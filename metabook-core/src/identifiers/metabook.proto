@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+message Prompt {
+    oneof prompt {
+        QuestionAnswer basicPrompt = 1;
+        ApplicationPrompt applicationPrompt = 2;
+    }
+}
+
+message ApplicationPrompt {
+    repeated QuestionAnswer variants = 1;
+}
+
+message QuestionAnswer {
+    uint32 version = 1;
+    string question = 2;
+    string answer = 3;
+    string explanation = 4;
+}

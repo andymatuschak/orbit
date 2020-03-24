@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base",
+  "compilerOptions": {
+    "jsx": "react",
+    "skipLibCheck": true,
+    "module": "esnext",
+    "noEmit": true,
+    "composite": false
+  },
+  "include": ["./src/**/*"]
+}

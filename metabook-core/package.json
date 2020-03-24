@@ -1,0 +1,37 @@
+{
+  "name": "metabook-core",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/cjs/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "devDependencies": {
+    "@babel/core": "^7.8.7",
+    "@babel/preset-env": "^7.8.7",
+    "@babel/preset-typescript": "^7.8.3",
+    "@types/jest": "^25.1.4",
+    "@types/node": "^13.9.2",
+    "babel-jest": "^25.1.0",
+    "jest": "^25.1.0",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "buffer": "^5.5.0",
+    "cids": "^0.7.4",
+    "ipld-dag-pb": "^0.18.3",
+    "multihashes": "^0.4.17",
+    "multihashing": "^0.3.3",
+    "protobufjs": "^6.8.9"
+  },
+  "scripts": {
+    "prebuild": "node scripts/compileProtobuf.js",
+    "build": "yarn run build:esm && yarn run build:cjs",
+    "build:cjs": "tsc --module commonjs --outDir dist/cjs && cp -R src/identifiers/generated dist/cjs/identifiers/",
+    "build:esm": "tsc -b && cp -R src/identifiers/generated dist/identifiers/"
+  }
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/metabook-client/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-cloud-functions/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-core/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-sample-data/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-ui-native-demo/.expo" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-ui-native-demo/.expo-shared" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-ui-native-demo/__generated__" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-ui-native-demo/ios/Pods" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-ui-web/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-ui-web/vendor/react-native-markdown-display/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-ui/.cache" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-ui/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-web-component/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/react-native-fit-image/dist" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Bundled Protobuf Distribution" level="application" />
+  </component>
+</module>

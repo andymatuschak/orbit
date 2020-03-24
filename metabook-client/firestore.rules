@@ -1,0 +1,12 @@
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /data/{document=**} {
+      allow read;
+    }
+    match /users/{user} {
+      match /logs/{document=**} {
+        allow read, write: if request.auth != null && (request.auth.uid == user || (request.auth.token != null && "admin" in request.auth.token && request.auth.token.admin == true));
+      }
+    }
+  }
+}

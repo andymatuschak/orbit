@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    // firebase requires dom lib, though the project itself can't use the DOM. c.f. https://github.com/firebase/firebase-js-sdk/issues/880
+    "lib": ["es6", "dom"],
+    "types": ["jest"]
+  },
+  "include": ["./src/**/*.ts"]
+}

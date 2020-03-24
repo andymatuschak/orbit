@@ -1,0 +1,8 @@
+{
+  "extends": "../tsconfig.base",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "noEmit": true
+  },
+  "files": ["src/index.ts"]
+}

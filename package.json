@@ -1,0 +1,29 @@
+{
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "metabook-client",
+      "metabook-cloud-functions",
+      "metabook-core",
+      "metabook-sample-data",
+      "metabook-ui",
+      "metabook-ui-web",
+      "metabook-ui-web-demo",
+      "metabook-web-component",
+      "firebase-node-persistence-shim"
+    ]
+  },
+  "scripts": {
+    "build": "(cd metabook-ui && yarn run build) && (cd metabook-ui-web && yarn run build)",
+    "prepare": "git submodule update --init --recursive && (cd vendor/react-native-web && yarn install)"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.22.0",
+    "@typescript-eslint/parser": "^2.22.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-react": "^7.18.3",
+    "prettier": "^1.19.1"
+  }
+}

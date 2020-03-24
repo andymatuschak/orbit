@@ -1,0 +1,14 @@
+{
+  "name": "firebase-node-persistence-shim",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./index.js",
+  "exports": "./index.js",
+  "types": "./index.d.ts",
+  "dependencies": {
+    "indexeddbshim": "^6.1.0",
+    "websql": "^1.0.0"
+  }
+}

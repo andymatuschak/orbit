@@ -1,0 +1,18 @@
+{
+  "extends": "../tsconfig.base",
+  "compilerOptions": {
+    "esModuleInterop": false,
+    "jsx": "react-native",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "target": "esnext",
+    "baseUrl": ".",
+    "paths": {
+      "react-native-markdown-display": [
+        "./src/@types/react-native-markdown-display",
+        "react-native-markdown-display"
+      ]
+    }
+  },
+  "include": ["./src/**/*.ts", "./src/**/*.tsx"]
+}

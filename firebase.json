@@ -1,0 +1,6 @@
+{
+  "functions": {
+    "predeploy": "(cd metabook-cloud-functions; yarn run build)",
+    "source": "metabook-cloud-functions"
+  }
+}

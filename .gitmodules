@@ -1,0 +1,6 @@
+[submodule "vendor/react-native-web"]
+	path = vendor/react-native-web
+	url = git@github.com:andymatuschak/react-native-web.git
+[submodule "vendor/react-native-fit-image"]
+	path = vendor/react-native-fit-image
+	url = git@github.com:andymatuschak/react-native-fit-image.git

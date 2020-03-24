@@ -1,0 +1,33 @@
+{
+  "name": "metabook-client",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "devDependencies": {
+    "@babel/core": "^7.8.7",
+    "@babel/preset-env": "^7.8.7",
+    "@babel/preset-typescript": "^7.8.3",
+    "@firebase/testing": "^0.17.0",
+    "@types/jest": "^25.1.4",
+    "@types/node": "^13.9.1",
+    "babel-jest": "^25.1.0",
+    "firebase-node-persistence-shim": "0.0.1",
+    "jest": "^25.1.0",
+    "jest-workspace-resolver": "^1.0.0",
+    "metabook-sample-data": "0.0.1",
+    "ts-jest": "^25.2.1",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "firebase": "^7.11.0",
+    "metabook-core": "0.0.1"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "watch": "tsc -w"
+  }
+}
