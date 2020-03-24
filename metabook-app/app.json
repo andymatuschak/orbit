@@ -1,0 +1,16 @@
+{
+  "name": "metabookapp",
+  "displayName": "metabookapp",
+  "expo": {
+    "name": "metabookapp",
+    "slug": "metabookapp",
+    "privacy": "unlisted",
+    "sdkVersion": "36.0.0",
+    "version": "1.0.0",
+    "entryPoint": "./.expo/AppEntry.js",
+    "platforms": ["ios", "android", "web"],
+    "packagerOpts": {
+      "config": "metro.config.js"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.base",
+  "compilerOptions": {
+    "jsx": "react-native",
+    "lib": ["dom", "esnext"],
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["**/*.tsx", "**/*.ts"]
+}
