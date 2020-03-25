@@ -1,6 +1,6 @@
 platform :ios, '10.0'
-require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
-require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
+require_relative '../../node_modules/@react-native-community/cli-platform-ios/native_modules'
+require_relative '../../node_modules/react-native-unimodules/cocoapods.rb'
 
 target 'metabook_ui_native_demo' do
   # Pods for metabook_ui_native_demo
@@ -41,7 +41,7 @@ target 'metabook_ui_native_demo' do
   end
 
   use_native_modules!
-  use_unimodules!(modules_paths: ['../node_modules'])
+  use_unimodules!(modules_paths: ['../../node_modules'], exclude: ["expo-file-system", "expo-font", "expo-image-loader", "expo-linear-gradient", "expo-location", "expo-permissions", "expo-sqlite", "expo-updates", "expo-web-browser"])
 end
 
 target 'metabook_ui_native_demo-tvOS' do

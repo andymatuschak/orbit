@@ -60,6 +60,7 @@
   },
   "scripts": {
     "build": "tsc -b",
+    "watch": "tsc -w",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   }

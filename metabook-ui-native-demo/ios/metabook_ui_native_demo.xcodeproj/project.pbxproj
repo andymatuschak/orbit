@@ -20,7 +20,6 @@
 		2DCD954D1E0B4F2C00145EB5 /* metabook_ui_native_demoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* metabook_ui_native_demoTests.m */; };
 		AF8A989B0A0D11A454537B00 /* libPods-metabook_ui_native_demoTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E095463E22C80568F499695 /* libPods-metabook_ui_native_demoTests.a */; };
 		FE084E717480572037ACC497 /* libPods-metabook_ui_native_demo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D56B17CBE242DD21E516342D /* libPods-metabook_ui_native_demo.a */; };
-		BE5D592FE8F743E1971B5E08 /* LibreFranklin-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 83EAE65367DF42B590911788 /* LibreFranklin-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,7 +68,6 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
 		EE0E660EF6E0883150261700 /* Pods-metabook_ui_native_demo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabook_ui_native_demo.debug.xcconfig"; path = "Target Support Files/Pods-metabook_ui_native_demo/Pods-metabook_ui_native_demo.debug.xcconfig"; sourceTree = "<group>"; };
-		83EAE65367DF42B590911788 /* LibreFranklin-Regular.ttf */ = {isa = PBXFileReference; name = "LibreFranklin-Regular.ttf"; path = "../assets/fonts/LibreFranklin-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -203,13 +201,11 @@
 			sourceTree = "<group>";
 		};
 		EBB0140D73B34997AF6FCE9E /* Resources */ = {
-			isa = "PBXGroup";
+			isa = PBXGroup;
 			children = (
-				83EAE65367DF42B590911788 /* LibreFranklin-Regular.ttf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
-			path = "";
 		};
 /* End PBXGroup section */
 
@@ -355,7 +351,6 @@
 			files = (
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
-				BE5D592FE8F743E1971B5E08 /* LibreFranklin-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -2,6 +2,7 @@
   "private": true,
   "workspaces": {
     "packages": [
+      "metabook-app",
       "metabook-client",
       "metabook-cloud-functions",
       "metabook-core",
