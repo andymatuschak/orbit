@@ -1,6 +1,8 @@
 # Created by .ignore support plugin (hsz.mobi)
 tsconfig.tsbuildinfo
 
+.DS_Store
+
 ### Node template
 # Logs
 logs
