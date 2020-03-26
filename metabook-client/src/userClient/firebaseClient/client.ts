@@ -42,28 +42,33 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     );
 
     const cardStateCache: MetabookCardStateSnapshot = {};
-    const latestTimestampByCardID: {
+    const latestTimestampByPromptID: {
       [key: string]: firebase.firestore.Timestamp;
     } = {};
     return userStateLogsRef.onSnapshot(
-      snapshot => {
+      (snapshot) => {
         for (const change of snapshot.docChanges()) {
           if (change.type === "added") {
             const log = change.doc.data();
             const { promptID } = log;
+            const latestPromptTimestamp = latestTimestampByPromptID[promptID];
             if (
               !cardStateCache[promptID] ||
               (cardStateCache[promptID] &&
-                log.timestamp > latestTimestampByCardID[promptID])
+                log.timestamp > latestPromptTimestamp)
             ) {
               cardStateCache[promptID] = {
                 interval: log.nextIntervalMillis,
-                dueTime: log.nextDueTimestamp.toMillis(),
+                dueTimestampMillis: log.nextDueTimestamp.toMillis(),
                 bestInterval: log.nextBestIntervalMillis,
                 needsRetry: log.nextNeedsRetry,
                 orderSeed: log.nextOrderSeed,
               };
             }
+            latestTimestampByPromptID[promptID] =
+              latestPromptTimestamp && latestPromptTimestamp > log.timestamp
+                ? latestPromptTimestamp
+                : log.timestamp;
           } else {
             // TODO probably this isn't robust against client failures to persist / sync
             throw new Error("Log entries should never disappear");
@@ -78,6 +83,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
   }
 
   recordActionLogs(logs: MetabookActionLog[]): Promise<unknown> {
+    console.log("recording", logs);
     const userStateLogsRef = this.getActionLogReference(this.userID);
     const batch = this.database.batch();
     for (const log of logs) {

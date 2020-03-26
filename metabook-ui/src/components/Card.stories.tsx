@@ -83,7 +83,7 @@ function createCardState(
     interval,
     bestInterval:
       bestLevel === null ? null : intervalSequence[bestLevel].interval,
-    dueTime: Date.now(),
+    dueTimestampMillis: Date.now(),
     needsRetry: false,
     orderSeed: 0,
   };

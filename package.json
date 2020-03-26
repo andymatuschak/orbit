@@ -11,7 +11,8 @@
       "metabook-ui-web",
       "metabook-ui-web-demo",
       "metabook-web-component",
-      "firebase-node-persistence-shim"
+      "firebase-node-persistence-shim",
+      "firebase-react-native-persistence-shim"
     ]
   },
   "scripts": {
@@ -25,6 +26,6 @@
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-react": "^7.18.3",
-    "prettier": "^1.19.1"
+    "prettier": "^2.0.2"
   }
 }

@@ -25,6 +25,7 @@
     "events": "^1.1.1",
     "expo": "~36.0.0",
     "firebase": "^7.12.0",
+    "firebase-react-native-persistence-shim": "0.0.1",
     "https-browserify": "0.0.1",
     "inherits": "^2.0.4",
     "metabook-client": "0.0.1",
@@ -52,7 +53,7 @@
     "string_decoder": "^0.10.31",
     "timers-browserify": "^1.4.2",
     "tty-browserify": "0.0.0",
-    "url": "^0.10.3",
+    "url": "^0.11.0",
     "util": "^0.10.4",
     "vm-browserify": "^1.1.2"
   },

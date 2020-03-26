@@ -1,6 +1,5 @@
-import firebase from "@firebase/app";
-import "@firebase/firestore";
-const firestore = firebase.firestore!;
+import firebase from "firebase/app";
+import "firebase/firestore";
 
 import { updateCardStateForReviewMarking } from "metabook-core";
 import { MetabookActionLog } from "../types/actionLog";
@@ -23,10 +22,12 @@ export function getActionLogForAction(
     promptID: action.promptID,
     sessionID: action.sessionID,
     actionOutcome: action.actionOutcome,
-    timestamp: firestore.Timestamp.fromMillis(action.timestamp),
+    timestamp: firebase.firestore.Timestamp.fromMillis(action.timestamp),
     baseIntervalMillis: action.baseCardState?.interval ?? null,
 
-    nextDueTimestamp: firestore.Timestamp.fromMillis(newCardState.dueTime),
+    nextDueTimestamp: firebase.firestore.Timestamp.fromMillis(
+      newCardState.dueTimestampMillis,
+    ),
     nextIntervalMillis: newCardState.interval,
     nextBestIntervalMillis: newCardState.bestInterval,
     nextOrderSeed: newCardState.orderSeed,

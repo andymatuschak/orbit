@@ -1,5 +1,5 @@
 export interface CardState {
-  dueTime: number; // TODO adapt from Firebase timestamp
+  dueTimestampMillis: number;
   interval: number;
   bestInterval: number | null;
   needsRetry: boolean;

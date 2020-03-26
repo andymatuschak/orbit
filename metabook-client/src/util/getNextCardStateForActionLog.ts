@@ -5,7 +5,7 @@ export function getNextCardStateForActionLog(
   log: MetabookActionLog,
 ): CardState {
   return {
-    dueTime: log.nextDueTimestamp.toMillis(),
+    dueTimestampMillis: log.nextDueTimestamp.toMillis(),
     interval: log.nextIntervalMillis,
     bestInterval: log.nextBestIntervalMillis,
     needsRetry: log.nextNeedsRetry,

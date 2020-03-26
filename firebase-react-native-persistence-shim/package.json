@@ -1,0 +1,22 @@
+{
+  "name": "firebase-react-native-persistence-shim",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": "./index.js",
+  "dependencies": {
+    "@indexeddbshim/indexeddbshim": "^6.2.1",
+    "expo-sqlite": "^8.1.0"
+  },
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "workspaces": {
+    "nohoist": [
+      "@indexeddbshim/indexeddbshim"
+    ]
+  }
+}

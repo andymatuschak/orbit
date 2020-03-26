@@ -4,7 +4,13 @@
     "jsx": "react-native",
     "lib": ["dom", "esnext"],
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "outDir": "./dist",
   },
-  "include": ["**/*.tsx", "**/*.ts"]
+  "include": [
+    "./src/**/*.tsx",
+    "./src/**/*.ts",
+    "./App.tsx",
+    "./src/shimBase64.js"
+  ]
 }

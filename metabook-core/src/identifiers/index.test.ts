@@ -13,7 +13,7 @@ const testPromptData: PromptData = {
 
 test("encoding stability", () => {
   expect(getIDForPromptData(testPromptData).toString()).toMatchInlineSnapshot(
-    `"zdj7WWUeVhmRFyz2r148TBtebecpFDoc3CXn5fsNbMzZiH1cf"`,
+    `"zdj7Wg7w5TjDLn9feHxwNTD3cDQuHkD1q4qig8mbDGRfGQy9y"`,
   );
 });
 

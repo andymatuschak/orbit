@@ -77,7 +77,7 @@ export default function updateCardStateForAction({
   }
 
   const newCardState: CardState = {
-    dueTime: newDueTimestampMillis,
+    dueTimestampMillis: newDueTimestampMillis,
     bestInterval,
     interval: newInterval,
     needsRetry: supportsRetry && actionOutcome === "forgotten",

@@ -49,7 +49,7 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
     }
 
     const fetchPromises = [...requestedPromptIDs.values()].map(
-      async promptID => {
+      async (promptID) => {
         try {
           const cachedData = await dataRef
             .doc(promptID)

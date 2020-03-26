@@ -19,7 +19,7 @@ function generateTask(questionText: string): ReviewTask {
 }
 
 function App() {
-  const initialTasks: ReviewTask[] = Array.from(new Array(5).keys()).map(i =>
+  const initialTasks: ReviewTask[] = Array.from(new Array(5).keys()).map((i) =>
     generateTask(`Question ${i + 1}`),
   );
 
@@ -36,9 +36,9 @@ function App() {
 
     const dataClient = new MetabookFirebaseDataClient(app);
     dataClient
-      .recordData(initialTasks.map(t => t.promptData))
-      .then(r => console.log("finished recording prompts", r))
-      .catch(error => console.error("Couldn't record prompts", error));
+      .recordData(initialTasks.map((t) => t.promptData))
+      .then((r) => console.log("Finished recording prompts", r))
+      .catch((error) => console.error("Couldn't record prompts", error));
 
     return new MetabookFirebaseUserClient(app, "testID");
   });
@@ -46,8 +46,8 @@ function App() {
   const [tasks, setTasks] = useState(initialTasks);
 
   const onMark = useCallback<ReviewAreaProps["onMark"]>(
-    async marking => {
-      setTasks(tasks => tasks.slice(1));
+    async (marking) => {
+      setTasks((tasks) => tasks.slice(1));
 
       const promptID = getIDForPromptData(marking.task.promptData);
       const { newCardState, commit } = client.recordCardStateUpdate({
@@ -59,7 +59,6 @@ function App() {
         timestamp: Date.now(),
       });
 
-      console.log("New state", newCardState);
       await commit;
       console.log("Committed", promptID);
     },

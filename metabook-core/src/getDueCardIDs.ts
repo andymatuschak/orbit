@@ -1,0 +1,46 @@
+import getCardLimitForReviewSession from "./getCardLimitForReviewSession";
+import { CardState } from "./types/cardState";
+
+// Given some time might be computing whether a user has a session due, we evaluate whether cards are due using a date slightly shifted into the future, to find the cards that'd be due on that conceptual day.
+function getFuzzyDueTimeThreshold(nowMillis: number): number {
+  return nowMillis + 1000 * 60 * 60 * 16; // 16 hour lookahead
+}
+
+export default function getDuePromptIDs({
+  cardStates,
+  timestampMillis,
+  reviewSessionIndex,
+  cardsCompletedInCurrentSession,
+}: {
+  cardStates: { [key: string]: CardState };
+  timestampMillis: number;
+  reviewSessionIndex: number;
+  cardsCompletedInCurrentSession: number;
+}) {
+  const dueThresholdTimestamp = getFuzzyDueTimeThreshold(timestampMillis);
+  const orderedDueCardIDs = Object.keys(cardStates).filter(
+    cardID => cardStates[cardID].dueTimestampMillis <= dueThresholdTimestamp,
+  );
+
+  const maxCardsInSession = getCardLimitForReviewSession(reviewSessionIndex);
+  const cardsRemaining = Math.max(
+    0,
+    maxCardsInSession - cardsCompletedInCurrentSession,
+  );
+
+  return (
+    orderedDueCardIDs
+      // Prefer lower-level cards when choosing the subset of questions to review.
+      .sort((a, b) => {
+        if (cardStates[a].interval === cardStates[b].interval) {
+          return (
+            (cardStates[a].orderSeed || 0) - (cardStates[b].orderSeed || 0)
+          );
+        } else {
+          return cardStates[a].interval - cardStates[b].interval;
+        }
+      })
+      // Apply our review cap.
+      .slice(0, cardsRemaining)
+  );
+}
