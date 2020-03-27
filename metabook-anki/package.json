@@ -1,0 +1,26 @@
+{
+  "name": "metabook-anki",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": "./dist/index.js",
+  "dependencies": {
+    "sqlite": "^3.0.6",
+    "unzip": "^0.1.11"
+  },
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.1.4",
+    "@types/node": "^12.12.31",
+    "@types/unzip": "^0.1.1",
+    "jest": "^25.2.3",
+    "sqlite": "^3.0.6",
+    "ts-jest": "^25.2.1",
+    "typescript": "^3.8.3"
+  }
+}

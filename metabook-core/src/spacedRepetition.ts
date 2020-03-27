@@ -82,7 +82,7 @@ const schedulesToIntervalsToLevels = ((): Record<
     MetabookSpacedRepetitionSchedule,
     { [key: number]: number }
   >> = {};
-  typedKeys(schedulesToIntervalSequences).forEach(schedule => {
+  typedKeys(schedulesToIntervalSequences).forEach((schedule) => {
     const lookupCache: { [key: number]: number } = {};
     schedulesToIntervalSequences[schedule].forEach(
       ({ interval }, index) => (lookupCache[interval] = index),
@@ -102,7 +102,7 @@ const schedulesToIntervalsToLevels = ((): Record<
 export function getIntervalLabelsForSchedule(
   schedule: MetabookSpacedRepetitionSchedule,
 ): string[] {
-  return schedulesToIntervalSequences[schedule].map(i => i.label);
+  return schedulesToIntervalSequences[schedule].map((i) => i.label);
 }
 
 export const getLevelForInterval = (
@@ -207,7 +207,7 @@ export const projectedAverageIntervalAfterReview = (
   const intervalSequence = schedulesToIntervalSequences[schedule];
 
   return getLogAverageInterval(
-    intervals.map(interval => {
+    intervals.map((interval) => {
       const newLevel =
         getLevelForInterval(interval, schedule) +
         (Math.random() > accuracy ? -1 : 1);

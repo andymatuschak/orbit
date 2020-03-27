@@ -1,9 +1,9 @@
 {
   "extends": "../tsconfig.base",
   "compilerOptions": {
+    "outDir": "./dist",
     "rootDir": "./src",
-    "noEmit": true,
-    "composite": false
+    "types": ["node", "jest"]
   },
-  "files": ["src/index.ts"]
+  "include": ["./src/**/*.ts"]
 }

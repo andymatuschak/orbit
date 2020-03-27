@@ -4,19 +4,15 @@
   "license": "UNLICENSED",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/cjs/index.js",
   "exports": {
     "import": "./dist/index.js",
     "require": "./dist/cjs/index.js"
   },
   "types": "./dist/index.d.ts",
   "devDependencies": {
-    "@babel/core": "^7.8.7",
-    "@babel/preset-env": "^7.8.7",
-    "@babel/preset-typescript": "^7.8.3",
     "@types/jest": "^25.1.4",
     "@types/node": "^13.9.2",
-    "babel-jest": "^25.1.0",
     "jest": "^25.1.0",
     "typescript": "^3.8.3"
   },

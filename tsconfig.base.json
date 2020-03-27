@@ -19,7 +19,6 @@
   "compileOnSave": true,
   "references": [
     { "path": "./metabook-ui" },
-    { "path": "./metabook-ui-web" },
     { "path": "./metabook-client" },
     { "path": "./metabook-core" },
     { "path": "./metabook-sample-data" }

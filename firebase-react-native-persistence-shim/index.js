@@ -2,7 +2,6 @@
 // Based on https://gist.github.com/zwily/e9e97e0f9f523a72c24c7df01d889482
 
 import * as SQLite from "expo-sqlite";
-// @ts-ignore: There are no types for indexeddbshim.
 import setGlobalVars from "./node_modules/@indexeddbshim/indexeddbshim/dist/indexeddbshim-noninvasive";
 
 let isShimmed = false;

@@ -19,7 +19,7 @@ export default function getDuePromptIDs({
 }) {
   const dueThresholdTimestamp = getFuzzyDueTimeThreshold(timestampMillis);
   const orderedDueCardIDs = Object.keys(cardStates).filter(
-    cardID => cardStates[cardID].dueTimestampMillis <= dueThresholdTimestamp,
+    (cardID) => cardStates[cardID].dueTimestampMillis <= dueThresholdTimestamp,
   );
 
   const maxCardsInSession = getCardLimitForReviewSession(reviewSessionIndex);

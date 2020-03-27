@@ -2,6 +2,7 @@
   "private": true,
   "workspaces": {
     "packages": [
+      "metabook-anki",
       "metabook-app",
       "metabook-client",
       "metabook-cloud-functions",
@@ -16,7 +17,10 @@
     ]
   },
   "scripts": {
-    "build": "(cd metabook-ui && yarn run build) && (cd metabook-ui-web && yarn run build)",
+    "build": "tsc -b tsconfig.base.json && (cd metabook-core && yarn run build) && (cd metabook-ui-web && yarn run build)",
+    "watch": "tsc -b -w tsconfig.base.json",
+    "test": "npx jest --projects metabook-anki metabook-core metabook-client --runInBand",
+    "test:watch": "yarn run test --watch",
     "prepare": "git submodule update --init --recursive && (cd vendor/react-native-web && yarn install)"
   },
   "devDependencies": {
@@ -26,6 +30,7 @@
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-react": "^7.18.3",
-    "prettier": "^2.0.2"
+    "prettier": "^2.0.2",
+    "typescript": "^3.8.3"
   }
 }

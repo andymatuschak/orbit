@@ -10,7 +10,7 @@ beforeEach(() => {
 test("recording a marking triggers card state update", async () => {
   const mockFunction = jest.fn();
   const firstMockCall = promiseForNextCall(mockFunction);
-  client.subscribeToCardStates({}, mockFunction, error => {
+  client.subscribeToCardStates({}, mockFunction, (error) => {
     fail(error);
   });
   await firstMockCall;
@@ -24,7 +24,7 @@ test("recording a marking triggers card state update", async () => {
     Object {
       "test": Object {
         "bestInterval": 0,
-        "dueTime": 432001000,
+        "dueTimestampMillis": 432001000,
         "interval": 432000000,
         "needsRetry": false,
         "orderSeed": 0.25,
