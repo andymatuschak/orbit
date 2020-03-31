@@ -38,14 +38,45 @@ async function writeTestPromptData() {
 
 const testPromptSpecID = "test" as PromptSpecID;
 
-test("reads card data", async () => {
-  await writeTestPromptData();
+describe("getData", () => {
+  test("reads card data", async () => {
+    await writeTestPromptData();
 
-  const mockFn = jest.fn();
-  await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
-  expect(mockFn.mock.calls[0][0]).toMatchObject(
-    new Map([["test", testBasicPromptSpec]]),
-  );
+    const mockFn = jest.fn();
+    await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+    expect(mockFn.mock.calls[0][0]).toMatchObject(
+      new Map([["test", testBasicPromptSpec]]),
+    );
+  });
+
+  test("calls callback even when set of cards to read is empty", async () => {
+    const mockFn = jest.fn();
+    await dataClient.getData(new Set(), mockFn).completion;
+    expect(mockFn).toHaveBeenCalled();
+  });
+
+  test("reads cached data", async () => {
+    await writeTestPromptData();
+
+    await testApp.firestore().disableNetwork();
+    const mockFn = jest.fn();
+    await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+    expect(mockFn.mock.calls[0][0].get("test")).toBeInstanceOf(Error);
+
+    await testApp.firestore().enableNetwork();
+    mockFn.mockClear();
+    await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+    expect(mockFn.mock.calls[0][0]).toMatchObject(
+      new Map([["test", testBasicPromptSpec]]),
+    );
+
+    await testApp.firestore().disableNetwork();
+    mockFn.mockClear();
+    await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+    expect(mockFn.mock.calls[0][0]).toMatchObject(
+      new Map([["test", testBasicPromptSpec]]),
+    );
+  });
 });
 
 test.skip("records prompt spec", async () => {
@@ -55,27 +86,4 @@ test.skip("records prompt spec", async () => {
   await dataClient.getData(new Set([testPromptID]), mockFn).completion;
   expect(mockFn.mock.calls[0][0].get(testPromptID)).toBeInstanceOf(Error);
   // TODO test recording new prompts when the network is down
-});
-
-test("reads cached data", async () => {
-  await writeTestPromptData();
-
-  await testApp.firestore().disableNetwork();
-  const mockFn = jest.fn();
-  await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
-  expect(mockFn.mock.calls[0][0].get("test")).toBeInstanceOf(Error);
-
-  await testApp.firestore().enableNetwork();
-  mockFn.mockClear();
-  await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
-  expect(mockFn.mock.calls[0][0]).toMatchObject(
-    new Map([["test", testBasicPromptSpec]]),
-  );
-
-  await testApp.firestore().disableNetwork();
-  mockFn.mockClear();
-  await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
-  expect(mockFn.mock.calls[0][0]).toMatchObject(
-    new Map([["test", testBasicPromptSpec]]),
-  );
 });

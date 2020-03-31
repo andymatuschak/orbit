@@ -1,7 +1,10 @@
-import { MetabookActionOutcome, PromptState } from "metabook-core";
-import { EncodedPromptID } from "metabook-core/dist/promptID";
+import {
+  EncodedPromptID,
+  MetabookActionOutcome,
+  PromptState,
+} from "metabook-core";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
-import { PromptTaskID } from "../util/promptTaskID";
+import { PromptTaskID } from "..";
 
 export interface MetabookUserClient {
   subscribeToPromptStates(

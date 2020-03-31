@@ -37,4 +37,4 @@ export type { PromptSpecID } from "./identifiers";
 export { default as getDuePromptIDs } from "./getDuePromptIDs";
 
 export { encodePromptID, decodePromptID } from "./promptID";
-export type { PromptID } from "./promptID";
+export type { PromptID, EncodedPromptID } from "./promptID";

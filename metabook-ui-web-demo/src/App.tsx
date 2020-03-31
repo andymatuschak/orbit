@@ -3,18 +3,19 @@ import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "metabook-client";
-import { getIDForPromptData } from "metabook-core/dist/identifiers";
-import { testBasicPromptData } from "metabook-sample-data";
+import { getIDForPromptSpec } from "metabook-core";
+import { testBasicPromptSpec } from "metabook-sample-data";
 import { ReviewAreaProps, ReviewTask } from "metabook-ui";
 import { ReviewArea } from "metabook-ui-web";
 import React, { useCallback, useState } from "react";
 
 function generateTask(questionText: string): ReviewTask {
   return {
-    type: "question",
-    cardState: null,
-    promptData: { ...testBasicPromptData, question: questionText },
-    promptIndex: null,
+    type: "prompt",
+    promptTask: {
+      spec: { ...testBasicPromptSpec, question: questionText },
+    },
+    promptState: null,
   };
 }
 
@@ -36,7 +37,7 @@ function App() {
 
     const dataClient = new MetabookFirebaseDataClient(app);
     dataClient
-      .recordData(initialTasks.map((t) => t.promptData))
+      .recordData(initialTasks.map((t) => t.promptTask.spec))
       .then((r) => console.log("Finished recording prompts", r))
       .catch((error) => console.error("Couldn't record prompts", error));
 
@@ -45,12 +46,11 @@ function App() {
 
   const [tasks, setTasks] = useState(initialTasks);
 
-  const onMark = useCallback<ReviewAreaProps["onMark"]>(
-    async (marking) => {
-      setTasks((tasks) => tasks.slice(1));
+  const onMark = useCallback<ReviewAreaProps["onMark"]>(async (marking) => {
+    setTasks((tasks) => tasks.slice(1));
 
-      const promptID = getIDForPromptData(marking.task.promptData);
-      const { newCardState, commit } = client.recordCardStateUpdate({
+    const promptID = getIDForPromptSpec(marking.reviewTask.promptTask.spec);
+    /*const { newCardState, commit } = client.recordCardStateUpdate({
         actionOutcome: marking.outcome,
         baseCardState: null,
         promptID,
@@ -58,12 +58,12 @@ function App() {
         sessionID: null,
         timestamp: Date.now(),
       });
-
       await commit;
-      console.log("Committed", promptID);
-    },
-    [client],
-  );
+       */
+    // TODO
+
+    console.log("Committed", promptID);
+  }, []);
 
   return (
     <ReviewArea

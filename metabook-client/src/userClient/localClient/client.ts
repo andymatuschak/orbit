@@ -1,9 +1,7 @@
-import { PromptState } from "metabook-core";
-import { encodePromptID } from "metabook-core/dist/promptID";
-import { PromptStates } from "metabook-core/dist/types/promptState";
+import { EncodedPromptID, encodePromptID, PromptState } from "metabook-core";
 import { MetabookActionLog } from "../../types/actionLog";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
-import { getPromptIDForPromptTaskID } from "../../util/promptTaskID";
+import { getPromptIDForPromptTaskID } from "../..";
 import {
   MetabookPromptStateSnapshot,
   MetabookAction,
@@ -15,7 +13,7 @@ import getPromptStates from "../getPromptStates";
 import { getNextPromptStateForActionLog } from "../../util/getNextPromptStateForActionLog";
 
 export class MetabookLocalUserClient implements MetabookUserClient {
-  private readonly latestPromptStates: PromptStates;
+  private readonly latestPromptStates: Map<EncodedPromptID, PromptState>;
   private readonly cardStateSubscribers: Set<CardStateSubscriber>;
   private readonly logs: MetabookActionLog[];
 

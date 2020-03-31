@@ -1,8 +1,9 @@
+import firebase from "firebase/app";
 import * as firebaseTesting from "@firebase/testing";
-import { EncodedPromptID } from "metabook-core/dist/promptID";
+import { EncodedPromptID } from "metabook-core";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
-import { MetabookLocalUserClient } from "../localClient/client";
+import { MetabookLocalUserClient } from "../localClient";
 import { MetabookFirebaseUserClient } from "./client";
 
 let testApp: firebase.app.App;

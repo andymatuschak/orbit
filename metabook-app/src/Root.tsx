@@ -1,35 +1,26 @@
 import {
+  getIDForPromptTask,
+  MetabookDataClient,
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
-} from "metabook-client";
-import { MetabookDataClient } from "metabook-client/dist/dataClient";
-import {
-  MetabookPromptStateSnapshot,
   MetabookUserClient,
-} from "metabook-client/dist/userClient";
-import { getIDForPromptTask } from "metabook-client/dist/util/promptTaskID";
-import { encodePromptID, getDuePromptIDs } from "metabook-core";
-import { testBasicPromptSpec } from "metabook-sample-data";
+} from "metabook-client";
+import {
+  EncodedPromptID,
+  encodePromptID,
+  getDuePromptIDs,
+  PromptState,
+} from "metabook-core";
 import { ReviewArea, ReviewAreaProps, ReviewTask } from "metabook-ui";
 import colors from "metabook-ui/dist/styles/colors";
 import "node-libs-react-native/globals";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import {
   enableFirebasePersistence,
   getFirebaseApp,
   PersistenceStatus,
 } from "./firebase";
-
-function generateTask(questionText: string): ReviewTask {
-  return {
-    type: "prompt",
-    promptTask: {
-      spec: { ...testBasicPromptSpec, question: questionText },
-    },
-    promptState: null,
-  };
-}
 
 function usePersistenceStatus() {
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(
@@ -52,7 +43,7 @@ function useTasks(
 
   const unsubscribeFromDataRequest = useRef<(() => void) | null>(null);
   const promptStatesDidChange = useCallback(
-    (newPromptStates: MetabookPromptStateSnapshot) => {
+    (newPromptStates: ReadonlyMap<EncodedPromptID, PromptState>) => {
       // TODO transform to tasks
       const duePromptIDs = getDuePromptIDs({
         promptStates: newPromptStates,
@@ -61,8 +52,8 @@ function useTasks(
         cardsCompletedInCurrentSession: 0, // TODO
       });
 
-      const tasks = unsubscribeFromDataRequest.current?.();
-      const { completion, unsubscribe } = dataClient.getData(
+      unsubscribeFromDataRequest.current?.();
+      const { unsubscribe } = dataClient.getData(
         new Set(duePromptIDs.map((promptID) => promptID.promptSpecID)),
         (snapshot) => {
           setTasks(
@@ -123,7 +114,7 @@ function useTasks(
       );
       unsubscribeFromDataRequest.current = unsubscribe;
     },
-    [setTasks],
+    [setTasks, dataClient],
   );
   useEffect(() => {
     unsubscribeFromDataRequest.current?.();
@@ -146,19 +137,13 @@ function useTasks(
       promptStatesDidChange,
       subscriptionDidFail,
     );
-  }, [userClient, persistenceStatus]);
+  }, [
+    userClient,
+    persistenceStatus,
+    promptStatesDidChange,
+    subscriptionDidFail,
+  ]);
   return tasks;
-}
-
-function recordTestTasks(dataClient: MetabookDataClient) {
-  const initialTasks: ReviewTask[] = Array.from(new Array(5).keys()).map((i) =>
-    generateTask(`Question ${i + 1}`),
-  );
-
-  dataClient
-    .recordData(initialTasks.map((t) => t.promptTask.spec))
-    .then((r) => console.log("finished recording prompts", r))
-    .catch((error) => console.error("Couldn't record prompts", error));
 }
 
 export default function App() {
@@ -175,7 +160,7 @@ export default function App() {
   const onMark = useCallback<ReviewAreaProps["onMark"]>(
     async (marking) => {
       console.log("Recording update");
-      const { newPromptState, commit } = userClient.recordAction({
+      const { commit } = userClient.recordAction({
         actionOutcome: marking.outcome,
         basePromptState: marking.reviewTask.promptState,
         sessionID: null,
@@ -218,12 +203,3 @@ export default function App() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0f0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

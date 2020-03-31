@@ -1,14 +1,13 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
 
-import { encodePromptID, PromptState } from "metabook-core";
-import { EncodedPromptID } from "metabook-core/dist/promptID";
+import { EncodedPromptID, encodePromptID, PromptState } from "metabook-core";
 import { getDefaultFirebaseApp } from "../../firebase";
 import { MetabookActionLog } from "../../types/actionLog";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
 import { getActionLogForAction } from "../../util/getActionLogForAction";
 import { getNextPromptStateForActionLog } from "../../util/getNextPromptStateForActionLog";
-import { getPromptIDForPromptTaskID } from "../../util/promptTaskID";
+import { getPromptIDForPromptTaskID } from "../..";
 import getPromptStates from "../getPromptStates";
 import {
   MetabookAction,
