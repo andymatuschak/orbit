@@ -35,7 +35,7 @@ function getQAPromptSpecForPromptTask(promptTask: PromptTask): QAPromptSpec {
       return spec.variants[(promptTask as ApplicationPromptTask).variantIndex];
     case "cloze":
       const clozeTask = promptTask as ClozePromptTask;
-      const clozeRegexp = /\{[^}]+?\}/g;
+      const clozeRegexp = /{([^}]+?)}/g;
       const { clozeIndex } = clozeTask;
       let matchIndex = 0;
       let match: RegExpExecArray | null;
@@ -46,11 +46,12 @@ function getQAPromptSpecForPromptTask(promptTask: PromptTask): QAPromptSpec {
       ) {
         if (matchIndex === clozeIndex) {
           return {
-            question:
+            question: (
               clozeTask.spec.contents.slice(0, match.index) +
               " ___ " +
-              clozeTask.spec.contents.slice(match.index + match.length),
-            answer: match[0],
+              clozeTask.spec.contents.slice(clozeRegexp.lastIndex)
+            ).replace(clozeRegexp, "$1"),
+            answer: match[1],
             explanation: null,
           };
         }

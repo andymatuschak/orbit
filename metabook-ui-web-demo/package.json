@@ -4,9 +4,9 @@
   "private": true,
   "dependencies": {
     "firebase": "^7.12.0",
-    "metabook-ui-web": "0.0.1",
     "metabook-client": "0.0.1",
     "metabook-core": "0.0.1",
+    "metabook-ui-web": "0.0.1",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
     "react-scripts": "3.4.0"

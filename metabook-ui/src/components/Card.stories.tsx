@@ -1,14 +1,18 @@
 import { number } from "@storybook/addon-knobs";
 import {
   getIntervalSequenceForSchedule,
-  MetabookActionOutcome,
   MetabookSpacedRepetitionSchedule,
-  PromptSpecType,
   PromptState,
+  PromptTask,
   updateCardStateForReviewMarking,
 } from "metabook-core";
-import React, { ReactNode, useCallback, useState } from "react";
-import { Button } from "react-native";
+import {
+  testApplicationPromptSpec,
+  testBasicPromptSpec,
+  testClozePromptGroupSpec,
+} from "metabook-sample-data";
+import React, { ReactNode, useState } from "react";
+import { Button, View } from "react-native";
 import testCardProps from "./__fixtures__/testCardProps";
 import Card from "./Card";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
@@ -23,50 +27,69 @@ export default {
 export const basic = () => (
   <TestCard
     showsNeedsRetryNotice={false}
+    promptTask={{ spec: testBasicPromptSpec }}
     shouldLabelApplicationPrompts={false}
+  />
+);
+
+export const applicationPrompt = () => (
+  <TestCard
+    showsNeedsRetryNotice={false}
+    promptTask={{ spec: testApplicationPromptSpec, variantIndex: 0 }}
+    shouldLabelApplicationPrompts={true}
+  />
+);
+
+export const clozePrompt = () => (
+  <TestCard
+    showsNeedsRetryNotice={false}
+    promptTask={{ spec: testClozePromptGroupSpec, clozeIndex: 1 }}
+    shouldLabelApplicationPrompts={true}
   />
 );
 
 function TestCard(props: {
   showsNeedsRetryNotice: boolean;
   shouldLabelApplicationPrompts: boolean;
+  promptTask: PromptTask;
 }) {
-  const { showsNeedsRetryNotice, shouldLabelApplicationPrompts } = props;
+  const {
+    showsNeedsRetryNotice,
+    shouldLabelApplicationPrompts,
+    promptTask,
+  } = props;
   return (
-    <div style={{ height: 600, position: "relative" }}>
+    <View>
       <h2>{JSON.stringify(props)}</h2>
       <WithReviewState
         initialBestLevel={null}
         initialCurrentLevel={number("initial current level", 0)}
         intervalSequence={testIntervalSequence}
         schedule="aggressiveStart"
-        promptSpecType={
-          shouldLabelApplicationPrompts ? "applicationPrompt" : "basic"
-        }
+        promptTask={promptTask}
       >
         {(promptState, reviewMarkingInteractionState) =>
-          [false, true].map((isRevealed, index) => (
-            <div
-              key={index}
-              className="CardDynamicsContainer"
-              style={{ marginTop: 128, left: index * 400 + 50 }}
-            >
-              <Card
-                {...testCardProps}
-                isRevealed={isRevealed}
-                promptState={{
-                  ...promptState,
-                  needsRetry: showsNeedsRetryNotice,
-                }}
-                reviewMarkingInteractionState={reviewMarkingInteractionState}
-                showsNeedsRetryNotice={showsNeedsRetryNotice}
-                shouldLabelApplicationPrompts={shouldLabelApplicationPrompts}
-              />
-            </div>
-          ))
+          [false, true].map((isRevealed, index) => {
+            return (
+              <View key={index}>
+                <Card
+                  {...testCardProps}
+                  promptTask={promptTask}
+                  isRevealed={isRevealed}
+                  promptState={{
+                    ...promptState,
+                    needsRetry: showsNeedsRetryNotice,
+                  }}
+                  reviewMarkingInteractionState={reviewMarkingInteractionState}
+                  showsNeedsRetryNotice={showsNeedsRetryNotice}
+                  shouldLabelApplicationPrompts={shouldLabelApplicationPrompts}
+                />
+              </View>
+            );
+          })
         }
       </WithReviewState>
-    </div>
+    </View>
   );
 }
 
@@ -90,7 +113,7 @@ function WithReviewState(props: {
   initialCurrentLevel: number;
   intervalSequence: typeof testIntervalSequence;
   schedule: MetabookSpacedRepetitionSchedule;
-  promptSpecType: PromptSpecType;
+  promptTask: PromptTask;
   children: (
     promptState: PromptState,
     reviewMarkingInteractionState: ReviewMarkingInteractionState | null,
@@ -118,7 +141,7 @@ function WithReviewState(props: {
     setReviewMarkingInterationState,
   ] = useState<ReviewMarkingInteractionState | null>(null);
 
-  const onHoverDidChange = useCallback(
+  /*const onHoverDidChange = useCallback(
     (isHovering: boolean, outcome: MetabookActionOutcome) => {
       if (isHovering) {
         if (!reviewMarkingInterationState) {
@@ -137,75 +160,79 @@ function WithReviewState(props: {
       }
     },
     [reviewMarkingInterationState],
-  );
+  );*/
 
   return (
-    <div
+    <View
       style={{
-        display: "flex",
-        width: 800,
+        flex: 1,
+        // width: 800,
         justifyContent: "space-between",
         margin: 16,
       }}
     >
-      <div>{props.children(promptState, reviewMarkingInterationState)}</div>
-      <Button
-        title="Mark remembered"
-        onPress={() => {
-          setReviewMarkingInterationState({
-            outcome: "remembered",
-            status: "committed",
-          });
-        }}
-      />
+      <View style={{ flexDirection: "row" }}>
+        {props.children(promptState, reviewMarkingInterationState)}
+      </View>
+      <View style={{ flexDirection: "row" }}>
+        <Button
+          title="Mark remembered"
+          onPress={() => {
+            setReviewMarkingInterationState({
+              outcome: "remembered",
+              status: "committed",
+            });
+          }}
+        />
 
-      <Button
-        title="Mark forgotten"
-        onPress={() => {
-          setReviewMarkingInterationState({
-            outcome: "forgotten",
-            status: "committed",
-          });
-        }}
-      />
+        <Button
+          title="Mark forgotten"
+          onPress={() => {
+            setReviewMarkingInterationState({
+              outcome: "forgotten",
+              status: "committed",
+            });
+          }}
+        />
 
-      <Button
-        title="Next round"
-        onPress={() => {
-          const currentOutcome =
-            (reviewMarkingInterationState &&
-              reviewMarkingInterationState.status === "committed" &&
-              reviewMarkingInterationState.outcome) ||
-            null;
-          if (!currentOutcome) {
-            return;
-          }
-          setPromptState(
-            updateCardStateForReviewMarking({
-              basePromptState: promptState,
-              promptSpecType: props.promptSpecType,
-              actionOutcome: currentOutcome,
-              schedule: props.schedule,
-              reviewTimestampMillis: Date.now(),
-            }),
-          );
-          setReviewMarkingInterationState(null);
-        }}
-      />
+        <Button
+          title="Next round"
+          onPress={() => {
+            const currentOutcome =
+              (reviewMarkingInterationState &&
+                reviewMarkingInterationState.status === "committed" &&
+                reviewMarkingInterationState.outcome) ||
+              null;
+            if (!currentOutcome) {
+              return;
+            }
+            setPromptState(
+              updateCardStateForReviewMarking({
+                basePromptState: promptState,
+                promptSpecType: props.promptTask.spec.promptSpecType,
+                actionOutcome: currentOutcome,
+                schedule: props.schedule,
+                reviewTimestampMillis: Date.now(),
+              }),
+            );
+            setReviewMarkingInterationState(null);
+          }}
+        />
 
-      <Button
-        title="Reset"
-        onPress={() => {
-          setReviewMarkingInterationState(null);
-          setPromptState(
-            createPromptState(
-              props.intervalSequence,
-              props.initialCurrentLevel,
-              props.initialBestLevel,
-            ),
-          );
-        }}
-      />
-    </div>
+        <Button
+          title="Reset"
+          onPress={() => {
+            setReviewMarkingInterationState(null);
+            setPromptState(
+              createPromptState(
+                props.intervalSequence,
+                props.initialCurrentLevel,
+                props.initialBestLevel,
+              ),
+            );
+          }}
+        />
+      </View>
+    </View>
   );
 }

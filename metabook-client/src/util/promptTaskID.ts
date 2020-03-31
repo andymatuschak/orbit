@@ -1,5 +1,5 @@
 import { getIDForPromptSpec, PromptSpecID, PromptTask } from "metabook-core";
-import { PromptID } from "metabook-core/dist/promptID";
+import { PromptID } from "metabook-core";
 
 // Hack for https://github.com/microsoft/TypeScript/issues/28339
 type _PromptTaskID<T> = T extends PromptTask

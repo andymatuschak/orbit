@@ -1,7 +1,6 @@
 {
   "extends": "../tsconfig.base",
   "compilerOptions": {
-    "esModuleInterop": false,
     "jsx": "react-native",
     "outDir": "./dist",
     "rootDir": "./src",
