@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="source files" pattern="file[metabook]:*/&amp;&amp;!file[metabook]:*/dist//*" />
+</component>

@@ -1,19 +1,21 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
 
-import { CardState } from "metabook-core";
+import { encodePromptID, PromptState } from "metabook-core";
+import { EncodedPromptID } from "metabook-core/dist/promptID";
 import { getDefaultFirebaseApp } from "../../firebase";
 import { MetabookActionLog } from "../../types/actionLog";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
+import { getActionLogForAction } from "../../util/getActionLogForAction";
+import { getNextPromptStateForActionLog } from "../../util/getNextPromptStateForActionLog";
+import { getPromptIDForPromptTaskID } from "../../util/promptTaskID";
+import getPromptStates from "../getPromptStates";
 import {
-  MetabookCardStateSnapshot,
   MetabookAction,
   MetabookCardStateQuery,
+  MetabookPromptStateSnapshot,
   MetabookUserClient,
 } from "../userClient";
-import { getActionLogForAction } from "../../util/getActionLogForAction";
-import getCardStates from "../getCardStates";
-import { getNextCardStateForActionLog } from "../../util/getNextCardStateForActionLog";
 
 export class MetabookFirebaseUserClient implements MetabookUserClient {
   userID: string;
@@ -24,15 +26,15 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     this.database = app.firestore();
   }
 
-  async getCardStates(
+  async getPromptStates(
     query: MetabookCardStateQuery,
-  ): Promise<MetabookCardStateSnapshot> {
-    return getCardStates(this, query);
+  ): Promise<MetabookPromptStateSnapshot> {
+    return getPromptStates(this, query);
   }
 
-  subscribeToCardStates(
+  subscribeToPromptStates(
     query: MetabookCardStateQuery,
-    onCardStatesDidUpdate: (newCardStates: MetabookCardStateSnapshot) => void,
+    onCardStatesDidUpdate: (newCardStates: MetabookPromptStateSnapshot) => void,
     onError: (error: Error) => void,
   ): MetabookUnsubscribe {
     // TODO: handle in-memory card state records...
@@ -41,40 +43,52 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
       "desc",
     );
 
-    const cardStateCache: MetabookCardStateSnapshot = {};
-    const latestTimestampByPromptID: {
-      [key: string]: firebase.firestore.Timestamp;
-    } = {};
+    const promptStateCache: Map<EncodedPromptID, PromptState> = new Map();
+    const latestTimestampByPromptID: Map<
+      EncodedPromptID,
+      firebase.firestore.Timestamp
+    > = new Map();
     return userStateLogsRef.onSnapshot(
       (snapshot) => {
         for (const change of snapshot.docChanges()) {
           if (change.type === "added") {
             const log = change.doc.data();
-            const { promptID } = log;
-            const latestPromptTimestamp = latestTimestampByPromptID[promptID];
+            const encodedPromptID = encodePromptID(
+              getPromptIDForPromptTaskID(log.promptTaskID),
+            );
+            const latestPromptTimestamp = latestTimestampByPromptID.get(
+              encodedPromptID,
+            );
+            const existingPromptState = promptStateCache.get(encodedPromptID);
             if (
-              !cardStateCache[promptID] ||
-              (cardStateCache[promptID] &&
+              !existingPromptState ||
+              (existingPromptState &&
+                latestPromptTimestamp &&
                 log.timestamp > latestPromptTimestamp)
             ) {
-              cardStateCache[promptID] = {
+              promptStateCache.set(encodedPromptID, {
                 interval: log.nextIntervalMillis,
                 dueTimestampMillis: log.nextDueTimestamp.toMillis(),
                 bestInterval: log.nextBestIntervalMillis,
                 needsRetry: log.nextNeedsRetry,
-                orderSeed: log.nextOrderSeed,
-              };
+              });
             }
-            latestTimestampByPromptID[promptID] =
+            latestTimestampByPromptID.set(
+              encodedPromptID,
               latestPromptTimestamp && latestPromptTimestamp > log.timestamp
                 ? latestPromptTimestamp
-                : log.timestamp;
+                : log.timestamp,
+            );
           } else {
             // TODO probably this isn't robust against client failures to persist / sync
-            throw new Error("Log entries should never disappear");
+            throw new Error(
+              `Log entries should never disappear. Unsupported change type ${
+                change.type
+              } with doc ${change.doc.data()}`,
+            );
           }
         }
-        onCardStatesDidUpdate(cardStateCache);
+        onCardStatesDidUpdate(new Map(promptStateCache));
       },
       (error: Error) => {
         onError(error);
@@ -93,15 +107,14 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     return batch.commit();
   }
 
-  recordCardStateUpdate(
+  recordAction(
     update: MetabookAction,
-  ): { newCardState: CardState; commit: Promise<unknown> } {
-    const orderSeed = Math.random();
-    const actionLog = getActionLogForAction(update, orderSeed);
+  ): { newPromptState: PromptState; commit: Promise<unknown> } {
+    const actionLog = getActionLogForAction(update);
     const commit = this.recordActionLogs([actionLog]);
 
     return {
-      newCardState: getNextCardStateForActionLog(actionLog),
+      newPromptState: getNextPromptStateForActionLog(actionLog),
       commit: commit,
     };
   }

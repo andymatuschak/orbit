@@ -1,13 +1,10 @@
 import isEqual from "lodash.isequal";
 import {
-  ApplicationPromptData,
-  BasicPromptData,
-  CardState,
   MetabookActionOutcome,
   MetabookSpacedRepetitionSchedule,
-  PromptData,
-  PromptType,
-  QuestionAnswerData,
+  PromptSpecType,
+  PromptState,
+  PromptTask,
 } from "metabook-core";
 import React, { useCallback, useRef, useState } from "react";
 import {
@@ -29,30 +26,23 @@ import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
 import WithAnimatedValue = Animated.WithAnimatedValue;
 
-export type QuestionReviewTask = {
-  type: "question";
-  cardState: CardState | null;
-} & (
-  | {
-      promptData: BasicPromptData;
-      promptIndex: null;
-    }
-  | {
-      promptData: ApplicationPromptData;
-      promptIndex: number;
-    }
-);
+const promptReviewTaskType = "prompt";
+export type PromptReviewTask = {
+  type: typeof promptReviewTaskType;
+  promptState: PromptState | null;
+  promptTask: PromptTask;
+};
 
 type InternalReviewTask =
   | ReviewTask
   | { type: "completedQuestion"; markingRecord: ReviewAreaMarkingRecord };
 
 export type ReviewAreaMarkingRecord = {
-  task: QuestionReviewTask;
+  reviewTask: PromptReviewTask;
   outcome: MetabookActionOutcome;
 };
 
-export type ReviewTask = QuestionReviewTask /* | LoginReviewTask TODO */;
+export type ReviewTask = PromptReviewTask /* | LoginReviewTask TODO */;
 
 export interface ReviewAreaProps {
   tasks: ReviewTask[];
@@ -70,22 +60,6 @@ export interface ReviewAreaProps {
   // Debug flags
   forceShowAnswer?: boolean;
   disableVisibilityTesting?: boolean;
-}
-
-function getQuestionAnswerDataFromQuestionReviewTask(
-  task: QuestionReviewTask,
-): QuestionAnswerData {
-  const { promptData } = task;
-  if (promptData.cardType === "basic") {
-    return promptData;
-  } else {
-    if (task.promptIndex === null) {
-      throw new Error(
-        "Should be unreachable, but Typescript's narrowing isn't smart enough.",
-      );
-    }
-    return promptData.prompts[task.promptIndex];
-  }
 }
 
 interface PendingMarkingInteractionState {
@@ -147,7 +121,7 @@ function CardRenderer({
             -1 * renderedStackIndex - 1,
             1,
           );
-          setPhase(phase => phase + 1);
+          setPhase((phase) => phase + 1);
         }
       }}
       durationMillis={100}
@@ -207,8 +181,8 @@ export default function ReviewArea(props: ReviewAreaProps) {
   const currentTask = tasks[0] || null;
   const onMarkingButton = useCallback(
     (outcome: MetabookActionOutcome) => {
-      if (currentTask && currentTask.type === "question") {
-        const markingRecord = { task: currentTask, outcome };
+      if (currentTask && currentTask.type === "prompt") {
+        const markingRecord = { reviewTask: currentTask, outcome };
         lastCommittedReviewMarkingRef.current = markingRecord;
         onMark(markingRecord /*, currentCardHandleRef.current! TODO */);
       } else {
@@ -219,7 +193,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
   );
 
   const onPress = useCallback(() => {
-    if (!isShowingAnswer && currentTask && currentTask.type === "question") {
+    if (!isShowingAnswer && currentTask && currentTask.type === "prompt") {
       setShowingAnswer(true);
 
       /*const boundingRect = containerRef.current!.getBoundingClientRect();
@@ -237,8 +211,8 @@ export default function ReviewArea(props: ReviewAreaProps) {
   }, [isShowingAnswer, currentTask]);
 
   const onToggleTopCardExplanation = useCallback(
-    isExplanationExpanded => {
-      if (currentTask?.type !== "question") {
+    (isExplanationExpanded) => {
+      if (currentTask?.type !== "prompt") {
         throw new Error(
           "How are we toggling the top card's explanation when it's not a question?",
         );
@@ -278,7 +252,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
 
   const renderedTasks = departingMarkingRecordQueueRef.current
     .map(
-      markingRecord =>
+      (markingRecord) =>
         ({
           type: "completedQuestion",
           markingRecord,
@@ -316,7 +290,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
         >
           {(inViewport || disableVisibilityTesting) &&
             Array.from(new Array(maximumCardsToRender).keys()).map(
-              renderNodeIndex => {
+              (renderNodeIndex) => {
                 const renderedTaskIndex = getRenderedTaskIndexFromRenderNodeIndex(
                   renderNodeIndex,
                   phase,
@@ -348,19 +322,16 @@ export default function ReviewArea(props: ReviewAreaProps) {
                   </div>
                 ); */
                 } else {
-                  let promptData: PromptData;
-                  let cardState: CardState | null;
+                  let reviewTask: PromptReviewTask;
                   let reviewMarkingInteractionState: ReviewMarkingInteractionState | null;
-                  let questionAnswerData: QuestionAnswerData;
 
-                  if (task.type === "question") {
-                    promptData = task.promptData;
-                    cardState = task.cardState;
+                  if (task.type === "prompt") {
+                    reviewTask = task;
                     if (
                       lastCommittedReviewMarkingRef.current &&
                       isEqual(
-                        lastCommittedReviewMarkingRef.current.task.promptData,
-                        promptData,
+                        lastCommittedReviewMarkingRef.current.reviewTask,
+                        reviewTask,
                       )
                     ) {
                       reviewMarkingInteractionState = {
@@ -383,15 +354,8 @@ export default function ReviewArea(props: ReviewAreaProps) {
                     } else {
                       reviewMarkingInteractionState = null;
                     }
-                    questionAnswerData = getQuestionAnswerDataFromQuestionReviewTask(
-                      task,
-                    );
                   } else {
-                    promptData = task.markingRecord.task.promptData;
-                    cardState = task.markingRecord.task.cardState;
-                    questionAnswerData = getQuestionAnswerDataFromQuestionReviewTask(
-                      task.markingRecord.task,
-                    );
+                    reviewTask = task.markingRecord.reviewTask;
                     reviewMarkingInteractionState = {
                       status: "committed",
                       outcome: task.markingRecord.outcome,
@@ -402,9 +366,8 @@ export default function ReviewArea(props: ReviewAreaProps) {
                     <Card
                       isRevealed={isRevealed}
                       isOccluded={renderedStackIndex > 0}
-                      questionAnswerData={questionAnswerData}
-                      cardState={cardState}
-                      promptType={promptData.cardType}
+                      promptTask={reviewTask.promptTask}
+                      promptState={reviewTask.promptState}
                       reviewMarkingInteractionState={
                         reviewMarkingInteractionState
                       }
@@ -450,9 +413,9 @@ export default function ReviewArea(props: ReviewAreaProps) {
                 setPendingMarkingInteractionState
               }
               disabled={!isShowingAnswer || tasks.length === 0}
-              promptType={
-                currentTask?.type === "question"
-                  ? currentTask.promptData.cardType
+              promptSpecType={
+                currentTask?.type === "prompt"
+                  ? currentTask.promptTask.spec.promptSpecType
                   : null
               }
             />
@@ -501,14 +464,17 @@ function ReviewButtonArea(props: {
     state: PendingMarkingInteractionState | null,
   ) => void;
   disabled: boolean;
-  promptType: PromptType | null;
+  promptSpecType: PromptSpecType | null;
 }) {
   const {
     onMark,
     onPendingMarkingInteractionStateDidChange,
     disabled,
-    promptType,
+    promptSpecType,
   } = props;
+
+  const isApplicationPrompt = promptSpecType === "applicationPrompt";
+
   return (
     <View style={styles.buttonContainer}>
       <Button
@@ -527,9 +493,7 @@ function ReviewButtonArea(props: {
         // )}
         // glyph={<RetryGlyph />} TODO
         disabled={disabled}
-        title={
-          promptType === "basic" || null ? "Didn’t remember" : "Couldn’t answer"
-        }
+        title={isApplicationPrompt ? "Couldn’t answer" : "Didn’t remember"}
       />
       <Button
         onPress={useCallback(() => onMark("remembered"), [onMark])}
@@ -547,7 +511,7 @@ function ReviewButtonArea(props: {
         // )}
         // glyph={<CheckGlyph />}
         disabled={disabled}
-        title={promptType === "basic" || null ? "Remembered" : "Answered"}
+        title={isApplicationPrompt ? "Answered" : "Remembered"}
       />
     </View>
   );

@@ -61,7 +61,7 @@ import { StyleSheet } from "react-native-web";
               cardState: null, // TODO
               cardData: {
                 cardID: index.toString(),
-                cardType: "basic",
+                promptType: "basic",
                 question: element.getAttribute("question") || "<missing>",
                 answer: element.getAttribute("answer") || "<missing>",
                 questionAdjustments: null,

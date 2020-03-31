@@ -1,10 +1,11 @@
-import { testBasicPromptData } from "metabook-sample-data";
+import { testBasicPromptSpec } from "metabook-sample-data";
 import { CardProps } from "../Card";
 
 const testCardProps: CardProps = {
-  promptType: testBasicPromptData.cardType,
-  questionAnswerData: testBasicPromptData,
-  cardState: null,
+  promptTask: {
+    spec: testBasicPromptSpec,
+  },
+  promptState: null,
   reviewMarkingInteractionState: null,
   schedule: "aggressiveStart",
   showsNeedsRetryNotice: false,

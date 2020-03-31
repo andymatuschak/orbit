@@ -1,45 +1,51 @@
-import { CardState } from "metabook-core";
+import { PromptState } from "metabook-core";
+import { encodePromptID } from "metabook-core/dist/promptID";
+import { PromptStates } from "metabook-core/dist/types/promptState";
 import { MetabookActionLog } from "../../types/actionLog";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
+import { getPromptIDForPromptTaskID } from "../../util/promptTaskID";
 import {
-  MetabookCardStateSnapshot,
+  MetabookPromptStateSnapshot,
   MetabookAction,
   MetabookCardStateQuery,
   MetabookUserClient,
 } from "../userClient";
 import { getActionLogForAction } from "../../util/getActionLogForAction";
-import getCardStates from "../getCardStates";
-import { getNextCardStateForActionLog } from "../../util/getNextCardStateForActionLog";
+import getPromptStates from "../getPromptStates";
+import { getNextPromptStateForActionLog } from "../../util/getNextPromptStateForActionLog";
 
 export class MetabookLocalUserClient implements MetabookUserClient {
-  private readonly latestCardStates: { [key: string]: CardState };
+  private readonly latestPromptStates: PromptStates;
   private readonly cardStateSubscribers: Set<CardStateSubscriber>;
   private readonly logs: MetabookActionLog[];
 
   constructor() {
-    this.latestCardStates = {};
+    this.latestPromptStates = new Map();
     this.cardStateSubscribers = new Set();
     this.logs = [];
   }
 
-  getCardStates(
+  getPromptStates(
     query: MetabookCardStateQuery,
-  ): Promise<MetabookCardStateSnapshot> {
-    return getCardStates(this, query);
+  ): Promise<MetabookPromptStateSnapshot> {
+    return getPromptStates(this, query);
   }
 
-  recordCardStateUpdate(
+  recordAction(
     action: MetabookAction,
-  ): { newCardState: CardState; commit: Promise<unknown> } {
-    const orderSeed = Math.random();
-    const actionLog = getActionLogForAction(action, orderSeed);
-    const newCardState = getNextCardStateForActionLog(actionLog);
+  ): { newPromptState: PromptState; commit: Promise<unknown> } {
+    const actionLog = getActionLogForAction(action);
+    const newPromptState = getNextPromptStateForActionLog(actionLog);
 
-    this.latestCardStates[action.promptID] = newCardState;
+    this.latestPromptStates.set(
+      encodePromptID(getPromptIDForPromptTaskID(action.promptTaskID)),
+      newPromptState,
+    );
     this.logs.push(actionLog);
     return {
-      newCardState,
-      commit: new Promise(resolve => {
+      newPromptState,
+      commit: new Promise((resolve) => {
+        // We return control to the caller before calling subscribers and resolving.
         setTimeout(() => {
           this.notifyCardStateSubscribers();
           resolve();
@@ -48,12 +54,12 @@ export class MetabookLocalUserClient implements MetabookUserClient {
     };
   }
 
-  subscribeToCardStates(
+  subscribeToPromptStates(
     query: MetabookCardStateQuery,
-    onCardStatesDidUpdate: (newCardStates: MetabookCardStateSnapshot) => void,
+    onCardStatesDidUpdate: (newCardStates: MetabookPromptStateSnapshot) => void,
     onError: (error: Error) => void,
   ): MetabookUnsubscribe {
-    onCardStatesDidUpdate({ ...this.latestCardStates });
+    onCardStatesDidUpdate(new Map(this.latestPromptStates));
     const subscriber = { query, onCardStatesDidUpdate, onError };
     this.cardStateSubscribers.add(subscriber);
     return () => {
@@ -67,13 +73,13 @@ export class MetabookLocalUserClient implements MetabookUserClient {
 
   private notifyCardStateSubscribers() {
     for (const { onCardStatesDidUpdate } of this.cardStateSubscribers) {
-      onCardStatesDidUpdate({ ...this.latestCardStates });
+      onCardStatesDidUpdate(new Map(this.latestPromptStates));
     }
   }
 }
 
 interface CardStateSubscriber {
   query: MetabookCardStateQuery;
-  onCardStatesDidUpdate: (newCardStates: MetabookCardStateSnapshot) => void;
+  onCardStatesDidUpdate: (newCardStates: MetabookPromptStateSnapshot) => void;
   onError: (error: Error) => void;
 }

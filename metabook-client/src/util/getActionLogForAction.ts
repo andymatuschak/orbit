@@ -7,30 +7,27 @@ import { MetabookAction } from "../userClient";
 
 export function getActionLogForAction(
   action: MetabookAction,
-  orderSeed: number,
 ): MetabookActionLog {
   const newCardState = updateCardStateForReviewMarking({
-    baseCardState: action.baseCardState,
-    cardType: action.promptType,
-    generatedOrderSeed: orderSeed,
+    basePromptState: action.basePromptState,
+    promptSpecType: action.promptTaskID.promptSpecType,
     actionOutcome: action.actionOutcome,
-    reviewTimestampMillis: action.timestamp,
+    reviewTimestampMillis: action.timestampMillis,
     schedule: "default", // TODO
   });
 
   return {
-    promptID: action.promptID,
+    promptTaskID: action.promptTaskID,
     sessionID: action.sessionID,
     actionOutcome: action.actionOutcome,
-    timestamp: firebase.firestore.Timestamp.fromMillis(action.timestamp),
-    baseIntervalMillis: action.baseCardState?.interval ?? null,
+    timestamp: firebase.firestore.Timestamp.fromMillis(action.timestampMillis),
+    baseIntervalMillis: action.basePromptState?.interval ?? null,
 
     nextDueTimestamp: firebase.firestore.Timestamp.fromMillis(
       newCardState.dueTimestampMillis,
     ),
     nextIntervalMillis: newCardState.interval,
     nextBestIntervalMillis: newCardState.bestInterval,
-    nextOrderSeed: newCardState.orderSeed,
     nextNeedsRetry: newCardState.needsRetry,
   };
 }

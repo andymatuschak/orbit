@@ -1,21 +1,21 @@
 import {
   MetabookCardStateQuery,
-  MetabookCardStateSnapshot,
+  MetabookPromptStateSnapshot,
   MetabookUserClient,
 } from "./userClient";
 
-export default function getCardStates(
+export default function getPromptStates(
   client: MetabookUserClient,
   query: MetabookCardStateQuery,
-): Promise<MetabookCardStateSnapshot> {
+): Promise<MetabookPromptStateSnapshot> {
   return new Promise((resolve, reject) => {
-    const unsubscribe = client.subscribeToCardStates(
+    const unsubscribe = client.subscribeToPromptStates(
       query,
-      newCardStates => {
-        resolve(newCardStates);
+      (newPromptStates) => {
+        resolve(newPromptStates);
         unsubscribe();
       },
-      error => {
+      (error) => {
         reject(error);
         unsubscribe();
       },

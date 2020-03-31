@@ -1,4 +1,4 @@
-import { testBasicPromptData } from "metabook-sample-data";
+import { testBasicPromptSpec } from "metabook-sample-data";
 import React, { useCallback, useState } from "react";
 import ReviewArea, { ReviewTask } from "./ReviewArea";
 
@@ -10,22 +10,23 @@ export default {
 
 function generateTask(questionText: string): ReviewTask {
   return {
-    type: "question",
-    cardState: null,
-    promptData: { ...testBasicPromptData, question: questionText },
-    promptIndex: null,
+    type: "prompt",
+    promptState: null,
+    promptTask: {
+      spec: { ...testBasicPromptSpec, question: questionText },
+    },
   };
 }
 
 export function Basic() {
-  const initialTasks: ReviewTask[] = Array.from(new Array(5).keys()).map(i =>
+  const initialTasks: ReviewTask[] = Array.from(new Array(5).keys()).map((i) =>
     generateTask(`Question ${i + 1}`),
   );
 
   const [tasks, setTasks] = useState(initialTasks);
 
   const onMark = useCallback(() => {
-    setTasks(tasks => tasks.slice(1));
+    setTasks((tasks) => tasks.slice(1));
   }, []);
 
   return (

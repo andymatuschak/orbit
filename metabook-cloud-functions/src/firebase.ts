@@ -1,6 +1,5 @@
 import * as firebase from "firebase-admin";
-import { PromptData } from "metabook-core";
-import { getIDForPromptData } from "metabook-core";
+import { getIDForPromptSpec, PromptSpec } from "metabook-core";
 
 let _database: firebase.firestore.Firestore | null = null;
 function getDatabase(): firebase.firestore.Firestore {
@@ -12,22 +11,22 @@ function getDatabase(): firebase.firestore.Firestore {
 }
 
 export function getDataCollectionReference(): firebase.firestore.CollectionReference<
-  PromptData
+  PromptSpec
 > {
   // TODO remove duplication with metabook-client
   return getDatabase().collection(
     "data",
-  ) as firebase.firestore.CollectionReference<PromptData>;
+  ) as firebase.firestore.CollectionReference<PromptSpec>;
 }
 
-export function recordData(prompts: PromptData[]): Promise<string[]> {
+export function recordData(prompts: PromptSpec[]): Promise<string[]> {
   // TODO probably add something about provenance
   // TODO something about user quotas, billing
   const database = getDatabase();
   const collectionReference = getDataCollectionReference();
   return Promise.all(
-    prompts.map(async promptData => {
-      const id = getIDForPromptData(promptData);
+    prompts.map(async (promptData) => {
+      const id = getIDForPromptSpec(promptData);
       const dataRef = collectionReference.doc(id);
       await dataRef
         .create(promptData)

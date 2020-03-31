@@ -1,32 +1,32 @@
-import { CardState } from "./types/cardState";
 import {
   getIntervalSequenceForSchedule,
   getLevelForInterval,
   MetabookActionOutcome,
   MetabookSpacedRepetitionSchedule,
 } from "./spacedRepetition";
-import { PromptType } from "./types/promptData";
+import { PromptSpecType } from "./types/promptSpec";
+import { PromptState } from "./types/promptState";
 
-export default function updateCardStateForAction({
-  baseCardState,
-  cardType,
+export default function updatePromptStateForAction({
+  basePromptState,
+  promptSpecType,
   actionOutcome,
   schedule,
   reviewTimestampMillis,
-  generatedOrderSeed,
 }: {
-  baseCardState: CardState | null;
-  cardType: PromptType;
+  basePromptState: PromptState | null;
+  promptSpecType: PromptSpecType;
   actionOutcome: MetabookActionOutcome;
   schedule: MetabookSpacedRepetitionSchedule;
   reviewTimestampMillis: number;
-  generatedOrderSeed: number;
 }) {
-  const supportsRetry = cardType !== "applicationPrompt";
-  const currentReviewInterval = baseCardState ? baseCardState.interval : 0;
-  const currentBestInterval = baseCardState ? baseCardState.bestInterval : null;
+  const supportsRetry = promptSpecType !== "applicationPrompt";
+  const currentReviewInterval = basePromptState ? basePromptState.interval : 0;
+  const currentBestInterval = basePromptState
+    ? basePromptState.bestInterval
+    : null;
   const currentlyNeedsRetry =
-    (baseCardState && baseCardState.needsRetry) || false;
+    (basePromptState && basePromptState.needsRetry) || false;
 
   const intervalSequence = getIntervalSequenceForSchedule(schedule);
 
@@ -50,16 +50,10 @@ export default function updateCardStateForAction({
   const newInterval = intervalSequence[newLevel].interval;
 
   let newDueTimestampMillis: number;
-  let newOrderSeed: number;
   if (supportsRetry && actionOutcome === "forgotten") {
     newDueTimestampMillis = reviewTimestampMillis;
-    newOrderSeed =
-      baseCardState && baseCardState.needsRetry
-        ? (baseCardState.orderSeed || generatedOrderSeed) + 1
-        : generatedOrderSeed;
   } else {
     newDueTimestampMillis = reviewTimestampMillis + newInterval;
-    newOrderSeed = generatedOrderSeed;
   }
 
   let bestInterval: number | null;
@@ -76,12 +70,11 @@ export default function updateCardStateForAction({
     bestInterval = currentBestInterval;
   }
 
-  const newCardState: CardState = {
+  const newPromptState: PromptState = {
     dueTimestampMillis: newDueTimestampMillis,
     bestInterval,
     interval: newInterval,
     needsRetry: supportsRetry && actionOutcome === "forgotten",
-    orderSeed: newOrderSeed,
   };
-  return newCardState;
+  return newPromptState;
 }

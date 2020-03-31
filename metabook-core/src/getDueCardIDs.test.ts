@@ -1,17 +1,24 @@
-import getDueCardIDs from "./getDueCardIDs";
-import { CardState } from "./types/cardState";
+import getDuePromptIDs from "./getDuePromptIDs";
+import { PromptSpecID } from "./identifiers";
+import { encodePromptID } from "./promptID";
+import { PromptStates } from "./types/promptState";
 
 function generateCardStates(count: number, dueCount: number) {
-  const cardStates: { [key: string]: CardState } = {};
+  const cardStates: PromptStates = new Map();
   for (let i = 0; i < count; i++) {
-    cardStates[i.toString()] = {
-      orderSeed: 0,
-      needsRetry: false,
-      bestInterval: null,
-      interval: 0,
-      dueTimestampMillis:
-        Date.now() + 1000 * 60 * 60 * 24 * (i < dueCount ? -1 : 1),
-    };
+    cardStates.set(
+      encodePromptID({
+        promptSpecID: i.toString() as PromptSpecID,
+        childIndex: null,
+      }),
+      {
+        needsRetry: false,
+        bestInterval: null,
+        interval: 0,
+        dueTimestampMillis:
+          Date.now() + 1000 * 60 * 60 * 24 * (i < dueCount ? -1 : 1),
+      },
+    );
   }
   return cardStates;
 }
@@ -19,8 +26,8 @@ function generateCardStates(count: number, dueCount: number) {
 describe("session cap", () => {
   test("due cards are capped", () => {
     expect(
-      getDueCardIDs({
-        cardStates: generateCardStates(100, 100),
+      getDuePromptIDs({
+        promptStates: generateCardStates(100, 100),
         timestampMillis: Date.now(),
         reviewSessionIndex: 0,
         cardsCompletedInCurrentSession: 0,
@@ -30,8 +37,8 @@ describe("session cap", () => {
 
   test("cap builds on count already completed in current session", () => {
     expect(
-      getDueCardIDs({
-        cardStates: generateCardStates(100, 100),
+      getDuePromptIDs({
+        promptStates: generateCardStates(100, 100),
         timestampMillis: Date.now(),
         reviewSessionIndex: 0,
         cardsCompletedInCurrentSession: 10,
@@ -42,8 +49,8 @@ describe("session cap", () => {
 
 test("only due cards are included", () => {
   expect(
-    getDueCardIDs({
-      cardStates: generateCardStates(100, 10),
+    getDuePromptIDs({
+      promptStates: generateCardStates(100, 10),
       timestampMillis: Date.now(),
       reviewSessionIndex: 0,
       cardsCompletedInCurrentSession: 0,

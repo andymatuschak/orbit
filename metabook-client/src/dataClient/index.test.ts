@@ -1,6 +1,7 @@
 import firebase from "firebase";
 import * as firebaseTesting from "@firebase/testing";
-import { testBasicPromptData } from "metabook-sample-data";
+import { getIDForPromptSpec, PromptSpecID } from "metabook-core";
+import { testBasicPromptSpec } from "metabook-sample-data";
 import { getDataCollectionReference } from "../firebase";
 import shimFirebasePersistence from "firebase-node-persistence-shim";
 import { MetabookFirebaseDataClient } from "./index";
@@ -32,15 +33,28 @@ async function writeTestPromptData() {
   });
   const adminDatabase = adminApp.firestore();
   const dataCollectionRef = getDataCollectionReference(adminDatabase);
-  await dataCollectionRef.doc("test").set(testBasicPromptData);
+  await dataCollectionRef.doc("test").set(testBasicPromptSpec);
 }
+
+const testPromptSpecID = "test" as PromptSpecID;
 
 test("reads card data", async () => {
   await writeTestPromptData();
 
   const mockFn = jest.fn();
-  await dataClient.getData(new Set(["test"]), mockFn).completion;
-  expect(mockFn.mock.calls[0][0]).toMatchObject({ test: testBasicPromptData });
+  await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+  expect(mockFn.mock.calls[0][0]).toMatchObject(
+    new Map([["test", testBasicPromptSpec]]),
+  );
+});
+
+test.skip("records prompt spec", async () => {
+  await dataClient.recordData([testBasicPromptSpec]);
+  const testPromptID = getIDForPromptSpec(testBasicPromptSpec);
+  const mockFn = jest.fn();
+  await dataClient.getData(new Set([testPromptID]), mockFn).completion;
+  expect(mockFn.mock.calls[0][0].get(testPromptID)).toBeInstanceOf(Error);
+  // TODO test recording new prompts when the network is down
 });
 
 test("reads cached data", async () => {
@@ -48,16 +62,20 @@ test("reads cached data", async () => {
 
   await testApp.firestore().disableNetwork();
   const mockFn = jest.fn();
-  await dataClient.getData(new Set(["test"]), mockFn).completion;
-  expect(mockFn.mock.calls[0][0]["test"]).toBeInstanceOf(Error);
+  await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+  expect(mockFn.mock.calls[0][0].get("test")).toBeInstanceOf(Error);
 
   await testApp.firestore().enableNetwork();
   mockFn.mockClear();
-  await dataClient.getData(new Set(["test"]), mockFn).completion;
-  expect(mockFn.mock.calls[0][0]).toMatchObject({ test: testBasicPromptData });
+  await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+  expect(mockFn.mock.calls[0][0]).toMatchObject(
+    new Map([["test", testBasicPromptSpec]]),
+  );
 
   await testApp.firestore().disableNetwork();
   mockFn.mockClear();
-  await dataClient.getData(new Set(["test"]), mockFn).completion;
-  expect(mockFn.mock.calls[0][0]).toMatchObject({ test: testBasicPromptData });
+  await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+  expect(mockFn.mock.calls[0][0]).toMatchObject(
+    new Map([["test", testBasicPromptSpec]]),
+  );
 });

@@ -7,6 +7,9 @@ export interface IPrompt {
 
     /** Prompt applicationPrompt */
     applicationPrompt?: (IApplicationPrompt|null);
+
+    /** Prompt clozePrompt */
+    clozePrompt?: (IClozePrompt|null);
 }
 
 /** Represents a Prompt. */
@@ -24,8 +27,11 @@ export class Prompt implements IPrompt {
     /** Prompt applicationPrompt. */
     public applicationPrompt?: (IApplicationPrompt|null);
 
+    /** Prompt clozePrompt. */
+    public clozePrompt?: (IClozePrompt|null);
+
     /** Prompt prompt. */
-    public prompt?: ("basicPrompt"|"applicationPrompt");
+    public prompt?: ("basicPrompt"|"applicationPrompt"|"clozePrompt");
 
     /**
      * Creates a new Prompt instance using the specified properties.
@@ -191,9 +197,6 @@ export class ApplicationPrompt implements IApplicationPrompt {
 /** Properties of a QuestionAnswer. */
 export interface IQuestionAnswer {
 
-    /** QuestionAnswer version */
-    version?: (number|null);
-
     /** QuestionAnswer question */
     question?: (string|null);
 
@@ -212,9 +215,6 @@ export class QuestionAnswer implements IQuestionAnswer {
      * @param [properties] Properties to set
      */
     constructor(properties?: IQuestionAnswer);
-
-    /** QuestionAnswer version. */
-    public version: number;
 
     /** QuestionAnswer question. */
     public question: string;
@@ -291,6 +291,96 @@ export class QuestionAnswer implements IQuestionAnswer {
 
     /**
      * Converts this QuestionAnswer to JSON.
+     * @returns JSON object
+     */
+    public toJSON(): { [k: string]: any };
+}
+
+/** Properties of a ClozePrompt. */
+export interface IClozePrompt {
+
+    /** ClozePrompt contents */
+    contents?: (string|null);
+}
+
+/** Represents a ClozePrompt. */
+export class ClozePrompt implements IClozePrompt {
+
+    /**
+     * Constructs a new ClozePrompt.
+     * @param [properties] Properties to set
+     */
+    constructor(properties?: IClozePrompt);
+
+    /** ClozePrompt contents. */
+    public contents: string;
+
+    /**
+     * Creates a new ClozePrompt instance using the specified properties.
+     * @param [properties] Properties to set
+     * @returns ClozePrompt instance
+     */
+    public static create(properties?: IClozePrompt): ClozePrompt;
+
+    /**
+     * Encodes the specified ClozePrompt message. Does not implicitly {@link ClozePrompt.verify|verify} messages.
+     * @param message ClozePrompt message or plain object to encode
+     * @param [writer] Writer to encode to
+     * @returns Writer
+     */
+    public static encode(message: IClozePrompt, writer?: $protobuf.Writer): $protobuf.Writer;
+
+    /**
+     * Encodes the specified ClozePrompt message, length delimited. Does not implicitly {@link ClozePrompt.verify|verify} messages.
+     * @param message ClozePrompt message or plain object to encode
+     * @param [writer] Writer to encode to
+     * @returns Writer
+     */
+    public static encodeDelimited(message: IClozePrompt, writer?: $protobuf.Writer): $protobuf.Writer;
+
+    /**
+     * Decodes a ClozePrompt message from the specified reader or buffer.
+     * @param reader Reader or buffer to decode from
+     * @param [length] Message length if known beforehand
+     * @returns ClozePrompt
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
+    public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): ClozePrompt;
+
+    /**
+     * Decodes a ClozePrompt message from the specified reader or buffer, length delimited.
+     * @param reader Reader or buffer to decode from
+     * @returns ClozePrompt
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
+    public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): ClozePrompt;
+
+    /**
+     * Verifies a ClozePrompt message.
+     * @param message Plain object to verify
+     * @returns `null` if valid, otherwise the reason why it is not
+     */
+    public static verify(message: { [k: string]: any }): (string|null);
+
+    /**
+     * Creates a ClozePrompt message from a plain object. Also converts values to their respective internal types.
+     * @param object Plain object
+     * @returns ClozePrompt
+     */
+    public static fromObject(object: { [k: string]: any }): ClozePrompt;
+
+    /**
+     * Creates a plain object from a ClozePrompt message. Also converts values to other types if specified.
+     * @param message ClozePrompt
+     * @param [options] Conversion options
+     * @returns Plain object
+     */
+    public static toObject(message: ClozePrompt, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+    /**
+     * Converts this ClozePrompt to JSON.
      * @returns JSON object
      */
     public toJSON(): { [k: string]: any };

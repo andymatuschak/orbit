@@ -1,9 +1,10 @@
+import { number } from "@storybook/addon-knobs";
 import {
-  CardState,
   getIntervalSequenceForSchedule,
   MetabookActionOutcome,
   MetabookSpacedRepetitionSchedule,
-  PromptType,
+  PromptSpecType,
+  PromptState,
   updateCardStateForReviewMarking,
 } from "metabook-core";
 import React, { ReactNode, useCallback, useState } from "react";
@@ -11,7 +12,6 @@ import { Button } from "react-native";
 import testCardProps from "./__fixtures__/testCardProps";
 import Card from "./Card";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
-import { number } from "@storybook/addon-knobs";
 
 const testIntervalSequence = getIntervalSequenceForSchedule("default");
 
@@ -40,11 +40,11 @@ function TestCard(props: {
         initialCurrentLevel={number("initial current level", 0)}
         intervalSequence={testIntervalSequence}
         schedule="aggressiveStart"
-        promptType={
+        promptSpecType={
           shouldLabelApplicationPrompts ? "applicationPrompt" : "basic"
         }
       >
-        {(cardState, reviewMarkingInteractionState) =>
+        {(promptState, reviewMarkingInteractionState) =>
           [false, true].map((isRevealed, index) => (
             <div
               key={index}
@@ -54,11 +54,8 @@ function TestCard(props: {
               <Card
                 {...testCardProps}
                 isRevealed={isRevealed}
-                promptType={
-                  shouldLabelApplicationPrompts ? "applicationPrompt" : "basic"
-                }
-                cardState={{
-                  ...cardState,
+                promptState={{
+                  ...promptState,
                   needsRetry: showsNeedsRetryNotice,
                 }}
                 reviewMarkingInteractionState={reviewMarkingInteractionState}
@@ -73,11 +70,11 @@ function TestCard(props: {
   );
 }
 
-function createCardState(
+function createPromptState(
   intervalSequence: typeof testIntervalSequence,
   level: number,
   bestLevel: number | null,
-): CardState {
+): PromptState {
   const interval = intervalSequence[level].interval;
   return {
     interval,
@@ -85,7 +82,6 @@ function createCardState(
       bestLevel === null ? null : intervalSequence[bestLevel].interval,
     dueTimestampMillis: Date.now(),
     needsRetry: false,
-    orderSeed: 0,
   };
 }
 
@@ -94,14 +90,14 @@ function WithReviewState(props: {
   initialCurrentLevel: number;
   intervalSequence: typeof testIntervalSequence;
   schedule: MetabookSpacedRepetitionSchedule;
-  promptType: PromptType;
+  promptSpecType: PromptSpecType;
   children: (
-    cardState: CardState,
+    promptState: PromptState,
     reviewMarkingInteractionState: ReviewMarkingInteractionState | null,
   ) => ReactNode;
 }) {
-  const [cardState, setCardState] = useState<CardState>(
-    createCardState(
+  const [promptState, setPromptState] = useState<PromptState>(
+    createPromptState(
       props.intervalSequence,
       props.initialCurrentLevel,
       props.initialBestLevel,
@@ -152,7 +148,7 @@ function WithReviewState(props: {
         margin: 16,
       }}
     >
-      <div>{props.children(cardState, reviewMarkingInterationState)}</div>
+      <div>{props.children(promptState, reviewMarkingInterationState)}</div>
       <Button
         title="Mark remembered"
         onPress={() => {
@@ -184,14 +180,13 @@ function WithReviewState(props: {
           if (!currentOutcome) {
             return;
           }
-          setCardState(
+          setPromptState(
             updateCardStateForReviewMarking({
-              baseCardState: cardState,
-              cardType: props.promptType,
+              basePromptState: promptState,
+              promptSpecType: props.promptSpecType,
               actionOutcome: currentOutcome,
               schedule: props.schedule,
               reviewTimestampMillis: Date.now(),
-              generatedOrderSeed: 0,
             }),
           );
           setReviewMarkingInterationState(null);
@@ -202,8 +197,8 @@ function WithReviewState(props: {
         title="Reset"
         onPress={() => {
           setReviewMarkingInterationState(null);
-          setCardState(
-            createCardState(
+          setPromptState(
+            createPromptState(
               props.intervalSequence,
               props.initialCurrentLevel,
               props.initialBestLevel,

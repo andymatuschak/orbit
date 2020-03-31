@@ -1,48 +1,39 @@
-import { PromptData, CardState, MetabookActionOutcome } from "metabook-core";
-import { PromptType } from "metabook-core/dist/types/promptData";
+import { MetabookActionOutcome, PromptState } from "metabook-core";
+import { EncodedPromptID } from "metabook-core/dist/promptID";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
+import { PromptTaskID } from "../util/promptTaskID";
 
 export interface MetabookUserClient {
-  subscribeToCardStates(
+  subscribeToPromptStates(
     query: MetabookCardStateQuery,
-    onCardStatesDidUpdate: (newCardStates: MetabookCardStateSnapshot) => void,
+    onPromptStatesDidUpdate: (
+      newPromptStates: MetabookPromptStateSnapshot,
+    ) => void,
     onError: (error: Error) => void,
   ): MetabookUnsubscribe;
 
-  getCardStates(
+  getPromptStates(
     query: MetabookCardStateQuery,
-  ): Promise<MetabookCardStateSnapshot>;
+  ): Promise<MetabookPromptStateSnapshot>;
 
-  recordCardStateUpdate(
-    update: MetabookAction,
-  ): { newCardState: CardState; commit: Promise<unknown> };
+  recordAction(
+    action: MetabookAction,
+  ): { newPromptState: PromptState; commit: Promise<unknown> };
 }
 
 // TODO
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface MetabookCardStateQuery {}
 
-export type MetabookCardStateSnapshot = {
-  [key: string]: CardState;
-};
-
-/*  subscribeToPromptData(
-    cardIDs: string[],
-    onPromptDataDidUpdate: (newCardStates: PromptDataSnapshot) => void,
-  ): MetabookUnsubscribe;
-
-export type PromptDataSnapshot = {
-  [key: string]:
-    | { promptData: PromptData; error: null }
-    | { promptData: null; error: Error }
-    | undefined; // i.e. we haven't yet resolved the card data; future updates will resolve this to either of the other alternates
-};*/
+export type MetabookPromptStateSnapshot = ReadonlyMap<
+  EncodedPromptID,
+  PromptState
+>;
 
 export interface MetabookAction {
-  promptID: string;
-  promptType: PromptType;
+  promptTaskID: PromptTaskID;
   sessionID: string | null;
-  timestamp: number;
+  timestampMillis: number;
   actionOutcome: MetabookActionOutcome;
-  baseCardState: CardState | null;
+  basePromptState: PromptState | null;
 }

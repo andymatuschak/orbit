@@ -3,7 +3,7 @@ import React, {useCallback, useState} from 'react';
 import {StyleSheet, View} from 'react-native';
 
 const testBasicCardData: any = {
-  cardType: 'basic',
+  promptType: 'basic',
   cardID: 'xxx',
   question:
     'Is it possible to use quantum teleportation to transmit information faster than light?\n\nThis is a second paragraph.',
@@ -24,7 +24,7 @@ function generateTask(questionText: string) {
 
 export default function App() {
   fojlaksdf;
-  const initialTasks: ReviewTask[] = Array.from(new Array(5).keys()).map(i =>
+  const initialTasks: ReviewTask[] = Array.from(new Array(5).keys()).map((i) =>
     generateTask(`Question ${i + 1}`),
   );
 
@@ -51,15 +51,15 @@ export default function App() {
   const [tasks, setTasks] = useState(initialTasks);
 
   const onMark = useCallback<ReviewAreaProps['onMark']>(
-    async marking => {
-      setTasks(tasks => tasks.slice(1));
+    async (marking) => {
+      setTasks((tasks) => tasks.slice(1));
 
       // const promptID = getIDForPromptData(marking.task.promptData);
       // const { newCardState, commit } = client.recordCardStateUpdate({
       //   actionOutcome: marking.outcome,
       //   baseCardState: null,
       //   promptID,
-      //   promptType: marking.task.promptData.cardType,
+      //   promptType: marking.task.promptData.promptType,
       //   sessionID: null,
       //   timestamp: Date.now(),
       // });

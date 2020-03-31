@@ -2,22 +2,23 @@ import firebase from "firebase";
 import "firebase/firestore";
 import "firebase/functions";
 
-import { PromptData } from "metabook-core";
+import { PromptSpec, PromptSpecID } from "metabook-core";
 import { getDataCollectionReference, getDefaultFirebaseApp } from "../firebase";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
 
 export interface MetabookDataClient {
-  recordData(promptData: PromptData[]): Promise<unknown>;
+  recordData(promptData: PromptSpec[]): Promise<unknown>;
 
   getData(
-    requestedPromptIDs: Set<string>,
+    requestedPromptIDs: Set<PromptSpecID>,
     onUpdate: (snapshot: MetabookPromptDataSnapshot) => void,
   ): { completion: Promise<unknown>; unsubscribe: MetabookUnsubscribe };
 }
 
-interface MetabookPromptDataSnapshot {
-  [key: string]: PromptData | Error | null; // null means the card data has not yet been fetched.
-}
+type MetabookPromptDataSnapshot = Map<
+  PromptSpecID,
+  PromptSpec | Error | null // null means the card data has not yet been fetched.
+>;
 
 export class MetabookFirebaseDataClient implements MetabookDataClient {
   private functions: firebase.functions.Functions;
@@ -28,52 +29,70 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
     this.functions = app.functions();
   }
 
-  recordData(prompts: PromptData[]): Promise<unknown> {
+  recordData(prompts: PromptSpec[]): Promise<unknown> {
+    // TODO locally cache new prompts
     return this.functions.httpsCallable("recordData")({ prompts });
   }
 
   getData(
-    requestedPromptIDs: Set<string>,
+    requestedPromptSpecIDs: Set<PromptSpecID>,
     onUpdate: (snapshot: MetabookPromptDataSnapshot) => void,
   ): { completion: Promise<unknown>; unsubscribe: MetabookUnsubscribe } {
     const dataRef = getDataCollectionReference(this.database);
-    const dataSnapshot: MetabookPromptDataSnapshot = {};
+
+    const dataSnapshot: MetabookPromptDataSnapshot = new Map(
+      [...requestedPromptSpecIDs.values()].map((promptSpecID) => [
+        promptSpecID,
+        null,
+      ]),
+    );
 
     let isCancelled = false;
 
-    function onFetch(promptID: string, result: PromptData | Error) {
-      dataSnapshot[promptID] = result;
+    function onFetch(promptSpecID: PromptSpecID, result: PromptSpec | Error) {
+      // TODO: Validate spec
+      dataSnapshot.set(promptSpecID, result);
       if (!isCancelled) {
         onUpdate(dataSnapshot);
       }
     }
 
-    const fetchPromises = [...requestedPromptIDs.values()].map(
-      async (promptID) => {
-        try {
-          const cachedData = await dataRef
-            .doc(promptID)
-            .get({ source: "cache" });
-          onFetch(promptID, cachedData.data()!);
-        } catch (error) {
-          // No cached data available.
-          if (!isCancelled) {
-            try {
-              const cachedData = await dataRef.doc(promptID).get();
-              onFetch(promptID, cachedData.data()!);
-            } catch (error) {
-              onFetch(promptID, error);
+    if (requestedPromptSpecIDs.size === 0) {
+      onUpdate(new Map());
+      return {
+        completion: Promise.resolve(),
+        unsubscribe: () => {
+          return;
+        },
+      };
+    } else {
+      const fetchPromises = [...requestedPromptSpecIDs.values()].map(
+        async (promptSpecID) => {
+          try {
+            const cachedData = await dataRef
+              .doc(promptSpecID)
+              .get({ source: "cache" });
+            onFetch(promptSpecID, cachedData.data()!);
+          } catch (error) {
+            // No cached data available.
+            if (!isCancelled) {
+              try {
+                const cachedData = await dataRef.doc(promptSpecID).get();
+                onFetch(promptSpecID, cachedData.data()!);
+              } catch (error) {
+                onFetch(promptSpecID, error);
+              }
             }
           }
-        }
-      },
-    );
+        },
+      );
 
-    return {
-      completion: Promise.all(fetchPromises),
-      unsubscribe: () => {
-        isCancelled = true;
-      },
-    };
+      return {
+        completion: Promise.all(fetchPromises),
+        unsubscribe: () => {
+          isCancelled = true;
+        },
+      };
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
-import { recordTestCardStateUpdate } from "../../util/tests/recordTestCardStateUpdate";
+import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
 import { MetabookLocalUserClient } from "./client";
 
 let client: MetabookLocalUserClient;
@@ -10,52 +10,55 @@ beforeEach(() => {
 test("recording a marking triggers card state update", async () => {
   const mockFunction = jest.fn();
   const firstMockCall = promiseForNextCall(mockFunction);
-  client.subscribeToCardStates({}, mockFunction, (error) => {
+  client.subscribeToPromptStates({}, mockFunction, (error) => {
     fail(error);
   });
   await firstMockCall;
-  expect(mockFunction).toHaveBeenCalledWith({});
+  expect(mockFunction).toHaveBeenCalledWith(new Map());
 
   const secondMockCall = promiseForNextCall(mockFunction);
   jest.spyOn(Math, "random").mockReturnValue(0.25);
-  await recordTestCardStateUpdate(client, "test");
+  await recordTestPromptStateUpdate(client, "test");
   const updatedCardStates = await secondMockCall;
   expect(updatedCardStates).toMatchInlineSnapshot(`
-    Object {
-      "test": Object {
+    Map {
+      "test" => Object {
         "bestInterval": 0,
         "dueTimestampMillis": 432001000,
         "interval": 432000000,
         "needsRetry": false,
-        "orderSeed": 0.25,
       },
     }
   `);
 });
 
 test("getCardStates changes after recording update", async () => {
-  const initialCardStates = await client.getCardStates({});
-  recordTestCardStateUpdate(client, "test");
-  const finalCardStates = await client.getCardStates({});
+  const initialCardStates = await client.getPromptStates({});
+  await recordTestPromptStateUpdate(client, "test").commit;
+  const finalCardStates = await client.getPromptStates({});
   expect(initialCardStates).not.toMatchObject(finalCardStates);
 });
 
 test("logs reflect updates", () => {
   expect(client.getAllLogs()).toHaveLength(0);
-  recordTestCardStateUpdate(client, "test");
-  recordTestCardStateUpdate(client, "test");
+  recordTestPromptStateUpdate(client, "test");
+  recordTestPromptStateUpdate(client, "test");
   expect(client.getAllLogs()).toHaveLength(2);
 });
 
 test("no events after unsubscribing", async () => {
   const mockFunction = jest.fn();
   const firstMockCall = promiseForNextCall(mockFunction);
-  const unsubscribe = client.subscribeToCardStates({}, mockFunction, jest.fn());
+  const unsubscribe = client.subscribeToPromptStates(
+    {},
+    mockFunction,
+    jest.fn(),
+  );
   await firstMockCall;
   mockFunction.mockClear();
 
   unsubscribe();
 
-  await recordTestCardStateUpdate(client, "test").commit;
+  await recordTestPromptStateUpdate(client, "test").commit;
   expect(mockFunction).not.toHaveBeenCalled();
 });

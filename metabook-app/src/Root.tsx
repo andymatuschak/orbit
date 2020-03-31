@@ -1,16 +1,15 @@
-import firebase from "firebase";
 import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "metabook-client";
 import { MetabookDataClient } from "metabook-client/dist/dataClient";
 import {
-  MetabookCardStateSnapshot,
+  MetabookPromptStateSnapshot,
   MetabookUserClient,
 } from "metabook-client/dist/userClient";
-import { getIDForPromptData } from "metabook-core";
-import getDuePromptIDs from "metabook-core/dist/getDueCardIDs";
-import { testBasicPromptData } from "metabook-sample-data";
+import { getIDForPromptTask } from "metabook-client/dist/util/promptTaskID";
+import { encodePromptID, getDuePromptIDs } from "metabook-core";
+import { testBasicPromptSpec } from "metabook-sample-data";
 import { ReviewArea, ReviewAreaProps, ReviewTask } from "metabook-ui";
 import colors from "metabook-ui/dist/styles/colors";
 import "node-libs-react-native/globals";
@@ -24,10 +23,11 @@ import {
 
 function generateTask(questionText: string): ReviewTask {
   return {
-    type: "question",
-    cardState: null,
-    promptData: { ...testBasicPromptData, question: questionText },
-    promptIndex: null,
+    type: "prompt",
+    promptTask: {
+      spec: { ...testBasicPromptSpec, question: questionText },
+    },
+    promptState: null,
   };
 }
 
@@ -51,44 +51,64 @@ function useTasks(
   const persistenceStatus = usePersistenceStatus();
 
   const unsubscribeFromDataRequest = useRef<(() => void) | null>(null);
-  const cardStatesDidChange = useCallback(
-    (newCardStates: MetabookCardStateSnapshot) => {
+  const promptStatesDidChange = useCallback(
+    (newPromptStates: MetabookPromptStateSnapshot) => {
       // TODO transform to tasks
       const duePromptIDs = getDuePromptIDs({
-        cardStates: newCardStates,
+        promptStates: newPromptStates,
         reviewSessionIndex: 0, // TODO
         timestampMillis: Date.now(),
         cardsCompletedInCurrentSession: 0, // TODO
       });
 
-      unsubscribeFromDataRequest.current?.();
+      const tasks = unsubscribeFromDataRequest.current?.();
       const { completion, unsubscribe } = dataClient.getData(
-        new Set(duePromptIDs),
+        new Set(duePromptIDs.map((promptID) => promptID.promptSpecID)),
         (snapshot) => {
           setTasks(
             duePromptIDs
-              .map((id): ReviewTask | null => {
-                const promptData = snapshot[id];
-                if (promptData) {
-                  if (promptData instanceof Error) {
-                    console.error("Error getting prompt", id, promptData);
+              .map((promptID): ReviewTask | null => {
+                const promptSpec = snapshot.get(promptID.promptSpecID);
+                if (promptSpec) {
+                  if (promptSpec instanceof Error) {
+                    console.error("Error getting prompt", promptID, promptSpec);
                     // TODO surface error more effectively
                     return null;
                   } else {
-                    if (promptData.cardType === "basic") {
-                      return {
-                        type: "question",
-                        promptData,
-                        promptIndex: null,
-                        cardState: newCardStates[id] ?? null,
-                      };
-                    } else {
-                      return {
-                        type: "question",
-                        promptData,
-                        promptIndex: 0, // TODO
-                        cardState: newCardStates[id] ?? null,
-                      };
+                    const promptState =
+                      newPromptStates.get(encodePromptID(promptID)) ?? null;
+                    switch (promptSpec.promptSpecType) {
+                      case "basic":
+                        return {
+                          type: "prompt",
+                          promptTask: {
+                            spec: promptSpec,
+                          },
+                          promptState,
+                        };
+                      case "applicationPrompt":
+                        return {
+                          type: "prompt",
+                          promptTask: {
+                            spec: promptSpec,
+                            variantIndex: 0, // TODO: will likely need to move this into client or something; depends on prior action task ID
+                          },
+                          promptState,
+                        };
+                      case "cloze":
+                        if (promptID.childIndex === null) {
+                          console.warn(
+                            `Warning: user has a prompt state for cloze prompt group spec ID ${promptID.promptSpecID} without a child index`,
+                          );
+                        }
+                        return {
+                          type: "prompt",
+                          promptTask: {
+                            spec: promptSpec,
+                            clozeIndex: promptID.childIndex ?? 0,
+                          },
+                          promptState,
+                        };
                     }
                   }
                 } else {
@@ -121,9 +141,9 @@ function useTasks(
     }
 
     console.log("subscribing to user card states");
-    return userClient.subscribeToCardStates(
+    return userClient.subscribeToPromptStates(
       {},
-      cardStatesDidChange,
+      promptStatesDidChange,
       subscriptionDidFail,
     );
   }, [userClient, persistenceStatus]);
@@ -136,7 +156,7 @@ function recordTestTasks(dataClient: MetabookDataClient) {
   );
 
   dataClient
-    .recordData(initialTasks.map((t) => t.promptData))
+    .recordData(initialTasks.map((t) => t.promptTask.spec))
     .then((r) => console.log("finished recording prompts", r))
     .catch((error) => console.error("Couldn't record prompts", error));
 }
@@ -154,23 +174,25 @@ export default function App() {
 
   const onMark = useCallback<ReviewAreaProps["onMark"]>(
     async (marking) => {
-      const promptID = getIDForPromptData(marking.task.promptData);
       console.log("Recording update");
-      const { newCardState, commit } = userClient.recordCardStateUpdate({
+      const { newPromptState, commit } = userClient.recordAction({
         actionOutcome: marking.outcome,
-        baseCardState: null,
-        promptID,
-        promptType: marking.task.promptData.cardType,
+        basePromptState: marking.reviewTask.promptState,
         sessionID: null,
-        timestamp: Date.now(),
+        timestampMillis: Date.now(),
+        promptTaskID: getIDForPromptTask(marking.reviewTask.promptTask),
       });
 
       commit
         .then(() => {
-          console.log("Committed", promptID);
+          console.log("Committed", marking.reviewTask.promptTask.spec);
         })
         .catch((error) => {
-          console.error("Couldn't commit", promptID, error);
+          console.error(
+            "Couldn't commit",
+            marking.reviewTask.promptTask.spec,
+            error,
+          );
         });
     },
     [userClient],

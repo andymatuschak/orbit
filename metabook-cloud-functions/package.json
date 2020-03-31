@@ -7,7 +7,9 @@
   "exports": "./dist/main.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "predeploy": "yarn run build",
+    "deploy": "firebase deploy --only functions"
   },
   "license": "UNLICENSED",
   "dependencies": {

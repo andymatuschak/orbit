@@ -1,5 +1,5 @@
 import * as firebase from "firebase";
-import { PromptData } from "metabook-core";
+import { PromptSpec } from "metabook-core";
 
 let _app: firebase.app.App | null;
 export function getDefaultFirebaseApp(): firebase.app.App {
@@ -13,8 +13,8 @@ export function getDefaultFirebaseApp(): firebase.app.App {
 
 export function getDataCollectionReference(
   database: firebase.firestore.Firestore,
-): firebase.firestore.CollectionReference<PromptData> {
+): firebase.firestore.CollectionReference<PromptSpec> {
   return database.collection("data") as firebase.firestore.CollectionReference<
-    PromptData
+    PromptSpec
   >;
 }

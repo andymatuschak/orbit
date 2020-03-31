@@ -4,30 +4,43 @@ import CID from "cids";
 import DAGPB from "ipld-dag-pb";
 import multihashing from "multihashing";
 
-import { PromptData } from "..";
+import {
+  applicationPromptSpecType,
+  basicPromptSpecType,
+  clozePromptGroupSpecType,
+  PromptSpec,
+} from "../types/promptSpec";
 import Proto from "./generated/proto";
 
-function getProtoFromPromptData(promptData: PromptData): Proto.IPrompt {
-  switch (promptData.cardType) {
-    case "basic":
+function getProtoFromPromptSpec(promptData: PromptSpec): Proto.IPrompt {
+  switch (promptData.promptSpecType) {
+    case basicPromptSpecType:
       return {
         basicPrompt: {
           ...promptData,
         },
       };
-    case "applicationPrompt":
+    case applicationPromptSpecType:
       return {
         applicationPrompt: {
-          variants: promptData.prompts,
+          variants: promptData.variants,
+        },
+      };
+    case clozePromptGroupSpecType:
+      return {
+        clozePrompt: {
+          contents: promptData.contents,
         },
       };
   }
 }
 
-export function getIDForPromptData(promptData: PromptData): string {
+export type PromptSpecID = string & { __promptSpecIDOpaqueType: never };
+
+export function getIDForPromptSpec(promptSpec: PromptSpec): PromptSpecID {
   // 1. Serialize the prompt into a protobuf.
   const promptDataEncoding = Proto.Prompt.encode(
-    getProtoFromPromptData(promptData),
+    getProtoFromPromptSpec(promptSpec),
   ).finish();
   const promptBuffer =
     promptDataEncoding instanceof Buffer
@@ -44,5 +57,5 @@ export function getIDForPromptData(promptData: PromptData): string {
   const hash = multihashing(nodeBuffer, "sha2-256");
   const cid = new CID(1, "dag-pb", hash, "base58btc");
 
-  return cid.toString();
+  return cid.toString() as PromptSpecID;
 }

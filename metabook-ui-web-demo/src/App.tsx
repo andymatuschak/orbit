@@ -54,7 +54,7 @@ function App() {
         actionOutcome: marking.outcome,
         baseCardState: null,
         promptID,
-        promptType: marking.task.promptData.cardType,
+        promptType: marking.task.promptData.promptType,
         sessionID: null,
         timestamp: Date.now(),
       });

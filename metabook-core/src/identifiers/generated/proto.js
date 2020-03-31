@@ -17,6 +17,7 @@ $root.Prompt = (function() {
      * @interface IPrompt
      * @property {IQuestionAnswer|null} [basicPrompt] Prompt basicPrompt
      * @property {IApplicationPrompt|null} [applicationPrompt] Prompt applicationPrompt
+     * @property {IClozePrompt|null} [clozePrompt] Prompt clozePrompt
      */
 
     /**
@@ -50,17 +51,25 @@ $root.Prompt = (function() {
      */
     Prompt.prototype.applicationPrompt = null;
 
+    /**
+     * Prompt clozePrompt.
+     * @member {IClozePrompt|null|undefined} clozePrompt
+     * @memberof Prompt
+     * @instance
+     */
+    Prompt.prototype.clozePrompt = null;
+
     // OneOf field names bound to virtual getters and setters
     var $oneOfFields;
 
     /**
      * Prompt prompt.
-     * @member {"basicPrompt"|"applicationPrompt"|undefined} prompt
+     * @member {"basicPrompt"|"applicationPrompt"|"clozePrompt"|undefined} prompt
      * @memberof Prompt
      * @instance
      */
     Object.defineProperty(Prompt.prototype, "prompt", {
-        get: $util.oneOfGetter($oneOfFields = ["basicPrompt", "applicationPrompt"]),
+        get: $util.oneOfGetter($oneOfFields = ["basicPrompt", "applicationPrompt", "clozePrompt"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -92,6 +101,8 @@ $root.Prompt = (function() {
             $root.QuestionAnswer.encode(message.basicPrompt, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
         if (message.applicationPrompt != null && message.hasOwnProperty("applicationPrompt"))
             $root.ApplicationPrompt.encode(message.applicationPrompt, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+        if (message.clozePrompt != null && message.hasOwnProperty("clozePrompt"))
+            $root.ClozePrompt.encode(message.clozePrompt, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
         return writer;
     };
 
@@ -131,6 +142,9 @@ $root.Prompt = (function() {
                 break;
             case 2:
                 message.applicationPrompt = $root.ApplicationPrompt.decode(reader, reader.uint32());
+                break;
+            case 3:
+                message.clozePrompt = $root.ClozePrompt.decode(reader, reader.uint32());
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -186,6 +200,16 @@ $root.Prompt = (function() {
                     return "applicationPrompt." + error;
             }
         }
+        if (message.clozePrompt != null && message.hasOwnProperty("clozePrompt")) {
+            if (properties.prompt === 1)
+                return "prompt: multiple values";
+            properties.prompt = 1;
+            {
+                var error = $root.ClozePrompt.verify(message.clozePrompt);
+                if (error)
+                    return "clozePrompt." + error;
+            }
+        }
         return null;
     };
 
@@ -210,6 +234,11 @@ $root.Prompt = (function() {
             if (typeof object.applicationPrompt !== "object")
                 throw TypeError(".Prompt.applicationPrompt: object expected");
             message.applicationPrompt = $root.ApplicationPrompt.fromObject(object.applicationPrompt);
+        }
+        if (object.clozePrompt != null) {
+            if (typeof object.clozePrompt !== "object")
+                throw TypeError(".Prompt.clozePrompt: object expected");
+            message.clozePrompt = $root.ClozePrompt.fromObject(object.clozePrompt);
         }
         return message;
     };
@@ -236,6 +265,11 @@ $root.Prompt = (function() {
             object.applicationPrompt = $root.ApplicationPrompt.toObject(message.applicationPrompt, options);
             if (options.oneofs)
                 object.prompt = "applicationPrompt";
+        }
+        if (message.clozePrompt != null && message.hasOwnProperty("clozePrompt")) {
+            object.clozePrompt = $root.ClozePrompt.toObject(message.clozePrompt, options);
+            if (options.oneofs)
+                object.prompt = "clozePrompt";
         }
         return object;
     };
@@ -468,7 +502,6 @@ $root.QuestionAnswer = (function() {
      * Properties of a QuestionAnswer.
      * @exports IQuestionAnswer
      * @interface IQuestionAnswer
-     * @property {number|null} [version] QuestionAnswer version
      * @property {string|null} [question] QuestionAnswer question
      * @property {string|null} [answer] QuestionAnswer answer
      * @property {string|null} [explanation] QuestionAnswer explanation
@@ -488,14 +521,6 @@ $root.QuestionAnswer = (function() {
                 if (properties[keys[i]] != null)
                     this[keys[i]] = properties[keys[i]];
     }
-
-    /**
-     * QuestionAnswer version.
-     * @member {number} version
-     * @memberof QuestionAnswer
-     * @instance
-     */
-    QuestionAnswer.prototype.version = 0;
 
     /**
      * QuestionAnswer question.
@@ -545,14 +570,12 @@ $root.QuestionAnswer = (function() {
     QuestionAnswer.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.version != null && message.hasOwnProperty("version"))
-            writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.version);
         if (message.question != null && message.hasOwnProperty("question"))
-            writer.uint32(/* id 2, wireType 2 =*/18).string(message.question);
+            writer.uint32(/* id 1, wireType 2 =*/10).string(message.question);
         if (message.answer != null && message.hasOwnProperty("answer"))
-            writer.uint32(/* id 3, wireType 2 =*/26).string(message.answer);
+            writer.uint32(/* id 2, wireType 2 =*/18).string(message.answer);
         if (message.explanation != null && message.hasOwnProperty("explanation"))
-            writer.uint32(/* id 4, wireType 2 =*/34).string(message.explanation);
+            writer.uint32(/* id 3, wireType 2 =*/26).string(message.explanation);
         return writer;
     };
 
@@ -588,15 +611,12 @@ $root.QuestionAnswer = (function() {
             var tag = reader.uint32();
             switch (tag >>> 3) {
             case 1:
-                message.version = reader.uint32();
-                break;
-            case 2:
                 message.question = reader.string();
                 break;
-            case 3:
+            case 2:
                 message.answer = reader.string();
                 break;
-            case 4:
+            case 3:
                 message.explanation = reader.string();
                 break;
             default:
@@ -634,9 +654,6 @@ $root.QuestionAnswer = (function() {
     QuestionAnswer.verify = function verify(message) {
         if (typeof message !== "object" || message === null)
             return "object expected";
-        if (message.version != null && message.hasOwnProperty("version"))
-            if (!$util.isInteger(message.version))
-                return "version: integer expected";
         if (message.question != null && message.hasOwnProperty("question"))
             if (!$util.isString(message.question))
                 return "question: string expected";
@@ -661,8 +678,6 @@ $root.QuestionAnswer = (function() {
         if (object instanceof $root.QuestionAnswer)
             return object;
         var message = new $root.QuestionAnswer();
-        if (object.version != null)
-            message.version = object.version >>> 0;
         if (object.question != null)
             message.question = String(object.question);
         if (object.answer != null)
@@ -686,13 +701,10 @@ $root.QuestionAnswer = (function() {
             options = {};
         var object = {};
         if (options.defaults) {
-            object.version = 0;
             object.question = "";
             object.answer = "";
             object.explanation = "";
         }
-        if (message.version != null && message.hasOwnProperty("version"))
-            object.version = message.version;
         if (message.question != null && message.hasOwnProperty("question"))
             object.question = message.question;
         if (message.answer != null && message.hasOwnProperty("answer"))
@@ -714,6 +726,193 @@ $root.QuestionAnswer = (function() {
     };
 
     return QuestionAnswer;
+})();
+
+$root.ClozePrompt = (function() {
+
+    /**
+     * Properties of a ClozePrompt.
+     * @exports IClozePrompt
+     * @interface IClozePrompt
+     * @property {string|null} [contents] ClozePrompt contents
+     */
+
+    /**
+     * Constructs a new ClozePrompt.
+     * @exports ClozePrompt
+     * @classdesc Represents a ClozePrompt.
+     * @implements IClozePrompt
+     * @constructor
+     * @param {IClozePrompt=} [properties] Properties to set
+     */
+    function ClozePrompt(properties) {
+        if (properties)
+            for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                if (properties[keys[i]] != null)
+                    this[keys[i]] = properties[keys[i]];
+    }
+
+    /**
+     * ClozePrompt contents.
+     * @member {string} contents
+     * @memberof ClozePrompt
+     * @instance
+     */
+    ClozePrompt.prototype.contents = "";
+
+    /**
+     * Creates a new ClozePrompt instance using the specified properties.
+     * @function create
+     * @memberof ClozePrompt
+     * @static
+     * @param {IClozePrompt=} [properties] Properties to set
+     * @returns {ClozePrompt} ClozePrompt instance
+     */
+    ClozePrompt.create = function create(properties) {
+        return new ClozePrompt(properties);
+    };
+
+    /**
+     * Encodes the specified ClozePrompt message. Does not implicitly {@link ClozePrompt.verify|verify} messages.
+     * @function encode
+     * @memberof ClozePrompt
+     * @static
+     * @param {IClozePrompt} message ClozePrompt message or plain object to encode
+     * @param {$protobuf.Writer} [writer] Writer to encode to
+     * @returns {$protobuf.Writer} Writer
+     */
+    ClozePrompt.encode = function encode(message, writer) {
+        if (!writer)
+            writer = $Writer.create();
+        if (message.contents != null && message.hasOwnProperty("contents"))
+            writer.uint32(/* id 1, wireType 2 =*/10).string(message.contents);
+        return writer;
+    };
+
+    /**
+     * Encodes the specified ClozePrompt message, length delimited. Does not implicitly {@link ClozePrompt.verify|verify} messages.
+     * @function encodeDelimited
+     * @memberof ClozePrompt
+     * @static
+     * @param {IClozePrompt} message ClozePrompt message or plain object to encode
+     * @param {$protobuf.Writer} [writer] Writer to encode to
+     * @returns {$protobuf.Writer} Writer
+     */
+    ClozePrompt.encodeDelimited = function encodeDelimited(message, writer) {
+        return this.encode(message, writer).ldelim();
+    };
+
+    /**
+     * Decodes a ClozePrompt message from the specified reader or buffer.
+     * @function decode
+     * @memberof ClozePrompt
+     * @static
+     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+     * @param {number} [length] Message length if known beforehand
+     * @returns {ClozePrompt} ClozePrompt
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
+    ClozePrompt.decode = function decode(reader, length) {
+        if (!(reader instanceof $Reader))
+            reader = $Reader.create(reader);
+        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.ClozePrompt();
+        while (reader.pos < end) {
+            var tag = reader.uint32();
+            switch (tag >>> 3) {
+            case 1:
+                message.contents = reader.string();
+                break;
+            default:
+                reader.skipType(tag & 7);
+                break;
+            }
+        }
+        return message;
+    };
+
+    /**
+     * Decodes a ClozePrompt message from the specified reader or buffer, length delimited.
+     * @function decodeDelimited
+     * @memberof ClozePrompt
+     * @static
+     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+     * @returns {ClozePrompt} ClozePrompt
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
+    ClozePrompt.decodeDelimited = function decodeDelimited(reader) {
+        if (!(reader instanceof $Reader))
+            reader = new $Reader(reader);
+        return this.decode(reader, reader.uint32());
+    };
+
+    /**
+     * Verifies a ClozePrompt message.
+     * @function verify
+     * @memberof ClozePrompt
+     * @static
+     * @param {Object.<string,*>} message Plain object to verify
+     * @returns {string|null} `null` if valid, otherwise the reason why it is not
+     */
+    ClozePrompt.verify = function verify(message) {
+        if (typeof message !== "object" || message === null)
+            return "object expected";
+        if (message.contents != null && message.hasOwnProperty("contents"))
+            if (!$util.isString(message.contents))
+                return "contents: string expected";
+        return null;
+    };
+
+    /**
+     * Creates a ClozePrompt message from a plain object. Also converts values to their respective internal types.
+     * @function fromObject
+     * @memberof ClozePrompt
+     * @static
+     * @param {Object.<string,*>} object Plain object
+     * @returns {ClozePrompt} ClozePrompt
+     */
+    ClozePrompt.fromObject = function fromObject(object) {
+        if (object instanceof $root.ClozePrompt)
+            return object;
+        var message = new $root.ClozePrompt();
+        if (object.contents != null)
+            message.contents = String(object.contents);
+        return message;
+    };
+
+    /**
+     * Creates a plain object from a ClozePrompt message. Also converts values to other types if specified.
+     * @function toObject
+     * @memberof ClozePrompt
+     * @static
+     * @param {ClozePrompt} message ClozePrompt
+     * @param {$protobuf.IConversionOptions} [options] Conversion options
+     * @returns {Object.<string,*>} Plain object
+     */
+    ClozePrompt.toObject = function toObject(message, options) {
+        if (!options)
+            options = {};
+        var object = {};
+        if (options.defaults)
+            object.contents = "";
+        if (message.contents != null && message.hasOwnProperty("contents"))
+            object.contents = message.contents;
+        return object;
+    };
+
+    /**
+     * Converts this ClozePrompt to JSON.
+     * @function toJSON
+     * @memberof ClozePrompt
+     * @instance
+     * @returns {Object.<string,*>} JSON object
+     */
+    ClozePrompt.prototype.toJSON = function toJSON() {
+        return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+    };
+
+    return ClozePrompt;
 })();
 
 module.exports = $root;

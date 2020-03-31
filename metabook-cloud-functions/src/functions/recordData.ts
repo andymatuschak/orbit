@@ -1,9 +1,9 @@
 import * as functions from "firebase-functions";
-import { PromptData } from "metabook-core";
+import { PromptSpec } from "metabook-core";
 import { recordData } from "../firebase";
 
 interface RecordDataArguments {
-  prompts: PromptData[];
+  prompts: PromptSpec[];
 }
 
 interface RecordDataResult {

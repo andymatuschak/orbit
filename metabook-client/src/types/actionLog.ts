@@ -2,9 +2,10 @@ import firebase from "firebase";
 import "firebase/firestore";
 
 import { MetabookActionOutcome } from "metabook-core";
+import { PromptTaskID } from "../util/promptTaskID";
 
 export interface MetabookActionLog {
-  promptID: string;
+  promptTaskID: PromptTaskID;
   sessionID: string | null;
   timestamp: firebase.firestore.Timestamp;
   actionOutcome: MetabookActionOutcome;
@@ -14,5 +15,4 @@ export interface MetabookActionLog {
   nextIntervalMillis: number;
   nextBestIntervalMillis: number | null;
   nextNeedsRetry: boolean;
-  nextOrderSeed: number;
 }

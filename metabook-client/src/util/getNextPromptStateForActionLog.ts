@@ -1,14 +1,13 @@
-import { CardState } from "metabook-core";
+import { PromptState } from "metabook-core";
 import { MetabookActionLog } from "../types/actionLog";
 
-export function getNextCardStateForActionLog(
+export function getNextPromptStateForActionLog(
   log: MetabookActionLog,
-): CardState {
+): PromptState {
   return {
     dueTimestampMillis: log.nextDueTimestamp.toMillis(),
     interval: log.nextIntervalMillis,
     bestInterval: log.nextBestIntervalMillis,
     needsRetry: log.nextNeedsRetry,
-    orderSeed: log.nextOrderSeed,
   };
 }
