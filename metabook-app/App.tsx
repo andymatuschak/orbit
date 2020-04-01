@@ -1,6 +1,6 @@
 import "node-libs-react-native/globals";
 import "./src/shimBase64";
-import Random from "expo-random";
+import * as Random from "expo-random";
 
 // Fix for https://github.com/firebase/firebase-js-sdk/issues/2827:
 // TODO remove once issue is closed
