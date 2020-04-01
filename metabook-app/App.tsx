@@ -13,8 +13,10 @@ import { Platform } from "react-native";
 import Root from "./src/Root";
 
 global.crypto = crypto;
-crypto.getRandomValues = (typedArray: any) =>
+crypto.getRandomValues = function (typedArray: any) {
   typedArray.set(Random.getRandomBytesAsync(typedArray.byteLength));
+  return typedArray;
+};
 
 // expo-web is inspired or based on react-native-web
 // which introduces a 'web' as platform value

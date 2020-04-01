@@ -79,6 +79,7 @@ function usePromptStates(
       return;
     }
 
+    console.log("Subscribing to prompt states");
     return userClient.subscribeToPromptStates(
       {},
       setPromptStates,
@@ -101,6 +102,7 @@ function usePromptSpecs(
 
   useEffect(() => {
     unsubscribeFromDataRequest.current?.();
+    console.log("Fetching prompt specs");
     const { unsubscribe } = dataClient.getData(promptSpecIDs, setPromptSpecs);
     unsubscribeFromDataRequest.current = unsubscribe;
 
@@ -143,23 +145,21 @@ function useReviewItems(
       .filter<Prompt>((prompt: Prompt | null): prompt is Prompt => !!prompt);
   }, [promptStates]);
 
-  const duePromptSpecIDSet = useMemo(
+  const duePromptSpecIDSet: Set<PromptSpecID> = useMemo(
     () =>
       orderedDuePrompts === null
-        ? null
+        ? new Set()
         : new Set(orderedDuePrompts.map((p) => p.promptSpecID)),
     [orderedDuePrompts],
   );
 
-  const promptSpecs = usePromptSpecs(
-    dataClient,
-    duePromptSpecIDSet ?? new Set(),
-  );
+  const promptSpecs = usePromptSpecs(dataClient, duePromptSpecIDSet);
 
   return useMemo(
     () =>
       orderedDuePrompts
         ?.map((prompt): PromptReviewItem | null => {
+          console.log("Computing review items");
           const promptSpec = promptSpecs?.get(prompt.promptSpecID);
           if (promptSpec) {
             if (promptSpec instanceof Error) {

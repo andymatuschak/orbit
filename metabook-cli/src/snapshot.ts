@@ -152,12 +152,12 @@ class Snapshot extends Command {
       logSnapshot.forEach((docSnapshot) => {
         const log = docSnapshot.data();
         logs[docSnapshot.id] = log;
-        specIDs.add(log.promptTaskID.promptSpecID);
+        specIDs.add(log.promptTask.prompt.promptSpecID);
       });
 
       const data: { [key: string]: PromptSpec } = {};
       await Promise.all(
-        [...specIDs.values()].map(async (specID) => {
+        Array.from(specIDs.values()).map(async (specID) => {
           const specData = await dataRef.doc(specID).get();
           if (!specData.exists) {
             console.error(

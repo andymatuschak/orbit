@@ -1,8 +1,11 @@
 {
   "extends": "../tsconfig.base",
   "compilerOptions": {
-    "noEmit": true,
-    "types": ["node"]
+    "types": ["node"],
+    "lib": ["dom", "es5"],
+    "module": "commonjs",
+    "rootDir": "./src",
+    "outDir": "./dist"
   },
-  "include": ["**/*.ts", "adminKey.json"]
+  "include": ["src/**/*.ts", "src/adminKey.json"]
 }
