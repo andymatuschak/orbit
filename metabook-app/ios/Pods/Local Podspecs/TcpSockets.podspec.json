@@ -1,0 +1,31 @@
+{
+  "name": "TcpSockets",
+  "version": "3.3.2",
+  "summary": "node's net API for react-native",
+  "homepage": "https://github.com/aprock/react-native-tcp",
+  "license": "MIT",
+  "authors": {
+    "name": "Andy Prock",
+    "email": "aprock@protonmail.com"
+  },
+  "source": {
+    "git": "https://github.com/aprock/react-native-tcp",
+    "tag": "v#{s.version}"
+  },
+  "requires_arc": true,
+  "platforms": {
+    "ios": "8.0",
+    "tvos": "9.0"
+  },
+  "preserve_paths": [
+    "README.md",
+    "package.json",
+    "**/*.js"
+  ],
+  "source_files": "ios/**/*.{h,m}",
+  "dependencies": {
+    "React": [
+
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "RNOS",
+  "version": "1.2.6",
+  "summary": "node's os module for react-native",
+  "description": "node's os module for react-native",
+  "homepage": "https://github.com/aprock/react-native-os",
+  "license": "MIT",
+  "authors": {
+    "name": "Andy Prock",
+    "email": "aprock@gmail.com"
+  },
+  "source": {
+    "git": "https://github.com/aprock/react-native-os.git"
+  },
+  "platforms": {
+    "ios": "9.0"
+  },
+  "source_files": "ios/**/*.{h,m}",
+  "exclude_files": "example/**/*",
+  "dependencies": {
+    "React": [
+
+    ]
+  }
+}

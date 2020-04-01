@@ -29,6 +29,7 @@ import React, {
   useState,
 } from "react";
 import { View } from "react-native";
+import { FileSystem } from "react-native-unimodules";
 import {
   enableFirebasePersistence,
   getFirebaseApp,
@@ -102,8 +103,14 @@ function usePromptSpecs(
 
   useEffect(() => {
     unsubscribeFromDataRequest.current?.();
-    console.log("Fetching prompt specs");
-    const { unsubscribe } = dataClient.getData(promptSpecIDs, setPromptSpecs);
+    console.log("Fetching prompt specs", promptSpecIDs);
+    const { unsubscribe } = dataClient.getData(
+      promptSpecIDs,
+      (newPromptSpecs) => {
+        console.log("Got new prompt specs", newPromptSpecs);
+        setPromptSpecs(newPromptSpecs);
+      },
+    );
     unsubscribeFromDataRequest.current = unsubscribe;
 
     return () => {
@@ -155,15 +162,19 @@ function useReviewItems(
 
   const promptSpecs = usePromptSpecs(dataClient, duePromptSpecIDSet);
 
-  return useMemo(
-    () =>
+  return useMemo(() => {
+    console.log("Computing review items");
+    return (
       orderedDuePrompts
         ?.map((prompt): PromptReviewItem | null => {
-          console.log("Computing review items");
           const promptSpec = promptSpecs?.get(prompt.promptSpecID);
           if (promptSpec) {
             if (promptSpec instanceof Error) {
-              console.error("Error getting prompt spec", prompt, promptSpec);
+              console.error(
+                "Error getting prompt spec",
+                prompt.promptSpecID,
+                promptSpec,
+              );
               // TODO surface error more effectively
               return null;
             } else {
@@ -178,19 +189,21 @@ function useReviewItems(
               } as PromptReviewItem;
             }
           } else {
+            console.log("Still loading", prompt.promptSpecID);
             return null;
           }
         })
         .filter<ReviewItem>(
           (task: PromptReviewItem | null): task is PromptReviewItem => !!task,
-        ) ?? null,
-    [orderedDuePrompts, promptStates, promptSpecs],
-  );
+        ) ?? null
+    );
+  }, [orderedDuePrompts, promptStates, promptSpecs]);
 }
 
 export default function App() {
   const [{ userClient, dataClient }] = useState(() => {
     const firebaseApp = getFirebaseApp();
+
     return {
       userClient: new MetabookFirebaseUserClient(firebaseApp, "testID"),
       dataClient: new MetabookFirebaseDataClient(firebaseApp),

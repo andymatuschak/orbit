@@ -39,7 +39,7 @@ target 'metabookapp' do
   # Other native modules
 
   # Automatically detect installed unimodules
-  use_unimodules!(modules_paths: ['../../node_modules'], exclude: ["expo-web-browser"])
+  use_unimodules!(modules_paths: ["../node_modules", "../../node_modules"])
 
   # react-native-cli autolinking
   use_native_modules!

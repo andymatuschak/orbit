@@ -14,6 +14,12 @@
     ],
     "packagerOpts": {
       "config": "metro.config.js"
+    },
+    "ios": {
+      "bundleIdentifier": "media.metabook.client"
+    },
+    "android": {
+      "package": "media.metabook.client"
     }
   }
 }

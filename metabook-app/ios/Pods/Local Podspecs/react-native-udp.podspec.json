@@ -1,0 +1,26 @@
+{
+  "name": "react-native-udp",
+  "version": "2.7.0",
+  "summary": "node's dgram API for react-native",
+  "homepage": "https://github.com/tradle/react-native-udp",
+  "license": "MIT",
+  "authors": {
+    "{\"name\"=>\"Mark Vayngrib\", \"email\"=>\"mark.vayngrib@lablz.com\"}": {
+      "name": "Mark Vayngrib",
+      "email": "mark.vayngrib@lablz.com"
+    }
+  },
+  "platforms": {
+    "ios": "7.0"
+  },
+  "source": {
+    "git": "https://github.com/tradle/react-native-udp",
+    "tag": "v2.7.0"
+  },
+  "source_files": "ios/**/*.{h,m}",
+  "dependencies": {
+    "React": [
+
+    ]
+  }
+}

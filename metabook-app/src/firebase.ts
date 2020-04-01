@@ -1,6 +1,7 @@
 import shimFirebasePersistence from "firebase-react-native-persistence-shim";
 import firebase from "firebase/app";
 import "firebase/firestore";
+import { FileSystem } from "react-native-unimodules";
 
 let app: firebase.app.App | null = null;
 export function getFirebaseApp(): firebase.app.App {
@@ -15,7 +16,7 @@ export function getFirebaseApp(): firebase.app.App {
       appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
     });
 
-    shimFirebasePersistence("");
+    shimFirebasePersistence(FileSystem.cacheDirectory ?? "");
   }
   return app;
 }
