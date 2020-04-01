@@ -1,13 +1,12 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
 
-import { EncodedPromptID, encodePromptID, PromptState } from "metabook-core";
+import { encodePrompt, PromptID, PromptState } from "metabook-core";
 import { getDefaultFirebaseApp } from "../../firebase";
 import { MetabookActionLog } from "../../types/actionLog";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
 import { getActionLogForAction } from "../../util/getActionLogForAction";
 import { getNextPromptStateForActionLog } from "../../util/getNextPromptStateForActionLog";
-import { getPromptIDForPromptTaskID } from "../..";
 import getPromptStates from "../getPromptStates";
 import {
   MetabookAction,
@@ -42,9 +41,9 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
       "desc",
     );
 
-    const promptStateCache: Map<EncodedPromptID, PromptState> = new Map();
+    const promptStateCache: Map<PromptID, PromptState> = new Map();
     const latestTimestampByPromptID: Map<
-      EncodedPromptID,
+      PromptID,
       firebase.firestore.Timestamp
     > = new Map();
     return userStateLogsRef.onSnapshot(
@@ -52,9 +51,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
         for (const change of snapshot.docChanges()) {
           if (change.type === "added") {
             const log = change.doc.data();
-            const encodedPromptID = encodePromptID(
-              getPromptIDForPromptTaskID(log.promptTaskID),
-            );
+            const encodedPromptID = encodePrompt(log.promptTask.prompt);
             const latestPromptTimestamp = latestTimestampByPromptID.get(
               encodedPromptID,
             );
@@ -70,6 +67,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
                 dueTimestampMillis: log.nextDueTimestamp.toMillis(),
                 bestInterval: log.nextBestIntervalMillis,
                 needsRetry: log.nextNeedsRetry,
+                taskParameters: log.promptTask.parameters,
               });
             }
             latestTimestampByPromptID.set(
@@ -113,7 +111,10 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     const commit = this.recordActionLogs([actionLog]);
 
     return {
-      newPromptState: getNextPromptStateForActionLog(actionLog),
+      newPromptState: getNextPromptStateForActionLog(
+        actionLog,
+        update.promptSpec,
+      ),
       commit: commit,
     };
   }

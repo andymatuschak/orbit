@@ -1,4 +1,6 @@
-import firebase from "firebase";
+import firebase from "firebase/app";
+import "firebase/firestore";
+
 import * as firebaseTesting from "@firebase/testing";
 import { getIDForPromptSpec, PromptSpecID } from "metabook-core";
 import { testBasicPromptSpec } from "metabook-sample-data";

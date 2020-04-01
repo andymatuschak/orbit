@@ -21,6 +21,7 @@
     { "path": "./metabook-ui" },
     { "path": "./metabook-client" },
     { "path": "./metabook-core" },
+    { "path": "./metabook-core/tsconfig.cjs.json" },
     { "path": "./metabook-sample-data" }
   ],
   "files": []

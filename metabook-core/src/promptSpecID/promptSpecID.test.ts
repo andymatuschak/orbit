@@ -7,7 +7,7 @@ import {
   PromptSpec,
   QAPromptSpec,
 } from "../types/promptSpec";
-import { getIDForPromptSpec } from "./index";
+import { getIDForPromptSpec } from "./promptSpecID";
 
 import multihash from "multihashes";
 

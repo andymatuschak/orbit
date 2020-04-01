@@ -1,13 +1,11 @@
 import {
-  ApplicationPromptTask,
-  ClozePromptTask,
+  ClozePromptParameters,
   MetabookSpacedRepetitionSchedule,
-  PromptState,
-  PromptTask,
   QAPromptSpec,
 } from "metabook-core";
 import React from "react";
 import { StyleSheet, View } from "react-native";
+import { PromptReviewItem } from "../reviewItem";
 import colors from "../styles/colors";
 import { borderRadius, gridUnit } from "../styles/layout";
 import CardTextArea from "./CardTextArea";
@@ -15,41 +13,41 @@ import FadeView from "./FadeView";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
 
 export interface CardProps {
+  reviewItem: PromptReviewItem;
+
   isRevealed: boolean;
   isOccluded?: boolean;
   showsNeedsRetryNotice?: boolean;
-  promptTask: PromptTask;
-  promptState: PromptState | null;
   reviewMarkingInteractionState: ReviewMarkingInteractionState | null;
   schedule: MetabookSpacedRepetitionSchedule;
   onToggleExplanation?: (isExplanationExpanded: boolean) => unknown;
   shouldLabelApplicationPrompts: boolean;
 }
 
-function getQAPromptSpecForPromptTask(promptTask: PromptTask): QAPromptSpec {
-  const { spec } = promptTask;
-  switch (spec.promptSpecType) {
+function getQAPromptSpec(reviewItem: PromptReviewItem): QAPromptSpec {
+  switch (reviewItem.promptSpec.promptSpecType) {
     case "basic":
-      return spec;
+      return reviewItem.promptSpec;
     case "applicationPrompt":
-      return spec.variants[(promptTask as ApplicationPromptTask).variantIndex];
+      return reviewItem.promptSpec.variants[
+        reviewItem.promptState?.taskParameters?.variantIndex ?? 0
+      ];
     case "cloze":
-      const clozeTask = promptTask as ClozePromptTask;
       const clozeRegexp = /{([^}]+?)}/g;
-      const { clozeIndex } = clozeTask;
+      const clozeContents = reviewItem.promptSpec.contents;
+      const {
+        clozeIndex,
+      } = reviewItem.promptParameters as ClozePromptParameters;
+
       let matchIndex = 0;
       let match: RegExpExecArray | null;
-      for (
-        ;
-        (match = clozeRegexp.exec(clozeTask.spec.contents));
-        matchIndex++
-      ) {
+      for (; (match = clozeRegexp.exec(clozeContents)); matchIndex++) {
         if (matchIndex === clozeIndex) {
           return {
             question: (
-              clozeTask.spec.contents.slice(0, match.index) +
+              clozeContents.slice(0, match.index) +
               " ___ " +
-              clozeTask.spec.contents.slice(clozeRegexp.lastIndex)
+              clozeContents.slice(clozeRegexp.lastIndex)
             ).replace(clozeRegexp, "$1"),
             answer: match[1],
             explanation: null,
@@ -57,7 +55,7 @@ function getQAPromptSpecForPromptTask(promptTask: PromptTask): QAPromptSpec {
         }
       }
       return {
-        question: clozeTask.spec.contents,
+        question: clozeContents,
         answer: `(invalid cloze: couldn't find cloze deletion with index ${clozeIndex})`,
         explanation: null,
       };
@@ -65,7 +63,7 @@ function getQAPromptSpecForPromptTask(promptTask: PromptTask): QAPromptSpec {
 }
 
 export default function Card(props: CardProps) {
-  const spec = getQAPromptSpecForPromptTask(props.promptTask);
+  const spec = getQAPromptSpec(props.reviewItem);
   return (
     <View style={styles.container}>
       <View style={styles.questionArea}>

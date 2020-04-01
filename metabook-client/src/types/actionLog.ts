@@ -1,11 +1,11 @@
-import firebase from "firebase";
+import firebase from "firebase/app";
 import "firebase/firestore";
 
-import { MetabookActionOutcome } from "metabook-core";
-import { PromptTaskID } from "../util/promptTaskID";
+import { MetabookActionOutcome, PromptTask } from "metabook-core";
 
 export interface MetabookActionLog {
-  promptTaskID: PromptTaskID;
+  promptTask: PromptTask;
+
   sessionID: string | null;
   timestamp: firebase.firestore.Timestamp;
   actionOutcome: MetabookActionOutcome;

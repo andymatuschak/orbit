@@ -1,26 +1,27 @@
+import getNextTaskParameters from "./getNextTaskParameters";
 import {
   getIntervalSequenceForSchedule,
   getLevelForInterval,
   MetabookActionOutcome,
   MetabookSpacedRepetitionSchedule,
 } from "./spacedRepetition";
-import { PromptSpecType } from "./types/promptSpec";
+import { PromptSpec } from "./types/promptSpec";
 import { PromptState } from "./types/promptState";
 
 export default function updatePromptStateForAction({
   basePromptState,
-  promptSpecType,
+  promptSpec,
   actionOutcome,
   schedule,
   reviewTimestampMillis,
 }: {
   basePromptState: PromptState | null;
-  promptSpecType: PromptSpecType;
+  promptSpec: PromptSpec;
   actionOutcome: MetabookActionOutcome;
   schedule: MetabookSpacedRepetitionSchedule;
   reviewTimestampMillis: number;
 }) {
-  const supportsRetry = promptSpecType !== "applicationPrompt";
+  const supportsRetry = promptSpec.promptSpecType !== "applicationPrompt";
   const currentReviewInterval = basePromptState ? basePromptState.interval : 0;
   const currentBestInterval = basePromptState
     ? basePromptState.bestInterval
@@ -75,6 +76,10 @@ export default function updatePromptStateForAction({
     bestInterval,
     interval: newInterval,
     needsRetry: supportsRetry && actionOutcome === "forgotten",
+    taskParameters: getNextTaskParameters(
+      promptSpec,
+      basePromptState?.taskParameters ?? null,
+    ),
   };
   return newPromptState;
 }

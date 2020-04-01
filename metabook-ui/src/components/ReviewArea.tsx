@@ -3,8 +3,6 @@ import {
   MetabookActionOutcome,
   MetabookSpacedRepetitionSchedule,
   PromptSpecType,
-  PromptState,
-  PromptTask,
 } from "metabook-core";
 import React, { useCallback, useRef, useState } from "react";
 import {
@@ -17,6 +15,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
+import { PromptReviewItem, ReviewItem } from "../reviewItem";
 import colors from "../styles/colors";
 import { gridUnit } from "../styles/layout";
 import Card, { baseCardHeight } from "./Card";
@@ -26,26 +25,20 @@ import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
 import WithAnimatedValue = Animated.WithAnimatedValue;
 
-const promptReviewTaskType = "prompt";
-export type PromptReviewTask = {
-  type: typeof promptReviewTaskType;
-  promptState: PromptState | null;
-  promptTask: PromptTask;
-};
-
-type InternalReviewTask =
-  | ReviewTask
-  | { type: "completedQuestion"; markingRecord: ReviewAreaMarkingRecord };
+type InternalReviewItem =
+  | ReviewItem
+  | {
+      reviewItemType: "completedQuestion";
+      markingRecord: ReviewAreaMarkingRecord;
+    };
 
 export type ReviewAreaMarkingRecord = {
-  reviewTask: PromptReviewTask;
+  reviewItem: PromptReviewItem;
   outcome: MetabookActionOutcome;
 };
 
-export type ReviewTask = PromptReviewTask /* | LoginReviewTask TODO */;
-
 export interface ReviewAreaProps {
-  tasks: ReviewTask[];
+  items: ReviewItem[];
   onMark: (
     markingRecord: ReviewAreaMarkingRecord,
   ) => //cardHandle: CardHandle, TODO
@@ -71,16 +64,16 @@ function getTransformForStackIndex(stackIndex: number) {
   return { scale: 1 - stackIndex * 0.05, translateY: stackIndex * 20 };
 }
 
-function getRenderedTaskIndexFromRenderNodeIndex(
+function getRenderedItemIndexFromRenderNodeIndex(
   renderNodeIndex: number,
   phase: number,
   maximumCardsToRender: number,
 ) {
-  const renderedTaskIndex =
+  return (
     (((renderNodeIndex - phase) % maximumCardsToRender) +
       maximumCardsToRender) %
-    maximumCardsToRender;
-  return renderedTaskIndex;
+    maximumCardsToRender
+  );
 }
 
 function CardRenderer({
@@ -88,10 +81,10 @@ function CardRenderer({
   maximumCardsToDisplay,
   renderedStackIndex,
   setPhase,
-  task,
+  item,
   children,
 }: {
-  task: InternalReviewTask;
+  item: InternalReviewItem;
   renderedStackIndex: number;
   maximumCardsToDisplay: number;
   departingMarkingRecordQueueRef: React.MutableRefObject<
@@ -107,8 +100,8 @@ function CardRenderer({
   });
 
   const isDisplayed =
-    task !== null &&
-    task.type !== "completedQuestion" &&
+    item !== null &&
+    item.reviewItemType !== "completedQuestion" &&
     renderedStackIndex < maximumCardsToDisplay;
 
   return (
@@ -144,7 +137,7 @@ function CardRenderer({
 
 export default function ReviewArea(props: ReviewAreaProps) {
   const {
-    tasks,
+    items,
     onMark,
     schedule,
     showsCompletedState,
@@ -158,7 +151,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
   const lastCommittedReviewMarkingRef = useRef<ReviewAreaMarkingRecord | null>(
     null,
   );
-  const previousTasks = usePrevious(props.tasks);
+  const previousItems = usePrevious(props.items);
 
   const [
     pendingMarkingInteractionState,
@@ -178,22 +171,26 @@ export default function ReviewArea(props: ReviewAreaProps) {
 
   // const currentCardHandleRef = useRef<CardHandle | null>(null);
 
-  const currentTask = tasks[0] || null;
+  const currentItem = items[0] || null;
   const onMarkingButton = useCallback(
     (outcome: MetabookActionOutcome) => {
-      if (currentTask && currentTask.type === "prompt") {
-        const markingRecord = { reviewTask: currentTask, outcome };
+      if (currentItem && currentItem.reviewItemType === "prompt") {
+        const markingRecord = { reviewItem: currentItem, outcome };
         lastCommittedReviewMarkingRef.current = markingRecord;
         onMark(markingRecord /*, currentCardHandleRef.current! TODO */);
       } else {
-        throw new Error(`Marked invalid task: ${currentTask}`);
+        throw new Error(`Marked invalid item: ${currentItem}`);
       }
     },
-    [currentTask, onMark],
+    [currentItem, onMark],
   );
 
   const onPress = useCallback(() => {
-    if (!isShowingAnswer && currentTask && currentTask.type === "prompt") {
+    if (
+      !isShowingAnswer &&
+      currentItem &&
+      currentItem.reviewItemType === "prompt"
+    ) {
       setShowingAnswer(true);
 
       /*const boundingRect = containerRef.current!.getBoundingClientRect();
@@ -208,27 +205,27 @@ export default function ReviewArea(props: ReviewAreaProps) {
         });
       } TODO */
     }
-  }, [isShowingAnswer, currentTask]);
+  }, [isShowingAnswer, currentItem]);
 
   const onToggleTopCardExplanation = useCallback(
     (isExplanationExpanded) => {
-      if (currentTask?.type !== "prompt") {
+      if (currentItem?.reviewItemType !== "prompt") {
         throw new Error(
           "How are we toggling the top card's explanation when it's not a question?",
         );
       }
       /* TODO context?.onToggleExplanation(
         isExplanationExpanded,
-        currentTask.cardData.cardID,
-        currentTask.promptIndex,
+        currentItem.cardData.cardID,
+        currentItem.promptIndex,
       ); */
     },
-    [currentTask /*, context*/],
+    [currentItem /*, context*/],
   );
 
   const departingMarkingRecordQueueRef = useRef<ReviewAreaMarkingRecord[]>([]);
 
-  const isComplete = tasks.length === 0 && !!showsCompletedState;
+  const isComplete = items.length === 0 && !!showsCompletedState;
 
   const maximumCardsToDisplay = 3;
   const maximumCardsToRender = 5;
@@ -237,12 +234,12 @@ export default function ReviewArea(props: ReviewAreaProps) {
 
   if (
     lastCommittedReviewMarkingRef.current &&
-    !isEqual(previousTasks, tasks) &&
-    previousTasks &&
+    !isEqual(previousItems, items) &&
+    previousItems &&
     isShowingAnswer
   ) {
     setShowingAnswer(false);
-    if (isEqual(previousTasks[1], tasks[0])) {
+    if (isEqual(previousItems[1], items[0])) {
       departingMarkingRecordQueueRef.current.push(
         lastCommittedReviewMarkingRef.current,
       );
@@ -250,15 +247,15 @@ export default function ReviewArea(props: ReviewAreaProps) {
     }
   }
 
-  const renderedTasks = departingMarkingRecordQueueRef.current
+  const renderedItems = departingMarkingRecordQueueRef.current
     .map(
       (markingRecord) =>
         ({
-          type: "completedQuestion",
+          reviewItemType: "completedQuestion",
           markingRecord,
-        } as InternalReviewTask),
+        } as InternalReviewItem),
     )
-    .concat(tasks)
+    .concat(items)
     .slice(0, maximumCardsToRender);
 
   return (
@@ -291,17 +288,17 @@ export default function ReviewArea(props: ReviewAreaProps) {
           {(inViewport || disableVisibilityTesting) &&
             Array.from(new Array(maximumCardsToRender).keys()).map(
               (renderNodeIndex) => {
-                const renderedTaskIndex = getRenderedTaskIndexFromRenderNodeIndex(
+                const renderedItemIndex = getRenderedItemIndexFromRenderNodeIndex(
                   renderNodeIndex,
                   phase,
                   maximumCardsToRender,
                 );
-                const task: InternalReviewTask | null =
-                  renderedTasks[renderedTaskIndex] || null;
+                const item: InternalReviewItem | null =
+                  renderedItems[renderedItemIndex] || null;
 
                 // The rendered stack index is 0 for the card that's currently on top, 1 for the next card down, -1 for the card that's currently animating out.
                 const renderedStackIndex =
-                  renderedTaskIndex -
+                  renderedItemIndex -
                   departingMarkingRecordQueueRef.current.length;
                 const isRevealed =
                   (isShowingAnswer && renderedStackIndex === 0) ||
@@ -309,29 +306,29 @@ export default function ReviewArea(props: ReviewAreaProps) {
 
                 let cardComponent: React.ReactNode;
 
-                if (task === null) {
+                if (item === null) {
                   cardComponent = null;
-                  /*} TODO else if (task.type === "login") {
+                  /*} TODO else if (item.type === "login") {
                 cardComponent = (
                   <div className="Card LoginCard">
                     <Login
                       isActive={renderedStackIndex === 0}
                       onLogin={onLogin}
-                      userState={task.userState}
+                      userState={item.userState}
                     />
                   </div>
                 ); */
                 } else {
-                  let reviewTask: PromptReviewTask;
+                  let reviewItem: PromptReviewItem;
                   let reviewMarkingInteractionState: ReviewMarkingInteractionState | null;
 
-                  if (task.type === "prompt") {
-                    reviewTask = task;
+                  if (item.reviewItemType === "prompt") {
+                    reviewItem = item;
                     if (
                       lastCommittedReviewMarkingRef.current &&
                       isEqual(
-                        lastCommittedReviewMarkingRef.current.reviewTask,
-                        reviewTask,
+                        lastCommittedReviewMarkingRef.current.reviewItem,
+                        reviewItem,
                       )
                     ) {
                       reviewMarkingInteractionState = {
@@ -355,10 +352,10 @@ export default function ReviewArea(props: ReviewAreaProps) {
                       reviewMarkingInteractionState = null;
                     }
                   } else {
-                    reviewTask = task.markingRecord.reviewTask;
+                    reviewItem = item.markingRecord.reviewItem;
                     reviewMarkingInteractionState = {
                       status: "committed",
-                      outcome: task.markingRecord.outcome,
+                      outcome: item.markingRecord.outcome,
                     };
                   }
 
@@ -366,8 +363,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
                     <Card
                       isRevealed={isRevealed}
                       isOccluded={renderedStackIndex > 0}
-                      promptTask={reviewTask.promptTask}
-                      promptState={reviewTask.promptState}
+                      reviewItem={reviewItem}
                       reviewMarkingInteractionState={
                         reviewMarkingInteractionState
                       }
@@ -389,7 +385,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
                   <CardRenderer
                     key={renderNodeIndex}
                     renderedStackIndex={renderedStackIndex}
-                    task={task}
+                    item={item}
                     maximumCardsToDisplay={maximumCardsToDisplay}
                     departingMarkingRecordQueueRef={
                       departingMarkingRecordQueueRef
@@ -412,10 +408,10 @@ export default function ReviewArea(props: ReviewAreaProps) {
               onPendingMarkingInteractionStateDidChange={
                 setPendingMarkingInteractionState
               }
-              disabled={!isShowingAnswer || tasks.length === 0}
+              disabled={!isShowingAnswer || items.length === 0}
               promptSpecType={
-                currentTask?.type === "prompt"
-                  ? currentTask.promptTask.spec.promptSpecType
+                currentItem?.reviewItemType === "prompt"
+                  ? currentItem.promptSpec.promptSpecType
                   : null
               }
             />

@@ -1,23 +1,33 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
+import {
+  getIDForPromptSpec,
+  PromptTask,
+  updatePromptStateForAction,
+} from "metabook-core";
 
-import { updateCardStateForReviewMarking } from "metabook-core";
 import { MetabookActionLog } from "../types/actionLog";
 import { MetabookAction } from "../userClient";
 
 export function getActionLogForAction(
   action: MetabookAction,
 ): MetabookActionLog {
-  const newCardState = updateCardStateForReviewMarking({
+  const newCardState = updatePromptStateForAction({
     basePromptState: action.basePromptState,
-    promptSpecType: action.promptTaskID.promptSpecType,
+    promptSpec: action.promptSpec,
     actionOutcome: action.actionOutcome,
     reviewTimestampMillis: action.timestampMillis,
     schedule: "default", // TODO
   });
 
   return {
-    promptTaskID: action.promptTaskID,
+    promptTask: {
+      prompt: {
+        promptSpecID: getIDForPromptSpec(action.promptSpec),
+        promptParameters: action.promptParameters,
+      },
+      parameters: action.promptTaskParameters,
+    } as PromptTask,
     sessionID: action.sessionID,
     actionOutcome: action.actionOutcome,
     timestamp: firebase.firestore.Timestamp.fromMillis(action.timestampMillis),

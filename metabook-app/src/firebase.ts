@@ -1,6 +1,6 @@
-import firebase from "firebase/app";
 import shimFirebasePersistence from "firebase-react-native-persistence-shim";
-import * as FileSystem from "expo-file-system";
+import firebase from "firebase/app";
+import "firebase/firestore";
 
 let app: firebase.app.App | null = null;
 export function getFirebaseApp(): firebase.app.App {

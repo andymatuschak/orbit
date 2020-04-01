@@ -1,4 +1,3 @@
-// A *prompt* is the atomic unit whose state is tracked in the system. Applications prompts comprise multiple variants, but those variants are not prompts because they share the state of their parent prompt. A cloze task is drawn from a cloze prompt *group*: each individual deletion is a prompt, since its state is tracked distinctly.
 // A *prompt spec* describes the data for one or more related prompts. A cloze prompt group is described by a spec which is used to generate many prompts (one for each deletion).
 
 export interface QAPromptSpec {

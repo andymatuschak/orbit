@@ -1,4 +1,4 @@
-import * as firebase from "firebase";
+import firebase from "firebase/app";
 import { PromptSpec } from "metabook-core";
 
 let _app: firebase.app.App | null;

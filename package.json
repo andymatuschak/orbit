@@ -5,6 +5,7 @@
       "metabook-anki",
       "metabook-app",
       "metabook-client",
+      "metabook-cli",
       "metabook-cloud-functions",
       "metabook-core",
       "metabook-sample-data",

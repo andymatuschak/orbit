@@ -1,4 +1,4 @@
-import firebase from "firebase";
+import firebase from "firebase/app";
 import "firebase/firestore";
 import "firebase/functions";
 
@@ -15,7 +15,7 @@ export interface MetabookDataClient {
   ): { completion: Promise<unknown>; unsubscribe: MetabookUnsubscribe };
 }
 
-type MetabookPromptDataSnapshot = Map<
+export type MetabookPromptDataSnapshot = Map<
   PromptSpecID,
   PromptSpec | Error | null // null means the card data has not yet been fetched.
 >;

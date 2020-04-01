@@ -1,6 +1,8 @@
+import { getIDForPromptSpec } from "metabook-core";
 import { testBasicPromptSpec } from "metabook-sample-data";
 import React, { useCallback, useState } from "react";
-import ReviewArea, { ReviewTask } from "./ReviewArea";
+import { ReviewItem } from "../reviewItem";
+import ReviewArea from "./ReviewArea";
 
 // noinspection JSUnusedGlobalSymbols
 export default {
@@ -8,30 +10,29 @@ export default {
   component: ReviewArea,
 };
 
-function generateTask(questionText: string): ReviewTask {
+function generateReviewItem(questionText: string): ReviewItem {
   return {
-    type: "prompt",
+    reviewItemType: "prompt",
     promptState: null,
-    promptTask: {
-      spec: { ...testBasicPromptSpec, question: questionText },
-    },
+    promptSpec: testBasicPromptSpec,
+    promptParameters: null,
   };
 }
 
 export function Basic() {
-  const initialTasks: ReviewTask[] = Array.from(new Array(5).keys()).map((i) =>
-    generateTask(`Question ${i + 1}`),
-  );
+  const initialReviewItems: ReviewItem[] = Array.from(
+    new Array(5).keys(),
+  ).map((i) => generateReviewItem(`Question ${i + 1}`));
 
-  const [tasks, setTasks] = useState(initialTasks);
+  const [items, setItems] = useState(initialReviewItems);
 
   const onMark = useCallback(() => {
-    setTasks((tasks) => tasks.slice(1));
+    setItems((tasks) => tasks.slice(1));
   }, []);
 
   return (
     <ReviewArea
-      tasks={tasks}
+      items={items}
       onMark={onMark}
       schedule="aggressiveStart"
       shouldLabelApplicationPrompts={false}

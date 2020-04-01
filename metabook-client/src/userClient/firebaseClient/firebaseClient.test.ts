@@ -1,10 +1,10 @@
 import firebase from "firebase/app";
 import * as firebaseTesting from "@firebase/testing";
-import { EncodedPromptID } from "metabook-core";
+import { PromptID } from "metabook-core";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
 import { MetabookLocalUserClient } from "../localClient";
-import { MetabookFirebaseUserClient } from "./client";
+import { MetabookFirebaseUserClient } from "./firebaseClient";
 
 let testApp: firebase.app.App;
 let client: MetabookFirebaseUserClient;
@@ -39,19 +39,20 @@ test("recording a marking triggers card state update", async () => {
 
   const secondMockCall = promiseForNextCall(mockFunction);
   jest.spyOn(Math, "random").mockReturnValue(0.25);
-  const { newPromptState } = recordTestPromptStateUpdate(client, "test");
+  const { newPromptState, testPromptID } = recordTestPromptStateUpdate(client);
   expect(newPromptState).toMatchInlineSnapshot(`
     Object {
       "bestInterval": 0,
       "dueTimestampMillis": 432001000,
       "interval": 432000000,
       "needsRetry": false,
+      "taskParameters": null,
     }
   `);
 
   const updatedPromptStates = await secondMockCall;
   expect(updatedPromptStates).toMatchObject(
-    new Map([["test", newPromptState]]),
+    new Map([[testPromptID, newPromptState]]),
   );
 
   // The new prompt states should be a different object.
@@ -62,23 +63,22 @@ test("recording a marking triggers card state update", async () => {
 
 test("port logs from local client", async () => {
   const localClient = new MetabookLocalUserClient();
-  recordTestPromptStateUpdate(localClient, "test");
-  const { newPromptState, commit } = recordTestPromptStateUpdate(
+  recordTestPromptStateUpdate(localClient);
+  const { newPromptState, commit, testPromptID } = recordTestPromptStateUpdate(
     localClient,
-    "test",
   );
   await commit;
 
   await client.recordActionLogs(localClient.getAllLogs());
   const cardStates = await client.getPromptStates({});
-  expect(cardStates.get("test" as EncodedPromptID)).toMatchObject(
+  expect(cardStates.get(testPromptID as PromptID)).toMatchObject(
     newPromptState,
   );
 });
 
 test("getCardStates changes after recording update", async () => {
   const initialCardStates = await client.getPromptStates({});
-  await recordTestPromptStateUpdate(client, "test").commit;
+  await recordTestPromptStateUpdate(client).commit;
   const finalCardStates = await client.getPromptStates({});
   expect(initialCardStates).not.toMatchObject(finalCardStates);
 });
@@ -96,7 +96,7 @@ test("no events after unsubscribing", async () => {
 
   unsubscribe();
 
-  await recordTestPromptStateUpdate(client, "test").commit;
+  await recordTestPromptStateUpdate(client).commit;
   expect(mockFunction).not.toHaveBeenCalled();
 });
 
@@ -107,7 +107,7 @@ describe("security rules", () => {
   });
 
   test("can't read cards from another user", async () => {
-    await recordTestPromptStateUpdate(client, "test").commit;
+    await recordTestPromptStateUpdate(client).commit;
     await expect(anotherClient.getPromptStates({})).rejects.toBeInstanceOf(
       Error,
     );
@@ -115,7 +115,7 @@ describe("security rules", () => {
 
   test("can't write cards to another user", async () => {
     await expect(
-      recordTestPromptStateUpdate(anotherClient, "test").commit,
+      recordTestPromptStateUpdate(anotherClient).commit,
     ).rejects.toBeInstanceOf(Error);
   });
 });

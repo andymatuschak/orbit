@@ -1,10 +1,12 @@
 import {
-  EncodedPromptID,
   MetabookActionOutcome,
+  PromptID,
+  PromptParameters,
+  PromptSpec,
   PromptState,
+  PromptTaskParameters,
 } from "metabook-core";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
-import { PromptTaskID } from "..";
 
 export interface MetabookUserClient {
   subscribeToPromptStates(
@@ -28,13 +30,13 @@ export interface MetabookUserClient {
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface MetabookCardStateQuery {}
 
-export type MetabookPromptStateSnapshot = ReadonlyMap<
-  EncodedPromptID,
-  PromptState
->;
+export type MetabookPromptStateSnapshot = ReadonlyMap<PromptID, PromptState>;
 
 export interface MetabookAction {
-  promptTaskID: PromptTaskID;
+  promptSpec: PromptSpec;
+  promptParameters: PromptParameters;
+  promptTaskParameters: PromptTaskParameters;
+
   sessionID: string | null;
   timestampMillis: number;
   actionOutcome: MetabookActionOutcome;

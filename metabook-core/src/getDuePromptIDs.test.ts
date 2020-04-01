@@ -1,15 +1,15 @@
 import getDuePromptIDs from "./getDuePromptIDs";
-import { PromptSpecID } from "./identifiers";
-import { encodePromptID } from "./promptID";
-import { PromptStates } from "./types/promptState";
+import { PromptSpecID } from "./promptSpecID";
+import { encodePrompt, PromptID } from "./types/prompt";
+import { PromptState } from "./types/promptState";
 
 function generateCardStates(count: number, dueCount: number) {
-  const cardStates: PromptStates = new Map();
+  const cardStates: Map<PromptID, PromptState> = new Map();
   for (let i = 0; i < count; i++) {
     cardStates.set(
-      encodePromptID({
+      encodePrompt({
         promptSpecID: i.toString() as PromptSpecID,
-        childIndex: null,
+        promptParameters: null,
       }),
       {
         needsRetry: false,
@@ -17,6 +17,7 @@ function generateCardStates(count: number, dueCount: number) {
         interval: 0,
         dueTimestampMillis:
           Date.now() + 1000 * 60 * 60 * 24 * (i < dueCount ? -1 : 1),
+        taskParameters: null,
       },
     );
   }

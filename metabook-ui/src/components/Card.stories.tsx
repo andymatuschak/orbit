@@ -3,7 +3,7 @@ import {
   getIntervalSequenceForSchedule,
   MetabookSpacedRepetitionSchedule,
   PromptState,
-  PromptTask,
+  PromptTaskParameters,
   updateCardStateForReviewMarking,
 } from "metabook-core";
 import {
@@ -13,6 +13,7 @@ import {
 } from "metabook-sample-data";
 import React, { ReactNode, useState } from "react";
 import { Button, View } from "react-native";
+import { PromptReviewItem } from "../reviewItem";
 import testCardProps from "./__fixtures__/testCardProps";
 import Card from "./Card";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
@@ -27,7 +28,12 @@ export default {
 export const basic = () => (
   <TestCard
     showsNeedsRetryNotice={false}
-    promptTask={{ spec: testBasicPromptSpec }}
+    reviewItem={{
+      reviewItemType: "prompt",
+      promptSpec: testBasicPromptSpec,
+      promptParameters: null,
+      promptState: null,
+    }}
     shouldLabelApplicationPrompts={false}
   />
 );
@@ -35,7 +41,12 @@ export const basic = () => (
 export const applicationPrompt = () => (
   <TestCard
     showsNeedsRetryNotice={false}
-    promptTask={{ spec: testApplicationPromptSpec, variantIndex: 0 }}
+    reviewItem={{
+      reviewItemType: "prompt",
+      promptSpec: testApplicationPromptSpec,
+      promptParameters: null,
+      promptState: null,
+    }}
     shouldLabelApplicationPrompts={true}
   />
 );
@@ -43,7 +54,12 @@ export const applicationPrompt = () => (
 export const clozePrompt = () => (
   <TestCard
     showsNeedsRetryNotice={false}
-    promptTask={{ spec: testClozePromptGroupSpec, clozeIndex: 1 }}
+    reviewItem={{
+      reviewItemType: "prompt",
+      promptSpec: testClozePromptGroupSpec,
+      promptParameters: { clozeIndex: 1 },
+      promptState: null,
+    }}
     shouldLabelApplicationPrompts={true}
   />
 );
@@ -51,12 +67,12 @@ export const clozePrompt = () => (
 function TestCard(props: {
   showsNeedsRetryNotice: boolean;
   shouldLabelApplicationPrompts: boolean;
-  promptTask: PromptTask;
+  reviewItem: PromptReviewItem;
 }) {
   const {
     showsNeedsRetryNotice,
     shouldLabelApplicationPrompts,
-    promptTask,
+    reviewItem,
   } = props;
   return (
     <View>
@@ -66,7 +82,7 @@ function TestCard(props: {
         initialCurrentLevel={number("initial current level", 0)}
         intervalSequence={testIntervalSequence}
         schedule="aggressiveStart"
-        promptTask={promptTask}
+        reviewItem={reviewItem}
       >
         {(promptState, reviewMarkingInteractionState) =>
           [false, true].map((isRevealed, index) => {
@@ -74,12 +90,16 @@ function TestCard(props: {
               <View key={index}>
                 <Card
                   {...testCardProps}
-                  promptTask={promptTask}
+                  reviewItem={
+                    {
+                      ...reviewItem,
+                      promptState: {
+                        ...promptState,
+                        needsRetry: showsNeedsRetryNotice,
+                      },
+                    } as PromptReviewItem
+                  }
                   isRevealed={isRevealed}
-                  promptState={{
-                    ...promptState,
-                    needsRetry: showsNeedsRetryNotice,
-                  }}
                   reviewMarkingInteractionState={reviewMarkingInteractionState}
                   showsNeedsRetryNotice={showsNeedsRetryNotice}
                   shouldLabelApplicationPrompts={shouldLabelApplicationPrompts}
@@ -97,6 +117,7 @@ function createPromptState(
   intervalSequence: typeof testIntervalSequence,
   level: number,
   bestLevel: number | null,
+  taskParameters: PromptTaskParameters,
 ): PromptState {
   const interval = intervalSequence[level].interval;
   return {
@@ -105,6 +126,7 @@ function createPromptState(
       bestLevel === null ? null : intervalSequence[bestLevel].interval,
     dueTimestampMillis: Date.now(),
     needsRetry: false,
+    taskParameters,
   };
 }
 
@@ -113,7 +135,7 @@ function WithReviewState(props: {
   initialCurrentLevel: number;
   intervalSequence: typeof testIntervalSequence;
   schedule: MetabookSpacedRepetitionSchedule;
-  promptTask: PromptTask;
+  reviewItem: PromptReviewItem;
   children: (
     promptState: PromptState,
     reviewMarkingInteractionState: ReviewMarkingInteractionState | null,
@@ -124,6 +146,7 @@ function WithReviewState(props: {
       props.intervalSequence,
       props.initialCurrentLevel,
       props.initialBestLevel,
+      props.reviewItem.promptState?.taskParameters ?? null,
     ),
   );
 
@@ -209,7 +232,7 @@ function WithReviewState(props: {
             setPromptState(
               updateCardStateForReviewMarking({
                 basePromptState: promptState,
-                promptSpecType: props.promptTask.spec.promptSpecType,
+                promptSpecType: props.reviewItem.promptSpec.promptSpecType,
                 actionOutcome: currentOutcome,
                 schedule: props.schedule,
                 reviewTimestampMillis: Date.now(),
@@ -228,6 +251,7 @@ function WithReviewState(props: {
                 props.intervalSequence,
                 props.initialCurrentLevel,
                 props.initialBestLevel,
+                props.reviewItem.promptState?.taskParameters ?? null,
               ),
             );
           }}

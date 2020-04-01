@@ -1,19 +1,18 @@
-import { EncodedPromptID, encodePromptID, PromptState } from "metabook-core";
+import { encodePrompt, PromptID, PromptState } from "metabook-core";
 import { MetabookActionLog } from "../../types/actionLog";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
-import { getPromptIDForPromptTaskID } from "../..";
+import { getActionLogForAction } from "../../util/getActionLogForAction";
+import { getNextPromptStateForActionLog } from "../../util/getNextPromptStateForActionLog";
+import getPromptStates from "../getPromptStates";
 import {
-  MetabookPromptStateSnapshot,
   MetabookAction,
   MetabookCardStateQuery,
+  MetabookPromptStateSnapshot,
   MetabookUserClient,
 } from "../userClient";
-import { getActionLogForAction } from "../../util/getActionLogForAction";
-import getPromptStates from "../getPromptStates";
-import { getNextPromptStateForActionLog } from "../../util/getNextPromptStateForActionLog";
 
 export class MetabookLocalUserClient implements MetabookUserClient {
-  private readonly latestPromptStates: Map<EncodedPromptID, PromptState>;
+  private readonly latestPromptStates: Map<PromptID, PromptState>;
   private readonly cardStateSubscribers: Set<CardStateSubscriber>;
   private readonly logs: MetabookActionLog[];
 
@@ -33,10 +32,13 @@ export class MetabookLocalUserClient implements MetabookUserClient {
     action: MetabookAction,
   ): { newPromptState: PromptState; commit: Promise<unknown> } {
     const actionLog = getActionLogForAction(action);
-    const newPromptState = getNextPromptStateForActionLog(actionLog);
+    const newPromptState = getNextPromptStateForActionLog(
+      actionLog,
+      action.promptSpec,
+    );
 
     this.latestPromptStates.set(
-      encodePromptID(getPromptIDForPromptTaskID(action.promptTaskID)),
+      encodePrompt(actionLog.promptTask.prompt),
       newPromptState,
     );
     this.logs.push(actionLog);

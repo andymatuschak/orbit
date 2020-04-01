@@ -1,10 +1,20 @@
-require("node-libs-react-native/globals");
-require("./src/shimBase64");
-const Root = require("./src/Root").default;
+import "node-libs-react-native/globals";
+import "./src/shimBase64";
+import Random from "expo-random";
+
+// Fix for https://github.com/firebase/firebase-js-sdk/issues/2827:
+// TODO remove once issue is closed
+// noinspection ES6UnusedImports
+// @ts-ignore
+import crypto from "crypto";
 
 import React from "react";
-
 import { Platform } from "react-native";
+import Root from "./src/Root";
+
+global.crypto = crypto;
+crypto.getRandomValues = (typedArray: any) =>
+  typedArray.set(Random.getRandomBytesAsync(typedArray.byteLength));
 
 // expo-web is inspired or based on react-native-web
 // which introduces a 'web' as platform value

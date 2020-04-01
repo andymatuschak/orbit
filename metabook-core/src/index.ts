@@ -1,6 +1,11 @@
-export { default as updateCardStateForReviewMarking } from "./updatePromptStateForAction";
+export { default as updatePromptStateForAction } from "./updatePromptStateForAction";
 
-export type { PromptState } from "./types/promptState";
+export type {
+  PromptState,
+  BasicPromptState,
+  ApplicationPromptState,
+  ClozePromptState,
+} from "./types/promptState";
 
 export {
   basicPromptSpecType,
@@ -22,6 +27,10 @@ export type {
   ApplicationPromptTask,
   ClozePromptTask,
   BasicPromptTask,
+  PromptTaskParameters,
+  ApplicationPromptTaskParameters,
+  ClozePromptTaskParameters,
+  BasicPromptTaskParameters,
 } from "./types/promptTask";
 
 export type {
@@ -31,10 +40,20 @@ export type {
 
 export { getIntervalSequenceForSchedule } from "./spacedRepetition";
 
-export { getIDForPromptSpec } from "./identifiers";
-export type { PromptSpecID } from "./identifiers";
+export { getIDForPromptSpec } from "./promptSpecID";
+export type { PromptSpecID } from "./promptSpecID";
 
 export { default as getDuePromptIDs } from "./getDuePromptIDs";
 
-export { encodePromptID, decodePromptID } from "./promptID";
-export type { PromptID, EncodedPromptID } from "./promptID";
+export { encodePrompt, decodePrompt } from "./types/prompt";
+export type {
+  Prompt,
+  BasicPrompt,
+  ApplicationPrompt,
+  ClozePrompt,
+  PromptID,
+  PromptParameters,
+  BasicPromptParameters,
+  ApplicationPromptParameters,
+  ClozePromptParameters,
+} from "./types/prompt";

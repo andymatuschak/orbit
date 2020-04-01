@@ -1,6 +1,6 @@
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
-import { MetabookLocalUserClient } from "./client";
+import { MetabookLocalUserClient } from "./localClient";
 
 let client: MetabookLocalUserClient;
 beforeEach(() => {
@@ -18,15 +18,16 @@ test("recording a marking triggers card state update", async () => {
 
   const secondMockCall = promiseForNextCall(mockFunction);
   jest.spyOn(Math, "random").mockReturnValue(0.25);
-  await recordTestPromptStateUpdate(client, "test");
+  await recordTestPromptStateUpdate(client);
   const updatedCardStates = await secondMockCall;
   expect(updatedCardStates).toMatchInlineSnapshot(`
     Map {
-      "test" => Object {
+      "zdj7WcTUE71kpqV2BPQoaNGejo8GKeyqfRA5DSgjgybo6cCa9" => Object {
         "bestInterval": 0,
         "dueTimestampMillis": 432001000,
         "interval": 432000000,
         "needsRetry": false,
+        "taskParameters": null,
       },
     }
   `);
@@ -34,15 +35,15 @@ test("recording a marking triggers card state update", async () => {
 
 test("getCardStates changes after recording update", async () => {
   const initialCardStates = await client.getPromptStates({});
-  await recordTestPromptStateUpdate(client, "test").commit;
+  await recordTestPromptStateUpdate(client).commit;
   const finalCardStates = await client.getPromptStates({});
   expect(initialCardStates).not.toMatchObject(finalCardStates);
 });
 
 test("logs reflect updates", () => {
   expect(client.getAllLogs()).toHaveLength(0);
-  recordTestPromptStateUpdate(client, "test");
-  recordTestPromptStateUpdate(client, "test");
+  recordTestPromptStateUpdate(client);
+  recordTestPromptStateUpdate(client);
   expect(client.getAllLogs()).toHaveLength(2);
 });
 
@@ -59,6 +60,6 @@ test("no events after unsubscribing", async () => {
 
   unsubscribe();
 
-  await recordTestPromptStateUpdate(client, "test").commit;
+  await recordTestPromptStateUpdate(client).commit;
   expect(mockFunction).not.toHaveBeenCalled();
 });
