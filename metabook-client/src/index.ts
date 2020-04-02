@@ -6,7 +6,4 @@ export type {
 } from "./userClient";
 
 export { MetabookFirebaseDataClient } from "./dataClient";
-export type {
-  MetabookDataClient,
-  MetabookPromptDataSnapshot,
-} from "./dataClient";
+export type { MetabookDataClient, MetabookDataSnapshot } from "./dataClient";

@@ -3,35 +3,66 @@ import { Buffer } from "buffer";
 import CID from "cids";
 import DAGPB from "ipld-dag-pb";
 import multihashing from "multihashing";
+import { QAPromptSpec } from "..";
 
 import {
   applicationPromptSpecType,
   basicPromptSpecType,
   clozePromptGroupSpecType,
   PromptSpec,
-} from "../types/promptSpec";
+} from "..";
 import Proto from "./generated/proto";
 
-function getProtoFromPromptSpec(promptData: PromptSpec): Proto.IPrompt {
-  switch (promptData.promptSpecType) {
+function getProtobufRepresentationForPromptSpec(
+  promptSpec: PromptSpec,
+): Proto.IPrompt {
+  switch (promptSpec.promptSpecType) {
     case basicPromptSpecType:
       return {
         basicPrompt: {
-          ...promptData,
+          ...promptSpec,
         },
       };
     case applicationPromptSpecType:
       return {
         applicationPrompt: {
-          variants: promptData.variants,
+          variants: promptSpec.variants,
         },
       };
     case clozePromptGroupSpecType:
       return {
         clozePrompt: {
-          contents: promptData.contents,
+          contents: promptSpec.contents,
         },
       };
+  }
+}
+
+function getDAGLinksForPromptSpec(promptSpec: PromptSpec): DAGPB.DAGLink[] {
+  function getDAGLinksForQAPrompt(
+    qaPromptSpec: QAPromptSpec,
+    prefix: string,
+  ): DAGPB.DAGLink[] {
+    return qaPromptSpec.attachments.map(
+      (attachmentReference, index) =>
+        new DAGPB.DAGLink(
+          `${prefix}/${index}/${attachmentReference.type}`,
+          attachmentReference.byteLength,
+          attachmentReference.id,
+        ),
+    );
+  }
+
+  switch (promptSpec.promptSpecType) {
+    case basicPromptSpecType:
+      return getDAGLinksForQAPrompt(promptSpec, "");
+    case applicationPromptSpecType:
+      const variantLinks = promptSpec.variants.map((variant, index) =>
+        getDAGLinksForQAPrompt(variant, index.toString()),
+      );
+      return variantLinks.reduce((output, list) => output.concat(list), []);
+    case clozePromptGroupSpecType:
+      return [];
   }
 }
 
@@ -40,7 +71,7 @@ export type PromptSpecID = string & { __promptSpecIDOpaqueType: never };
 export function getIDForPromptSpec(promptSpec: PromptSpec): PromptSpecID {
   // 1. Serialize the prompt into a protobuf.
   const promptDataEncoding = Proto.Prompt.encode(
-    getProtoFromPromptSpec(promptSpec),
+    getProtobufRepresentationForPromptSpec(promptSpec),
   ).finish();
   const promptBuffer =
     promptDataEncoding instanceof Buffer
@@ -48,7 +79,10 @@ export function getIDForPromptSpec(promptSpec: PromptSpec): PromptSpecID {
       : new Buffer(promptDataEncoding);
 
   // 2. Wrap that data in an IPLD MerkleDAG leaf node.
-  const dagNode = new DAGPB.DAGNode(promptBuffer);
+  const dagNode = new DAGPB.DAGNode(
+    promptBuffer,
+    getDAGLinksForPromptSpec(promptSpec),
+  );
 
   // 3. Serialize the MerkleDAG node to a protobuf.
   const nodeBuffer = dagNode.serialize();

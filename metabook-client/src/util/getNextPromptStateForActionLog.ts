@@ -1,5 +1,4 @@
-import { PromptSpec, PromptState } from "metabook-core";
-import getNextTaskParameters from "../../dist/util/getNextTaskParameters";
+import { getNextTaskParameters, PromptSpec, PromptState } from "metabook-core";
 import { MetabookActionLog } from "../types/actionLog";
 
 export function getNextPromptStateForActionLog(

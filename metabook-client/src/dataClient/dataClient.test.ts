@@ -2,13 +2,22 @@ import firebase from "firebase/app";
 import "firebase/firestore";
 
 import * as firebaseTesting from "@firebase/testing";
-import { getIDForPromptSpec, PromptSpecID } from "metabook-core";
+import {
+  Attachment,
+  getIDForAttachment,
+  getIDForPromptSpec,
+  imageAttachmentType,
+  PromptSpecID,
+} from "metabook-core";
 import { testBasicPromptSpec } from "metabook-sample-data";
 import { getDataCollectionReference } from "../firebase";
 import shimFirebasePersistence from "firebase-node-persistence-shim";
-import { MetabookFirebaseDataClient } from "./index";
+import {
+  getAttachmentURLReferenceForAttachment,
+  MetabookFirebaseDataClient,
+} from "./dataClient";
 
-const testProjectID = "data-client-test";
+const testProjectID = "metabook-system";
 let testApp: firebase.app.App;
 let dataClient: MetabookFirebaseDataClient;
 
@@ -20,9 +29,11 @@ beforeEach(async () => {
   testApp = firebaseTesting.initializeTestApp({
     projectId: testProjectID,
   });
+  const testFunctions = testApp.functions();
+  testFunctions.useFunctionsEmulator("http://localhost:5001");
   await testApp.firestore().enablePersistence();
 
-  dataClient = new MetabookFirebaseDataClient(testApp);
+  dataClient = new MetabookFirebaseDataClient(testApp, testFunctions);
 });
 
 afterEach(() => {
@@ -45,7 +56,8 @@ describe("getData", () => {
     await writeTestPromptData();
 
     const mockFn = jest.fn();
-    await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+    await dataClient.getPromptSpecs(new Set([testPromptSpecID]), mockFn)
+      .completion;
     expect(mockFn.mock.calls[0][0]).toMatchObject(
       new Map([["test", testBasicPromptSpec]]),
     );
@@ -53,7 +65,7 @@ describe("getData", () => {
 
   test("calls callback even when set of cards to read is empty", async () => {
     const mockFn = jest.fn();
-    await dataClient.getData(new Set(), mockFn).completion;
+    await dataClient.getPromptSpecs(new Set(), mockFn).completion;
     expect(mockFn).toHaveBeenCalled();
   });
 
@@ -62,30 +74,54 @@ describe("getData", () => {
 
     await testApp.firestore().disableNetwork();
     const mockFn = jest.fn();
-    await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+    await dataClient.getPromptSpecs(new Set([testPromptSpecID]), mockFn)
+      .completion;
     expect(mockFn.mock.calls[0][0].get("test")).toBeInstanceOf(Error);
 
     await testApp.firestore().enableNetwork();
     mockFn.mockClear();
-    await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+    await dataClient.getPromptSpecs(new Set([testPromptSpecID]), mockFn)
+      .completion;
     expect(mockFn.mock.calls[0][0]).toMatchObject(
       new Map([["test", testBasicPromptSpec]]),
     );
 
     await testApp.firestore().disableNetwork();
     mockFn.mockClear();
-    await dataClient.getData(new Set([testPromptSpecID]), mockFn).completion;
+    await dataClient.getPromptSpecs(new Set([testPromptSpecID]), mockFn)
+      .completion;
     expect(mockFn.mock.calls[0][0]).toMatchObject(
       new Map([["test", testBasicPromptSpec]]),
     );
   });
 });
 
-test.skip("records prompt spec", async () => {
-  await dataClient.recordData([testBasicPromptSpec]);
+test("records prompt spec", async () => {
+  await dataClient.recordPromptSpecs([testBasicPromptSpec]);
   const testPromptID = getIDForPromptSpec(testBasicPromptSpec);
   const mockFn = jest.fn();
-  await dataClient.getData(new Set([testPromptID]), mockFn).completion;
-  expect(mockFn.mock.calls[0][0].get(testPromptID)).toBeInstanceOf(Error);
+  await dataClient.getPromptSpecs(new Set([testPromptID]), mockFn).completion;
+  expect(mockFn.mock.calls[0][0].get(testPromptID)).toMatchObject(
+    testBasicPromptSpec,
+  );
+  // TODO test recording new prompts when the network is down
+});
+
+test("records attachments", async () => {
+  const testAttachment: Attachment = {
+    type: imageAttachmentType,
+    mimeType: "image/png",
+    contents: "test attachment",
+  };
+  await dataClient.recordAttachments([testAttachment]);
+  const testAttachmentID = getIDForAttachment(
+    Buffer.from(testAttachment.contents),
+  );
+  const mockFn = jest.fn();
+  await dataClient.getAttachments(new Set([testAttachmentID]), mockFn)
+    .completion;
+  expect(mockFn.mock.calls[0][0].get(testAttachmentID)).toMatchObject(
+    getAttachmentURLReferenceForAttachment(testAttachment),
+  );
   // TODO test recording new prompts when the network is down
 });

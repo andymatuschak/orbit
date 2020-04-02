@@ -50,7 +50,7 @@ function getTasksFromSpecs(specs: PromptSpec[]): PromptTask[] {
     }
   });
 
-  return taskLists.reduce((list, output) => output.concat(list), []);
+  return taskLists.reduce((output, list) => output.concat(list), []);
 }
 
 class Ingest extends Command {

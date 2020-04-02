@@ -12,7 +12,7 @@ export function startFirebaseTestingEmulator() {
 
   const localEmulatorProcess = childProcess.spawn(
     "firebase",
-    ["emulators:start", "--only", "firestore"],
+    ["emulators:start"],
     {
       cwd: path.resolve(__dirname, "../../.."),
     },
@@ -22,7 +22,7 @@ export function startFirebaseTestingEmulator() {
   return new Promise((resolve) => {
     localEmulatorProcess.stdout.on("data", (data) => {
       console.log(data.toString());
-      if (/Emulator started/.test(data.toString())) {
+      if (/All emulators started/.test(data.toString())) {
         resolve();
       }
     });

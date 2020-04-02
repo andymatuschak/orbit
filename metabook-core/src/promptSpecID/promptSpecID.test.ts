@@ -1,36 +1,18 @@
 import CID from "cids";
-import {
-  ApplicationPromptSpec,
-  BasicPromptSpec,
-  basicPromptSpecType,
-  ClozePromptGroupSpec,
-  PromptSpec,
-  QAPromptSpec,
-} from "../types/promptSpec";
-import { getIDForPromptSpec } from "./promptSpecID";
 
 import multihash from "multihashes";
-
-const testQAPromptSpecData: QAPromptSpec = {
-  question: "Test question",
-  answer: "Test answer",
-  explanation: null,
-};
-
-const testBasicPromptSpec: BasicPromptSpec = {
-  ...testQAPromptSpecData,
-  promptSpecType: basicPromptSpecType,
-};
-
-const testApplicationPromptData: ApplicationPromptSpec = {
-  promptSpecType: "applicationPrompt",
-  variants: [testQAPromptSpecData, testQAPromptSpecData],
-};
-
-const testClozePromptGroupData: ClozePromptGroupSpec = {
-  promptSpecType: "cloze",
-  contents: "Test {cloze}",
-};
+import {
+  ApplicationPromptSpec,
+  AttachmentIDReference,
+  getIDForAttachment,
+} from "..";
+import {
+  testApplicationPromptSpec,
+  testBasicPromptSpec,
+  testClozePromptGroupSpec,
+  testQAPromptSpec,
+} from "../__tests__/sampleData";
+import { getIDForPromptSpec } from "./promptSpecID";
 
 test("encoding stability", () => {
   expect(
@@ -40,16 +22,83 @@ test("encoding stability", () => {
   );
 
   expect(
-    getIDForPromptSpec(testApplicationPromptData).toString(),
+    getIDForPromptSpec(testApplicationPromptSpec).toString(),
   ).toMatchInlineSnapshot(
     `"zdj7WeP6nSgw44Dcyxz9ydsfuvVB6SfDWs1wQWTeeHvbkCxst"`,
   );
 
   expect(
-    getIDForPromptSpec(testClozePromptGroupData).toString(),
+    getIDForPromptSpec(testClozePromptGroupSpec).toString(),
   ).toMatchInlineSnapshot(
     `"zdj7WbQaeWpew3hGLirKSimxUv8MgGDRWTH1jhEtC9dy1jwG3"`,
   );
+});
+
+describe("encoding attachments", () => {
+  const testAttachmentReference: AttachmentIDReference = {
+    type: "image",
+    id: getIDForAttachment(Buffer.from("abc")),
+    byteLength: 10,
+  };
+  const testAttachmentReference2 = {
+    ...testAttachmentReference,
+    id: getIDForAttachment(Buffer.from("def")),
+  };
+
+  test("basic prompt attachments", () => {
+    const basicPromptSpecID = getIDForPromptSpec(
+      testBasicPromptSpec,
+    ).toString();
+    const oneAttachmentPromptSpecID = getIDForPromptSpec({
+      ...testBasicPromptSpec,
+      attachments: [testAttachmentReference],
+    }).toString();
+    const attachmentsPromptSpecID = getIDForPromptSpec({
+      ...testBasicPromptSpec,
+      attachments: [testAttachmentReference, testAttachmentReference2],
+    });
+    expect(basicPromptSpecID).not.toEqual(oneAttachmentPromptSpecID);
+    expect(oneAttachmentPromptSpecID).not.toEqual(attachmentsPromptSpecID);
+
+    expect(oneAttachmentPromptSpecID).toMatchInlineSnapshot(
+      `"zdj7WaGRVJirVmAsvoEZGV9XAzkHaAEY4XtUc3DQcvPvh5AyP"`,
+    );
+    expect(attachmentsPromptSpecID).toMatchInlineSnapshot(
+      `"zdj7Wd154b4Bn4C2B8zcBWGBM6mvyVcDHJzic4dhSdeYzeh2k"`,
+    );
+  });
+
+  describe("application prompt attachments", () => {
+    test("variants have different attachments", () => {
+      const testApplicationPrompt1: ApplicationPromptSpec = {
+        promptSpecType: "applicationPrompt",
+        variants: [
+          {
+            ...testBasicPromptSpec,
+            attachments: [testAttachmentReference, testAttachmentReference2],
+          },
+          testBasicPromptSpec,
+        ],
+      };
+      const testApplicationPrompt2: ApplicationPromptSpec = {
+        promptSpecType: "applicationPrompt",
+        variants: [
+          { ...testBasicPromptSpec, attachments: [testAttachmentReference] },
+          { ...testBasicPromptSpec, attachments: [testAttachmentReference2] },
+        ],
+      };
+      const testSpecID1 = getIDForPromptSpec(testApplicationPrompt1).toString();
+      const testSpecID2 = getIDForPromptSpec(testApplicationPrompt2).toString();
+      expect(testSpecID1).not.toEqual(testSpecID2);
+
+      expect(testSpecID1).toMatchInlineSnapshot(
+        `"zdj7WaFZG7nm7bTUonNGYu3wjWHU1LBJhPtGo1on6mpKNTi9D"`,
+      );
+      expect(testSpecID2).toMatchInlineSnapshot(
+        `"zdj7Wf6ebJYzsf4HPaLfUzGX8Rn97bGeDTrDwP9YjFKmXxQFK"`,
+      );
+    });
+  });
 });
 
 test("encodings are repeatable", () => {
@@ -59,10 +108,10 @@ test("encodings are repeatable", () => {
 });
 
 test("application prompts encodings depend on variants", () => {
-  expect(getIDForPromptSpec(testApplicationPromptData)).not.toEqual(
+  expect(getIDForPromptSpec(testApplicationPromptSpec)).not.toEqual(
     getIDForPromptSpec({
-      ...testApplicationPromptData,
-      variants: [testQAPromptSpecData],
+      ...testApplicationPromptSpec,
+      variants: [testQAPromptSpec],
     }),
   );
 });

@@ -1,8 +1,8 @@
 import {
   MetabookDataClient,
+  MetabookDataSnapshot,
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
-  MetabookPromptDataSnapshot,
   MetabookPromptStateSnapshot,
   MetabookUserClient,
 } from "metabook-client";
@@ -11,6 +11,7 @@ import {
   encodePrompt,
   getDuePromptIDs,
   Prompt,
+  PromptSpec,
   PromptSpecID,
 } from "metabook-core";
 import {
@@ -29,7 +30,6 @@ import React, {
   useState,
 } from "react";
 import { View } from "react-native";
-import { FileSystem } from "react-native-unimodules";
 import {
   enableFirebasePersistence,
   getFirebaseApp,
@@ -94,17 +94,17 @@ function usePromptStates(
 function usePromptSpecs(
   dataClient: MetabookDataClient,
   promptSpecIDs: Set<PromptSpecID>,
-): MetabookPromptDataSnapshot | null {
+): MetabookDataSnapshot<PromptSpecID, PromptSpec> | null {
   const unsubscribeFromDataRequest = useRef<(() => void) | null>(null);
-  const [
-    promptSpecs,
-    setPromptSpecs,
-  ] = useState<MetabookPromptDataSnapshot | null>(null);
+  const [promptSpecs, setPromptSpecs] = useState<MetabookDataSnapshot<
+    PromptSpecID,
+    PromptSpec
+  > | null>(null);
 
   useEffect(() => {
     unsubscribeFromDataRequest.current?.();
     console.log("Fetching prompt specs", promptSpecIDs);
-    const { unsubscribe } = dataClient.getData(
+    const { unsubscribe } = dataClient.getPromptSpecs(
       promptSpecIDs,
       (newPromptSpecs) => {
         console.log("Got new prompt specs", newPromptSpecs);

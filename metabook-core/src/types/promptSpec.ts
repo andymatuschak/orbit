@@ -1,9 +1,12 @@
 // A *prompt spec* describes the data for one or more related prompts. A cloze prompt group is described by a spec which is used to generate many prompts (one for each deletion).
 
+import { AttachmentIDReference } from "./attachmentIDReference";
+
 export interface QAPromptSpec {
   question: string;
   answer: string;
   explanation: string | null;
+  attachments: AttachmentIDReference[];
 }
 
 export const basicPromptSpecType = "basic";

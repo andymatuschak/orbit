@@ -1,5 +1,12 @@
 import * as firebase from "firebase-admin";
-import { getIDForPromptSpec, PromptSpec } from "metabook-core";
+import {
+  Attachment,
+  AttachmentID,
+  getIDForAttachment,
+  getIDForPromptSpec,
+  PromptSpec,
+  PromptSpecID,
+} from "metabook-core";
 
 let _database: firebase.firestore.Firestore | null = null;
 function getDatabase(): firebase.firestore.Firestore {
@@ -11,7 +18,7 @@ function getDatabase(): firebase.firestore.Firestore {
 }
 
 export function getDataCollectionReference(): firebase.firestore.CollectionReference<
-  PromptSpec
+  PromptSpec | Attachment
 > {
   // TODO remove duplication with metabook-client
   return getDatabase().collection(
@@ -19,10 +26,9 @@ export function getDataCollectionReference(): firebase.firestore.CollectionRefer
   ) as firebase.firestore.CollectionReference<PromptSpec>;
 }
 
-export function recordData(prompts: PromptSpec[]): Promise<string[]> {
+export function recordPrompts(prompts: PromptSpec[]): Promise<PromptSpecID[]> {
   // TODO probably add something about provenance
   // TODO something about user quotas, billing
-  const database = getDatabase();
   const collectionReference = getDataCollectionReference();
   return Promise.all(
     prompts.map(async (promptData) => {
@@ -31,12 +37,35 @@ export function recordData(prompts: PromptSpec[]): Promise<string[]> {
       await dataRef
         .create(promptData)
         .then(() => {
-          console.log("Recorded", id, promptData);
+          console.log("Recorded prompt spec", id, promptData);
         })
         .catch(() => {
           return;
         });
-      return id;
+      return id as PromptSpecID;
+    }),
+  );
+}
+
+export function recordAttachments(
+  attachments: Attachment[],
+): Promise<AttachmentID[]> {
+  // TODO probably add something about provenance
+  // TODO something about user quotas, billing
+  const collectionReference = getDataCollectionReference();
+  return Promise.all(
+    attachments.map(async (attachment) => {
+      const id = getIDForAttachment(Buffer.from(attachment.contents));
+      const dataRef = collectionReference.doc(id);
+      await dataRef
+        .create(attachment)
+        .then(() => {
+          console.log("Recorded attachment", id);
+        })
+        .catch(() => {
+          return;
+        });
+      return id as AttachmentID;
     }),
   );
 }

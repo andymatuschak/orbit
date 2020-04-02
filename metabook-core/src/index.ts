@@ -57,3 +57,14 @@ export type {
   ApplicationPromptParameters,
   ClozePromptParameters,
 } from "./types/prompt";
+
+export type { Attachment } from "./types/attachment";
+
+export { getIDForAttachment } from "./types/attachmentID";
+export type { AttachmentID } from "./types/attachmentID";
+export type { AttachmentIDReference } from "./types/attachmentIDReference";
+export type { AttachmentType } from "./types/attachmentType";
+export { imageAttachmentType } from "./types/attachmentType";
+export type { AttachmentURLReference } from "./types/attachmentURLReference";
+
+export { default as getNextTaskParameters } from "./getNextTaskParameters";
