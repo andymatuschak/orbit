@@ -5,12 +5,7 @@ import fs from "fs";
 import { MetabookActionLog } from "metabook-client/dist/types/actionLog";
 import { PromptSpec } from "metabook-core";
 import * as path from "path";
-import serviceAccount from "./adminKey.json";
-
-interface Snapshot {
-  data: { [key: string]: PromptSpec };
-  logs: { [key: string]: MetabookActionLog };
-}
+import { getAdminApp } from "./adminApp";
 
 function deleteQueryBatch(
   db: admin.firestore.Firestore,
@@ -64,6 +59,7 @@ function deleteCollection(
 }
 
 async function batchWriteEntries(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   logEntries: [string, any][],
   db: FirebaseFirestore.Firestore,
   logRef: FirebaseFirestore.CollectionReference,
@@ -119,11 +115,7 @@ class Snapshot extends Command {
 
   async run() {
     const { flags, args } = this.parse(Snapshot);
-
-    const app = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount as any),
-      databaseURL: "https://metabook-system.firebaseio.com",
-    });
+    const app = getAdminApp();
 
     const db = app.firestore();
     const snapshotPath = path.resolve(process.cwd(), args.snapshotPath);

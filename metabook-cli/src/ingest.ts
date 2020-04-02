@@ -1,18 +1,28 @@
 import { Command, flags } from "@oclif/command";
 import firebase from "firebase/app";
 import "firebase/firestore";
+import fs from "fs";
 
 import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "metabook-client";
 import type { MetabookActionLog } from "metabook-client/src/types/actionLog";
-import { getIDForPromptSpec, PromptSpec, PromptTask } from "metabook-core";
+import {
+  Attachment,
+  AttachmentIDReference,
+  getIDForAttachment,
+  getIDForPromptSpec,
+  imageAttachmentType,
+  PromptSpec,
+  PromptTask,
+} from "metabook-core";
 import {
   testApplicationPromptSpec,
   testBasicPromptSpec,
   testClozePromptGroupSpec,
 } from "metabook-sample-data";
+import path from "path";
 
 function getTasksFromSpecs(specs: PromptSpec[]): PromptTask[] {
   const taskLists: PromptTask[][] = specs.map((spec) => {
@@ -73,17 +83,42 @@ class Ingest extends Command {
       messagingSenderId: "748053153064",
       appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
     });
-
     const dataClient = new MetabookFirebaseDataClient(app);
 
+    const imageData = await fs.promises.readFile(
+      path.resolve(__dirname, "__fixtures__/general_circuit.png"),
+    );
+    const imageAttachment: Attachment = {
+      type: imageAttachmentType,
+      mimeType: "image/png",
+      contents: imageData.toString("binary"),
+    };
+    const imageAttachmentIDReference: AttachmentIDReference = {
+      type: imageAttachmentType,
+      id: getIDForAttachment(imageData),
+      byteLength: imageData.byteLength,
+    };
+
+    const testImagePromptSpec: PromptSpec = {
+      ...testBasicPromptSpec,
+      question: {
+        ...testBasicPromptSpec.question,
+        attachments: [imageAttachmentIDReference],
+      },
+    };
+
     const specs = [
+      testImagePromptSpec,
       testBasicPromptSpec,
       testApplicationPromptSpec,
       testClozePromptGroupSpec,
     ];
 
-    await dataClient.recordData(specs);
+    await dataClient.recordPromptSpecs(specs);
     console.log(`Recorded ${specs.length} spec(s)`);
+
+    await dataClient.recordAttachments([imageAttachment]);
+    console.log(`Recorded 1 attachment`);
 
     const userClient = new MetabookFirebaseUserClient(app, flags.userID);
     const tasks = getTasksFromSpecs(specs);
