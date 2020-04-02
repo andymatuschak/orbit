@@ -7,8 +7,8 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { PromptReviewItem } from "../reviewItem";
 import colors from "../styles/colors";
-import { borderRadius, gridUnit } from "../styles/layout";
-import CardTextArea from "./CardTextArea";
+import { borderRadius } from "../styles/layout";
+import CardField from "./CardField";
 import FadeView from "./FadeView";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
 
@@ -44,19 +44,28 @@ function getQAPromptSpec(reviewItem: PromptReviewItem): QAPromptSpec {
       for (; (match = clozeRegexp.exec(clozeContents)); matchIndex++) {
         if (matchIndex === clozeIndex) {
           return {
-            question: (
-              clozeContents.slice(0, match.index) +
-              " ___ " +
-              clozeContents.slice(clozeRegexp.lastIndex)
-            ).replace(clozeRegexp, "$1"),
-            answer: match[1],
+            question: {
+              contents: (
+                clozeContents.slice(0, match.index) +
+                " ___ " +
+                clozeContents.slice(clozeRegexp.lastIndex)
+              ).replace(clozeRegexp, "$1"),
+              attachments: [],
+            },
+            answer: {
+              contents: match[1],
+              attachments: [],
+            },
             explanation: null,
           };
         }
       }
       return {
-        question: clozeContents,
-        answer: `(invalid cloze: couldn't find cloze deletion with index ${clozeIndex})`,
+        question: { contents: clozeContents, attachments: [] },
+        answer: {
+          contents: `(invalid cloze: couldn't find cloze deletion with index ${clozeIndex})`,
+          attachments: [],
+        },
         explanation: null,
       };
   }
@@ -67,11 +76,17 @@ export default function Card(props: CardProps) {
   return (
     <View style={styles.container}>
       <View style={styles.questionArea}>
-        <CardTextArea>{spec.question}</CardTextArea>
+        <CardField
+          promptField={spec.question}
+          attachmentResolutionMap={props.reviewItem.attachmentResolutionMap}
+        />
       </View>
       <View style={styles.bottomArea}>
         <View style={styles.answerArea}>
-          <CardTextArea>{spec.answer}</CardTextArea>
+          <CardField
+            promptField={spec.answer}
+            attachmentResolutionMap={props.reviewItem.attachmentResolutionMap}
+          />
         </View>
         <View style={styles.progressIndicator} />
         <FadeView isVisible={!props.isRevealed} style={styles.answerCover} />
@@ -106,7 +121,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: "white",
     flexBasis: interiorRegionHeight,
-    padding: gridUnit,
     borderBottomColor: colors.key10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
@@ -114,7 +128,6 @@ const styles = StyleSheet.create({
   answerArea: {
     flexBasis: interiorRegionHeight,
     backgroundColor: colors.key00,
-    padding: gridUnit,
     borderBottomColor: colors.key10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },

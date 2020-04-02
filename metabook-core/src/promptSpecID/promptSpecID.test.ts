@@ -51,20 +51,41 @@ describe("encoding attachments", () => {
     ).toString();
     const oneAttachmentPromptSpecID = getIDForPromptSpec({
       ...testBasicPromptSpec,
-      attachments: [testAttachmentReference],
+      question: {
+        ...testBasicPromptSpec.question,
+        attachments: [testAttachmentReference],
+      },
     }).toString();
     const attachmentsPromptSpecID = getIDForPromptSpec({
       ...testBasicPromptSpec,
-      attachments: [testAttachmentReference, testAttachmentReference2],
+      question: {
+        ...testBasicPromptSpec.question,
+        attachments: [testAttachmentReference, testAttachmentReference2],
+      },
+    });
+    const multiFieldsPromptSpecID = getIDForPromptSpec({
+      ...testBasicPromptSpec,
+      question: {
+        ...testBasicPromptSpec.question,
+        attachments: [testAttachmentReference],
+      },
+      answer: {
+        ...testBasicPromptSpec.answer,
+        attachments: [testAttachmentReference2],
+      },
     });
     expect(basicPromptSpecID).not.toEqual(oneAttachmentPromptSpecID);
     expect(oneAttachmentPromptSpecID).not.toEqual(attachmentsPromptSpecID);
+    expect(attachmentsPromptSpecID).not.toEqual(multiFieldsPromptSpecID);
 
     expect(oneAttachmentPromptSpecID).toMatchInlineSnapshot(
-      `"zdj7WaGRVJirVmAsvoEZGV9XAzkHaAEY4XtUc3DQcvPvh5AyP"`,
+      `"zdj7WcVkswQeBJgNoifPjYM3AXwdBLfHYaMFsjDLDFvnng9tj"`,
     );
     expect(attachmentsPromptSpecID).toMatchInlineSnapshot(
-      `"zdj7Wd154b4Bn4C2B8zcBWGBM6mvyVcDHJzic4dhSdeYzeh2k"`,
+      `"zdj7WYS1e8XL6e7Y44UBDTj44DshcYaCeyta67CbUKbDEtRNq"`,
+    );
+    expect(multiFieldsPromptSpecID).toMatchInlineSnapshot(
+      `"zdj7WVjZFXE7T5wpXG4pjWbo7ocd8fo4KMwjVy7vrkK16NLnv"`,
     );
   });
 
@@ -75,7 +96,10 @@ describe("encoding attachments", () => {
         variants: [
           {
             ...testBasicPromptSpec,
-            attachments: [testAttachmentReference, testAttachmentReference2],
+            question: {
+              ...testBasicPromptSpec.question,
+              attachments: [testAttachmentReference, testAttachmentReference2],
+            },
           },
           testBasicPromptSpec,
         ],
@@ -83,8 +107,20 @@ describe("encoding attachments", () => {
       const testApplicationPrompt2: ApplicationPromptSpec = {
         promptSpecType: "applicationPrompt",
         variants: [
-          { ...testBasicPromptSpec, attachments: [testAttachmentReference] },
-          { ...testBasicPromptSpec, attachments: [testAttachmentReference2] },
+          {
+            ...testBasicPromptSpec,
+            question: {
+              ...testBasicPromptSpec.question,
+              attachments: [testAttachmentReference],
+            },
+          },
+          {
+            ...testBasicPromptSpec,
+            question: {
+              ...testBasicPromptSpec.question,
+              attachments: [testAttachmentReference2],
+            },
+          },
         ],
       };
       const testSpecID1 = getIDForPromptSpec(testApplicationPrompt1).toString();
@@ -92,10 +128,10 @@ describe("encoding attachments", () => {
       expect(testSpecID1).not.toEqual(testSpecID2);
 
       expect(testSpecID1).toMatchInlineSnapshot(
-        `"zdj7WaFZG7nm7bTUonNGYu3wjWHU1LBJhPtGo1on6mpKNTi9D"`,
+        `"zdj7WbR6s6G4LLMweN9EoyLfTkxjdTr2paJZkLakKaA2acEzc"`,
       );
       expect(testSpecID2).toMatchInlineSnapshot(
-        `"zdj7Wf6ebJYzsf4HPaLfUzGX8Rn97bGeDTrDwP9YjFKmXxQFK"`,
+        `"zdj7WjCQ62HfzMSCFoycD3fXBi5njp1TKj3aHDU1ZJi2vmoPu"`,
       );
     });
   });

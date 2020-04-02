@@ -1,10 +1,13 @@
 import { number } from "@storybook/addon-knobs";
 import {
+  AttachmentID,
+  AttachmentIDReference,
   getIntervalSequenceForSchedule,
+  imageAttachmentType,
   MetabookSpacedRepetitionSchedule,
   PromptState,
   PromptTaskParameters,
-  updateCardStateForReviewMarking,
+  updatePromptStateForAction,
 } from "metabook-core";
 import {
   testApplicationPromptSpec,
@@ -13,17 +16,34 @@ import {
 } from "metabook-sample-data";
 import React, { ReactNode, useState } from "react";
 import { Button, View } from "react-native";
-import { PromptReviewItem } from "../reviewItem";
+import { AttachmentResolutionMap, PromptReviewItem } from "../reviewItem";
 import testCardProps from "./__fixtures__/testCardProps";
 import Card from "./Card";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
 
 const testIntervalSequence = getIntervalSequenceForSchedule("default");
 
+// noinspection JSUnusedGlobalSymbols
 export default {
   title: "Card",
   component: Card,
 };
+
+const testAttachmentIDReference: AttachmentIDReference = {
+  type: imageAttachmentType,
+  id: "testAttachmentID" as AttachmentID,
+  byteLength: 1,
+};
+
+const testAttachmentResolutionMap: AttachmentResolutionMap = new Map([
+  [
+    testAttachmentIDReference.id,
+    {
+      type: imageAttachmentType,
+      url: "https://picsum.photos/200/300",
+    },
+  ],
+]);
 
 export const basic = () => (
   <TestCard
@@ -33,6 +53,7 @@ export const basic = () => (
       promptSpec: testBasicPromptSpec,
       promptParameters: null,
       promptState: null,
+      attachmentResolutionMap: null,
     }}
     shouldLabelApplicationPrompts={false}
   />
@@ -46,6 +67,7 @@ export const applicationPrompt = () => (
       promptSpec: testApplicationPromptSpec,
       promptParameters: null,
       promptState: null,
+      attachmentResolutionMap: null,
     }}
     shouldLabelApplicationPrompts={true}
   />
@@ -59,8 +81,29 @@ export const clozePrompt = () => (
       promptSpec: testClozePromptGroupSpec,
       promptParameters: { clozeIndex: 1 },
       promptState: null,
+      attachmentResolutionMap: null,
     }}
     shouldLabelApplicationPrompts={true}
+  />
+);
+
+export const image = () => (
+  <TestCard
+    showsNeedsRetryNotice={false}
+    reviewItem={{
+      reviewItemType: "prompt",
+      promptSpec: {
+        ...testBasicPromptSpec,
+        question: {
+          ...testBasicPromptSpec.question,
+          attachments: [testAttachmentIDReference],
+        },
+      },
+      promptParameters: null,
+      promptState: null,
+      attachmentResolutionMap: testAttachmentResolutionMap,
+    }}
+    shouldLabelApplicationPrompts={false}
   />
 );
 
@@ -230,9 +273,9 @@ function WithReviewState(props: {
               return;
             }
             setPromptState(
-              updateCardStateForReviewMarking({
+              updatePromptStateForAction({
                 basePromptState: promptState,
-                promptSpecType: props.reviewItem.promptSpec.promptSpecType,
+                promptSpec: props.reviewItem.promptSpec,
                 actionOutcome: currentOutcome,
                 schedule: props.schedule,
                 reviewTimestampMillis: Date.now(),

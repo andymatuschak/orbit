@@ -6,11 +6,17 @@ import {
   QAPromptSpec,
 } from "..";
 
+// Unfortunately duplicates metabook-sample-data because there's a cyclical module dependency. I'd need to extract metabook-core's types to metabook-types to resolve it.
 export const testQAPromptSpec: QAPromptSpec = {
-  question: "Test question",
-  answer: "Test answer",
+  question: {
+    contents: "Test question",
+    attachments: [],
+  },
+  answer: {
+    contents: "Test answer",
+    attachments: [],
+  },
   explanation: null,
-  attachments: [],
 };
 export const testBasicPromptSpec: BasicPromptSpec = {
   ...testQAPromptSpec,

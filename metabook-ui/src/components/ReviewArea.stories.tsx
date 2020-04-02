@@ -1,4 +1,3 @@
-import { getIDForPromptSpec } from "metabook-core";
 import { testBasicPromptSpec } from "metabook-sample-data";
 import React, { useCallback, useState } from "react";
 import { ReviewItem } from "../reviewItem";
@@ -14,8 +13,12 @@ function generateReviewItem(questionText: string): ReviewItem {
   return {
     reviewItemType: "prompt",
     promptState: null,
-    promptSpec: testBasicPromptSpec,
+    promptSpec: {
+      ...testBasicPromptSpec,
+      question: { contents: questionText, attachments: [] },
+    },
     promptParameters: null,
+    attachmentResolutionMap: null,
   };
 }
 

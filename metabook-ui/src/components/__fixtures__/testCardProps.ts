@@ -1,4 +1,3 @@
-import { basicPromptSpecType, getIDForPromptSpec } from "metabook-core";
 import { testBasicPromptSpec } from "metabook-sample-data";
 import { CardProps } from "../Card";
 
@@ -8,6 +7,7 @@ const testCardProps: CardProps = {
     promptSpec: testBasicPromptSpec,
     promptParameters: null,
     promptState: null,
+    attachmentResolutionMap: null,
   },
   reviewMarkingInteractionState: null,
   schedule: "aggressiveStart",

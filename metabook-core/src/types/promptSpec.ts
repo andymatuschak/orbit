@@ -2,11 +2,15 @@
 
 import { AttachmentIDReference } from "./attachmentIDReference";
 
-export interface QAPromptSpec {
-  question: string;
-  answer: string;
-  explanation: string | null;
+export interface PromptField {
+  contents: string;
   attachments: AttachmentIDReference[];
+}
+
+export interface QAPromptSpec {
+  question: PromptField;
+  answer: PromptField;
+  explanation: PromptField | null;
 }
 
 export const basicPromptSpecType = "basic";

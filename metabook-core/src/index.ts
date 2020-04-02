@@ -20,6 +20,7 @@ export type {
   ApplicationPromptSpec,
   ClozePromptGroupSpec,
   QAPromptSpec,
+  PromptField,
 } from "./types/promptSpec";
 
 export type {

@@ -2,6 +2,8 @@ import {
   ApplicationPromptParameters,
   ApplicationPromptSpec,
   ApplicationPromptState,
+  AttachmentID,
+  AttachmentURLReference,
   BasicPromptParameters,
   BasicPromptSpec,
   BasicPromptState,
@@ -11,8 +13,11 @@ import {
 } from "metabook-core";
 
 export const promptReviewItemType = "prompt";
+export type AttachmentResolutionMap = Map<AttachmentID, AttachmentURLReference>;
+
 interface BasePromptReviewItem {
   reviewItemType: typeof promptReviewItemType;
+  attachmentResolutionMap: AttachmentResolutionMap | null;
 }
 
 export interface BasicPromptReviewItem extends BasePromptReviewItem {

@@ -9,26 +9,26 @@ var $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.ut
 // Exported root namespace
 var $root = $protobuf.roots["default"] || ($protobuf.roots["default"] = {});
 
-$root.Prompt = (function() {
+$root.PromptSpec = (function() {
 
     /**
-     * Properties of a Prompt.
-     * @exports IPrompt
-     * @interface IPrompt
-     * @property {IQuestionAnswer|null} [basicPrompt] Prompt basicPrompt
-     * @property {IApplicationPrompt|null} [applicationPrompt] Prompt applicationPrompt
-     * @property {IClozePrompt|null} [clozePrompt] Prompt clozePrompt
+     * Properties of a PromptSpec.
+     * @exports IPromptSpec
+     * @interface IPromptSpec
+     * @property {IQuestionAnswerPrompt|null} [basicPrompt] PromptSpec basicPrompt
+     * @property {IApplicationPrompt|null} [applicationPrompt] PromptSpec applicationPrompt
+     * @property {IClozePrompt|null} [clozePrompt] PromptSpec clozePrompt
      */
 
     /**
-     * Constructs a new Prompt.
-     * @exports Prompt
-     * @classdesc Represents a Prompt.
-     * @implements IPrompt
+     * Constructs a new PromptSpec.
+     * @exports PromptSpec
+     * @classdesc Represents a PromptSpec.
+     * @implements IPromptSpec
      * @constructor
-     * @param {IPrompt=} [properties] Properties to set
+     * @param {IPromptSpec=} [properties] Properties to set
      */
-    function Prompt(properties) {
+    function PromptSpec(properties) {
         if (properties)
             for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                 if (properties[keys[i]] != null)
@@ -36,69 +36,69 @@ $root.Prompt = (function() {
     }
 
     /**
-     * Prompt basicPrompt.
-     * @member {IQuestionAnswer|null|undefined} basicPrompt
-     * @memberof Prompt
+     * PromptSpec basicPrompt.
+     * @member {IQuestionAnswerPrompt|null|undefined} basicPrompt
+     * @memberof PromptSpec
      * @instance
      */
-    Prompt.prototype.basicPrompt = null;
+    PromptSpec.prototype.basicPrompt = null;
 
     /**
-     * Prompt applicationPrompt.
+     * PromptSpec applicationPrompt.
      * @member {IApplicationPrompt|null|undefined} applicationPrompt
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @instance
      */
-    Prompt.prototype.applicationPrompt = null;
+    PromptSpec.prototype.applicationPrompt = null;
 
     /**
-     * Prompt clozePrompt.
+     * PromptSpec clozePrompt.
      * @member {IClozePrompt|null|undefined} clozePrompt
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @instance
      */
-    Prompt.prototype.clozePrompt = null;
+    PromptSpec.prototype.clozePrompt = null;
 
     // OneOf field names bound to virtual getters and setters
     var $oneOfFields;
 
     /**
-     * Prompt prompt.
+     * PromptSpec prompt.
      * @member {"basicPrompt"|"applicationPrompt"|"clozePrompt"|undefined} prompt
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @instance
      */
-    Object.defineProperty(Prompt.prototype, "prompt", {
+    Object.defineProperty(PromptSpec.prototype, "prompt", {
         get: $util.oneOfGetter($oneOfFields = ["basicPrompt", "applicationPrompt", "clozePrompt"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
     /**
-     * Creates a new Prompt instance using the specified properties.
+     * Creates a new PromptSpec instance using the specified properties.
      * @function create
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @static
-     * @param {IPrompt=} [properties] Properties to set
-     * @returns {Prompt} Prompt instance
+     * @param {IPromptSpec=} [properties] Properties to set
+     * @returns {PromptSpec} PromptSpec instance
      */
-    Prompt.create = function create(properties) {
-        return new Prompt(properties);
+    PromptSpec.create = function create(properties) {
+        return new PromptSpec(properties);
     };
 
     /**
-     * Encodes the specified Prompt message. Does not implicitly {@link Prompt.verify|verify} messages.
+     * Encodes the specified PromptSpec message. Does not implicitly {@link PromptSpec.verify|verify} messages.
      * @function encode
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @static
-     * @param {IPrompt} message Prompt message or plain object to encode
+     * @param {IPromptSpec} message PromptSpec message or plain object to encode
      * @param {$protobuf.Writer} [writer] Writer to encode to
      * @returns {$protobuf.Writer} Writer
      */
-    Prompt.encode = function encode(message, writer) {
+    PromptSpec.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
         if (message.basicPrompt != null && message.hasOwnProperty("basicPrompt"))
-            $root.QuestionAnswer.encode(message.basicPrompt, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            $root.QuestionAnswerPrompt.encode(message.basicPrompt, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
         if (message.applicationPrompt != null && message.hasOwnProperty("applicationPrompt"))
             $root.ApplicationPrompt.encode(message.applicationPrompt, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
         if (message.clozePrompt != null && message.hasOwnProperty("clozePrompt"))
@@ -107,38 +107,38 @@ $root.Prompt = (function() {
     };
 
     /**
-     * Encodes the specified Prompt message, length delimited. Does not implicitly {@link Prompt.verify|verify} messages.
+     * Encodes the specified PromptSpec message, length delimited. Does not implicitly {@link PromptSpec.verify|verify} messages.
      * @function encodeDelimited
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @static
-     * @param {IPrompt} message Prompt message or plain object to encode
+     * @param {IPromptSpec} message PromptSpec message or plain object to encode
      * @param {$protobuf.Writer} [writer] Writer to encode to
      * @returns {$protobuf.Writer} Writer
      */
-    Prompt.encodeDelimited = function encodeDelimited(message, writer) {
+    PromptSpec.encodeDelimited = function encodeDelimited(message, writer) {
         return this.encode(message, writer).ldelim();
     };
 
     /**
-     * Decodes a Prompt message from the specified reader or buffer.
+     * Decodes a PromptSpec message from the specified reader or buffer.
      * @function decode
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @static
      * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
      * @param {number} [length] Message length if known beforehand
-     * @returns {Prompt} Prompt
+     * @returns {PromptSpec} PromptSpec
      * @throws {Error} If the payload is not a reader or valid buffer
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
-    Prompt.decode = function decode(reader, length) {
+    PromptSpec.decode = function decode(reader, length) {
         if (!(reader instanceof $Reader))
             reader = $Reader.create(reader);
-        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.Prompt();
+        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.PromptSpec();
         while (reader.pos < end) {
             var tag = reader.uint32();
             switch (tag >>> 3) {
             case 1:
-                message.basicPrompt = $root.QuestionAnswer.decode(reader, reader.uint32());
+                message.basicPrompt = $root.QuestionAnswerPrompt.decode(reader, reader.uint32());
                 break;
             case 2:
                 message.applicationPrompt = $root.ApplicationPrompt.decode(reader, reader.uint32());
@@ -155,37 +155,37 @@ $root.Prompt = (function() {
     };
 
     /**
-     * Decodes a Prompt message from the specified reader or buffer, length delimited.
+     * Decodes a PromptSpec message from the specified reader or buffer, length delimited.
      * @function decodeDelimited
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @static
      * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-     * @returns {Prompt} Prompt
+     * @returns {PromptSpec} PromptSpec
      * @throws {Error} If the payload is not a reader or valid buffer
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
-    Prompt.decodeDelimited = function decodeDelimited(reader) {
+    PromptSpec.decodeDelimited = function decodeDelimited(reader) {
         if (!(reader instanceof $Reader))
             reader = new $Reader(reader);
         return this.decode(reader, reader.uint32());
     };
 
     /**
-     * Verifies a Prompt message.
+     * Verifies a PromptSpec message.
      * @function verify
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @static
      * @param {Object.<string,*>} message Plain object to verify
      * @returns {string|null} `null` if valid, otherwise the reason why it is not
      */
-    Prompt.verify = function verify(message) {
+    PromptSpec.verify = function verify(message) {
         if (typeof message !== "object" || message === null)
             return "object expected";
         var properties = {};
         if (message.basicPrompt != null && message.hasOwnProperty("basicPrompt")) {
             properties.prompt = 1;
             {
-                var error = $root.QuestionAnswer.verify(message.basicPrompt);
+                var error = $root.QuestionAnswerPrompt.verify(message.basicPrompt);
                 if (error)
                     return "basicPrompt." + error;
             }
@@ -214,50 +214,50 @@ $root.Prompt = (function() {
     };
 
     /**
-     * Creates a Prompt message from a plain object. Also converts values to their respective internal types.
+     * Creates a PromptSpec message from a plain object. Also converts values to their respective internal types.
      * @function fromObject
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @static
      * @param {Object.<string,*>} object Plain object
-     * @returns {Prompt} Prompt
+     * @returns {PromptSpec} PromptSpec
      */
-    Prompt.fromObject = function fromObject(object) {
-        if (object instanceof $root.Prompt)
+    PromptSpec.fromObject = function fromObject(object) {
+        if (object instanceof $root.PromptSpec)
             return object;
-        var message = new $root.Prompt();
+        var message = new $root.PromptSpec();
         if (object.basicPrompt != null) {
             if (typeof object.basicPrompt !== "object")
-                throw TypeError(".Prompt.basicPrompt: object expected");
-            message.basicPrompt = $root.QuestionAnswer.fromObject(object.basicPrompt);
+                throw TypeError(".PromptSpec.basicPrompt: object expected");
+            message.basicPrompt = $root.QuestionAnswerPrompt.fromObject(object.basicPrompt);
         }
         if (object.applicationPrompt != null) {
             if (typeof object.applicationPrompt !== "object")
-                throw TypeError(".Prompt.applicationPrompt: object expected");
+                throw TypeError(".PromptSpec.applicationPrompt: object expected");
             message.applicationPrompt = $root.ApplicationPrompt.fromObject(object.applicationPrompt);
         }
         if (object.clozePrompt != null) {
             if (typeof object.clozePrompt !== "object")
-                throw TypeError(".Prompt.clozePrompt: object expected");
+                throw TypeError(".PromptSpec.clozePrompt: object expected");
             message.clozePrompt = $root.ClozePrompt.fromObject(object.clozePrompt);
         }
         return message;
     };
 
     /**
-     * Creates a plain object from a Prompt message. Also converts values to other types if specified.
+     * Creates a plain object from a PromptSpec message. Also converts values to other types if specified.
      * @function toObject
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @static
-     * @param {Prompt} message Prompt
+     * @param {PromptSpec} message PromptSpec
      * @param {$protobuf.IConversionOptions} [options] Conversion options
      * @returns {Object.<string,*>} Plain object
      */
-    Prompt.toObject = function toObject(message, options) {
+    PromptSpec.toObject = function toObject(message, options) {
         if (!options)
             options = {};
         var object = {};
         if (message.basicPrompt != null && message.hasOwnProperty("basicPrompt")) {
-            object.basicPrompt = $root.QuestionAnswer.toObject(message.basicPrompt, options);
+            object.basicPrompt = $root.QuestionAnswerPrompt.toObject(message.basicPrompt, options);
             if (options.oneofs)
                 object.prompt = "basicPrompt";
         }
@@ -275,17 +275,17 @@ $root.Prompt = (function() {
     };
 
     /**
-     * Converts this Prompt to JSON.
+     * Converts this PromptSpec to JSON.
      * @function toJSON
-     * @memberof Prompt
+     * @memberof PromptSpec
      * @instance
      * @returns {Object.<string,*>} JSON object
      */
-    Prompt.prototype.toJSON = function toJSON() {
+    PromptSpec.prototype.toJSON = function toJSON() {
         return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
     };
 
-    return Prompt;
+    return PromptSpec;
 })();
 
 $root.ApplicationPrompt = (function() {
@@ -294,7 +294,7 @@ $root.ApplicationPrompt = (function() {
      * Properties of an ApplicationPrompt.
      * @exports IApplicationPrompt
      * @interface IApplicationPrompt
-     * @property {Array.<IQuestionAnswer>|null} [variants] ApplicationPrompt variants
+     * @property {Array.<IQuestionAnswerPrompt>|null} [variants] ApplicationPrompt variants
      */
 
     /**
@@ -315,7 +315,7 @@ $root.ApplicationPrompt = (function() {
 
     /**
      * ApplicationPrompt variants.
-     * @member {Array.<IQuestionAnswer>} variants
+     * @member {Array.<IQuestionAnswerPrompt>} variants
      * @memberof ApplicationPrompt
      * @instance
      */
@@ -347,7 +347,7 @@ $root.ApplicationPrompt = (function() {
             writer = $Writer.create();
         if (message.variants != null && message.variants.length)
             for (var i = 0; i < message.variants.length; ++i)
-                $root.QuestionAnswer.encode(message.variants[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                $root.QuestionAnswerPrompt.encode(message.variants[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
         return writer;
     };
 
@@ -385,7 +385,7 @@ $root.ApplicationPrompt = (function() {
             case 1:
                 if (!(message.variants && message.variants.length))
                     message.variants = [];
-                message.variants.push($root.QuestionAnswer.decode(reader, reader.uint32()));
+                message.variants.push($root.QuestionAnswerPrompt.decode(reader, reader.uint32()));
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -426,7 +426,7 @@ $root.ApplicationPrompt = (function() {
             if (!Array.isArray(message.variants))
                 return "variants: array expected";
             for (var i = 0; i < message.variants.length; ++i) {
-                var error = $root.QuestionAnswer.verify(message.variants[i]);
+                var error = $root.QuestionAnswerPrompt.verify(message.variants[i]);
                 if (error)
                     return "variants." + error;
             }
@@ -453,7 +453,7 @@ $root.ApplicationPrompt = (function() {
             for (var i = 0; i < object.variants.length; ++i) {
                 if (typeof object.variants[i] !== "object")
                     throw TypeError(".ApplicationPrompt.variants: object expected");
-                message.variants[i] = $root.QuestionAnswer.fromObject(object.variants[i]);
+                message.variants[i] = $root.QuestionAnswerPrompt.fromObject(object.variants[i]);
             }
         }
         return message;
@@ -477,7 +477,7 @@ $root.ApplicationPrompt = (function() {
         if (message.variants && message.variants.length) {
             object.variants = [];
             for (var j = 0; j < message.variants.length; ++j)
-                object.variants[j] = $root.QuestionAnswer.toObject(message.variants[j], options);
+                object.variants[j] = $root.QuestionAnswerPrompt.toObject(message.variants[j], options);
         }
         return object;
     };
@@ -496,26 +496,26 @@ $root.ApplicationPrompt = (function() {
     return ApplicationPrompt;
 })();
 
-$root.QuestionAnswer = (function() {
+$root.QuestionAnswerPrompt = (function() {
 
     /**
-     * Properties of a QuestionAnswer.
-     * @exports IQuestionAnswer
-     * @interface IQuestionAnswer
-     * @property {string|null} [question] QuestionAnswer question
-     * @property {string|null} [answer] QuestionAnswer answer
-     * @property {string|null} [explanation] QuestionAnswer explanation
+     * Properties of a QuestionAnswerPrompt.
+     * @exports IQuestionAnswerPrompt
+     * @interface IQuestionAnswerPrompt
+     * @property {string|null} [question] QuestionAnswerPrompt question
+     * @property {string|null} [answer] QuestionAnswerPrompt answer
+     * @property {string|null} [explanation] QuestionAnswerPrompt explanation
      */
 
     /**
-     * Constructs a new QuestionAnswer.
-     * @exports QuestionAnswer
-     * @classdesc Represents a QuestionAnswer.
-     * @implements IQuestionAnswer
+     * Constructs a new QuestionAnswerPrompt.
+     * @exports QuestionAnswerPrompt
+     * @classdesc Represents a QuestionAnswerPrompt.
+     * @implements IQuestionAnswerPrompt
      * @constructor
-     * @param {IQuestionAnswer=} [properties] Properties to set
+     * @param {IQuestionAnswerPrompt=} [properties] Properties to set
      */
-    function QuestionAnswer(properties) {
+    function QuestionAnswerPrompt(properties) {
         if (properties)
             for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                 if (properties[keys[i]] != null)
@@ -523,51 +523,51 @@ $root.QuestionAnswer = (function() {
     }
 
     /**
-     * QuestionAnswer question.
+     * QuestionAnswerPrompt question.
      * @member {string} question
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @instance
      */
-    QuestionAnswer.prototype.question = "";
+    QuestionAnswerPrompt.prototype.question = "";
 
     /**
-     * QuestionAnswer answer.
+     * QuestionAnswerPrompt answer.
      * @member {string} answer
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @instance
      */
-    QuestionAnswer.prototype.answer = "";
+    QuestionAnswerPrompt.prototype.answer = "";
 
     /**
-     * QuestionAnswer explanation.
+     * QuestionAnswerPrompt explanation.
      * @member {string} explanation
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @instance
      */
-    QuestionAnswer.prototype.explanation = "";
+    QuestionAnswerPrompt.prototype.explanation = "";
 
     /**
-     * Creates a new QuestionAnswer instance using the specified properties.
+     * Creates a new QuestionAnswerPrompt instance using the specified properties.
      * @function create
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @static
-     * @param {IQuestionAnswer=} [properties] Properties to set
-     * @returns {QuestionAnswer} QuestionAnswer instance
+     * @param {IQuestionAnswerPrompt=} [properties] Properties to set
+     * @returns {QuestionAnswerPrompt} QuestionAnswerPrompt instance
      */
-    QuestionAnswer.create = function create(properties) {
-        return new QuestionAnswer(properties);
+    QuestionAnswerPrompt.create = function create(properties) {
+        return new QuestionAnswerPrompt(properties);
     };
 
     /**
-     * Encodes the specified QuestionAnswer message. Does not implicitly {@link QuestionAnswer.verify|verify} messages.
+     * Encodes the specified QuestionAnswerPrompt message. Does not implicitly {@link QuestionAnswerPrompt.verify|verify} messages.
      * @function encode
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @static
-     * @param {IQuestionAnswer} message QuestionAnswer message or plain object to encode
+     * @param {IQuestionAnswerPrompt} message QuestionAnswerPrompt message or plain object to encode
      * @param {$protobuf.Writer} [writer] Writer to encode to
      * @returns {$protobuf.Writer} Writer
      */
-    QuestionAnswer.encode = function encode(message, writer) {
+    QuestionAnswerPrompt.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
         if (message.question != null && message.hasOwnProperty("question"))
@@ -580,33 +580,33 @@ $root.QuestionAnswer = (function() {
     };
 
     /**
-     * Encodes the specified QuestionAnswer message, length delimited. Does not implicitly {@link QuestionAnswer.verify|verify} messages.
+     * Encodes the specified QuestionAnswerPrompt message, length delimited. Does not implicitly {@link QuestionAnswerPrompt.verify|verify} messages.
      * @function encodeDelimited
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @static
-     * @param {IQuestionAnswer} message QuestionAnswer message or plain object to encode
+     * @param {IQuestionAnswerPrompt} message QuestionAnswerPrompt message or plain object to encode
      * @param {$protobuf.Writer} [writer] Writer to encode to
      * @returns {$protobuf.Writer} Writer
      */
-    QuestionAnswer.encodeDelimited = function encodeDelimited(message, writer) {
+    QuestionAnswerPrompt.encodeDelimited = function encodeDelimited(message, writer) {
         return this.encode(message, writer).ldelim();
     };
 
     /**
-     * Decodes a QuestionAnswer message from the specified reader or buffer.
+     * Decodes a QuestionAnswerPrompt message from the specified reader or buffer.
      * @function decode
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @static
      * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
      * @param {number} [length] Message length if known beforehand
-     * @returns {QuestionAnswer} QuestionAnswer
+     * @returns {QuestionAnswerPrompt} QuestionAnswerPrompt
      * @throws {Error} If the payload is not a reader or valid buffer
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
-    QuestionAnswer.decode = function decode(reader, length) {
+    QuestionAnswerPrompt.decode = function decode(reader, length) {
         if (!(reader instanceof $Reader))
             reader = $Reader.create(reader);
-        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.QuestionAnswer();
+        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.QuestionAnswerPrompt();
         while (reader.pos < end) {
             var tag = reader.uint32();
             switch (tag >>> 3) {
@@ -628,30 +628,30 @@ $root.QuestionAnswer = (function() {
     };
 
     /**
-     * Decodes a QuestionAnswer message from the specified reader or buffer, length delimited.
+     * Decodes a QuestionAnswerPrompt message from the specified reader or buffer, length delimited.
      * @function decodeDelimited
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @static
      * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-     * @returns {QuestionAnswer} QuestionAnswer
+     * @returns {QuestionAnswerPrompt} QuestionAnswerPrompt
      * @throws {Error} If the payload is not a reader or valid buffer
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
-    QuestionAnswer.decodeDelimited = function decodeDelimited(reader) {
+    QuestionAnswerPrompt.decodeDelimited = function decodeDelimited(reader) {
         if (!(reader instanceof $Reader))
             reader = new $Reader(reader);
         return this.decode(reader, reader.uint32());
     };
 
     /**
-     * Verifies a QuestionAnswer message.
+     * Verifies a QuestionAnswerPrompt message.
      * @function verify
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @static
      * @param {Object.<string,*>} message Plain object to verify
      * @returns {string|null} `null` if valid, otherwise the reason why it is not
      */
-    QuestionAnswer.verify = function verify(message) {
+    QuestionAnswerPrompt.verify = function verify(message) {
         if (typeof message !== "object" || message === null)
             return "object expected";
         if (message.question != null && message.hasOwnProperty("question"))
@@ -667,17 +667,17 @@ $root.QuestionAnswer = (function() {
     };
 
     /**
-     * Creates a QuestionAnswer message from a plain object. Also converts values to their respective internal types.
+     * Creates a QuestionAnswerPrompt message from a plain object. Also converts values to their respective internal types.
      * @function fromObject
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @static
      * @param {Object.<string,*>} object Plain object
-     * @returns {QuestionAnswer} QuestionAnswer
+     * @returns {QuestionAnswerPrompt} QuestionAnswerPrompt
      */
-    QuestionAnswer.fromObject = function fromObject(object) {
-        if (object instanceof $root.QuestionAnswer)
+    QuestionAnswerPrompt.fromObject = function fromObject(object) {
+        if (object instanceof $root.QuestionAnswerPrompt)
             return object;
-        var message = new $root.QuestionAnswer();
+        var message = new $root.QuestionAnswerPrompt();
         if (object.question != null)
             message.question = String(object.question);
         if (object.answer != null)
@@ -688,15 +688,15 @@ $root.QuestionAnswer = (function() {
     };
 
     /**
-     * Creates a plain object from a QuestionAnswer message. Also converts values to other types if specified.
+     * Creates a plain object from a QuestionAnswerPrompt message. Also converts values to other types if specified.
      * @function toObject
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @static
-     * @param {QuestionAnswer} message QuestionAnswer
+     * @param {QuestionAnswerPrompt} message QuestionAnswerPrompt
      * @param {$protobuf.IConversionOptions} [options] Conversion options
      * @returns {Object.<string,*>} Plain object
      */
-    QuestionAnswer.toObject = function toObject(message, options) {
+    QuestionAnswerPrompt.toObject = function toObject(message, options) {
         if (!options)
             options = {};
         var object = {};
@@ -715,17 +715,17 @@ $root.QuestionAnswer = (function() {
     };
 
     /**
-     * Converts this QuestionAnswer to JSON.
+     * Converts this QuestionAnswerPrompt to JSON.
      * @function toJSON
-     * @memberof QuestionAnswer
+     * @memberof QuestionAnswerPrompt
      * @instance
      * @returns {Object.<string,*>} JSON object
      */
-    QuestionAnswer.prototype.toJSON = function toJSON() {
+    QuestionAnswerPrompt.prototype.toJSON = function toJSON() {
         return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
     };
 
-    return QuestionAnswer;
+    return QuestionAnswerPrompt;
 })();
 
 $root.ClozePrompt = (function() {
