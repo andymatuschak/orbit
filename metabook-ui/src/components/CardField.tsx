@@ -41,6 +41,9 @@ export default React.memo(function CardField(props: {
             zIndex: -1,
             resizeMode: "contain",
           }}
+          onError={({ nativeEvent: { error } }) =>
+            console.warn(`Error displaying image`, error)
+          }
         />
       )}
     </View>

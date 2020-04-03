@@ -55,7 +55,7 @@ export function recordAttachments(
   const collectionReference = getDataCollectionReference();
   return Promise.all(
     attachments.map(async (attachment) => {
-      const id = getIDForAttachment(Buffer.from(attachment.contents));
+      const id = getIDForAttachment(Buffer.from(attachment.contents, "binary"));
       const dataRef = collectionReference.doc(id);
       await dataRef
         .create(attachment)

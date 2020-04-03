@@ -16,7 +16,8 @@ export function getFirebaseApp(): firebase.app.App {
       appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
     });
 
-    shimFirebasePersistence(FileSystem.cacheDirectory ?? "");
+    // console.log("cache directory", FileSystem.cacheDirectory);
+    shimFirebasePersistence("");
   }
   return app;
 }

@@ -13,6 +13,12 @@ import {
 import { getDataCollectionReference, getDefaultFirebaseApp } from "../firebase";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
 
+type MetabookDataClientCacheWriteHandler = (
+  name: string,
+  extension: string,
+  data: Buffer,
+) => Promise<string>;
+
 export interface MetabookDataClient {
   recordPromptSpecs(promptSpecs: PromptSpec[]): Promise<unknown>;
   recordAttachments(attachments: Attachment[]): Promise<unknown>;
@@ -44,15 +50,18 @@ export function getAttachmentURLReferenceForAttachment(attachment: Attachment) {
 }
 
 export class MetabookFirebaseDataClient implements MetabookDataClient {
-  private functions: firebase.functions.Functions;
-  private database: firebase.firestore.Firestore;
+  private readonly functions: firebase.functions.Functions;
+  private readonly database: firebase.firestore.Firestore;
+  private readonly cacheWriteHandler: MetabookDataClientCacheWriteHandler;
 
   constructor(
     app: firebase.app.App = getDefaultFirebaseApp(),
     functionsInstance: firebase.functions.Functions = app.functions(),
+    cacheWriteHandler: MetabookDataClientCacheWriteHandler,
   ) {
     this.database = app.firestore();
     this.functions = functionsInstance;
+    this.cacheWriteHandler = cacheWriteHandler;
   }
 
   recordPromptSpecs(prompts: PromptSpec[]): Promise<unknown> {
@@ -73,7 +82,7 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
     MappedData = Data
   >(
     requestedIDs: Set<ID>,
-    mapRetrievedType: (data: Data) => MappedData,
+    mapRetrievedType: (id: ID, data: Data) => Promise<MappedData | Error>,
     onUpdate: (snapshot: MetabookDataSnapshot<ID, MappedData>) => void,
   ): { completion: Promise<unknown>; unsubscribe: MetabookUnsubscribe } {
     const dataRef = getDataCollectionReference(this.database);
@@ -84,15 +93,15 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
 
     let isCancelled = false;
 
-    function onFetch(promptSpecID: ID, result: Data | Error) {
+    async function onFetch(id: ID, result: Data | Error) {
       // TODO: Validate spec
       let mappedData: MappedData | Error;
       if (result instanceof Error) {
         mappedData = result;
       } else {
-        mappedData = mapRetrievedType(result);
+        mappedData = await mapRetrievedType(id, result);
       }
-      dataSnapshot.set(promptSpecID, mappedData);
+      dataSnapshot.set(id, mappedData);
       if (!isCancelled) {
         onUpdate(new Map(dataSnapshot));
       }
@@ -113,15 +122,16 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
             const cachedData = await dataRef
               .doc(promptSpecID)
               .get({ source: "cache" });
+            console.log("Read from cache", promptSpecID, cachedData.data());
             onFetch(promptSpecID, cachedData.data()! as Data);
           } catch (error) {
             // No cached data available.
             if (!isCancelled) {
               try {
                 const cachedData = await dataRef.doc(promptSpecID).get();
-                onFetch(promptSpecID, cachedData.data()! as Data);
+                await onFetch(promptSpecID, cachedData.data()! as Data);
               } catch (error) {
-                onFetch(promptSpecID, error);
+                await onFetch(promptSpecID, error);
               }
             }
           }
@@ -145,7 +155,7 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
   ): { completion: Promise<unknown>; unsubscribe: MetabookUnsubscribe } {
     return this.getData(
       requestedPromptSpecIDs,
-      (data: PromptSpec) => data,
+      async (id: PromptSpecID, data: PromptSpec) => data,
       onUpdate,
     );
   }
@@ -159,8 +169,29 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
     // This is an awfully silly way to handle caching. We'll want to write the attachments out to disk in a temporary directory.
     return this.getData(
       requestedAttachmentIDs,
-      (attachment: Attachment): AttachmentURLReference => {
-        return getAttachmentURLReferenceForAttachment(attachment);
+      async (
+        attachmentID: AttachmentID,
+        attachment: Attachment,
+      ): Promise<AttachmentURLReference | Error> => {
+        let extension: string;
+        switch (attachment.mimeType) {
+          case "image/png":
+            extension = "png";
+            break;
+          default:
+            return new Error(
+              `Unknown attachment mime type ${attachment.mimeType}`,
+            );
+        }
+        const cacheURI = await this.cacheWriteHandler(
+          attachmentID,
+          extension,
+          Buffer.from(attachment.contents, "binary"),
+        );
+        return {
+          type: attachment.type,
+          url: cacheURI,
+        };
       },
       onUpdate,
     );

@@ -1,203 +1,34 @@
+import base64 from "base64-js";
+import * as FileSystem from "expo-file-system";
 import {
-  MetabookDataClient,
-  MetabookDataSnapshot,
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
-  MetabookPromptStateSnapshot,
-  MetabookUserClient,
 } from "metabook-client";
-import {
-  decodePrompt,
-  encodePrompt,
-  getDuePromptIDs,
-  Prompt,
-  PromptSpec,
-  PromptSpecID,
-} from "metabook-core";
-import {
-  PromptReviewItem,
-  ReviewArea,
-  ReviewAreaProps,
-  ReviewItem,
-} from "metabook-ui";
+import { ReviewArea, ReviewAreaProps } from "metabook-ui";
 import colors from "metabook-ui/dist/styles/colors";
 import "node-libs-react-native/globals";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useState } from "react";
 import { View } from "react-native";
-import {
-  enableFirebasePersistence,
-  getFirebaseApp,
-  PersistenceStatus,
-} from "./firebase";
+import { getFirebaseApp } from "./firebase";
+import { useReviewItems } from "./useReviewItems";
 
-function usePersistenceStatus() {
-  const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(
-    "pending",
+async function cacheWriteHandler(
+  name: string,
+  extension: string,
+  data: Buffer,
+): Promise<string> {
+  const cacheDirectoryURI = FileSystem.cacheDirectory;
+  if (cacheDirectoryURI === null) {
+    throw new Error("Unknown cache directory");
+  }
+  const cachedAttachmentURI = cacheDirectoryURI + name + "." + extension;
+  await FileSystem.writeAsStringAsync(
+    cachedAttachmentURI,
+    base64.fromByteArray(Uint8Array.from(data)),
+    { encoding: "base64" },
   );
-
-  useEffect(() => {
-    let hasUnmounted = false;
-    function safeSetPersistenceStatus(newStatus: PersistenceStatus) {
-      if (!hasUnmounted) {
-        setPersistenceStatus(newStatus);
-      }
-    }
-    enableFirebasePersistence()
-      .then(() => safeSetPersistenceStatus("enabled"))
-      .catch(() => safeSetPersistenceStatus("unavailable"));
-
-    return () => {
-      hasUnmounted = true;
-    };
-  }, []);
-
-  return persistenceStatus;
-}
-
-function usePromptStates(
-  userClient: MetabookUserClient,
-): MetabookPromptStateSnapshot | null {
-  const persistenceStatus = usePersistenceStatus();
-  const [
-    promptStates,
-    setPromptStates,
-  ] = useState<MetabookPromptStateSnapshot | null>(null);
-
-  // TODO: surface in UI
-  const subscriptionDidFail = useCallback(
-    (error) => console.error("Subscription error", error),
-    [],
-  );
-
-  useEffect(() => {
-    if (persistenceStatus === "pending") {
-      return;
-    }
-
-    console.log("Subscribing to prompt states");
-    return userClient.subscribeToPromptStates(
-      {},
-      setPromptStates,
-      subscriptionDidFail,
-    );
-  }, [userClient, persistenceStatus, setPromptStates, subscriptionDidFail]);
-
-  return promptStates;
-}
-
-function usePromptSpecs(
-  dataClient: MetabookDataClient,
-  promptSpecIDs: Set<PromptSpecID>,
-): MetabookDataSnapshot<PromptSpecID, PromptSpec> | null {
-  const unsubscribeFromDataRequest = useRef<(() => void) | null>(null);
-  const [promptSpecs, setPromptSpecs] = useState<MetabookDataSnapshot<
-    PromptSpecID,
-    PromptSpec
-  > | null>(null);
-
-  useEffect(() => {
-    unsubscribeFromDataRequest.current?.();
-    console.log("Fetching prompt specs", promptSpecIDs);
-    const { unsubscribe } = dataClient.getPromptSpecs(
-      promptSpecIDs,
-      (newPromptSpecs) => {
-        console.log("Got new prompt specs", newPromptSpecs);
-        setPromptSpecs(newPromptSpecs);
-      },
-    );
-    unsubscribeFromDataRequest.current = unsubscribe;
-
-    return () => {
-      unsubscribeFromDataRequest.current?.();
-      unsubscribeFromDataRequest.current = null;
-    };
-  }, [dataClient, promptSpecIDs]);
-
-  return promptSpecs;
-}
-
-function useReviewItems(
-  userClient: MetabookUserClient,
-  dataClient: MetabookDataClient,
-): ReviewItem[] | null {
-  const promptStates = usePromptStates(userClient);
-
-  const orderedDuePrompts = useMemo(() => {
-    if (promptStates === null) {
-      return null;
-    }
-
-    const duePromptIDs = getDuePromptIDs({
-      promptStates,
-      reviewSessionIndex: 0, // TODO
-      timestampMillis: Date.now(),
-      cardsCompletedInCurrentSession: 0, // TODO
-    });
-    return duePromptIDs
-      .map((promptID) => {
-        const prompt = decodePrompt(promptID);
-        if (prompt) {
-          return prompt;
-        } else {
-          console.error("Can't parse prompt ID", promptID);
-          return null;
-        }
-      })
-      .filter<Prompt>((prompt: Prompt | null): prompt is Prompt => !!prompt);
-  }, [promptStates]);
-
-  const duePromptSpecIDSet: Set<PromptSpecID> = useMemo(
-    () =>
-      orderedDuePrompts === null
-        ? new Set()
-        : new Set(orderedDuePrompts.map((p) => p.promptSpecID)),
-    [orderedDuePrompts],
-  );
-
-  const promptSpecs = usePromptSpecs(dataClient, duePromptSpecIDSet);
-
-  return useMemo(() => {
-    console.log("Computing review items");
-    return (
-      orderedDuePrompts
-        ?.map((prompt): PromptReviewItem | null => {
-          const promptSpec = promptSpecs?.get(prompt.promptSpecID);
-          if (promptSpec) {
-            if (promptSpec instanceof Error) {
-              console.error(
-                "Error getting prompt spec",
-                prompt.promptSpecID,
-                promptSpec,
-              );
-              // TODO surface error more effectively
-              return null;
-            } else {
-              const promptState =
-                promptStates?.get(encodePrompt(prompt)) ?? null;
-              // TODO validate that prompt spec, prompt state, and prompt parameter types all match up... or, better, design the API to ensure that more reasonably
-              return {
-                reviewItemType: "prompt",
-                promptSpec,
-                promptState,
-                promptParameters: prompt.promptParameters,
-              } as PromptReviewItem;
-            }
-          } else {
-            console.log("Still loading", prompt.promptSpecID);
-            return null;
-          }
-        })
-        .filter<ReviewItem>(
-          (task: PromptReviewItem | null): task is PromptReviewItem => !!task,
-        ) ?? null
-    );
-  }, [orderedDuePrompts, promptStates, promptSpecs]);
+  console.log(`Wrote file to cache: ${cachedAttachmentURI}`);
+  return cachedAttachmentURI;
 }
 
 export default function App() {
@@ -206,7 +37,11 @@ export default function App() {
 
     return {
       userClient: new MetabookFirebaseUserClient(firebaseApp, "testID"),
-      dataClient: new MetabookFirebaseDataClient(firebaseApp),
+      dataClient: new MetabookFirebaseDataClient(
+        firebaseApp,
+        firebaseApp.functions(),
+        cacheWriteHandler,
+      ),
     };
   });
 

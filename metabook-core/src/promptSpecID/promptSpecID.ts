@@ -3,6 +3,7 @@ import { Buffer } from "buffer";
 import CID from "cids";
 import DAGPB from "ipld-dag-pb";
 import multihashing from "multihashing";
+import Proto from "./generated/proto";
 import {
   applicationPromptSpecType,
   basicPromptSpecType,
@@ -10,8 +11,7 @@ import {
   PromptField,
   PromptSpec,
   QAPromptSpec,
-} from "..";
-import Proto from "./generated/proto";
+} from "../types/promptSpec";
 
 function getProtobufRepresentationForQAPromptSpec(
   qaPromptSpec: QAPromptSpec,
