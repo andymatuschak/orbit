@@ -49,6 +49,12 @@ export function getIntervalSequenceForSchedule(
   return schedulesToIntervalSequences[schedule];
 }
 
+export function getInitialIntervalForSchedule(
+  schedule: MetabookSpacedRepetitionSchedule,
+) {
+  return schedulesToIntervalSequences[schedule][1];
+}
+
 const intervalForContinuousLevel = (
   level: number,
   schedule: MetabookSpacedRepetitionSchedule,

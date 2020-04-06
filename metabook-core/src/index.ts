@@ -39,7 +39,10 @@ export type {
   MetabookSpacedRepetitionSchedule,
 } from "./spacedRepetition";
 
-export { getIntervalSequenceForSchedule } from "./spacedRepetition";
+export {
+  getIntervalSequenceForSchedule,
+  getInitialIntervalForSchedule,
+} from "./spacedRepetition";
 
 export { getIDForPromptSpec } from "./promptSpecID";
 export type { PromptSpecID } from "./promptSpecID";

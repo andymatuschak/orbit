@@ -12,14 +12,12 @@ import {
 import { testBasicPromptSpec } from "metabook-sample-data";
 import { getDataCollectionReference } from "../firebase";
 import shimFirebasePersistence from "firebase-node-persistence-shim";
-import {
-  getAttachmentURLReferenceForAttachment,
-  MetabookFirebaseDataClient,
-} from "./dataClient";
+import { MetabookFirebaseDataClient } from "./dataClient";
 
 const testProjectID = "metabook-system";
 let testApp: firebase.app.App;
 let dataClient: MetabookFirebaseDataClient;
+let cacheWriteHandler: jest.Mock;
 
 beforeAll(async () => {
   await shimFirebasePersistence();
@@ -33,7 +31,12 @@ beforeEach(async () => {
   testFunctions.useFunctionsEmulator("http://localhost:5001");
   await testApp.firestore().enablePersistence();
 
-  dataClient = new MetabookFirebaseDataClient(testApp, testFunctions);
+  cacheWriteHandler = jest.fn();
+  dataClient = new MetabookFirebaseDataClient(
+    testApp,
+    testFunctions,
+    cacheWriteHandler,
+  );
 });
 
 afterEach(() => {
@@ -117,11 +120,16 @@ test("records attachments", async () => {
   const testAttachmentID = getIDForAttachment(
     Buffer.from(testAttachment.contents),
   );
+
+  const mockURL = "https://test.org";
+  cacheWriteHandler.mockImplementation(() => mockURL);
+
   const mockFn = jest.fn();
   await dataClient.getAttachments(new Set([testAttachmentID]), mockFn)
     .completion;
-  expect(mockFn.mock.calls[0][0].get(testAttachmentID)).toMatchObject(
-    getAttachmentURLReferenceForAttachment(testAttachment),
-  );
+  expect(mockFn.mock.calls[0][0].get(testAttachmentID)).toMatchObject({
+    type: imageAttachmentType,
+    url: mockURL,
+  });
   // TODO test recording new prompts when the network is down
 });

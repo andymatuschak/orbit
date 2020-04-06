@@ -21,6 +21,7 @@ export function getActionLogForAction(
   });
 
   return {
+    actionLogType: "review",
     promptTask: {
       prompt: {
         promptSpecID: getIDForPromptSpec(action.promptSpec),

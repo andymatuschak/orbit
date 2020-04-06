@@ -1,13 +1,30 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
 
-import { MetabookActionOutcome, PromptTask } from "metabook-core";
+import {
+  MetabookActionOutcome,
+  Prompt,
+  PromptSpecID,
+  PromptTask,
+} from "metabook-core";
 
-export interface MetabookActionLog {
+interface BaseActionLog {
+  actionLogType: ActionLogType;
+  timestamp: firebase.firestore.Timestamp;
+}
+
+const ingestActionLogType = "ingest";
+export interface MetabookIngestActionLog extends BaseActionLog {
+  actionLogType: typeof ingestActionLogType;
+  prompt: Prompt;
+}
+
+const reviewActionLogType = "review";
+export interface MetabookReviewActionLog extends BaseActionLog {
+  actionLogType: typeof reviewActionLogType;
   promptTask: PromptTask;
 
   sessionID: string | null;
-  timestamp: firebase.firestore.Timestamp;
   actionOutcome: MetabookActionOutcome;
   baseIntervalMillis: number | null;
 
@@ -16,3 +33,9 @@ export interface MetabookActionLog {
   nextBestIntervalMillis: number | null;
   nextNeedsRetry: boolean;
 }
+
+export type MetabookActionLog =
+  | MetabookIngestActionLog
+  | MetabookReviewActionLog;
+
+export type ActionLogType = MetabookActionLog["actionLogType"];

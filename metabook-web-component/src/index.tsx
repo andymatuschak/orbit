@@ -54,7 +54,7 @@ import { StyleSheet } from "react-native-web";
 
       ReactDOM.render(
         <ReviewArea
-          tasks={cardElements
+          items={cardElements
             .slice(this.protoCardIndex)
             .map((element, index) => ({
               type: "question",

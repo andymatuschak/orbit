@@ -40,15 +40,6 @@ export interface MetabookDataClient {
 
 export type MetabookDataSnapshot<ID, Data> = Map<ID, Data | Error | null>; // null means the card data has not yet been fetched.
 
-export function getAttachmentURLReferenceForAttachment(attachment: Attachment) {
-  return {
-    type: attachment.type,
-    url: `data:${attachment.mimeType};base64,${base64.fromByteArray(
-      Uint8Array.from(Buffer.from(attachment.contents)),
-    )}`,
-  };
-}
-
 export class MetabookFirebaseDataClient implements MetabookDataClient {
   private readonly functions: firebase.functions.Functions;
   private readonly database: firebase.firestore.Firestore;

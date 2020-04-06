@@ -1,6 +1,7 @@
 import firebase from "firebase/app";
 import * as firebaseTesting from "@firebase/testing";
-import { PromptID } from "metabook-core";
+import { encodePrompt, Prompt, PromptID, PromptSpecID } from "metabook-core";
+import { clozePrompt } from "metabook-ui/dist/components/Card.stories";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
 import { MetabookLocalUserClient } from "../localClient";
@@ -23,7 +24,7 @@ afterEach(() => {
   return firebaseTesting.clearFirestoreData({ projectId: testProjectID });
 });
 
-test("recording a marking triggers card state update", async () => {
+test("recording a review triggers card state update", async () => {
   const mockFunction = jest.fn();
   const firstMockCall = promiseForNextCall(mockFunction);
   const unsubscribe = client.subscribeToPromptStates(
@@ -59,6 +60,56 @@ test("recording a marking triggers card state update", async () => {
   expect(updatedPromptStates).not.toMatchObject(initialPromptStates);
 
   unsubscribe();
+});
+
+describe("ingesting prompt specs", () => {
+  test("ingesting a basic prompt spec", async () => {
+    const prompt: Prompt = {
+      promptSpecID: "test" as PromptSpecID,
+      promptParameters: null,
+    };
+    await client.recordActionLogs([
+      {
+        actionLogType: "ingest",
+        prompt,
+        timestamp: firebase.firestore.Timestamp.fromMillis(Date.UTC(2020, 0)),
+      },
+    ]);
+    const cardStates = await client.getPromptStates({});
+    expect(cardStates.get(encodePrompt(prompt))).toMatchInlineSnapshot(`
+      Object {
+        "bestInterval": null,
+        "dueTimestampMillis": 1578268800000,
+        "interval": 432000000,
+        "needsRetry": false,
+        "taskParameters": null,
+      }
+    `);
+  });
+
+  test("ingesting a cloze prompt", async () => {
+    const prompt: Prompt = {
+      promptSpecID: "test" as PromptSpecID,
+      promptParameters: { clozeIndex: 2 },
+    };
+    await client.recordActionLogs([
+      {
+        actionLogType: "ingest",
+        prompt,
+        timestamp: firebase.firestore.Timestamp.fromMillis(Date.UTC(2020, 0)),
+      },
+    ]);
+    const cardStates = await client.getPromptStates({});
+    expect(cardStates.get(encodePrompt(prompt))).toMatchInlineSnapshot(`
+      Object {
+        "bestInterval": null,
+        "dueTimestampMillis": 1578268800000,
+        "interval": 432000000,
+        "needsRetry": false,
+        "taskParameters": null,
+      }
+    `);
+  });
 });
 
 test("port logs from local client", async () => {
