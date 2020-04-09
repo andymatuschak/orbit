@@ -299,8 +299,8 @@ export class QuestionAnswerPrompt implements IQuestionAnswerPrompt {
 /** Properties of a ClozePrompt. */
 export interface IClozePrompt {
 
-    /** ClozePrompt contents */
-    contents?: (string|null);
+    /** ClozePrompt body */
+    body?: (string|null);
 }
 
 /** Represents a ClozePrompt. */
@@ -312,8 +312,8 @@ export class ClozePrompt implements IClozePrompt {
      */
     constructor(properties?: IClozePrompt);
 
-    /** ClozePrompt contents. */
-    public contents: string;
+    /** ClozePrompt body. */
+    public body: string;
 
     /**
      * Creates a new ClozePrompt instance using the specified properties.

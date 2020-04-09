@@ -15,10 +15,10 @@ import {
 } from "../../types/actionLog";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
 import { getActionLogForAction } from "../../util/getActionLogForAction";
-import { getNextPromptStateForActionLog } from "../../util/getNextPromptStateForActionLog";
+import { getNextPromptStateForReviewLog } from "../../util/getNextPromptStateForActionLog";
 import getPromptStates from "../getPromptStates";
 import {
-  MetabookAction,
+  MetabookReviewAction,
   MetabookCardStateQuery,
   MetabookPromptStateSnapshot,
   MetabookUserClient,
@@ -147,13 +147,13 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
   }
 
   recordAction(
-    update: MetabookAction,
+    update: MetabookReviewAction,
   ): { newPromptState: PromptState; commit: Promise<unknown> } {
     const actionLog = getActionLogForAction(update);
     const commit = this.recordActionLogs([actionLog]);
 
     return {
-      newPromptState: getNextPromptStateForActionLog(
+      newPromptState: getNextPromptStateForReviewLog(
         actionLog,
         update.promptSpec,
       ),

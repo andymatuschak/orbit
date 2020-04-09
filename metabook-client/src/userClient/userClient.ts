@@ -22,7 +22,7 @@ export interface MetabookUserClient {
   ): Promise<MetabookPromptStateSnapshot>;
 
   recordAction(
-    action: MetabookAction,
+    action: MetabookReviewAction,
   ): { newPromptState: PromptState; commit: Promise<unknown> };
 }
 
@@ -32,7 +32,7 @@ export interface MetabookCardStateQuery {}
 
 export type MetabookPromptStateSnapshot = ReadonlyMap<PromptID, PromptState>;
 
-export interface MetabookAction {
+export interface MetabookReviewAction {
   promptSpec: PromptSpec;
   promptParameters: PromptParameters;
   promptTaskParameters: PromptTaskParameters;

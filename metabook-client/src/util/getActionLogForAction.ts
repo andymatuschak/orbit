@@ -6,12 +6,12 @@ import {
   updatePromptStateForAction,
 } from "metabook-core";
 
-import { MetabookActionLog } from "../types/actionLog";
-import { MetabookAction } from "../userClient";
+import { MetabookReviewActionLog } from "../types/actionLog";
+import { MetabookReviewAction } from "../userClient";
 
 export function getActionLogForAction(
-  action: MetabookAction,
-): MetabookActionLog {
+  action: MetabookReviewAction,
+): MetabookReviewActionLog {
   const newCardState = updatePromptStateForAction({
     basePromptState: action.basePromptState,
     promptSpec: action.promptSpec,

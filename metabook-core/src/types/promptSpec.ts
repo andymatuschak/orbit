@@ -27,7 +27,7 @@ export interface ApplicationPromptSpec {
 export const clozePromptGroupSpecType = "cloze";
 export interface ClozePromptGroupSpec {
   promptSpecType: typeof clozePromptGroupSpecType;
-  contents: string;
+  body: PromptField;
 }
 
 export type PromptSpec =

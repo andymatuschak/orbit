@@ -2,12 +2,12 @@ import { encodePrompt, PromptID, PromptState } from "metabook-core";
 import { MetabookActionLog } from "../../types/actionLog";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
 import { getActionLogForAction } from "../../util/getActionLogForAction";
-import { getNextPromptStateForActionLog } from "../../util/getNextPromptStateForActionLog";
+import { getNextPromptStateForReviewLog } from "../../util/getNextPromptStateForActionLog";
 import getPromptStates from "../getPromptStates";
 import {
-  MetabookAction,
   MetabookCardStateQuery,
   MetabookPromptStateSnapshot,
+  MetabookReviewAction,
   MetabookUserClient,
 } from "../userClient";
 
@@ -29,10 +29,10 @@ export class MetabookLocalUserClient implements MetabookUserClient {
   }
 
   recordAction(
-    action: MetabookAction,
+    action: MetabookReviewAction,
   ): { newPromptState: PromptState; commit: Promise<unknown> } {
     const actionLog = getActionLogForAction(action);
-    const newPromptState = getNextPromptStateForActionLog(
+    const newPromptState = getNextPromptStateForReviewLog(
       actionLog,
       action.promptSpec,
     );

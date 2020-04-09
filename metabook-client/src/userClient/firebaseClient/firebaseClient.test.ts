@@ -1,7 +1,6 @@
 import firebase from "firebase/app";
 import * as firebaseTesting from "@firebase/testing";
 import { encodePrompt, Prompt, PromptID, PromptSpecID } from "metabook-core";
-import { clozePrompt } from "metabook-ui/dist/components/Card.stories";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
 import { MetabookLocalUserClient } from "../localClient";

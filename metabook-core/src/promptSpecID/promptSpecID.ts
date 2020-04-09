@@ -42,7 +42,7 @@ function getProtobufRepresentationForPromptSpec(
     case clozePromptGroupSpecType:
       return {
         clozePrompt: {
-          contents: promptSpec.contents,
+          body: promptSpec.body.contents,
         },
       };
   }
@@ -88,7 +88,7 @@ function getDAGLinksForPromptSpec(promptSpec: PromptSpec): DAGPB.DAGLink[] {
       );
       return variantLinks.reduce((output, list) => output.concat(list), []);
     case clozePromptGroupSpecType:
-      return [];
+      return getDAGLinksForPromptField(promptSpec.body, "");
   }
 }
 

@@ -28,5 +28,8 @@ export const testApplicationPromptSpec: ApplicationPromptSpec = {
 };
 export const testClozePromptGroupSpec: ClozePromptGroupSpec = {
   promptSpecType: "cloze",
-  contents: "Test {cloze}",
+  body: {
+    contents: "Test {cloze}",
+    attachments: [],
+  },
 };

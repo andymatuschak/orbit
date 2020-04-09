@@ -1,0 +1,124 @@
+import events from "events";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import sqlite from "sqlite";
+import unzip from "unzip";
+import { Card, Collection, Log, Note } from "./ankiDBTypes";
+
+function readRows<R>(
+  handle: AnkiCollectionDBHandle,
+  tableName: string,
+  processRow: (row: R) => void,
+): Promise<unknown> {
+  return (handle as sqlite.Database).each(
+    `SELECT * FROM ${tableName}`,
+    (error: Error, row: R) => {
+      if (error) {
+        throw error;
+      } else {
+        processRow(row);
+      }
+    },
+  );
+}
+
+export function readNotes(
+  handle: AnkiCollectionDBHandle,
+  visitor: (row: Note) => void,
+): Promise<unknown> {
+  return readRows(handle, "notes", visitor);
+}
+
+export function readCards(
+  handle: AnkiCollectionDBHandle,
+  visitor: (row: Card) => void,
+): Promise<unknown> {
+  return readRows(handle, "cards", visitor);
+}
+
+export function readLogs(
+  handle: AnkiCollectionDBHandle,
+  visitor: (row: Log) => void,
+): Promise<unknown> {
+  return readRows(handle, "revlog", visitor);
+}
+
+export type AnkiCollectionDBHandle = unknown;
+export async function readCollection(
+  handle: AnkiCollectionDBHandle,
+): Promise<Collection> {
+  const database = handle as sqlite.Database;
+  const rawCollection = await database.get("SELECT * FROM col");
+  for (const key of ["conf", "models", "decks", "dconf"]) {
+    try {
+      rawCollection[key] = JSON.parse(rawCollection[key]);
+    } catch (error) {
+      throw new Error(`Error parsing ${key}: ${error}`);
+    }
+  }
+  return rawCollection;
+}
+
+async function withCollectionDatabase<R = undefined>(
+  ankiCollectionPath: string,
+  continuation: (handle: AnkiCollectionDBHandle) => Promise<R>,
+): Promise<R> {
+  const database = await sqlite.open(ankiCollectionPath, { mode: 1 });
+  return continuation(database);
+}
+
+export interface MediaManifest {
+  [key: string]: string; // maps filenames inside the collection package to filenames as referenced within notes
+}
+
+export async function readAnkiCollectionPackage(
+  collectionPath: string,
+  continuation: (
+    handle: AnkiCollectionDBHandle,
+    mediaManifest: MediaManifest | null,
+  ) => Promise<void>,
+) {
+  const workingDir = path.resolve(os.tmpdir(), `metabook-anki-${Date.now()}`);
+  await fs.promises.mkdir(workingDir, { recursive: true });
+
+  let ankiCollectionWritePath: string | null = null;
+  let mediaManifest: MediaManifest | null = null;
+  const promises: Promise<unknown>[] = [];
+  const collectionReadStream = fs
+    .createReadStream(collectionPath)
+    .pipe(unzip.Parse())
+    .on("entry", (entry: unzip.Entry) => {
+      if (entry.path === "collection.anki2") {
+        ankiCollectionWritePath = path.resolve(workingDir, entry.path);
+        const writeStream = fs.createWriteStream(ankiCollectionWritePath);
+        entry.pipe(writeStream);
+        promises.push(events.once(writeStream, "close"));
+      } else if (entry.path === "media") {
+        entry.setEncoding("utf-8");
+        let mediaManifestContents = "";
+        entry.on("data", (chunk: string) => {
+          mediaManifestContents += chunk;
+        });
+        promises.push(
+          events.once(entry, "end").then(() => {
+            mediaManifest = JSON.parse(mediaManifestContents);
+          }),
+        );
+      } else {
+        entry.autodrain();
+      }
+    });
+  promises.push(events.once(collectionReadStream, "close"));
+  await Promise.all(promises);
+
+  if (ankiCollectionWritePath) {
+    await withCollectionDatabase(ankiCollectionWritePath, (handle) =>
+      continuation(handle, mediaManifest),
+    );
+  } else {
+    throw new Error(
+      `${collectionPath} did not contain a collection database (probable version mismatch)`,
+    );
+  }
+}

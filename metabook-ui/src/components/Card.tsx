@@ -34,7 +34,7 @@ function getQAPromptSpec(reviewItem: PromptReviewItem): QAPromptSpec {
       ];
     case "cloze":
       const clozeRegexp = /{([^}]+?)}/g;
-      const clozeContents = reviewItem.promptSpec.contents;
+      const clozeContents = reviewItem.promptSpec.body.contents;
       const {
         clozeIndex,
       } = reviewItem.promptParameters as ClozePromptParameters;
@@ -50,7 +50,7 @@ function getQAPromptSpec(reviewItem: PromptReviewItem): QAPromptSpec {
                 " ___ " +
                 clozeContents.slice(clozeRegexp.lastIndex)
               ).replace(clozeRegexp, "$1"),
-              attachments: [],
+              attachments: reviewItem.promptSpec.body.attachments,
             },
             answer: {
               contents: match[1],

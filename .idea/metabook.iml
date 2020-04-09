@@ -5,6 +5,7 @@
       <excludeFolder url="file://$MODULE_DIR$/metabook-app/ios/Pods" />
       <excludeFolder url="file://$MODULE_DIR$/metabook-app/metabookapp/ios/Pods" />
       <excludeFolder url="file://$MODULE_DIR$/metabook-cloud-functions/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/metabook-core/src/promptSpecID/generated" />
       <excludeFolder url="file://$MODULE_DIR$/metabook-sample-data/dist" />
       <excludeFolder url="file://$MODULE_DIR$/metabook-ui-native-demo/.expo" />
       <excludeFolder url="file://$MODULE_DIR$/metabook-ui-native-demo/.expo-shared" />

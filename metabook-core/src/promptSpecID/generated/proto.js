@@ -734,7 +734,7 @@ $root.ClozePrompt = (function() {
      * Properties of a ClozePrompt.
      * @exports IClozePrompt
      * @interface IClozePrompt
-     * @property {string|null} [contents] ClozePrompt contents
+     * @property {string|null} [body] ClozePrompt body
      */
 
     /**
@@ -753,12 +753,12 @@ $root.ClozePrompt = (function() {
     }
 
     /**
-     * ClozePrompt contents.
-     * @member {string} contents
+     * ClozePrompt body.
+     * @member {string} body
      * @memberof ClozePrompt
      * @instance
      */
-    ClozePrompt.prototype.contents = "";
+    ClozePrompt.prototype.body = "";
 
     /**
      * Creates a new ClozePrompt instance using the specified properties.
@@ -784,8 +784,8 @@ $root.ClozePrompt = (function() {
     ClozePrompt.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        if (message.contents != null && message.hasOwnProperty("contents"))
-            writer.uint32(/* id 1, wireType 2 =*/10).string(message.contents);
+        if (message.body != null && message.hasOwnProperty("body"))
+            writer.uint32(/* id 1, wireType 2 =*/10).string(message.body);
         return writer;
     };
 
@@ -821,7 +821,7 @@ $root.ClozePrompt = (function() {
             var tag = reader.uint32();
             switch (tag >>> 3) {
             case 1:
-                message.contents = reader.string();
+                message.body = reader.string();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -858,9 +858,9 @@ $root.ClozePrompt = (function() {
     ClozePrompt.verify = function verify(message) {
         if (typeof message !== "object" || message === null)
             return "object expected";
-        if (message.contents != null && message.hasOwnProperty("contents"))
-            if (!$util.isString(message.contents))
-                return "contents: string expected";
+        if (message.body != null && message.hasOwnProperty("body"))
+            if (!$util.isString(message.body))
+                return "body: string expected";
         return null;
     };
 
@@ -876,8 +876,8 @@ $root.ClozePrompt = (function() {
         if (object instanceof $root.ClozePrompt)
             return object;
         var message = new $root.ClozePrompt();
-        if (object.contents != null)
-            message.contents = String(object.contents);
+        if (object.body != null)
+            message.body = String(object.body);
         return message;
     };
 
@@ -895,9 +895,9 @@ $root.ClozePrompt = (function() {
             options = {};
         var object = {};
         if (options.defaults)
-            object.contents = "";
-        if (message.contents != null && message.hasOwnProperty("contents"))
-            object.contents = message.contents;
+            object.body = "";
+        if (message.body != null && message.hasOwnProperty("body"))
+            object.body = message.body;
         return object;
     };
 

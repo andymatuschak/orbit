@@ -19,5 +19,5 @@ message QuestionAnswerPrompt {
 }
 
 message ClozePrompt {
-    string contents = 1;
+    string body = 1;
 }
