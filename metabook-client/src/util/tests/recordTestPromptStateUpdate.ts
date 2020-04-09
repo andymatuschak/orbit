@@ -1,22 +1,22 @@
 import {
-  encodePrompt,
-  getIDForPromptSpec,
-  PromptID,
+  encodePromptTask,
+  getIDForPrompt,
+  PromptTaskID,
   PromptState,
 } from "metabook-core";
-import { testBasicPromptSpec } from "metabook-sample-data";
+import { testBasicPrompt } from "metabook-sample-data";
 import { MetabookUserClient } from "../../userClient/userClient";
 
 export function recordTestPromptStateUpdate(
   client: MetabookUserClient,
 ): {
   newPromptState: PromptState;
-  testPromptID: PromptID;
+  testPromptTaskID: PromptTaskID;
   commit: Promise<unknown>;
 } {
   return {
     ...client.recordAction({
-      promptSpec: testBasicPromptSpec,
+      prompt: testBasicPrompt,
       promptParameters: null,
       promptTaskParameters: null,
       basePromptState: null,
@@ -24,8 +24,8 @@ export function recordTestPromptStateUpdate(
       sessionID: "a",
       timestampMillis: 1000,
     }),
-    testPromptID: encodePrompt({
-      promptSpecID: getIDForPromptSpec(testBasicPromptSpec),
+    testPromptTaskID: encodePromptTask({
+      promptID: getIDForPrompt(testBasicPrompt),
       promptParameters: null,
     }),
   };

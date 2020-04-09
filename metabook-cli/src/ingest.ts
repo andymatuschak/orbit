@@ -12,48 +12,48 @@ import {
   Attachment,
   AttachmentIDReference,
   getIDForAttachment,
-  getIDForPromptSpec,
+  getIDForPrompt,
   imageAttachmentType,
   PromptParameters,
-  PromptSpec,
-  PromptSpecID,
+  Prompt,
+  PromptID,
 } from "metabook-core";
 import {
-  testApplicationPromptSpec,
-  testBasicPromptSpec,
-  testClozePromptGroupSpec,
+  testApplicationPrompt,
+  testBasicPrompt,
+  testClozePrompt,
 } from "metabook-sample-data";
 import path from "path";
 
 function getTasksFromSpecs(
-  specs: PromptSpec[],
+  specs: Prompt[],
 ): {
-  promptSpecID: PromptSpecID;
+  promptID: PromptID;
   promptParameters: PromptParameters;
 }[] {
   const taskLists: {
-    promptSpecID: PromptSpecID;
+    promptID: PromptID;
     promptParameters: PromptParameters;
   }[][] = specs.map((spec) => {
-    switch (spec.promptSpecType) {
+    switch (spec.promptType) {
       case "basic":
         return [
           {
-            promptSpecID: getIDForPromptSpec(spec),
+            promptID: getIDForPrompt(spec),
             promptParameters: null,
           },
         ];
       case "applicationPrompt":
         return [
           {
-            promptSpecID: getIDForPromptSpec(spec),
+            promptID: getIDForPrompt(spec),
             promptParameters: null,
           },
         ];
       case "cloze":
         return [
           {
-            promptSpecID: getIDForPromptSpec(spec),
+            promptID: getIDForPrompt(spec),
             promptParameters: { clozeIndex: 0 },
           },
         ];
@@ -105,22 +105,22 @@ class Ingest extends Command {
       byteLength: imageData.byteLength,
     };
 
-    const testImagePromptSpec: PromptSpec = {
-      ...testBasicPromptSpec,
+    const testImagePrompt: Prompt = {
+      ...testBasicPrompt,
       question: {
-        ...testBasicPromptSpec.question,
+        ...testBasicPrompt.question,
         attachments: [imageAttachmentIDReference],
       },
     };
 
     const specs = [
-      testImagePromptSpec,
-      testBasicPromptSpec,
-      testApplicationPromptSpec,
-      testClozePromptGroupSpec,
+      testImagePrompt,
+      testBasicPrompt,
+      testApplicationPrompt,
+      testClozePrompt,
     ];
 
-    await dataClient.recordPromptSpecs(specs);
+    await dataClient.recordPrompts(specs);
     console.log(`Recorded ${specs.length} spec(s)`);
 
     await dataClient.recordAttachments([imageAttachment]);
@@ -130,10 +130,10 @@ class Ingest extends Command {
     const tasks = getTasksFromSpecs(specs);
     const now = firebase.firestore.Timestamp.fromDate(new Date());
     const actionLogs: MetabookActionLog[] = tasks.map(
-      ({ promptSpecID, promptParameters }) => {
+      ({ promptID, promptParameters }) => {
         return {
           actionLogType: "ingest",
-          promptSpecID,
+          promptID,
           promptParameters,
           timestamp: now,
         };

@@ -55,7 +55,7 @@ export default function App() {
         basePromptState: marking.reviewItem.promptState,
         sessionID: null,
         timestampMillis: Date.now(),
-        promptSpec: marking.reviewItem.promptSpec,
+        prompt: marking.reviewItem.prompt,
         promptTaskParameters:
           marking.reviewItem.promptState?.taskParameters ?? null,
         promptParameters: marking.reviewItem.promptParameters,
@@ -63,14 +63,10 @@ export default function App() {
 
       commit
         .then(() => {
-          console.log("Committed", marking.reviewItem.promptSpec);
+          console.log("Committed", marking.reviewItem.prompt);
         })
         .catch((error) => {
-          console.error(
-            "Couldn't commit",
-            marking.reviewItem.promptSpec,
-            error,
-          );
+          console.error("Couldn't commit", marking.reviewItem.prompt, error);
         });
     },
     [userClient],

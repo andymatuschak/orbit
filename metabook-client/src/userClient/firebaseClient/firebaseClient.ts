@@ -2,9 +2,9 @@ import firebase from "firebase/app";
 import "firebase/firestore";
 
 import {
-  encodePrompt,
+  encodePromptTask,
   getInitialIntervalForSchedule,
-  PromptID,
+  PromptTaskID,
   PromptState,
 } from "metabook-core";
 import { getDefaultFirebaseApp } from "../../firebase";
@@ -24,9 +24,9 @@ import {
   MetabookUserClient,
 } from "../userClient";
 
-function getPromptIDForActionLog(log: MetabookActionLog) {
-  return encodePrompt({
-    promptSpecID: log.promptSpecID,
+function getPromptTaskIDForActionLog(log: MetabookActionLog): PromptTaskID {
+  return encodePromptTask({
+    promptID: log.promptID,
     promptParameters: log.promptParameters,
   });
 }
@@ -34,9 +34,9 @@ function getPromptIDForActionLog(log: MetabookActionLog) {
 export class MetabookFirebaseUserClient implements MetabookUserClient {
   userID: string;
   private database: firebase.firestore.Firestore;
-  private promptStateCache: Map<PromptID, PromptState>;
-  private latestTimestampByPromptID: Map<
-    PromptID,
+  private readonly promptStateCache: Map<PromptTaskID, PromptState>;
+  private latestTimestampByPromptTaskID: Map<
+    PromptTaskID,
     firebase.firestore.Timestamp
   >;
 
@@ -44,7 +44,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     this.userID = userID;
     this.database = app.firestore();
     this.promptStateCache = new Map();
-    this.latestTimestampByPromptID = new Map();
+    this.latestTimestampByPromptTaskID = new Map();
   }
 
   async getPromptStates(
@@ -87,30 +87,30 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
   }
 
   private updateCacheForLog(log: MetabookActionLog): void {
-    const promptID = getPromptIDForActionLog(log);
-    const latestPromptTimestamp = this.latestTimestampByPromptID.get(promptID);
+    const promptTaskID = getPromptTaskIDForActionLog(log);
+    const latestPromptTimestamp = this.latestTimestampByPromptTaskID.get(promptTaskID);
     if (
       !latestPromptTimestamp ||
       (latestPromptTimestamp && log.timestamp > latestPromptTimestamp)
     ) {
       switch (log.actionLogType) {
         case "ingest":
-          this.updateCacheForIngestLog(log, promptID);
+          this.updateCacheForIngestLog(log, promptTaskID);
           break;
         case "review":
-          this.updateCacheForReviewLog(log, promptID);
+          this.updateCacheForReviewLog(log, promptTaskID);
           break;
       }
 
-      this.latestTimestampByPromptID.set(promptID, log.timestamp);
+      this.latestTimestampByPromptTaskID.set(promptTaskID, log.timestamp);
     }
   }
 
   private updateCacheForReviewLog(
     log: MetabookReviewActionLog,
-    promptID: PromptID,
+    promptTaskID: PromptTaskID,
   ) {
-    this.promptStateCache.set(promptID, {
+    this.promptStateCache.set(promptTaskID, {
       interval: log.nextIntervalMillis,
       dueTimestampMillis: log.nextDueTimestamp.toMillis(),
       bestInterval: log.nextBestIntervalMillis,
@@ -121,10 +121,10 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
 
   private updateCacheForIngestLog(
     log: MetabookIngestActionLog,
-    promptID: PromptID,
+    promptTaskID: PromptTaskID,
   ) {
     const initialInterval = getInitialIntervalForSchedule("default").interval;
-    this.promptStateCache.set(promptID, {
+    this.promptStateCache.set(promptTaskID, {
       interval: initialInterval,
       dueTimestampMillis: log.timestamp.toMillis() + initialInterval,
       bestInterval: null,
@@ -153,7 +153,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     return {
       newPromptState: getNextPromptStateForReviewLog(
         actionLog,
-        update.promptSpec,
+        update.prompt,
       ),
       commit: commit,
     };

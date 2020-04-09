@@ -3,7 +3,7 @@ import admin from "firebase-admin";
 
 import fs from "fs";
 import { MetabookActionLog } from "metabook-client/dist/types/actionLog";
-import { PromptSpec } from "metabook-core";
+import { Prompt } from "metabook-core";
 import * as path from "path";
 import { getAdminApp } from "./adminApp";
 
@@ -130,7 +130,7 @@ class Snapshot extends Command {
 
     const dataRef = db.collection(
       "data",
-    ) as admin.firestore.CollectionReference<PromptSpec>;
+    ) as admin.firestore.CollectionReference<Prompt>;
 
     if (flags.save) {
       const logSnapshot = await logRef.get();
@@ -144,10 +144,10 @@ class Snapshot extends Command {
       logSnapshot.forEach((docSnapshot) => {
         const log = docSnapshot.data();
         logs[docSnapshot.id] = log;
-        specIDs.add(log.promptTask.prompt.promptSpecID);
+        specIDs.add(log.promptTask.prompt.promptID);
       });
 
-      const data: { [key: string]: PromptSpec } = {};
+      const data: { [key: string]: Prompt } = {};
       await Promise.all(
         Array.from(specIDs.values()).map(async (specID) => {
           const specData = await dataRef.doc(specID).get();

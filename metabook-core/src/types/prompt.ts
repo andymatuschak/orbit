@@ -1,56 +1,58 @@
-// A *prompt* is the atomic unit whose state is tracked in the system. Applications prompts comprise multiple variants, but those variants are not prompts because they share the state of their parent prompt. A cloze task is drawn from a cloze prompt *group*: each individual deletion is a prompt, since its state is tracked distinctly.
+// A *prompt* describes the data for one or more related prompt tasks. A cloze prompt, for example, generates many tasks (one for each deletion).
 
-import { PromptSpecID } from "../promptSpecID";
+import { AttachmentIDReference } from "./attachmentIDReference";
 
-interface BasePrompt<PromptParametersType extends PromptParameters> {
-  promptSpecID: PromptSpecID;
-  promptParameters: PromptParametersType;
+export interface PromptField {
+  contents: string;
+  attachments: AttachmentIDReference[];
 }
 
-export type BasicPrompt = BasePrompt<BasicPromptParameters>;
-export type ApplicationPrompt = BasePrompt<ApplicationPromptParameters>;
-export type ClozePrompt = BasePrompt<ClozePromptParameters>;
+export interface QAPrompt {
+  question: PromptField;
+  answer: PromptField;
+  explanation: PromptField | null;
+}
+
+export const basicPromptType = "basic";
+export interface BasicPrompt extends QAPrompt {
+  promptType: typeof basicPromptType;
+}
+
+export const applicationPromptType = "applicationPrompt";
+export interface ApplicationPrompt {
+  promptType: typeof applicationPromptType;
+  variants: QAPrompt[];
+}
+
+export const clozePromptType = "cloze";
+export interface ClozePrompt {
+  promptType: typeof clozePromptType;
+  body: PromptField;
+}
+
 export type Prompt = BasicPrompt | ApplicationPrompt | ClozePrompt;
+export type PromptType = Prompt["promptType"];
 
-export type BasicPromptParameters = null;
-export type ApplicationPromptParameters = null;
-export interface ClozePromptParameters {
-  clozeIndex: number;
-}
-export type PromptParameters =
-  | BasicPromptParameters
-  | ApplicationPromptParameters
-  | ClozePromptParameters;
+/*
 
-export type PromptID = string & { __promptIDOpaqueType: never };
+given a task, to write a prompt's state:
+* basic prompts: hash the data, write as usual
+* cloze prompts: hash the contents, write to contentsHash/clozeIndex
+* application propmts: hash the prompt data, write to contentsHash/variantIndex
 
-// TODO: is this function really needed? it's not safe!
-export function decodePrompt(promptID: PromptID): Prompt | null {
-  const components = promptID.split("/");
-  if (components.length === 1) {
-    return {
-      promptSpecID: components[0] as PromptSpecID,
-      promptParameters: null,
-    };
-  } else if (components.length === 2) {
-    const childIndex = Number.parseInt(components[1]);
-    if (isNaN(childIndex)) {
-      return null;
-    } else {
-      return {
-        promptSpecID: components[0] as PromptSpecID,
-        promptParameters: {
-          clozeIndex: childIndex,
-        },
-      };
-    }
-  } else {
-    return null;
-  }
-}
+given a log entry:
+* separate the paths. read the first path segment.
+* if it's a basic prompt, record the data as usual
+    e.g. p111
+* if it's a cloze prompt, record the data in the variant's card states
+    e.g. p111/0
+* if it's an application prompt, record the data in the parent, including the next prompt index
+    e.g. p000/0
 
-export function encodePrompt(prompt: Prompt): PromptID {
-  return (prompt.promptParameters
-    ? `${prompt.promptSpecID}/${prompt.promptParameters.clozeIndex}`
-    : prompt.promptSpecID) as PromptID;
-}
+to make the task:
+* separate the path components. look at the first segment.
+* if it's a basic prompt, trivial
+* if it's a cloze prompt, trivial
+* if it's an application prompt, get appropriate child
+
+ */

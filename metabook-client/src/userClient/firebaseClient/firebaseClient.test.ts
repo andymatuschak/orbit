@@ -1,6 +1,6 @@
-import firebase from "firebase/app";
 import * as firebaseTesting from "@firebase/testing";
-import { encodePrompt, Prompt, PromptID, PromptSpecID } from "metabook-core";
+import firebase from "firebase/app";
+import { encodePromptTask, PromptID, PromptTask } from "metabook-core";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
 import { MetabookLocalUserClient } from "../localClient";
@@ -39,7 +39,9 @@ test("recording a review triggers card state update", async () => {
 
   const secondMockCall = promiseForNextCall(mockFunction);
   jest.spyOn(Math, "random").mockReturnValue(0.25);
-  const { newPromptState, testPromptID } = recordTestPromptStateUpdate(client);
+  const { newPromptState, testPromptTaskID } = recordTestPromptStateUpdate(
+    client,
+  );
   expect(newPromptState).toMatchInlineSnapshot(`
     Object {
       "bestInterval": 0,
@@ -52,7 +54,7 @@ test("recording a review triggers card state update", async () => {
 
   const updatedPromptStates = await secondMockCall;
   expect(updatedPromptStates).toMatchObject(
-    new Map([[testPromptID, newPromptState]]),
+    new Map([[testPromptTaskID, newPromptState]]),
   );
 
   // The new prompt states should be a different object.
@@ -63,19 +65,19 @@ test("recording a review triggers card state update", async () => {
 
 describe("ingesting prompt specs", () => {
   test("ingesting a basic prompt spec", async () => {
-    const prompt: Prompt = {
-      promptSpecID: "test" as PromptSpecID,
+    const promptTask: PromptTask = {
+      promptID: "test" as PromptID,
       promptParameters: null,
     };
     await client.recordActionLogs([
       {
         actionLogType: "ingest",
-        ...prompt,
+        ...promptTask,
         timestamp: firebase.firestore.Timestamp.fromMillis(Date.UTC(2020, 0)),
       },
     ]);
     const cardStates = await client.getPromptStates({});
-    expect(cardStates.get(encodePrompt(prompt))).toMatchInlineSnapshot(`
+    expect(cardStates.get(encodePromptTask(promptTask))).toMatchInlineSnapshot(`
       Object {
         "bestInterval": null,
         "dueTimestampMillis": 1578268800000,
@@ -87,8 +89,8 @@ describe("ingesting prompt specs", () => {
   });
 
   test("ingesting a cloze prompt", async () => {
-    const prompt: Prompt = {
-      promptSpecID: "test" as PromptSpecID,
+    const prompt: PromptTask = {
+      promptID: "test" as PromptID,
       promptParameters: { clozeIndex: 2 },
     };
     await client.recordActionLogs([
@@ -99,7 +101,7 @@ describe("ingesting prompt specs", () => {
       },
     ]);
     const cardStates = await client.getPromptStates({});
-    expect(cardStates.get(encodePrompt(prompt))).toMatchInlineSnapshot(`
+    expect(cardStates.get(encodePromptTask(prompt))).toMatchInlineSnapshot(`
       Object {
         "bestInterval": null,
         "dueTimestampMillis": 1578268800000,
@@ -114,16 +116,16 @@ describe("ingesting prompt specs", () => {
 test("port logs from local client", async () => {
   const localClient = new MetabookLocalUserClient();
   recordTestPromptStateUpdate(localClient);
-  const { newPromptState, commit, testPromptID } = recordTestPromptStateUpdate(
-    localClient,
-  );
+  const {
+    newPromptState,
+    commit,
+    testPromptTaskID,
+  } = recordTestPromptStateUpdate(localClient);
   await commit;
 
   await client.recordActionLogs(localClient.getAllLogs());
   const cardStates = await client.getPromptStates({});
-  expect(cardStates.get(testPromptID as PromptID)).toMatchObject(
-    newPromptState,
-  );
+  expect(cardStates.get(testPromptTaskID)).toMatchObject(newPromptState);
 });
 
 test("getCardStates changes after recording update", async () => {

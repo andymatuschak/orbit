@@ -2,33 +2,33 @@ import CID from "cids";
 
 import multihash from "multihashes";
 import {
-  ApplicationPromptSpec,
+  ApplicationPrompt,
   AttachmentIDReference,
   getIDForAttachment,
 } from "..";
 import {
-  testApplicationPromptSpec,
-  testBasicPromptSpec,
-  testClozePromptGroupSpec,
-  testQAPromptSpec,
+  testApplicationPrompt,
+  testBasicPrompt,
+  testClozePrompt,
+  testQAPrompt,
 } from "../__tests__/sampleData";
-import { getIDForPromptSpec } from "./promptSpecID";
+import { getIDForPrompt } from "./promptID";
 
 test("encoding stability", () => {
   expect(
-    getIDForPromptSpec(testBasicPromptSpec).toString(),
+    getIDForPrompt(testBasicPrompt).toString(),
   ).toMatchInlineSnapshot(
     `"zdj7WXQPmKiV2DXSuGfpnTLrwRE5F2HAMJznC63vxJHCptRcR"`,
   );
 
   expect(
-    getIDForPromptSpec(testApplicationPromptSpec).toString(),
+    getIDForPrompt(testApplicationPrompt).toString(),
   ).toMatchInlineSnapshot(
     `"zdj7WeP6nSgw44Dcyxz9ydsfuvVB6SfDWs1wQWTeeHvbkCxst"`,
   );
 
   expect(
-    getIDForPromptSpec(testClozePromptGroupSpec).toString(),
+    getIDForPrompt(testClozePrompt).toString(),
   ).toMatchInlineSnapshot(
     `"zdj7WbQaeWpew3hGLirKSimxUv8MgGDRWTH1jhEtC9dy1jwG3"`,
   );
@@ -46,85 +46,85 @@ describe("encoding attachments", () => {
   };
 
   test("basic prompt attachments", () => {
-    const basicPromptSpecID = getIDForPromptSpec(
-      testBasicPromptSpec,
+    const basicPromptID = getIDForPrompt(
+      testBasicPrompt,
     ).toString();
-    const oneAttachmentPromptSpecID = getIDForPromptSpec({
-      ...testBasicPromptSpec,
+    const oneAttachmentPromptID = getIDForPrompt({
+      ...testBasicPrompt,
       question: {
-        ...testBasicPromptSpec.question,
+        ...testBasicPrompt.question,
         attachments: [testAttachmentReference],
       },
     }).toString();
-    const attachmentsPromptSpecID = getIDForPromptSpec({
-      ...testBasicPromptSpec,
+    const attachmentsPromptID = getIDForPrompt({
+      ...testBasicPrompt,
       question: {
-        ...testBasicPromptSpec.question,
+        ...testBasicPrompt.question,
         attachments: [testAttachmentReference, testAttachmentReference2],
       },
     });
-    const multiFieldsPromptSpecID = getIDForPromptSpec({
-      ...testBasicPromptSpec,
+    const multiFieldsPromptID = getIDForPrompt({
+      ...testBasicPrompt,
       question: {
-        ...testBasicPromptSpec.question,
+        ...testBasicPrompt.question,
         attachments: [testAttachmentReference],
       },
       answer: {
-        ...testBasicPromptSpec.answer,
+        ...testBasicPrompt.answer,
         attachments: [testAttachmentReference2],
       },
     });
-    expect(basicPromptSpecID).not.toEqual(oneAttachmentPromptSpecID);
-    expect(oneAttachmentPromptSpecID).not.toEqual(attachmentsPromptSpecID);
-    expect(attachmentsPromptSpecID).not.toEqual(multiFieldsPromptSpecID);
+    expect(basicPromptID).not.toEqual(oneAttachmentPromptID);
+    expect(oneAttachmentPromptID).not.toEqual(attachmentsPromptID);
+    expect(attachmentsPromptID).not.toEqual(multiFieldsPromptID);
 
-    expect(oneAttachmentPromptSpecID).toMatchInlineSnapshot(
+    expect(oneAttachmentPromptID).toMatchInlineSnapshot(
       `"zdj7WcVkswQeBJgNoifPjYM3AXwdBLfHYaMFsjDLDFvnng9tj"`,
     );
-    expect(attachmentsPromptSpecID).toMatchInlineSnapshot(
+    expect(attachmentsPromptID).toMatchInlineSnapshot(
       `"zdj7WYS1e8XL6e7Y44UBDTj44DshcYaCeyta67CbUKbDEtRNq"`,
     );
-    expect(multiFieldsPromptSpecID).toMatchInlineSnapshot(
+    expect(multiFieldsPromptID).toMatchInlineSnapshot(
       `"zdj7WVjZFXE7T5wpXG4pjWbo7ocd8fo4KMwjVy7vrkK16NLnv"`,
     );
   });
 
   describe("application prompt attachments", () => {
     test("variants have different attachments", () => {
-      const testApplicationPrompt1: ApplicationPromptSpec = {
-        promptSpecType: "applicationPrompt",
+      const testApplicationPrompt1: ApplicationPrompt = {
+        promptType: "applicationPrompt",
         variants: [
           {
-            ...testBasicPromptSpec,
+            ...testBasicPrompt,
             question: {
-              ...testBasicPromptSpec.question,
+              ...testBasicPrompt.question,
               attachments: [testAttachmentReference, testAttachmentReference2],
             },
           },
-          testBasicPromptSpec,
+          testBasicPrompt,
         ],
       };
-      const testApplicationPrompt2: ApplicationPromptSpec = {
-        promptSpecType: "applicationPrompt",
+      const testApplicationPrompt2: ApplicationPrompt = {
+        promptType: "applicationPrompt",
         variants: [
           {
-            ...testBasicPromptSpec,
+            ...testBasicPrompt,
             question: {
-              ...testBasicPromptSpec.question,
+              ...testBasicPrompt.question,
               attachments: [testAttachmentReference],
             },
           },
           {
-            ...testBasicPromptSpec,
+            ...testBasicPrompt,
             question: {
-              ...testBasicPromptSpec.question,
+              ...testBasicPrompt.question,
               attachments: [testAttachmentReference2],
             },
           },
         ],
       };
-      const testSpecID1 = getIDForPromptSpec(testApplicationPrompt1).toString();
-      const testSpecID2 = getIDForPromptSpec(testApplicationPrompt2).toString();
+      const testSpecID1 = getIDForPrompt(testApplicationPrompt1).toString();
+      const testSpecID2 = getIDForPrompt(testApplicationPrompt2).toString();
       expect(testSpecID1).not.toEqual(testSpecID2);
 
       expect(testSpecID1).toMatchInlineSnapshot(
@@ -138,22 +138,22 @@ describe("encoding attachments", () => {
 });
 
 test("encodings are repeatable", () => {
-  const a = getIDForPromptSpec(testBasicPromptSpec);
-  const b = getIDForPromptSpec({ ...testBasicPromptSpec });
+  const a = getIDForPrompt(testBasicPrompt);
+  const b = getIDForPrompt({ ...testBasicPrompt });
   expect(a).toEqual(b);
 });
 
 test("application prompts encodings depend on variants", () => {
-  expect(getIDForPromptSpec(testApplicationPromptSpec)).not.toEqual(
-    getIDForPromptSpec({
-      ...testApplicationPromptSpec,
-      variants: [testQAPromptSpec],
+  expect(getIDForPrompt(testApplicationPrompt)).not.toEqual(
+    getIDForPrompt({
+      ...testApplicationPrompt,
+      variants: [testQAPrompt],
     }),
   );
 });
 
 test("encoding metadata", () => {
-  const cid = getIDForPromptSpec(testBasicPromptSpec);
+  const cid = getIDForPrompt(testBasicPrompt);
   const testCID = new CID(cid);
   expect(testCID.multibaseName).toEqual("base58btc");
   expect(multihash.decode(testCID.multihash).name).toEqual("sha2-256");

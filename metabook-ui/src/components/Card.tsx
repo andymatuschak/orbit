@@ -1,7 +1,7 @@
 import {
   ClozePromptParameters,
   MetabookSpacedRepetitionSchedule,
-  QAPromptSpec,
+  QAPrompt,
 } from "metabook-core";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -24,17 +24,17 @@ export interface CardProps {
   shouldLabelApplicationPrompts: boolean;
 }
 
-function getQAPromptSpec(reviewItem: PromptReviewItem): QAPromptSpec {
-  switch (reviewItem.promptSpec.promptSpecType) {
+function getQAPrompt(reviewItem: PromptReviewItem): QAPrompt {
+  switch (reviewItem.prompt.promptType) {
     case "basic":
-      return reviewItem.promptSpec;
+      return reviewItem.prompt;
     case "applicationPrompt":
-      return reviewItem.promptSpec.variants[
+      return reviewItem.prompt.variants[
         reviewItem.promptState?.taskParameters?.variantIndex ?? 0
       ];
     case "cloze":
       const clozeRegexp = /{([^}]+?)}/g;
-      const clozeContents = reviewItem.promptSpec.body.contents;
+      const clozeContents = reviewItem.prompt.body.contents;
       const {
         clozeIndex,
       } = reviewItem.promptParameters as ClozePromptParameters;
@@ -50,7 +50,7 @@ function getQAPromptSpec(reviewItem: PromptReviewItem): QAPromptSpec {
                 " ___ " +
                 clozeContents.slice(clozeRegexp.lastIndex)
               ).replace(clozeRegexp, "$1"),
-              attachments: reviewItem.promptSpec.body.attachments,
+              attachments: reviewItem.prompt.body.attachments,
             },
             answer: {
               contents: match[1],
@@ -72,7 +72,7 @@ function getQAPromptSpec(reviewItem: PromptReviewItem): QAPromptSpec {
 }
 
 export default function Card(props: CardProps) {
-  const spec = getQAPromptSpec(props.reviewItem);
+  const spec = getQAPrompt(props.reviewItem);
   return (
     <View style={styles.container}>
       <View style={styles.questionArea}>

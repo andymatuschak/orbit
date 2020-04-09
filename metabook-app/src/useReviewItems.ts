@@ -7,20 +7,21 @@ import {
 import {
   AttachmentID,
   AttachmentURLReference,
-  decodePrompt,
-  encodePrompt,
-  getDuePromptIDs,
-  Prompt,
+  decodePromptTask,
+  encodePromptTask,
+  getDuePromptTaskIDs,
   PromptField,
-  PromptSpec,
-  PromptSpecID,
-  QAPromptSpec,
+  Prompt,
+  PromptID,
+  PromptTask,
+  QAPrompt,
 } from "metabook-core";
 import {
   AttachmentResolutionMap,
   PromptReviewItem,
   ReviewItem,
 } from "metabook-ui";
+import { promptReviewItemType } from "metabook-ui/dist/reviewItem";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { enableFirebasePersistence, PersistenceStatus } from "./firebase";
 
@@ -81,35 +82,32 @@ function usePromptStates(
   return promptStates;
 }
 
-function usePromptSpecs(
+function usePrompts(
   dataClient: MetabookDataClient,
-  promptSpecIDs: Set<PromptSpecID>,
-): MetabookDataSnapshot<PromptSpecID, PromptSpec> | null {
+  promptIDs: Set<PromptID>,
+): MetabookDataSnapshot<PromptID, Prompt> | null {
   const unsubscribeFromDataRequest = useRef<(() => void) | null>(null);
-  const [promptSpecs, setPromptSpecs] = useState<MetabookDataSnapshot<
-    PromptSpecID,
-    PromptSpec
+  const [prompts, setPrompts] = useState<MetabookDataSnapshot<
+    PromptID,
+    Prompt
   > | null>(null);
 
   useEffect(() => {
     unsubscribeFromDataRequest.current?.();
-    console.log("Fetching prompt specs", promptSpecIDs);
-    const { unsubscribe } = dataClient.getPromptSpecs(
-      promptSpecIDs,
-      (newPromptSpecs) => {
-        console.log("Got new prompt specs", newPromptSpecs);
-        setPromptSpecs(newPromptSpecs);
-      },
-    );
+    console.log("Fetching prompt specs", promptIDs);
+    const { unsubscribe } = dataClient.getPrompts(promptIDs, (newPrompts) => {
+      console.log("Got new prompt specs", newPrompts);
+      setPrompts(newPrompts);
+    });
     unsubscribeFromDataRequest.current = unsubscribe;
 
     return () => {
       unsubscribeFromDataRequest.current?.();
       unsubscribeFromDataRequest.current = null;
     };
-  }, [dataClient, promptSpecIDs]);
+  }, [dataClient, promptIDs]);
 
-  return promptSpecs;
+  return prompts;
 }
 
 function useAttachments(
@@ -146,28 +144,28 @@ function useAttachments(
   return attachmentResolutionMap;
 }
 
-function getAttachmentIDsInPromptSpec(spec: PromptSpec): Set<AttachmentID> {
+function getAttachmentIDsInPrompt(spec: Prompt): Set<AttachmentID> {
   const output = new Set<AttachmentID>();
-  function visitQAPromptSpec(qaPromptSpec: QAPromptSpec) {
+  function visitQAPrompt(qaPrompt: QAPrompt) {
     function visitPromptField(promptField: PromptField) {
       promptField.attachments.forEach((attachmentIDReference) =>
         output.add(attachmentIDReference.id),
       );
     }
 
-    visitPromptField(qaPromptSpec.question);
-    visitPromptField(qaPromptSpec.answer);
-    if (qaPromptSpec.explanation) {
-      visitPromptField(qaPromptSpec.explanation);
+    visitPromptField(qaPrompt.question);
+    visitPromptField(qaPrompt.answer);
+    if (qaPrompt.explanation) {
+      visitPromptField(qaPrompt.explanation);
     }
   }
 
-  switch (spec.promptSpecType) {
+  switch (spec.promptType) {
     case "basic":
-      visitQAPromptSpec(spec);
+      visitQAPrompt(spec);
       break;
     case "applicationPrompt":
-      spec.variants.forEach(visitQAPromptSpec);
+      spec.variants.forEach(visitQAPrompt);
       break;
     case "cloze":
       break;
@@ -175,13 +173,13 @@ function getAttachmentIDsInPromptSpec(spec: PromptSpec): Set<AttachmentID> {
   return output;
 }
 
-function getAttachmentIDsInPromptSpecs(
-  promptSpecs: MetabookDataSnapshot<PromptSpecID, PromptSpec>,
+function getAttachmentIDsInPrompts(
+  prompts: MetabookDataSnapshot<PromptID, Prompt>,
 ): Set<AttachmentID> {
   const output: Set<AttachmentID> = new Set();
-  for (const maybeSpec of promptSpecs.values()) {
+  for (const maybeSpec of prompts.values()) {
     if (maybeSpec && !(maybeSpec instanceof Error)) {
-      for (const value of getAttachmentIDsInPromptSpec(maybeSpec)) {
+      for (const value of getAttachmentIDsInPrompt(maybeSpec)) {
         output.add(value);
       }
     }
@@ -195,94 +193,94 @@ export function useReviewItems(
 ): ReviewItem[] | null {
   const promptStates = usePromptStates(userClient);
 
-  const orderedDuePrompts = useMemo(() => {
+  const orderedDuePromptTasks = useMemo(() => {
     if (promptStates === null) {
       return null;
     }
 
-    const duePromptIDs = getDuePromptIDs({
+    const duePromptTaskIDs = getDuePromptTaskIDs({
       promptStates,
       reviewSessionIndex: 0, // TODO
       timestampMillis: Date.now(),
       cardsCompletedInCurrentSession: 0, // TODO
     });
-    return duePromptIDs
-      .map((promptID) => {
-        const prompt = decodePrompt(promptID);
+    return duePromptTaskIDs
+      .map((promptTaskID) => {
+        const prompt = decodePromptTask(promptTaskID);
         if (prompt) {
           return prompt;
         } else {
-          console.error("Can't parse prompt ID", promptID);
+          console.error("Can't parse prompt ID", promptTaskID);
           return null;
         }
       })
-      .filter<Prompt>((prompt: Prompt | null): prompt is Prompt => !!prompt);
+      .filter<PromptTask>(
+        (promptTask: PromptTask | null): promptTask is PromptTask =>
+          !!promptTask,
+      );
   }, [promptStates]);
 
-  const duePromptSpecIDSet: Set<PromptSpecID> = useMemo(
+  const duePromptIDSet: Set<PromptID> = useMemo(
     () =>
-      orderedDuePrompts === null
+      orderedDuePromptTasks === null
         ? new Set()
-        : new Set(orderedDuePrompts.map((p) => p.promptSpecID)),
-    [orderedDuePrompts],
+        : new Set(orderedDuePromptTasks.map((p) => p.promptID)),
+    [orderedDuePromptTasks],
   );
 
-  const promptSpecs = usePromptSpecs(dataClient, duePromptSpecIDSet);
+  const prompts = usePrompts(dataClient, duePromptIDSet);
 
-  const duePromptSpecAttachmentIDSet: Set<AttachmentID> = useMemo(
-    () =>
-      promptSpecs ? getAttachmentIDsInPromptSpecs(promptSpecs) : new Set(),
-    [promptSpecs],
+  const duePromptAttachmentIDSet: Set<AttachmentID> = useMemo(
+    () => (prompts ? getAttachmentIDsInPrompts(prompts) : new Set()),
+    [prompts],
   );
 
-  const attachments = useAttachments(dataClient, duePromptSpecAttachmentIDSet);
+  const attachments = useAttachments(dataClient, duePromptAttachmentIDSet);
 
   return useMemo(() => {
     console.log("Computing review items");
     return (
-      orderedDuePrompts
-        ?.map((prompt): PromptReviewItem | null => {
-          const promptSpec = promptSpecs?.get(prompt.promptSpecID);
-          if (promptSpec) {
-            if (promptSpec instanceof Error) {
+      orderedDuePromptTasks
+        ?.map((task): PromptReviewItem | null => {
+          const prompt = prompts?.get(task.promptID);
+          if (prompt) {
+            if (prompt instanceof Error) {
               console.error(
-                "Error getting prompt spec",
-                prompt.promptSpecID,
-                promptSpec,
+                "Error getting task's prompt",
+                task.promptID,
+                prompt,
               );
               // TODO surface error more effectively
               return null;
             } else {
               const promptState =
-                promptStates?.get(encodePrompt(prompt)) ?? null;
+                promptStates?.get(encodePromptTask(task)) ?? null;
 
               const attachmentResolutionMap: AttachmentResolutionMap = new Map();
-              for (const attachmentID of getAttachmentIDsInPromptSpec(
-                promptSpec,
-              )) {
+              for (const attachmentID of getAttachmentIDsInPrompt(prompt)) {
                 const maybeAttachment = attachments?.get(attachmentID);
                 if (maybeAttachment && !(maybeAttachment instanceof Error)) {
                   attachmentResolutionMap.set(attachmentID, maybeAttachment);
                 } else {
                   console.log(
-                    "Still loading attachment for prompt spec",
-                    prompt.promptSpecID,
+                    "Still loading attachment for task spec",
+                    task.promptID,
                     attachmentID,
                   );
-                  return null; // TODO order not jumping egregiously when this prompt finally becomes available
+                  return null; // TODO order not jumping egregiously when this task finally becomes available
                 }
               }
-              // TODO validate that prompt spec, prompt state, and prompt parameter types all match up... or, better, design the API to ensure that more reasonably
+              // TODO validate that task spec, task state, and task parameter types all match up... or, better, design the API to ensure that more reasonably
               return {
-                reviewItemType: "prompt",
-                promptSpec,
+                reviewItemType: promptReviewItemType,
+                prompt,
                 promptState,
-                promptParameters: prompt.promptParameters,
+                promptParameters: task.promptParameters,
                 attachmentResolutionMap,
               } as PromptReviewItem;
             }
           } else {
-            console.log("Still loading prompt spec", prompt.promptSpecID);
+            console.log("Still loading task spec", task.promptID);
             return null;
           }
         })
@@ -290,5 +288,5 @@ export function useReviewItems(
           (task: PromptReviewItem | null): task is PromptReviewItem => !!task,
         ) ?? null
     );
-  }, [orderedDuePrompts, promptStates, promptSpecs, attachments]);
+  }, [orderedDuePromptTasks, promptStates, prompts, attachments]);
 }

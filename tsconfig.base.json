@@ -19,6 +19,7 @@
   "compileOnSave": true,
   "references": [
     { "path": "./metabook-ui" },
+    { "path": "./metabook-app" },
     { "path": "./metabook-client" },
     { "path": "./metabook-core" },
     { "path": "./metabook-core/tsconfig.cjs.json" },

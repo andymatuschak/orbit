@@ -2,7 +2,7 @@ import isEqual from "lodash.isequal";
 import {
   MetabookActionOutcome,
   MetabookSpacedRepetitionSchedule,
-  PromptSpecType,
+  PromptType,
 } from "metabook-core";
 import React, { useCallback, useRef, useState } from "react";
 import {
@@ -409,9 +409,9 @@ export default function ReviewArea(props: ReviewAreaProps) {
                 setPendingMarkingInteractionState
               }
               disabled={!isShowingAnswer || items.length === 0}
-              promptSpecType={
+              promptType={
                 currentItem?.reviewItemType === "prompt"
-                  ? currentItem.promptSpec.promptSpecType
+                  ? currentItem.prompt.promptType
                   : null
               }
             />
@@ -460,16 +460,16 @@ function ReviewButtonArea(props: {
     state: PendingMarkingInteractionState | null,
   ) => void;
   disabled: boolean;
-  promptSpecType: PromptSpecType | null;
+  promptType: PromptType | null;
 }) {
   const {
     onMark,
     onPendingMarkingInteractionStateDidChange,
     disabled,
-    promptSpecType,
+    promptType,
   } = props;
 
-  const isApplicationPrompt = promptSpecType === "applicationPrompt";
+  const isApplicationPrompt = promptType === "applicationPrompt";
 
   return (
     <View style={styles.buttonContainer}>

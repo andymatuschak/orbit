@@ -4,7 +4,7 @@ import "firebase/firestore";
 import {
   MetabookActionOutcome,
   PromptParameters,
-  PromptSpecID,
+  PromptID,
   PromptTaskParameters,
 } from "metabook-core";
 
@@ -16,14 +16,14 @@ interface BaseActionLog {
 const ingestActionLogType = "ingest";
 export interface MetabookIngestActionLog extends BaseActionLog {
   actionLogType: typeof ingestActionLogType;
-  promptSpecID: PromptSpecID;
+  promptID: PromptID;
   promptParameters: PromptParameters
 }
 
 const reviewActionLogType = "review";
 export interface MetabookReviewActionLog extends BaseActionLog {
   actionLogType: typeof reviewActionLogType;
-  promptSpecID: PromptSpecID;
+  promptID: PromptID;
   promptParameters: PromptParameters;
   promptTaskParameters: PromptTaskParameters;
 

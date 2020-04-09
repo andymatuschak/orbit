@@ -3,9 +3,9 @@ import {
   Attachment,
   AttachmentID,
   getIDForAttachment,
-  getIDForPromptSpec,
-  PromptSpec,
-  PromptSpecID,
+  getIDForPrompt,
+  Prompt,
+  PromptID,
 } from "metabook-core";
 
 let _database: firebase.firestore.Firestore | null = null;
@@ -18,21 +18,21 @@ function getDatabase(): firebase.firestore.Firestore {
 }
 
 export function getDataCollectionReference(): firebase.firestore.CollectionReference<
-  PromptSpec | Attachment
+  Prompt | Attachment
 > {
   // TODO remove duplication with metabook-client
   return getDatabase().collection(
     "data",
-  ) as firebase.firestore.CollectionReference<PromptSpec>;
+  ) as firebase.firestore.CollectionReference<Prompt>;
 }
 
-export function recordPrompts(prompts: PromptSpec[]): Promise<PromptSpecID[]> {
+export function recordPrompts(prompts: Prompt[]): Promise<PromptID[]> {
   // TODO probably add something about provenance
   // TODO something about user quotas, billing
   const collectionReference = getDataCollectionReference();
   return Promise.all(
     prompts.map(async (promptData) => {
-      const id = getIDForPromptSpec(promptData);
+      const id = getIDForPrompt(promptData);
       const dataRef = collectionReference.doc(id);
       await dataRef
         .create(promptData)
@@ -42,7 +42,7 @@ export function recordPrompts(prompts: PromptSpec[]): Promise<PromptSpecID[]> {
         .catch(() => {
           return;
         });
-      return id as PromptSpecID;
+      return id as PromptID;
     }),
   );
 }

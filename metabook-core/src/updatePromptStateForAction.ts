@@ -5,23 +5,23 @@ import {
   MetabookActionOutcome,
   MetabookSpacedRepetitionSchedule,
 } from "./spacedRepetition";
-import { PromptSpec } from "./types/promptSpec";
+import { Prompt } from "./types/prompt";
 import { PromptState } from "./types/promptState";
 
 export default function updatePromptStateForAction({
   basePromptState,
-  promptSpec,
+  prompt,
   actionOutcome,
   schedule,
   reviewTimestampMillis,
 }: {
   basePromptState: PromptState | null;
-  promptSpec: PromptSpec;
+  prompt: Prompt;
   actionOutcome: MetabookActionOutcome;
   schedule: MetabookSpacedRepetitionSchedule;
   reviewTimestampMillis: number;
 }) {
-  const supportsRetry = promptSpec.promptSpecType !== "applicationPrompt";
+  const supportsRetry = prompt.promptType !== "applicationPrompt";
   const currentReviewInterval = basePromptState ? basePromptState.interval : 0;
   const currentBestInterval = basePromptState
     ? basePromptState.bestInterval
@@ -77,7 +77,7 @@ export default function updatePromptStateForAction({
     interval: newInterval,
     needsRetry: supportsRetry && actionOutcome === "forgotten",
     taskParameters: getNextTaskParameters(
-      promptSpec,
+      prompt,
       basePromptState?.taskParameters ?? null,
     ),
   };

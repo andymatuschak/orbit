@@ -1,16 +1,16 @@
-// PromptSpec and PromptTaskParameters need to be the same subtypes, but I don't have a good way to express that in the type system.
+// Prompt and PromptTaskParameters need to be the same subtypes, but I don't have a good way to express that in the type system.
 
-import { PromptSpec } from "./types/promptSpec";
+import { Prompt } from "./types/prompt";
 import {
   ApplicationPromptTaskParameters,
   PromptTaskParameters,
 } from "./types/promptTaskParameters";
 
 export default function getNextTaskParameters(
-  promptSpec: PromptSpec,
+  prompt: Prompt,
   promptTaskParameters: PromptTaskParameters | null,
 ): PromptTaskParameters {
-  switch (promptSpec.promptSpecType) {
+  switch (prompt.promptType) {
     case "basic":
     case "cloze":
       return null;
@@ -25,7 +25,7 @@ export default function getNextTaskParameters(
             ((promptTaskParameters as ApplicationPromptTaskParameters)
               .variantIndex +
               1) %
-            promptSpec.variants.length,
+            prompt.variants.length,
         };
       }
   }

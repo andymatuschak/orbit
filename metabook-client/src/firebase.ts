@@ -1,5 +1,5 @@
 import firebase from "firebase/app";
-import { Attachment, PromptSpec } from "metabook-core";
+import { Attachment, Prompt } from "metabook-core";
 
 let _app: firebase.app.App | null;
 export function getDefaultFirebaseApp(): firebase.app.App {
@@ -13,8 +13,8 @@ export function getDefaultFirebaseApp(): firebase.app.App {
 
 export function getDataCollectionReference(
   database: firebase.firestore.Firestore,
-): firebase.firestore.CollectionReference<PromptSpec | Attachment> {
+): firebase.firestore.CollectionReference<Prompt | Attachment> {
   return database.collection("data") as firebase.firestore.CollectionReference<
-    PromptSpec | Attachment
+    Prompt | Attachment
   >;
 }

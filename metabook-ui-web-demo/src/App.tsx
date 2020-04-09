@@ -3,8 +3,8 @@ import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "metabook-client";
-import { getIDForPromptSpec } from "metabook-core";
-import { testBasicPromptSpec } from "metabook-sample-data";
+import { getIDForPrompt } from "metabook-core";
+import { testBasicPrompt } from "metabook-sample-data";
 import { ReviewAreaProps, ReviewTask } from "metabook-ui";
 import { ReviewArea } from "metabook-ui-web";
 import React, { useCallback, useState } from "react";
@@ -13,7 +13,7 @@ function generateTask(questionText: string): ReviewTask {
   return {
     type: "prompt",
     promptTask: {
-      spec: { ...testBasicPromptSpec, question: questionText },
+      spec: { ...testBasicPrompt, question: questionText },
     },
     promptState: null,
   };
@@ -49,11 +49,11 @@ function App() {
   const onMark = useCallback<ReviewAreaProps["onMark"]>(async (marking) => {
     setTasks((tasks) => tasks.slice(1));
 
-    const promptID = getIDForPromptSpec(marking.reviewTask.promptTask.spec);
+    const promptTaskID = getIDForPrompt(marking.reviewTask.promptTask.spec);
     /*const { newCardState, commit } = client.recordCardStateUpdate({
         actionOutcome: marking.outcome,
         baseCardState: null,
-        promptID,
+        promptTaskID,
         promptType: marking.task.promptData.promptType,
         sessionID: null,
         timestamp: Date.now(),
@@ -62,12 +62,12 @@ function App() {
        */
     // TODO
 
-    console.log("Committed", promptID);
+    console.log("Committed", promptTaskID);
   }, []);
 
   return (
     <ReviewArea
-      tasks={tasks}
+      items={items}
       onMark={onMark}
       schedule="aggressiveStart"
       shouldLabelApplicationPrompts={false}

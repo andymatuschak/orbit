@@ -1,22 +1,22 @@
 import {
   AttachmentIDReference,
-  BasicPromptSpec,
-  ClozePromptGroupSpec,
+  BasicPrompt,
+  ClozePrompt,
   PromptField,
-  PromptSpec,
+  Prompt,
 } from "metabook-core";
 import { Note, splitAnkiDBNoteFields } from "./ankiPkg";
 import { AnkiAttachmentReference } from "./ankiPkg/ankiAttachmentReference";
 import parseAnkiField from "./ankiPkg/parseAnkiField";
 import { ModelMapping, ModelMappingType } from "./modelMapping";
 
-export function mapNoteToPromptSpec(
+export function mapNoteToPrompt(
   note: Note,
   modelMapping: ModelMapping,
   attachmentResolver: (
     ankiAttachmentReference: AnkiAttachmentReference,
   ) => AttachmentIDReference | null,
-): { promptSpec: PromptSpec; issues: string[] } {
+): { prompt: Prompt; issues: string[] } {
   const fields = splitAnkiDBNoteFields(note.flds);
   const issues: string[] = [];
 
@@ -54,27 +54,27 @@ export function mapNoteToPromptSpec(
         modelMapping.answerFieldIndex,
       ]);
 
-      const basicPromptSpec: BasicPromptSpec = {
+      const basicPrompt: BasicPrompt = {
         question: transformAnkiField(fields[modelMapping.questionFieldIndex]),
         answer: transformAnkiField(fields[modelMapping.answerFieldIndex]),
         explanation: null,
-        promptSpecType: "basic",
+        promptType: "basic",
       };
       return {
         issues,
-        promptSpec: basicPromptSpec,
+        prompt: basicPrompt,
       };
 
     case ModelMappingType.Cloze:
       checkForDroppedFields([modelMapping.contentsFieldIndex]);
 
-      const clozePromptSpec: ClozePromptGroupSpec = {
+      const clozePrompt: ClozePrompt = {
         body: transformAnkiField(fields[modelMapping.contentsFieldIndex]),
-        promptSpecType: "cloze",
+        promptType: "cloze",
       };
       return {
         issues,
-        promptSpec: clozePromptSpec,
+        prompt: clozePrompt,
       };
   }
 }

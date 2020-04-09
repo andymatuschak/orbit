@@ -1,4 +1,4 @@
-import { encodePrompt, PromptID, PromptState } from "metabook-core";
+import { encodePromptTask, PromptTaskID, PromptState } from "metabook-core";
 import { MetabookActionLog } from "../../types/actionLog";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
 import { getActionLogForAction } from "../../util/getActionLogForAction";
@@ -12,7 +12,7 @@ import {
 } from "../userClient";
 
 export class MetabookLocalUserClient implements MetabookUserClient {
-  private readonly latestPromptStates: Map<PromptID, PromptState>;
+  private readonly latestPromptStates: Map<PromptTaskID, PromptState>;
   private readonly cardStateSubscribers: Set<CardStateSubscriber>;
   private readonly logs: MetabookActionLog[];
 
@@ -34,12 +34,12 @@ export class MetabookLocalUserClient implements MetabookUserClient {
     const actionLog = getActionLogForAction(action);
     const newPromptState = getNextPromptStateForReviewLog(
       actionLog,
-      action.promptSpec,
+      action.prompt,
     );
 
     this.latestPromptStates.set(
-      encodePrompt({
-        promptSpecID: actionLog.promptSpecID,
+      encodePromptTask({
+        promptID: actionLog.promptID,
         promptParameters: actionLog.promptParameters,
       }),
       newPromptState,

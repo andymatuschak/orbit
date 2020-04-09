@@ -10,9 +10,9 @@ import {
   updatePromptStateForAction,
 } from "metabook-core";
 import {
-  testApplicationPromptSpec,
-  testBasicPromptSpec,
-  testClozePromptGroupSpec,
+  testApplicationPrompt,
+  testBasicPrompt,
+  testClozePrompt,
 } from "metabook-sample-data";
 import React, { ReactNode, useState } from "react";
 import { Button, View } from "react-native";
@@ -50,7 +50,7 @@ export const basic = () => (
     showsNeedsRetryNotice={false}
     reviewItem={{
       reviewItemType: "prompt",
-      promptSpec: testBasicPromptSpec,
+      prompt: testBasicPrompt,
       promptParameters: null,
       promptState: null,
       attachmentResolutionMap: null,
@@ -64,7 +64,7 @@ export const applicationPrompt = () => (
     showsNeedsRetryNotice={false}
     reviewItem={{
       reviewItemType: "prompt",
-      promptSpec: testApplicationPromptSpec,
+      prompt: testApplicationPrompt,
       promptParameters: null,
       promptState: null,
       attachmentResolutionMap: null,
@@ -78,7 +78,7 @@ export const clozePrompt = () => (
     showsNeedsRetryNotice={false}
     reviewItem={{
       reviewItemType: "prompt",
-      promptSpec: testClozePromptGroupSpec,
+      prompt: testClozePrompt,
       promptParameters: { clozeIndex: 1 },
       promptState: null,
       attachmentResolutionMap: null,
@@ -92,10 +92,10 @@ export const image = () => (
     showsNeedsRetryNotice={false}
     reviewItem={{
       reviewItemType: "prompt",
-      promptSpec: {
-        ...testBasicPromptSpec,
+      prompt: {
+        ...testBasicPrompt,
         question: {
-          ...testBasicPromptSpec.question,
+          ...testBasicPrompt.question,
           attachments: [testAttachmentIDReference],
         },
       },
@@ -275,7 +275,7 @@ function WithReviewState(props: {
             setPromptState(
               updatePromptStateForAction({
                 basePromptState: promptState,
-                promptSpec: props.reviewItem.promptSpec,
+                prompt: props.reviewItem.prompt,
                 actionOutcome: currentOutcome,
                 schedule: props.schedule,
                 reviewTimestampMillis: Date.now(),

@@ -1,4 +1,3 @@
-import base64 from "base64-js";
 import firebase from "firebase/app";
 import "firebase/firestore";
 import "firebase/functions";
@@ -7,8 +6,8 @@ import {
   Attachment,
   AttachmentID,
   AttachmentURLReference,
-  PromptSpec,
-  PromptSpecID,
+  Prompt,
+  PromptID,
 } from "metabook-core";
 import { getDataCollectionReference, getDefaultFirebaseApp } from "../firebase";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
@@ -20,14 +19,12 @@ type MetabookDataClientCacheWriteHandler = (
 ) => Promise<string>;
 
 export interface MetabookDataClient {
-  recordPromptSpecs(promptSpecs: PromptSpec[]): Promise<unknown>;
+  recordPrompts(prompts: Prompt[]): Promise<unknown>;
   recordAttachments(attachments: Attachment[]): Promise<unknown>;
 
-  getPromptSpecs(
-    requestedPromptSpecIDs: Set<PromptSpecID>,
-    onUpdate: (
-      snapshot: MetabookDataSnapshot<PromptSpecID, PromptSpec>,
-    ) => void,
+  getPrompts(
+    requestedPromptIDs: Set<PromptID>,
+    onUpdate: (snapshot: MetabookDataSnapshot<PromptID, Prompt>) => void,
   ): { completion: Promise<unknown>; unsubscribe: MetabookUnsubscribe };
 
   getAttachments(
@@ -55,7 +52,7 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
     this.cacheWriteHandler = cacheWriteHandler;
   }
 
-  recordPromptSpecs(prompts: PromptSpec[]): Promise<unknown> {
+  recordPrompts(prompts: Prompt[]): Promise<unknown> {
     // TODO locally cache new prompts
     return this.functions.httpsCallable("recordPrompts")({ prompts });
   }
@@ -68,8 +65,8 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
   }
 
   private getData<
-    ID extends PromptSpecID | AttachmentID,
-    Data extends PromptSpec | Attachment,
+    ID extends PromptID | AttachmentID,
+    Data extends Prompt | Attachment,
     MappedData = Data
   >(
     requestedIDs: Set<ID>,
@@ -79,7 +76,7 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
     const dataRef = getDataCollectionReference(this.database);
 
     const dataSnapshot: MetabookDataSnapshot<ID, MappedData> = new Map(
-      [...requestedIDs.values()].map((promptSpecID) => [promptSpecID, null]),
+      [...requestedIDs.values()].map((promptID) => [promptID, null]),
     );
 
     let isCancelled = false;
@@ -107,27 +104,25 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
         },
       };
     } else {
-      const fetchPromises = [...requestedIDs.values()].map(
-        async (promptSpecID) => {
-          try {
-            const cachedData = await dataRef
-              .doc(promptSpecID)
-              .get({ source: "cache" });
-            console.log("Read from cache", promptSpecID, cachedData.data());
-            onFetch(promptSpecID, cachedData.data()! as Data);
-          } catch (error) {
-            // No cached data available.
-            if (!isCancelled) {
-              try {
-                const cachedData = await dataRef.doc(promptSpecID).get();
-                await onFetch(promptSpecID, cachedData.data()! as Data);
-              } catch (error) {
-                await onFetch(promptSpecID, error);
-              }
+      const fetchPromises = [...requestedIDs.values()].map(async (promptID) => {
+        try {
+          const cachedData = await dataRef
+            .doc(promptID)
+            .get({ source: "cache" });
+          console.log("Read from cache", promptID, cachedData.data());
+          onFetch(promptID, cachedData.data()! as Data);
+        } catch (error) {
+          // No cached data available.
+          if (!isCancelled) {
+            try {
+              const cachedData = await dataRef.doc(promptID).get();
+              await onFetch(promptID, cachedData.data()! as Data);
+            } catch (error) {
+              await onFetch(promptID, error);
             }
           }
-        },
-      );
+        }
+      });
 
       return {
         completion: Promise.all(fetchPromises),
@@ -138,15 +133,13 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
     }
   }
 
-  getPromptSpecs(
-    requestedPromptSpecIDs: Set<PromptSpecID>,
-    onUpdate: (
-      snapshot: MetabookDataSnapshot<PromptSpecID, PromptSpec>,
-    ) => void,
+  getPrompts(
+    requestedPromptIDs: Set<PromptID>,
+    onUpdate: (snapshot: MetabookDataSnapshot<PromptID, Prompt>) => void,
   ): { completion: Promise<unknown>; unsubscribe: MetabookUnsubscribe } {
     return this.getData(
-      requestedPromptSpecIDs,
-      async (id: PromptSpecID, data: PromptSpec) => data,
+      requestedPromptIDs,
+      async (id: PromptID, data: Prompt) => data,
       onUpdate,
     );
   }

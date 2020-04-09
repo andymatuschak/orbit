@@ -8,20 +8,20 @@ export type {
 } from "./types/promptState";
 
 export {
-  basicPromptSpecType,
-  applicationPromptSpecType,
-  clozePromptGroupSpecType,
-} from "./types/promptSpec";
+  basicPromptType,
+  applicationPromptType,
+  clozePromptType,
+} from "./types/prompt";
 
 export type {
-  PromptSpec,
-  PromptSpecType,
-  BasicPromptSpec,
-  ApplicationPromptSpec,
-  ClozePromptGroupSpec,
-  QAPromptSpec,
+  Prompt,
+  PromptType,
+  BasicPrompt,
+  ApplicationPrompt,
+  ClozePrompt,
+  QAPrompt,
   PromptField,
-} from "./types/promptSpec";
+} from "./types/prompt";
 
 export type {
   PromptTaskParameters,
@@ -40,23 +40,23 @@ export {
   getInitialIntervalForSchedule,
 } from "./spacedRepetition";
 
-export { getIDForPromptSpec } from "./promptSpecID";
-export type { PromptSpecID } from "./promptSpecID";
+export { getIDForPrompt } from "./promptID";
+export type { PromptID } from "./promptID";
 
-export { default as getDuePromptIDs } from "./getDuePromptIDs";
+export { default as getDuePromptTaskIDs } from "./getDuePromptTaskIDs";
 
-export { encodePrompt, decodePrompt } from "./types/prompt";
+export { encodePromptTask, decodePromptTask } from "./types/promptTask";
 export type {
-  Prompt,
-  BasicPrompt,
-  ApplicationPrompt,
-  ClozePrompt,
-  PromptID,
+  PromptTask,
+  BasicPromptTask,
+  ApplicationPromptTask,
+  ClozePromptTask,
+  PromptTaskID,
   PromptParameters,
   BasicPromptParameters,
   ApplicationPromptParameters,
   ClozePromptParameters,
-} from "./types/prompt";
+} from "./types/promptTask";
 
 export type { Attachment } from "./types/attachment";
 

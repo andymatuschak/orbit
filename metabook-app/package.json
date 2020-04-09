@@ -31,6 +31,7 @@
     "firebase-react-native-persistence-shim": "0.0.1",
     "https-browserify": "0.0.1",
     "inherits": "^2.0.4",
+    "metabook-core": "0.0.1",
     "metabook-client": "0.0.1",
     "metabook-sample-data": "0.0.1",
     "metabook-ui": "0.0.1",

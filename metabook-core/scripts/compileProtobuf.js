@@ -1,17 +1,11 @@
 const { pbjs, pbts } = require("protobufjs/cli"); // or require("protobufjs/cli").pbjs / .pbts
 const path = require("path");
 
-const protobufPath = path.join(
-  __dirname,
-  "../src/promptSpecID/promptSpecID.proto",
-);
-const outputPath = path.join(
-  __dirname,
-  "../src/promptSpecID/generated/proto.js",
-);
+const protobufPath = path.join(__dirname, "../src/promptID/promptID.proto");
+const outputPath = path.join(__dirname, "../src/promptID/generated/proto.js");
 const outputTypesPath = path.join(
   __dirname,
-  "../src/promptSpecID/generated/proto.d.ts",
+  "../src/promptID/generated/proto.d.ts",
 );
 
 pbjs.main(

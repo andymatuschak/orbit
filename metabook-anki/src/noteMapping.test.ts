@@ -1,4 +1,4 @@
-import { basicPromptSpecType, clozePromptGroupSpecType } from "metabook-core";
+import { basicPromptType, clozePromptType } from "metabook-core";
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
 import {
   AnkiCollectionDBHandle,
@@ -13,7 +13,7 @@ import {
   ClozeModelMapping,
   ModelMappingType,
 } from "./modelMapping";
-import { mapNoteToPromptSpec } from "./noteMapping";
+import { mapNoteToPrompt } from "./noteMapping";
 
 let collection: Collection;
 const notes: Note[] = [];
@@ -46,15 +46,15 @@ function findNoteByFirstFieldContents(contents: string): Note | null {
 
 test("mapping basic note", () => {
   expect(
-    mapNoteToPromptSpec(
+    mapNoteToPrompt(
       findNoteByFirstFieldContents("Test Q")!,
       basicMapping,
       jest.fn(),
     ),
   ).toMatchObject({
     issues: [],
-    promptSpec: {
-      promptSpecType: basicPromptSpecType,
+    prompt: {
+      promptType: basicPromptType,
       question: {
         contents: "Test Q",
         attachments: [],
@@ -68,13 +68,13 @@ test("mapping basic note", () => {
 });
 
 test("mapping cloze note", () => {
-  const result = mapNoteToPromptSpec(
+  const result = mapNoteToPrompt(
     findNoteByFirstFieldContents("Test {{c1::cloze}} deletion {{c2::prompt}}")!,
     clozeMapping,
     jest.fn(),
   );
-  expect(result.promptSpec).toMatchObject({
-    promptSpecType: clozePromptGroupSpecType,
+  expect(result.prompt).toMatchObject({
+    promptType: clozePromptType,
     body: {
       contents: "Test {cloze} deletion {prompt}",
       attachments: [],
@@ -87,11 +87,11 @@ test("mapping note with image", () => {
   const imageNote = notes.find((note) => note.flds.includes("<img"))!;
   const mock = jest.fn();
   mock.mockImplementation((ref) => `${ref.type}-${ref.name}`);
-  const result = mapNoteToPromptSpec(imageNote, basicMapping, mock);
+  const result = mapNoteToPrompt(imageNote, basicMapping, mock);
   expect(result).toMatchInlineSnapshot(`
     Object {
       "issues": Array [],
-      "promptSpec": Object {
+      "prompt": Object {
         "answer": Object {
           "attachments": Array [
             "image-paste-235d52a420e48250574495268d1eaadbcd40e188.jpg",
@@ -99,7 +99,7 @@ test("mapping note with image", () => {
           "contents": "Test answer with an image",
         },
         "explanation": null,
-        "promptSpecType": "basic",
+        "promptType": "basic",
         "question": Object {
           "attachments": Array [
             "image-paste-5146b5478bc75de1c703057f0a51a93a70ca922d.jpg",

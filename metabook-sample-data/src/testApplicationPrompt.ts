@@ -1,7 +1,7 @@
-import { ApplicationPromptSpec } from "metabook-core";
+import { ApplicationPrompt } from "metabook-core";
 
-const testApplicationPromptSpec: ApplicationPromptSpec = {
-  promptSpecType: "applicationPrompt",
+const testApplicationPrompt: ApplicationPrompt = {
+  promptType: "applicationPrompt",
   variants: [
     {
       question: {
@@ -31,4 +31,4 @@ const testApplicationPromptSpec: ApplicationPromptSpec = {
   ],
 };
 
-export default testApplicationPromptSpec;
+export default testApplicationPrompt;

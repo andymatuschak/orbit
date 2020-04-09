@@ -1,14 +1,14 @@
-import getDuePromptIDs from "./getDuePromptIDs";
-import { PromptSpecID } from "./promptSpecID";
-import { encodePrompt, PromptID } from "./types/prompt";
+import getDuePromptTaskIDs from "./getDuePromptTaskIDs";
+import { PromptID } from "./promptID";
+import { encodePromptTask, PromptTaskID } from "./types/promptTask";
 import { PromptState } from "./types/promptState";
 
 function generateCardStates(count: number, dueCount: number) {
-  const cardStates: Map<PromptID, PromptState> = new Map();
+  const cardStates: Map<PromptTaskID, PromptState> = new Map();
   for (let i = 0; i < count; i++) {
     cardStates.set(
-      encodePrompt({
-        promptSpecID: i.toString() as PromptSpecID,
+      encodePromptTask({
+        promptID: i.toString() as PromptID,
         promptParameters: null,
       }),
       {
@@ -27,7 +27,7 @@ function generateCardStates(count: number, dueCount: number) {
 describe("session cap", () => {
   test("due cards are capped", () => {
     expect(
-      getDuePromptIDs({
+      getDuePromptTaskIDs({
         promptStates: generateCardStates(100, 100),
         timestampMillis: Date.now(),
         reviewSessionIndex: 0,
@@ -38,7 +38,7 @@ describe("session cap", () => {
 
   test("cap builds on count already completed in current session", () => {
     expect(
-      getDuePromptIDs({
+      getDuePromptTaskIDs({
         promptStates: generateCardStates(100, 100),
         timestampMillis: Date.now(),
         reviewSessionIndex: 0,
@@ -50,7 +50,7 @@ describe("session cap", () => {
 
 test("only due cards are included", () => {
   expect(
-    getDuePromptIDs({
+    getDuePromptTaskIDs({
       promptStates: generateCardStates(100, 10),
       timestampMillis: Date.now(),
       reviewSessionIndex: 0,

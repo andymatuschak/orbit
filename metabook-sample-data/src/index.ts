@@ -1,3 +1,3 @@
-export { default as testBasicPromptSpec } from "./testBasicPromptSpec";
-export { default as testApplicationPromptSpec } from "./testApplicationPromptSpec";
-export { default as testClozePromptGroupSpec } from "./testClozePromptGroupSpec";
+export { default as testBasicPrompt } from "./testBasicPrompt";
+export { default as testApplicationPrompt } from "./testApplicationPrompt";
+export { default as testClozePrompt } from "./testClozePrompt";

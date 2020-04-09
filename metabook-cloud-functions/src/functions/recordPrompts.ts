@@ -1,19 +1,19 @@
 import * as functions from "firebase-functions";
-import { PromptSpec } from "metabook-core";
+import { Prompt } from "metabook-core";
 import { recordPrompts } from "../firebase";
 
 interface RecordPromptsArguments {
-  prompts: PromptSpec[];
+  prompts: Prompt[];
 }
 
 interface RecordPromptsResult {
-  promptIDs: string[];
+  promptTaskIDs: string[];
 }
 
 export default functions.https.onCall(
   async (data: RecordPromptsArguments): Promise<RecordPromptsResult> => {
     // TODO require auth
-    const promptIDs = await recordPrompts(data.prompts);
-    return { promptIDs };
+    const promptTaskIDs = await recordPrompts(data.prompts);
+    return { promptTaskIDs };
   },
 );

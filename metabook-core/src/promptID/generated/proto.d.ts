@@ -1,104 +1,104 @@
 import * as $protobuf from "protobufjs";
-/** Properties of a PromptSpec. */
-export interface IPromptSpec {
+/** Properties of a Prompt. */
+export interface IPrompt {
 
-    /** PromptSpec basicPrompt */
+    /** Prompt basicPrompt */
     basicPrompt?: (IQuestionAnswerPrompt|null);
 
-    /** PromptSpec applicationPrompt */
+    /** Prompt applicationPrompt */
     applicationPrompt?: (IApplicationPrompt|null);
 
-    /** PromptSpec clozePrompt */
+    /** Prompt clozePrompt */
     clozePrompt?: (IClozePrompt|null);
 }
 
-/** Represents a PromptSpec. */
-export class PromptSpec implements IPromptSpec {
+/** Represents a Prompt. */
+export class Prompt implements IPrompt {
 
     /**
-     * Constructs a new PromptSpec.
+     * Constructs a new Prompt.
      * @param [properties] Properties to set
      */
-    constructor(properties?: IPromptSpec);
+    constructor(properties?: IPrompt);
 
-    /** PromptSpec basicPrompt. */
+    /** Prompt basicPrompt. */
     public basicPrompt?: (IQuestionAnswerPrompt|null);
 
-    /** PromptSpec applicationPrompt. */
+    /** Prompt applicationPrompt. */
     public applicationPrompt?: (IApplicationPrompt|null);
 
-    /** PromptSpec clozePrompt. */
+    /** Prompt clozePrompt. */
     public clozePrompt?: (IClozePrompt|null);
 
-    /** PromptSpec prompt. */
+    /** Prompt prompt. */
     public prompt?: ("basicPrompt"|"applicationPrompt"|"clozePrompt");
 
     /**
-     * Creates a new PromptSpec instance using the specified properties.
+     * Creates a new Prompt instance using the specified properties.
      * @param [properties] Properties to set
-     * @returns PromptSpec instance
+     * @returns Prompt instance
      */
-    public static create(properties?: IPromptSpec): PromptSpec;
+    public static create(properties?: IPrompt): Prompt;
 
     /**
-     * Encodes the specified PromptSpec message. Does not implicitly {@link PromptSpec.verify|verify} messages.
-     * @param message PromptSpec message or plain object to encode
+     * Encodes the specified Prompt message. Does not implicitly {@link Prompt.verify|verify} messages.
+     * @param message Prompt message or plain object to encode
      * @param [writer] Writer to encode to
      * @returns Writer
      */
-    public static encode(message: IPromptSpec, writer?: $protobuf.Writer): $protobuf.Writer;
+    public static encode(message: IPrompt, writer?: $protobuf.Writer): $protobuf.Writer;
 
     /**
-     * Encodes the specified PromptSpec message, length delimited. Does not implicitly {@link PromptSpec.verify|verify} messages.
-     * @param message PromptSpec message or plain object to encode
+     * Encodes the specified Prompt message, length delimited. Does not implicitly {@link Prompt.verify|verify} messages.
+     * @param message Prompt message or plain object to encode
      * @param [writer] Writer to encode to
      * @returns Writer
      */
-    public static encodeDelimited(message: IPromptSpec, writer?: $protobuf.Writer): $protobuf.Writer;
+    public static encodeDelimited(message: IPrompt, writer?: $protobuf.Writer): $protobuf.Writer;
 
     /**
-     * Decodes a PromptSpec message from the specified reader or buffer.
+     * Decodes a Prompt message from the specified reader or buffer.
      * @param reader Reader or buffer to decode from
      * @param [length] Message length if known beforehand
-     * @returns PromptSpec
+     * @returns Prompt
      * @throws {Error} If the payload is not a reader or valid buffer
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
-    public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): PromptSpec;
+    public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Prompt;
 
     /**
-     * Decodes a PromptSpec message from the specified reader or buffer, length delimited.
+     * Decodes a Prompt message from the specified reader or buffer, length delimited.
      * @param reader Reader or buffer to decode from
-     * @returns PromptSpec
+     * @returns Prompt
      * @throws {Error} If the payload is not a reader or valid buffer
      * @throws {$protobuf.util.ProtocolError} If required fields are missing
      */
-    public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): PromptSpec;
+    public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): Prompt;
 
     /**
-     * Verifies a PromptSpec message.
+     * Verifies a Prompt message.
      * @param message Plain object to verify
      * @returns `null` if valid, otherwise the reason why it is not
      */
     public static verify(message: { [k: string]: any }): (string|null);
 
     /**
-     * Creates a PromptSpec message from a plain object. Also converts values to their respective internal types.
+     * Creates a Prompt message from a plain object. Also converts values to their respective internal types.
      * @param object Plain object
-     * @returns PromptSpec
+     * @returns Prompt
      */
-    public static fromObject(object: { [k: string]: any }): PromptSpec;
+    public static fromObject(object: { [k: string]: any }): Prompt;
 
     /**
-     * Creates a plain object from a PromptSpec message. Also converts values to other types if specified.
-     * @param message PromptSpec
+     * Creates a plain object from a Prompt message. Also converts values to other types if specified.
+     * @param message Prompt
      * @param [options] Conversion options
      * @returns Plain object
      */
-    public static toObject(message: PromptSpec, options?: $protobuf.IConversionOptions): { [k: string]: any };
+    public static toObject(message: Prompt, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
     /**
-     * Converts this PromptSpec to JSON.
+     * Converts this Prompt to JSON.
      * @returns JSON object
      */
     public toJSON(): { [k: string]: any };

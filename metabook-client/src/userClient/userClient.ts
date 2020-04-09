@@ -1,8 +1,8 @@
 import {
   MetabookActionOutcome,
-  PromptID,
+  PromptTaskID,
   PromptParameters,
-  PromptSpec,
+  Prompt,
   PromptState,
   PromptTaskParameters,
 } from "metabook-core";
@@ -30,10 +30,13 @@ export interface MetabookUserClient {
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface MetabookCardStateQuery {}
 
-export type MetabookPromptStateSnapshot = ReadonlyMap<PromptID, PromptState>;
+export type MetabookPromptStateSnapshot = ReadonlyMap<
+  PromptTaskID,
+  PromptState
+>;
 
 export interface MetabookReviewAction {
-  promptSpec: PromptSpec;
+  prompt: Prompt;
   promptParameters: PromptParameters;
   promptTaskParameters: PromptTaskParameters;
 

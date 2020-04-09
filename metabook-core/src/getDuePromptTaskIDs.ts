@@ -1,5 +1,5 @@
 import getCardLimitForReviewSession from "./getCardLimitForReviewSession";
-import { PromptID } from "./types/prompt";
+import { PromptTaskID } from "./types/promptTask";
 import { PromptState } from "./types/promptState";
 
 // Given some time might be computing whether a user has a session due, we evaluate whether cards are due using a date slightly shifted into the future, to find the cards that'd be due on that conceptual day.
@@ -7,19 +7,19 @@ function getFuzzyDueTimeThreshold(nowMillis: number): number {
   return nowMillis + 1000 * 60 * 60 * 16; // 16 hour lookahead
 }
 
-export default function getDuePromptIDs({
+export default function getDuePromptTaskIDs({
   promptStates,
   timestampMillis,
   reviewSessionIndex,
   cardsCompletedInCurrentSession,
 }: {
-  promptStates: ReadonlyMap<PromptID, PromptState>;
+  promptStates: ReadonlyMap<PromptTaskID, PromptState>;
   timestampMillis: number;
   reviewSessionIndex: number;
   cardsCompletedInCurrentSession: number;
-}): PromptID[] {
+}): PromptTaskID[] {
   const dueThresholdTimestamp = getFuzzyDueTimeThreshold(timestampMillis);
-  const dueCardIDs = [...promptStates.keys()].filter(
+  const duePromptTaskIDs = [...promptStates.keys()].filter(
     (cardID) =>
       promptStates.get(cardID)!.dueTimestampMillis <= dueThresholdTimestamp,
   );
@@ -31,7 +31,7 @@ export default function getDuePromptIDs({
   );
 
   return (
-    dueCardIDs
+    duePromptTaskIDs
       // Prefer lower-level cards when choosing the subset of questions to review.
       .sort((a, b) => {
         const promptStateA = promptStates.get(a)!;
