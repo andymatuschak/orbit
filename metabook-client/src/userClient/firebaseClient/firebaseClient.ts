@@ -25,12 +25,10 @@ import {
 } from "../userClient";
 
 function getPromptIDForActionLog(log: MetabookActionLog) {
-  switch (log.actionLogType) {
-    case "ingest":
-      return encodePrompt(log.prompt);
-    case "review":
-      return encodePrompt(log.promptTask.prompt);
-  }
+  return encodePrompt({
+    promptSpecID: log.promptSpecID,
+    promptParameters: log.promptParameters,
+  });
 }
 
 export class MetabookFirebaseUserClient implements MetabookUserClient {
@@ -117,7 +115,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
       dueTimestampMillis: log.nextDueTimestamp.toMillis(),
       bestInterval: log.nextBestIntervalMillis,
       needsRetry: log.nextNeedsRetry,
-      taskParameters: log.promptTask.parameters,
+      taskParameters: log.promptTaskParameters,
     });
   }
 

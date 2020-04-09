@@ -70,7 +70,7 @@ describe("ingesting prompt specs", () => {
     await client.recordActionLogs([
       {
         actionLogType: "ingest",
-        prompt,
+        ...prompt,
         timestamp: firebase.firestore.Timestamp.fromMillis(Date.UTC(2020, 0)),
       },
     ]);
@@ -94,7 +94,7 @@ describe("ingesting prompt specs", () => {
     await client.recordActionLogs([
       {
         actionLogType: "ingest",
-        prompt,
+        ...prompt,
         timestamp: firebase.firestore.Timestamp.fromMillis(Date.UTC(2020, 0)),
       },
     ]);

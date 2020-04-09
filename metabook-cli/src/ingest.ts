@@ -14,8 +14,9 @@ import {
   getIDForAttachment,
   getIDForPromptSpec,
   imageAttachmentType,
+  PromptParameters,
   PromptSpec,
-  PromptTask,
+  PromptSpecID,
 } from "metabook-core";
 import {
   testApplicationPromptSpec,
@@ -24,37 +25,36 @@ import {
 } from "metabook-sample-data";
 import path from "path";
 
-function getTasksFromSpecs(specs: PromptSpec[]): PromptTask[] {
-  const taskLists: PromptTask[][] = specs.map((spec) => {
+function getTasksFromSpecs(
+  specs: PromptSpec[],
+): {
+  promptSpecID: PromptSpecID;
+  promptParameters: PromptParameters;
+}[] {
+  const taskLists: {
+    promptSpecID: PromptSpecID;
+    promptParameters: PromptParameters;
+  }[][] = specs.map((spec) => {
     switch (spec.promptSpecType) {
       case "basic":
         return [
           {
-            prompt: {
-              promptSpecID: getIDForPromptSpec(spec),
-              promptParameters: null,
-            },
-            parameters: null,
+            promptSpecID: getIDForPromptSpec(spec),
+            promptParameters: null,
           },
         ];
       case "applicationPrompt":
         return [
           {
-            prompt: {
-              promptSpecID: getIDForPromptSpec(spec),
-              promptParameters: null,
-            },
-            parameters: { variantIndex: 0 },
+            promptSpecID: getIDForPromptSpec(spec),
+            promptParameters: null,
           },
         ];
       case "cloze":
         return [
           {
-            prompt: {
-              promptSpecID: getIDForPromptSpec(spec),
-              promptParameters: { clozeIndex: 0 },
-            },
-            parameters: null,
+            promptSpecID: getIDForPromptSpec(spec),
+            promptParameters: { clozeIndex: 0 },
           },
         ];
     }
@@ -83,7 +83,13 @@ class Ingest extends Command {
       messagingSenderId: "748053153064",
       appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
     });
-    const dataClient = new MetabookFirebaseDataClient(app);
+    const dataClient = new MetabookFirebaseDataClient(
+      app,
+      app.functions(),
+      () => {
+        throw new Error("unimplemented");
+      },
+    );
 
     const imageData = await fs.promises.readFile(
       path.resolve(__dirname, "__fixtures__/general_circuit.png"),
@@ -123,19 +129,16 @@ class Ingest extends Command {
     const userClient = new MetabookFirebaseUserClient(app, flags.userID);
     const tasks = getTasksFromSpecs(specs);
     const now = firebase.firestore.Timestamp.fromDate(new Date());
-    const actionLogs: MetabookActionLog[] = tasks.map((promptTask) => {
-      return {
-        promptTask,
-        actionOutcome: "remembered",
-        timestamp: now,
-        sessionID: null,
-        baseIntervalMillis: null,
-        nextNeedsRetry: false,
-        nextBestIntervalMillis: null,
-        nextIntervalMillis: 0,
-        nextDueTimestamp: now,
-      };
-    });
+    const actionLogs: MetabookActionLog[] = tasks.map(
+      ({ promptSpecID, promptParameters }) => {
+        return {
+          actionLogType: "ingest",
+          promptSpecID,
+          promptParameters,
+          timestamp: now,
+        };
+      },
+    );
     await userClient.recordActionLogs(actionLogs);
     console.log(
       `Recorded ${actionLogs.length} logs for userID ${flags.userID}`,

@@ -38,7 +38,10 @@ export class MetabookLocalUserClient implements MetabookUserClient {
     );
 
     this.latestPromptStates.set(
-      encodePrompt(actionLog.promptTask.prompt),
+      encodePrompt({
+        promptSpecID: actionLog.promptSpecID,
+        promptParameters: actionLog.promptParameters,
+      }),
       newPromptState,
     );
     this.logs.push(actionLog);

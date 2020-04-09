@@ -1,10 +1,6 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
-import {
-  getIDForPromptSpec,
-  PromptTask,
-  updatePromptStateForAction,
-} from "metabook-core";
+import { getIDForPromptSpec, updatePromptStateForAction } from "metabook-core";
 
 import { MetabookReviewActionLog } from "../types/actionLog";
 import { MetabookReviewAction } from "../userClient";
@@ -22,13 +18,10 @@ export function getActionLogForAction(
 
   return {
     actionLogType: "review",
-    promptTask: {
-      prompt: {
-        promptSpecID: getIDForPromptSpec(action.promptSpec),
-        promptParameters: action.promptParameters,
-      },
-      parameters: action.promptTaskParameters,
-    } as PromptTask,
+    promptSpecID: getIDForPromptSpec(action.promptSpec),
+    promptParameters: action.promptParameters,
+    promptTaskParameters: action.promptTaskParameters,
+
     sessionID: action.sessionID,
     actionOutcome: action.actionOutcome,
     timestamp: firebase.firestore.Timestamp.fromMillis(action.timestampMillis),

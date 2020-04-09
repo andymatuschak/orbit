@@ -3,9 +3,9 @@ import "firebase/firestore";
 
 import {
   MetabookActionOutcome,
-  Prompt,
+  PromptParameters,
   PromptSpecID,
-  PromptTask,
+  PromptTaskParameters,
 } from "metabook-core";
 
 interface BaseActionLog {
@@ -16,13 +16,16 @@ interface BaseActionLog {
 const ingestActionLogType = "ingest";
 export interface MetabookIngestActionLog extends BaseActionLog {
   actionLogType: typeof ingestActionLogType;
-  prompt: Prompt;
+  promptSpecID: PromptSpecID;
+  promptParameters: PromptParameters
 }
 
 const reviewActionLogType = "review";
 export interface MetabookReviewActionLog extends BaseActionLog {
   actionLogType: typeof reviewActionLogType;
-  promptTask: PromptTask;
+  promptSpecID: PromptSpecID;
+  promptParameters: PromptParameters;
+  promptTaskParameters: PromptTaskParameters;
 
   sessionID: string | null;
   actionOutcome: MetabookActionOutcome;

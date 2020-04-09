@@ -12,7 +12,7 @@ export function getNextPromptStateForReviewLog(
     needsRetry: log.nextNeedsRetry,
     taskParameters: getNextTaskParameters(
       promptSpec,
-      log.promptTask.parameters,
+      log.promptTaskParameters,
     ),
   };
 }
