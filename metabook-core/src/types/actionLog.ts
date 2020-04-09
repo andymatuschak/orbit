@@ -1,8 +1,4 @@
 import { ActionLogID } from "../actionLogID";
-import { PromptID } from "../promptID";
-import { MetabookActionOutcome } from "../spacedRepetition";
-import { PromptParameters } from "./promptTask";
-import { PromptTaskParameters } from "./promptTaskParameters";
 
 interface BaseActionLog {
   actionLogType: ActionLogType;
@@ -12,21 +8,19 @@ interface BaseActionLog {
 export const ingestActionLogType = "ingest";
 export interface IngestActionLog extends BaseActionLog {
   actionLogType: typeof ingestActionLogType;
-  promptID: PromptID;
-  promptParameters: PromptParameters;
+  taskID: string;
 }
 
 export const repetitionActionLogType = "repetition";
 export interface RepetitionActionLog extends BaseActionLog {
   actionLogType: typeof repetitionActionLogType;
-  promptID: PromptID;
-  promptParameters: PromptParameters;
-  promptTaskParameters: PromptTaskParameters;
-
   parentActionLogIDs: ActionLogID[];
 
-  sessionID: string | null;
-  actionOutcome: MetabookActionOutcome;
+  taskID: string;
+  taskParameters: string | null;
+
+  context: string | null;
+  outcome: string;
 }
 
 export type ActionLog = IngestActionLog | RepetitionActionLog;

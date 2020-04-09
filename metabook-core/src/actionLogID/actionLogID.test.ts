@@ -11,8 +11,7 @@ test("ingest logs", () => {
     getIDForActionLog({
       actionLogType: ingestActionLogType,
       timestampMillis: 0,
-      promptID: "test" as PromptID,
-      promptParameters: null,
+      taskID: "test",
     }),
   ).toMatchInlineSnapshot(
     `"zdj7WgK8RzKsuDK4THX4ed2RpGDxXmyyFnVbtKw2RJ3YcSESN"`,
@@ -23,12 +22,11 @@ test("action logs", () => {
   const testActionLog: RepetitionActionLog = {
     actionLogType: repetitionActionLogType,
     timestampMillis: 0,
-    promptID: "test" as PromptID,
-    promptParameters: null,
-    promptTaskParameters: null,
+    taskID: "test",
+    taskParameters: null,
     parentActionLogIDs: [],
-    sessionID: "testSession",
-    actionOutcome: "remembered",
+    context: "testSession",
+    outcome: "remembered",
   };
 
   const noParentActionLogID = getIDForActionLog(testActionLog);

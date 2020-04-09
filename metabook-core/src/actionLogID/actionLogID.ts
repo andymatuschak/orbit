@@ -3,7 +3,7 @@ import { Buffer } from "buffer";
 import CID from "cids";
 import DAGPB from "ipld-dag-pb";
 import multihashing from "multihashing";
-import { ActionLog, encodePromptTask, PromptTaskParameters } from "..";
+import { ActionLog } from "..";
 import Proto from "../generated/proto";
 import {
   ingestActionLogType,
@@ -19,38 +19,26 @@ function getProtobufTimestampFromMillis(
   };
 }
 
-function getProtobufRepresentationForTaskParameters(
-  promptTaskParameters: PromptTaskParameters,
-): string | null {
-  return promptTaskParameters && promptTaskParameters.variantIndex.toString();
-}
-
 function getProtobufRepresentationForActionLog(
   actionLog: ActionLog,
 ): Proto.IActionLog {
   const timestamp = getProtobufTimestampFromMillis(actionLog.timestampMillis);
-  const taskID = encodePromptTask({
-    promptID: actionLog.promptID,
-    promptParameters: actionLog.promptParameters,
-  });
   switch (actionLog.actionLogType) {
     case ingestActionLogType:
       return {
         timestamp,
         ingest: {
-          taskID,
+          taskID: actionLog.taskID,
         },
       };
     case repetitionActionLogType:
       return {
         timestamp,
         repetition: {
-          taskID,
-          context: actionLog.sessionID,
-          outcome: actionLog.actionOutcome,
-          taskParameters: getProtobufRepresentationForTaskParameters(
-            actionLog.promptTaskParameters,
-          ),
+          taskID: actionLog.taskID,
+          context: actionLog.context,
+          outcome: actionLog.outcome,
+          taskParameters: actionLog.taskParameters,
         },
       };
   }
