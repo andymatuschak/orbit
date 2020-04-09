@@ -7,7 +7,6 @@ import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "metabook-client";
-import type { MetabookActionLog } from "metabook-client/src/types/actionLog";
 import {
   Attachment,
   AttachmentIDReference,
@@ -129,7 +128,7 @@ class Ingest extends Command {
     const userClient = new MetabookFirebaseUserClient(app, flags.userID);
     const tasks = getTasksFromSpecs(specs);
     const now = firebase.firestore.Timestamp.fromDate(new Date());
-    const actionLogs: MetabookActionLog[] = tasks.map(
+    const actionLogs: ActionLog[] = tasks.map(
       ({ promptID, promptParameters }) => {
         return {
           actionLogType: "ingest",

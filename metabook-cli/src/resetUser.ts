@@ -1,6 +1,5 @@
 import { Command, flags } from "@oclif/command";
 import admin from "firebase-admin";
-import { MetabookActionLog } from "metabook-client/dist/types/actionLog";
 import { getAdminApp } from "./adminApp";
 import { deleteCollection } from "./deleteCollection";
 

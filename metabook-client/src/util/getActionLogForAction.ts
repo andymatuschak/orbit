@@ -1,13 +1,14 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
 import { getIDForPrompt, updatePromptStateForAction } from "metabook-core";
+import { repetitionActionLogType } from "metabook-core/dist/types/actionLog";
 
-import { MetabookReviewActionLog } from "../types/actionLog";
 import { MetabookReviewAction } from "../userClient";
+import { RepetitionActionLog } from "metabook-core";
 
 export function getActionLogForAction(
   action: MetabookReviewAction,
-): MetabookReviewActionLog {
+): RepetitionActionLog {
   const newCardState = updatePromptStateForAction({
     basePromptState: action.basePromptState,
     prompt: action.prompt,
@@ -17,21 +18,14 @@ export function getActionLogForAction(
   });
 
   return {
-    actionLogType: "review",
+    parentActionLogIDs: [], // TODO
+    actionLogType: repetitionActionLogType,
     promptID: getIDForPrompt(action.prompt),
     promptParameters: action.promptParameters,
     promptTaskParameters: action.promptTaskParameters,
 
     sessionID: action.sessionID,
     actionOutcome: action.actionOutcome,
-    timestamp: firebase.firestore.Timestamp.fromMillis(action.timestampMillis),
-    baseIntervalMillis: action.basePromptState?.interval ?? null,
-
-    nextDueTimestamp: firebase.firestore.Timestamp.fromMillis(
-      newCardState.dueTimestampMillis,
-    ),
-    nextIntervalMillis: newCardState.interval,
-    nextBestIntervalMillis: newCardState.bestInterval,
-    nextNeedsRetry: newCardState.needsRetry,
+    timestampMillis: action.timestampMillis,
   };
 }

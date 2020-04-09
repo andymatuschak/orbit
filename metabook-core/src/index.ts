@@ -68,3 +68,17 @@ export { imageAttachmentType } from "./types/attachmentType";
 export type { AttachmentURLReference } from "./types/attachmentURLReference";
 
 export { default as getNextTaskParameters } from "./getNextTaskParameters";
+
+export {
+  ingestActionLogType,
+  repetitionActionLogType,
+} from "./types/actionLog";
+export type {
+  ActionLog,
+  ActionLogType,
+  IngestActionLog,
+  RepetitionActionLog,
+} from "./types/actionLog";
+
+export { getIDForActionLog } from "./actionLogID";
+export type { ActionLogID } from "./actionLogID";

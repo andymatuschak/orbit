@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["jest"]
+    "types": ["jest", "long"]
   },
   "include": ["./src/**/*.ts"],
   "exclude": ["./dist"]

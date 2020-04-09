@@ -1,4 +1,4 @@
-import typedKeys from "./typedKeys";
+import typedKeys from "./util/typedKeys";
 
 export type MetabookActionOutcome = "forgotten" | "remembered";
 export type ReviewIntervalMilliseconds = number;
@@ -208,7 +208,7 @@ export const getLogAverageInterval = (
 export const projectedAverageIntervalAfterReview = (
   intervals: number[],
   schedule: MetabookSpacedRepetitionSchedule,
-  accuracy: number = 0.85,
+  accuracy = 0.85,
 ) => {
   const intervalSequence = schedulesToIntervalSequences[schedule];
 

@@ -3,7 +3,7 @@ import { Buffer } from "buffer";
 import CID from "cids";
 import DAGPB from "ipld-dag-pb";
 import multihashing from "multihashing";
-import Proto from "./generated/proto";
+import Proto from "../generated/proto";
 import {
   applicationPromptType,
   basicPromptType,
@@ -23,9 +23,7 @@ function getProtobufRepresentationForQAPrompt(
   };
 }
 
-function getProtobufRepresentationForPrompt(
-  prompt: Prompt,
-): Proto.IPrompt {
+function getProtobufRepresentationForPrompt(prompt: Prompt): Proto.IPrompt {
   switch (prompt.promptType) {
     case basicPromptType:
       return {
@@ -34,9 +32,7 @@ function getProtobufRepresentationForPrompt(
     case applicationPromptType:
       return {
         applicationPrompt: {
-          variants: prompt.variants.map(
-            getProtobufRepresentationForQAPrompt,
-          ),
+          variants: prompt.variants.map(getProtobufRepresentationForQAPrompt),
         },
       };
     case clozePromptType:
@@ -105,10 +101,7 @@ export function getIDForPrompt(prompt: Prompt): PromptID {
       : new Buffer(promptDataEncoding);
 
   // 2. Wrap that data in an IPLD MerkleDAG leaf node.
-  const dagNode = new DAGPB.DAGNode(
-    promptBuffer,
-    getDAGLinksForPrompt(prompt),
-  );
+  const dagNode = new DAGPB.DAGNode(promptBuffer, getDAGLinksForPrompt(prompt));
 
   // 3. Serialize the MerkleDAG node to a protobuf.
   const nodeBuffer = dagNode.serialize();

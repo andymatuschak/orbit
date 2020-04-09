@@ -1,6 +1,11 @@
 import * as firebaseTesting from "@firebase/testing";
 import firebase from "firebase/app";
-import { encodePromptTask, PromptID, PromptTask } from "metabook-core";
+import {
+  encodePromptTask,
+  ingestActionLogType,
+  PromptID,
+  PromptTask,
+} from "metabook-core";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
 import { MetabookLocalUserClient } from "../localClient";
@@ -71,9 +76,9 @@ describe("ingesting prompt specs", () => {
     };
     await client.recordActionLogs([
       {
-        actionLogType: "ingest",
+        actionLogType: ingestActionLogType,
         ...promptTask,
-        timestamp: firebase.firestore.Timestamp.fromMillis(Date.UTC(2020, 0)),
+        timestampMillis: Date.UTC(2020, 0),
       },
     ]);
     const cardStates = await client.getPromptStates({});
@@ -95,9 +100,9 @@ describe("ingesting prompt specs", () => {
     };
     await client.recordActionLogs([
       {
-        actionLogType: "ingest",
+        actionLogType: ingestActionLogType,
         ...prompt,
-        timestamp: firebase.firestore.Timestamp.fromMillis(Date.UTC(2020, 0)),
+        timestampMillis: Date.UTC(2020, 0),
       },
     ]);
     const cardStates = await client.getPromptStates({});

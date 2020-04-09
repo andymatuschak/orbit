@@ -23,7 +23,7 @@ declare module "ipld-dag-pb" {
   export class DAGLink {
     constructor(
       name: string | null | undefined,
-      size: number,
+      size: number | undefined,
       cid: string | Buffer | CID,
     );
 

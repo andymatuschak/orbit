@@ -19,9 +19,9 @@ import {
 import {
   AttachmentResolutionMap,
   PromptReviewItem,
+  promptReviewItemType,
   ReviewItem,
 } from "metabook-ui";
-import { promptReviewItemType } from "metabook-ui/dist/reviewItem";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { enableFirebasePersistence, PersistenceStatus } from "./firebase";
 

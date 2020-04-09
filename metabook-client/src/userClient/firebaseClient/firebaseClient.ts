@@ -6,13 +6,13 @@ import {
   getInitialIntervalForSchedule,
   PromptTaskID,
   PromptState,
+  ActionLog,
+  ingestActionLogType,
+  repetitionActionLogType,
+  RepetitionActionLog,
+  IngestActionLog,
 } from "metabook-core";
 import { getDefaultFirebaseApp } from "../../firebase";
-import {
-  MetabookActionLog,
-  MetabookIngestActionLog,
-  MetabookReviewActionLog,
-} from "../../types/actionLog";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
 import { getActionLogForAction } from "../../util/getActionLogForAction";
 import { getNextPromptStateForReviewLog } from "../../util/getNextPromptStateForActionLog";
@@ -24,7 +24,7 @@ import {
   MetabookUserClient,
 } from "../userClient";
 
-function getPromptTaskIDForActionLog(log: MetabookActionLog): PromptTaskID {
+function getPromptTaskIDForActionLog(log: ActionLog): PromptTaskID {
   return encodePromptTask({
     promptID: log.promptID,
     promptParameters: log.promptParameters,
@@ -35,10 +35,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
   userID: string;
   private database: firebase.firestore.Firestore;
   private readonly promptStateCache: Map<PromptTaskID, PromptState>;
-  private latestTimestampByPromptTaskID: Map<
-    PromptTaskID,
-    firebase.firestore.Timestamp
-  >;
+  private latestTimestampByPromptTaskID: Map<PromptTaskID, number>;
 
   constructor(app: firebase.app.App = getDefaultFirebaseApp(), userID: string) {
     this.userID = userID;
@@ -86,54 +83,57 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     );
   }
 
-  private updateCacheForLog(log: MetabookActionLog): void {
+  private updateCacheForLog(log: ActionLog): void {
     const promptTaskID = getPromptTaskIDForActionLog(log);
-    const latestPromptTimestamp = this.latestTimestampByPromptTaskID.get(promptTaskID);
+    const latestPromptTimestamp = this.latestTimestampByPromptTaskID.get(
+      promptTaskID,
+    );
     if (
       !latestPromptTimestamp ||
-      (latestPromptTimestamp && log.timestamp > latestPromptTimestamp)
+      (latestPromptTimestamp && log.timestampMillis > latestPromptTimestamp) // TODO check that parents(?) match
     ) {
       switch (log.actionLogType) {
-        case "ingest":
+        case ingestActionLogType:
           this.updateCacheForIngestLog(log, promptTaskID);
           break;
-        case "review":
-          this.updateCacheForReviewLog(log, promptTaskID);
+        case repetitionActionLogType:
+          this.updateCacheByAppendingRepetitionLog(log, promptTaskID);
           break;
       }
 
-      this.latestTimestampByPromptTaskID.set(promptTaskID, log.timestamp);
+      this.latestTimestampByPromptTaskID.set(promptTaskID, log.timestampMillis);
     }
   }
 
-  private updateCacheForReviewLog(
-    log: MetabookReviewActionLog,
+  private updateCacheByAppendingRepetitionLog(
+    log: RepetitionActionLog,
     promptTaskID: PromptTaskID,
   ) {
-    this.promptStateCache.set(promptTaskID, {
+    // TODO
+    /*this.promptStateCache.set(promptTaskID, {
       interval: log.nextIntervalMillis,
       dueTimestampMillis: log.nextDueTimestamp.toMillis(),
       bestInterval: log.nextBestIntervalMillis,
       needsRetry: log.nextNeedsRetry,
       taskParameters: log.promptTaskParameters,
-    });
+    });*/
   }
 
   private updateCacheForIngestLog(
-    log: MetabookIngestActionLog,
+    log: IngestActionLog,
     promptTaskID: PromptTaskID,
   ) {
     const initialInterval = getInitialIntervalForSchedule("default").interval;
     this.promptStateCache.set(promptTaskID, {
       interval: initialInterval,
-      dueTimestampMillis: log.timestamp.toMillis() + initialInterval,
+      dueTimestampMillis: log.timestampMillis + initialInterval,
       bestInterval: null,
       needsRetry: false,
       taskParameters: null,
     });
   }
 
-  recordActionLogs(logs: MetabookActionLog[]): Promise<unknown> {
+  recordActionLogs(logs: ActionLog[]): Promise<unknown> {
     console.log("recording", logs);
     const userStateLogsRef = this.getActionLogReference(this.userID);
     const batch = this.database.batch();
@@ -151,20 +151,17 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     const commit = this.recordActionLogs([actionLog]);
 
     return {
-      newPromptState: getNextPromptStateForReviewLog(
-        actionLog,
-        update.prompt,
-      ),
+      newPromptState: getNextPromptStateForReviewLog(actionLog, update.prompt),
       commit: commit,
     };
   }
 
   private getActionLogReference(
     userID: string,
-  ): firebase.firestore.CollectionReference<MetabookActionLog> {
+  ): firebase.firestore.CollectionReference<ActionLog> {
     // TODO validate
     return this.database.collection(
       `users/${userID}/logs`,
-    ) as firebase.firestore.CollectionReference<MetabookActionLog>;
+    ) as firebase.firestore.CollectionReference<ActionLog>;
   }
 }

@@ -2,7 +2,6 @@ import { Command, flags } from "@oclif/command";
 import admin from "firebase-admin";
 
 import fs from "fs";
-import { MetabookActionLog } from "metabook-client/dist/types/actionLog";
 import { Prompt } from "metabook-core";
 import * as path from "path";
 import { getAdminApp } from "./adminApp";

@@ -1,18 +1,21 @@
-import { getNextTaskParameters, Prompt, PromptState } from "metabook-core";
-import { MetabookReviewActionLog } from "../types/actionLog";
+import {
+  getNextTaskParameters,
+  Prompt,
+  PromptState,
+  RepetitionActionLog,
+} from "metabook-core";
 
 export function getNextPromptStateForReviewLog(
-  log: MetabookReviewActionLog,
+  log: RepetitionActionLog,
   prompt: Prompt,
 ): PromptState {
   return {
-    dueTimestampMillis: log.nextDueTimestamp.toMillis(),
-    interval: log.nextIntervalMillis,
-    bestInterval: log.nextBestIntervalMillis,
-    needsRetry: log.nextNeedsRetry,
-    taskParameters: getNextTaskParameters(
-      prompt,
-      log.promptTaskParameters,
-    ),
+    dueTimestampMillis: 0,
+    interval: 0,
+    bestInterval: null,
+    needsRetry: false,
+    taskParameters: null,
   };
+
+  // TODO
 }

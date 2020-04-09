@@ -31,7 +31,7 @@
   "scripts": {
     "prebuild": "node scripts/compileProtobuf.js",
     "build": "yarn run build:esm && yarn run build:cjs",
-    "build:cjs": "tsc -b tsconfig.cjs.json && cp -R src/promptID/generated dist/cjs/promptID/",
-    "build:esm": "tsc -b && cp -R src/promptID/generated dist/promptID/"
+    "build:cjs": "tsc -b tsconfig.cjs.json && cp -R src/generated dist/cjs/",
+    "build:esm": "tsc -b && cp -R src/generated dist/"
   }
 }

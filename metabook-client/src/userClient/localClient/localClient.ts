@@ -1,5 +1,9 @@
-import { encodePromptTask, PromptTaskID, PromptState } from "metabook-core";
-import { MetabookActionLog } from "../../types/actionLog";
+import {
+  encodePromptTask,
+  PromptTaskID,
+  PromptState,
+  ActionLog,
+} from "metabook-core";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
 import { getActionLogForAction } from "../../util/getActionLogForAction";
 import { getNextPromptStateForReviewLog } from "../../util/getNextPromptStateForActionLog";
@@ -14,7 +18,7 @@ import {
 export class MetabookLocalUserClient implements MetabookUserClient {
   private readonly latestPromptStates: Map<PromptTaskID, PromptState>;
   private readonly cardStateSubscribers: Set<CardStateSubscriber>;
-  private readonly logs: MetabookActionLog[];
+  private readonly logs: ActionLog[];
 
   constructor() {
     this.latestPromptStates = new Map();
@@ -70,7 +74,7 @@ export class MetabookLocalUserClient implements MetabookUserClient {
     };
   }
 
-  getAllLogs(): MetabookActionLog[] {
+  getAllLogs(): ActionLog[] {
     return [...this.logs];
   }
 

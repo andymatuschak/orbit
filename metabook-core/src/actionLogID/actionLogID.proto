@@ -1,0 +1,22 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+
+message ActionLog {
+    message Ingest {
+        string taskID = 1;
+    }
+
+    message Repetition {
+        string taskID = 1;
+
+        string taskParameters = 6;
+        string outcome = 7;
+        string context = 8;
+    }
+
+    google.protobuf.Timestamp timestamp = 1;
+    oneof log {
+        Ingest ingest = 2;
+        Repetition repetition = 3;
+    }
+}
