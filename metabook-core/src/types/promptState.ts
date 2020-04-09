@@ -5,7 +5,7 @@ import {
   BasicPromptTaskParameters,
   ClozePromptTaskParameters,
   PromptTaskParameters,
-} from "./promptTask";
+} from "./promptTaskParameters";
 
 interface BasePromptState<TaskParametersType extends PromptTaskParameters> {
   dueTimestampMillis: number;

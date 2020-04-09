@@ -24,15 +24,11 @@ export type {
 } from "./types/promptSpec";
 
 export type {
-  PromptTask,
-  ApplicationPromptTask,
-  ClozePromptTask,
-  BasicPromptTask,
   PromptTaskParameters,
   ApplicationPromptTaskParameters,
   ClozePromptTaskParameters,
   BasicPromptTaskParameters,
-} from "./types/promptTask";
+} from "./types/promptTaskParameters";
 
 export type {
   MetabookActionOutcome,

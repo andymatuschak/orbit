@@ -4,7 +4,7 @@ import { PromptSpec } from "./types/promptSpec";
 import {
   ApplicationPromptTaskParameters,
   PromptTaskParameters,
-} from "./types/promptTask";
+} from "./types/promptTaskParameters";
 
 export default function getNextTaskParameters(
   promptSpec: PromptSpec,
