@@ -1,15 +1,13 @@
 import {
   ApplicationPromptParameters,
   ApplicationPrompt,
-  ApplicationPromptState,
   AttachmentID,
   AttachmentURLReference,
   BasicPromptParameters,
   BasicPrompt,
-  BasicPromptState,
   ClozePrompt,
   ClozePromptParameters,
-  ClozePromptState,
+  PromptState,
 } from "metabook-core";
 
 export const promptReviewItemType = "prompt";
@@ -23,19 +21,19 @@ interface BasePromptReviewItem {
 export interface BasicPromptReviewItem extends BasePromptReviewItem {
   prompt: BasicPrompt;
   promptParameters: BasicPromptParameters;
-  promptState: BasicPromptState | null;
+  promptState: PromptState | null;
 }
 
 export interface ApplicationPromptReviewItem extends BasePromptReviewItem {
   prompt: ApplicationPrompt;
   promptParameters: ApplicationPromptParameters;
-  promptState: ApplicationPromptState | null;
+  promptState: PromptState | null;
 }
 
 export interface ClozePromptReviewItem extends BasePromptReviewItem {
   prompt: ClozePrompt;
   promptParameters: ClozePromptParameters;
-  promptState: ClozePromptState | null;
+  promptState: PromptState | null;
 }
 
 export type PromptReviewItem =

@@ -1,23 +1,18 @@
 import CID from "cids";
-
 import multihash from "multihashes";
-import {
-  ApplicationPrompt,
-  AttachmentIDReference,
-  getIDForAttachment,
-} from "..";
 import {
   testApplicationPrompt,
   testBasicPrompt,
   testClozePrompt,
   testQAPrompt,
 } from "../__tests__/sampleData";
+import { getIDForAttachment } from "../types/attachmentID";
+import { AttachmentIDReference } from "../types/attachmentIDReference";
+import { ApplicationPrompt } from "../types/prompt";
 import { getIDForPrompt } from "./promptID";
 
 test("encoding stability", () => {
-  expect(
-    getIDForPrompt(testBasicPrompt).toString(),
-  ).toMatchInlineSnapshot(
+  expect(getIDForPrompt(testBasicPrompt).toString()).toMatchInlineSnapshot(
     `"zdj7WXQPmKiV2DXSuGfpnTLrwRE5F2HAMJznC63vxJHCptRcR"`,
   );
 
@@ -27,9 +22,7 @@ test("encoding stability", () => {
     `"zdj7WeP6nSgw44Dcyxz9ydsfuvVB6SfDWs1wQWTeeHvbkCxst"`,
   );
 
-  expect(
-    getIDForPrompt(testClozePrompt).toString(),
-  ).toMatchInlineSnapshot(
+  expect(getIDForPrompt(testClozePrompt).toString()).toMatchInlineSnapshot(
     `"zdj7WbQaeWpew3hGLirKSimxUv8MgGDRWTH1jhEtC9dy1jwG3"`,
   );
 });
@@ -46,9 +39,7 @@ describe("encoding attachments", () => {
   };
 
   test("basic prompt attachments", () => {
-    const basicPromptID = getIDForPrompt(
-      testBasicPrompt,
-    ).toString();
+    const basicPromptID = getIDForPrompt(testBasicPrompt).toString();
     const oneAttachmentPromptID = getIDForPrompt({
       ...testBasicPrompt,
       question: {

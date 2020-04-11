@@ -1,11 +1,6 @@
-export { default as updatePromptStateForAction } from "./updatePromptStateForAction";
+export type { PromptState } from "./promptState";
 
-export type {
-  PromptState,
-  BasicPromptState,
-  ApplicationPromptState,
-  ClozePromptState,
-} from "./types/promptState";
+export { applyActionLogToPromptState } from "./promptState";
 
 export {
   basicPromptType,
@@ -30,10 +25,8 @@ export type {
   BasicPromptTaskParameters,
 } from "./types/promptTaskParameters";
 
-export type {
-  MetabookActionOutcome,
-  MetabookSpacedRepetitionSchedule,
-} from "./spacedRepetition";
+export { PromptRepetitionOutcome } from "./spacedRepetition";
+export type { MetabookSpacedRepetitionSchedule } from "./spacedRepetition";
 
 export {
   getIntervalSequenceForSchedule,
@@ -45,7 +38,7 @@ export type { PromptID } from "./promptID";
 
 export { default as getDuePromptTaskIDs } from "./getDuePromptTaskIDs";
 
-export { encodePromptTask, decodePromptTask } from "./types/promptTask";
+export { getIDForPromptTask, getPromptTaskForID } from "./types/promptTask";
 export type {
   PromptTask,
   BasicPromptTask,
@@ -79,6 +72,16 @@ export type {
   IngestActionLog,
   RepetitionActionLog,
 } from "./types/actionLog";
+
+export type {
+  PromptRepetitionActionLog,
+  PromptActionLog,
+  PromptIngestActionLog,
+} from "./types/promptActionLog";
+export {
+  getActionLogFromPromptActionLog,
+  getPromptActionLogFromActionLog,
+} from "./types/promptActionLog";
 
 export { getIDForActionLog } from "./actionLogID";
 export type { ActionLogID } from "./actionLogID";

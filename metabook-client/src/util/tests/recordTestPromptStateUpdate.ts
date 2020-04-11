@@ -1,8 +1,12 @@
 import {
-  encodePromptTask,
+  getIDForPromptTask,
   getIDForPrompt,
   PromptTaskID,
-  PromptState,
+  PromptActionLog,
+  repetitionActionLogType,
+  PromptTaskParameters,
+  PromptRepetitionOutcome,
+  getActionLogFromPromptActionLog,
 } from "metabook-core";
 import { testBasicPrompt } from "metabook-sample-data";
 import { MetabookUserClient } from "../../userClient/userClient";
@@ -10,23 +14,29 @@ import { MetabookUserClient } from "../../userClient/userClient";
 export function recordTestPromptStateUpdate(
   client: MetabookUserClient,
 ): {
-  newPromptState: PromptState;
   testPromptTaskID: PromptTaskID;
+  testPromptActionLog: PromptActionLog<PromptTaskParameters>;
   commit: Promise<unknown>;
 } {
+  const taskID = getIDForPromptTask({
+    promptID: getIDForPrompt(testBasicPrompt),
+    promptType: testBasicPrompt.promptType,
+    promptParameters: null,
+  });
+  const promptActionLog: PromptActionLog<PromptTaskParameters> = {
+    actionLogType: repetitionActionLogType,
+    taskID,
+    taskParameters: null,
+    outcome: PromptRepetitionOutcome.Remembered,
+    context: "a",
+    timestampMillis: 1000,
+    parentActionLogIDs: [],
+  };
   return {
-    ...client.recordAction({
-      prompt: testBasicPrompt,
-      promptParameters: null,
-      promptTaskParameters: null,
-      basePromptState: null,
-      actionOutcome: "remembered",
-      sessionID: "a",
-      timestampMillis: 1000,
-    }),
-    testPromptTaskID: encodePromptTask({
-      promptID: getIDForPrompt(testBasicPrompt),
-      promptParameters: null,
-    }),
+    commit: client.recordActionLogs([
+      getActionLogFromPromptActionLog(promptActionLog),
+    ]),
+    testPromptActionLog: promptActionLog,
+    testPromptTaskID: taskID,
   };
 }

@@ -1,11 +1,4 @@
-import {
-  MetabookActionOutcome,
-  PromptTaskID,
-  PromptParameters,
-  Prompt,
-  PromptState,
-  PromptTaskParameters,
-} from "metabook-core";
+import { ActionLog, PromptState, PromptTaskID } from "metabook-core";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
 
 export interface MetabookUserClient {
@@ -21,9 +14,7 @@ export interface MetabookUserClient {
     query: MetabookCardStateQuery,
   ): Promise<MetabookPromptStateSnapshot>;
 
-  recordAction(
-    action: MetabookReviewAction,
-  ): { newPromptState: PromptState; commit: Promise<unknown> };
+  recordActionLogs(logs: ActionLog[]): Promise<unknown>;
 }
 
 // TODO
@@ -34,14 +25,3 @@ export type MetabookPromptStateSnapshot = ReadonlyMap<
   PromptTaskID,
   PromptState
 >;
-
-export interface MetabookReviewAction {
-  prompt: Prompt;
-  promptParameters: PromptParameters;
-  promptTaskParameters: PromptTaskParameters;
-
-  sessionID: string | null;
-  timestampMillis: number;
-  actionOutcome: MetabookActionOutcome;
-  basePromptState: PromptState | null;
-}

@@ -1,6 +1,6 @@
 import getCardLimitForReviewSession from "./getCardLimitForReviewSession";
 import { PromptTaskID } from "./types/promptTask";
-import { PromptState } from "./types/promptState";
+import { PromptState } from "./promptState/promptState";
 
 // Given some time might be computing whether a user has a session due, we evaluate whether cards are due using a date slightly shifted into the future, to find the cards that'd be due on that conceptual day.
 function getFuzzyDueTimeThreshold(nowMillis: number): number {
@@ -37,13 +37,13 @@ export default function getDuePromptTaskIDs({
         const promptStateA = promptStates.get(a)!;
         const promptStateB = promptStates.get(b)!;
 
-        if (promptStateA.interval === promptStateB.interval) {
+        if (promptStateA.intervalMillis === promptStateB.intervalMillis) {
           // TODO: Shuffle... maybe hash the due timestamp millis
           return (
             promptStateA.dueTimestampMillis - promptStateB.dueTimestampMillis
           );
         } else {
-          return promptStateA.interval - promptStateB.interval;
+          return promptStateA.intervalMillis - promptStateB.intervalMillis;
         }
       })
       // Apply our review cap.

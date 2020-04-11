@@ -1,7 +1,9 @@
 import {
   ClozePromptParameters,
+  getNextTaskParameters,
   MetabookSpacedRepetitionSchedule,
   QAPrompt,
+  ApplicationPromptTaskParameters,
 } from "metabook-core";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -29,9 +31,11 @@ function getQAPrompt(reviewItem: PromptReviewItem): QAPrompt {
     case "basic":
       return reviewItem.prompt;
     case "applicationPrompt":
-      return reviewItem.prompt.variants[
-        reviewItem.promptState?.taskParameters?.variantIndex ?? 0
-      ];
+      const taskParameters = getNextTaskParameters(
+        reviewItem.prompt,
+        reviewItem.promptState?.lastReviewTaskParameters ?? null,
+      ) as ApplicationPromptTaskParameters;
+      return reviewItem.prompt.variants[taskParameters.variantIndex];
     case "cloze":
       const clozeRegexp = /{([^}]+?)}/g;
       const clozeContents = reviewItem.prompt.body.contents;

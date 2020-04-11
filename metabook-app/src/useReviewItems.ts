@@ -7,11 +7,11 @@ import {
 import {
   AttachmentID,
   AttachmentURLReference,
-  decodePromptTask,
-  encodePromptTask,
   getDuePromptTaskIDs,
-  PromptField,
+  getPromptTaskForID,
+  getIDForPromptTask,
   Prompt,
+  PromptField,
   PromptID,
   PromptTask,
   QAPrompt,
@@ -193,7 +193,7 @@ export function useReviewItems(
 ): ReviewItem[] | null {
   const promptStates = usePromptStates(userClient);
 
-  const orderedDuePromptTasks = useMemo(() => {
+  const orderedDuePromptTasks: PromptTask[] | null = useMemo(() => {
     if (promptStates === null) {
       return null;
     }
@@ -206,12 +206,12 @@ export function useReviewItems(
     });
     return duePromptTaskIDs
       .map((promptTaskID) => {
-        const prompt = decodePromptTask(promptTaskID);
-        if (prompt) {
-          return prompt;
-        } else {
-          console.error("Can't parse prompt ID", promptTaskID);
+        const promptTask = getPromptTaskForID(promptTaskID);
+        if (promptTask instanceof Error) {
+          console.error("Can't parse prompt task ID", promptTaskID);
           return null;
+        } else {
+          return promptTask;
         }
       })
       .filter<PromptTask>(
@@ -254,7 +254,7 @@ export function useReviewItems(
               return null;
             } else {
               const promptState =
-                promptStates?.get(encodePromptTask(task)) ?? null;
+                promptStates?.get(getIDForPromptTask(task)) ?? null;
 
               const attachmentResolutionMap: AttachmentResolutionMap = new Map();
               for (const attachmentID of getAttachmentIDsInPrompt(prompt)) {

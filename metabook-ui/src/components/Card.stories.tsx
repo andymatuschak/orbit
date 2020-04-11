@@ -1,13 +1,19 @@
 import { number } from "@storybook/addon-knobs";
 import {
+  applyActionLogToPromptState,
   AttachmentID,
+  PromptTask,
+  getNextTaskParameters,
+  getIDForPromptTask,
+  getIDForPrompt,
+  repetitionActionLogType,
   AttachmentIDReference,
   getIntervalSequenceForSchedule,
   imageAttachmentType,
   MetabookSpacedRepetitionSchedule,
   PromptState,
   PromptTaskParameters,
-  updatePromptStateForAction,
+  PromptRepetitionOutcome,
 } from "metabook-core";
 import {
   testApplicationPrompt,
@@ -160,16 +166,18 @@ function createPromptState(
   intervalSequence: typeof testIntervalSequence,
   level: number,
   bestLevel: number | null,
-  taskParameters: PromptTaskParameters,
+  lastReviewTaskParameters: PromptTaskParameters,
 ): PromptState {
   const interval = intervalSequence[level].interval;
   return {
-    interval,
-    bestInterval:
+    intervalMillis: interval,
+    bestIntervalMillis:
       bestLevel === null ? null : intervalSequence[bestLevel].interval,
     dueTimestampMillis: Date.now(),
     needsRetry: false,
-    taskParameters,
+    lastReviewTaskParameters,
+    lastReviewTimestampMillis: Date.now(),
+    headActionLogIDs: [],
   };
 }
 
@@ -189,7 +197,7 @@ function WithReviewState(props: {
       props.intervalSequence,
       props.initialCurrentLevel,
       props.initialBestLevel,
-      props.reviewItem.promptState?.taskParameters ?? null,
+      props.reviewItem.promptState?.lastReviewTaskParameters ?? null,
     ),
   );
 
@@ -245,7 +253,7 @@ function WithReviewState(props: {
           title="Mark remembered"
           onPress={() => {
             setReviewMarkingInterationState({
-              outcome: "remembered",
+              outcome: PromptRepetitionOutcome.Remembered,
               status: "committed",
             });
           }}
@@ -255,7 +263,7 @@ function WithReviewState(props: {
           title="Mark forgotten"
           onPress={() => {
             setReviewMarkingInterationState({
-              outcome: "forgotten",
+              outcome: PromptRepetitionOutcome.Forgotten,
               status: "committed",
             });
           }}
@@ -273,13 +281,28 @@ function WithReviewState(props: {
               return;
             }
             setPromptState(
-              updatePromptStateForAction({
+              applyActionLogToPromptState({
                 basePromptState: promptState,
-                prompt: props.reviewItem.prompt,
-                actionOutcome: currentOutcome,
                 schedule: props.schedule,
-                reviewTimestampMillis: Date.now(),
-              }),
+                promptActionLog: {
+                  parentActionLogIDs: [],
+                  timestampMillis:
+                    promptState.lastReviewTimestampMillis +
+                    promptState.intervalMillis,
+                  actionLogType: repetitionActionLogType,
+                  context: null,
+                  outcome: currentOutcome,
+                  taskID: getIDForPromptTask({
+                    promptID: getIDForPrompt(props.reviewItem.prompt),
+                    promptType: props.reviewItem.prompt.promptType,
+                    promptParameters: props.reviewItem.promptParameters,
+                  } as PromptTask),
+                  taskParameters: getNextTaskParameters(
+                    props.reviewItem.prompt,
+                    promptState.lastReviewTaskParameters,
+                  ),
+                },
+              }) as PromptState,
             );
             setReviewMarkingInterationState(null);
           }}
@@ -294,7 +317,7 @@ function WithReviewState(props: {
                 props.intervalSequence,
                 props.initialCurrentLevel,
                 props.initialBestLevel,
-                props.reviewItem.promptState?.taskParameters ?? null,
+                props.reviewItem.promptState?.lastReviewTaskParameters ?? null,
               ),
             );
           }}

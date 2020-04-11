@@ -1,8 +1,8 @@
 import isEqual from "lodash.isequal";
 import {
-  MetabookActionOutcome,
   MetabookSpacedRepetitionSchedule,
   PromptType,
+  PromptRepetitionOutcome,
 } from "metabook-core";
 import React, { useCallback, useRef, useState } from "react";
 import {
@@ -34,7 +34,7 @@ type InternalReviewItem =
 
 export type ReviewAreaMarkingRecord = {
   reviewItem: PromptReviewItem;
-  outcome: MetabookActionOutcome;
+  outcome: PromptRepetitionOutcome;
 };
 
 export interface ReviewAreaProps {
@@ -56,7 +56,7 @@ export interface ReviewAreaProps {
 }
 
 interface PendingMarkingInteractionState {
-  pendingActionOutcome: MetabookActionOutcome;
+  pendingActionOutcome: PromptRepetitionOutcome;
   status: "hover" | "active";
 }
 
@@ -173,7 +173,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
 
   const currentItem = items[0] || null;
   const onMarkingButton = useCallback(
-    (outcome: MetabookActionOutcome) => {
+    (outcome: PromptRepetitionOutcome) => {
       if (currentItem && currentItem.reviewItemType === "prompt") {
         const markingRecord = { reviewItem: currentItem, outcome };
         lastCommittedReviewMarkingRef.current = markingRecord;
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
 });
 
 function ReviewButtonArea(props: {
-  onMark: (outcome: MetabookActionOutcome) => void;
+  onMark: (outcome: PromptRepetitionOutcome) => void;
   onPendingMarkingInteractionStateDidChange: (
     state: PendingMarkingInteractionState | null,
   ) => void;
@@ -474,7 +474,9 @@ function ReviewButtonArea(props: {
   return (
     <View style={styles.buttonContainer}>
       <Button
-        onPress={useCallback(() => onMark("forgotten"), [onMark])}
+        onPress={useCallback(() => onMark(PromptRepetitionOutcome.Forgotten), [
+          onMark,
+        ])}
         // onStatusDidChange={useCallback(
         //   status =>
         //     onPendingMarkingInteractionStateDidChange(
@@ -492,7 +494,9 @@ function ReviewButtonArea(props: {
         title={isApplicationPrompt ? "Couldn’t answer" : "Didn’t remember"}
       />
       <Button
-        onPress={useCallback(() => onMark("remembered"), [onMark])}
+        onPress={useCallback(() => onMark(PromptRepetitionOutcome.Remembered), [
+          onMark,
+        ])}
         // onStatusDidChange={useCallback(
         //   status =>
         //     onPendingMarkingInteractionStateDidChange(

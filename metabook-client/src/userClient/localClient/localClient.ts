@@ -1,19 +1,18 @@
 import {
-  encodePromptTask,
-  PromptTaskID,
-  PromptState,
   ActionLog,
+  applyActionLogToPromptState,
+  getPromptActionLogFromActionLog,
+  PromptState,
+  PromptTaskID,
 } from "metabook-core";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
-import { getActionLogForAction } from "../../util/getActionLogForAction";
-import { getNextPromptStateForReviewLog } from "../../util/getNextPromptStateForActionLog";
 import getPromptStates from "../getPromptStates";
 import {
   MetabookCardStateQuery,
   MetabookPromptStateSnapshot,
-  MetabookReviewAction,
   MetabookUserClient,
 } from "../userClient";
+import promptActionLogCanBeAppliedToPromptState from "../promptActionLogCanBeAppliedToPromptState";
 
 export class MetabookLocalUserClient implements MetabookUserClient {
   private readonly latestPromptStates: Map<PromptTaskID, PromptState>;
@@ -32,33 +31,37 @@ export class MetabookLocalUserClient implements MetabookUserClient {
     return getPromptStates(this, query);
   }
 
-  recordAction(
-    action: MetabookReviewAction,
-  ): { newPromptState: PromptState; commit: Promise<unknown> } {
-    const actionLog = getActionLogForAction(action);
-    const newPromptState = getNextPromptStateForReviewLog(
-      actionLog,
-      action.prompt,
-    );
+  async recordActionLogs(logs: ActionLog[]): Promise<unknown> {
+    for (const log of logs) {
+      const promptActionLog = getPromptActionLogFromActionLog(log);
+      const cachedPromptState =
+        this.latestPromptStates.get(promptActionLog.taskID) ?? null;
+      if (
+        promptActionLogCanBeAppliedToPromptState(
+          promptActionLog,
+          cachedPromptState,
+        )
+      ) {
+        const newPromptState = applyActionLogToPromptState({
+          promptActionLog,
+          basePromptState: cachedPromptState,
+          schedule: "default",
+        });
+        if (newPromptState instanceof Error) {
+          throw newPromptState;
+        }
+        this.latestPromptStates.set(promptActionLog.taskID, newPromptState);
+      }
+    }
+    this.logs.push(...logs);
 
-    this.latestPromptStates.set(
-      encodePromptTask({
-        promptID: actionLog.promptID,
-        promptParameters: actionLog.promptParameters,
-      }),
-      newPromptState,
-    );
-    this.logs.push(actionLog);
-    return {
-      newPromptState,
-      commit: new Promise((resolve) => {
-        // We return control to the caller before calling subscribers and resolving.
-        setTimeout(() => {
-          this.notifyCardStateSubscribers();
-          resolve();
-        }, 0);
-      }),
-    };
+    return new Promise((resolve) => {
+      // We return control to the caller before calling subscribers and resolving.
+      setTimeout(() => {
+        this.notifyCardStateSubscribers();
+        resolve();
+      }, 0);
+    });
   }
 
   subscribeToPromptStates(

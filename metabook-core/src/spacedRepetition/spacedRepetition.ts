@@ -1,6 +1,9 @@
-import typedKeys from "./util/typedKeys";
+import typedKeys from "../util/typedKeys";
 
-export type MetabookActionOutcome = "forgotten" | "remembered";
+export enum PromptRepetitionOutcome {
+  Forgotten = "forgotten",
+  Remembered = "remembered",
+}
 export type ReviewIntervalMilliseconds = number;
 
 // Deliberately naive here. This is fine for now.
@@ -52,33 +55,8 @@ export function getIntervalSequenceForSchedule(
 export function getInitialIntervalForSchedule(
   schedule: MetabookSpacedRepetitionSchedule,
 ) {
-  return schedulesToIntervalSequences[schedule][1];
+  return schedulesToIntervalSequences[schedule][1].interval;
 }
-
-const intervalForContinuousLevel = (
-  level: number,
-  schedule: MetabookSpacedRepetitionSchedule,
-): number => {
-  const intervalSequence = schedulesToIntervalSequences[schedule];
-
-  // exp(0) = 1
-  // exp(a) = level_ceil_interval - level_floor_interval
-  // a = ln(level_ceil_interval - level_floor_interval)
-  if (level >= intervalSequence.length - 1) {
-    return intervalSequence[intervalSequence.length - 1].interval;
-  }
-
-  const baseLevel = Math.floor(level);
-  const nextLevel = Math.floor(level + 1);
-  const highInterval = intervalSequence[nextLevel].interval;
-  const lowInterval = intervalSequence[baseLevel].interval;
-  // exp(x - h) + k...
-  const h = Math.log(
-    (Math.exp(nextLevel) - Math.exp(baseLevel)) / (highInterval - lowInterval),
-  );
-  const k = lowInterval - Math.exp(baseLevel - h);
-  return Math.exp(level - h) + k;
-};
 
 const schedulesToIntervalsToLevels = ((): Record<
   MetabookSpacedRepetitionSchedule,
@@ -104,12 +82,6 @@ const schedulesToIntervalsToLevels = ((): Record<
     { [key: number]: number }
   >;
 })();
-
-export function getIntervalLabelsForSchedule(
-  schedule: MetabookSpacedRepetitionSchedule,
-): string[] {
-  return schedulesToIntervalSequences[schedule].map((i) => i.label);
-}
 
 export const getLevelForInterval = (
   interval: ReviewIntervalMilliseconds,
@@ -147,35 +119,30 @@ export const getLevelForInterval = (
   }
 };
 
-export const computeNextInterval = (
-  interval: ReviewIntervalMilliseconds,
-  reviewMarking: MetabookActionOutcome,
-  needsRetry: boolean,
+/*
+const intervalForContinuousLevel = (
+  level: number,
   schedule: MetabookSpacedRepetitionSchedule,
-): ReviewIntervalMilliseconds => {
+): number => {
   const intervalSequence = schedulesToIntervalSequences[schedule];
 
-  const currentLevel = getLevelForInterval(interval, schedule);
-  let newLevel: number;
-  if (reviewMarking === "remembered") {
-    if (needsRetry && currentLevel > 0) {
-      // If the card needs to be retried, and the user remembers, then we just remove the retry indication. Unless they're on the "in-text" level, in which case we still bump them up to 5 days.
-      newLevel = currentLevel;
-    } else {
-      newLevel = Math.min(intervalSequence.length - 1, currentLevel + 1);
-    }
-  } else {
-    if (
-      (schedule === "aggressiveStart" && currentLevel <= 1) ||
-      currentLevel === 0
-    ) {
-      newLevel = currentLevel;
-    } else {
-      newLevel = currentLevel - 1;
-    }
+  // exp(0) = 1
+  // exp(a) = level_ceil_interval - level_floor_interval
+  // a = ln(level_ceil_interval - level_floor_interval)
+  if (level >= intervalSequence.length - 1) {
+    return intervalSequence[intervalSequence.length - 1].interval;
   }
 
-  return intervalSequence[newLevel].interval;
+  const baseLevel = Math.floor(level);
+  const nextLevel = Math.floor(level + 1);
+  const highInterval = intervalSequence[nextLevel].interval;
+  const lowInterval = intervalSequence[baseLevel].interval;
+  // exp(x - h) + k...
+  const h = Math.log(
+    (Math.exp(nextLevel) - Math.exp(baseLevel)) / (highInterval - lowInterval),
+  );
+  const k = lowInterval - Math.exp(baseLevel - h);
+  return Math.exp(level - h) + k;
 };
 
 export const getAverageLevel = (
@@ -224,3 +191,4 @@ export const projectedAverageIntervalAfterReview = (
     schedule,
   );
 };
+*/

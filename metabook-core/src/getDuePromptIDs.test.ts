@@ -1,23 +1,27 @@
 import getDuePromptTaskIDs from "./getDuePromptTaskIDs";
 import { PromptID } from "./promptID";
-import { encodePromptTask, PromptTaskID } from "./types/promptTask";
-import { PromptState } from "./types/promptState";
+import { PromptState } from "./promptState/promptState";
+import { basicPromptType } from "./types/prompt";
+import { getIDForPromptTask, PromptTaskID } from "./types/promptTask";
 
 function generateCardStates(count: number, dueCount: number) {
   const cardStates: Map<PromptTaskID, PromptState> = new Map();
   for (let i = 0; i < count; i++) {
     cardStates.set(
-      encodePromptTask({
+      getIDForPromptTask({
         promptID: i.toString() as PromptID,
+        promptType: basicPromptType,
         promptParameters: null,
       }),
       {
+        lastReviewTimestampMillis: 0,
+        lastReviewTaskParameters: null,
+        headActionLogIDs: [],
         needsRetry: false,
-        bestInterval: null,
-        interval: 0,
+        bestIntervalMillis: null,
+        intervalMillis: 0,
         dueTimestampMillis:
           Date.now() + 1000 * 60 * 60 * 24 * (i < dueCount ? -1 : 1),
-        taskParameters: null,
       },
     );
   }

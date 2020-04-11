@@ -4,6 +4,14 @@ import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "metabook-client";
+import {
+  getActionLogFromPromptActionLog,
+  getNextTaskParameters,
+  repetitionActionLogType,
+  getIDForPromptTask,
+  getIDForPrompt,
+  PromptTask,
+} from "metabook-core";
 import { ReviewArea, ReviewAreaProps } from "metabook-ui";
 import colors from "metabook-ui/dist/styles/colors";
 import "node-libs-react-native/globals";
@@ -50,18 +58,27 @@ export default function App() {
   const onMark = useCallback<ReviewAreaProps["onMark"]>(
     async (marking) => {
       console.log("Recording update");
-      const { commit } = userClient.recordAction({
-        actionOutcome: marking.outcome,
-        basePromptState: marking.reviewItem.promptState,
-        sessionID: null,
-        timestampMillis: Date.now(),
-        prompt: marking.reviewItem.prompt,
-        promptTaskParameters:
-          marking.reviewItem.promptState?.taskParameters ?? null,
-        promptParameters: marking.reviewItem.promptParameters,
-      });
 
-      commit
+      userClient
+        .recordActionLogs([
+          getActionLogFromPromptActionLog({
+            actionLogType: repetitionActionLogType,
+            parentActionLogIDs:
+              marking.reviewItem.promptState?.headActionLogIDs ?? [],
+            taskID: getIDForPromptTask({
+              promptID: getIDForPrompt(marking.reviewItem.prompt),
+              promptType: marking.reviewItem.prompt.promptType,
+              promptParameters: marking.reviewItem.promptParameters,
+            } as PromptTask),
+            outcome: marking.outcome,
+            context: null,
+            timestampMillis: Date.now(),
+            taskParameters: getNextTaskParameters(
+              marking.reviewItem.prompt,
+              marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
+            ),
+          }),
+        ])
         .then(() => {
           console.log("Committed", marking.reviewItem.prompt);
         })

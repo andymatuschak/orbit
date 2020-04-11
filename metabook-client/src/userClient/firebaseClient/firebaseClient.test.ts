@@ -1,10 +1,13 @@
 import * as firebaseTesting from "@firebase/testing";
 import firebase from "firebase/app";
 import {
-  encodePromptTask,
+  basicPromptType,
+  clozePromptType,
   ingestActionLogType,
   PromptID,
   PromptTask,
+  getIDForPromptTask,
+  applyActionLogToPromptState,
 } from "metabook-core";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
@@ -43,23 +46,25 @@ test("recording a review triggers card state update", async () => {
   expect(initialPromptStates).toMatchObject(new Map());
 
   const secondMockCall = promiseForNextCall(mockFunction);
-  jest.spyOn(Math, "random").mockReturnValue(0.25);
-  const { newPromptState, testPromptTaskID } = recordTestPromptStateUpdate(
-    client,
-  );
-  expect(newPromptState).toMatchInlineSnapshot(`
-    Object {
-      "bestInterval": 0,
-      "dueTimestampMillis": 432001000,
-      "interval": 432000000,
-      "needsRetry": false,
-      "taskParameters": null,
-    }
-  `);
+  const {
+    testPromptTaskID,
+    testPromptActionLog,
+    commit,
+  } = recordTestPromptStateUpdate(client);
+  await commit;
 
   const updatedPromptStates = await secondMockCall;
   expect(updatedPromptStates).toMatchObject(
-    new Map([[testPromptTaskID, newPromptState]]),
+    new Map([
+      [
+        testPromptTaskID,
+        applyActionLogToPromptState({
+          promptActionLog: testPromptActionLog,
+          basePromptState: null,
+          schedule: "default",
+        }),
+      ],
+    ]),
   );
 
   // The new prompt states should be a different object.
@@ -72,65 +77,51 @@ describe("ingesting prompt specs", () => {
   test("ingesting a basic prompt spec", async () => {
     const promptTask: PromptTask = {
       promptID: "test" as PromptID,
+      promptType: basicPromptType,
       promptParameters: null,
     };
     await client.recordActionLogs([
       {
         actionLogType: ingestActionLogType,
-        ...promptTask,
+        taskID: getIDForPromptTask(promptTask),
         timestampMillis: Date.UTC(2020, 0),
       },
     ]);
     const cardStates = await client.getPromptStates({});
-    expect(cardStates.get(encodePromptTask(promptTask))).toMatchInlineSnapshot(`
-      Object {
-        "bestInterval": null,
-        "dueTimestampMillis": 1578268800000,
-        "interval": 432000000,
-        "needsRetry": false,
-        "taskParameters": null,
-      }
-    `);
+    expect(cardStates.get(getIDForPromptTask(promptTask))).toBeTruthy();
   });
 
   test("ingesting a cloze prompt", async () => {
-    const prompt: PromptTask = {
+    const promptTask: PromptTask = {
       promptID: "test" as PromptID,
+      promptType: clozePromptType,
       promptParameters: { clozeIndex: 2 },
     };
     await client.recordActionLogs([
       {
         actionLogType: ingestActionLogType,
-        ...prompt,
+        taskID: getIDForPromptTask(promptTask),
         timestampMillis: Date.UTC(2020, 0),
       },
     ]);
     const cardStates = await client.getPromptStates({});
-    expect(cardStates.get(encodePromptTask(prompt))).toMatchInlineSnapshot(`
-      Object {
-        "bestInterval": null,
-        "dueTimestampMillis": 1578268800000,
-        "interval": 432000000,
-        "needsRetry": false,
-        "taskParameters": null,
-      }
-    `);
+    expect(cardStates.get(getIDForPromptTask(promptTask))).toBeTruthy();
   });
 });
 
 test("port logs from local client", async () => {
   const localClient = new MetabookLocalUserClient();
   recordTestPromptStateUpdate(localClient);
-  const {
-    newPromptState,
-    commit,
-    testPromptTaskID,
-  } = recordTestPromptStateUpdate(localClient);
+  const { commit, testPromptTaskID } = recordTestPromptStateUpdate(localClient);
   await commit;
+  const localCardStates = await localClient.getPromptStates({});
+  expect(localCardStates.get(testPromptTaskID)).toBeTruthy();
 
   await client.recordActionLogs(localClient.getAllLogs());
   const cardStates = await client.getPromptStates({});
-  expect(cardStates.get(testPromptTaskID)).toMatchObject(newPromptState);
+  expect(cardStates.get(testPromptTaskID)).toMatchObject(
+    localCardStates.get(testPromptTaskID)!,
+  );
 });
 
 test("getCardStates changes after recording update", async () => {

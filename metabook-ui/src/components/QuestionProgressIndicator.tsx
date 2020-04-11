@@ -1,7 +1,7 @@
-import { MetabookActionOutcome } from "metabook-core";
+import { PromptRepetitionOutcome } from "metabook-core";
 
 export type ReviewMarkingInteractionState = {
-  outcome: MetabookActionOutcome;
+  outcome: PromptRepetitionOutcome;
   status: "pending" | "committed";
 };
 export function QPI() {

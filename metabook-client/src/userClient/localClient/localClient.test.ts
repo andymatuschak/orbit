@@ -1,3 +1,8 @@
+import {
+  applyActionLogToPromptState,
+  PromptTaskID,
+  PromptState,
+} from "metabook-core";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
 import { MetabookLocalUserClient } from "./localClient";
@@ -18,19 +23,24 @@ test("recording a marking triggers card state update", async () => {
 
   const secondMockCall = promiseForNextCall(mockFunction);
   jest.spyOn(Math, "random").mockReturnValue(0.25);
-  await recordTestPromptStateUpdate(client);
-  const updatedCardStates = await secondMockCall;
-  expect(updatedCardStates).toMatchInlineSnapshot(`
-    Map {
-      "zdj7WcTUE71kpqV2BPQoaNGejo8GKeyqfRA5DSgjgybo6cCa9" => Object {
-        "bestInterval": 0,
-        "dueTimestampMillis": 432001000,
-        "interval": 432000000,
-        "needsRetry": false,
-        "taskParameters": null,
-      },
-    }
-  `);
+  const {
+    commit,
+    testPromptActionLog,
+    testPromptTaskID,
+  } = recordTestPromptStateUpdate(client);
+  await commit;
+
+  const updatedCardStates = (await secondMockCall) as Map<
+    PromptTaskID,
+    PromptState
+  >;
+  expect(updatedCardStates.get(testPromptTaskID)).toMatchObject(
+    applyActionLogToPromptState({
+      basePromptState: null,
+      promptActionLog: testPromptActionLog,
+      schedule: "default",
+    }),
+  );
 });
 
 test("getCardStates changes after recording update", async () => {
@@ -40,10 +50,10 @@ test("getCardStates changes after recording update", async () => {
   expect(initialCardStates).not.toMatchObject(finalCardStates);
 });
 
-test("logs reflect updates", () => {
+test("logs reflect updates", async () => {
   expect(client.getAllLogs()).toHaveLength(0);
-  recordTestPromptStateUpdate(client);
-  recordTestPromptStateUpdate(client);
+  await recordTestPromptStateUpdate(client).commit;
+  await recordTestPromptStateUpdate(client).commit;
   expect(client.getAllLogs()).toHaveLength(2);
 });
 

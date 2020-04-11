@@ -2,46 +2,31 @@ import firebase from "firebase/app";
 import "firebase/firestore";
 
 import {
-  encodePromptTask,
-  getInitialIntervalForSchedule,
-  PromptTaskID,
-  PromptState,
   ActionLog,
-  ingestActionLogType,
-  repetitionActionLogType,
-  RepetitionActionLog,
-  IngestActionLog,
+  applyActionLogToPromptState,
+  getPromptActionLogFromActionLog,
+  PromptState,
+  PromptTaskID,
 } from "metabook-core";
 import { getDefaultFirebaseApp } from "../../firebase";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
-import { getActionLogForAction } from "../../util/getActionLogForAction";
-import { getNextPromptStateForReviewLog } from "../../util/getNextPromptStateForActionLog";
 import getPromptStates from "../getPromptStates";
+import promptActionLogCanBeAppliedToPromptState from "../promptActionLogCanBeAppliedToPromptState";
 import {
-  MetabookReviewAction,
   MetabookCardStateQuery,
   MetabookPromptStateSnapshot,
   MetabookUserClient,
 } from "../userClient";
 
-function getPromptTaskIDForActionLog(log: ActionLog): PromptTaskID {
-  return encodePromptTask({
-    promptID: log.promptID,
-    promptParameters: log.promptParameters,
-  });
-}
-
 export class MetabookFirebaseUserClient implements MetabookUserClient {
   userID: string;
   private database: firebase.firestore.Firestore;
   private readonly promptStateCache: Map<PromptTaskID, PromptState>;
-  private latestTimestampByPromptTaskID: Map<PromptTaskID, number>;
 
   constructor(app: firebase.app.App = getDefaultFirebaseApp(), userID: string) {
     this.userID = userID;
     this.database = app.firestore();
     this.promptStateCache = new Map();
-    this.latestTimestampByPromptTaskID = new Map();
   }
 
   async getPromptStates(
@@ -57,12 +42,13 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
   ): MetabookUnsubscribe {
     // TODO: handle in-memory card state records...
     const userStateLogsRef = this.getActionLogReference(this.userID).orderBy(
-      "timestamp",
+      "timestampMillis",
       "desc",
     );
 
     return userStateLogsRef.onSnapshot(
       (snapshot) => {
+        console.log("Got snapshot", snapshot.docChanges());
         for (const change of snapshot.docChanges()) {
           if (change.type === "added") {
             this.updateCacheForLog(change.doc.data());
@@ -84,53 +70,37 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
   }
 
   private updateCacheForLog(log: ActionLog): void {
-    const promptTaskID = getPromptTaskIDForActionLog(log);
-    const latestPromptTimestamp = this.latestTimestampByPromptTaskID.get(
-      promptTaskID,
-    );
+    const promptActionLog = getPromptActionLogFromActionLog(log);
+    const cachedPromptState =
+      this.promptStateCache.get(promptActionLog.taskID) ?? null;
     if (
-      !latestPromptTimestamp ||
-      (latestPromptTimestamp && log.timestampMillis > latestPromptTimestamp) // TODO check that parents(?) match
+      promptActionLogCanBeAppliedToPromptState(
+        promptActionLog,
+        cachedPromptState,
+      )
     ) {
-      switch (log.actionLogType) {
-        case ingestActionLogType:
-          this.updateCacheForIngestLog(log, promptTaskID);
-          break;
-        case repetitionActionLogType:
-          this.updateCacheByAppendingRepetitionLog(log, promptTaskID);
-          break;
+      const newPromptState = applyActionLogToPromptState({
+        promptActionLog,
+        basePromptState: cachedPromptState,
+        schedule: "default",
+      });
+      if (newPromptState instanceof Error) {
+        throw newPromptState;
       }
-
-      this.latestTimestampByPromptTaskID.set(promptTaskID, log.timestampMillis);
+      this.promptStateCache.set(promptActionLog.taskID, newPromptState);
+    } else {
+      throw new Error(
+        `Unsupported prompt log addition. New log heads: ${JSON.stringify(
+          log,
+          null,
+          "\t",
+        )}. Cached prompt state: ${JSON.stringify(
+          cachedPromptState,
+          null,
+          "\t",
+        )}`,
+      );
     }
-  }
-
-  private updateCacheByAppendingRepetitionLog(
-    log: RepetitionActionLog,
-    promptTaskID: PromptTaskID,
-  ) {
-    // TODO
-    /*this.promptStateCache.set(promptTaskID, {
-      interval: log.nextIntervalMillis,
-      dueTimestampMillis: log.nextDueTimestamp.toMillis(),
-      bestInterval: log.nextBestIntervalMillis,
-      needsRetry: log.nextNeedsRetry,
-      taskParameters: log.promptTaskParameters,
-    });*/
-  }
-
-  private updateCacheForIngestLog(
-    log: IngestActionLog,
-    promptTaskID: PromptTaskID,
-  ) {
-    const initialInterval = getInitialIntervalForSchedule("default").interval;
-    this.promptStateCache.set(promptTaskID, {
-      interval: initialInterval,
-      dueTimestampMillis: log.timestampMillis + initialInterval,
-      bestInterval: null,
-      needsRetry: false,
-      taskParameters: null,
-    });
   }
 
   recordActionLogs(logs: ActionLog[]): Promise<unknown> {
@@ -142,18 +112,6 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
       batch.set(newDoc, log);
     }
     return batch.commit();
-  }
-
-  recordAction(
-    update: MetabookReviewAction,
-  ): { newPromptState: PromptState; commit: Promise<unknown> } {
-    const actionLog = getActionLogForAction(update);
-    const commit = this.recordActionLogs([actionLog]);
-
-    return {
-      newPromptState: getNextPromptStateForReviewLog(actionLog, update.prompt),
-      commit: commit,
-    };
   }
 
   private getActionLogReference(
