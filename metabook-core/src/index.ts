@@ -51,7 +51,11 @@ export type {
   ClozePromptParameters,
 } from "./types/promptTask";
 
-export type { Attachment } from "./types/attachment";
+export type { Attachment, AttachmentMimeType } from "./types/attachment";
+export {
+  getAttachmentMimeTypeForFilename,
+  getFileExtensionForAttachmentMimeType,
+} from "./types/attachment";
 
 export { getIDForAttachment } from "./types/attachmentID";
 export type { AttachmentID } from "./types/attachmentID";
@@ -85,3 +89,10 @@ export {
 
 export { getIDForActionLog } from "./actionLogID";
 export type { ActionLogID } from "./actionLogID";
+
+export type {
+  PromptProvenance,
+  AnkiPromptProvenance,
+  NotePromptProvenance,
+} from "./types/promptProvenance";
+export { PromptProvenanceType } from "./types/promptProvenance";

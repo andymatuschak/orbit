@@ -1,28 +1,29 @@
 import { ActionLogID } from "../actionLogID";
 
-interface BaseActionLog {
-  actionLogType: ActionLogType;
+type BaseActionLog = {
   timestampMillis: number;
-}
+};
+
+export type ActionLogMetadata = { [key: string]: string | number };
 
 export const ingestActionLogType = "ingest";
-export interface IngestActionLog extends BaseActionLog {
+export type IngestActionLog = {
   actionLogType: typeof ingestActionLogType;
   taskID: string;
-}
+  metadata: ActionLogMetadata | null;
+} & BaseActionLog;
 
 export const repetitionActionLogType = "repetition";
-export interface RepetitionActionLog extends BaseActionLog {
+export type RepetitionActionLog = {
   actionLogType: typeof repetitionActionLogType;
   parentActionLogIDs: ActionLogID[];
 
   taskID: string;
-  taskParameters: string | null;
+  taskParameters: ActionLogMetadata | null;
 
   context: string | null;
   outcome: string;
-}
+} & BaseActionLog;
 
 export type ActionLog = IngestActionLog | RepetitionActionLog;
-
 export type ActionLogType = ActionLog["actionLogType"];

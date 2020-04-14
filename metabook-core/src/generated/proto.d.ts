@@ -498,6 +498,9 @@ export namespace ActionLog {
 
         /** Ingest taskID */
         taskID?: (string|null);
+
+        /** Ingest metadataEntries */
+        metadataEntries?: (ActionLog.IMetadataEntry[]|null);
     }
 
     /** Represents an Ingest. */
@@ -511,6 +514,9 @@ export namespace ActionLog {
 
         /** Ingest taskID. */
         public taskID: string;
+
+        /** Ingest metadataEntries. */
+        public metadataEntries: ActionLog.IMetadataEntry[];
 
         /**
          * Creates a new Ingest instance using the specified properties.
@@ -590,7 +596,7 @@ export namespace ActionLog {
         taskID?: (string|null);
 
         /** Repetition taskParameters */
-        taskParameters?: (string|null);
+        taskParameters?: (ActionLog.IMetadataEntry[]|null);
 
         /** Repetition outcome */
         outcome?: (string|null);
@@ -612,7 +618,7 @@ export namespace ActionLog {
         public taskID: string;
 
         /** Repetition taskParameters. */
-        public taskParameters: string;
+        public taskParameters: ActionLog.IMetadataEntry[];
 
         /** Repetition outcome. */
         public outcome: string;
@@ -686,6 +692,111 @@ export namespace ActionLog {
 
         /**
          * Converts this Repetition to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a MetadataEntry. */
+    interface IMetadataEntry {
+
+        /** MetadataEntry key */
+        key?: (string|null);
+
+        /** MetadataEntry string */
+        string?: (string|null);
+
+        /** MetadataEntry number */
+        number?: (number|null);
+    }
+
+    /** Represents a MetadataEntry. */
+    class MetadataEntry implements IMetadataEntry {
+
+        /**
+         * Constructs a new MetadataEntry.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: ActionLog.IMetadataEntry);
+
+        /** MetadataEntry key. */
+        public key: string;
+
+        /** MetadataEntry string. */
+        public string: string;
+
+        /** MetadataEntry number. */
+        public number: number;
+
+        /** MetadataEntry value. */
+        public value?: ("string"|"number");
+
+        /**
+         * Creates a new MetadataEntry instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns MetadataEntry instance
+         */
+        public static create(properties?: ActionLog.IMetadataEntry): ActionLog.MetadataEntry;
+
+        /**
+         * Encodes the specified MetadataEntry message. Does not implicitly {@link ActionLog.MetadataEntry.verify|verify} messages.
+         * @param message MetadataEntry message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: ActionLog.IMetadataEntry, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified MetadataEntry message, length delimited. Does not implicitly {@link ActionLog.MetadataEntry.verify|verify} messages.
+         * @param message MetadataEntry message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: ActionLog.IMetadataEntry, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a MetadataEntry message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns MetadataEntry
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): ActionLog.MetadataEntry;
+
+        /**
+         * Decodes a MetadataEntry message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns MetadataEntry
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): ActionLog.MetadataEntry;
+
+        /**
+         * Verifies a MetadataEntry message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a MetadataEntry message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns MetadataEntry
+         */
+        public static fromObject(object: { [k: string]: any }): ActionLog.MetadataEntry;
+
+        /**
+         * Creates a plain object from a MetadataEntry message. Also converts values to other types if specified.
+         * @param message MetadataEntry
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: ActionLog.MetadataEntry, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this MetadataEntry to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };

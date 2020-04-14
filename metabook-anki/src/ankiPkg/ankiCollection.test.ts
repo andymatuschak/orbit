@@ -18,6 +18,12 @@ test("manifest contains two test images", async () => {
   });
 });
 
+test("attachments extracted", async () => {
+  await withTestAnkiCollection(async (handle, manifest, attachments) => {
+    expect(Object.keys(attachments).length).toBe(2);
+  });
+});
+
 test("reads revlog", async () => {
   await withTestAnkiCollection(async (handle) => {
     const mock = jest.fn();

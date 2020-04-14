@@ -1,5 +1,5 @@
-import { PromptID } from "../promptID";
 import {
+  IngestActionLog,
   ingestActionLogType,
   RepetitionActionLog,
   repetitionActionLogType,
@@ -7,15 +7,25 @@ import {
 import { ActionLogID, getIDForActionLog } from "./actionLogID";
 
 test("ingest logs", () => {
-  expect(
-    getIDForActionLog({
-      actionLogType: ingestActionLogType,
-      timestampMillis: 0,
-      taskID: "test",
-    }),
-  ).toMatchInlineSnapshot(
+  const withoutMetadataLog: IngestActionLog = {
+    actionLogType: ingestActionLogType,
+    timestampMillis: 0,
+    taskID: "test",
+    metadata: null,
+  };
+  const withoutMetadataID = getIDForActionLog(withoutMetadataLog);
+  expect(withoutMetadataID).toMatchInlineSnapshot(
     `"zdj7WgK8RzKsuDK4THX4ed2RpGDxXmyyFnVbtKw2RJ3YcSESN"`,
   );
+
+  const withMetadataID = getIDForActionLog({
+    ...withoutMetadataLog,
+    metadata: { test: 3 },
+  });
+  expect(withMetadataID).toMatchInlineSnapshot(
+    `"zdj7WdK5hE3wmUdpfboMfmkFm8qmdoJYmqBF3BoqhueNy5Qw4"`,
+  );
+  expect(withoutMetadataID).not.toEqual(withMetadataID);
 });
 
 test("action logs", () => {
@@ -23,7 +33,7 @@ test("action logs", () => {
     actionLogType: repetitionActionLogType,
     timestampMillis: 0,
     taskID: "test",
-    taskParameters: null,
+    taskParameters: { variantIndex: 3 },
     parentActionLogIDs: [],
     context: "testSession",
     outcome: "remembered",
@@ -38,10 +48,10 @@ test("action logs", () => {
   });
 
   expect(noParentActionLogID).toMatchInlineSnapshot(
-    `"zdj7WhUtpKgUPmJGSxWs9Ap8N3CRdQnZTcBMoy5Z7WJUg64ih"`,
+    `"zdj7WYA8UdWSuZwNJVKGvwTnhhJ84Tmr4ByVUTffvadRuTKP7"`,
   );
   expect(parentActionLogID).toMatchInlineSnapshot(
-    `"zdj7WX4Rwp566AeBUN9SoFyUkLvBsbtdC8wbgJXRHhRKWzs9g"`,
+    `"zdj7WZiZrerunQBk43fp4RTYSdBDEWeU23j2nE9jn91Bd237m"`,
   );
 
   expect(noParentActionLogID).not.toEqual(parentActionLogID);

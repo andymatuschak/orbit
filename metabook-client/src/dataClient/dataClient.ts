@@ -6,6 +6,7 @@ import {
   Attachment,
   AttachmentID,
   AttachmentURLReference,
+  getFileExtensionForAttachmentMimeType,
   Prompt,
   PromptID,
 } from "metabook-core";
@@ -157,15 +158,13 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
         attachmentID: AttachmentID,
         attachment: Attachment,
       ): Promise<AttachmentURLReference | Error> => {
-        let extension: string;
-        switch (attachment.mimeType) {
-          case "image/png":
-            extension = "png";
-            break;
-          default:
-            return new Error(
-              `Unknown attachment mime type ${attachment.mimeType}`,
-            );
+        const extension = getFileExtensionForAttachmentMimeType(
+          attachment.mimeType,
+        );
+        if (!extension) {
+          return new Error(
+            `Unknown attachment mime type ${attachment.mimeType}`,
+          );
         }
         const cacheURI = await this.cacheWriteHandler(
           attachmentID,

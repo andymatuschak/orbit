@@ -3,9 +3,9 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export type BasicPromptTaskParameters = null;
 
-export interface ApplicationPromptTaskParameters {
+export type ApplicationPromptTaskParameters = {
   variantIndex: number;
-}
+};
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export type ClozePromptTaskParameters = null;

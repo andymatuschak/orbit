@@ -6,6 +6,7 @@ import multihashing from "multihashing";
 import { ActionLog } from "..";
 import Proto from "../generated/proto";
 import {
+  ActionLogMetadata,
   ingestActionLogType,
   repetitionActionLogType,
 } from "../types/actionLog";
@@ -19,6 +20,21 @@ function getProtobufTimestampFromMillis(
   };
 }
 
+function getProtobufRepresentationForMetadata(
+  metadata: ActionLogMetadata | null,
+): Proto.ActionLog.IMetadataEntry[] | null {
+  if (metadata === null) {
+    return null;
+  }
+  return Object.keys(metadata).map((key) => ({
+    key,
+    number:
+      typeof metadata[key] === "number" ? (metadata[key] as number) : undefined,
+    string:
+      typeof metadata[key] === "string" ? (metadata[key] as string) : undefined,
+  }));
+}
+
 function getProtobufRepresentationForActionLog(
   actionLog: ActionLog,
 ): Proto.IActionLog {
@@ -29,16 +45,22 @@ function getProtobufRepresentationForActionLog(
         timestamp,
         ingest: {
           taskID: actionLog.taskID,
+          metadataEntries: getProtobufRepresentationForMetadata(
+            actionLog.metadata,
+          ),
         },
       };
     case repetitionActionLogType:
+      const taskParameters = actionLog.taskParameters;
       return {
         timestamp,
         repetition: {
           taskID: actionLog.taskID,
           context: actionLog.context,
           outcome: actionLog.outcome,
-          taskParameters: actionLog.taskParameters,
+          taskParameters: getProtobufRepresentationForMetadata(
+            actionLog.taskParameters,
+          ),
         },
       };
   }

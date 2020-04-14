@@ -5,12 +5,13 @@ import {
   readAnkiCollectionPackage,
 } from "../ankiPkg";
 
-export default function withTestAnkiCollection(
+export default function withTestAnkiCollection<R>(
   continuation: (
     handle: AnkiCollectionDBHandle,
     mediaManifest: MediaManifest | null,
-  ) => Promise<void>,
-): Promise<void> {
+    attachmentIDsToExtractedPaths: { [key: string]: string },
+  ) => Promise<R>,
+): Promise<R> {
   return readAnkiCollectionPackage(
     path.resolve(__dirname, "./testCollection.colpkg"),
     continuation,

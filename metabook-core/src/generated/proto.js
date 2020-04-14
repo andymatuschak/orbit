@@ -1192,6 +1192,7 @@ $root.ActionLog = (function() {
          * @memberof ActionLog
          * @interface IIngest
          * @property {string|null} [taskID] Ingest taskID
+         * @property {Array.<ActionLog.IMetadataEntry>|null} [metadataEntries] Ingest metadataEntries
          */
 
         /**
@@ -1203,6 +1204,7 @@ $root.ActionLog = (function() {
          * @param {ActionLog.IIngest=} [properties] Properties to set
          */
         function Ingest(properties) {
+            this.metadataEntries = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -1216,6 +1218,14 @@ $root.ActionLog = (function() {
          * @instance
          */
         Ingest.prototype.taskID = "";
+
+        /**
+         * Ingest metadataEntries.
+         * @member {Array.<ActionLog.IMetadataEntry>} metadataEntries
+         * @memberof ActionLog.Ingest
+         * @instance
+         */
+        Ingest.prototype.metadataEntries = $util.emptyArray;
 
         /**
          * Creates a new Ingest instance using the specified properties.
@@ -1243,6 +1253,9 @@ $root.ActionLog = (function() {
                 writer = $Writer.create();
             if (message.taskID != null && message.hasOwnProperty("taskID"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.taskID);
+            if (message.metadataEntries != null && message.metadataEntries.length)
+                for (var i = 0; i < message.metadataEntries.length; ++i)
+                    $root.ActionLog.MetadataEntry.encode(message.metadataEntries[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
 
@@ -1279,6 +1292,11 @@ $root.ActionLog = (function() {
                 switch (tag >>> 3) {
                 case 1:
                     message.taskID = reader.string();
+                    break;
+                case 2:
+                    if (!(message.metadataEntries && message.metadataEntries.length))
+                        message.metadataEntries = [];
+                    message.metadataEntries.push($root.ActionLog.MetadataEntry.decode(reader, reader.uint32()));
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -1318,6 +1336,15 @@ $root.ActionLog = (function() {
             if (message.taskID != null && message.hasOwnProperty("taskID"))
                 if (!$util.isString(message.taskID))
                     return "taskID: string expected";
+            if (message.metadataEntries != null && message.hasOwnProperty("metadataEntries")) {
+                if (!Array.isArray(message.metadataEntries))
+                    return "metadataEntries: array expected";
+                for (var i = 0; i < message.metadataEntries.length; ++i) {
+                    var error = $root.ActionLog.MetadataEntry.verify(message.metadataEntries[i]);
+                    if (error)
+                        return "metadataEntries." + error;
+                }
+            }
             return null;
         };
 
@@ -1335,6 +1362,16 @@ $root.ActionLog = (function() {
             var message = new $root.ActionLog.Ingest();
             if (object.taskID != null)
                 message.taskID = String(object.taskID);
+            if (object.metadataEntries) {
+                if (!Array.isArray(object.metadataEntries))
+                    throw TypeError(".ActionLog.Ingest.metadataEntries: array expected");
+                message.metadataEntries = [];
+                for (var i = 0; i < object.metadataEntries.length; ++i) {
+                    if (typeof object.metadataEntries[i] !== "object")
+                        throw TypeError(".ActionLog.Ingest.metadataEntries: object expected");
+                    message.metadataEntries[i] = $root.ActionLog.MetadataEntry.fromObject(object.metadataEntries[i]);
+                }
+            }
             return message;
         };
 
@@ -1351,10 +1388,17 @@ $root.ActionLog = (function() {
             if (!options)
                 options = {};
             var object = {};
+            if (options.arrays || options.defaults)
+                object.metadataEntries = [];
             if (options.defaults)
                 object.taskID = "";
             if (message.taskID != null && message.hasOwnProperty("taskID"))
                 object.taskID = message.taskID;
+            if (message.metadataEntries && message.metadataEntries.length) {
+                object.metadataEntries = [];
+                for (var j = 0; j < message.metadataEntries.length; ++j)
+                    object.metadataEntries[j] = $root.ActionLog.MetadataEntry.toObject(message.metadataEntries[j], options);
+            }
             return object;
         };
 
@@ -1379,7 +1423,7 @@ $root.ActionLog = (function() {
          * @memberof ActionLog
          * @interface IRepetition
          * @property {string|null} [taskID] Repetition taskID
-         * @property {string|null} [taskParameters] Repetition taskParameters
+         * @property {Array.<ActionLog.IMetadataEntry>|null} [taskParameters] Repetition taskParameters
          * @property {string|null} [outcome] Repetition outcome
          * @property {string|null} [context] Repetition context
          */
@@ -1393,6 +1437,7 @@ $root.ActionLog = (function() {
          * @param {ActionLog.IRepetition=} [properties] Properties to set
          */
         function Repetition(properties) {
+            this.taskParameters = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -1409,11 +1454,11 @@ $root.ActionLog = (function() {
 
         /**
          * Repetition taskParameters.
-         * @member {string} taskParameters
+         * @member {Array.<ActionLog.IMetadataEntry>} taskParameters
          * @memberof ActionLog.Repetition
          * @instance
          */
-        Repetition.prototype.taskParameters = "";
+        Repetition.prototype.taskParameters = $util.emptyArray;
 
         /**
          * Repetition outcome.
@@ -1457,8 +1502,9 @@ $root.ActionLog = (function() {
                 writer = $Writer.create();
             if (message.taskID != null && message.hasOwnProperty("taskID"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.taskID);
-            if (message.taskParameters != null && message.hasOwnProperty("taskParameters"))
-                writer.uint32(/* id 6, wireType 2 =*/50).string(message.taskParameters);
+            if (message.taskParameters != null && message.taskParameters.length)
+                for (var i = 0; i < message.taskParameters.length; ++i)
+                    $root.ActionLog.MetadataEntry.encode(message.taskParameters[i], writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
             if (message.outcome != null && message.hasOwnProperty("outcome"))
                 writer.uint32(/* id 7, wireType 2 =*/58).string(message.outcome);
             if (message.context != null && message.hasOwnProperty("context"))
@@ -1501,7 +1547,9 @@ $root.ActionLog = (function() {
                     message.taskID = reader.string();
                     break;
                 case 6:
-                    message.taskParameters = reader.string();
+                    if (!(message.taskParameters && message.taskParameters.length))
+                        message.taskParameters = [];
+                    message.taskParameters.push($root.ActionLog.MetadataEntry.decode(reader, reader.uint32()));
                     break;
                 case 7:
                     message.outcome = reader.string();
@@ -1547,9 +1595,15 @@ $root.ActionLog = (function() {
             if (message.taskID != null && message.hasOwnProperty("taskID"))
                 if (!$util.isString(message.taskID))
                     return "taskID: string expected";
-            if (message.taskParameters != null && message.hasOwnProperty("taskParameters"))
-                if (!$util.isString(message.taskParameters))
-                    return "taskParameters: string expected";
+            if (message.taskParameters != null && message.hasOwnProperty("taskParameters")) {
+                if (!Array.isArray(message.taskParameters))
+                    return "taskParameters: array expected";
+                for (var i = 0; i < message.taskParameters.length; ++i) {
+                    var error = $root.ActionLog.MetadataEntry.verify(message.taskParameters[i]);
+                    if (error)
+                        return "taskParameters." + error;
+                }
+            }
             if (message.outcome != null && message.hasOwnProperty("outcome"))
                 if (!$util.isString(message.outcome))
                     return "outcome: string expected";
@@ -1573,8 +1627,16 @@ $root.ActionLog = (function() {
             var message = new $root.ActionLog.Repetition();
             if (object.taskID != null)
                 message.taskID = String(object.taskID);
-            if (object.taskParameters != null)
-                message.taskParameters = String(object.taskParameters);
+            if (object.taskParameters) {
+                if (!Array.isArray(object.taskParameters))
+                    throw TypeError(".ActionLog.Repetition.taskParameters: array expected");
+                message.taskParameters = [];
+                for (var i = 0; i < object.taskParameters.length; ++i) {
+                    if (typeof object.taskParameters[i] !== "object")
+                        throw TypeError(".ActionLog.Repetition.taskParameters: object expected");
+                    message.taskParameters[i] = $root.ActionLog.MetadataEntry.fromObject(object.taskParameters[i]);
+                }
+            }
             if (object.outcome != null)
                 message.outcome = String(object.outcome);
             if (object.context != null)
@@ -1595,16 +1657,20 @@ $root.ActionLog = (function() {
             if (!options)
                 options = {};
             var object = {};
+            if (options.arrays || options.defaults)
+                object.taskParameters = [];
             if (options.defaults) {
                 object.taskID = "";
-                object.taskParameters = "";
                 object.outcome = "";
                 object.context = "";
             }
             if (message.taskID != null && message.hasOwnProperty("taskID"))
                 object.taskID = message.taskID;
-            if (message.taskParameters != null && message.hasOwnProperty("taskParameters"))
-                object.taskParameters = message.taskParameters;
+            if (message.taskParameters && message.taskParameters.length) {
+                object.taskParameters = [];
+                for (var j = 0; j < message.taskParameters.length; ++j)
+                    object.taskParameters[j] = $root.ActionLog.MetadataEntry.toObject(message.taskParameters[j], options);
+            }
             if (message.outcome != null && message.hasOwnProperty("outcome"))
                 object.outcome = message.outcome;
             if (message.context != null && message.hasOwnProperty("context"))
@@ -1624,6 +1690,262 @@ $root.ActionLog = (function() {
         };
 
         return Repetition;
+    })();
+
+    ActionLog.MetadataEntry = (function() {
+
+        /**
+         * Properties of a MetadataEntry.
+         * @memberof ActionLog
+         * @interface IMetadataEntry
+         * @property {string|null} [key] MetadataEntry key
+         * @property {string|null} [string] MetadataEntry string
+         * @property {number|null} [number] MetadataEntry number
+         */
+
+        /**
+         * Constructs a new MetadataEntry.
+         * @memberof ActionLog
+         * @classdesc Represents a MetadataEntry.
+         * @implements IMetadataEntry
+         * @constructor
+         * @param {ActionLog.IMetadataEntry=} [properties] Properties to set
+         */
+        function MetadataEntry(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MetadataEntry key.
+         * @member {string} key
+         * @memberof ActionLog.MetadataEntry
+         * @instance
+         */
+        MetadataEntry.prototype.key = "";
+
+        /**
+         * MetadataEntry string.
+         * @member {string} string
+         * @memberof ActionLog.MetadataEntry
+         * @instance
+         */
+        MetadataEntry.prototype.string = "";
+
+        /**
+         * MetadataEntry number.
+         * @member {number} number
+         * @memberof ActionLog.MetadataEntry
+         * @instance
+         */
+        MetadataEntry.prototype.number = 0;
+
+        // OneOf field names bound to virtual getters and setters
+        var $oneOfFields;
+
+        /**
+         * MetadataEntry value.
+         * @member {"string"|"number"|undefined} value
+         * @memberof ActionLog.MetadataEntry
+         * @instance
+         */
+        Object.defineProperty(MetadataEntry.prototype, "value", {
+            get: $util.oneOfGetter($oneOfFields = ["string", "number"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
+        /**
+         * Creates a new MetadataEntry instance using the specified properties.
+         * @function create
+         * @memberof ActionLog.MetadataEntry
+         * @static
+         * @param {ActionLog.IMetadataEntry=} [properties] Properties to set
+         * @returns {ActionLog.MetadataEntry} MetadataEntry instance
+         */
+        MetadataEntry.create = function create(properties) {
+            return new MetadataEntry(properties);
+        };
+
+        /**
+         * Encodes the specified MetadataEntry message. Does not implicitly {@link ActionLog.MetadataEntry.verify|verify} messages.
+         * @function encode
+         * @memberof ActionLog.MetadataEntry
+         * @static
+         * @param {ActionLog.IMetadataEntry} message MetadataEntry message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MetadataEntry.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.key != null && message.hasOwnProperty("key"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.key);
+            if (message.string != null && message.hasOwnProperty("string"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.string);
+            if (message.number != null && message.hasOwnProperty("number"))
+                writer.uint32(/* id 3, wireType 1 =*/25).double(message.number);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MetadataEntry message, length delimited. Does not implicitly {@link ActionLog.MetadataEntry.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof ActionLog.MetadataEntry
+         * @static
+         * @param {ActionLog.IMetadataEntry} message MetadataEntry message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MetadataEntry.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MetadataEntry message from the specified reader or buffer.
+         * @function decode
+         * @memberof ActionLog.MetadataEntry
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {ActionLog.MetadataEntry} MetadataEntry
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MetadataEntry.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.ActionLog.MetadataEntry();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.key = reader.string();
+                    break;
+                case 2:
+                    message.string = reader.string();
+                    break;
+                case 3:
+                    message.number = reader.double();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MetadataEntry message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof ActionLog.MetadataEntry
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {ActionLog.MetadataEntry} MetadataEntry
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MetadataEntry.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MetadataEntry message.
+         * @function verify
+         * @memberof ActionLog.MetadataEntry
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MetadataEntry.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            var properties = {};
+            if (message.key != null && message.hasOwnProperty("key"))
+                if (!$util.isString(message.key))
+                    return "key: string expected";
+            if (message.string != null && message.hasOwnProperty("string")) {
+                properties.value = 1;
+                if (!$util.isString(message.string))
+                    return "string: string expected";
+            }
+            if (message.number != null && message.hasOwnProperty("number")) {
+                if (properties.value === 1)
+                    return "value: multiple values";
+                properties.value = 1;
+                if (typeof message.number !== "number")
+                    return "number: number expected";
+            }
+            return null;
+        };
+
+        /**
+         * Creates a MetadataEntry message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof ActionLog.MetadataEntry
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {ActionLog.MetadataEntry} MetadataEntry
+         */
+        MetadataEntry.fromObject = function fromObject(object) {
+            if (object instanceof $root.ActionLog.MetadataEntry)
+                return object;
+            var message = new $root.ActionLog.MetadataEntry();
+            if (object.key != null)
+                message.key = String(object.key);
+            if (object.string != null)
+                message.string = String(object.string);
+            if (object.number != null)
+                message.number = Number(object.number);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MetadataEntry message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof ActionLog.MetadataEntry
+         * @static
+         * @param {ActionLog.MetadataEntry} message MetadataEntry
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MetadataEntry.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults)
+                object.key = "";
+            if (message.key != null && message.hasOwnProperty("key"))
+                object.key = message.key;
+            if (message.string != null && message.hasOwnProperty("string")) {
+                object.string = message.string;
+                if (options.oneofs)
+                    object.value = "string";
+            }
+            if (message.number != null && message.hasOwnProperty("number")) {
+                object.number = options.json && !isFinite(message.number) ? String(message.number) : message.number;
+                if (options.oneofs)
+                    object.value = "number";
+            }
+            return object;
+        };
+
+        /**
+         * Converts this MetadataEntry to JSON.
+         * @function toJSON
+         * @memberof ActionLog.MetadataEntry
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MetadataEntry.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return MetadataEntry;
     })();
 
     return ActionLog;

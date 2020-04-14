@@ -87,8 +87,11 @@ describe("ingesting", () => {
     actionLogType: ingestActionLogType,
     timestampMillis: 1000,
     taskID: testBasicPromptTaskID,
+    provenance: null,
   };
-  const testIngestLogID = getIDForActionLog(testIngestLog);
+  const testIngestLogID = getIDForActionLog(
+    getActionLogFromPromptActionLog(testIngestLog),
+  );
 
   test("without a base state", () => {
     expect(
@@ -114,7 +117,12 @@ describe("ingesting", () => {
       bestIntervalMillis: null,
       dueTimestampMillis: scheduleSequence[1].interval,
       headActionLogIDs: [
-        getIDForActionLog({ ...testIngestLog, timestampMillis: 500 }),
+        getIDForActionLog(
+          getActionLogFromPromptActionLog({
+            ...testIngestLog,
+            timestampMillis: 500,
+          }),
+        ),
       ],
       intervalMillis: scheduleSequence[1].interval,
       lastReviewTimestampMillis: 500,

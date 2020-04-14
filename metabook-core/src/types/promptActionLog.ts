@@ -1,28 +1,28 @@
 import { ActionLogID, getIDForActionLog } from "../actionLogID";
 import { PromptRepetitionOutcome } from "../spacedRepetition/spacedRepetition";
+import typedKeys from "../util/typedKeys";
 import {
   ActionLog,
-  ActionLogType,
   ingestActionLogType,
   repetitionActionLogType,
 } from "./actionLog";
+import { PromptProvenance } from "./promptProvenance";
 import { PromptTaskID } from "./promptTask";
 import { PromptTaskParameters } from "./promptTaskParameters";
 
 // Prompt-specific definitions of ActionLog which include domain-specific narrowings of relevant fields.
 
-interface BasePromptActionLog {
-  actionLogType: ActionLogType;
+type BasePromptActionLog = {
   timestampMillis: number;
-}
+};
 
-export interface PromptIngestActionLog extends BasePromptActionLog {
+export type PromptIngestActionLog = {
   actionLogType: typeof ingestActionLogType;
   taskID: PromptTaskID;
-}
+  provenance: PromptProvenance | null;
+} & BasePromptActionLog;
 
-export interface PromptRepetitionActionLog<P extends PromptTaskParameters>
-  extends BasePromptActionLog {
+export type PromptRepetitionActionLog<P extends PromptTaskParameters> = {
   actionLogType: typeof repetitionActionLogType;
   parentActionLogIDs: ActionLogID[];
 
@@ -31,7 +31,7 @@ export interface PromptRepetitionActionLog<P extends PromptTaskParameters>
 
   context: string | null;
   outcome: PromptRepetitionOutcome;
-}
+} & BasePromptActionLog;
 
 export type PromptActionLog<P extends PromptTaskParameters> =
   | PromptIngestActionLog
@@ -42,24 +42,27 @@ export function getActionLogFromPromptActionLog<P extends PromptTaskParameters>(
 ): ActionLog {
   switch (promptActionLog.actionLogType) {
     case ingestActionLogType:
-      return promptActionLog;
-    case repetitionActionLogType:
       return {
         ...promptActionLog,
-        taskParameters:
-          promptActionLog.taskParameters &&
-          JSON.stringify(promptActionLog.taskParameters),
+        metadata: promptActionLog.provenance,
       };
+    case repetitionActionLogType:
+      return promptActionLog;
   }
 }
 
-export function getPromptActionLogFromActionLog<P extends PromptTaskParameters>(
+export function getPromptActionLogFromActionLog(
   actionLog: ActionLog,
-): PromptActionLog<P> {
+): PromptActionLog<PromptTaskParameters> {
   const taskID = actionLog.taskID as PromptTaskID;
   switch (actionLog.actionLogType) {
     case ingestActionLogType:
-      return { ...actionLog, taskID };
+      const { metadata, ...rest } = actionLog;
+      return {
+        ...rest,
+        taskID,
+        provenance: metadata as PromptProvenance | null,
+      };
     case repetitionActionLogType:
       if (
         actionLog.outcome === PromptRepetitionOutcome.Forgotten ||
@@ -68,8 +71,7 @@ export function getPromptActionLogFromActionLog<P extends PromptTaskParameters>(
         return {
           ...actionLog,
           taskID,
-          taskParameters: (actionLog.taskParameters &&
-            JSON.parse(actionLog.taskParameters)) as P,
+          taskParameters: actionLog.taskParameters as PromptTaskParameters,
           outcome: actionLog.outcome as PromptRepetitionOutcome,
         };
       } else {

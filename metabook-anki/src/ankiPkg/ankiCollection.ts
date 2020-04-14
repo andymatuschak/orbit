@@ -3,7 +3,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import sqlite from "sqlite";
-import unzip from "unzip";
+import unzip, { Entry } from "unzip";
 import { Card, Collection, Log, Note } from "./ankiDBTypes";
 
 function readRows<R>(
@@ -72,28 +72,36 @@ export interface MediaManifest {
   [key: string]: string; // maps filenames inside the collection package to filenames as referenced within notes
 }
 
-export async function readAnkiCollectionPackage(
+export async function readAnkiCollectionPackage<R>(
   collectionPath: string,
   continuation: (
     handle: AnkiCollectionDBHandle,
     mediaManifest: MediaManifest | null,
-  ) => Promise<void>,
-) {
+    attachmentIDsToExtractedPaths: { [key: string]: string },
+  ) => Promise<R>,
+): Promise<R> {
   const workingDir = path.resolve(os.tmpdir(), `metabook-anki-${Date.now()}`);
   await fs.promises.mkdir(workingDir, { recursive: true });
 
   let ankiCollectionWritePath: string | null = null;
   let mediaManifest: MediaManifest | null = null;
+  const attachmentIDsToExtractedPaths: { [key: string]: string } = {};
   const promises: Promise<unknown>[] = [];
+
+  function queueExtractEntry(entry: Entry): string {
+    const targetPath = path.resolve(workingDir, entry.path);
+    const writeStream = fs.createWriteStream(targetPath);
+    entry.pipe(writeStream);
+    promises.push(events.once(writeStream, "close"));
+    return targetPath;
+  }
+
   const collectionReadStream = fs
     .createReadStream(collectionPath)
     .pipe(unzip.Parse())
     .on("entry", (entry: unzip.Entry) => {
       if (entry.path === "collection.anki2") {
-        ankiCollectionWritePath = path.resolve(workingDir, entry.path);
-        const writeStream = fs.createWriteStream(ankiCollectionWritePath);
-        entry.pipe(writeStream);
-        promises.push(events.once(writeStream, "close"));
+        ankiCollectionWritePath = queueExtractEntry(entry);
       } else if (entry.path === "media") {
         entry.setEncoding("utf-8");
         let mediaManifestContents = "";
@@ -106,15 +114,19 @@ export async function readAnkiCollectionPackage(
           }),
         );
       } else {
-        entry.autodrain();
+        if (isNaN(Number.parseInt(entry.path))) {
+          entry.autodrain();
+        } else {
+          attachmentIDsToExtractedPaths[entry.path] = queueExtractEntry(entry);
+        }
       }
     });
   promises.push(events.once(collectionReadStream, "close"));
   await Promise.all(promises);
 
   if (ankiCollectionWritePath) {
-    await withCollectionDatabase(ankiCollectionWritePath, (handle) =>
-      continuation(handle, mediaManifest),
+    return await withCollectionDatabase(ankiCollectionWritePath, (handle) =>
+      continuation(handle, mediaManifest, attachmentIDsToExtractedPaths),
     );
   } else {
     throw new Error(
