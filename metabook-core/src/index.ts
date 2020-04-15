@@ -51,8 +51,9 @@ export type {
   ClozePromptParameters,
 } from "./types/promptTask";
 
-export type { Attachment, AttachmentMimeType } from "./types/attachment";
+export type { Attachment } from "./types/attachment";
 export {
+  AttachmentMimeType,
   getAttachmentMimeTypeForFilename,
   getFileExtensionForAttachmentMimeType,
 } from "./types/attachment";

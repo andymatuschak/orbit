@@ -1,5 +1,6 @@
 import { Command, flags } from "@oclif/command";
 import admin from "firebase-admin";
+import { ActionLog } from "metabook-core";
 import { getAdminApp } from "./adminApp";
 import { deleteCollection } from "./deleteCollection";
 
@@ -22,9 +23,7 @@ class ResetUser extends Command {
     const logRef = db
       .collection("users")
       .doc(userID)
-      .collection("logs") as admin.firestore.CollectionReference<
-      MetabookActionLog
-    >;
+      .collection("logs") as admin.firestore.CollectionReference<ActionLog>;
     await deleteCollection(db, logRef);
     console.log("User reset");
   }

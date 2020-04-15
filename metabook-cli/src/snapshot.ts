@@ -2,7 +2,14 @@ import { Command, flags } from "@oclif/command";
 import admin from "firebase-admin";
 
 import fs from "fs";
-import { Prompt } from "metabook-core";
+import {
+  ActionLog,
+  getPromptTaskForID,
+  Prompt,
+  PromptID,
+  PromptTask,
+  PromptTaskID,
+} from "metabook-core";
 import * as path from "path";
 import { getAdminApp } from "./adminApp";
 
@@ -123,9 +130,7 @@ class Snapshot extends Command {
     const logRef = db
       .collection("users")
       .doc(userID)
-      .collection("logs") as admin.firestore.CollectionReference<
-      MetabookActionLog
-    >;
+      .collection("logs") as admin.firestore.CollectionReference<ActionLog>;
 
     const dataRef = db.collection(
       "data",
@@ -138,17 +143,20 @@ class Snapshot extends Command {
       }
       console.log(`Read ${logSnapshot.size} logs`);
 
-      const logs: { [key: string]: MetabookActionLog } = {};
-      const specIDs = new Set<string>();
+      const logs: { [key: string]: ActionLog } = {};
+      const promptIDs = new Set<PromptID>();
       logSnapshot.forEach((docSnapshot) => {
         const log = docSnapshot.data();
         logs[docSnapshot.id] = log;
-        specIDs.add(log.promptTask.prompt.promptID);
+        promptIDs.add(
+          (getPromptTaskForID(log.taskID as PromptTaskID) as PromptTask)
+            .promptID,
+        );
       });
 
       const data: { [key: string]: Prompt } = {};
       await Promise.all(
-        Array.from(specIDs.values()).map(async (specID) => {
+        Array.from(promptIDs.values()).map(async (specID) => {
           const specData = await dataRef.doc(specID).get();
           if (!specData.exists) {
             console.error(
@@ -160,7 +168,7 @@ class Snapshot extends Command {
           data[specID] = specData.data()!;
         }),
       );
-      console.log(`Read ${specIDs.size} specs`);
+      console.log(`Read ${promptIDs.size} specs`);
 
       fs.promises.writeFile(snapshotPath, JSON.stringify({ data, logs }), {
         encoding: "utf-8",
@@ -169,7 +177,7 @@ class Snapshot extends Command {
       const snapshotJSONString = await fs.promises.readFile(snapshotPath, {
         encoding: "utf-8",
       });
-      const snapshot = JSON.parse(snapshotJSONString) as Snapshot;
+      const snapshot = JSON.parse(snapshotJSONString) as any;
 
       await deleteCollection(db, logRef, 500);
 

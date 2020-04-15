@@ -1,9 +1,10 @@
+import * as firebaseTesting from "@firebase/testing";
+import shimFirebasePersistence from "firebase-node-persistence-shim";
 import firebase from "firebase/app";
 import "firebase/firestore";
-
-import * as firebaseTesting from "@firebase/testing";
 import {
   Attachment,
+  AttachmentMimeType,
   getIDForAttachment,
   getIDForPrompt,
   imageAttachmentType,
@@ -11,7 +12,6 @@ import {
 } from "metabook-core";
 import { testBasicPrompt } from "metabook-sample-data";
 import { getDataCollectionReference } from "../firebase";
-import shimFirebasePersistence from "firebase-node-persistence-shim";
 import { MetabookFirebaseDataClient } from "./dataClient";
 
 const testProjectID = "metabook-system";
@@ -59,8 +59,7 @@ describe("getData", () => {
     await writeTestPromptData();
 
     const mockFn = jest.fn();
-    await dataClient.getPrompts(new Set([testPromptID]), mockFn)
-      .completion;
+    await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
     expect(mockFn.mock.calls[0][0]).toMatchObject(
       new Map([["test", testBasicPrompt]]),
     );
@@ -77,22 +76,19 @@ describe("getData", () => {
 
     await testApp.firestore().disableNetwork();
     const mockFn = jest.fn();
-    await dataClient.getPrompts(new Set([testPromptID]), mockFn)
-      .completion;
+    await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
     expect(mockFn.mock.calls[0][0].get("test")).toBeInstanceOf(Error);
 
     await testApp.firestore().enableNetwork();
     mockFn.mockClear();
-    await dataClient.getPrompts(new Set([testPromptID]), mockFn)
-      .completion;
+    await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
     expect(mockFn.mock.calls[0][0]).toMatchObject(
       new Map([["test", testBasicPrompt]]),
     );
 
     await testApp.firestore().disableNetwork();
     mockFn.mockClear();
-    await dataClient.getPrompts(new Set([testPromptID]), mockFn)
-      .completion;
+    await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
     expect(mockFn.mock.calls[0][0]).toMatchObject(
       new Map([["test", testBasicPrompt]]),
     );
@@ -113,7 +109,7 @@ test("records prompt spec", async () => {
 test("records attachments", async () => {
   const testAttachment: Attachment = {
     type: imageAttachmentType,
-    mimeType: "image/png",
+    mimeType: AttachmentMimeType.PNG,
     contents: "test attachment",
   };
   await dataClient.recordAttachments([testAttachment]);

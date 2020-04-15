@@ -10,12 +10,18 @@ import {
 import {
   Attachment,
   AttachmentIDReference,
+  AttachmentMimeType,
+  getActionLogFromPromptActionLog,
   getIDForAttachment,
   getIDForPrompt,
+  getIDForPromptTask,
   imageAttachmentType,
-  PromptParameters,
   Prompt,
-  PromptID,
+  PromptActionLog,
+  PromptParameters,
+  PromptTask,
+  PromptTaskID,
+  PromptTaskParameters,
 } from "metabook-core";
 import {
   testApplicationPrompt,
@@ -24,39 +30,26 @@ import {
 } from "metabook-sample-data";
 import path from "path";
 
-function getTasksFromSpecs(
-  specs: Prompt[],
-): {
-  promptID: PromptID;
-  promptParameters: PromptParameters;
-}[] {
-  const taskLists: {
-    promptID: PromptID;
-    promptParameters: PromptParameters;
-  }[][] = specs.map((spec) => {
+function getTasksFromPrompts(prompts: Prompt[]): PromptTaskID[] {
+  const taskLists: PromptTaskID[][] = prompts.map((spec) => {
+    let promptParameters: PromptParameters;
     switch (spec.promptType) {
       case "basic":
-        return [
-          {
-            promptID: getIDForPrompt(spec),
-            promptParameters: null,
-          },
-        ];
       case "applicationPrompt":
-        return [
-          {
-            promptID: getIDForPrompt(spec),
-            promptParameters: null,
-          },
-        ];
+        promptParameters = null;
+        break;
       case "cloze":
-        return [
-          {
-            promptID: getIDForPrompt(spec),
-            promptParameters: { clozeIndex: 0 },
-          },
-        ];
+        // TODO: import all cloze indices
+        promptParameters = { clozeIndex: 0 };
+        break;
     }
+    return [
+      getIDForPromptTask({
+        promptID: getIDForPrompt(spec),
+        promptType: spec.promptType,
+        promptParameters: promptParameters,
+      } as PromptTask),
+    ];
   });
 
   return taskLists.reduce((output, list) => output.concat(list), []);
@@ -95,7 +88,7 @@ class Ingest extends Command {
     );
     const imageAttachment: Attachment = {
       type: imageAttachmentType,
-      mimeType: "image/png",
+      mimeType: AttachmentMimeType.PNG,
       contents: imageData.toString("binary"),
     };
     const imageAttachmentIDReference: AttachmentIDReference = {
@@ -126,19 +119,19 @@ class Ingest extends Command {
     console.log(`Recorded 1 attachment`);
 
     const userClient = new MetabookFirebaseUserClient(app, flags.userID);
-    const tasks = getTasksFromSpecs(specs);
-    const now = firebase.firestore.Timestamp.fromDate(new Date());
-    const actionLogs: ActionLog[] = tasks.map(
-      ({ promptID, promptParameters }) => {
-        return {
-          actionLogType: "ingest",
-          promptID,
-          promptParameters,
-          timestamp: now,
-        };
-      },
+    const tasks = getTasksFromPrompts(specs);
+    const now = Date.now();
+    const actionLogs: PromptActionLog<PromptTaskParameters>[] = tasks.map(
+      (taskID) => ({
+        actionLogType: "ingest",
+        timestampMillis: now,
+        taskID,
+        provenance: null,
+      }),
     );
-    await userClient.recordActionLogs(actionLogs);
+    await userClient.recordActionLogs(
+      actionLogs.map(getActionLogFromPromptActionLog),
+    );
     console.log(
       `Recorded ${actionLogs.length} logs for userID ${flags.userID}`,
     );
