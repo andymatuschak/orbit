@@ -4,7 +4,7 @@ type BaseActionLog = {
   timestampMillis: number;
 };
 
-export type ActionLogMetadata = { [key: string]: string | number };
+export type ActionLogMetadata = { [key: string]: string | number | null };
 
 export const ingestActionLogType = "ingest";
 export type IngestActionLog = {

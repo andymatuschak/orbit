@@ -2,9 +2,7 @@ import { basicPromptType, clozePromptType } from "metabook-core";
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
 import {
   AnkiCollectionDBHandle,
-  Collection,
   Note,
-  readCollection,
   readNotes,
   splitAnkiDBNoteFields,
 } from "./ankiPkg";
@@ -15,11 +13,9 @@ import {
 } from "./modelMapping";
 import { mapNoteToPrompt } from "./noteMapping";
 
-let collection: Collection;
 const notes: Note[] = [];
 beforeAll(async () => {
   await withTestAnkiCollection(async (handle: AnkiCollectionDBHandle) => {
-    collection = await readCollection(handle);
     await readNotes(handle, (note) => {
       notes.push(note);
     });

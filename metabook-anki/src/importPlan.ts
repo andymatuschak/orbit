@@ -25,6 +25,10 @@ import {
   AttachmentIDReference,
   getIDForAttachment,
   getAttachmentMimeTypeForFilename,
+  NotePromptProvenance,
+  PromptProvenance,
+  applyActionLogToPromptState,
+  PromptState,
 } from "metabook-core";
 
 import * as Anki from "./ankiPkg";
@@ -91,11 +95,12 @@ export function extractPromptTaskIDForCard(
 export function createPlanForCard(
   card: Anki.Card,
   prompt: Prompt,
+  noteProvenance: PromptProvenance | null,
 ): PromptActionLog<BasicPromptTaskParameters | ClozePromptTaskParameters> {
   // Generate an ingest log.
   return {
     actionLogType: ingestActionLogType,
-    provenance: {
+    provenance: noteProvenance ?? {
       provenanceType: PromptProvenanceType.Anki,
       cardModificationTimestampMillis: card.mod * 1000,
       cardID: card.id,
@@ -170,6 +175,7 @@ export async function createImportPlan(
   const collection = await Anki.readCollection(handle);
   const modelMappingCache: { [key: number]: ModelMapping } = {};
   const noteIDsToPrompts: Map<number, Prompt> = new Map();
+  const noteIDsToProvenance: Map<number, NotePromptProvenance> = new Map();
 
   const attachmentNamesToAttachmentIDReferences: Map<
     string,
@@ -210,12 +216,15 @@ export async function createImportPlan(
     if (result instanceof Error) {
       plan.issues.push(result.message);
     } else {
-      const { prompt, issues } = result;
+      const { prompt, issues, provenance } = result;
       plan.prompts.push(prompt);
       plan.issues.push(...issues);
       noteIDsToPrompts.set(note.id, prompt);
+      noteIDsToProvenance.set(note.id, provenance);
     }
   });
+
+  const cardIDsToPromptStates: Map<number, PromptState> = new Map();
 
   const cardIDsToLastActionLogs: Map<
     number,
@@ -228,9 +237,22 @@ export async function createImportPlan(
       return;
     }
 
-    const promptActionLog = createPlanForCard(card, prompt);
+    const promptActionLog = createPlanForCard(
+      card,
+      prompt,
+      noteIDsToProvenance.get(card.nid) ?? null,
+    );
     plan.logs.push(getActionLogFromPromptActionLog(promptActionLog));
     cardIDsToLastActionLogs.set(card.id, promptActionLog);
+
+    cardIDsToPromptStates.set(
+      card.id,
+      applyActionLogToPromptState({
+        promptActionLog,
+        schedule: "default",
+        basePromptState: null,
+      }) as PromptState,
+    );
   });
 
   await Anki.readLogs(handle, (ankiLog) => {
@@ -241,6 +263,20 @@ export async function createImportPlan(
 
     const promptActionLog = createPlanForLog(ankiLog, cardLastActionLog);
     plan.logs.push(promptActionLog);
+
+    const newPromptState = applyActionLogToPromptState({
+      promptActionLog,
+      schedule: "default",
+      basePromptState: cardIDsToPromptStates.get(ankiLog.cid)!,
+    }) as PromptState;
+    cardIDsToPromptStates.set(ankiLog.cid, newPromptState);
+
+    const oneDay = 1000 * 60 * 60 * 24;
+    (promptActionLog as any).debug = {
+      newInterval: newPromptState.intervalMillis / oneDay,
+      originalInterval: ankiLog.ivl < 0 ? ankiLog.ivl / -oneDay : ankiLog.ivl,
+    };
+
     cardIDsToLastActionLogs.set(ankiLog.cid, promptActionLog);
   });
 

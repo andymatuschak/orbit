@@ -42,9 +42,10 @@ export function getActionLogFromPromptActionLog<P extends PromptTaskParameters>(
 ): ActionLog {
   switch (promptActionLog.actionLogType) {
     case ingestActionLogType:
+      const { provenance, ...rest } = promptActionLog;
       return {
-        ...promptActionLog,
-        metadata: promptActionLog.provenance,
+        ...rest,
+        metadata: provenance,
       };
     case repetitionActionLogType:
       return promptActionLog;

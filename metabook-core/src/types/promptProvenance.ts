@@ -13,6 +13,7 @@ export type NotePromptProvenance = {
   provenanceType: typeof PromptProvenanceType.Note;
   noteID: string;
   noteTitle: string;
+  noteURL: string | null;
   noteModificationTimestampMillis: number;
 };
 

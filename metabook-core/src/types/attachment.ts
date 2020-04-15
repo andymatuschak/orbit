@@ -15,9 +15,13 @@ export enum AttachmentMimeType {
 export function getAttachmentMimeTypeForFilename(
   filename: string,
 ): AttachmentMimeType | null {
-  if (filename.endsWith(".png")) {
+  const uppercaseFilename = filename.toUpperCase();
+  if (uppercaseFilename.endsWith(".PNG")) {
     return AttachmentMimeType.PNG;
-  } else if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
+  } else if (
+    uppercaseFilename.endsWith(".JPG") ||
+    uppercaseFilename.endsWith(".JPEG")
+  ) {
     return AttachmentMimeType.JPEG;
   } else {
     return null;

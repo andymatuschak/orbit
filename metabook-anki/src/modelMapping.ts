@@ -1,4 +1,5 @@
 import { Collection, ModelType } from "./ankiPkg";
+import * as SpacedEverything from "./spacedEverything";
 
 export interface BasicModelMapping {
   type: ModelMappingType.Basic;
@@ -11,10 +12,21 @@ export interface ClozeModelMapping {
   contentsFieldIndex: number;
 }
 
-export type ModelMapping = BasicModelMapping | ClozeModelMapping;
+export interface SpacedEverythingModelMapping {
+  type:
+    | ModelMappingType.SpacedEverythingQA
+    | ModelMappingType.SpacedEverythingCloze;
+}
+
+export type ModelMapping =
+  | BasicModelMapping
+  | ClozeModelMapping
+  | SpacedEverythingModelMapping;
 export enum ModelMappingType {
   Basic = "basic",
   Cloze = "cloze",
+  SpacedEverythingQA = "spacedEverythingQA",
+  SpacedEverythingCloze = "clozeQA",
 }
 
 export function getModelMapping(
@@ -24,24 +36,34 @@ export function getModelMapping(
   const model = collection.models[modelID];
   if (model) {
     if (model.type === ModelType.Standard) {
-      const fieldNames = model.flds.map((field) => field.name);
-      const questionFieldIndex = fieldNames.indexOf("Front");
-      const answerFieldIndex = fieldNames.indexOf("Back");
-      if (
-        questionFieldIndex !== -1 &&
-        answerFieldIndex !== -1 &&
-        model.tmpls.length === 1
-      ) {
+      if (model.name === SpacedEverything.qaPromptModelName) {
         return {
-          type: ModelMappingType.Basic,
-          questionFieldIndex,
-          answerFieldIndex,
+          type: ModelMappingType.SpacedEverythingQA,
         };
       } else {
-        return "unknown";
+        const fieldNames = model.flds.map((field) => field.name);
+        const questionFieldIndex = fieldNames.indexOf("Front");
+        const answerFieldIndex = fieldNames.indexOf("Back");
+        if (
+          questionFieldIndex !== -1 &&
+          answerFieldIndex !== -1 &&
+          model.tmpls.length === 1
+        ) {
+          return {
+            type: ModelMappingType.Basic,
+            questionFieldIndex,
+            answerFieldIndex,
+          };
+        } else {
+          return "unknown";
+        }
       }
     } else if (model.type === ModelType.Cloze) {
-      if (model.tmpls.length === 1) {
+      if (model.name === SpacedEverything.clozeModelName) {
+        return {
+          type: ModelMappingType.SpacedEverythingCloze,
+        };
+      } else if (model.tmpls.length === 1) {
         const clozeFieldMatch = model.tmpls[0].qfmt.match(/{cloze:([^}]+)}/);
         if (clozeFieldMatch) {
           const fieldName = clozeFieldMatch[1];

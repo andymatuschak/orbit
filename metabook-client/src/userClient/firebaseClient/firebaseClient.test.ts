@@ -85,6 +85,7 @@ describe("ingesting prompt specs", () => {
         actionLogType: ingestActionLogType,
         taskID: getIDForPromptTask(promptTask),
         timestampMillis: Date.UTC(2020, 0),
+        metadata: null,
       },
     ]);
     const cardStates = await client.getPromptStates({});
@@ -102,6 +103,7 @@ describe("ingesting prompt specs", () => {
         actionLogType: ingestActionLogType,
         taskID: getIDForPromptTask(promptTask),
         timestampMillis: Date.UTC(2020, 0),
+        metadata: null,
       },
     ]);
     const cardStates = await client.getPromptStates({});
