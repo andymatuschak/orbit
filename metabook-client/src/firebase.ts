@@ -10,11 +10,3 @@ export function getDefaultFirebaseApp(): firebase.app.App {
   }
   return _app;
 }
-
-export function getDataCollectionReference(
-  database: firebase.firestore.Firestore,
-): firebase.firestore.CollectionReference<Prompt | Attachment> {
-  return database.collection("data") as firebase.firestore.CollectionReference<
-    Prompt | Attachment
-  >;
-}

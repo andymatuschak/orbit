@@ -8,10 +8,9 @@ import {
   getIDForAttachment,
   getIDForPrompt,
   imageAttachmentType,
-  PromptID,
 } from "metabook-core";
+import { getReferenceForPromptID } from "metabook-firebase-shared";
 import { testBasicPrompt } from "metabook-sample-data";
-import { getDataCollectionReference } from "../firebase";
 import { MetabookFirebaseDataClient } from "./dataClient";
 
 const testProjectID = "metabook-system";
@@ -43,16 +42,16 @@ afterEach(() => {
   return firebaseTesting.clearFirestoreData({ projectId: testProjectID });
 });
 
+const testPromptID = getIDForPrompt(testBasicPrompt);
 async function writeTestPromptData() {
   const adminApp = firebaseTesting.initializeAdminApp({
     projectId: testProjectID,
   });
   const adminDatabase = adminApp.firestore();
-  const dataCollectionRef = getDataCollectionReference(adminDatabase);
-  await dataCollectionRef.doc("test").set(testBasicPrompt);
+  await getReferenceForPromptID(adminDatabase, testPromptID).set(
+    testBasicPrompt,
+  );
 }
-
-const testPromptID = "test" as PromptID;
 
 describe("getData", () => {
   test("reads card data", async () => {
@@ -61,7 +60,7 @@ describe("getData", () => {
     const mockFn = jest.fn();
     await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
     expect(mockFn.mock.calls[0][0]).toMatchObject(
-      new Map([["test", testBasicPrompt]]),
+      new Map([[testPromptID, testBasicPrompt]]),
     );
   });
 
@@ -77,20 +76,20 @@ describe("getData", () => {
     await testApp.firestore().disableNetwork();
     const mockFn = jest.fn();
     await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
-    expect(mockFn.mock.calls[0][0].get("test")).toBeInstanceOf(Error);
+    expect(mockFn.mock.calls[0][0].get(testPromptID)).toBeInstanceOf(Error);
 
     await testApp.firestore().enableNetwork();
     mockFn.mockClear();
     await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
     expect(mockFn.mock.calls[0][0]).toMatchObject(
-      new Map([["test", testBasicPrompt]]),
+      new Map([[testPromptID, testBasicPrompt]]),
     );
 
     await testApp.firestore().disableNetwork();
     mockFn.mockClear();
     await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
     expect(mockFn.mock.calls[0][0]).toMatchObject(
-      new Map([["test", testBasicPrompt]]),
+      new Map([[testPromptID, testBasicPrompt]]),
     );
   });
 });

@@ -66,6 +66,7 @@ class ImportAnkiCollection extends Command {
 
       await dataClient.recordAttachments(plan.attachments);
       console.log("Recorded attachments.");
+      return;
       await dataClient.recordPrompts(plan.prompts);
       console.log("Recorded prompts.");
 

@@ -107,8 +107,8 @@ export function getIDForPrompt(prompt: Prompt): PromptID {
   const nodeBuffer = dagNode.serialize();
 
   // 4. Hash the protobuf and encode that as a CID.
-  const hash = multihashing(nodeBuffer, "sha2-256");
-  const cid = new CID(1, "dag-pb", hash, "base58btc");
+  const multihash = multihashing(nodeBuffer, "sha2-256");
+  const cid = new CID(1, "dag-pb", multihash, "base58btc");
 
   return cid.toString() as PromptID;
 }

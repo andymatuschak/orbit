@@ -7,6 +7,10 @@ import {
   Prompt,
   PromptID,
 } from "metabook-core";
+import {
+  getReferenceForAttachmentID,
+  getReferenceForPromptID,
+} from "metabook-firebase-shared";
 
 let _database: firebase.firestore.Firestore | null = null;
 function getDatabase(): firebase.firestore.Firestore {
@@ -17,32 +21,22 @@ function getDatabase(): firebase.firestore.Firestore {
   return _database;
 }
 
-export function getDataCollectionReference(): firebase.firestore.CollectionReference<
-  Prompt | Attachment
-> {
-  // TODO remove duplication with metabook-client
-  return getDatabase().collection(
-    "data",
-  ) as firebase.firestore.CollectionReference<Prompt>;
-}
-
 export function recordPrompts(prompts: Prompt[]): Promise<PromptID[]> {
   // TODO probably add something about provenance
   // TODO something about user quotas, billing
-  const collectionReference = getDataCollectionReference();
   return Promise.all(
     prompts.map(async (promptData) => {
-      const id = getIDForPrompt(promptData);
-      const dataRef = collectionReference.doc(id);
+      const promptID = getIDForPrompt(promptData);
+      const dataRef = getReferenceForPromptID(getDatabase(), promptID);
       await dataRef
         .create(promptData)
         .then(() => {
-          console.log("Recorded prompt spec", id, promptData);
+          console.log("Recorded prompt spec", promptID, promptData);
         })
         .catch(() => {
           return;
         });
-      return id as PromptID;
+      return promptID as PromptID;
     }),
   );
 }
@@ -52,20 +46,21 @@ export function recordAttachments(
 ): Promise<AttachmentID[]> {
   // TODO probably add something about provenance
   // TODO something about user quotas, billing
-  const collectionReference = getDataCollectionReference();
   return Promise.all(
     attachments.map(async (attachment) => {
-      const id = getIDForAttachment(Buffer.from(attachment.contents, "binary"));
-      const dataRef = collectionReference.doc(id);
+      const attachmentID = getIDForAttachment(
+        Buffer.from(attachment.contents, "binary"),
+      );
+      const dataRef = getReferenceForAttachmentID(getDatabase(), attachmentID);
       await dataRef
         .create(attachment)
         .then(() => {
-          console.log("Recorded attachment", id);
+          console.log("Recorded attachment", attachmentID);
         })
         .catch(() => {
           return;
         });
-      return id as AttachmentID;
+      return attachmentID as AttachmentID;
     }),
   );
 }

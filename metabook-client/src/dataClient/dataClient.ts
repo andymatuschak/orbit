@@ -10,7 +10,11 @@ import {
   Prompt,
   PromptID,
 } from "metabook-core";
-import { getDataCollectionReference, getDefaultFirebaseApp } from "../firebase";
+import {
+  getReferenceForAttachmentID,
+  getReferenceForPromptID,
+} from "metabook-firebase-shared";
+import { getDefaultFirebaseApp } from "../firebase";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
 
 type MetabookDataClientCacheWriteHandler = (
@@ -95,11 +99,10 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
     MappedData = Data
   >(
     requestedIDs: Set<ID>,
+    getReferenceForID: (id: ID) => firebase.firestore.DocumentReference,
     mapRetrievedType: (id: ID, data: Data) => Promise<MappedData | Error>,
     onUpdate: (snapshot: MetabookDataSnapshot<ID, MappedData>) => void,
   ): { completion: Promise<unknown>; unsubscribe: MetabookUnsubscribe } {
-    const dataRef = getDataCollectionReference(this.database);
-
     const dataSnapshot: MetabookDataSnapshot<ID, MappedData> = new Map(
       [...requestedIDs.values()].map((promptID) => [promptID, null]),
     );
@@ -129,21 +132,22 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
         },
       };
     } else {
-      const fetchPromises = [...requestedIDs.values()].map(async (promptID) => {
+      const fetchPromises = [...requestedIDs.values()].map(async (id) => {
+        const dataRef = getReferenceForID(id);
         try {
-          const cachedData = await dataRef
-            .doc(promptID)
-            .get({ source: "cache" });
-          console.log("Read from cache", promptID, cachedData.data());
-          onFetch(promptID, cachedData.data()! as Data);
+          const cachedData = await dataRef.get({
+            source: "cache",
+          });
+          console.log("Read from cache", id, cachedData.data());
+          onFetch(id, cachedData.data()! as Data);
         } catch (error) {
           // No cached data available.
           if (!isCancelled) {
             try {
-              const cachedData = await dataRef.doc(promptID).get();
-              await onFetch(promptID, cachedData.data()! as Data);
+              const cachedData = await dataRef.get();
+              await onFetch(id, cachedData.data()! as Data);
             } catch (error) {
-              await onFetch(promptID, error);
+              await onFetch(id, error);
             }
           }
         }
@@ -164,6 +168,7 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
   ): { completion: Promise<unknown>; unsubscribe: MetabookUnsubscribe } {
     return this.getData(
       requestedPromptIDs,
+      (promptID) => getReferenceForPromptID(this.database, promptID),
       async (id: PromptID, data: Prompt) => data,
       onUpdate,
     );
@@ -178,6 +183,8 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
     // This is an awfully silly way to handle caching. We'll want to write the attachments out to disk in a temporary directory.
     return this.getData(
       requestedAttachmentIDs,
+      (attachmentID) =>
+        getReferenceForAttachmentID(this.database, attachmentID),
       async (
         attachmentID: AttachmentID,
         attachment: Attachment,

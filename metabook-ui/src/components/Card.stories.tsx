@@ -178,6 +178,7 @@ function createPromptState(
     lastReviewTaskParameters,
     lastReviewTimestampMillis: Date.now(),
     headActionLogIDs: [],
+    provenance: null,
   };
 }
 
