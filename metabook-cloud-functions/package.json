@@ -20,7 +20,6 @@
     "node": "10"
   },
   "devDependencies": {
-    "metabook-core": "0.0.1",
     "@babel/plugin-transform-modules-commonjs": "^7.9.0",
     "@babel/preset-env": "^7.9.0",
     "@babel/preset-typescript": "^7.9.0",

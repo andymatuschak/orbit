@@ -4,6 +4,7 @@ import "firebase/firestore";
 import {
   ActionLog,
   applyActionLogToPromptState,
+  getIDForActionLog,
   getPromptActionLogFromActionLog,
   PromptState,
   PromptTaskID,
@@ -17,6 +18,43 @@ import {
   MetabookPromptStateSnapshot,
   MetabookUserClient,
 } from "../userClient";
+
+async function batchWriteEntries(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  logEntries: [string, any][],
+  db: firebase.firestore.Firestore,
+  logRef: firebase.firestore.CollectionReference,
+) {
+  for (
+    let batchBaseIndex = 0;
+    batchBaseIndex <= logEntries.length;
+    batchBaseIndex += 500
+  ) {
+    const batch = db.batch();
+    for (
+      let index = batchBaseIndex;
+      index < batchBaseIndex + 500 && index < logEntries.length;
+      index++
+    ) {
+      const data = { ...logEntries[index][1] };
+      for (const key of Object.keys(data)) {
+        if (
+          typeof data[key] === "object" &&
+          data[key] &&
+          "_nanoseconds" in data[key] &&
+          "_seconds" in data[key]
+        ) {
+          data[key] = new firebase.firestore.Timestamp(
+            data[key]["_seconds"],
+            data[key]["_nanoseconds"],
+          );
+        }
+      }
+      batch.set(logRef.doc(logEntries[index][0]), data);
+    }
+    await batch.commit();
+  }
+}
 
 export class MetabookFirebaseUserClient implements MetabookUserClient {
   userID: string;
@@ -43,12 +81,12 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     // TODO: handle in-memory card state records...
     const userStateLogsRef = this.getActionLogReference(this.userID).orderBy(
       "timestampMillis",
-      "desc",
+      "asc",
     );
+    // .limit(500);
 
     return userStateLogsRef.onSnapshot(
       (snapshot) => {
-        console.log("Got snapshot", snapshot.docChanges());
         for (const change of snapshot.docChanges()) {
           if (change.type === "added") {
             this.updateCacheForLog(change.doc.data());
@@ -87,6 +125,26 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
       if (newPromptState instanceof Error) {
         throw newPromptState;
       }
+      if (
+        promptActionLog.taskID ===
+        "zdj7WmY91tqZAuhjLNsjCSjt1SQe5RDYKoNrktXtdjHAnJsKQ/cloze/0"
+      ) {
+        console.log(JSON.stringify(log, null, "\t"));
+        console.log("wire", getIDForActionLog(log));
+        console.log(
+          "local",
+          getIDForActionLog({
+            actionLogType: "ingest",
+            taskID: "zdj7WmY91tqZAuhjLNsjCSjt1SQe5RDYKoNrktXtdjHAnJsKQ/cloze/0",
+            timestampMillis: 1451593523946,
+            metadata: {
+              provenanceType: "anki",
+              cardModificationTimestampMillis: 1579019518000,
+              cardID: 1451593523946,
+            },
+          }),
+        );
+      }
       this.promptStateCache.set(promptActionLog.taskID, newPromptState);
     } else {
       throw new Error(
@@ -103,15 +161,13 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     }
   }
 
-  recordActionLogs(logs: ActionLog[]): Promise<unknown> {
-    console.log("recording", logs);
+  async recordActionLogs(logs: ActionLog[]): Promise<void> {
     const userStateLogsRef = this.getActionLogReference(this.userID);
-    const batch = this.database.batch();
-    for (const log of logs) {
-      const newDoc = userStateLogsRef.doc();
-      batch.set(newDoc, log);
-    }
-    return batch.commit();
+    await batchWriteEntries(
+      logs.map((log) => [getIDForActionLog(log), log]),
+      this.database,
+      userStateLogsRef,
+    );
   }
 
   private getActionLogReference(

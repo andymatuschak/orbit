@@ -7,6 +7,7 @@
       "metabook-client",
       "metabook-cli",
       "metabook-cloud-functions",
+      "metabook-firebase-shared",
       "metabook-core",
       "metabook-sample-data",
       "metabook-ui",

@@ -6,36 +6,52 @@ import {
   PromptRepetitionOutcome,
 } from "./spacedRepetition";
 
+const growthFactor = 2.3;
+
 export function getNextRepetitionInterval<P extends PromptTaskParameters>({
   schedule,
   reviewIntervalMillis,
+  scheduledIntervalMillis,
   outcome,
   currentlyNeedsRetry,
   supportsRetry,
 }: {
   reviewIntervalMillis: number;
+  scheduledIntervalMillis: number | null;
   currentlyNeedsRetry: boolean;
   outcome: PromptRepetitionOutcome;
   schedule: MetabookSpacedRepetitionSchedule;
   supportsRetry: boolean;
-}) {
+}): number {
   const intervalSequence = getIntervalSequenceForSchedule(schedule);
-  const currentLevel = getLevelForInterval(reviewIntervalMillis, schedule);
-  let newLevel: number;
   if (outcome === PromptRepetitionOutcome.Remembered) {
-    if (currentlyNeedsRetry && currentLevel > 0) {
-      // If the card needs to be retried, and the user remembers, then we just remove the retry indication. Unless they're on the "in-text" level, in which case we still bump them up to 5 days.
-      newLevel = currentLevel;
+    if (currentlyNeedsRetry) {
+      // If the card needs to be retried, and the user remembers, then we just remove the retry indication.
+      // If it happens that they waited a long time before attempting a retry, and that time is longer than their scheduled interval, we'll give them credit for that.
+      // Unless they're on the "in-text" level, in which case we still bump them up to 5 days.
+      return Math.max(
+        scheduledIntervalMillis!,
+        reviewIntervalMillis / growthFactor,
+        intervalSequence[1].interval,
+      );
     } else {
-      newLevel = Math.min(intervalSequence.length - 1, currentLevel + 1);
+      return Math.max(
+        intervalSequence[1].interval,
+        Math.floor(reviewIntervalMillis * growthFactor),
+      );
     }
   } else {
-    if (currentLevel <= 1) {
-      newLevel = supportsRetry ? currentLevel : 1;
+    const scheduledLevel =
+      scheduledIntervalMillis === null
+        ? 0
+        : getLevelForInterval(scheduledIntervalMillis, schedule);
+    if (scheduledLevel <= 1) {
+      return intervalSequence[supportsRetry ? scheduledLevel : 1].interval;
     } else {
-      // TODO: shouldn't extend further than your previous max level
-      newLevel = currentLevel - 1;
+      return Math.max(
+        intervalSequence[1].interval,
+        Math.floor(scheduledIntervalMillis! / growthFactor),
+      );
     }
   }
-  return intervalSequence[newLevel].interval;
 }

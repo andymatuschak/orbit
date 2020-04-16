@@ -17,6 +17,7 @@ describe("default schedule", () => {
             getNextRepetitionInterval({
               schedule,
               reviewIntervalMillis: sequence[0].interval,
+              scheduledIntervalMillis: sequence[0].interval,
               currentlyNeedsRetry: true,
               outcome: PromptRepetitionOutcome.Remembered,
               supportsRetry,
@@ -31,7 +32,8 @@ describe("default schedule", () => {
         expect(
           getNextRepetitionInterval({
             schedule,
-            reviewIntervalMillis: sequence[levelIndex].interval,
+            reviewIntervalMillis: sequence[levelIndex].interval + 1000,
+            scheduledIntervalMillis: sequence[levelIndex].interval,
             currentlyNeedsRetry: true,
             outcome: PromptRepetitionOutcome.Remembered,
             supportsRetry: true,
@@ -50,25 +52,40 @@ describe("default schedule", () => {
               getNextRepetitionInterval({
                 schedule,
                 reviewIntervalMillis: sequence[levelIndex].interval,
+                scheduledIntervalMillis: sequence[levelIndex].interval,
                 currentlyNeedsRetry: false,
                 outcome: PromptRepetitionOutcome.Remembered,
                 supportsRetry,
               }),
-            ).toEqual(sequence[levelIndex + 1].interval),
+            ).toBeGreaterThan(sequence[levelIndex].interval),
         );
 
-        test("level doesn't increases at last level", () => {
+        test("gives credit for real interval", () => {
+          expect(
+            getNextRepetitionInterval({
+              schedule,
+              reviewIntervalMillis: sequence[2].interval * 4,
+              scheduledIntervalMillis: sequence[2].interval,
+              currentlyNeedsRetry: false,
+              outcome: PromptRepetitionOutcome.Remembered,
+              supportsRetry,
+            }),
+          ).toBeGreaterThan(sequence[3].interval);
+        });
+
+        test("level keeps increasing at last level", () => {
           const lastLevelIntervalMillis =
             sequence[sequence.length - 1].interval;
           expect(
             getNextRepetitionInterval({
               schedule,
-              reviewIntervalMillis: lastLevelIntervalMillis,
+              reviewIntervalMillis: lastLevelIntervalMillis * 2,
+              scheduledIntervalMillis: lastLevelIntervalMillis * 2,
               currentlyNeedsRetry: false,
               outcome: PromptRepetitionOutcome.Remembered,
               supportsRetry,
             }),
-          ).toEqual(lastLevelIntervalMillis);
+          ).toBeGreaterThan(lastLevelIntervalMillis * 2);
         });
       },
     );
@@ -82,7 +99,8 @@ describe("default schedule", () => {
           expect(
             getNextRepetitionInterval({
               schedule,
-              reviewIntervalMillis: sequence[levelIndex].interval,
+              reviewIntervalMillis: 1000,
+              scheduledIntervalMillis: sequence[levelIndex].interval,
               supportsRetry: true,
               currentlyNeedsRetry,
               outcome: PromptRepetitionOutcome.Forgotten,
@@ -96,17 +114,18 @@ describe("default schedule", () => {
       Array.from(new Array(sequence.length - 2).keys()).map((i) => i + 2),
     )("from level %i", (levelIndex) => {
       test.each([false, true])(
-        "drops a level when currentlyNeedsRetry=%p",
+        "drops when currentlyNeedsRetry=%p",
         (currentlyNeedsRetry) => {
-          expect(
-            getNextRepetitionInterval({
-              schedule,
-              reviewIntervalMillis: sequence[levelIndex].interval,
-              supportsRetry: true,
-              currentlyNeedsRetry,
-              outcome: PromptRepetitionOutcome.Forgotten,
-            }),
-          ).toEqual(sequence[levelIndex - 1].interval);
+          const nextInterval = getNextRepetitionInterval({
+            schedule,
+            reviewIntervalMillis: 1000,
+            scheduledIntervalMillis: sequence[levelIndex].interval,
+            supportsRetry: true,
+            currentlyNeedsRetry,
+            outcome: PromptRepetitionOutcome.Forgotten,
+          });
+          expect(nextInterval).toBeLessThan(sequence[levelIndex].interval);
+          expect(nextInterval).toBeGreaterThan(1000);
         },
       );
     });

@@ -1,5 +1,12 @@
 import { Command, flags } from "@oclif/command";
 import "firebase/firestore";
+import firebase from "firebase";
+import {
+  MetabookFirebaseDataClient,
+  MetabookFirebaseUserClient,
+} from "metabook-client";
+import { getIDForActionLog } from "metabook-core";
+import path from "path";
 import {
   createImportPlan,
   readAnkiCollectionPackage,
@@ -12,6 +19,7 @@ class ImportAnkiCollection extends Command {
     userID: flags.string({
       required: true,
     }),
+    skipUpload: flags.boolean(),
   };
 
   static args = [{ name: "ankiCollectionPath", required: true }];
@@ -29,26 +37,44 @@ class ImportAnkiCollection extends Command {
     console.log(`${plan.attachments.length} attachments imported`);
     console.log(`${plan.issues.length} issues found`);
 
-    await fs.promises.writeFile("importAnki.log", plan.issues.join("\n"));
-    await fs.promises.writeFile(
-      "prompts.log",
-      JSON.stringify(plan.prompts, null, "\t"),
-    );
-    await fs.promises.writeFile(
-      "logs.log",
-      JSON.stringify(plan.logs, null, "\t"),
-    );
+    if (flags.skipUpload) {
+      await fs.promises.writeFile(
+        path.resolve(__dirname, "importPlan.json"),
+        JSON.stringify(plan),
+        {
+          encoding: "utf8",
+        },
+      );
+    } else {
+      console.log("\nUploading to server...");
+      const app = firebase.initializeApp({
+        apiKey: "AIzaSyAwlVFBlx4D3s3eSrwOvUyqOKr_DXFmj0c",
+        authDomain: "metabook-system.firebaseapp.com",
+        databaseURL: "https://metabook-system.firebaseio.com",
+        projectId: "metabook-system",
+        storageBucket: "metabook-system.appspot.com",
+        messagingSenderId: "748053153064",
+        appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
+      });
+      const dataClient = new MetabookFirebaseDataClient(
+        app,
+        app.functions(),
+        () => {
+          throw new Error("unimplemented");
+        },
+      );
 
-    const csv: string[] = ["Old,New"];
-    for (const log of plan.logs) {
-      const anyLog = log as any;
-      if ("debug" in anyLog) {
-        csv.push(
-          `${anyLog.debug.originalInterval},${anyLog.debug.newInterval}`,
-        );
-      }
+      await dataClient.recordAttachments(plan.attachments);
+      console.log("Recorded attachments.");
+      await dataClient.recordPrompts(plan.prompts);
+      console.log("Recorded prompts.");
+
+      const userClient = new MetabookFirebaseUserClient(app, flags.userID);
+      await userClient.recordActionLogs(plan.logs);
+      console.log("Recorded logs.");
+
+      console.log("Done.");
     }
-    await fs.promises.writeFile("comparison.csv", csv.join("\n"));
   }
 }
 

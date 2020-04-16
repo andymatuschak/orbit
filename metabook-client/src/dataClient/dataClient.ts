@@ -58,11 +58,35 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
     return this.functions.httpsCallable("recordPrompts")({ prompts });
   }
 
-  recordAttachments(attachments: Attachment[]): Promise<unknown> {
+  async recordAttachments(attachments: Attachment[]): Promise<void> {
     // TODO locally cache attachments
-    return this.functions.httpsCallable("recordAttachments")({
-      attachments,
-    });
+    const queue = [...attachments];
+    let batch: Attachment[] = [];
+    let batchBytes = 0;
+    let count = 0;
+
+    const recordAttachmentsFunction = this.functions.httpsCallable(
+      "recordAttachments",
+    );
+    async function flush() {
+      await recordAttachmentsFunction({
+        attachments: batch,
+      });
+      count += batch.length;
+      batch = [];
+      batchBytes = 0;
+      console.log(`Recorded attachment ${count}/${attachments.length}`);
+    }
+    while (queue.length > 0) {
+      const attachment = queue.shift()!;
+      const attachmentSize = attachment.contents.length;
+      if (batchBytes + attachmentSize >= 1e6) {
+        await flush();
+      }
+      batch.push(attachment);
+      batchBytes += attachmentSize;
+    }
+    await flush();
   }
 
   private getData<

@@ -2,8 +2,7 @@
   "extends": "../tsconfig.base",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
-    "types": ["jest", "long"]
+    "rootDir": "./src"
   },
   "include": ["./src/**/*.ts"]
 }

@@ -16,7 +16,7 @@ function getProtobufTimestampFromMillis(
 ): Proto.google.protobuf.ITimestamp {
   return {
     seconds: Math.floor(millis / 1000),
-    nanos: (millis % 1000) * 10e6,
+    nanos: (millis % 1000) * 1e6,
   };
 }
 
@@ -26,13 +26,19 @@ function getProtobufRepresentationForMetadata(
   if (metadata === null) {
     return null;
   }
-  return Object.keys(metadata).map((key) => ({
-    key,
-    number:
-      typeof metadata[key] === "number" ? (metadata[key] as number) : undefined,
-    string:
-      typeof metadata[key] === "string" ? (metadata[key] as string) : undefined,
-  }));
+  return Object.keys(metadata)
+    .sort()
+    .map((key) => ({
+      key,
+      number:
+        typeof metadata[key] === "number"
+          ? (metadata[key] as number)
+          : undefined,
+      string:
+        typeof metadata[key] === "string"
+          ? (metadata[key] as string)
+          : undefined,
+    }));
 }
 
 function getProtobufRepresentationForActionLog(

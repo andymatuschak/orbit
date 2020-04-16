@@ -99,7 +99,7 @@ export const getLevelForInterval = (
         { interval: currentInterval },
         index,
       ) => {
-        if (currentInterval <= interval) {
+        if (interval >= currentInterval * 0.9) {
           if (
             largestSmallerIntervalIndex === null ||
             intervalSequence[largestSmallerIntervalIndex].interval <
@@ -113,7 +113,7 @@ export const getLevelForInterval = (
       null,
     );
     if (closeLevel === null) {
-      throw new Error("Invalid interval");
+      return intervalSequence.length - 1;
     }
     return closeLevel;
   }

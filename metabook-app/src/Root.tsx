@@ -11,6 +11,7 @@ import {
   getIDForPromptTask,
   getIDForPrompt,
   PromptTask,
+  getIDForActionLog,
 } from "metabook-core";
 import { ReviewArea, ReviewAreaProps } from "metabook-ui";
 import colors from "metabook-ui/dist/styles/colors";

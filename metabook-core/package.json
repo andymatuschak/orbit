@@ -4,11 +4,9 @@
   "license": "UNLICENSED",
   "private": true,
   "type": "module",
-  "main": "./dist/cjs/index.js",
-  "exports": {
-    "import": "./dist/index.js",
-    "require": "./dist/cjs/index.js"
-  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "browser": "./dist/cjs/index.js",
   "types": "./dist/index.d.ts",
   "devDependencies": {
     "@babel/core": "^7.9.0",

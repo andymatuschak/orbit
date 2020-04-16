@@ -2,36 +2,36 @@ import fs from "fs";
 import {
   ActionLog,
   applicationPromptType,
+  applyActionLogToPromptState,
   Attachment,
+  AttachmentIDReference,
   BasicPromptTaskParameters,
   basicPromptType,
   ClozePromptTaskParameters,
   clozePromptType,
   getActionLogFromPromptActionLog,
+  getAttachmentMimeTypeForFilename,
   getIDForActionLog,
+  getIDForAttachment,
   getIDForPrompt,
   getIDForPromptTask,
   imageAttachmentType,
   ingestActionLogType,
+  NotePromptProvenance,
   Prompt,
   PromptActionLog,
   PromptParameters,
+  PromptProvenance,
   PromptProvenanceType,
   PromptRepetitionActionLog,
   PromptRepetitionOutcome,
+  PromptState,
   PromptTask,
   PromptTaskID,
   repetitionActionLogType,
-  AttachmentIDReference,
-  getIDForAttachment,
-  getAttachmentMimeTypeForFilename,
-  NotePromptProvenance,
-  PromptProvenance,
-  applyActionLogToPromptState,
-  PromptState,
 } from "metabook-core";
-
 import * as Anki from "./ankiPkg";
+import { Card } from "./ankiPkg";
 import { getModelMapping, ModelMapping } from "./modelMapping";
 import { mapNoteToPrompt } from "./noteMapping";
 
@@ -47,7 +47,13 @@ export function createPlanForNote(
   ankiCollection: Anki.Collection,
   attachmentNamesToAttachmentIDReferences: Map<string, AttachmentIDReference>,
   modelMappingCache: { [p: number]: ModelMapping },
-): { prompt: Prompt; issues: string[] } | Error {
+):
+  | {
+      prompt: Prompt;
+      provenance: NotePromptProvenance | null;
+      issues: string[];
+    }
+  | Error {
   const modelID = note.mid;
   let modelMapping: ModelMapping = modelMappingCache[modelID];
   if (!modelMapping) {
@@ -96,6 +102,7 @@ export function createPlanForCard(
   card: Anki.Card,
   prompt: Prompt,
   noteProvenance: PromptProvenance | null,
+  overrideTimestampMillis?: number,
 ): PromptActionLog<BasicPromptTaskParameters | ClozePromptTaskParameters> {
   // Generate an ingest log.
   return {
@@ -106,7 +113,7 @@ export function createPlanForCard(
       cardID: card.id,
     },
     taskID: extractPromptTaskIDForCard(card, prompt),
-    timestampMillis: card.id,
+    timestampMillis: overrideTimestampMillis ?? card.id,
   };
 }
 
@@ -220,30 +227,48 @@ export async function createImportPlan(
       plan.prompts.push(prompt);
       plan.issues.push(...issues);
       noteIDsToPrompts.set(note.id, prompt);
-      noteIDsToProvenance.set(note.id, provenance);
+      if (provenance) {
+        noteIDsToProvenance.set(note.id, provenance);
+      }
     }
   });
 
-  const cardIDsToPromptStates: Map<number, PromptState> = new Map();
+  const cardIDsToCards: Map<number, Card> = new Map();
+  const cardIDsToIngest: Set<number> = new Set();
+  await Anki.readCards(handle, (card) => {
+    cardIDsToCards.set(card.id, card);
+    cardIDsToIngest.add(card.id);
+  });
 
+  const cardIDsToPromptStates: Map<number, PromptState> = new Map();
   const cardIDsToLastActionLogs: Map<
     number,
     PromptActionLog<BasicPromptTaskParameters | ClozePromptTaskParameters>
   > = new Map();
-  await Anki.readCards(handle, (card) => {
-    // Only ingest cards whose notes are included.
+
+  function addIngestEventForCardID(
+    cardID: number,
+    overrideTimestampMillis?: number,
+  ): PromptActionLog<
+    BasicPromptTaskParameters | ClozePromptTaskParameters
+  > | null {
+    // Create the ingest log for this card.
+    const card = cardIDsToCards.get(cardID);
+    if (!card) {
+      return null;
+    }
     const prompt = noteIDsToPrompts.get(card.nid);
     if (!prompt) {
-      return;
+      // Only ingest cards whose notes are included.
+      return null;
     }
-
     const promptActionLog = createPlanForCard(
       card,
       prompt,
       noteIDsToProvenance.get(card.nid) ?? null,
+      overrideTimestampMillis,
     );
     plan.logs.push(getActionLogFromPromptActionLog(promptActionLog));
-    cardIDsToLastActionLogs.set(card.id, promptActionLog);
 
     cardIDsToPromptStates.set(
       card.id,
@@ -253,12 +278,20 @@ export async function createImportPlan(
         basePromptState: null,
       }) as PromptState,
     );
-  });
+
+    return promptActionLog;
+  }
 
   await Anki.readLogs(handle, (ankiLog) => {
-    const cardLastActionLog = cardIDsToLastActionLogs.get(ankiLog.cid);
+    let cardLastActionLog = cardIDsToLastActionLogs.get(ankiLog.cid);
     if (!cardLastActionLog) {
-      return;
+      const maybeLog = addIngestEventForCardID(ankiLog.cid, ankiLog.id);
+      if (maybeLog) {
+        cardLastActionLog = maybeLog;
+        cardIDsToIngest.delete(ankiLog.cid);
+      } else {
+        return;
+      }
     }
 
     const promptActionLog = createPlanForLog(ankiLog, cardLastActionLog);
@@ -279,6 +312,11 @@ export async function createImportPlan(
 
     cardIDsToLastActionLogs.set(ankiLog.cid, promptActionLog);
   });
+
+  for (const cardID of cardIDsToIngest) {
+    // These cards have never actually been reviewed.
+    addIngestEventForCardID(cardID);
+  }
 
   return plan;
 }

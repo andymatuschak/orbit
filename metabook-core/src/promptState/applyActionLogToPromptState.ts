@@ -9,7 +9,7 @@ import {
   ingestActionLogType,
   repetitionActionLogType,
 } from "../types/actionLog";
-import { applicationPromptType, Prompt } from "../types/prompt";
+import { applicationPromptType } from "../types/prompt";
 import {
   getActionLogFromPromptActionLog,
   PromptActionLog,
@@ -71,6 +71,7 @@ function applyPromptRepetitionActionLogToPromptState<
   const newInterval = getNextRepetitionInterval({
     schedule: schedule,
     reviewIntervalMillis: currentReviewInterval,
+    scheduledIntervalMillis: basePromptState?.intervalMillis || null,
     outcome: promptActionLog.outcome,
     supportsRetry,
     currentlyNeedsRetry,
@@ -103,6 +104,7 @@ function applyPromptRepetitionActionLogToPromptState<
       promptActionLog.outcome === PromptRepetitionOutcome.Forgotten,
     intervalMillis: newInterval,
     lastReviewTaskParameters: promptActionLog.taskParameters,
+    provenance: basePromptState?.provenance ?? null,
   };
 }
 
@@ -142,6 +144,7 @@ export default function applyActionLogToPromptState<
           needsRetry: false,
           lastReviewTaskParameters: null,
           bestIntervalMillis: null,
+          provenance: promptActionLog.provenance,
         };
       }
     case repetitionActionLogType:

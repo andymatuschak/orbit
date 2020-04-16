@@ -14,6 +14,7 @@ export default functions.https.onCall(
   async (data: RecordAttachmentsArguments): Promise<RecordPromptsResult> => {
     // TODO require auth
     const attachmentIDs = await recordAttachments(data.attachments);
+    console.log("Recorded attachment IDs", attachmentIDs);
     return { attachmentIDs };
   },
 );

@@ -7,7 +7,6 @@ import {
   NotePromptProvenance,
   Prompt,
   PromptField,
-  PromptProvenance,
   PromptProvenanceType,
 } from "metabook-core";
 import { Note, splitAnkiDBNoteFields } from "./ankiPkg";
@@ -44,7 +43,11 @@ export function mapNoteToPrompt(
   attachmentResolver: (
     ankiAttachmentReference: AnkiAttachmentReference,
   ) => AttachmentIDReference | null,
-): { prompt: Prompt; provenance: PromptProvenance | null; issues: string[] } {
+): {
+  prompt: Prompt;
+  provenance: NotePromptProvenance | null;
+  issues: string[];
+} {
   const fields = splitAnkiDBNoteFields(note.flds);
   const issues: string[] = [];
 

@@ -13,7 +13,8 @@ interface RecordPromptsResult {
 export default functions.https.onCall(
   async (data: RecordPromptsArguments): Promise<RecordPromptsResult> => {
     // TODO require auth
-    const promptTaskIDs = await recordPrompts(data.prompts);
-    return { promptTaskIDs };
+    const promptIDs = await recordPrompts(data.prompts);
+    console.log("Recorded prompt IDs", promptIDs);
+    return { promptTaskIDs: promptIDs };
   },
 );

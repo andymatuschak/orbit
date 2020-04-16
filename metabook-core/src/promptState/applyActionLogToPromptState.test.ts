@@ -128,6 +128,7 @@ describe("ingesting", () => {
       lastReviewTimestampMillis: 500,
       needsRetry: false,
       lastReviewTaskParameters: null,
+      provenance: null,
     };
     expect(
       applyActionLogToPromptState({
@@ -205,7 +206,7 @@ describe("repetition", () => {
     });
   });
 
-  describe("with a base state", () => {
+  test("with a base state", () => {
     const basePromptState = applyActionLogToPromptState({
       promptActionLog: testRepetitionLog,
       basePromptState: null,
@@ -227,7 +228,7 @@ describe("repetition", () => {
     expect(nextPromptState.bestIntervalMillis).toEqual(
       log.timestampMillis - testRepetitionLog.timestampMillis,
     );
-    expect(nextPromptState.intervalMillis).toEqual(
+    expect(nextPromptState.intervalMillis).toBeGreaterThanOrEqual(
       scheduleSequence[4].interval,
     );
   });
