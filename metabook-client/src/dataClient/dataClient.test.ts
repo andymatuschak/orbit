@@ -38,7 +38,9 @@ beforeEach(async () => {
   );
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await testApp.firestore().terminate();
+  await testApp.firestore().clearPersistence();
   return firebaseTesting.clearFirestoreData({ projectId: testProjectID });
 });
 

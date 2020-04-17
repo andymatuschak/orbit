@@ -1,30 +1,44 @@
 import * as firebaseTesting from "@firebase/testing";
 import firebase from "firebase/app";
 import {
+  applyActionLogToPromptState,
   basicPromptType,
   clozePromptType,
+  getActionLogFromPromptActionLog,
+  getIDForActionLog,
+  getIDForPrompt,
+  getIDForPromptTask,
   ingestActionLogType,
   PromptID,
+  PromptIngestActionLog,
+  PromptRepetitionOutcome,
+  PromptState,
   PromptTask,
-  getIDForPromptTask,
-  applyActionLogToPromptState,
+  PromptTaskID,
+  repetitionActionLogType,
 } from "metabook-core";
+import {
+  getTaskStateCacheReferenceForTaskID,
+  PromptStateCache,
+} from "metabook-firebase-shared";
+import { testBasicPrompt } from "metabook-sample-data";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
 import { MetabookLocalUserClient } from "../localClient";
 import { MetabookFirebaseUserClient } from "./firebaseClient";
 
-let testApp: firebase.app.App;
+let testFirestore: firebase.firestore.Firestore;
 let client: MetabookFirebaseUserClient;
 
 const testUserID = "testUser";
 const testProjectID = "firebase-client-test";
 beforeEach(() => {
-  testApp = firebaseTesting.initializeTestApp({
+  const testApp = firebaseTesting.initializeTestApp({
     projectId: testProjectID,
     auth: { uid: testUserID, email: "test@test.com" },
   });
-  client = new MetabookFirebaseUserClient(testApp, testUserID);
+  testFirestore = testApp.firestore();
+  client = new MetabookFirebaseUserClient(testFirestore, testUserID);
 });
 
 afterEach(() => {
@@ -71,6 +85,80 @@ test("recording a review triggers card state update", async () => {
   expect(updatedPromptStates).not.toMatchObject(initialPromptStates);
 
   unsubscribe();
+});
+
+describe("prompt state cache", () => {
+  test("initial prompt states", async () => {
+    const testPromptID = getIDForPrompt(testBasicPrompt);
+    const promptTask: PromptTask = {
+      promptID: testPromptID,
+      promptType: basicPromptType,
+      promptParameters: null,
+    };
+    const taskID = getIDForPromptTask(promptTask);
+    const ref = getTaskStateCacheReferenceForTaskID(
+      testFirestore,
+      testUserID,
+      taskID,
+    ) as firebase.firestore.DocumentReference<
+      PromptStateCache<firebase.firestore.Timestamp>
+    >;
+    const ingestLog: PromptIngestActionLog = {
+      taskID,
+      actionLogType: ingestActionLogType,
+      timestampMillis: 1000,
+      provenance: null,
+    };
+    const initialPromptState = applyActionLogToPromptState({
+      promptActionLog: ingestLog,
+      basePromptState: null,
+      schedule: "default",
+    }) as PromptState;
+    await ref.set({
+      ...initialPromptState,
+      taskID,
+      lastLogServerTimestamp: new firebase.firestore.Timestamp(0.5, 0),
+    });
+
+    const mockFunction = jest.fn();
+    const firstMockCall = promiseForNextCall(mockFunction);
+    const unsubscribe = client.subscribeToPromptStates(
+      {},
+      mockFunction,
+      (error) => {
+        fail(error);
+      },
+    );
+    await firstMockCall;
+    const initialPromptStates = mockFunction.mock.calls[0][0];
+    expect(initialPromptStates.get(taskID)).toEqual(initialPromptState);
+
+    const secondMockCall = promiseForNextCall(mockFunction);
+    await client.recordActionLogs([
+      {
+        actionLogType: repetitionActionLogType,
+        taskID,
+        taskParameters: null,
+        timestampMillis: 2000,
+        outcome: PromptRepetitionOutcome.Remembered,
+        parentActionLogIDs: [
+          getIDForActionLog(getActionLogFromPromptActionLog(ingestLog)),
+        ],
+        context: null,
+      },
+    ]);
+
+    await secondMockCall;
+    const updatedPromptStates = mockFunction.mock.calls[1][0] as Map<
+      PromptTaskID,
+      PromptState
+    >;
+    expect(updatedPromptStates.get(taskID)!.lastReviewTimestampMillis).toEqual(
+      2000,
+    );
+
+    unsubscribe();
+  });
 });
 
 describe("ingesting prompt specs", () => {
@@ -153,7 +241,10 @@ test("no events after unsubscribing", async () => {
 describe("security rules", () => {
   let anotherClient: MetabookFirebaseUserClient;
   beforeEach(() => {
-    anotherClient = new MetabookFirebaseUserClient(testApp, "anotherUser");
+    anotherClient = new MetabookFirebaseUserClient(
+      testFirestore,
+      "anotherUser",
+    );
   });
 
   test("can't read cards from another user", async () => {

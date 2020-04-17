@@ -6,12 +6,11 @@ import {
 } from "metabook-client";
 import {
   getActionLogFromPromptActionLog,
-  getNextTaskParameters,
-  repetitionActionLogType,
-  getIDForPromptTask,
   getIDForPrompt,
+  getIDForPromptTask,
+  getNextTaskParameters,
   PromptTask,
-  getIDForActionLog,
+  repetitionActionLogType,
 } from "metabook-core";
 import { ReviewArea, ReviewAreaProps } from "metabook-ui";
 import colors from "metabook-ui/dist/styles/colors";
@@ -45,7 +44,10 @@ export default function App() {
     const firebaseApp = getFirebaseApp();
 
     return {
-      userClient: new MetabookFirebaseUserClient(firebaseApp, "testID"),
+      userClient: new MetabookFirebaseUserClient(
+        firebaseApp.firestore(),
+        "testID",
+      ),
       dataClient: new MetabookFirebaseDataClient(
         firebaseApp,
         firebaseApp.functions(),

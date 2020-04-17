@@ -15,6 +15,8 @@ import {
   batchWriteEntries,
   getLogCollectionReference,
   getReferenceForActionLogID,
+  getTaskStateCacheCollectionReference,
+  PromptStateCache,
 } from "metabook-firebase-shared";
 import { getDefaultFirebaseApp } from "../../firebase";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
@@ -25,15 +27,34 @@ import {
   MetabookUserClient,
 } from "../userClient";
 
+type Timestamp = firebase.firestore.Timestamp;
+
+type Subscriber = Parameters<
+  MetabookFirebaseUserClient["subscribeToPromptStates"]
+>;
+
 export class MetabookFirebaseUserClient implements MetabookUserClient {
   userID: string;
   private database: firebase.firestore.Firestore;
   private readonly promptStateCache: Map<PromptTaskID, PromptState>;
 
-  constructor(app: firebase.app.App = getDefaultFirebaseApp(), userID: string) {
+  private promptStateCacheStatus: "unstarted" | "fetching" | "primed";
+  private latestRecordedServerLogTimestamp: Timestamp | null;
+
+  private subscribers: Set<Subscriber>;
+  private logSubscription: (() => void) | null;
+
+  constructor(
+    firestore: firebase.firestore.Firestore = getDefaultFirebaseApp().firestore(),
+    userID: string,
+  ) {
     this.userID = userID;
-    this.database = app.firestore();
+    this.database = firestore;
     this.promptStateCache = new Map();
+    this.promptStateCacheStatus = "unstarted";
+    this.latestRecordedServerLogTimestamp = null;
+    this.subscribers = new Set();
+    this.logSubscription = null;
   }
 
   async getPromptStates(
@@ -42,40 +63,150 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     return getPromptStates(this, query);
   }
 
+  private async fetchInitialCachedPromptStates(): Promise<void> {
+    if (this.promptStateCacheStatus !== "unstarted") {
+      return;
+    }
+
+    // TODO: rationalize unwritten logs with incoming prompt states
+
+    this.promptStateCacheStatus = "fetching";
+    console.log("Fetching initial prompt state cache");
+
+    try {
+      const ref = getTaskStateCacheCollectionReference(
+        this.database,
+        this.userID,
+      ).limit(1000) as firebase.firestore.Query<PromptStateCache<Timestamp>>;
+      let startAfter: firebase.firestore.DocumentSnapshot<
+        PromptStateCache<Timestamp>
+      > | null = null;
+      do {
+        const offsetRef: firebase.firestore.Query<PromptStateCache<
+          Timestamp
+        >> = startAfter ? ref.startAfter(startAfter) : ref;
+        const snapshot = await offsetRef.get();
+        for (const doc of snapshot.docs) {
+          const { taskID, lastLogServerTimestamp, ...promptState } = doc.data();
+          this.promptStateCache.set(taskID as PromptTaskID, promptState);
+          this.latestRecordedServerLogTimestamp =
+            this.latestRecordedServerLogTimestamp === null ||
+            lastLogServerTimestamp > this.latestRecordedServerLogTimestamp
+              ? lastLogServerTimestamp
+              : this.latestRecordedServerLogTimestamp;
+        }
+
+        startAfter = snapshot.empty
+          ? null
+          : snapshot.docs[snapshot.docs.length - 1];
+        console.log(`Fetched ${this.promptStateCache.size} caches`);
+      } while (startAfter !== null);
+    } catch (error) {
+      this.dispatchErrorToAllSubscribers(error);
+      // TODO: Leaves the system in an inconsistent state. What should we actually do at this point?
+    }
+
+    console.log("Done fetching prompt state caches.");
+    console.log(
+      "Latest server timestamp now",
+      this.latestRecordedServerLogTimestamp,
+    );
+    this.promptStateCacheStatus = "primed";
+
+    this.subscribeToLogs();
+  }
+
+  private dispatchSubscriber(subscriber: Subscriber) {
+    subscriber[1](new Map(this.promptStateCache));
+  }
+
+  private dispatchAllSubscribers() {
+    this.subscribers.forEach((subscriber) =>
+      this.dispatchSubscriber(subscriber),
+    );
+  }
+
+  private dispatchErrorToAllSubscribers(error: Error) {
+    this.subscribers.forEach((s) => s[2](error));
+  }
+
+  private subscribeToLogs() {
+    let userStateLogsRef = getLogCollectionReference(
+      this.database,
+      this.userID,
+    ).orderBy("serverTimestamp", "asc") as firebase.firestore.Query<
+      ActionLogDocument<Timestamp>
+    >;
+    if (this.latestRecordedServerLogTimestamp) {
+      userStateLogsRef = userStateLogsRef.where(
+        "serverTimestamp",
+        ">",
+        this.latestRecordedServerLogTimestamp,
+      );
+    }
+
+    this.logSubscription = userStateLogsRef.onSnapshot(
+      (snapshot) => {
+        for (const change of snapshot.docChanges()) {
+          const log = change.doc.data({ serverTimestamps: "none" });
+          if (
+            log.serverTimestamp &&
+            (!this.latestRecordedServerLogTimestamp ||
+              log.serverTimestamp > this.latestRecordedServerLogTimestamp)
+          ) {
+            this.latestRecordedServerLogTimestamp = log.serverTimestamp;
+            console.log(`Latest server timestamp now`, log.serverTimestamp);
+          }
+          switch (change.type) {
+            case "added":
+              this.updateCacheForLog(log);
+              break;
+            case "modified":
+              console.log("Ignoring modification to log", change.doc.id, log);
+              break;
+            case "removed":
+              // TODO make more robust against client failures to persist / sync
+              throw new Error(
+                `Log entries should never disappear. Unsupported change type ${
+                  change.type
+                } with doc ${change.doc.data()}`,
+              );
+          }
+        }
+        this.dispatchAllSubscribers();
+      },
+      (error: Error) => {
+        for (const subscriber of this.subscribers) {
+          subscriber[2](error);
+        }
+      },
+    );
+  }
+
   subscribeToPromptStates(
     query: MetabookCardStateQuery,
     onCardStatesDidUpdate: (newCardStates: MetabookPromptStateSnapshot) => void,
     onError: (error: Error) => void,
   ): MetabookUnsubscribe {
-    // TODO: handle in-memory card state records...
-    const userStateLogsRef = getLogCollectionReference(
-      this.database,
-      this.userID,
-    ).orderBy(
-      "timestampMillis",
-      "asc",
-    ) as firebase.firestore.CollectionReference<ActionLog>;
+    const subscriber: Subscriber = [query, onCardStatesDidUpdate, onError];
+    this.subscribers.add(subscriber);
+    if (this.promptStateCacheStatus === "unstarted") {
+      this.fetchInitialCachedPromptStates();
+    } else if (this.promptStateCacheStatus === "primed") {
+      if (this.logSubscription === null) {
+        this.subscribeToLogs();
+      } else {
+        this.dispatchSubscriber(subscriber);
+      }
+    }
 
-    return userStateLogsRef.onSnapshot(
-      (snapshot) => {
-        for (const change of snapshot.docChanges()) {
-          if (change.type === "added") {
-            this.updateCacheForLog(change.doc.data());
-          } else {
-            // TODO make more robust against client failures to persist / sync
-            throw new Error(
-              `Log entries should never disappear. Unsupported change type ${
-                change.type
-              } with doc ${change.doc.data()}`,
-            );
-          }
-        }
-        onCardStatesDidUpdate(new Map(this.promptStateCache));
-      },
-      (error: Error) => {
-        onError(error);
-      },
-    );
+    return () => {
+      this.subscribers.delete(subscriber);
+      if (this.subscribers.size === 0) {
+        this.logSubscription?.();
+        this.logSubscription = null;
+      }
+    };
   }
 
   private updateCacheForLog(log: ActionLog): void {
