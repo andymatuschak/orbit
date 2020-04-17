@@ -1,11 +1,11 @@
+import { ActionLogID } from "../actionLogID";
 import {
-  ActionLogID,
   ingestActionLogType,
-  PromptActionLog,
-  PromptState,
-  PromptTaskParameters,
   repetitionActionLogType,
-} from "metabook-core";
+} from "../types/actionLog";
+import { PromptActionLog } from "../types/promptActionLog";
+import { PromptTaskParameters } from "../types/promptTaskParameters";
+import { PromptState } from "./promptState";
 
 export default function promptActionLogCanBeAppliedToPromptState(
   promptActionLog: PromptActionLog<PromptTaskParameters>,

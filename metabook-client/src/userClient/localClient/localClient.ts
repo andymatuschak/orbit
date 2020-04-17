@@ -2,6 +2,7 @@ import {
   ActionLog,
   applyActionLogToPromptState,
   getPromptActionLogFromActionLog,
+  promptActionLogCanBeAppliedToPromptState,
   PromptState,
   PromptTaskID,
 } from "metabook-core";
@@ -12,7 +13,6 @@ import {
   MetabookPromptStateSnapshot,
   MetabookUserClient,
 } from "../userClient";
-import promptActionLogCanBeAppliedToPromptState from "../promptActionLogCanBeAppliedToPromptState";
 
 export class MetabookLocalUserClient implements MetabookUserClient {
   private readonly latestPromptStates: Map<PromptTaskID, PromptState>;

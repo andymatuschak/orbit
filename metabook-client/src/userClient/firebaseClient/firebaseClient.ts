@@ -6,6 +6,7 @@ import {
   applyActionLogToPromptState,
   getIDForActionLog,
   getPromptActionLogFromActionLog,
+  promptActionLogCanBeAppliedToPromptState,
   PromptState,
   PromptTaskID,
 } from "metabook-core";
@@ -17,7 +18,6 @@ import {
 import { getDefaultFirebaseApp } from "../../firebase";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
 import getPromptStates from "../getPromptStates";
-import promptActionLogCanBeAppliedToPromptState from "../promptActionLogCanBeAppliedToPromptState";
 import {
   MetabookCardStateQuery,
   MetabookPromptStateSnapshot,

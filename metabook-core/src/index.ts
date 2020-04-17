@@ -1,6 +1,6 @@
 export type { PromptState } from "./promptState";
 
-export { applyActionLogToPromptState } from "./promptState";
+export * from "./promptState";
 
 export {
   basicPromptType,

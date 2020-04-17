@@ -55,7 +55,7 @@ class ImportAnkiCollection extends Command {
 
       const adminApp = getAdminApp();
       const adminDB = adminApp.firestore();
-      batchWriteEntries(
+      /*batchWriteEntries(
         plan.promptStateCaches.map(({ taskID, promptState }) => [
           getTaskStateCacheReferenceForTaskID(adminDB, flags.userID, taskID),
           {
@@ -66,7 +66,7 @@ class ImportAnkiCollection extends Command {
         ]),
         adminDB,
         (ms, ns) => new firebase.firestore.Timestamp(ms, ns),
-      );
+      );*/
 
       const app = firebase.initializeApp({
         apiKey: "AIzaSyAwlVFBlx4D3s3eSrwOvUyqOKr_DXFmj0c",
@@ -85,10 +85,10 @@ class ImportAnkiCollection extends Command {
         },
       );
 
-      await dataClient.recordAttachments(plan.attachments);
-      console.log("Recorded attachments.");
+      // await dataClient.recordAttachments(plan.attachments);
+      // console.log("Recorded attachments.");
 
-      await dataClient.recordPrompts(plan.prompts);
+      // await dataClient.recordPrompts(plan.prompts);
       console.log("Recorded prompts.");
 
       const userClient = new MetabookFirebaseUserClient(app, flags.userID);
