@@ -10,6 +10,7 @@ import {
   PromptTaskID,
 } from "metabook-core";
 import {
+  batchWriteEntries,
   getLogCollectionReference,
   getReferenceForActionLogID,
 } from "metabook-firebase-shared";
@@ -22,42 +23,6 @@ import {
   MetabookPromptStateSnapshot,
   MetabookUserClient,
 } from "../userClient";
-
-async function batchWriteEntries(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  logEntries: [firebase.firestore.DocumentReference, any][],
-  db: firebase.firestore.Firestore,
-) {
-  for (
-    let batchBaseIndex = 0;
-    batchBaseIndex <= logEntries.length;
-    batchBaseIndex += 500
-  ) {
-    const batch = db.batch();
-    for (
-      let index = batchBaseIndex;
-      index < batchBaseIndex + 500 && index < logEntries.length;
-      index++
-    ) {
-      const data = { ...logEntries[index][1] };
-      for (const key of Object.keys(data)) {
-        if (
-          typeof data[key] === "object" &&
-          data[key] &&
-          "_nanoseconds" in data[key] &&
-          "_seconds" in data[key]
-        ) {
-          data[key] = new firebase.firestore.Timestamp(
-            data[key]["_seconds"],
-            data[key]["_nanoseconds"],
-          );
-        }
-      }
-      batch.set(logEntries[index][0], data);
-    }
-    await batch.commit();
-  }
-}
 
 export class MetabookFirebaseUserClient implements MetabookUserClient {
   userID: string;
@@ -157,6 +122,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
         log,
       ]),
       this.database,
+      (ms, ns) => new firebase.firestore.Timestamp(ms, ns),
     );
   }
 }

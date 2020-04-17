@@ -30,6 +30,7 @@ import {
   PromptTaskID,
   repetitionActionLogType,
 } from "metabook-core";
+import { PromptStateCache } from "metabook-firebase-shared";
 import * as Anki from "./ankiPkg";
 import { Card } from "./ankiPkg";
 import { getModelMapping, ModelMapping } from "./modelMapping";
@@ -40,6 +41,7 @@ interface ImportPlan {
   attachments: Attachment[];
   logs: ActionLog[];
   issues: string[];
+  promptStateCaches: { taskID: string; promptState: PromptState }[];
 }
 
 export function createPlanForNote(
@@ -177,6 +179,7 @@ export async function createImportPlan(
     attachments: [],
     logs: [],
     issues: [],
+    promptStateCaches: [],
   };
 
   const collection = await Anki.readCollection(handle);
@@ -240,7 +243,7 @@ export async function createImportPlan(
     cardIDsToIngest.add(card.id);
   });
 
-  const cardIDsToPromptStates: Map<number, PromptState> = new Map();
+  const taskIDsToPromptStates: Map<string, PromptState> = new Map();
   const cardIDsToLastActionLogs: Map<
     number,
     PromptActionLog<BasicPromptTaskParameters | ClozePromptTaskParameters>
@@ -270,8 +273,8 @@ export async function createImportPlan(
     );
     plan.logs.push(getActionLogFromPromptActionLog(promptActionLog));
 
-    cardIDsToPromptStates.set(
-      card.id,
+    taskIDsToPromptStates.set(
+      promptActionLog.taskID,
       applyActionLogToPromptState({
         promptActionLog,
         schedule: "default",
@@ -300,9 +303,9 @@ export async function createImportPlan(
     const newPromptState = applyActionLogToPromptState({
       promptActionLog,
       schedule: "default",
-      basePromptState: cardIDsToPromptStates.get(ankiLog.cid)!,
+      basePromptState: taskIDsToPromptStates.get(promptActionLog.taskID)!,
     }) as PromptState;
-    cardIDsToPromptStates.set(ankiLog.cid, newPromptState);
+    taskIDsToPromptStates.set(promptActionLog.taskID, newPromptState);
 
     // const oneDay = 1000 * 60 * 60 * 24;
     // (promptActionLog as any).debug = {
@@ -317,6 +320,12 @@ export async function createImportPlan(
     // These cards have never actually been reviewed.
     addIngestEventForCardID(cardID);
   }
+
+  plan.promptStateCaches = [...taskIDsToPromptStates.entries()].map(
+    ([taskID, promptState]) => {
+      return { taskID, promptState };
+    },
+  );
 
   return plan;
 }

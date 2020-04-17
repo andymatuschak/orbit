@@ -1,13 +1,12 @@
-import type { firestore as ClientFirestore } from "firebase";
-import type { firestore as AdminFirestore } from "firebase-admin";
 import { ActionLogID, AttachmentID, PromptID } from "metabook-core";
+import multihashes from "multihashes";
+import multihashing from "multihashing";
 import { getFirebaseKeyForCIDString } from "./cdidEncoding";
-
-type Database = ClientFirestore.Firestore | AdminFirestore.Firestore;
-type CollectionReference<D extends Database> = ReturnType<D["collection"]>;
-type DocumentReference<D extends Database> = ReturnType<
-  CollectionReference<D>["doc"]
->;
+import {
+  CollectionReference,
+  Database,
+  DocumentReference,
+} from "./libraryAbstraction";
 
 function getDataCollectionReference<D extends Database>(
   database: D,
@@ -44,6 +43,29 @@ export function getLogCollectionReference<D extends Database>(
   userID: string,
 ): CollectionReference<D> {
   return database.collection(`users/${userID}/logs`) as CollectionReference<D>;
+}
+
+export function getTaskStateCacheCollectionReference<D extends Database>(
+  database: D,
+  userID: string,
+): CollectionReference<D> {
+  return database.collection(
+    `users/${userID}/taskStates`,
+  ) as CollectionReference<D>;
+}
+
+export function getTaskStateCacheReferenceForTaskID<D extends Database>(
+  database: D,
+  userID: string,
+  taskID: string,
+): DocumentReference<D> {
+  // The taskID is not sharding-friendly; we hash it to get a Firebase key with a uniformly-distributed prefix.
+  const hashedTaskID = multihashes.toB58String(
+    multihashing.digest(taskID, "sha2-256"),
+  );
+  return getTaskStateCacheCollectionReference(database, userID).doc(
+    hashedTaskID,
+  ) as DocumentReference<D>;
 }
 
 export function getReferenceForActionLogID<D extends Database>(
