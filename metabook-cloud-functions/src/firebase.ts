@@ -1,6 +1,5 @@
 import * as firebase from "firebase-admin";
 import {
-  ActionLog,
   applyActionLogToPromptState,
   Attachment,
   AttachmentID,
@@ -13,6 +12,7 @@ import {
   PromptState,
 } from "metabook-core";
 import {
+  ActionLogDocument,
   getReferenceForAttachmentID,
   getReferenceForPromptID,
   getTaskStateCacheReferenceForTaskID,
@@ -73,7 +73,7 @@ export function recordAttachments(
 }
 
 export async function updatePromptStateCacheWithLog(
-  log: ActionLog,
+  log: ActionLogDocument<firebase.firestore.Timestamp>,
   userID: string,
 ) {
   const db = getDatabase();
@@ -113,7 +113,7 @@ export async function updatePromptStateCacheWithLog(
       const promptStateCache: PromptStateCache<firebase.firestore.Timestamp> = {
         ...newPromptState,
         taskID: log.taskID,
-        lastUpdateTimestamp: firebase.firestore.FieldValue.serverTimestamp() as firebase.firestore.Timestamp,
+        lastLogServerTimestamp: log.serverTimestamp, // TODO: when adapting this to actually join the log DAGs, take the max of the head logs' timestamps.
       };
       transaction.set(promptStateCacheReference, promptStateCache);
     } else {

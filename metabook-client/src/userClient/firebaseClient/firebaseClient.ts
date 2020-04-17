@@ -11,6 +11,7 @@ import {
   PromptTaskID,
 } from "metabook-core";
 import {
+  ActionLogDocument,
   batchWriteEntries,
   getLogCollectionReference,
   getReferenceForActionLogID,
@@ -113,14 +114,20 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
 
   async recordActionLogs(logs: ActionLog[]): Promise<void> {
     await batchWriteEntries(
-      logs.map((log) => [
-        getReferenceForActionLogID(
-          this.database,
-          this.userID,
-          getIDForActionLog(log),
-        ),
-        log,
-      ]),
+      logs.map((log) => {
+        const logDocument: ActionLogDocument<firebase.firestore.Timestamp> = {
+          ...log,
+          serverTimestamp: firebase.firestore.FieldValue.serverTimestamp() as firebase.firestore.Timestamp,
+        };
+        return [
+          getReferenceForActionLogID(
+            this.database,
+            this.userID,
+            getIDForActionLog(log),
+          ),
+          logDocument,
+        ];
+      }),
       this.database,
       (ms, ns) => new firebase.firestore.Timestamp(ms, ns),
     );
