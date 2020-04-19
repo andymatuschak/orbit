@@ -81,11 +81,24 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
       let startAfter: firebase.firestore.DocumentSnapshot<
         PromptStateCache<Timestamp>
       > | null = null;
+      let usingCache = true;
       do {
         const offsetRef: firebase.firestore.Query<PromptStateCache<
           Timestamp
         >> = startAfter ? ref.startAfter(startAfter) : ref;
-        const snapshot = await offsetRef.get();
+
+        // We'll try from cache first, but if we don't have anything in the cache, we'll look to the server.
+        let snapshot = await offsetRef.get(
+          usingCache ? { source: "cache" } : {},
+        );
+        if (snapshot.docs.length === 0 && this.promptStateCache.size === 0) {
+          console.log(
+            "No cached prompt states; falling back to remote prompt states.",
+          );
+          usingCache = false;
+          snapshot = await offsetRef.get();
+        }
+
         for (const doc of snapshot.docs) {
           const { taskID, lastLogServerTimestamp, ...promptState } = doc.data();
           this.promptStateCache.set(taskID as PromptTaskID, promptState);
@@ -99,7 +112,11 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
         startAfter = snapshot.empty
           ? null
           : snapshot.docs[snapshot.docs.length - 1];
-        console.log(`Fetched ${this.promptStateCache.size} caches`);
+        console.log(
+          `Fetched ${this.promptStateCache.size} caches ${
+            snapshot.metadata.fromCache ? "from cache" : ""
+          }`,
+        );
       } while (startAfter !== null);
     } catch (error) {
       this.dispatchErrorToAllSubscribers(error);
@@ -145,8 +162,10 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
       );
     }
 
+    console.log("Subscribing to logs");
     this.logSubscription = userStateLogsRef.onSnapshot(
       (snapshot) => {
+        console.log("Got log snapshot of size", snapshot.size);
         for (const change of snapshot.docChanges()) {
           const log = change.doc.data({ serverTimestamps: "none" });
           if (

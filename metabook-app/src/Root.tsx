@@ -46,7 +46,7 @@ export default function App() {
     return {
       userClient: new MetabookFirebaseUserClient(
         firebaseApp.firestore(),
-        "testID",
+        "x5EWk2UT56URxbfrl7djoxwxiqH2",
       ),
       dataClient: new MetabookFirebaseDataClient(
         firebaseApp,

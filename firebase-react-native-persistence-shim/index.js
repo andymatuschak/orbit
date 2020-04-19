@@ -17,15 +17,9 @@ export default function shimFirebasePersistence(databaseBasePath) {
   window.__localStorageStore = {};
   window.localStorage = {
     getItem: function (key) {
-      console.info(
-        "getting Firebase local storage",
-        key,
-        window.__localStorageStore[key],
-      );
       return window.__localStorageStore[key];
     },
     setItem: function (key, value) {
-      console.info("writing Firebase local storage", key, value);
       window.__localStorageStore[key] = value;
     },
     removeItem: function (key) {
@@ -35,9 +29,8 @@ export default function shimFirebasePersistence(databaseBasePath) {
       window.__localStorageStore = {};
     },
     key: function (i) {
-      console.log("Firebase local storage getting key", i);
       // Assuming ES6 order-stable objects
-      Object.keys(window.__localStorageStore)[i];
+      return Object.keys(window.__localStorageStore)[i];
     },
   };
 

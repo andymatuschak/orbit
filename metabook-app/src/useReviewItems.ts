@@ -22,7 +22,14 @@ import {
   promptReviewItemType,
   ReviewItem,
 } from "metabook-ui";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  MutableRefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { enableFirebasePersistence, PersistenceStatus } from "./firebase";
 
 function usePersistenceStatus() {
@@ -82,6 +89,14 @@ function usePromptStates(
   return promptStates;
 }
 
+function useWeakRef<T>(val: T): MutableRefObject<T> {
+  const ref = useRef(val);
+  useEffect(() => {
+    ref.current = val;
+  }, [val]);
+  return ref;
+}
+
 function usePrompts(
   dataClient: MetabookDataClient,
   promptIDs: Set<PromptID>,
@@ -91,21 +106,45 @@ function usePrompts(
     PromptID,
     Prompt
   > | null>(null);
+  const weakPrompts = useWeakRef(prompts);
 
   useEffect(() => {
     unsubscribeFromDataRequest.current?.();
-    console.log("Fetching prompt specs", promptIDs);
-    const { unsubscribe } = dataClient.getPrompts(promptIDs, (newPrompts) => {
-      console.log("Got new prompt specs", newPrompts);
-      setPrompts(newPrompts);
-    });
-    unsubscribeFromDataRequest.current = unsubscribe;
+    let promptIDsToFetch: Set<PromptID>;
+    if (weakPrompts.current) {
+      promptIDsToFetch = new Set();
+      for (const promptID of promptIDs) {
+        if (!weakPrompts.current?.has(promptID)) {
+          promptIDsToFetch.add(promptID);
+        }
+      }
+    } else {
+      promptIDsToFetch = promptIDs;
+    }
+
+    if (promptIDsToFetch.size > 0) {
+      console.log("Fetching prompt specs", promptIDsToFetch);
+      const { unsubscribe } = dataClient.getPrompts(
+        promptIDsToFetch,
+        (newPrompts) => {
+          console.log("Got new prompt specs", newPrompts);
+          setPrompts(
+            (oldPrompts) =>
+              new Map([
+                ...(oldPrompts?.entries() ?? []),
+                ...newPrompts.entries(),
+              ]),
+          );
+        },
+      );
+      unsubscribeFromDataRequest.current = unsubscribe;
+    }
 
     return () => {
       unsubscribeFromDataRequest.current?.();
       unsubscribeFromDataRequest.current = null;
     };
-  }, [dataClient, promptIDs]);
+  }, [weakPrompts, dataClient, promptIDs]);
 
   return prompts;
 }
@@ -122,24 +161,39 @@ function useAttachments(
     AttachmentID,
     AttachmentURLReference
   > | null>(null);
+  const weakAttachmentResolutionMap = useWeakRef(attachmentResolutionMap);
 
   useEffect(() => {
     unsubscribeFromDataRequest.current?.();
-    console.log("Fetching attachments", attachmentIDs);
-    const { unsubscribe } = dataClient.getAttachments(
-      attachmentIDs,
-      (attachmentResolutionMap) => {
-        console.log("Got new attachments", attachmentIDs);
-        setAttachmentResolutionMap(attachmentResolutionMap);
-      },
-    );
-    unsubscribeFromDataRequest.current = unsubscribe;
+    let attachmentIDsToFetch: Set<AttachmentID>;
+    if (weakAttachmentResolutionMap.current) {
+      attachmentIDsToFetch = new Set();
+      for (const promptID of attachmentIDs) {
+        if (!weakAttachmentResolutionMap.current?.has(promptID)) {
+          attachmentIDsToFetch.add(promptID);
+        }
+      }
+    } else {
+      attachmentIDsToFetch = attachmentIDs;
+    }
+
+    if (attachmentIDsToFetch.size > 0) {
+      console.log("Fetching attachments", attachmentIDs);
+      const { unsubscribe } = dataClient.getAttachments(
+        attachmentIDs,
+        (attachmentResolutionMap) => {
+          console.log("Got new attachments", attachmentIDs);
+          setAttachmentResolutionMap(attachmentResolutionMap);
+        },
+      );
+      unsubscribeFromDataRequest.current = unsubscribe;
+    }
 
     return () => {
       unsubscribeFromDataRequest.current?.();
       unsubscribeFromDataRequest.current = null;
     };
-  }, [dataClient, attachmentIDs]);
+  }, [weakAttachmentResolutionMap, dataClient, attachmentIDs]);
 
   return attachmentResolutionMap;
 }

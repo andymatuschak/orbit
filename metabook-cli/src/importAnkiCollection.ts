@@ -1,22 +1,16 @@
 import { Command, flags } from "@oclif/command";
 import firebase from "firebase";
 import "firebase/firestore";
-import admin from "firebase-admin";
 import fs from "fs";
 import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "metabook-client";
-import {
-  batchWriteEntries,
-  getTaskStateCacheReferenceForTaskID,
-} from "metabook-firebase-shared";
 import path from "path";
 import {
   createImportPlan,
   readAnkiCollectionPackage,
 } from "../../metabook-anki";
-import { getAdminApp } from "./adminApp";
 
 class ImportAnkiCollection extends Command {
   static flags = {
@@ -53,9 +47,9 @@ class ImportAnkiCollection extends Command {
     } else {
       console.log("\nUploading to server...");
 
-      const adminApp = getAdminApp();
+      /*const adminApp = getAdminApp();
       const adminDB = adminApp.firestore();
-      /*batchWriteEntries(
+      batchWriteEntries(
         plan.promptStateCaches.map(({ taskID, promptState }) => [
           getTaskStateCacheReferenceForTaskID(adminDB, flags.userID, taskID),
           {
@@ -85,16 +79,20 @@ class ImportAnkiCollection extends Command {
         },
       );
 
-      // await dataClient.recordAttachments(plan.attachments);
-      // console.log("Recorded attachments.");
+      await dataClient.recordAttachments(plan.attachments);
+      console.log("Recorded attachments.");
 
-      // await dataClient.recordPrompts(plan.prompts);
+      await dataClient.recordPrompts(plan.prompts);
       console.log("Recorded prompts.");
 
-      const userClient = new MetabookFirebaseUserClient(app, flags.userID);
+      const userClient = new MetabookFirebaseUserClient(
+        app.firestore(),
+        flags.userID,
+      );
       await userClient.recordActionLogs(plan.logs);
       console.log("Recorded logs.");
 
+      await firebase.firestore().terminate();
       console.log("Done.");
     }
   }
