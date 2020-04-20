@@ -8,6 +8,7 @@ import React, { useCallback, useRef, useState } from "react";
 import {
   Animated,
   Button,
+  Platform,
   StyleProp,
   StyleSheet,
   Text,
@@ -261,6 +262,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
   return (
     <TouchableWithoutFeedback
       onPress={onPress}
+      accessible={false}
       /*className={`ReviewArea ${isComplete ? "ReviewAreaComplete" : ""}
       style={{
         cursor: isComplete || isShowingAnswer ? undefined : "pointer"
@@ -437,6 +439,8 @@ const styles = StyleSheet.create({
   outerContainer: {
     backgroundColor: colors.key00,
     padding: gridUnit * 2,
+    flexGrow: 1,
+    justifyContent: "center",
   },
 
   stackContainer: {

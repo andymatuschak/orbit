@@ -15,8 +15,9 @@ import {
 import { ReviewArea, ReviewAreaProps } from "metabook-ui";
 import colors from "metabook-ui/dist/styles/colors";
 import "node-libs-react-native/globals";
+import typography from "metabook-ui/dist/styles/typography";
 import React, { useCallback, useState } from "react";
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { getFirebaseApp } from "./firebase";
 import { useReviewItems } from "./useReviewItems";
 
@@ -101,15 +102,26 @@ export default function App() {
       }}
     >
       {items && (
-        <ReviewArea
-          items={items}
-          onMark={onMark}
-          schedule="aggressiveStart"
-          shouldLabelApplicationPrompts={false}
-          onLogin={() => {
-            return;
-          }}
-        />
+        <>
+          <ReviewArea
+            items={items}
+            onMark={onMark}
+            schedule="aggressiveStart"
+            shouldLabelApplicationPrompts={false}
+            onLogin={() => {
+              return;
+            }}
+          />
+          <Text
+            style={{
+              position: "absolute",
+              right: 16,
+              top: 16,
+              ...typography.cardBodyText,
+              color: colors.textColor,
+            }}
+          >{`Remaining: ${items.length}`}</Text>
+        </>
       )}
     </View>
   );
