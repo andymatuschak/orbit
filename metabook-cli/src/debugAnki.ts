@@ -43,13 +43,6 @@ function formatMillis(millis: number): string {
       schedule: "default",
       basePromptState: promptStates.get(log.taskID) ?? null,
     }) as PromptState;
-    if (
-      log.actionLogType === repetitionActionLogType &&
-      (log as any).debug.newInterval > 50 &&
-      (log as any).debug.originalInterval < 2
-    ) {
-      taskIDsToInspect.add(log.taskID);
-    }
     logs[getIDForActionLog(log)] = log;
     promptStates.set(log.taskID, promptState);
   }
@@ -57,7 +50,7 @@ function formatMillis(millis: number): string {
   const intervalCounts = new Map<number, number>();
   let printed = false;
   for (const [taskID, promptState] of promptStates.entries()) {
-    if (promptState.dueTimestampMillis <= Date.now()) {
+    if (promptState.dueTimestampMillis <= Date.now() + 1000 * 60 * 60 * 16) {
       intervalCounts.set(
         promptState.intervalMillis,
         (intervalCounts.get(promptState.intervalMillis) ?? 0) + 1,
@@ -99,14 +92,14 @@ function formatMillis(millis: number): string {
     }
   }
 
-  const csv: string[] = ["Old,New"];
-  for (const log of plan.logs) {
-    const anyLog = log as any;
-    if ("debug" in anyLog) {
-      csv.push(`${anyLog.debug.originalInterval},${anyLog.debug.newInterval}`);
-    }
-  }
-  await fs.promises.writeFile("comparison.csv", csv.join("\n"));
+  // const csv: string[] = ["Old,New"];
+  // for (const log of plan.logs) {
+  //   const anyLog = log as any;
+  //   if ("debug" in anyLog) {
+  //     csv.push(`${anyLog.debug.originalInterval},${anyLog.debug.newInterval}`);
+  //   }
+  // }
+  // await fs.promises.writeFile("comparison.csv", csv.join("\n"));
 
   let total = 0;
   for (const [interval, count] of [...intervalCounts.entries()].sort(

@@ -23,6 +23,7 @@ export default function getDuePromptTaskIDs({
     (cardID) =>
       promptStates.get(cardID)!.dueTimestampMillis <= dueThresholdTimestamp,
   );
+  console.log(duePromptTaskIDs.length, "tasks due");
 
   const maxCardsInSession = getCardLimitForReviewSession(reviewSessionIndex);
   const cardsRemaining = Math.max(
@@ -37,14 +38,9 @@ export default function getDuePromptTaskIDs({
         const promptStateA = promptStates.get(a)!;
         const promptStateB = promptStates.get(b)!;
 
-        if (promptStateA.intervalMillis === promptStateB.intervalMillis) {
-          // TODO: Shuffle... maybe hash the due timestamp millis
-          return (
-            promptStateA.dueTimestampMillis - promptStateB.dueTimestampMillis
-          );
-        } else {
-          return promptStateA.intervalMillis - promptStateB.intervalMillis;
-        }
+        return (
+          promptStateA.dueTimestampMillis - promptStateB.dueTimestampMillis
+        );
       })
       // Apply our review cap.
       .slice(0, cardsRemaining)

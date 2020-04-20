@@ -1,4 +1,5 @@
 platform :ios, '10.0'
+load 'remove_unsupported_libraries.rb'
 require_relative '../../node_modules/react-native-unimodules/cocoapods'
 require_relative '../../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
@@ -66,9 +67,14 @@ target 'metabookapp' do
   #
   # Note that if you have use_frameworks! enabled, Flipper will not work and
   # you should disable these next few lines.
-  add_flipper_pods!
+  #add_flipper_pods!
+
+  def unsupported_pods
+    ["FlipperKit", "DoubleConversion", "glog", "FlipperKit/FlipperKitLayoutPlugin", "FlipperKit/SKIOSNetworkPlugin", "FlipperKit/FlipperKitUserDefaultsPlugin", "FlipperKit/FlipperKitReactPlugin"]
+  end
   post_install do |installer|
-    flipper_post_install(installer)
+    #flipper_post_install(installer)
+    #configure_support_catalyst installer, unsupported_pods
   end
 
   use_unimodules!(modules_paths: ['../../node_modules'], exclude: ["expo-web-browser"])
@@ -82,3 +88,4 @@ target 'metabookapp-tvOS' do
     # Pods for testing
   end
 end
+
