@@ -1,25 +1,22 @@
 {
-  "name": "metabookapp",
-  "displayName": "metabookapp",
+  "name": "orbit",
+  "displayName": "Orbit",
   "expo": {
-    "name": "metabookapp",
-    "slug": "metabookapp",
+    "name": "Orbit",
+    "slug": "orbit",
     "privacy": "unlisted",
     "version": "1.0.0",
-    "entryPoint": "./.expo/AppEntry.js",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "sdkVersion": "37.0.0",
+    "assetBundlePatterns": ["**/*"],
+    "platforms": ["ios", "android", "web"],
     "packagerOpts": {
       "config": "metro.config.js"
     },
     "ios": {
-      "bundleIdentifier": "media.metabook.client"
+      "bundleIdentifier": "media.ladder.orbit"
     },
     "android": {
-      "package": "media.metabook.client"
+      "package": "media.ladder.orbit"
     }
   }
 }
