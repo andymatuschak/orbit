@@ -1,16 +1,27 @@
 import { Command, flags } from "@oclif/command";
 import firebase from "firebase";
 import "firebase/firestore";
+import admin from "firebase-admin";
 import fs from "fs";
 import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "metabook-client";
+import { getIDForActionLog } from "metabook-core";
+import {
+  ActionLogDocument,
+  batchWriteEntries,
+  getLogCollectionReference,
+  getReferenceForActionLogID,
+  getTaskStateCacheReferenceForTaskID,
+  PromptStateCache,
+} from "metabook-firebase-shared";
 import path from "path";
 import {
   createImportPlan,
   readAnkiCollectionPackage,
 } from "../../metabook-anki";
+import { getAdminApp } from "./adminApp";
 
 class ImportAnkiCollection extends Command {
   static flags = {
@@ -47,21 +58,6 @@ class ImportAnkiCollection extends Command {
     } else {
       console.log("\nUploading to server...");
 
-      /*const adminApp = getAdminApp();
-      const adminDB = adminApp.firestore();
-      batchWriteEntries(
-        plan.promptStateCaches.map(({ taskID, promptState }) => [
-          getTaskStateCacheReferenceForTaskID(adminDB, flags.userID, taskID),
-          {
-            taskID,
-            ...promptState,
-            lastUpdateTimestamp: admin.firestore.FieldValue.serverTimestamp(),
-          },
-        ]),
-        adminDB,
-        (ms, ns) => new firebase.firestore.Timestamp(ms, ns),
-      );*/
-
       const app = firebase.initializeApp({
         apiKey: "AIzaSyAwlVFBlx4D3s3eSrwOvUyqOKr_DXFmj0c",
         authDomain: "metabook-system.firebaseapp.com",
@@ -85,12 +81,44 @@ class ImportAnkiCollection extends Command {
       await dataClient.recordPrompts(plan.prompts);
       console.log("Recorded prompts.");
 
-      const userClient = new MetabookFirebaseUserClient(
+      const importTimestamp = firebase.firestore.Timestamp.now();
+      getLogCollectionReference(app.firestore(), flags.userID);
+      await batchWriteEntries(
+        plan.logs.map((log) => [
+          getReferenceForActionLogID(
+            app.firestore(),
+            flags.userID,
+            getIDForActionLog(log),
+          ),
+          {
+            ...log,
+            suppressTaskStateCacheUpdate: true,
+            serverTimestamp: importTimestamp,
+          } as ActionLogDocument<firebase.firestore.Timestamp>,
+        ]),
         app.firestore(),
-        flags.userID,
+        (ms, ns) => new firebase.firestore.Timestamp(ms, ns),
       );
-      await userClient.recordActionLogs(plan.logs);
       console.log("Recorded logs.");
+
+      const adminApp = getAdminApp();
+      const adminDB = adminApp.firestore();
+      const serverImportTimestamp = new admin.firestore.Timestamp(
+        importTimestamp.seconds,
+        importTimestamp.nanoseconds,
+      );
+      await batchWriteEntries(
+        plan.promptStateCaches.map(({ taskID, promptState }) => [
+          getTaskStateCacheReferenceForTaskID(adminDB, flags.userID, taskID),
+          {
+            taskID,
+            ...promptState,
+            lastLogServerTimestamp: serverImportTimestamp,
+          } as PromptStateCache<admin.firestore.Timestamp>,
+        ]),
+        adminDB,
+        (ms, ns) => new admin.firestore.Timestamp(ms, ns),
+      );
 
       await firebase.firestore().terminate();
       console.log("Done.");

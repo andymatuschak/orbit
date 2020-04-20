@@ -61,6 +61,7 @@
 		593ADEADA394BF03E53B8AE2 /* Pods-metabookapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabookapp.release.xcconfig"; path = "Target Support Files/Pods-metabookapp/Pods-metabookapp.release.xcconfig"; sourceTree = "<group>"; };
 		5B86B292223CAE89B49DE48C /* libPods-metabookapp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-metabookapp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5F11CAD6CFFA7F3606BAEE09 /* libPods-metabookapp-tvOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-metabookapp-tvOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		61AFA20B244D0FB4005E78DA /* metabookapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = metabookapp.entitlements; path = metabookapp/metabookapp.entitlements; sourceTree = "<group>"; };
 		8B28552F11E9836F2EF049AF /* Pods-metabookapp-tvOSTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabookapp-tvOSTests.debug.xcconfig"; path = "Target Support Files/Pods-metabookapp-tvOSTests/Pods-metabookapp-tvOSTests.debug.xcconfig"; sourceTree = "<group>"; };
 		C6482A7365C3563C4AA98C8B /* libPods-metabookapp-metabookappTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-metabookapp-metabookappTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E5E6A15EB832BBAC3B39B2D6 /* Pods-metabookapp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabookapp.debug.xcconfig"; path = "Target Support Files/Pods-metabookapp/Pods-metabookapp.debug.xcconfig"; sourceTree = "<group>"; };
@@ -125,6 +126,7 @@
 		13B07FAE1A68108700A75B9A /* metabookapp */ = {
 			isa = PBXGroup;
 			children = (
+				61AFA20B244D0FB4005E78DA /* metabookapp.entitlements */,
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.m */,
@@ -291,6 +293,7 @@
 						TestTargetID = 13B07F861A680F5B00A75B9A;
 					};
 					13B07F861A680F5B00A75B9A = {
+						DevelopmentTeam = H824UX64GY;
 						LastSwiftMigration = 1120;
 					};
 					2D02E47A1E0B4A5D006451C7 = {
@@ -628,13 +631,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = metabookapp/metabookapp.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H824UX64GY;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
 				INFOPLIST_FILE = metabookapp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -643,8 +649,10 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = metabookapp;
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -655,8 +663,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = metabookapp/metabookapp.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H824UX64GY;
 				INFOPLIST_FILE = metabookapp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -665,7 +676,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = metabookapp;
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;

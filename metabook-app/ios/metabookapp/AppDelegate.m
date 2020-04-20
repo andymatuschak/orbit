@@ -8,8 +8,8 @@
 #import <UMReactNativeAdapter/UMNativeModulesProxy.h>
 #import <UMReactNativeAdapter/UMModuleRegistryAdapter.h>
 
-
-#if DEBUG
+#if 0
+//#if DEBUG && !TARGET_OS_MACCATALYST
 #import <FlipperKit/FlipperClient.h>
 #import <FlipperKitLayoutPlugin/FlipperKitLayoutPlugin.h>
 #import <FlipperKitUserDefaultsPlugin/FKUserDefaultsPlugin.h>
@@ -36,7 +36,8 @@ static void InitializeFlipper(UIApplication *application) {
 {
   self.moduleRegistryAdapter = [[UMModuleRegistryAdapter alloc] initWithModuleRegistryProvider:[[UMModuleRegistryProvider alloc] init]];
 
-#if DEBUG
+#if 0
+//#if DEBUG && !TARGET_OS_MACCATALYST
   InitializeFlipper(application);
 #endif
 
@@ -53,6 +54,25 @@ static void InitializeFlipper(UIApplication *application) {
   self.window.rootViewController = rootViewController;
   [self.window makeKeyAndVisible];
   return YES;
+}
+
+- (void)buildMenuWithBuilder:(id<UIMenuBuilder>)builder {
+  [super buildMenuWithBuilder:builder];
+
+  UIKeyCommand *clearCacheCommand = [UIKeyCommand keyCommandWithInput:@"K" modifierFlags:UIKeyModifierCommand | UIKeyModifierControl action:@selector(clearCaches)];
+  clearCacheCommand.title = @"Clear caches";
+  UIMenu *debugMenu = [UIMenu menuWithTitle:@"Debug" children:@[clearCacheCommand]];
+
+  [builder insertSiblingMenu:debugMenu beforeMenuForIdentifier:UIMenuHelp];
+}
+
+- (void)clearCaches {
+  NSURL *cacheURL = [[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask][0];
+  [[NSFileManager defaultManager] removeItemAtURL:cacheURL error:nil];
+
+  NSURL *documentsURL = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask][0];
+  [[NSFileManager defaultManager] removeItemAtURL:documentsURL error:nil];
+
 }
 
 - (NSArray<id<RCTBridgeModule>> *)extraModulesForBridge:(RCTBridge *)bridge

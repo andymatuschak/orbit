@@ -9,5 +9,7 @@ export default functions.firestore
     const actionLog = snapshot.data() as ActionLogDocument<
       firebase.firestore.Timestamp
     >;
-    await updatePromptStateCacheWithLog(actionLog, context.params["userID"]);
+    if (!actionLog.suppressTaskStateCacheUpdate) {
+      await updatePromptStateCacheWithLog(actionLog, context.params["userID"]);
+    }
   });
