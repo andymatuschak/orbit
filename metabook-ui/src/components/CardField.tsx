@@ -3,13 +3,40 @@ import {
   imageAttachmentType,
   PromptField,
 } from "metabook-core";
-import React from "react";
-import { Image, StyleSheet, View } from "react-native";
-import Markdown from "react-native-markdown-display";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Image,
+  LayoutChangeEvent,
+  StyleSheet,
+  TextStyle,
+  View,
+} from "react-native";
+import Markdown, * as MarkdownDisplay from "react-native-markdown-display";
 import { AttachmentResolutionMap } from "../reviewItem";
 import { gridUnit } from "../styles/layout";
 
 import typography from "../styles/typography";
+
+function getMarkdownStyles(shrinkFactor: number) {
+  let paragraphStyles: TextStyle;
+  switch (shrinkFactor) {
+    case 0:
+      paragraphStyles = typography.cardBodyText;
+      break;
+    case 1:
+      paragraphStyles = typography.smallCardBodyText;
+      break;
+    case 2:
+      paragraphStyles = typography.smallestCardBodyText;
+      break;
+    default:
+      throw new Error("Unknown shrink factor");
+  }
+  paragraphStyles.marginBottom = paragraphStyles.lineHeight! / 2.0;
+  return {
+    paragraph: paragraphStyles,
+  };
+}
 
 export default React.memo(function CardField(props: {
   promptField: PromptField;
@@ -28,9 +55,49 @@ export default React.memo(function CardField(props: {
       imageURL = imageURLReferences[0].url;
     }
   }
+
+  const [shrinkFactor, setShrinkFactor] = useState(0);
+
+  const [markdownHeight, setMarkdownHeight] = useState<number | null>(null);
+  const [containerHeight, setContainerHeight] = useState<number | null>(null);
+  useEffect(() => {
+    if (markdownHeight && containerHeight && markdownHeight > containerHeight) {
+      setShrinkFactor((shrinkFactor) => Math.min(shrinkFactor + 1, 2));
+    }
+  }, [markdownHeight, containerHeight]);
+
+  const onContainerLayout = useCallback(
+    (event: LayoutChangeEvent) =>
+      setContainerHeight(event.nativeEvent.layout.height),
+    [],
+  );
+
+  const renderRules = useMemo<MarkdownDisplay.RenderRules>(
+    () => ({
+      body: function MarkdownRoot(node, children, parent, styles) {
+        return (
+          <View
+            key={node.key}
+            style={styles._VIEW_SAFE_body}
+            onLayout={(event) =>
+              setMarkdownHeight(event.nativeEvent.layout.height)
+            }
+          >
+            {children}
+          </View>
+        );
+      },
+    }),
+    [],
+  );
+
+  const markdownStyles = useMemo(() => getMarkdownStyles(shrinkFactor), [
+    shrinkFactor,
+  ]);
+
   return (
-    <View style={styles.container}>
-      <Markdown style={markdownStyles} mergeStyle={false}>
+    <View style={styles.container} onLayout={onContainerLayout}>
+      <Markdown rules={renderRules} style={markdownStyles} mergeStyle={false}>
         {promptField.contents}
       </Markdown>
       {imageURL && (
@@ -48,13 +115,6 @@ export default React.memo(function CardField(props: {
       )}
     </View>
   );
-});
-
-const markdownStyles = StyleSheet.create({
-  paragraph: {
-    ...typography.cardBodyText,
-    marginBottom: typography.cardBodyText.lineHeight / 2.0,
-  },
 });
 
 const styles = StyleSheet.create({

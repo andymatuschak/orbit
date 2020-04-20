@@ -4,8 +4,20 @@ const fontFamily = "Libre Franklin";
 
 export default {
   cardBodyText: {
-    fontSize: 18,
-    lineHeight: 1.625 * 18,
+    fontSize: 16,
+    lineHeight: 1.5 * 16,
+    color: colors.textColor,
+  },
+
+  smallCardBodyText: {
+    fontSize: 15,
+    lineHeight: 1.45 * 15,
+    color: colors.textColor,
+  },
+
+  smallestCardBodyText: {
+    fontSize: 13,
+    lineHeight: 1.35 * 13,
     color: colors.textColor,
   },
 };

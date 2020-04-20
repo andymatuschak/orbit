@@ -65,6 +65,34 @@ export const basic = () => (
   />
 );
 
+export const longText = () => (
+  <View>
+    <TestCard
+      showsNeedsRetryNotice={false}
+      reviewItem={{
+        reviewItemType: "prompt",
+        prompt: {
+          ...testBasicPrompt,
+          question: {
+            attachments: [],
+            contents:
+              "Faucibus sit at fusce egestas felis per tristique vitae arcu interdum magna, ut fermentum habitasse non parturient sem in vehicula eget sed, hac molestie lacus vestibulum primis laoreet nascetur risus posuere nostra. Blandit scelerisque montes dolor quam varius fermentum eget id, sagittis cursus at elementum fames donec elit, mauris ultrices sociis nascetur pretium auctor quisque. Gravida arcu fames euismod vestibulum est nisi habitasse integer eu justo curabitur, nec velit ligula non per dictum rhoncus lacus fermentum taciti, varius pellentesque purus habitant platea cubilia vel mus diam primis.",
+          },
+          answer: {
+            attachments: [],
+            contents:
+              "Faucibus sit at fusce egestas felis per tristique vitae arcu interdum magna, ut fermentum habitasse non parturient sem in vehicula eget sed, hac molestie lacus vestibulum primis laoreet nascetur risus posuere nostra. Blandit scelerisque montes dolor quam varius fermentum eget id, sagittis cursus at elementum fames donec elit,",
+          },
+        },
+        promptParameters: null,
+        promptState: null,
+        attachmentResolutionMap: null,
+      }}
+      shouldLabelApplicationPrompts={false}
+    />
+  </View>
+);
+
 export const applicationPrompt = () => (
   <TestCard
     showsNeedsRetryNotice={false}
