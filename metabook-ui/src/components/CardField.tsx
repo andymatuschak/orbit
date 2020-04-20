@@ -61,5 +61,6 @@ const styles = StyleSheet.create({
   container: {
     padding: gridUnit,
     flex: 1,
+    overflow: "scroll",
   },
 });
