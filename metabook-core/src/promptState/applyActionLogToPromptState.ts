@@ -77,14 +77,19 @@ function applyPromptRepetitionActionLogToPromptState<
     currentlyNeedsRetry,
   });
 
+  // We'll generate a small offset, so that cards don't always end up in the same order. Here the maximum jitter is 10 minutes.
+  const jitter = (promptActionLog.timestampMillis % 1000) * (60 * 10);
+
   let newDueTimestampMillis: number;
   if (
     supportsRetry &&
     promptActionLog.outcome === PromptRepetitionOutcome.Forgotten
   ) {
-    newDueTimestampMillis = promptActionLog.timestampMillis + 600;
+    // Assign it to be due in 10 minutes or so.
+    newDueTimestampMillis = promptActionLog.timestampMillis + 300 + jitter;
   } else {
-    newDueTimestampMillis = promptActionLog.timestampMillis + newInterval;
+    newDueTimestampMillis =
+      promptActionLog.timestampMillis + newInterval + jitter;
   }
 
   return {

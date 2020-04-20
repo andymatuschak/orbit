@@ -218,13 +218,19 @@ describe("repetition", () => {
         getIDForActionLog(getActionLogFromPromptActionLog(testRepetitionLog)),
       ],
       timestampMillis:
-        testRepetitionLog.timestampMillis + scheduleSequence[3].interval,
+        testRepetitionLog.timestampMillis + scheduleSequence[3].interval + 50,
     };
     const nextPromptState = applyActionLogToPromptState({
       promptActionLog: log,
       basePromptState,
       schedule: testSchedule,
     }) as PromptState;
+    expect(nextPromptState.dueTimestampMillis).toBeGreaterThan(
+      log.timestampMillis + nextPromptState.intervalMillis,
+    );
+    expect(nextPromptState.dueTimestampMillis).toBeLessThan(
+      log.timestampMillis + nextPromptState.intervalMillis + 1000 * 60 * 10,
+    );
     expect(nextPromptState.bestIntervalMillis).toEqual(
       log.timestampMillis - testRepetitionLog.timestampMillis,
     );
