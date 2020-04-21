@@ -2,13 +2,17 @@ import {
   ActionLog,
   applyActionLogToPromptState,
   getIDForActionLog,
+  getIDForPrompt,
   getPromptActionLogFromActionLog,
   ingestActionLogType,
+  Prompt,
   PromptState,
   PromptTaskID,
   repetitionActionLogType,
 } from "metabook-core";
 import fs from "fs";
+import { getReferenceForPromptID } from "metabook-firebase-support";
+import { getAdminApp } from "./adminApp";
 import plan from "./importPlan.json";
 
 function formatMillis(millis: number): string {
@@ -35,6 +39,15 @@ function formatMillis(millis: number): string {
 (async () => {
   const promptStates = new Map<PromptTaskID, PromptState>();
   const logs: { [key: string]: ActionLog } = {};
+
+  const adminApp = getAdminApp();
+  const adminDB = adminApp.firestore();
+  const refs = (plan.prompts as Prompt[]).map((prompt) =>
+    getReferenceForPromptID(adminDB, getIDForPrompt(prompt)),
+  );
+  console.log(`Requesting ${refs.length} prompts`, Date.now());
+  const snapshots = await adminDB.getAll(...refs);
+  console.log(`Got ${snapshots.length} snapshots`, Date.now());
 
   const taskIDsToInspect: Set<PromptTaskID> = new Set();
   for (const log of plan.logs) {

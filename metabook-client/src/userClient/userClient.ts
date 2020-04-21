@@ -3,7 +3,7 @@ import { MetabookUnsubscribe } from "../types/unsubscribe";
 
 export interface MetabookUserClient {
   subscribeToPromptStates(
-    query: MetabookCardStateQuery,
+    query: PromptStateQuery,
     onPromptStatesDidUpdate: (
       newPromptStates: MetabookPromptStateSnapshot,
     ) => void,
@@ -11,7 +11,7 @@ export interface MetabookUserClient {
   ): MetabookUnsubscribe;
 
   getPromptStates(
-    query: MetabookCardStateQuery,
+    query: PromptStateQuery,
   ): Promise<MetabookPromptStateSnapshot>;
 
   recordActionLogs(logs: ActionLog[]): Promise<unknown>;
@@ -19,7 +19,9 @@ export interface MetabookUserClient {
 
 // TODO
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface MetabookCardStateQuery {}
+export interface PromptStateQuery {
+  dueBeforeTimestampMillis?: number;
+}
 
 export type MetabookPromptStateSnapshot = ReadonlyMap<
   PromptTaskID,

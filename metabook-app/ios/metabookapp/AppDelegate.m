@@ -3,6 +3,7 @@
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
+#import <React/RCTLog.h>
 
 #import <UMCore/UMModuleRegistry.h>
 #import <UMReactNativeAdapter/UMNativeModulesProxy.h>
@@ -28,43 +29,87 @@ static void InitializeFlipper(UIApplication *application) {
 }
 #endif
 
+@interface AppDelegate ()
+
+@property (nonatomic, strong) NSDictionary *launchOptions;
+
+@end
+
+
 @implementation AppDelegate
 
 @synthesize window = _window;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  self.moduleRegistryAdapter = [[UMModuleRegistryAdapter alloc] initWithModuleRegistryProvider:[[UMModuleRegistryProvider alloc] init]];
 
+  RCTSetLogThreshold(RCTLogLevelInfo - 1);
 #if 0
 //#if DEBUG && !TARGET_OS_MACCATALYST
   InitializeFlipper(application);
 #endif
 
-  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
-  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
-                                                   moduleName:@"main"
-                                            initialProperties:nil];
-
-  rootView.backgroundColor = [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1];
-
-  self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-  UIViewController *rootViewController = [UIViewController new];
-  rootViewController.view = rootView;
-  self.window.rootViewController = rootViewController;
-  [self.window makeKeyAndVisible];
   return YES;
 }
 
+- (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions {
+  self.moduleRegistryAdapter = [[UMModuleRegistryAdapter alloc] initWithModuleRegistryProvider:[[UMModuleRegistryProvider alloc] init]];
+
+  if ([scene isKindOfClass:[UIWindowScene class]]) {
+    UIWindowScene *windowScene = (UIWindowScene *)scene;
+
+    self.window = [[UIWindow alloc] initWithWindowScene:windowScene];
+    [[UIApplication sharedApplication] delegate].window = self.window;
+    #if DEBUG
+    [self initializeReactNativeApp];
+    #else
+    EXUpdatesAppController *controller = [EXUpdatesAppController sharedInstance];
+    controller.delegate = self;
+    [controller startAndShowLaunchScreen:self.window];
+    #endif
+
+#if TARGET_OS_MACCATALYST
+    windowScene.titlebar.toolbar.visible = false;
+    windowScene.titlebar.titleVisibility = UITitlebarTitleVisibilityHidden;
+#endif
+  }
+}
+
+- (void)initializeReactNativeApp {
+  if (!self.bridge) {
+    self.bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:nil];
+
+    RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:self.bridge
+                                                     moduleName:@"main"
+                                              initialProperties:nil];
+    rootView.backgroundColor = [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1];
+
+    UIViewController *rootViewController = [UIViewController new];
+    rootViewController.view = rootView;
+    self.window.rootViewController = rootViewController;
+
+    [self.window makeKeyAndVisible];
+  }
+}
+
+- (void)appController:(EXUpdatesAppController *)appController didStartWithSuccess:(BOOL)success
+{
+  [self initializeReactNativeApp];
+  appController.bridge = self.bridge;
+}
+
+
+#if TARGET_OS_MACCATALYST
 - (void)buildMenuWithBuilder:(id<UIMenuBuilder>)builder {
   [super buildMenuWithBuilder:builder];
 
   UIKeyCommand *clearCacheCommand = [UIKeyCommand keyCommandWithInput:@"K" modifierFlags:UIKeyModifierCommand | UIKeyModifierControl action:@selector(clearCaches)];
-  clearCacheCommand.title = @"Clear caches";
+  clearCacheCommand.title = @"Clear Caches";
   UIMenu *debugMenu = [UIMenu menuWithTitle:@"Debug" children:@[clearCacheCommand]];
 
   [builder insertSiblingMenu:debugMenu beforeMenuForIdentifier:UIMenuHelp];
 }
+#endif
 
 - (void)clearCaches {
   NSURL *cacheURL = [[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask][0];
@@ -73,6 +118,9 @@ static void InitializeFlipper(UIApplication *application) {
   NSURL *documentsURL = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask][0];
   [[NSFileManager defaultManager] removeItemAtURL:documentsURL error:nil];
 
+#if DEBUG
+  exit(0);
+#endif
 }
 
 - (NSArray<id<RCTBridgeModule>> *)extraModulesForBridge:(RCTBridge *)bridge
@@ -88,7 +136,7 @@ static void InitializeFlipper(UIApplication *application) {
 #if DEBUG
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index" fallbackResource:nil];
 #else
-  return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+  return [[EXUpdatesAppController sharedInstance] launchAssetUrl];
 #endif
 }
 

@@ -29,12 +29,14 @@ export async function enableFirebasePersistence(): Promise<PersistenceStatus> {
     return persistenceStatus;
   }
 
+  console.log("[Performance] Requesting persistence", Date.now() / 1000.0);
   return getFirebaseApp()
     .firestore()
     .enablePersistence()
     .then(() => {
       persistenceStatus = "enabled";
       console.log("Enabled persistence");
+      console.log("[Performance] Enabled persistence", Date.now() / 1000.0);
       return persistenceStatus;
     })
     .catch((error) => {

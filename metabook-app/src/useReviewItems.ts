@@ -30,7 +30,9 @@ import {
   useRef,
   useState,
 } from "react";
+import DataRecordClient from "./dataRecordClient";
 import { enableFirebasePersistence, PersistenceStatus } from "./firebase";
+import promptDataCache from "./dataRecordCache";
 
 function usePersistenceStatus() {
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(
@@ -79,8 +81,12 @@ function usePromptStates(
     }
 
     console.log("Subscribing to prompt states");
+    console.log(
+      "[Performance] Subscribing to prompt states",
+      Date.now() / 1000.0,
+    );
     return userClient.subscribeToPromptStates(
-      {},
+      { dueBeforeTimestampMillis: Date.now() }, // TODO: use fuzzy due dates
       setPromptStates,
       subscriptionDidFail,
     );
@@ -98,7 +104,7 @@ function useWeakRef<T>(val: T): MutableRefObject<T> {
 }
 
 function usePrompts(
-  dataClient: MetabookDataClient,
+  dataRecordClient: DataRecordClient,
   promptIDs: Set<PromptID>,
 ): MetabookDataSnapshot<PromptID, Prompt> | null {
   const unsubscribeFromDataRequest = useRef<(() => void) | null>(null);
@@ -124,10 +130,17 @@ function usePrompts(
 
     if (promptIDsToFetch.size > 0) {
       console.log("Fetching prompt specs", promptIDsToFetch);
-      const { unsubscribe } = dataClient.getPrompts(
-        promptIDsToFetch,
-        (newPrompts) => {
-          console.log("Got new prompt specs", newPrompts);
+      console.log("[Performance] Fetching prompt specs", Date.now() / 1000.0);
+      let isCancelled = false;
+      unsubscribeFromDataRequest.current = () => {
+        isCancelled = true;
+      };
+      dataRecordClient.getPrompts(promptIDs).then((newPrompts) => {
+        if (!isCancelled) {
+          console.log(
+            "[Performance] Fetched prompt specs",
+            Date.now() / 1000.0,
+          );
           setPrompts(
             (oldPrompts) =>
               new Map([
@@ -135,22 +148,21 @@ function usePrompts(
                 ...newPrompts.entries(),
               ]),
           );
-        },
-      );
-      unsubscribeFromDataRequest.current = unsubscribe;
+        }
+      });
     }
 
     return () => {
       unsubscribeFromDataRequest.current?.();
       unsubscribeFromDataRequest.current = null;
     };
-  }, [weakPrompts, dataClient, promptIDs]);
+  }, [weakPrompts, dataRecordClient, promptIDs]);
 
   return prompts;
 }
 
 function useAttachments(
-  dataClient: MetabookDataClient,
+  dataRecordClient: DataRecordClient,
   attachmentIDs: Set<AttachmentID>,
 ): MetabookDataSnapshot<AttachmentID, AttachmentURLReference> | null {
   const unsubscribeFromDataRequest = useRef<(() => void) | null>(null);
@@ -179,21 +191,34 @@ function useAttachments(
 
     if (attachmentIDsToFetch.size > 0) {
       console.log("Fetching attachments", attachmentIDs);
-      const { unsubscribe } = dataClient.getAttachments(
-        attachmentIDs,
-        (attachmentResolutionMap) => {
-          console.log("Got new attachments", attachmentIDs);
-          setAttachmentResolutionMap(attachmentResolutionMap);
-        },
-      );
-      unsubscribeFromDataRequest.current = unsubscribe;
+      let isCancelled = false;
+      unsubscribeFromDataRequest.current = () => {
+        isCancelled = true;
+      };
+      dataRecordClient
+        .getAttachments(attachmentIDs)
+        .then((newAttachmentResolutionMap) => {
+          if (!isCancelled) {
+            console.log(
+              "[Performance] Fetched attachments",
+              Date.now() / 1000.0,
+            );
+            setAttachmentResolutionMap(
+              (oldAttachmentResolutionMap) =>
+                new Map([
+                  ...(oldAttachmentResolutionMap?.entries() ?? []),
+                  ...newAttachmentResolutionMap.entries(),
+                ]),
+            );
+          }
+        });
     }
 
     return () => {
       unsubscribeFromDataRequest.current?.();
       unsubscribeFromDataRequest.current = null;
     };
-  }, [weakAttachmentResolutionMap, dataClient, attachmentIDs]);
+  }, [weakAttachmentResolutionMap, dataRecordClient, attachmentIDs]);
 
   return attachmentResolutionMap;
 }
@@ -243,7 +268,7 @@ function getAttachmentIDsInPrompts(
 
 export function useReviewItems(
   userClient: MetabookUserClient,
-  dataClient: MetabookDataClient,
+  dataRecordClient: DataRecordClient,
 ): ReviewItem[] | null {
   const promptStates = usePromptStates(userClient);
 
@@ -282,17 +307,21 @@ export function useReviewItems(
     [orderedDuePromptTasks],
   );
 
-  const prompts = usePrompts(dataClient, duePromptIDSet);
+  const prompts = usePrompts(dataRecordClient, duePromptIDSet);
 
   const duePromptAttachmentIDSet: Set<AttachmentID> = useMemo(
     () => (prompts ? getAttachmentIDsInPrompts(prompts) : new Set()),
     [prompts],
   );
 
-  const attachments = useAttachments(dataClient, duePromptAttachmentIDSet);
+  const attachments = useAttachments(
+    dataRecordClient,
+    duePromptAttachmentIDSet,
+  );
 
   return useMemo(() => {
     console.log("Computing review items");
+    console.log("[Performance] Computing review items", Date.now() / 1000.0);
     return (
       orderedDuePromptTasks
         ?.map((task): PromptReviewItem | null => {
@@ -334,7 +363,6 @@ export function useReviewItems(
               } as PromptReviewItem;
             }
           } else {
-            console.log("Still loading task spec", task.promptID);
             return null;
           }
         })

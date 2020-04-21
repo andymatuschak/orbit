@@ -9,12 +9,14 @@ import {
   getIDForPrompt,
   imageAttachmentType,
 } from "metabook-core";
-import { getReferenceForPromptID } from "metabook-firebase-shared";
+import { getReferenceForDataRecordID } from "metabook-firebase-support";
 import { testBasicPrompt } from "metabook-sample-data";
 import { MetabookFirebaseDataClient } from "./dataClient";
 
 const testProjectID = "metabook-system";
+const functionsEmulatorURL = "http://localhost:5001";
 let testApp: firebase.app.App;
+let testFunctions: firebase.functions.Functions;
 let dataClient: MetabookFirebaseDataClient;
 let cacheWriteHandler: jest.Mock;
 
@@ -26,8 +28,8 @@ beforeEach(async () => {
   testApp = firebaseTesting.initializeTestApp({
     projectId: testProjectID,
   });
-  const testFunctions = testApp.functions();
-  testFunctions.useFunctionsEmulator("http://localhost:5001");
+  testFunctions = testApp.functions();
+  testFunctions.useFunctionsEmulator(functionsEmulatorURL);
   await testApp.firestore().enablePersistence();
 
   cacheWriteHandler = jest.fn();
@@ -50,7 +52,7 @@ async function writeTestPromptData() {
     projectId: testProjectID,
   });
   const adminDatabase = adminApp.firestore();
-  await getReferenceForPromptID(adminDatabase, testPromptID).set(
+  await getReferenceForDataRecordID(adminDatabase, testPromptID).set(
     testBasicPrompt,
   );
 }
@@ -58,53 +60,21 @@ async function writeTestPromptData() {
 describe("getData", () => {
   test("reads card data", async () => {
     await writeTestPromptData();
-
-    const mockFn = jest.fn();
-    await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
-    expect(mockFn.mock.calls[0][0]).toMatchObject(
-      new Map([[testPromptID, testBasicPrompt]]),
-    );
+    const prompts = await dataClient.getPrompts(new Set([testPromptID]));
+    expect(prompts[0]).toMatchObject(testBasicPrompt);
   });
 
-  test("calls callback even when set of cards to read is empty", async () => {
+  test("returns empty list when input is empty", async () => {
     const mockFn = jest.fn();
-    await dataClient.getPrompts(new Set(), mockFn).completion;
-    expect(mockFn).toHaveBeenCalled();
-  });
-
-  test("reads cached data", async () => {
-    await writeTestPromptData();
-
-    await testApp.firestore().disableNetwork();
-    const mockFn = jest.fn();
-    await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
-    expect(mockFn.mock.calls[0][0].get(testPromptID)).toBeInstanceOf(Error);
-
-    await testApp.firestore().enableNetwork();
-    mockFn.mockClear();
-    await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
-    expect(mockFn.mock.calls[0][0]).toMatchObject(
-      new Map([[testPromptID, testBasicPrompt]]),
-    );
-
-    await testApp.firestore().disableNetwork();
-    mockFn.mockClear();
-    await dataClient.getPrompts(new Set([testPromptID]), mockFn).completion;
-    expect(mockFn.mock.calls[0][0]).toMatchObject(
-      new Map([[testPromptID, testBasicPrompt]]),
-    );
+    expect(await dataClient.getPrompts(new Set([]))).toMatchObject([]);
   });
 });
 
 test("records prompt spec", async () => {
   await dataClient.recordPrompts([testBasicPrompt]);
   const testPromptTaskID = getIDForPrompt(testBasicPrompt);
-  const mockFn = jest.fn();
-  await dataClient.getPrompts(new Set([testPromptTaskID]), mockFn).completion;
-  expect(mockFn.mock.calls[0][0].get(testPromptTaskID)).toMatchObject(
-    testBasicPrompt,
-  );
-  // TODO test recording new prompts when the network is down
+  const prompts = await dataClient.getPrompts([testPromptTaskID]);
+  expect(prompts[0]).toMatchObject(testBasicPrompt);
 });
 
 test("records attachments", async () => {
@@ -121,12 +91,6 @@ test("records attachments", async () => {
   const mockURL = "https://test.org";
   cacheWriteHandler.mockImplementation(() => mockURL);
 
-  const mockFn = jest.fn();
-  await dataClient.getAttachments(new Set([testAttachmentID]), mockFn)
-    .completion;
-  expect(mockFn.mock.calls[0][0].get(testAttachmentID)).toMatchObject({
-    type: imageAttachmentType,
-    url: mockURL,
-  });
-  // TODO test recording new prompts when the network is down
+  const attachments = await dataClient.getAttachments([testAttachmentID]);
+  expect(attachments[0]).toMatchObject(testAttachment);
 });

@@ -9,7 +9,7 @@ import {
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
 import getPromptStates from "../getPromptStates";
 import {
-  MetabookCardStateQuery,
+  PromptStateQuery,
   MetabookPromptStateSnapshot,
   MetabookUserClient,
 } from "../userClient";
@@ -26,7 +26,7 @@ export class MetabookLocalUserClient implements MetabookUserClient {
   }
 
   getPromptStates(
-    query: MetabookCardStateQuery,
+    query: PromptStateQuery,
   ): Promise<MetabookPromptStateSnapshot> {
     return getPromptStates(this, query);
   }
@@ -65,7 +65,7 @@ export class MetabookLocalUserClient implements MetabookUserClient {
   }
 
   subscribeToPromptStates(
-    query: MetabookCardStateQuery,
+    query: PromptStateQuery,
     onCardStatesDidUpdate: (newCardStates: MetabookPromptStateSnapshot) => void,
     onError: (error: Error) => void,
   ): MetabookUnsubscribe {
@@ -89,7 +89,7 @@ export class MetabookLocalUserClient implements MetabookUserClient {
 }
 
 interface CardStateSubscriber {
-  query: MetabookCardStateQuery;
+  query: PromptStateQuery;
   onCardStatesDidUpdate: (newCardStates: MetabookPromptStateSnapshot) => void;
   onError: (error: Error) => void;
 }

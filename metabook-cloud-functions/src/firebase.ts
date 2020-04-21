@@ -13,11 +13,12 @@ import {
 } from "metabook-core";
 import {
   ActionLogDocument,
-  getReferenceForAttachmentID,
-  getReferenceForPromptID,
+  DataRecord,
+  DataRecordID,
+  getReferenceForDataRecordID,
   getTaskStateCacheReferenceForTaskID,
   PromptStateCache,
-} from "metabook-firebase-shared";
+} from "metabook-firebase-support";
 
 let _database: firebase.firestore.Firestore | null = null;
 function getDatabase(): firebase.firestore.Firestore {
@@ -34,7 +35,7 @@ export function recordPrompts(prompts: Prompt[]): Promise<PromptID[]> {
   return Promise.all(
     prompts.map(async (promptData) => {
       const promptID = getIDForPrompt(promptData);
-      const dataRef = getReferenceForPromptID(getDatabase(), promptID);
+      const dataRef = getReferenceForDataRecordID(getDatabase(), promptID);
       await dataRef
         .create(promptData)
         .then(() => {
@@ -48,6 +49,16 @@ export function recordPrompts(prompts: Prompt[]): Promise<PromptID[]> {
   );
 }
 
+export async function getDataRecords<R extends DataRecord>(
+  recordIDs: DataRecordID<R>[],
+): Promise<(R | null)[]> {
+  const db = getDatabase();
+  const snapshots = (await getDatabase().getAll(
+    ...recordIDs.map((recordID) => getReferenceForDataRecordID(db, recordID)),
+  )) as firebase.firestore.DocumentSnapshot<R>[];
+  return snapshots.map((snapshot) => snapshot.data() ?? null);
+}
+
 export function recordAttachments(
   attachments: Attachment[],
 ): Promise<AttachmentID[]> {
@@ -58,7 +69,7 @@ export function recordAttachments(
       const attachmentID = getIDForAttachment(
         Buffer.from(attachment.contents, "binary"),
       );
-      const dataRef = getReferenceForAttachmentID(getDatabase(), attachmentID);
+      const dataRef = getReferenceForDataRecordID(getDatabase(), attachmentID);
       await dataRef
         .create(attachment)
         .then(() => {

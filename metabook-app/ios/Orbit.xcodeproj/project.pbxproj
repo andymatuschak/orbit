@@ -17,6 +17,9 @@
 		2D02E4BD1E0B4A84006451C7 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		2D02E4BF1E0B4AB3006451C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		2DCD954D1E0B4F2C00145EB5 /* metabookappTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* metabookappTests.m */; };
+		6194ADB2244E30C4000B8E21 /* app.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 6194ADB0244E30C4000B8E21 /* app.bundle */; };
+		6194ADB3244E30C4000B8E21 /* app.manifest in Resources */ = {isa = PBXBuildFile; fileRef = 6194ADB1244E30C4000B8E21 /* app.manifest */; };
+		61AFA20E244E2598005E78DA /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 61AFA20D244E2598005E78DA /* Expo.plist */; };
 		695E1DC5A1E4BB4050DB4189 /* libPods-metabookapp-tvOSTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F11CAD6CFFA7F3606BAEE09 /* libPods-metabookapp-tvOSTests.a */; };
 		C92A182AA20C9FEC1AC5D900 /* libPods-metabookapp-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EBB76F96A5ADDF8652750AC5 /* libPods-metabookapp-tvOS.a */; };
 		DBAC250BA7BAD3D5D38AAD9D /* libPods-metabookapp-metabookappTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6482A7365C3563C4AA98C8B /* libPods-metabookapp-metabookappTests.a */; };
@@ -41,11 +44,11 @@
 
 /* Begin PBXFileReference section */
 		008F07F21AC5B25A0029DE68 /* main.jsbundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
-		00E356EE1AD99517003FC87E /* metabookappTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = metabookappTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		00E356EE1AD99517003FC87E /* OrbitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OrbitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* metabookappTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = metabookappTests.m; sourceTree = "<group>"; };
 		134375746A66EAB58D4C5A8E /* Pods-metabookapp-tvOSTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabookapp-tvOSTests.release.xcconfig"; path = "Target Support Files/Pods-metabookapp-tvOSTests/Pods-metabookapp-tvOSTests.release.xcconfig"; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* metabookapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = metabookapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07F961A680F5B00A75B9A /* Orbit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Orbit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = metabookapp/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = metabookapp/AppDelegate.m; sourceTree = "<group>"; };
 		13B07FB21A68108700A75B9A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
@@ -53,15 +56,18 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = metabookapp/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = metabookapp/main.m; sourceTree = "<group>"; };
 		29090050886AD884620A5DDF /* Pods-metabookapp-tvOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabookapp-tvOS.debug.xcconfig"; path = "Target Support Files/Pods-metabookapp-tvOS/Pods-metabookapp-tvOS.debug.xcconfig"; sourceTree = "<group>"; };
-		2D02E47B1E0B4A5D006451C7 /* metabookapp-tvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "metabookapp-tvOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2D02E4901E0B4A5D006451C7 /* metabookapp-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "metabookapp-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D02E47B1E0B4A5D006451C7 /* Orbit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Orbit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D02E4901E0B4A5D006451C7 /* Orbit-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Orbit-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3104BE9F306E1BE3512BDD9F /* Pods-metabookapp-metabookappTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabookapp-metabookappTests.release.xcconfig"; path = "Target Support Files/Pods-metabookapp-metabookappTests/Pods-metabookapp-metabookappTests.release.xcconfig"; sourceTree = "<group>"; };
 		329CF1EA60815DF344BD0350 /* Pods-metabookapp-metabookappTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabookapp-metabookappTests.debug.xcconfig"; path = "Target Support Files/Pods-metabookapp-metabookappTests/Pods-metabookapp-metabookappTests.debug.xcconfig"; sourceTree = "<group>"; };
 		4F4C3BD459AF2B5589922424 /* Pods-metabookapp-tvOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabookapp-tvOS.release.xcconfig"; path = "Target Support Files/Pods-metabookapp-tvOS/Pods-metabookapp-tvOS.release.xcconfig"; sourceTree = "<group>"; };
 		593ADEADA394BF03E53B8AE2 /* Pods-metabookapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabookapp.release.xcconfig"; path = "Target Support Files/Pods-metabookapp/Pods-metabookapp.release.xcconfig"; sourceTree = "<group>"; };
 		5B86B292223CAE89B49DE48C /* libPods-metabookapp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-metabookapp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5F11CAD6CFFA7F3606BAEE09 /* libPods-metabookapp-tvOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-metabookapp-tvOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6194ADB0244E30C4000B8E21 /* app.bundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = app.bundle; sourceTree = "<group>"; };
+		6194ADB1244E30C4000B8E21 /* app.manifest */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = app.manifest; sourceTree = "<group>"; };
 		61AFA20B244D0FB4005E78DA /* metabookapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = metabookapp.entitlements; path = metabookapp/metabookapp.entitlements; sourceTree = "<group>"; };
+		61AFA20D244E2598005E78DA /* Expo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Expo.plist; sourceTree = "<group>"; };
 		8B28552F11E9836F2EF049AF /* Pods-metabookapp-tvOSTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabookapp-tvOSTests.debug.xcconfig"; path = "Target Support Files/Pods-metabookapp-tvOSTests/Pods-metabookapp-tvOSTests.debug.xcconfig"; sourceTree = "<group>"; };
 		C6482A7365C3563C4AA98C8B /* libPods-metabookapp-metabookappTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-metabookapp-metabookappTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E5E6A15EB832BBAC3B39B2D6 /* Pods-metabookapp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-metabookapp.debug.xcconfig"; path = "Target Support Files/Pods-metabookapp/Pods-metabookapp.debug.xcconfig"; sourceTree = "<group>"; };
@@ -166,6 +172,17 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		61AFA20C244E257A005E78DA /* Supporting */ = {
+			isa = PBXGroup;
+			children = (
+				61AFA20D244E2598005E78DA /* Expo.plist */,
+				6194ADB0244E30C4000B8E21 /* app.bundle */,
+				6194ADB1244E30C4000B8E21 /* app.manifest */,
+			);
+			name = Supporting;
+			path = Orbit/Supporting;
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -178,6 +195,7 @@
 			children = (
 				13B07FAE1A68108700A75B9A /* metabookapp */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
+				61AFA20C244E257A005E78DA /* Supporting */,
 				00E356EF1AD99517003FC87E /* metabookappTests */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
@@ -191,10 +209,10 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* metabookapp.app */,
-				00E356EE1AD99517003FC87E /* metabookappTests.xctest */,
-				2D02E47B1E0B4A5D006451C7 /* metabookapp-tvOS.app */,
-				2D02E4901E0B4A5D006451C7 /* metabookapp-tvOSTests.xctest */,
+				13B07F961A680F5B00A75B9A /* Orbit.app */,
+				00E356EE1AD99517003FC87E /* OrbitTests.xctest */,
+				2D02E47B1E0B4A5D006451C7 /* Orbit.app */,
+				2D02E4901E0B4A5D006451C7 /* Orbit-tvOSTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -202,9 +220,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		00E356ED1AD99517003FC87E /* metabookappTests */ = {
+		00E356ED1AD99517003FC87E /* OrbitTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "metabookappTests" */;
+			buildConfigurationList = 00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "OrbitTests" */;
 			buildPhases = (
 				33E13CB0B8A6E271346AED2F /* [CP] Check Pods Manifest.lock */,
 				00E356EA1AD99517003FC87E /* Sources */,
@@ -216,14 +234,14 @@
 			dependencies = (
 				00E356F51AD99517003FC87E /* PBXTargetDependency */,
 			);
-			name = metabookappTests;
+			name = OrbitTests;
 			productName = metabookappTests;
-			productReference = 00E356EE1AD99517003FC87E /* metabookappTests.xctest */;
+			productReference = 00E356EE1AD99517003FC87E /* OrbitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		13B07F861A680F5B00A75B9A /* metabookapp */ = {
+		13B07F861A680F5B00A75B9A /* Orbit */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "metabookapp" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Orbit" */;
 			buildPhases = (
 				473617A8D25B1056DD62F434 /* [CP] Check Pods Manifest.lock */,
 				FD10A7F022414F080027D42C /* Start Packager */,
@@ -236,14 +254,14 @@
 			);
 			dependencies = (
 			);
-			name = metabookapp;
+			name = Orbit;
 			productName = metabookapp;
-			productReference = 13B07F961A680F5B00A75B9A /* metabookapp.app */;
+			productReference = 13B07F961A680F5B00A75B9A /* Orbit.app */;
 			productType = "com.apple.product-type.application";
 		};
-		2D02E47A1E0B4A5D006451C7 /* metabookapp-tvOS */ = {
+		2D02E47A1E0B4A5D006451C7 /* Orbit-tvOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2D02E4BA1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "metabookapp-tvOS" */;
+			buildConfigurationList = 2D02E4BA1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "Orbit-tvOS" */;
 			buildPhases = (
 				C378ACB2C52B567888A51929 /* [CP] Check Pods Manifest.lock */,
 				FD10A7F122414F3F0027D42C /* Start Packager */,
@@ -256,14 +274,14 @@
 			);
 			dependencies = (
 			);
-			name = "metabookapp-tvOS";
+			name = "Orbit-tvOS";
 			productName = "metabookapp-tvOS";
-			productReference = 2D02E47B1E0B4A5D006451C7 /* metabookapp-tvOS.app */;
+			productReference = 2D02E47B1E0B4A5D006451C7 /* Orbit.app */;
 			productType = "com.apple.product-type.application";
 		};
-		2D02E48F1E0B4A5D006451C7 /* metabookapp-tvOSTests */ = {
+		2D02E48F1E0B4A5D006451C7 /* Orbit-tvOSTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2D02E4BB1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "metabookapp-tvOSTests" */;
+			buildConfigurationList = 2D02E4BB1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "Orbit-tvOSTests" */;
 			buildPhases = (
 				46FE8A6D72E1D16CB6BEBE23 /* [CP] Check Pods Manifest.lock */,
 				2D02E48C1E0B4A5D006451C7 /* Sources */,
@@ -275,9 +293,9 @@
 			dependencies = (
 				2D02E4921E0B4A5D006451C7 /* PBXTargetDependency */,
 			);
-			name = "metabookapp-tvOSTests";
+			name = "Orbit-tvOSTests";
 			productName = "metabookapp-tvOSTests";
-			productReference = 2D02E4901E0B4A5D006451C7 /* metabookapp-tvOSTests.xctest */;
+			productReference = 2D02E4901E0B4A5D006451C7 /* Orbit-tvOSTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -307,7 +325,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "metabookapp" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Orbit" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -320,10 +338,10 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* metabookapp */,
-				00E356ED1AD99517003FC87E /* metabookappTests */,
-				2D02E47A1E0B4A5D006451C7 /* metabookapp-tvOS */,
-				2D02E48F1E0B4A5D006451C7 /* metabookapp-tvOSTests */,
+				13B07F861A680F5B00A75B9A /* Orbit */,
+				00E356ED1AD99517003FC87E /* OrbitTests */,
+				2D02E47A1E0B4A5D006451C7 /* Orbit-tvOS */,
+				2D02E48F1E0B4A5D006451C7 /* Orbit-tvOSTests */,
 			);
 		};
 /* End PBXProject section */
@@ -340,8 +358,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6194ADB3244E30C4000B8E21 /* app.manifest in Resources */,
+				61AFA20E244E2598005E78DA /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
+				6194ADB2244E30C4000B8E21 /* app.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -375,7 +396,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh";
+			shellScript = "if [ \"$CONFIGURATION\" == \"Release\" ]; then\n  exit 0;\nfi\n\n../../node_modules/expo-updates/bundle-expo-assets.sh\n";
 		};
 		2D02E4CB1E0B4B27006451C7 /* Bundle React Native Code And Images */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -559,12 +580,12 @@
 /* Begin PBXTargetDependency section */
 		00E356F51AD99517003FC87E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 13B07F861A680F5B00A75B9A /* metabookapp */;
+			target = 13B07F861A680F5B00A75B9A /* Orbit */;
 			targetProxy = 00E356F41AD99517003FC87E /* PBXContainerItemProxy */;
 		};
 		2D02E4921E0B4A5D006451C7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2D02E47A1E0B4A5D006451C7 /* metabookapp-tvOS */;
+			target = 2D02E47A1E0B4A5D006451C7 /* Orbit-tvOS */;
 			targetProxy = 2D02E4911E0B4A5D006451C7 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -601,7 +622,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/metabookapp.app/metabookapp";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Orbit.app/Orbit";
 			};
 			name = Debug;
 		};
@@ -621,7 +642,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/metabookapp.app/metabookapp";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Orbit.app/Orbit";
 			};
 			name = Release;
 		};
@@ -640,15 +661,15 @@
 					"FB_SONARKIT_ENABLED=1",
 				);
 				INFOPLIST_FILE = metabookapp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = metabookapp;
+				PRODUCT_BUNDLE_IDENTIFIER = media.ladder.orbit;
+				PRODUCT_NAME = Orbit;
 				SUPPORTS_MACCATALYST = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -667,15 +688,15 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = H824UX64GY;
 				INFOPLIST_FILE = metabookapp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = metabookapp;
+				PRODUCT_BUNDLE_IDENTIFIER = media.ladder.orbit;
+				PRODUCT_NAME = Orbit;
 				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -703,8 +724,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.metabookapp-tvOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "media.ladder.orbit-tvOS";
+				PRODUCT_NAME = Orbit;
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 9.2;
@@ -731,8 +752,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.metabookapp-tvOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "media.ladder.orbit-tvOS";
+				PRODUCT_NAME = Orbit;
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 9.2;
@@ -761,7 +782,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.metabookapp-tvOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/metabookapp-tvOS.app/metabookapp-tvOS";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Orbit-tvOS.app/Orbit-tvOS";
 				TVOS_DEPLOYMENT_TARGET = 10.1;
 			};
 			name = Debug;
@@ -788,7 +809,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.metabookapp-tvOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/metabookapp-tvOS.app/metabookapp-tvOS";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Orbit-tvOS.app/Orbit-tvOS";
 				TVOS_DEPLOYMENT_TARGET = 10.1;
 			};
 			name = Release;
@@ -907,7 +928,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "metabookappTests" */ = {
+		00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "OrbitTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				00E356F61AD99517003FC87E /* Debug */,
@@ -916,7 +937,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "metabookapp" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Orbit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -925,7 +946,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2D02E4BA1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "metabookapp-tvOS" */ = {
+		2D02E4BA1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "Orbit-tvOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2D02E4971E0B4A5E006451C7 /* Debug */,
@@ -934,7 +955,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2D02E4BB1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "metabookapp-tvOSTests" */ = {
+		2D02E4BB1E0B4A5E006451C7 /* Build configuration list for PBXNativeTarget "Orbit-tvOSTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2D02E4991E0B4A5E006451C7 /* Debug */,
@@ -943,7 +964,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "metabookapp" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Orbit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,

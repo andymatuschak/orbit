@@ -18,19 +18,17 @@ import "node-libs-react-native/globals";
 import typography from "metabook-ui/dist/styles/typography";
 import React, { useCallback, useState } from "react";
 import { View, Text } from "react-native";
+import DataRecordCache from "./dataRecordCache";
+import DataRecordClient from "./dataRecordClient";
 import { getFirebaseApp } from "./firebase";
 import { useReviewItems } from "./useReviewItems";
 
-async function cacheWriteHandler(
-  name: string,
-  extension: string,
-  data: Buffer,
-): Promise<string> {
+async function cacheWriteHandler(name: string, data: Buffer): Promise<string> {
   const cacheDirectoryURI = FileSystem.cacheDirectory;
   if (cacheDirectoryURI === null) {
     throw new Error("Unknown cache directory");
   }
-  const cachedAttachmentURI = cacheDirectoryURI + name + "." + extension;
+  const cachedAttachmentURI = cacheDirectoryURI + name;
   await FileSystem.writeAsStringAsync(
     cachedAttachmentURI,
     base64.fromByteArray(Uint8Array.from(data)),
@@ -40,28 +38,36 @@ async function cacheWriteHandler(
   return cachedAttachmentURI;
 }
 
-export default function App() {
-  const [{ userClient, dataClient }] = useState(() => {
-    const firebaseApp = getFirebaseApp();
+async function fileExistsAtURL(url: string): Promise<boolean> {
+  const info = await FileSystem.getInfoAsync(url);
+  return info.exists;
+}
 
+export default function App() {
+  const [{ userClient, dataRecordClient }] = useState(() => {
+    const firebaseApp = getFirebaseApp();
+    const dataClient = new MetabookFirebaseDataClient(
+      firebaseApp,
+      firebaseApp.functions(),
+    );
+    const dataCache = new DataRecordCache();
     return {
       userClient: new MetabookFirebaseUserClient(
         firebaseApp.firestore(),
         "x5EWk2UT56URxbfrl7djoxwxiqH2",
       ),
-      dataClient: new MetabookFirebaseDataClient(
-        firebaseApp,
-        firebaseApp.functions(),
-        cacheWriteHandler,
-      ),
+      dataRecordClient: new DataRecordClient(dataClient, dataCache, {
+        writeFile: cacheWriteHandler,
+        fileExistsAtURL,
+      }),
     };
   });
 
-  const items = useReviewItems(userClient, dataClient);
+  const items = useReviewItems(userClient, dataRecordClient);
 
   const onMark = useCallback<ReviewAreaProps["onMark"]>(
     async (marking) => {
-      console.log("Recording update");
+      console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
       userClient
         .recordActionLogs([
@@ -85,6 +91,10 @@ export default function App() {
         ])
         .then(() => {
           console.log("Committed", marking.reviewItem.prompt);
+          console.log(
+            "[Performance] Log committed to server",
+            Date.now() / 1000.0,
+          );
         })
         .catch((error) => {
           console.error("Couldn't commit", marking.reviewItem.prompt, error);
@@ -92,6 +102,8 @@ export default function App() {
     },
     [userClient],
   );
+
+  console.log("[Performance] Render", Date.now() / 1000.0);
 
   return (
     <View

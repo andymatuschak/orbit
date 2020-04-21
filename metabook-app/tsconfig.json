@@ -3,6 +3,7 @@
   "compilerOptions": {
     "jsx": "react-native",
     "lib": ["dom", "esnext"],
+    "types": ["jest"],
     "noEmit": true,
     "skipLibCheck": true,
     "outDir": "./dist",

@@ -1,7 +1,8 @@
-import { ActionLogID, AttachmentID, PromptID } from "metabook-core";
+import { ActionLogID } from "metabook-core";
 import multihashes from "multihashes";
 import multihashing from "multihashing";
 import { getFirebaseKeyForCIDString } from "./cdidEncoding";
+import { DataRecord, DataRecordID } from "./dataRecord";
 import {
   CollectionReference,
   Database,
@@ -24,18 +25,11 @@ function getReferenceForCID<D extends Database>(
   ) as DocumentReference<D>;
 }
 
-export function getReferenceForAttachmentID<D extends Database>(
-  database: D,
-  attachmentID: AttachmentID,
-): DocumentReference<D> {
-  return getReferenceForCID(database, attachmentID);
-}
-
-export function getReferenceForPromptID<D extends Database>(
-  database: D,
-  promptID: PromptID,
-): DocumentReference<D> {
-  return getReferenceForCID(database, promptID);
+export function getReferenceForDataRecordID<
+  D extends Database,
+  R extends DataRecord
+>(database: D, recordID: DataRecordID<R>): DocumentReference<D> {
+  return getReferenceForCID(database, recordID);
 }
 
 export function getLogCollectionReference<D extends Database>(

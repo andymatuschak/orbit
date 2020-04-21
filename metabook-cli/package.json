@@ -10,6 +10,7 @@
     "firebase-functions": "^3.5.0",
     "metabook-app": "0.0.1",
     "metabook-client": "0.0.1",
+    "metabook-firebase-support": "0.0.1",
     "metabook-anki": "0.0.1"
   },
   "engines": {

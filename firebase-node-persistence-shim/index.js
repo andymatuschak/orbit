@@ -7,7 +7,7 @@ import setGlobalVars from "@indexeddbshim/indexeddbshim";
 import os from "os";
 
 let isShimmed = false;
-export default async function shimFirebasePersistence() {
+export default function shimFirebasePersistence() {
   if (isShimmed) {
     return;
   }

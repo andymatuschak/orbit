@@ -20,7 +20,7 @@ import {
 import {
   getTaskStateCacheReferenceForTaskID,
   PromptStateCache,
-} from "metabook-firebase-shared";
+} from "metabook-firebase-support";
 import { testBasicPrompt } from "metabook-sample-data";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
