@@ -6,6 +6,7 @@ import {
   Prompt,
   PromptID,
 } from "metabook-core";
+import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";
 
 export default class DataRecordCache {
   private db: levelup.LevelUp;
@@ -13,47 +14,34 @@ export default class DataRecordCache {
     this.db = LevelUp(LevelJS(cacheName));
   }
 
-  private saveRecord(key: string, value: unknown): Promise<void> {
-    return this.db.put(key, JSON.stringify(value));
-  }
-
-  private async getRecord<R>(key: string): Promise<R | null> {
-    const recordString = await this.db
-      .get(key)
-      .catch((error) => (error.notFound ? null : Promise.reject(error)));
-    if (recordString) {
-      return JSON.parse(recordString) as R;
-    } else {
-      return null;
-    }
-  }
-
   async savePrompt(id: PromptID, prompt: Prompt): Promise<void> {
-    await this.saveRecord(id, prompt);
+    await saveJSONRecord(this.db, id, prompt);
   }
 
   async getPrompt(id: PromptID): Promise<Prompt | null> {
-    return this.getRecord(id);
+    const result = await getJSONRecord(this.db, id);
+    return (result?.record as Prompt) ?? null;
   }
 
   async saveAttachmentURLReference(
     id: AttachmentID,
     reference: AttachmentURLReference,
   ): Promise<void> {
-    await this.saveRecord(id, reference);
+    await saveJSONRecord(this.db, id, reference);
   }
 
   async getAttachmentURLReference(
     id: AttachmentID,
   ): Promise<AttachmentURLReference | null> {
-    return this.getRecord(id);
+    const result = await getJSONRecord(this.db, id);
+    return (result?.record as AttachmentURLReference) ?? null;
   }
 
-  async clear() {
-    return this.db.clear();
+  async clear(): Promise<void> {
+    await this.db.clear();
   }
 
-  async close() {
-    return this.db.close();
+  async close(): Promise<void> {
+    await this.db.close();
   }
 }

@@ -1,15 +1,13 @@
 import {
-  MetabookDataClient,
   MetabookDataSnapshot,
   MetabookPromptStateSnapshot,
-  MetabookUserClient,
 } from "metabook-client";
 import {
   AttachmentID,
   AttachmentURLReference,
   getDuePromptTaskIDs,
-  getPromptTaskForID,
   getIDForPromptTask,
+  getPromptTaskForID,
   Prompt,
   PromptField,
   PromptID,
@@ -30,40 +28,12 @@ import {
   useRef,
   useState,
 } from "react";
-import DataRecordClient from "./dataRecordClient";
-import { enableFirebasePersistence, PersistenceStatus } from "./firebase";
-import promptDataCache from "./dataRecordCache";
-
-function usePersistenceStatus() {
-  const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(
-    "pending",
-  );
-
-  useEffect(() => {
-    let hasUnmounted = false;
-
-    function safeSetPersistenceStatus(newStatus: PersistenceStatus) {
-      if (!hasUnmounted) {
-        setPersistenceStatus(newStatus);
-      }
-    }
-
-    enableFirebasePersistence()
-      .then(() => safeSetPersistenceStatus("enabled"))
-      .catch(() => safeSetPersistenceStatus("unavailable"));
-
-    return () => {
-      hasUnmounted = true;
-    };
-  }, []);
-
-  return persistenceStatus;
-}
+import DataRecordClient from "./model/dataRecordClient";
+import PromptStateClient from "./model/promptStateClient";
 
 function usePromptStates(
-  userClient: MetabookUserClient,
+  promptStateClient: PromptStateClient | null,
 ): MetabookPromptStateSnapshot | null {
-  const persistenceStatus = usePersistenceStatus();
   const [
     promptStates,
     setPromptStates,
@@ -76,7 +46,7 @@ function usePromptStates(
   );
 
   useEffect(() => {
-    if (persistenceStatus === "pending") {
+    if (!promptStateClient) {
       return;
     }
 
@@ -85,12 +55,30 @@ function usePromptStates(
       "[Performance] Subscribing to prompt states",
       Date.now() / 1000.0,
     );
-    return userClient.subscribeToPromptStates(
-      { dueBeforeTimestampMillis: Date.now() }, // TODO: use fuzzy due dates
-      setPromptStates,
-      subscriptionDidFail,
+    return promptStateClient.subscribeToDuePromptStates(
+      // TODO use fuzzy due dates
+      // TODO when does this change?
+      Date.now(),
+      (update) =>
+        setPromptStates((oldPromptStates) => {
+          console.log(
+            "[Performance] Updating prompt state cache in useReviewItems",
+            Date.now() / 1000,
+          );
+          const newPromptStates = new Map(oldPromptStates ?? []);
+          for (const [taskID, promptState] of update.addedEntries) {
+            newPromptStates.set(taskID, promptState);
+          }
+          for (const [taskID, promptState] of update.updatedEntries) {
+            newPromptStates.set(taskID, promptState);
+          }
+          for (const taskID of update.removedEntries) {
+            newPromptStates.delete(taskID);
+          }
+          return newPromptStates;
+        }),
     );
-  }, [userClient, persistenceStatus, setPromptStates, subscriptionDidFail]);
+  }, [promptStateClient, setPromptStates, subscriptionDidFail]);
 
   return promptStates;
 }
@@ -104,7 +92,7 @@ function useWeakRef<T>(val: T): MutableRefObject<T> {
 }
 
 function usePrompts(
-  dataRecordClient: DataRecordClient,
+  dataRecordClient: DataRecordClient | null,
   promptIDs: Set<PromptID>,
 ): MetabookDataSnapshot<PromptID, Prompt> | null {
   const unsubscribeFromDataRequest = useRef<(() => void) | null>(null);
@@ -115,6 +103,10 @@ function usePrompts(
   const weakPrompts = useWeakRef(prompts);
 
   useEffect(() => {
+    if (dataRecordClient === null) {
+      return;
+    }
+
     unsubscribeFromDataRequest.current?.();
     let promptIDsToFetch: Set<PromptID>;
     if (weakPrompts.current) {
@@ -162,7 +154,7 @@ function usePrompts(
 }
 
 function useAttachments(
-  dataRecordClient: DataRecordClient,
+  dataRecordClient: DataRecordClient | null,
   attachmentIDs: Set<AttachmentID>,
 ): MetabookDataSnapshot<AttachmentID, AttachmentURLReference> | null {
   const unsubscribeFromDataRequest = useRef<(() => void) | null>(null);
@@ -176,6 +168,10 @@ function useAttachments(
   const weakAttachmentResolutionMap = useWeakRef(attachmentResolutionMap);
 
   useEffect(() => {
+    if (dataRecordClient === null) {
+      return;
+    }
+
     unsubscribeFromDataRequest.current?.();
     let attachmentIDsToFetch: Set<AttachmentID>;
     if (weakAttachmentResolutionMap.current) {
@@ -267,10 +263,10 @@ function getAttachmentIDsInPrompts(
 }
 
 export function useReviewItems(
-  userClient: MetabookUserClient,
-  dataRecordClient: DataRecordClient,
+  promptStateClient: PromptStateClient | null,
+  dataRecordClient: DataRecordClient | null,
 ): ReviewItem[] | null {
-  const promptStates = usePromptStates(userClient);
+  const promptStates = usePromptStates(promptStateClient);
 
   const orderedDuePromptTasks: PromptTask[] | null = useMemo(() => {
     if (promptStates === null) {
@@ -320,7 +316,6 @@ export function useReviewItems(
   );
 
   return useMemo(() => {
-    console.log("Computing review items");
     console.log("[Performance] Computing review items", Date.now() / 1000.0);
     return (
       orderedDuePromptTasks

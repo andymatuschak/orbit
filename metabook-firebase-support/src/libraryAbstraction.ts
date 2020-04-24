@@ -9,4 +9,7 @@ export type DocumentReference<D extends Database> = ReturnType<
   CollectionReference<D>["doc"]
 >;
 
-export type Timestamp = ClientFirestore.Timestamp | AdminFirestore.Timestamp;
+export interface ServerTimestamp {
+  seconds: number;
+  nanoseconds: number;
+}

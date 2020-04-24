@@ -1,7 +1,7 @@
 import { ActionLog } from "metabook-core";
-import { Timestamp } from "./libraryAbstraction";
+import { ServerTimestamp } from "./libraryAbstraction";
 
-export type ActionLogDocument<T extends Timestamp> = ActionLog & {
-  serverTimestamp: Timestamp;
+export type ActionLogDocument<T extends ServerTimestamp> = ActionLog & {
+  serverTimestamp: ServerTimestamp;
   suppressTaskStateCacheUpdate?: boolean;
 };

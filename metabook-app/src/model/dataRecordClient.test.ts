@@ -46,7 +46,6 @@ class MockDataClient implements MetabookDataClient {
 }
 
 let cache: DataRecordCache;
-let client: DataRecordClient;
 const testBasicPromptID = getIDForPrompt(testBasicPrompt);
 beforeEach(() => {
   cache = new DataRecordCache();

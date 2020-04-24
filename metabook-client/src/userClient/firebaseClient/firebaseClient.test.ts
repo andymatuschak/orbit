@@ -4,18 +4,13 @@ import {
   applyActionLogToPromptState,
   basicPromptType,
   clozePromptType,
-  getActionLogFromPromptActionLog,
-  getIDForActionLog,
   getIDForPrompt,
   getIDForPromptTask,
   ingestActionLogType,
   PromptID,
   PromptIngestActionLog,
-  PromptRepetitionOutcome,
   PromptState,
   PromptTask,
-  PromptTaskID,
-  repetitionActionLogType,
 } from "metabook-core";
 import {
   getTaskStateCacheReferenceForTaskID,
@@ -24,7 +19,6 @@ import {
 import { testBasicPrompt } from "metabook-sample-data";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
-import { MetabookLocalUserClient } from "../localClient";
 import { MetabookFirebaseUserClient } from "./firebaseClient";
 
 let testFirestore: firebase.firestore.Firestore;
@@ -45,49 +39,26 @@ afterEach(() => {
   return firebaseTesting.clearFirestoreData({ projectId: testProjectID });
 });
 
-test("recording a review triggers card state update", async () => {
+test("recording a review triggers new log", async () => {
   const mockFunction = jest.fn();
-  const firstMockCall = promiseForNextCall(mockFunction);
-  const unsubscribe = client.subscribeToPromptStates(
-    {},
+  const unsubscribe = client.subscribeToActionLogs(
+    null,
     mockFunction,
     (error) => {
       fail(error);
     },
   );
-  await firstMockCall;
-  const initialPromptStates = mockFunction.mock.calls[0][0];
-  expect(initialPromptStates).toMatchObject(new Map());
 
-  const secondMockCall = promiseForNextCall(mockFunction);
-  const {
-    testPromptTaskID,
-    testPromptActionLog,
-    commit,
-  } = recordTestPromptStateUpdate(client);
+  const mockCall = promiseForNextCall(mockFunction);
+  const { testPromptActionLog, commit } = recordTestPromptStateUpdate(client);
   await commit;
 
-  const updatedPromptStates = await secondMockCall;
-  expect(updatedPromptStates).toMatchObject(
-    new Map([
-      [
-        testPromptTaskID,
-        applyActionLogToPromptState({
-          promptActionLog: testPromptActionLog,
-          basePromptState: null,
-          schedule: "default",
-        }),
-      ],
-    ]),
-  );
-
-  // The new prompt states should be a different object.
-  expect(updatedPromptStates).not.toMatchObject(initialPromptStates);
-
+  const newLogs = await mockCall;
+  expect(newLogs).toMatchObject([{ log: testPromptActionLog }]);
   unsubscribe();
 });
 
-describe("prompt state cache", () => {
+describe("prompt states", () => {
   test("initial prompt states", async () => {
     const testPromptID = getIDForPrompt(testBasicPrompt);
     const promptTask: PromptTask = {
@@ -100,9 +71,7 @@ describe("prompt state cache", () => {
       testFirestore,
       testUserID,
       taskID,
-    ) as firebase.firestore.DocumentReference<
-      PromptStateCache<firebase.firestore.Timestamp>
-    >;
+    ) as firebase.firestore.DocumentReference<PromptStateCache>;
     const ingestLog: PromptIngestActionLog = {
       taskID,
       actionLogType: ingestActionLogType,
@@ -120,120 +89,26 @@ describe("prompt state cache", () => {
       lastLogServerTimestamp: new firebase.firestore.Timestamp(0.5, 0),
     });
 
-    const mockFunction = jest.fn();
-    const firstMockCall = promiseForNextCall(mockFunction);
-    const unsubscribe = client.subscribeToPromptStates(
-      {},
-      mockFunction,
-      (error) => {
-        fail(error);
-      },
+    const initialPromptStates = await client.getDuePromptStates(
+      initialPromptState.dueTimestampMillis,
     );
-    await firstMockCall;
-    const initialPromptStates = mockFunction.mock.calls[0][0];
-    expect(initialPromptStates.get(taskID)).toEqual(initialPromptState);
-
-    const secondMockCall = promiseForNextCall(mockFunction);
-    await client.recordActionLogs([
+    expect(initialPromptStates).toMatchObject([
       {
-        actionLogType: repetitionActionLogType,
         taskID,
-        taskParameters: null,
-        timestampMillis: 2000,
-        outcome: PromptRepetitionOutcome.Remembered,
-        parentActionLogIDs: [
-          getIDForActionLog(getActionLogFromPromptActionLog(ingestLog)),
-        ],
-        context: null,
+        ...initialPromptState,
       },
     ]);
-
-    await secondMockCall;
-    const updatedPromptStates = mockFunction.mock.calls[1][0] as Map<
-      PromptTaskID,
-      PromptState
-    >;
-    expect(updatedPromptStates.get(taskID)!.lastReviewTimestampMillis).toEqual(
-      2000,
-    );
-
-    unsubscribe();
   });
-});
-
-describe("ingesting prompt specs", () => {
-  test("ingesting a basic prompt spec", async () => {
-    const promptTask: PromptTask = {
-      promptID: "test" as PromptID,
-      promptType: basicPromptType,
-      promptParameters: null,
-    };
-    await client.recordActionLogs([
-      {
-        actionLogType: ingestActionLogType,
-        taskID: getIDForPromptTask(promptTask),
-        timestampMillis: Date.UTC(2020, 0),
-        metadata: null,
-      },
-    ]);
-    const cardStates = await client.getPromptStates({});
-    expect(cardStates.get(getIDForPromptTask(promptTask))).toBeTruthy();
-  });
-
-  test("ingesting a cloze prompt", async () => {
-    const promptTask: PromptTask = {
-      promptID: "test" as PromptID,
-      promptType: clozePromptType,
-      promptParameters: { clozeIndex: 2 },
-    };
-    await client.recordActionLogs([
-      {
-        actionLogType: ingestActionLogType,
-        taskID: getIDForPromptTask(promptTask),
-        timestampMillis: Date.UTC(2020, 0),
-        metadata: null,
-      },
-    ]);
-    const cardStates = await client.getPromptStates({});
-    expect(cardStates.get(getIDForPromptTask(promptTask))).toBeTruthy();
-  });
-});
-
-test("port logs from local client", async () => {
-  const localClient = new MetabookLocalUserClient();
-  recordTestPromptStateUpdate(localClient);
-  const { commit, testPromptTaskID } = recordTestPromptStateUpdate(localClient);
-  await commit;
-  const localCardStates = await localClient.getPromptStates({});
-  expect(localCardStates.get(testPromptTaskID)).toBeTruthy();
-
-  await client.recordActionLogs(localClient.getAllLogs());
-  const cardStates = await client.getPromptStates({});
-  expect(cardStates.get(testPromptTaskID)).toMatchObject(
-    localCardStates.get(testPromptTaskID)!,
-  );
-});
-
-test("getCardStates changes after recording update", async () => {
-  const initialCardStates = await client.getPromptStates({});
-  await recordTestPromptStateUpdate(client).commit;
-  const finalCardStates = await client.getPromptStates({});
-  expect(initialCardStates).not.toMatchObject(finalCardStates);
 });
 
 test("no events after unsubscribing", async () => {
   const mockFunction = jest.fn();
-  const firstMockCall = promiseForNextCall(mockFunction);
-  const unsubscribe = client.subscribeToPromptStates(
-    {},
+  const unsubscribe = client.subscribeToActionLogs(
+    null,
     mockFunction,
     jest.fn(),
   );
-  await firstMockCall;
-  mockFunction.mockClear();
-
   unsubscribe();
-
   await recordTestPromptStateUpdate(client).commit;
   expect(mockFunction).not.toHaveBeenCalled();
 });
@@ -249,7 +124,7 @@ describe("security rules", () => {
 
   test("can't read cards from another user", async () => {
     await recordTestPromptStateUpdate(client).commit;
-    await expect(anotherClient.getPromptStates({})).rejects.toBeInstanceOf(
+    await expect(anotherClient.getDuePromptStates(1e10)).rejects.toBeInstanceOf(
       Error,
     );
   });

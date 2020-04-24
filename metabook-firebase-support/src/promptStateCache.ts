@@ -1,7 +1,7 @@
-import { PromptState } from "metabook-core";
-import { Timestamp } from "./libraryAbstraction";
+import { PromptState, PromptTaskID } from "metabook-core";
+import { ServerTimestamp } from "./libraryAbstraction";
 
-export interface PromptStateCache<T extends Timestamp> extends PromptState {
-  taskID: string;
-  lastLogServerTimestamp: T;
+export interface PromptStateCache extends PromptState {
+  taskID: PromptTaskID;
+  lastLogServerTimestamp: ServerTimestamp;
 }

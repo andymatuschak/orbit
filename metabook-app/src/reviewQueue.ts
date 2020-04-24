@@ -1,6 +1,6 @@
 import { MetabookDataClient } from "metabook-client";
 import { ReviewItem } from "metabook-ui";
-import DataRecordCache from "./dataRecordCache";
+import DataRecordCache from "./model/dataRecordCache";
 
 class ReviewQueue {
   private dataClient: MetabookDataClient;

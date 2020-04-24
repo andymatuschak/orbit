@@ -1,10 +1,14 @@
-import { Database, DocumentReference, Timestamp } from "./libraryAbstraction";
+import {
+  Database,
+  DocumentReference,
+  ServerTimestamp,
+} from "./libraryAbstraction";
 
 const batchSize = 250;
 
 export default async function batchWriteEntries<
   D extends Database,
-  T extends Timestamp
+  T extends ServerTimestamp
 >(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   logEntries: [DocumentReference<D>, any][],

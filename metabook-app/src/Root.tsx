@@ -5,22 +5,27 @@ import {
   MetabookFirebaseUserClient,
 } from "metabook-client";
 import {
-  getActionLogFromPromptActionLog,
   getIDForPrompt,
   getIDForPromptTask,
   getNextTaskParameters,
   PromptTask,
   repetitionActionLogType,
 } from "metabook-core";
-import { ReviewArea, ReviewAreaProps } from "metabook-ui";
+import { ReviewArea, ReviewAreaProps, ReviewItem } from "metabook-ui";
 import colors from "metabook-ui/dist/styles/colors";
-import "node-libs-react-native/globals";
 import typography from "metabook-ui/dist/styles/typography";
-import React, { useCallback, useState } from "react";
-import { View, Text } from "react-native";
-import DataRecordCache from "./dataRecordCache";
-import DataRecordClient from "./dataRecordClient";
-import { getFirebaseApp } from "./firebase";
+import "node-libs-react-native/globals";
+import React, { useCallback, useEffect, useState } from "react";
+import { Text, View } from "react-native";
+import {
+  enableFirebasePersistence,
+  getFirebaseApp,
+  PersistenceStatus,
+} from "./firebase";
+import DataRecordCache from "./model/dataRecordCache";
+import DataRecordClient from "./model/dataRecordClient";
+import PromptStateClient from "./model/promptStateClient";
+import PromptStateStore from "./model/promptStateStore";
 import { useReviewItems } from "./useReviewItems";
 
 async function cacheWriteHandler(name: string, data: Buffer): Promise<string> {
@@ -43,35 +48,76 @@ async function fileExistsAtURL(url: string): Promise<boolean> {
   return info.exists;
 }
 
+function usePersistenceStatus() {
+  const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(
+    "pending",
+  );
+
+  useEffect(() => {
+    let hasUnmounted = false;
+
+    function safeSetPersistenceStatus(newStatus: PersistenceStatus) {
+      if (!hasUnmounted) {
+        setPersistenceStatus(newStatus);
+      }
+    }
+
+    enableFirebasePersistence()
+      .then(() => safeSetPersistenceStatus("enabled"))
+      .catch(() => safeSetPersistenceStatus("unavailable"));
+
+    return () => {
+      hasUnmounted = true;
+    };
+  }, []);
+
+  return persistenceStatus;
+}
+
 export default function App() {
-  const [{ userClient, dataRecordClient }] = useState(() => {
-    const firebaseApp = getFirebaseApp();
-    const dataClient = new MetabookFirebaseDataClient(
-      firebaseApp,
-      firebaseApp.functions(),
-    );
-    const dataCache = new DataRecordCache();
-    return {
-      userClient: new MetabookFirebaseUserClient(
+  const persistenceStatus = usePersistenceStatus();
+  const [
+    promptStateClient,
+    setPromptStateClient,
+  ] = useState<PromptStateClient | null>(null);
+  const [
+    dataRecordClient,
+    setDataRecordClient,
+  ] = useState<DataRecordClient | null>(null);
+
+  useEffect(() => {
+    if (persistenceStatus === "enabled") {
+      const firebaseApp = getFirebaseApp();
+      const userClient = new MetabookFirebaseUserClient(
         firebaseApp.firestore(),
         "x5EWk2UT56URxbfrl7djoxwxiqH2",
-      ),
-      dataRecordClient: new DataRecordClient(dataClient, dataCache, {
-        writeFile: cacheWriteHandler,
-        fileExistsAtURL,
-      }),
-    };
-  });
+      );
+      setPromptStateClient(
+        new PromptStateClient(userClient, new PromptStateStore()),
+      );
+      const dataClient = new MetabookFirebaseDataClient(
+        firebaseApp,
+        firebaseApp.functions(),
+      );
+      const dataCache = new DataRecordCache();
+      setDataRecordClient(
+        new DataRecordClient(dataClient, dataCache, {
+          writeFile: cacheWriteHandler,
+          fileExistsAtURL,
+        }),
+      );
+    }
+  }, [persistenceStatus]);
 
-  const items = useReviewItems(userClient, dataRecordClient);
+  const items = useReviewItems(promptStateClient, dataRecordClient);
 
   const onMark = useCallback<ReviewAreaProps["onMark"]>(
     async (marking) => {
       console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
-      userClient
-        .recordActionLogs([
-          getActionLogFromPromptActionLog({
+      promptStateClient!
+        .recordPromptActionLogs([
+          {
             actionLogType: repetitionActionLogType,
             parentActionLogIDs:
               marking.reviewItem.promptState?.headActionLogIDs ?? [],
@@ -87,10 +133,9 @@ export default function App() {
               marking.reviewItem.prompt,
               marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
             ),
-          }),
+          },
         ])
         .then(() => {
-          console.log("Committed", marking.reviewItem.prompt);
           console.log(
             "[Performance] Log committed to server",
             Date.now() / 1000.0,
@@ -100,7 +145,7 @@ export default function App() {
           console.error("Couldn't commit", marking.reviewItem.prompt, error);
         });
     },
-    [userClient],
+    [promptStateClient],
   );
 
   console.log("[Performance] Render", Date.now() / 1000.0);

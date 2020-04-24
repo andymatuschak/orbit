@@ -12,7 +12,11 @@ export default function shimFirebasePersistence(databaseBasePath) {
   isShimmed = true;
 
   window.openDatabase = SQLite.openDatabase;
-  setGlobalVars(window, { checkOrigin: false, databaseBasePath });
+  setGlobalVars(window, {
+    checkOrigin: false,
+    databaseBasePath,
+    useSQLiteIndexes: true,
+  });
 
   window.__localStorageStore = {};
   window.localStorage = {

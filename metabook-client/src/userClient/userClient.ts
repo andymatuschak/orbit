@@ -1,26 +1,21 @@
 import { ActionLog, PromptState, PromptTaskID } from "metabook-core";
+import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
 
 export interface MetabookUserClient {
-  subscribeToPromptStates(
-    query: PromptStateQuery,
-    onPromptStatesDidUpdate: (
-      newPromptStates: MetabookPromptStateSnapshot,
+  getDuePromptStates(
+    thresholdTimestampMillis: number,
+  ): Promise<PromptStateCache[]>;
+
+  subscribeToActionLogs(
+    afterServerTimestamp: ServerTimestamp | null,
+    onNewLogs: (
+      newLogs: { log: ActionLog; serverTimestamp: ServerTimestamp }[],
     ) => void,
     onError: (error: Error) => void,
   ): MetabookUnsubscribe;
 
-  getPromptStates(
-    query: PromptStateQuery,
-  ): Promise<MetabookPromptStateSnapshot>;
-
   recordActionLogs(logs: ActionLog[]): Promise<unknown>;
-}
-
-// TODO
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface PromptStateQuery {
-  dueBeforeTimestampMillis?: number;
 }
 
 export type MetabookPromptStateSnapshot = ReadonlyMap<
