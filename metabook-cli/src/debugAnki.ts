@@ -1,19 +1,7 @@
-import {
-  ActionLog,
-  applyActionLogToPromptState,
-  getIDForActionLog,
-  getIDForPrompt,
-  getPromptActionLogFromActionLog,
-  ingestActionLogType,
-  Prompt,
-  PromptState,
-  PromptTaskID,
-  repetitionActionLogType,
-} from "metabook-core";
-import fs from "fs";
-import { getReferenceForPromptID } from "metabook-firebase-support";
+import admin from "firebase-admin";
+import { ActionLog, PromptState, PromptTaskID } from "metabook-core";
+import { getLogCollectionReference } from "metabook-firebase-support";
 import { getAdminApp } from "./adminApp";
-import plan from "./importPlan.json";
 
 function formatMillis(millis: number): string {
   let working = millis;
@@ -42,6 +30,29 @@ function formatMillis(millis: number): string {
 
   const adminApp = getAdminApp();
   const adminDB = adminApp.firestore();
+
+  let ref = getLogCollectionReference(adminDB, "x5EWk2UT56URxbfrl7djoxwxiqH2")
+    .orderBy("serverTimestamp", "asc")
+    .limit(1000);
+  let baseServerTimestamp: admin.firestore.Timestamp | null = null;
+  let total = 0;
+  while (true) {
+    if (baseServerTimestamp) {
+      ref = ref.where("serverTimestamp", ">", baseServerTimestamp);
+    }
+    const snapshot = await ref.get();
+    total += snapshot.size;
+    console.log(`Got ${snapshot.size} logs; ${total} total`);
+    if (snapshot.size > 0) {
+      baseServerTimestamp = snapshot.docs[snapshot.size - 1].data()
+        .serverTimestamp;
+    } else {
+      console.log("Done.");
+      break;
+    }
+  }
+
+  /*
   const refs = (plan.prompts as Prompt[]).map((prompt) =>
     getReferenceForPromptID(adminDB, getIDForPrompt(prompt)),
   );
@@ -122,5 +133,5 @@ function formatMillis(millis: number): string {
     total += count;
   }
 
-  console.log("Total scheduled: ", total);
+  console.log("Total scheduled: ", total);*/
 })();

@@ -15,6 +15,11 @@ export interface MetabookUserClient {
     onError: (error: Error) => void,
   ): MetabookUnsubscribe;
 
+  getActionLogs(
+    afterServerTimestamp: ServerTimestamp | null,
+    limit: number,
+  ): Promise<{ log: ActionLog; serverTimestamp: ServerTimestamp }[]>;
+
   recordActionLogs(logs: ActionLog[]): Promise<unknown>;
 }
 

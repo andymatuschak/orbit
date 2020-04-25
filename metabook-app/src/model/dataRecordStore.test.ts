@@ -1,15 +1,15 @@
 import shimFirebasePersistence from "firebase-node-persistence-shim";
 import { PromptID } from "metabook-core";
 import { testBasicPrompt } from "metabook-sample-data";
-import DataRecordCache from "./dataRecordCache";
+import DataRecordStore from "./dataRecordStore";
 
 beforeAll(() => {
   shimFirebasePersistence();
 });
 
-let cache: DataRecordCache;
+let cache: DataRecordStore;
 beforeEach(() => {
-  cache = new DataRecordCache(`test-${Date.now()}`);
+  cache = new DataRecordStore(`test-${Date.now()}`);
 });
 
 afterEach(async () => {

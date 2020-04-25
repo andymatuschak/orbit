@@ -1,5 +1,5 @@
 import { Command, flags } from "@oclif/command";
-import { getLogCollectionReference } from "metabook-firebase-shared";
+import { getLogCollectionReference } from "metabook-firebase-support";
 import { getAdminApp } from "./adminApp";
 import { deleteCollection } from "./deleteCollection";
 

@@ -21,6 +21,16 @@ config.resolver.extraNodeModules[
 
 config.resolver.extraNodeModules["vm"] = require.resolve("vm-browserify");
 
+config.resolver.extraNodeModules["firebase/app"] = require.resolve(
+  "@react-native-firebase/app",
+);
+config.resolver.extraNodeModules["firebase/firestore"] = require.resolve(
+  "@react-native-firebase/firestore",
+);
+config.resolver.extraNodeModules["firebase/functions"] = require.resolve(
+  "@react-native-firebase/functions",
+);
+
 // Default metro config
 config.transformer.getTransformOptions = async () => ({
   transform: {

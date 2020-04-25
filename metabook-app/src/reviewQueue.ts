@@ -1,18 +1,18 @@
 import { MetabookDataClient } from "metabook-client";
 import { ReviewItem } from "metabook-ui";
-import DataRecordCache from "./model/dataRecordCache";
+import DataRecordStore from "./model/dataRecordStore";
 
 class ReviewQueue {
   private dataClient: MetabookDataClient;
-  private dataCache: DataRecordCache;
+  private dataCache: DataRecordStore;
 
-  constructor(dataClient: MetabookDataClient, dataCache: DataRecordCache) {
+  constructor(dataClient: MetabookDataClient, dataCache: DataRecordStore) {
     this.dataClient = dataClient;
     this.dataCache = dataCache;
   }
 
-  subscribeToReviewItems(
+  /*subscribeToReviewItems(
     onUpdate: (reviewItems: ReviewItem[]) => void,
     onError: (error: Error) => void,
-  ): () => void {}
+  ): () => void {}*/
 }

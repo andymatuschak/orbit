@@ -1,14 +1,11 @@
 import LevelJS from "level-js";
 import LevelUp, * as levelup from "levelup";
-import { Transform } from "stream";
 import * as lexi from "lexicographic-integer";
 
 import { PromptState, PromptTaskID } from "metabook-core";
 import { ServerTimestamp } from "metabook-firebase-support";
+import { Transform } from "stream";
 import sub from "subleveldown";
-import { getJSONRecord } from "./levelDBUtil";
-
-const latestLogServerTimestampDBKey = "_latestLogServerTimestamp";
 
 function getDueTimestampIndexKey(
   promptState: PromptState,
@@ -57,38 +54,16 @@ export default class PromptStateStore {
   }
 
   // Can only be called from the op queue
-  private async _getLatestLogServerTimestamp(): Promise<ServerTimestamp | null> {
-    if (this.cachedLatestLogServerTimestamp === undefined) {
-      const result = await getJSONRecord(
-        this.promptStateDB,
-        latestLogServerTimestampDBKey,
-      );
-      this.cachedLatestLogServerTimestamp =
-        (result?.record as ServerTimestamp) ?? null;
-    }
-    return this.cachedLatestLogServerTimestamp ?? null;
-  }
-
-  async getLatestLogServerTimestamp(): Promise<ServerTimestamp | null> {
-    return this.runOp(async () => {
-      return this._getLatestLogServerTimestamp();
-    });
-  }
-
   async savePromptStateCaches(
     entries: Iterable<{
       promptState: PromptState;
       taskID: PromptTaskID;
-      lastLogServerTimestamp: ServerTimestamp | null;
     }>,
-  ): Promise<ServerTimestamp | null> {
+  ): Promise<void> {
     return this.runOp(async () => {
-      const initialLatestLogServerTimestamp = await this._getLatestLogServerTimestamp();
-      let latestLogServerTimestamp = initialLatestLogServerTimestamp;
-
       const batch = this.promptStateDB.batch();
       const dueTimestampIndexBatch = this.dueTimestampIndexDB.batch();
-      for (const { promptState, taskID, lastLogServerTimestamp } of entries) {
+      for (const { promptState, taskID } of entries) {
         const encodedPromptState = JSON.stringify(promptState);
         batch.put(taskID, encodedPromptState);
 
@@ -102,29 +77,9 @@ export default class PromptStateStore {
             getDueTimestampIndexKey(oldPromptState, taskID),
           );
         }
-        if (
-          lastLogServerTimestamp &&
-          (latestLogServerTimestamp === null ||
-            lastLogServerTimestamp.seconds > latestLogServerTimestamp.seconds ||
-            (lastLogServerTimestamp.seconds ===
-              latestLogServerTimestamp.seconds &&
-              lastLogServerTimestamp.nanoseconds >
-                latestLogServerTimestamp.nanoseconds))
-        ) {
-          latestLogServerTimestamp = lastLogServerTimestamp;
-        }
-      }
-
-      if (latestLogServerTimestamp !== initialLatestLogServerTimestamp) {
-        batch.put(
-          latestLogServerTimestampDBKey,
-          JSON.stringify(latestLogServerTimestamp),
-        );
-        this.cachedLatestLogServerTimestamp = latestLogServerTimestamp;
       }
 
       await Promise.all([batch.write(), dueTimestampIndexBatch.write()]);
-      return latestLogServerTimestamp;
     });
   }
 
@@ -162,9 +117,7 @@ export default class PromptStateStore {
               // console.log("[Performance] Start transform", Date.now());
               const indexKey = chunk.key;
               const promptState = JSON.parse(chunk.value);
-              // If this is a stale index entry, ditch it.
               const taskID = indexKey.split("!")[1];
-              // console.log("[Performance] Finish transform", Date.now());
               done(null, { taskID, promptState });
             },
           });

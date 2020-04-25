@@ -11,7 +11,7 @@ import {
   PromptID,
 } from "metabook-core";
 import { testApplicationPrompt, testBasicPrompt } from "metabook-sample-data";
-import DataRecordCache from "./dataRecordCache";
+import DataRecordStore from "./dataRecordStore";
 import DataRecordClient, {
   DataRecordClientFileStore,
 } from "./dataRecordClient";
@@ -45,10 +45,10 @@ class MockDataClient implements MetabookDataClient {
   }
 }
 
-let cache: DataRecordCache;
+let cache: DataRecordStore;
 const testBasicPromptID = getIDForPrompt(testBasicPrompt);
 beforeEach(() => {
-  cache = new DataRecordCache();
+  cache = new DataRecordStore();
 });
 
 afterEach(async () => {

@@ -6,7 +6,7 @@ import {
   Prompt,
   PromptID,
 } from "metabook-core";
-import DataRecordCache from "./dataRecordCache";
+import DataRecordStore from "./dataRecordStore";
 
 export interface DataRecordClientFileStore {
   fileExistsAtURL(url: string): Promise<boolean>;
@@ -15,14 +15,14 @@ export interface DataRecordClientFileStore {
 
 export default class DataRecordClient {
   private dataClient: MetabookDataClient;
-  private dataCache: DataRecordCache;
+  private dataCache: DataRecordStore;
   private fileStore: DataRecordClientFileStore;
 
   private cacheWrites: Promise<unknown>[];
 
   constructor(
     dataClient: MetabookDataClient,
-    dataCache: DataRecordCache,
+    dataCache: DataRecordStore,
     fileStore: DataRecordClientFileStore,
   ) {
     this.dataClient = dataClient;

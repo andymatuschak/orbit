@@ -8,9 +8,9 @@ import {
 } from "metabook-core";
 import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";
 
-export default class DataRecordCache {
+export default class DataRecordStore {
   private db: levelup.LevelUp;
-  constructor(cacheName = "DataRecordCache") {
+  constructor(cacheName = "DataRecordStore") {
     this.db = LevelUp(LevelJS(cacheName));
   }
 

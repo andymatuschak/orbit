@@ -19,10 +19,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import {
   enableFirebasePersistence,
-  getFirebaseApp,
+  getFirestore,
+  getFirebaseFunctions,
   PersistenceStatus,
 } from "./firebase";
-import DataRecordCache from "./model/dataRecordCache";
+import ActionLogStore from "./model/actionLogStore";
+import DataRecordStore from "./model/dataRecordStore";
 import DataRecordClient from "./model/dataRecordClient";
 import PromptStateClient from "./model/promptStateClient";
 import PromptStateStore from "./model/promptStateStore";
@@ -87,19 +89,22 @@ export default function App() {
 
   useEffect(() => {
     if (persistenceStatus === "enabled") {
-      const firebaseApp = getFirebaseApp();
       const userClient = new MetabookFirebaseUserClient(
-        firebaseApp.firestore(),
+        getFirestore(),
         "x5EWk2UT56URxbfrl7djoxwxiqH2",
       );
       setPromptStateClient(
-        new PromptStateClient(userClient, new PromptStateStore()),
+        new PromptStateClient(
+          userClient,
+          new PromptStateStore(),
+          new ActionLogStore(),
+        ),
       );
       const dataClient = new MetabookFirebaseDataClient(
-        firebaseApp,
-        firebaseApp.functions(),
+        getFirestore(),
+        getFirebaseFunctions(),
       );
-      const dataCache = new DataRecordCache();
+      const dataCache = new DataRecordStore();
       setDataRecordClient(
         new DataRecordClient(dataClient, dataCache, {
           writeFile: cacheWriteHandler,

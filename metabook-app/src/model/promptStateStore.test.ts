@@ -1,6 +1,5 @@
 import shimFirebasePersistence from "firebase-node-persistence-shim";
 import { PromptState, PromptTaskID } from "metabook-core";
-import { ServerTimestamp } from "metabook-firebase-support";
 import PromptStateStore from "./promptStateStore";
 
 beforeAll(() => {
@@ -22,41 +21,19 @@ const testPromptState = ({
   dueTimestampMillis: 0,
 } as unknown) as PromptState;
 
-async function saveTestPromptState(
-  lastLogServerTimestamp: ServerTimestamp | null,
-) {
+async function saveTestPromptState() {
   return await store.savePromptStateCaches([
     {
       promptState: testPromptState,
-      lastLogServerTimestamp,
       taskID: "x" as PromptTaskID,
     },
   ]);
 }
 
 test("round trips data", async () => {
-  const saveResult = await saveTestPromptState(null);
-  expect(saveResult).toBeNull();
+  await saveTestPromptState();
   const record = await store.getPromptState("x" as PromptTaskID);
   expect(record).toMatchObject(testPromptState);
-});
-
-test("writes last log timestamp", async () => {
-  const testTimestamp = { seconds: 1000, nanoseconds: 0 };
-  const timestamp = await saveTestPromptState(testTimestamp);
-  expect(timestamp).toMatchObject(testTimestamp);
-
-  await store.close();
-  store = new PromptStateStore();
-  expect(await store.getLatestLogServerTimestamp()).toMatchObject(
-    testTimestamp,
-  );
-});
-
-test("only updates timestamp if newer", async () => {
-  await saveTestPromptState({ seconds: 1000, nanoseconds: 0 });
-  const timestamp = await saveTestPromptState({ seconds: 500, nanoseconds: 0 });
-  expect(timestamp?.seconds).toEqual(1000);
 });
 
 test("returns null for missing keys", async () => {
@@ -71,12 +48,10 @@ describe("access by due timestamp", () => {
     await store.savePromptStateCaches([
       {
         promptState: testPromptState,
-        lastLogServerTimestamp: null,
         taskID: testTaskID,
       },
       {
         promptState: { dueTimestampMillis: 5000 } as PromptState,
-        lastLogServerTimestamp: null,
         taskID: "another" as PromptTaskID,
       },
     ]);
@@ -91,14 +66,12 @@ describe("access by due timestamp", () => {
     await store.savePromptStateCaches([
       {
         promptState: { dueTimestampMillis: 1000 } as PromptState,
-        lastLogServerTimestamp: null,
         taskID: testTaskID,
       },
     ]);
     await store.savePromptStateCaches([
       {
         promptState: { dueTimestampMillis: 5000 } as PromptState,
-        lastLogServerTimestamp: null,
         taskID: testTaskID,
       },
     ]);

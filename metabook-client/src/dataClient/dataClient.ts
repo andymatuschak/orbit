@@ -29,11 +29,11 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
   private readonly database: firebase.firestore.Firestore;
 
   constructor(
-    app: firebase.app.App = getDefaultFirebaseApp(),
-    functionsInstance: firebase.functions.Functions = app.functions(),
+    firestore: firebase.firestore.Firestore,
+    functions: firebase.functions.Functions,
   ) {
-    this.database = app.firestore();
-    this.functions = functionsInstance;
+    this.database = firestore;
+    this.functions = functions;
   }
 
   recordPrompts(prompts: Prompt[]): Promise<unknown> {

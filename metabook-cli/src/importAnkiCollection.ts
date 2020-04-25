@@ -15,7 +15,7 @@ import {
   getReferenceForActionLogID,
   getTaskStateCacheReferenceForTaskID,
   PromptStateCache,
-} from "metabook-firebase-shared";
+} from "metabook-firebase-support";
 import path from "path";
 import {
   createImportPlan,
@@ -67,13 +67,7 @@ class ImportAnkiCollection extends Command {
         messagingSenderId: "748053153064",
         appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
       });
-      const dataClient = new MetabookFirebaseDataClient(
-        app,
-        app.functions(),
-        () => {
-          throw new Error("unimplemented");
-        },
-      );
+      const dataClient = new MetabookFirebaseDataClient(app, app.functions());
 
       await dataClient.recordAttachments(plan.attachments);
       console.log("Recorded attachments.");
@@ -81,7 +75,6 @@ class ImportAnkiCollection extends Command {
       await dataClient.recordPrompts(plan.prompts);
       console.log("Recorded prompts.");
 
-      const importTimestamp = firebase.firestore.Timestamp.now();
       getLogCollectionReference(app.firestore(), flags.userID);
       await batchWriteEntries(
         plan.logs.map((log) => [
@@ -93,7 +86,7 @@ class ImportAnkiCollection extends Command {
           {
             ...log,
             suppressTaskStateCacheUpdate: true,
-            serverTimestamp: importTimestamp,
+            serverTimestamp: firebase.firestore.FieldValue.serverTimestamp() as firebase.firestore.Timestamp,
           } as ActionLogDocument<firebase.firestore.Timestamp>,
         ]),
         app.firestore(),
@@ -103,18 +96,13 @@ class ImportAnkiCollection extends Command {
 
       const adminApp = getAdminApp();
       const adminDB = adminApp.firestore();
-      const serverImportTimestamp = new admin.firestore.Timestamp(
-        importTimestamp.seconds,
-        importTimestamp.nanoseconds,
-      );
       await batchWriteEntries(
         plan.promptStateCaches.map(({ taskID, promptState }) => [
           getTaskStateCacheReferenceForTaskID(adminDB, flags.userID, taskID),
           {
             taskID,
             ...promptState,
-            lastLogServerTimestamp: serverImportTimestamp,
-          } as PromptStateCache<admin.firestore.Timestamp>,
+          } as PromptStateCache,
         ]),
         adminDB,
         (ms, ns) => new admin.firestore.Timestamp(ms, ns),

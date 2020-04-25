@@ -35,6 +35,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     const output: PromptStateCache[] = [];
     const ref = getTaskStateCacheCollectionReference(this.database, this.userID)
       .limit(1000)
+      .orderBy("dueTimestampMillis", "asc")
       .where(
         "dueTimestampMillis",
         "<=",
@@ -72,51 +73,80 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     ) => void,
     onError: (error: Error) => void,
   ): MetabookUnsubscribe {
-    let userStateLogsRef = getLogCollectionReference(
-      this.database,
-      this.userID,
-    ).orderBy("serverTimestamp", "asc") as firebase.firestore.Query<
-      ActionLogDocument<Timestamp>
-    >;
+    return this.getActionLogRef(afterServerTimestamp, 1000).onSnapshot(
+      (snapshot) => {
+        const newLogs: {
+          log: ActionLog;
+          serverTimestamp: ServerTimestamp;
+        }[] = [];
+        for (const change of snapshot.docChanges()) {
+          if (!change.doc.metadata.hasPendingWrites) {
+            switch (change.type) {
+              case "added":
+              case "modified":
+                const {
+                  serverTimestamp,
+                  suppressTaskStateCacheUpdate,
+                  ...log
+                } = change.doc.data({ serverTimestamps: "none" });
+                newLogs.push({ log, serverTimestamp });
+                break;
+              case "removed":
+                // TODO make more robust against client failures to persist / sync
+                throw new Error(
+                  `Log entries shouldn't change after their creation. Unsupported change type ${
+                    change.type
+                  } with doc ${change.doc.data()}`,
+                );
+            }
+          }
+        }
+        if (newLogs.length > 0) {
+          onNewLogs(newLogs);
+        }
+      },
+      onError,
+    );
+  }
+
+  private getActionLogRef(
+    afterServerTimestamp: ServerTimestamp | null,
+    limit: number,
+  ) {
+    let userStateLogsRef = getLogCollectionReference(this.database, this.userID)
+      .orderBy("serverTimestamp", "asc")
+      .limit(limit) as firebase.firestore.Query<ActionLogDocument<Timestamp>>;
     if (afterServerTimestamp) {
       userStateLogsRef = userStateLogsRef.where(
         "serverTimestamp",
         ">",
-        afterServerTimestamp,
+        new firebase.firestore.Timestamp(
+          afterServerTimestamp.seconds,
+          afterServerTimestamp.nanoseconds,
+        ),
       );
+    } else {
+      userStateLogsRef = userStateLogsRef.where("serverTimestamp", "==", null);
     }
+    return userStateLogsRef;
+  }
 
-    return userStateLogsRef.onSnapshot((snapshot) => {
-      const newLogs: {
-        log: ActionLog;
-        serverTimestamp: ServerTimestamp;
-      }[] = [];
-      for (const change of snapshot.docChanges()) {
-        if (!change.doc.metadata.hasPendingWrites) {
-          switch (change.type) {
-            case "added":
-            case "modified":
-              const {
-                serverTimestamp,
-                suppressTaskStateCacheUpdate,
-                ...log
-              } = change.doc.data({ serverTimestamps: "none" });
-              newLogs.push({ log, serverTimestamp });
-              break;
-            case "removed":
-              // TODO make more robust against client failures to persist / sync
-              throw new Error(
-                `Log entries shouldn't change after their creation. Unsupported change type ${
-                  change.type
-                } with doc ${change.doc.data()}`,
-              );
-          }
-        }
-      }
-      if (newLogs.length > 0) {
-        onNewLogs(newLogs);
-      }
-    }, onError);
+  async getActionLogs(
+    afterServerTimestamp: ServerTimestamp,
+    limit: number,
+  ): Promise<{ log: ActionLog; serverTimestamp: ServerTimestamp }[]> {
+    const snapshot = await this.getActionLogRef(
+      afterServerTimestamp,
+      limit,
+    ).get();
+    return snapshot.docs.map((doc) => {
+      const {
+        serverTimestamp,
+        suppressTaskStateCacheUpdate,
+        ...log
+      } = doc.data();
+      return { log, serverTimestamp };
+    });
   }
 
   async recordActionLogs(logs: ActionLog[]): Promise<void> {

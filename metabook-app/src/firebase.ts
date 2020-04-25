@@ -1,9 +1,10 @@
 import shimFirebasePersistence from "firebase-react-native-persistence-shim";
 import firebase from "firebase/app";
-import "firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
+import firebaseFunctions from "@react-native-firebase/functions";
 import { FileSystem } from "react-native-unimodules";
 
-let app: firebase.app.App | null = null;
+/*let app: firebase.app.App | null = null;
 export function getFirebaseApp(): firebase.app.App {
   if (!app) {
     app = firebase.initializeApp({
@@ -20,12 +21,22 @@ export function getFirebaseApp(): firebase.app.App {
     shimFirebasePersistence("");
   }
   return app;
+}*/
+
+export function getFirestore(): firebase.firestore.Firestore {
+  return (firestore() as unknown) as firebase.firestore.Firestore;
+}
+
+export function getFirebaseFunctions(): firebase.functions.Functions {
+  return (firebaseFunctions() as unknown) as firebase.functions.Functions;
 }
 
 export type PersistenceStatus = "pending" | "enabled" | "unavailable";
-let persistenceStatus: PersistenceStatus = "pending";
+const persistenceStatus: PersistenceStatus = "pending";
 export async function enableFirebasePersistence(): Promise<PersistenceStatus> {
-  if (persistenceStatus !== "pending") {
+  shimFirebasePersistence("");
+  return "enabled";
+  /*if (persistenceStatus !== "pending") {
     return persistenceStatus;
   }
 
@@ -43,5 +54,5 @@ export async function enableFirebasePersistence(): Promise<PersistenceStatus> {
       console.error("Couldn't enable persistence", error);
       persistenceStatus = "unavailable";
       return persistenceStatus;
-    });
+    });*/
 }

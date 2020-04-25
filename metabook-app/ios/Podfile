@@ -23,7 +23,7 @@ def flipper_post_install(installer)
   end
 end
 
-target 'metabookapp' do
+target 'Orbit' do
   # Pods for metabookapp
   pod 'FBLazyVector', :path => "../node_modules/react-native/Libraries/FBLazyVector"
   pod 'FBReactNativeSpec', :path => "../node_modules/react-native/Libraries/FBReactNativeSpec"
@@ -56,7 +56,7 @@ target 'metabookapp' do
   pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
   pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
 
-  target 'metabookappTests' do
+  target 'OrbitTests' do
     inherit! :complete
     # Pods for testing
   end
@@ -70,22 +70,13 @@ target 'metabookapp' do
   #add_flipper_pods!
 
   def unsupported_pods
-    ["FlipperKit", "DoubleConversion", "glog", "FlipperKit/FlipperKitLayoutPlugin", "FlipperKit/SKIOSNetworkPlugin", "FlipperKit/FlipperKitUserDefaultsPlugin", "FlipperKit/FlipperKitReactPlugin"]
+    ["Crashlytics", "Fabric"]
   end
   post_install do |installer|
     #flipper_post_install(installer)
-    #configure_support_catalyst installer, unsupported_pods
+    configure_support_catalyst installer, unsupported_pods
   end
 
   use_unimodules!(modules_paths: ['../../node_modules'], exclude: ["expo-web-browser"])
-end
-
-target 'metabookapp-tvOS' do
-  # Pods for metabookapp-tvOS
-
-  target 'metabookapp-tvOSTests' do
-    inherit! :search_paths
-    # Pods for testing
-  end
 end
 

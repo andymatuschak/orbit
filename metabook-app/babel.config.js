@@ -25,6 +25,9 @@ module.exports = function (api) {
             {
               aliases: {
                 crypto: "crypto-browserify",
+                "firebase/app": "@react-native-firebase/app",
+                "firebase/firestore": "@react-native-firebase/firestore",
+                "firebase/functions": "@react-native-firebase/functions",
               },
               throwForNonStringLiteral: true,
             },

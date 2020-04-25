@@ -15,6 +15,7 @@ import {
   PromptTaskID,
   repetitionActionLogType,
 } from "metabook-core";
+import ActionLogStore from "./actionLogStore";
 import PromptStateClient, {
   computeSubscriberUpdate,
   PromptStateClientUpdate,
@@ -132,20 +133,26 @@ describe("computeSubscriberUpdate", () => {
 
 describe("prompt state subscriptions", () => {
   let promptStateStore: PromptStateStore;
+  let actionLogStore: ActionLogStore;
   let remoteClient: MetabookUserClient;
   let promptStateClient: PromptStateClient;
 
   beforeEach(() => {
     promptStateStore = {} as PromptStateStore;
+    actionLogStore = {} as ActionLogStore;
     remoteClient = {} as MetabookUserClient;
-    remoteClient.subscribeToActionLogs = jest.fn();
-    promptStateClient = new PromptStateClient(remoteClient, promptStateStore);
+    remoteClient.subscribeToActionLogs = jest.fn(() => () => {
+      return;
+    });
+    promptStateClient = new PromptStateClient(
+      remoteClient,
+      promptStateStore,
+      actionLogStore,
+    );
   });
 
   test("fetches remote states when none are cached", async () => {
-    promptStateStore.getLatestLogServerTimestamp = jest
-      .fn()
-      .mockResolvedValue(null);
+    actionLogStore.getLatestServerTimestamp = jest.fn().mockResolvedValue(null);
     promptStateStore.savePromptStateCaches = jest.fn();
     remoteClient.getDuePromptStates = jest.fn().mockResolvedValue([{}]);
 
@@ -163,9 +170,7 @@ describe("prompt state subscriptions", () => {
   });
 
   test("uses cached states when available", async () => {
-    promptStateStore.getLatestLogServerTimestamp = jest
-      .fn()
-      .mockResolvedValue(0);
+    actionLogStore.getLatestServerTimestamp = jest.fn().mockResolvedValue(0);
     promptStateStore.getDuePromptStates = jest
       .fn()
       .mockResolvedValue(new Map([["x", {}]]));
@@ -184,9 +189,7 @@ describe("prompt state subscriptions", () => {
   });
 
   test("uses cached states when available", async () => {
-    promptStateStore.getLatestLogServerTimestamp = jest
-      .fn()
-      .mockResolvedValue(0);
+    actionLogStore.getLatestServerTimestamp = jest.fn().mockResolvedValue(0);
     promptStateStore.getDuePromptStates = jest
       .fn()
       .mockResolvedValue(new Map([["x", {}]]));
@@ -235,9 +238,13 @@ describe("prompt state subscriptions", () => {
     };
 
     beforeEach(() => {
-      promptStateStore.getLatestLogServerTimestamp = jest
+      actionLogStore.getLatestServerTimestamp = jest
         .fn()
-        .mockResolvedValue(0);
+        .mockResolvedValue({ seconds: 0, nanoseconds: 0 });
+      actionLogStore.saveActionLogs = jest.fn();
+      actionLogStore.getActionLogsByTaskID = jest
+        .fn()
+        .mockResolvedValue([testIngestLog]);
       promptStateStore.getDuePromptStates = jest
         .fn()
         .mockResolvedValue(new Map());
@@ -262,11 +269,12 @@ describe("prompt state subscriptions", () => {
         await callbackPromise;
 
         callbackPromise = promiseForNextCall(callbackMock);
-        promptStateClient.recordPromptActionLogs([repetitionLog]);
+        await promptStateClient.recordPromptActionLogs([repetitionLog]);
         const update = (await callbackPromise) as PromptStateClientUpdate;
 
         expect(update.removedEntries.size).toEqual(1);
         expect(promptStateStore.savePromptStateCaches).toHaveBeenCalled();
+        expect(actionLogStore.saveActionLogs).toHaveBeenCalled();
         expect(remoteClient.recordActionLogs).toHaveBeenCalled();
         unsubscribe();
       });
@@ -286,12 +294,14 @@ describe("prompt state subscriptions", () => {
     describe("remote logs", () => {
       test("notifies subscribers when new remote log arrives", async () => {
         remoteClient.subscribeToActionLogs = jest.fn((t, callback) => {
-          callback([
-            {
-              log: repetitionLog,
-              serverTimestamp: { seconds: 10, nanoseconds: 0 },
-            },
-          ]);
+          if (t?.seconds === 0) {
+            callback([
+              {
+                log: repetitionLog,
+                serverTimestamp: { seconds: 10, nanoseconds: 0 },
+              },
+            ]);
+          }
           return () => {
             return;
           };
@@ -310,6 +320,7 @@ describe("prompt state subscriptions", () => {
         const update = (await callbackPromise) as PromptStateClientUpdate;
         expect(update.removedEntries.size).toEqual(1);
         expect(promptStateStore.savePromptStateCaches).toHaveBeenCalled();
+        expect(actionLogStore.saveActionLogs).toHaveBeenCalled();
         unsubscribe();
       });
     });
