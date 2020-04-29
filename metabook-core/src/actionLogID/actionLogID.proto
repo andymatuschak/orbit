@@ -15,6 +15,11 @@ message ActionLog {
         string context = 8;
     }
 
+    message Reschedule {
+        string taskID = 1;
+        google.protobuf.Timestamp newTimestamp = 2;
+    }
+
     message MetadataEntry {
         string key = 1;
         oneof value {
@@ -27,5 +32,6 @@ message ActionLog {
     oneof log {
         Ingest ingest = 2;
         Repetition repetition = 3;
+        Reschedule reschedule = 4;
     }
 }

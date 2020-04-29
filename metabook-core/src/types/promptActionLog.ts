@@ -1,10 +1,10 @@
 import { ActionLogID, getIDForActionLog } from "../actionLogID";
 import { PromptRepetitionOutcome } from "../spacedRepetition/spacedRepetition";
-import typedKeys from "../util/typedKeys";
 import {
   ActionLog,
   ingestActionLogType,
   repetitionActionLogType,
+  rescheduleActionLogType,
 } from "./actionLog";
 import { PromptProvenance } from "./promptProvenance";
 import { PromptTaskID } from "./promptTask";
@@ -33,9 +33,18 @@ export type PromptRepetitionActionLog<P extends PromptTaskParameters> = {
   outcome: PromptRepetitionOutcome;
 } & BasePromptActionLog;
 
+export type PromptRescheduleActionLog = {
+  actionLogType: typeof rescheduleActionLogType;
+  parentActionLogIDs: ActionLogID[];
+
+  taskID: PromptTaskID;
+  newTimestampMillis: number;
+} & BasePromptActionLog;
+
 export type PromptActionLog<P extends PromptTaskParameters> =
   | PromptIngestActionLog
-  | PromptRepetitionActionLog<P>;
+  | PromptRepetitionActionLog<P>
+  | PromptRescheduleActionLog;
 
 export function getActionLogFromPromptActionLog<P extends PromptTaskParameters>(
   promptActionLog: PromptActionLog<P>,
@@ -48,6 +57,8 @@ export function getActionLogFromPromptActionLog<P extends PromptTaskParameters>(
         metadata: provenance,
       };
     case repetitionActionLogType:
+      return promptActionLog;
+    case rescheduleActionLogType:
       return promptActionLog;
   }
 }
@@ -82,5 +93,7 @@ export function getPromptActionLogFromActionLog(
           } in action log ${getIDForActionLog(actionLog)}`,
         );
       }
+    case rescheduleActionLogType:
+      return { ...actionLog, taskID };
   }
 }

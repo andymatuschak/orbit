@@ -103,6 +103,7 @@ test("mapping note with image", () => {
           "contents": "Test question with an image",
         },
       },
+      "provenance": null,
     }
   `);
 });

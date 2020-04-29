@@ -1,7 +1,6 @@
 export { MetabookFirebaseUserClient } from "./userClient";
 export type {
   MetabookUserClient,
-  PromptStateQuery,
   MetabookPromptStateSnapshot,
 } from "./userClient";
 

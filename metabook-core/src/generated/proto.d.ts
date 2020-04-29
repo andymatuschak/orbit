@@ -397,6 +397,9 @@ export interface IActionLog {
 
     /** ActionLog repetition */
     repetition?: (ActionLog.IRepetition|null);
+
+    /** ActionLog reschedule */
+    reschedule?: (ActionLog.IReschedule|null);
 }
 
 /** Represents an ActionLog. */
@@ -417,8 +420,11 @@ export class ActionLog implements IActionLog {
     /** ActionLog repetition. */
     public repetition?: (ActionLog.IRepetition|null);
 
+    /** ActionLog reschedule. */
+    public reschedule?: (ActionLog.IReschedule|null);
+
     /** ActionLog log. */
-    public log?: ("ingest"|"repetition");
+    public log?: ("ingest"|"repetition"|"reschedule");
 
     /**
      * Creates a new ActionLog instance using the specified properties.
@@ -692,6 +698,102 @@ export namespace ActionLog {
 
         /**
          * Converts this Repetition to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a Reschedule. */
+    interface IReschedule {
+
+        /** Reschedule taskID */
+        taskID?: (string|null);
+
+        /** Reschedule newTimestamp */
+        newTimestamp?: (google.protobuf.ITimestamp|null);
+    }
+
+    /** Represents a Reschedule. */
+    class Reschedule implements IReschedule {
+
+        /**
+         * Constructs a new Reschedule.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: ActionLog.IReschedule);
+
+        /** Reschedule taskID. */
+        public taskID: string;
+
+        /** Reschedule newTimestamp. */
+        public newTimestamp?: (google.protobuf.ITimestamp|null);
+
+        /**
+         * Creates a new Reschedule instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Reschedule instance
+         */
+        public static create(properties?: ActionLog.IReschedule): ActionLog.Reschedule;
+
+        /**
+         * Encodes the specified Reschedule message. Does not implicitly {@link ActionLog.Reschedule.verify|verify} messages.
+         * @param message Reschedule message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: ActionLog.IReschedule, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Reschedule message, length delimited. Does not implicitly {@link ActionLog.Reschedule.verify|verify} messages.
+         * @param message Reschedule message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: ActionLog.IReschedule, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Reschedule message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Reschedule
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): ActionLog.Reschedule;
+
+        /**
+         * Decodes a Reschedule message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Reschedule
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): ActionLog.Reschedule;
+
+        /**
+         * Verifies a Reschedule message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Reschedule message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Reschedule
+         */
+        public static fromObject(object: { [k: string]: any }): ActionLog.Reschedule;
+
+        /**
+         * Creates a plain object from a Reschedule message. Also converts values to other types if specified.
+         * @param message Reschedule
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: ActionLog.Reschedule, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Reschedule to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };

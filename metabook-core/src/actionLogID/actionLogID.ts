@@ -9,6 +9,7 @@ import {
   ActionLogMetadata,
   ingestActionLogType,
   repetitionActionLogType,
+  rescheduleActionLogType,
 } from "../types/actionLog";
 
 function getProtobufTimestampFromMillis(
@@ -69,6 +70,16 @@ function getProtobufRepresentationForActionLog(
           ),
         },
       };
+    case rescheduleActionLogType:
+      return {
+        timestamp,
+        reschedule: {
+          newTimestamp: getProtobufTimestampFromMillis(
+            actionLog.newTimestampMillis,
+          ),
+          taskID: actionLog.taskID,
+        },
+      };
   }
 }
 
@@ -77,6 +88,7 @@ function getDAGLinksForActionLog(actionLog: ActionLog): DAGPB.DAGLink[] {
     case "ingest":
       return [];
     case "repetition":
+    case "reschedule":
       return actionLog.parentActionLogIDs.map(
         (actionLogID) => new DAGPB.DAGLink(undefined, undefined, actionLogID),
       );

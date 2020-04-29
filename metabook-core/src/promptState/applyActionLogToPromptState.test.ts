@@ -11,6 +11,7 @@ import {
 import {
   ingestActionLogType,
   repetitionActionLogType,
+  rescheduleActionLogType,
 } from "../types/actionLog";
 import { applicationPromptType, basicPromptType } from "../types/prompt";
 import {
@@ -82,17 +83,16 @@ describe("updateBaseHeadActionLogIDs", () => {
   });
 });
 
+const testIngestLog: PromptIngestActionLog = {
+  actionLogType: ingestActionLogType,
+  timestampMillis: 1000,
+  taskID: testBasicPromptTaskID,
+  provenance: null,
+};
+const testIngestLogID = getIDForActionLog(
+  getActionLogFromPromptActionLog(testIngestLog),
+);
 describe("ingesting", () => {
-  const testIngestLog: PromptIngestActionLog = {
-    actionLogType: ingestActionLogType,
-    timestampMillis: 1000,
-    taskID: testBasicPromptTaskID,
-    provenance: null,
-  };
-  const testIngestLogID = getIDForActionLog(
-    getActionLogFromPromptActionLog(testIngestLog),
-  );
-
   test("without a base state", () => {
     expect(
       applyActionLogToPromptState({
@@ -254,5 +254,27 @@ describe("repetition", () => {
         schedule: testSchedule,
       }) as PromptState).needsRetry,
     ).toBe(false);
+  });
+});
+
+describe("reschedule", () => {
+  test("reschedules due time", () => {
+    expect(
+      (applyActionLogToPromptState({
+        promptActionLog: {
+          actionLogType: rescheduleActionLogType,
+          parentActionLogIDs: [testIngestLogID],
+          timestampMillis: testIngestLog.timestampMillis + 100,
+          taskID: testIngestLog.taskID,
+          newTimestampMillis: 10000,
+        },
+        basePromptState: applyActionLogToPromptState({
+          promptActionLog: testIngestLog,
+          basePromptState: null,
+          schedule: "default",
+        }) as PromptState,
+        schedule: "default",
+      }) as PromptState).dueTimestampMillis,
+    ).toEqual(10000);
   });
 });

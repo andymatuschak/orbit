@@ -924,6 +924,7 @@ $root.ActionLog = (function() {
      * @property {google.protobuf.ITimestamp|null} [timestamp] ActionLog timestamp
      * @property {ActionLog.IIngest|null} [ingest] ActionLog ingest
      * @property {ActionLog.IRepetition|null} [repetition] ActionLog repetition
+     * @property {ActionLog.IReschedule|null} [reschedule] ActionLog reschedule
      */
 
     /**
@@ -965,17 +966,25 @@ $root.ActionLog = (function() {
      */
     ActionLog.prototype.repetition = null;
 
+    /**
+     * ActionLog reschedule.
+     * @member {ActionLog.IReschedule|null|undefined} reschedule
+     * @memberof ActionLog
+     * @instance
+     */
+    ActionLog.prototype.reschedule = null;
+
     // OneOf field names bound to virtual getters and setters
     var $oneOfFields;
 
     /**
      * ActionLog log.
-     * @member {"ingest"|"repetition"|undefined} log
+     * @member {"ingest"|"repetition"|"reschedule"|undefined} log
      * @memberof ActionLog
      * @instance
      */
     Object.defineProperty(ActionLog.prototype, "log", {
-        get: $util.oneOfGetter($oneOfFields = ["ingest", "repetition"]),
+        get: $util.oneOfGetter($oneOfFields = ["ingest", "repetition", "reschedule"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -1009,6 +1018,8 @@ $root.ActionLog = (function() {
             $root.ActionLog.Ingest.encode(message.ingest, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
         if (message.repetition != null && message.hasOwnProperty("repetition"))
             $root.ActionLog.Repetition.encode(message.repetition, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+        if (message.reschedule != null && message.hasOwnProperty("reschedule"))
+            $root.ActionLog.Reschedule.encode(message.reschedule, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
         return writer;
     };
 
@@ -1051,6 +1062,9 @@ $root.ActionLog = (function() {
                 break;
             case 3:
                 message.repetition = $root.ActionLog.Repetition.decode(reader, reader.uint32());
+                break;
+            case 4:
+                message.reschedule = $root.ActionLog.Reschedule.decode(reader, reader.uint32());
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -1111,6 +1125,16 @@ $root.ActionLog = (function() {
                     return "repetition." + error;
             }
         }
+        if (message.reschedule != null && message.hasOwnProperty("reschedule")) {
+            if (properties.log === 1)
+                return "log: multiple values";
+            properties.log = 1;
+            {
+                var error = $root.ActionLog.Reschedule.verify(message.reschedule);
+                if (error)
+                    return "reschedule." + error;
+            }
+        }
         return null;
     };
 
@@ -1141,6 +1165,11 @@ $root.ActionLog = (function() {
                 throw TypeError(".ActionLog.repetition: object expected");
             message.repetition = $root.ActionLog.Repetition.fromObject(object.repetition);
         }
+        if (object.reschedule != null) {
+            if (typeof object.reschedule !== "object")
+                throw TypeError(".ActionLog.reschedule: object expected");
+            message.reschedule = $root.ActionLog.Reschedule.fromObject(object.reschedule);
+        }
         return message;
     };
 
@@ -1170,6 +1199,11 @@ $root.ActionLog = (function() {
             object.repetition = $root.ActionLog.Repetition.toObject(message.repetition, options);
             if (options.oneofs)
                 object.log = "repetition";
+        }
+        if (message.reschedule != null && message.hasOwnProperty("reschedule")) {
+            object.reschedule = $root.ActionLog.Reschedule.toObject(message.reschedule, options);
+            if (options.oneofs)
+                object.log = "reschedule";
         }
         return object;
     };
@@ -1690,6 +1724,221 @@ $root.ActionLog = (function() {
         };
 
         return Repetition;
+    })();
+
+    ActionLog.Reschedule = (function() {
+
+        /**
+         * Properties of a Reschedule.
+         * @memberof ActionLog
+         * @interface IReschedule
+         * @property {string|null} [taskID] Reschedule taskID
+         * @property {google.protobuf.ITimestamp|null} [newTimestamp] Reschedule newTimestamp
+         */
+
+        /**
+         * Constructs a new Reschedule.
+         * @memberof ActionLog
+         * @classdesc Represents a Reschedule.
+         * @implements IReschedule
+         * @constructor
+         * @param {ActionLog.IReschedule=} [properties] Properties to set
+         */
+        function Reschedule(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Reschedule taskID.
+         * @member {string} taskID
+         * @memberof ActionLog.Reschedule
+         * @instance
+         */
+        Reschedule.prototype.taskID = "";
+
+        /**
+         * Reschedule newTimestamp.
+         * @member {google.protobuf.ITimestamp|null|undefined} newTimestamp
+         * @memberof ActionLog.Reschedule
+         * @instance
+         */
+        Reschedule.prototype.newTimestamp = null;
+
+        /**
+         * Creates a new Reschedule instance using the specified properties.
+         * @function create
+         * @memberof ActionLog.Reschedule
+         * @static
+         * @param {ActionLog.IReschedule=} [properties] Properties to set
+         * @returns {ActionLog.Reschedule} Reschedule instance
+         */
+        Reschedule.create = function create(properties) {
+            return new Reschedule(properties);
+        };
+
+        /**
+         * Encodes the specified Reschedule message. Does not implicitly {@link ActionLog.Reschedule.verify|verify} messages.
+         * @function encode
+         * @memberof ActionLog.Reschedule
+         * @static
+         * @param {ActionLog.IReschedule} message Reschedule message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Reschedule.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.taskID != null && message.hasOwnProperty("taskID"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.taskID);
+            if (message.newTimestamp != null && message.hasOwnProperty("newTimestamp"))
+                $root.google.protobuf.Timestamp.encode(message.newTimestamp, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Reschedule message, length delimited. Does not implicitly {@link ActionLog.Reschedule.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof ActionLog.Reschedule
+         * @static
+         * @param {ActionLog.IReschedule} message Reschedule message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Reschedule.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Reschedule message from the specified reader or buffer.
+         * @function decode
+         * @memberof ActionLog.Reschedule
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {ActionLog.Reschedule} Reschedule
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Reschedule.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.ActionLog.Reschedule();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.taskID = reader.string();
+                    break;
+                case 2:
+                    message.newTimestamp = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Reschedule message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof ActionLog.Reschedule
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {ActionLog.Reschedule} Reschedule
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Reschedule.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Reschedule message.
+         * @function verify
+         * @memberof ActionLog.Reschedule
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Reschedule.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.taskID != null && message.hasOwnProperty("taskID"))
+                if (!$util.isString(message.taskID))
+                    return "taskID: string expected";
+            if (message.newTimestamp != null && message.hasOwnProperty("newTimestamp")) {
+                var error = $root.google.protobuf.Timestamp.verify(message.newTimestamp);
+                if (error)
+                    return "newTimestamp." + error;
+            }
+            return null;
+        };
+
+        /**
+         * Creates a Reschedule message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof ActionLog.Reschedule
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {ActionLog.Reschedule} Reschedule
+         */
+        Reschedule.fromObject = function fromObject(object) {
+            if (object instanceof $root.ActionLog.Reschedule)
+                return object;
+            var message = new $root.ActionLog.Reschedule();
+            if (object.taskID != null)
+                message.taskID = String(object.taskID);
+            if (object.newTimestamp != null) {
+                if (typeof object.newTimestamp !== "object")
+                    throw TypeError(".ActionLog.Reschedule.newTimestamp: object expected");
+                message.newTimestamp = $root.google.protobuf.Timestamp.fromObject(object.newTimestamp);
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Reschedule message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof ActionLog.Reschedule
+         * @static
+         * @param {ActionLog.Reschedule} message Reschedule
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Reschedule.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.taskID = "";
+                object.newTimestamp = null;
+            }
+            if (message.taskID != null && message.hasOwnProperty("taskID"))
+                object.taskID = message.taskID;
+            if (message.newTimestamp != null && message.hasOwnProperty("newTimestamp"))
+                object.newTimestamp = $root.google.protobuf.Timestamp.toObject(message.newTimestamp, options);
+            return object;
+        };
+
+        /**
+         * Converts this Reschedule to JSON.
+         * @function toJSON
+         * @memberof ActionLog.Reschedule
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Reschedule.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Reschedule;
     })();
 
     ActionLog.MetadataEntry = (function() {

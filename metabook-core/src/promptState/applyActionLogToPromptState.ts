@@ -8,6 +8,7 @@ import {
 import {
   ingestActionLogType,
   repetitionActionLogType,
+  rescheduleActionLogType,
 } from "../types/actionLog";
 import { applicationPromptType } from "../types/prompt";
 import {
@@ -162,5 +163,14 @@ export default function applyActionLogToPromptState<
         basePromptState,
         schedule,
       );
+    case rescheduleActionLogType:
+      if (basePromptState) {
+        return {
+          ...basePromptState,
+          dueTimestampMillis: promptActionLog.newTimestampMillis,
+        };
+      } else {
+        return new Error("Can't reschedule a prompt with no prior actions");
+      }
   }
 }

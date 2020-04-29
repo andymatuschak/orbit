@@ -2,6 +2,7 @@ import { ActionLogID } from "../actionLogID";
 
 type BaseActionLog = {
   timestampMillis: number;
+  taskID: string;
 };
 
 export type ActionLogMetadata = { [key: string]: string | number | null };
@@ -9,7 +10,6 @@ export type ActionLogMetadata = { [key: string]: string | number | null };
 export const ingestActionLogType = "ingest";
 export type IngestActionLog = {
   actionLogType: typeof ingestActionLogType;
-  taskID: string;
   metadata: ActionLogMetadata | null;
 } & BaseActionLog;
 
@@ -18,12 +18,22 @@ export type RepetitionActionLog = {
   actionLogType: typeof repetitionActionLogType;
   parentActionLogIDs: ActionLogID[];
 
-  taskID: string;
   taskParameters: ActionLogMetadata | null;
 
   context: string | null;
   outcome: string;
 } & BaseActionLog;
 
-export type ActionLog = IngestActionLog | RepetitionActionLog;
+export const rescheduleActionLogType = "reschedule";
+export type RescheduleActionLog = {
+  actionLogType: typeof rescheduleActionLogType;
+  parentActionLogIDs: ActionLogID[];
+
+  newTimestampMillis: number;
+} & BaseActionLog;
+
+export type ActionLog =
+  | IngestActionLog
+  | RepetitionActionLog
+  | RescheduleActionLog;
 export type ActionLogType = ActionLog["actionLogType"];
