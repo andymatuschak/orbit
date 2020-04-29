@@ -69,7 +69,6 @@ export default class ActionLogStore {
       serverTimestamp: ServerTimestamp | null;
     }>,
   ): Promise<ServerTimestamp | null> {
-    console.log("Start of saveActionLogs", Date.now() / 1000);
     const initialLatestServerTimestamp = await this.getLatestServerTimestamp();
     let latestServerTimestamp = initialLatestServerTimestamp;
 
@@ -107,7 +106,6 @@ export default class ActionLogStore {
       this.cachedLatestServerTimestamp = latestServerTimestamp;
     }
 
-    console.log("About to call into native code", Date.now() / 1000);
     await Promise.all([
       this.actionLogDB.batch(operations),
       this.taskIDIndexDB.batch(taskIDIndexOperations),
@@ -179,7 +177,7 @@ export default class ActionLogStore {
           const id = getActionLogIDFromTaskIDIndexDBKey(key);
           const actionLog = JSON.parse(value) as ActionLog;
           if (currentTaskID && actionLog.taskID !== currentTaskID) {
-            await visitor(currentTaskID, currentTaskLogs);
+            await visitor(currentTaskID, currentTaskLogs).catch(reject);
             currentTaskLogs = [];
             currentTaskID = actionLog.taskID;
           } else if (currentTaskID === null) {
@@ -189,7 +187,7 @@ export default class ActionLogStore {
           iterator.next(iterate);
         } else {
           if (currentTaskID) {
-            await visitor(currentTaskID, currentTaskLogs);
+            await visitor(currentTaskID, currentTaskLogs).catch(reject);
           }
           iterator.end((error) => (error ? reject(error) : resolve()));
         }

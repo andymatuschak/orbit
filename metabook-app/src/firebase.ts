@@ -1,8 +1,7 @@
-import shimFirebasePersistence from "firebase-react-native-persistence-shim";
-import firebase from "firebase/app";
 import firestore from "@react-native-firebase/firestore";
 import firebaseFunctions from "@react-native-firebase/functions";
-import { FileSystem } from "react-native-unimodules";
+import shimFirebasePersistence from "firebase-react-native-persistence-shim";
+import type firebase from "firebase/app";
 
 /*let app: firebase.app.App | null = null;
 export function getFirebaseApp(): firebase.app.App {
@@ -32,7 +31,7 @@ export function getFirebaseFunctions(): firebase.functions.Functions {
 }
 
 export type PersistenceStatus = "pending" | "enabled" | "unavailable";
-const persistenceStatus: PersistenceStatus = "pending";
+// const persistenceStatus: PersistenceStatus = "pending";
 export async function enableFirebasePersistence(): Promise<PersistenceStatus> {
   await firestore().settings({
     persistence: false, // disable offline persistence

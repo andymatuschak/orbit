@@ -108,7 +108,6 @@ export default class PromptStateStore {
           const indexUpdateTransformer = new Transform({
             objectMode: true,
             transform: async (chunk, inc, done) => {
-              // console.log("[Performance] Start transform", Date.now());
               const indexKey = chunk.key;
               const taskID = indexKey.split("!")[1];
               const promptState = await this._getPromptState(taskID);
@@ -130,9 +129,7 @@ export default class PromptStateStore {
             })
             .pipe(indexUpdateTransformer)
             .on("data", ({ taskID, promptState }) => {
-              // console.log("[Performance] Start data fn", Date.now());
               output.set(taskID, promptState);
-              // console.log("[Performance] End data fn", Date.now());
             })
             .on("error", reject)
             .on("close", () => reject(new Error(`Database unexpected closed`)))

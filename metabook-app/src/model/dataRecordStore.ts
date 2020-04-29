@@ -1,5 +1,5 @@
 import LevelUp, * as levelup from "levelup";
-import LevelJS from "level-js";
+import RNLeveldown from "react-native-leveldown";
 import {
   AttachmentID,
   AttachmentURLReference,
@@ -11,7 +11,7 @@ import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";
 export default class DataRecordStore {
   private db: levelup.LevelUp;
   constructor(cacheName = "DataRecordStore") {
-    this.db = LevelUp(LevelJS(cacheName));
+    this.db = LevelUp(new RNLeveldown(cacheName));
   }
 
   async savePrompt(id: PromptID, prompt: Prompt): Promise<void> {

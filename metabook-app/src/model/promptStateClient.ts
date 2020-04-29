@@ -17,7 +17,6 @@ import {
 } from "metabook-core";
 import { ServerTimestamp } from "metabook-firebase-support";
 import ActionLogStore from "./actionLogStore";
-import importRemoteActionLogs from "./importRemoteActionLogs";
 import PromptStateStore from "./promptStateStore";
 
 export function computeSubscriberUpdate(
@@ -75,6 +74,7 @@ export default class PromptStateClient {
   private actionLogStore: ActionLogStore;
   private readonly subscribers: Set<PromptStateClientSubscriber>;
   private remoteLogSubscription: (() => void) | null;
+  private initialPromptStatePromise: Promise<void> | null;
 
   constructor(
     remoteClient: MetabookUserClient,
@@ -86,6 +86,7 @@ export default class PromptStateClient {
     this.actionLogStore = actionLogStore;
     this.subscribers = new Set();
     this.remoteLogSubscription = null;
+    this.initialPromptStatePromise = null;
 
     this.actionLogStore
       .hasCompletedInitialImport()
@@ -95,6 +96,9 @@ export default class PromptStateClient {
             await this.actionLogStore.getLatestServerTimestamp(),
           );
         } else {
+          this.initialPromptStatePromise = this.performInitialPromptStateImport();
+          await this.initialPromptStatePromise;
+          this.initialPromptStatePromise = null;
           this.performInitialLogImport();
         }
       });
@@ -110,55 +114,53 @@ export default class PromptStateClient {
     };
     this.subscribers.add(subscriber);
 
-    this.actionLogStore
-      .hasCompletedInitialImport()
-      .then(async (hasCompletedInitialImport) => {
-        let initialEntries: Map<PromptTaskID, PromptState>;
-        if (hasCompletedInitialImport) {
-          initialEntries = await this.promptStateStore.getDuePromptStates(
-            dueThresholdMillis,
-          );
+    (async () => {
+      if (
+        !(await this.actionLogStore.hasCompletedInitialImport()) &&
+        this.initialPromptStatePromise
+      ) {
+        await this.initialPromptStatePromise;
+      }
+
+      this.promptStateStore
+        .getDuePromptStates(dueThresholdMillis)
+        .then((initialEntries) => {
           console.log(
             "[Performance] Read stored due prompt states",
             Date.now() / 1000.0,
           );
-        } else {
-          console.log(
-            "Hasn't finished initial import. Fetching initial prompt states.",
-          );
-          const initialPromptStateCaches = await this.remoteClient.getDuePromptStates(
-            dueThresholdMillis,
-          );
-          await this.promptStateStore.savePromptStateCaches(
-            initialPromptStateCaches.map((cache) => {
-              const { taskID, ...promptState } = cache;
-              return {
-                taskID: taskID,
-                promptState,
-              };
-            }),
-          );
-          initialEntries = new Map(
-            initialPromptStateCaches.map((cache) => {
-              const { taskID, ...promptState } = cache;
-              return [taskID, promptState];
-            }),
-          );
-        }
 
-        // TODO: maybe wait to notify subscribers if the data is stale
-        if (this.subscribers.has(subscriber)) {
-          onUpdate({
-            addedEntries: initialEntries,
-            updatedEntries: new Map(),
-            removedEntries: new Set(),
-          });
-        }
-      });
+          if (this.subscribers.has(subscriber)) {
+            onUpdate({
+              addedEntries: initialEntries,
+              updatedEntries: new Map(),
+              removedEntries: new Set(),
+            });
+          }
+        });
+    })();
 
     return () => {
       this.subscribers.delete(subscriber);
     };
+  }
+
+  private async performInitialPromptStateImport(): Promise<void> {
+    console.log(
+      "Hasn't finished initial import. Fetching initial prompt states.",
+    );
+    const initialPromptStateCaches = await this.remoteClient.getDuePromptStates(
+      Date.now(),
+    );
+    await this.promptStateStore.savePromptStateCaches(
+      initialPromptStateCaches.map((cache) => {
+        const { taskID, ...promptState } = cache;
+        return {
+          taskID: taskID,
+          promptState,
+        };
+      }),
+    );
   }
 
   private async performInitialLogImport() {
@@ -178,7 +180,7 @@ export default class PromptStateClient {
 
       const logs = await this.remoteClient.getActionLogs(
         currentServerTimestampThreshold,
-        5000,
+        100,
       );
       if (logs.length > 0) {
         total += logs.length;
@@ -210,36 +212,44 @@ export default class PromptStateClient {
     const startTime = Date.now();
     let promptStateCounter = 0;
     let errorCount = 0;
-    await this.actionLogStore.iterateAllActionLogsByTaskID(
-      async (taskID, entries) => {
-        const mergedPromptState = mergeActionLogs(
-          entries.map(({ log, id }) => ({
-            log: getPromptActionLogFromActionLog(log),
-            id,
-          })),
-          null,
-        );
-        if (mergedPromptState instanceof Error) {
-          console.log(
-            `Couldn't merge logs for ${taskID}. ${mergedPromptState.mergeLogErrorType}: ${mergedPromptState.message}.`,
+    await this.actionLogStore
+      .iterateAllActionLogsByTaskID(async (taskID, entries) => {
+        try {
+          const mergedPromptState = mergeActionLogs(
+            entries.map(({ log, id }) => ({
+              log: getPromptActionLogFromActionLog(log),
+              id,
+            })),
+            null,
           );
-          errorCount++;
-        } else {
-          promptStateBatch.push({
-            taskID: taskID as PromptTaskID,
-            promptState: mergedPromptState,
-          });
-          if (promptStateBatch.length >= 100) {
-            promptStateCounter += promptStateBatch.length;
-            await this.promptStateStore.savePromptStateCaches(promptStateBatch);
+          if (mergedPromptState instanceof Error) {
             console.log(
-              `[Action log import] Merged ${promptStateCounter} prompt states`,
+              `Couldn't merge logs for ${taskID}. ${mergedPromptState.mergeLogErrorType}: ${mergedPromptState.message}.`,
             );
-            promptStateBatch = [];
+            errorCount++;
+          } else {
+            promptStateBatch.push({
+              taskID: taskID as PromptTaskID,
+              promptState: mergedPromptState,
+            });
+            if (promptStateBatch.length >= 100) {
+              promptStateCounter += promptStateBatch.length;
+              await this.promptStateStore.savePromptStateCaches(
+                promptStateBatch,
+              );
+              console.log(
+                `[Action log import] Merged ${promptStateCounter} prompt states`,
+              );
+              promptStateBatch = [];
+            }
           }
+        } catch (error) {
+          console.error("error in log iteration", taskID);
         }
-      },
-    );
+      })
+      .catch((error) => {
+        throw new Error(`ERROR ITERATIONG ACTION LOGS ${error}`);
+      });
     if (promptStateBatch.length > 0) {
       promptStateCounter += promptStateBatch.length;
       console.log(

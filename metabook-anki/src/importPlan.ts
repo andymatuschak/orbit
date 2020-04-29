@@ -30,7 +30,6 @@ import {
   PromptTaskID,
   repetitionActionLogType,
 } from "metabook-core";
-import { PromptStateCache } from "metabook-firebase-shared";
 import * as Anki from "./ankiPkg";
 import { Card } from "./ankiPkg";
 import { getModelMapping, ModelMapping } from "./modelMapping";
