@@ -135,8 +135,6 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
           afterServerTimestamp.nanoseconds,
         ),
       );
-    } else {
-      userStateLogsRef = userStateLogsRef.where("serverTimestamp", "==", null);
     }
     return userStateLogsRef;
   }

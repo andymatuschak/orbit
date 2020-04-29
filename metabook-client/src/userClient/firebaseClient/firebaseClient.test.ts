@@ -3,11 +3,9 @@ import firebase from "firebase/app";
 import {
   applyActionLogToPromptState,
   basicPromptType,
-  clozePromptType,
   getIDForPrompt,
   getIDForPromptTask,
   ingestActionLogType,
-  PromptID,
   PromptIngestActionLog,
   PromptState,
   PromptTask,
@@ -86,7 +84,6 @@ describe("prompt states", () => {
     await ref.set({
       ...initialPromptState,
       taskID,
-      lastLogServerTimestamp: new firebase.firestore.Timestamp(0.5, 0),
     });
 
     const initialPromptStates = await client.getDuePromptStates(
