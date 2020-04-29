@@ -1,4 +1,4 @@
-import LevelJS from "level-js";
+import RNLeveldown from "react-native-leveldown";
 import LevelUp, * as levelup from "levelup";
 import * as lexi from "lexicographic-integer";
 
@@ -24,7 +24,7 @@ export default class PromptStateStore {
 
   constructor(cacheName = "PromptStateStore") {
     console.log("[Performance] Opening prompt store", Date.now() / 1000.0);
-    this.rootDB = LevelUp(LevelJS(cacheName), () => {
+    this.rootDB = LevelUp(new RNLeveldown(cacheName), () => {
       console.log("[Performance] Opened database", Date.now() / 1000.0);
     });
     this.promptStateDB = sub(this.rootDB, "promptStates");
@@ -69,14 +69,8 @@ export default class PromptStateStore {
 
         dueTimestampIndexBatch.put(
           getDueTimestampIndexKey(promptState, taskID),
-          encodedPromptState,
+          taskID,
         );
-        const oldPromptState = await this._getPromptState(taskID);
-        if (oldPromptState) {
-          dueTimestampIndexBatch.del(
-            getDueTimestampIndexKey(oldPromptState, taskID),
-          );
-        }
       }
 
       await Promise.all([batch.write(), dueTimestampIndexBatch.write()]);
@@ -116,8 +110,13 @@ export default class PromptStateStore {
             transform: async (chunk, inc, done) => {
               // console.log("[Performance] Start transform", Date.now());
               const indexKey = chunk.key;
-              const promptState = JSON.parse(chunk.value);
               const taskID = indexKey.split("!")[1];
+              const promptState = await this._getPromptState(taskID);
+              if (!promptState) {
+                throw new Error(
+                  `Inconsistent index: contains index for prompt state with key ${taskID}, which doesn't exist`,
+                );
+              }
               done(null, { taskID, promptState });
             },
           });

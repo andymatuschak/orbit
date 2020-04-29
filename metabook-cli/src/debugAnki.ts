@@ -1,6 +1,15 @@
+import firebase from "firebase";
 import admin from "firebase-admin";
-import { ActionLog, PromptState, PromptTaskID } from "metabook-core";
-import { getLogCollectionReference } from "metabook-firebase-support";
+import {
+  ActionLog,
+  ActionLogID,
+  PromptState,
+  PromptTaskID,
+} from "metabook-core";
+import {
+  getLogCollectionReference,
+  getReferenceForActionLogID,
+} from "metabook-firebase-support";
 import { getAdminApp } from "./adminApp";
 
 function formatMillis(millis: number): string {
@@ -31,26 +40,48 @@ function formatMillis(millis: number): string {
   const adminApp = getAdminApp();
   const adminDB = adminApp.firestore();
 
-  let ref = getLogCollectionReference(adminDB, "x5EWk2UT56URxbfrl7djoxwxiqH2")
+  const app = firebase.initializeApp({
+    apiKey: "AIzaSyAwlVFBlx4D3s3eSrwOvUyqOKr_DXFmj0c",
+    authDomain: "metabook-system.firebaseapp.com",
+    databaseURL: "https://metabook-system.firebaseio.com",
+    projectId: "metabook-system",
+    storageBucket: "metabook-system.appspot.com",
+    messagingSenderId: "748053153064",
+    appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
+  });
+
+  const ref = getReferenceForActionLogID(
+    app.firestore(),
+    "x5EWk2UT56URxbfrl7djoxwxiqH2",
+    "zdj7WaVVJ8gaUcyQM4iZbwiYzLpC6jmzYAESK2RsqmdpMY8py" as ActionLogID,
+  );
+  const snapshot = await ref.get();
+  console.log(snapshot.data());
+
+  /*const startTime = Date.now();
+  let ref = getLogCollectionReference(
+    app.firestore(),
+    "x5EWk2UT56URxbfrl7djoxwxiqH2",
+  )
     .orderBy("serverTimestamp", "asc")
-    .limit(1000);
-  let baseServerTimestamp: admin.firestore.Timestamp | null = null;
+    .limit(50000);
+  // let baseServerTimestamp: admin.firestore.Timestamp | null = null;
+  let baseSnapshot: any = null;
   let total = 0;
   while (true) {
-    if (baseServerTimestamp) {
-      ref = ref.where("serverTimestamp", ">", baseServerTimestamp);
+    if (baseSnapshot) {
+      ref = ref.startAfter(baseSnapshot);
     }
     const snapshot = await ref.get();
     total += snapshot.size;
-    console.log(`Got ${snapshot.size} logs; ${total} total`);
+    // console.log(`Got ${snapshot.size} logs; ${total} total`);
     if (snapshot.size > 0) {
-      baseServerTimestamp = snapshot.docs[snapshot.size - 1].data()
-        .serverTimestamp;
+      baseSnapshot = snapshot.docs[snapshot.size - 1];
     } else {
-      console.log("Done.");
+      console.log("Done", total, (Date.now() - startTime) / 1000);
       break;
     }
-  }
+  }*/
 
   /*
   const refs = (plan.prompts as Prompt[]).map((prompt) =>

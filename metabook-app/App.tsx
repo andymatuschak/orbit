@@ -1,3 +1,4 @@
+import React from "react";
 import "node-libs-react-native/globals";
 import "./src/shimBase64";
 import * as Random from "expo-random";
@@ -9,7 +10,6 @@ import "expo-asset";
 // @ts-ignore
 import crypto from "crypto";
 
-import React from "react";
 import { Platform } from "react-native";
 import Root from "./src/Root";
 

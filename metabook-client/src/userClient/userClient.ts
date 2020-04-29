@@ -1,4 +1,9 @@
-import { ActionLog, PromptState, PromptTaskID } from "metabook-core";
+import {
+  ActionLog,
+  ActionLogID,
+  PromptState,
+  PromptTaskID,
+} from "metabook-core";
 import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
 
@@ -10,7 +15,11 @@ export interface MetabookUserClient {
   subscribeToActionLogs(
     afterServerTimestamp: ServerTimestamp | null,
     onNewLogs: (
-      newLogs: { log: ActionLog; serverTimestamp: ServerTimestamp }[],
+      newLogs: {
+        log: ActionLog;
+        id: ActionLogID;
+        serverTimestamp: ServerTimestamp;
+      }[],
     ) => void,
     onError: (error: Error) => void,
   ): MetabookUnsubscribe;
@@ -18,7 +27,9 @@ export interface MetabookUserClient {
   getActionLogs(
     afterServerTimestamp: ServerTimestamp | null,
     limit: number,
-  ): Promise<{ log: ActionLog; serverTimestamp: ServerTimestamp }[]>;
+  ): Promise<
+    { log: ActionLog; id: ActionLogID; serverTimestamp: ServerTimestamp }[]
+  >;
 
   recordActionLogs(logs: ActionLog[]): Promise<unknown>;
 }

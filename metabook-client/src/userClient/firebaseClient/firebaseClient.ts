@@ -1,10 +1,11 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
 
-import { ActionLog, getIDForActionLog } from "metabook-core";
+import { ActionLog, ActionLogID, getIDForActionLog } from "metabook-core";
 import {
   ActionLogDocument,
   batchWriteEntries,
+  getActionLogIDForFirebaseKey,
   getLogCollectionReference,
   getReferenceForActionLogID,
   getTaskStateCacheCollectionReference,
@@ -69,7 +70,11 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
   subscribeToActionLogs(
     afterServerTimestamp: ServerTimestamp | null,
     onNewLogs: (
-      newLogs: { log: ActionLog; serverTimestamp: ServerTimestamp }[],
+      newLogs: {
+        log: ActionLog;
+        id: ActionLogID;
+        serverTimestamp: ServerTimestamp;
+      }[],
     ) => void,
     onError: (error: Error) => void,
   ): MetabookUnsubscribe {
@@ -77,6 +82,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
       (snapshot) => {
         const newLogs: {
           log: ActionLog;
+          id: ActionLogID;
           serverTimestamp: ServerTimestamp;
         }[] = [];
         for (const change of snapshot.docChanges()) {
@@ -89,7 +95,11 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
                   suppressTaskStateCacheUpdate,
                   ...log
                 } = change.doc.data({ serverTimestamps: "none" });
-                newLogs.push({ log, serverTimestamp });
+                newLogs.push({
+                  log,
+                  id: getActionLogIDForFirebaseKey(change.doc.id),
+                  serverTimestamp,
+                });
                 break;
               case "removed":
                 // TODO make more robust against client failures to persist / sync
@@ -134,7 +144,9 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
   async getActionLogs(
     afterServerTimestamp: ServerTimestamp,
     limit: number,
-  ): Promise<{ log: ActionLog; serverTimestamp: ServerTimestamp }[]> {
+  ): Promise<
+    { log: ActionLog; id: ActionLogID; serverTimestamp: ServerTimestamp }[]
+  > {
     const snapshot = await this.getActionLogRef(
       afterServerTimestamp,
       limit,
@@ -145,7 +157,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
         suppressTaskStateCacheUpdate,
         ...log
       } = doc.data();
-      return { log, serverTimestamp };
+      return { log, id: getActionLogIDForFirebaseKey(doc.id), serverTimestamp };
     });
   }
 

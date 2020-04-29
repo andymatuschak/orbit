@@ -3,8 +3,10 @@ import isEqual from "lodash.isequal";
 import { MetabookUserClient } from "metabook-client";
 import {
   ActionLog,
+  ActionLogID,
   applyActionLogToPromptState,
   getActionLogFromPromptActionLog,
+  getIDForActionLog,
   getPromptActionLogFromActionLog,
   mergeActionLogs,
   PromptActionLog,
@@ -17,29 +19,6 @@ import { ServerTimestamp } from "metabook-firebase-support";
 import ActionLogStore from "./actionLogStore";
 import importRemoteActionLogs from "./importRemoteActionLogs";
 import PromptStateStore from "./promptStateStore";
-
-function updatePromptStateForLog(
-  basePromptState: PromptState | null,
-  promptActionLog: PromptActionLog<PromptTaskParameters>,
-): PromptState | null {
-  // TODO: implement real resolution
-  if (
-    promptActionLogCanBeAppliedToPromptState(promptActionLog, basePromptState)
-  ) {
-    const newPromptState = applyActionLogToPromptState({
-      promptActionLog,
-      basePromptState,
-      schedule: "default",
-    });
-    if (newPromptState instanceof Error) {
-      throw newPromptState;
-    } else {
-      return newPromptState;
-    }
-  } else {
-    return null;
-  }
-}
 
 export function computeSubscriberUpdate(
   subscriber: PromptStateClientSubscriber,
@@ -97,9 +76,6 @@ export default class PromptStateClient {
   private readonly subscribers: Set<PromptStateClientSubscriber>;
   private remoteLogSubscription: (() => void) | null;
 
-  // TODO: Persist
-  private brokenTaskIDs: Set<PromptTaskID>;
-
   constructor(
     remoteClient: MetabookUserClient,
     promptStateStore: PromptStateStore,
@@ -111,7 +87,17 @@ export default class PromptStateClient {
     this.subscribers = new Set();
     this.remoteLogSubscription = null;
 
-    this.brokenTaskIDs = new Set();
+    this.actionLogStore
+      .hasCompletedInitialImport()
+      .then(async (hasCompletedInitialImport) => {
+        if (hasCompletedInitialImport) {
+          this.ensureSubscriptionToRemoteLogs(
+            await this.actionLogStore.getLatestServerTimestamp(),
+          );
+        } else {
+          this.performInitialLogImport();
+        }
+      });
   }
 
   subscribeToDuePromptStates(
@@ -125,12 +111,20 @@ export default class PromptStateClient {
     this.subscribers.add(subscriber);
 
     this.actionLogStore
-      .getLatestServerTimestamp()
-      .then(async (latestServerLogTimestamp) => {
+      .hasCompletedInitialImport()
+      .then(async (hasCompletedInitialImport) => {
         let initialEntries: Map<PromptTaskID, PromptState>;
-        if (latestServerLogTimestamp === null) {
+        if (hasCompletedInitialImport) {
+          initialEntries = await this.promptStateStore.getDuePromptStates(
+            dueThresholdMillis,
+          );
           console.log(
-            "No cached prompt states. Fetching initial prompt states.",
+            "[Performance] Read stored due prompt states",
+            Date.now() / 1000.0,
+          );
+        } else {
+          console.log(
+            "Hasn't finished initial import. Fetching initial prompt states.",
           );
           const initialPromptStateCaches = await this.remoteClient.getDuePromptStates(
             dueThresholdMillis,
@@ -150,14 +144,6 @@ export default class PromptStateClient {
               return [taskID, promptState];
             }),
           );
-        } else {
-          initialEntries = await this.promptStateStore.getDuePromptStates(
-            dueThresholdMillis,
-          );
-          console.log(
-            "[Performance] Got stored due prompt states",
-            Date.now() / 1000.0,
-          );
         }
 
         // TODO: maybe wait to notify subscribers if the data is stale
@@ -168,22 +154,109 @@ export default class PromptStateClient {
             removedEntries: new Set(),
           });
         }
-
-        // this.ensureSubscriptionToRemoteLogs(latestServerLogTimestamp);
-        importRemoteActionLogs(
-          this.actionLogStore,
-          this.promptStateStore,
-          this.remoteClient,
-        );
       });
 
     return () => {
       this.subscribers.delete(subscriber);
-      if (this.subscribers.size === 0) {
-        this.remoteLogSubscription?.();
-        this.remoteLogSubscription = null;
-      }
     };
+  }
+
+  private async performInitialLogImport() {
+    let currentServerTimestampThreshold: ServerTimestamp = (await this.actionLogStore.getLatestServerTimestamp()) ?? {
+      seconds: 0,
+      nanoseconds: 0,
+    };
+    console.log("[Action log import] Starting initial import");
+
+    let total = 0;
+    const savePromises: Promise<unknown>[] = [];
+    const downloadStartTime = Date.now();
+    while (true) {
+      console.log(
+        `[Action log import] Fetching logs after ${currentServerTimestampThreshold.seconds}.${currentServerTimestampThreshold.nanoseconds}.`,
+      );
+
+      const logs = await this.remoteClient.getActionLogs(
+        currentServerTimestampThreshold,
+        5000,
+      );
+      if (logs.length > 0) {
+        total += logs.length;
+        console.log(
+          `[Action log import] Fetched ${logs.length} logs (total ${total}).`,
+        );
+        savePromises.push(this.actionLogStore.saveActionLogs(logs));
+        currentServerTimestampThreshold = logs[logs.length - 1].serverTimestamp;
+      } else {
+        console.log(
+          "[Action log import] Finished fetching action logs.",
+          total,
+          (Date.now() - downloadStartTime) / 1000,
+        );
+        break;
+      }
+    }
+    await Promise.all(savePromises);
+    console.log(
+      "[Action log import] Finished writing action logs.",
+      total,
+      (Date.now() - downloadStartTime) / 1000,
+    );
+
+    let promptStateBatch: {
+      taskID: PromptTaskID;
+      promptState: PromptState;
+    }[] = [];
+    const startTime = Date.now();
+    let promptStateCounter = 0;
+    let errorCount = 0;
+    await this.actionLogStore.iterateAllActionLogsByTaskID(
+      async (taskID, entries) => {
+        const mergedPromptState = mergeActionLogs(
+          entries.map(({ log, id }) => ({
+            log: getPromptActionLogFromActionLog(log),
+            id,
+          })),
+          null,
+        );
+        if (mergedPromptState instanceof Error) {
+          console.log(
+            `Couldn't merge logs for ${taskID}. ${mergedPromptState.mergeLogErrorType}: ${mergedPromptState.message}.`,
+          );
+          errorCount++;
+        } else {
+          promptStateBatch.push({
+            taskID: taskID as PromptTaskID,
+            promptState: mergedPromptState,
+          });
+          if (promptStateBatch.length >= 100) {
+            promptStateCounter += promptStateBatch.length;
+            await this.promptStateStore.savePromptStateCaches(promptStateBatch);
+            console.log(
+              `[Action log import] Merged ${promptStateCounter} prompt states`,
+            );
+            promptStateBatch = [];
+          }
+        }
+      },
+    );
+    if (promptStateBatch.length > 0) {
+      promptStateCounter += promptStateBatch.length;
+      console.log(
+        `[Action log import] Merged ${promptStateCounter} prompt states`,
+      );
+      await this.promptStateStore.savePromptStateCaches(promptStateBatch);
+    }
+
+    console.log(
+      "[Action log import] Finished merging action logs.",
+      promptStateCounter,
+      errorCount,
+      (Date.now() - startTime) / 1000,
+    );
+
+    await this.actionLogStore.markInitialImportCompleted();
+    this.ensureSubscriptionToRemoteLogs(currentServerTimestampThreshold);
   }
 
   private ensureSubscriptionToRemoteLogs(
@@ -199,7 +272,7 @@ export default class PromptStateClient {
       async (newLogs) => {
         console.log(`Got new logs: ${newLogs.length}`);
         // TODO: debounce
-        const newLatestServerTimestamp = await this.updateLocalStateForLogEntries(
+        const newLatestServerTimestamp = await this.patchLocalStateFromLogEntries(
           newLogs,
         );
         this.remoteLogSubscription?.();
@@ -212,18 +285,19 @@ export default class PromptStateClient {
     );
   }
 
-  private async updateLocalStateForLogEntries(
+  private async patchLocalStateFromLogEntries(
     entries: Iterable<{
       log: ActionLog;
+      id: ActionLogID;
       serverTimestamp: ServerTimestamp | null;
     }>,
   ): Promise<ServerTimestamp | null> {
-    // First, we get the current prompt states for these logs.
     const taskIDs = new Set<PromptTaskID>();
     for (const { log } of entries) {
       taskIDs.add(getPromptActionLogFromActionLog(log).taskID);
     }
 
+    // First, we get the current prompt states for these logs.
     const workingPromptStates = new Map<PromptTaskID, PromptState | null>();
     const promptStateGetPromises: Promise<unknown>[] = [];
     for (const taskID of taskIDs) {
@@ -236,32 +310,43 @@ export default class PromptStateClient {
     await Promise.all(promptStateGetPromises);
 
     // Now we try to directly apply all the new prompt states.
-    const affectedBrokenTaskIDs = new Map<PromptTaskID, PromptState | null>();
+    const brokenTaskIDs = new Map<PromptTaskID, PromptState | null>();
     const updates: {
       oldPromptState: PromptState | null;
       newPromptState: PromptState;
       taskID: PromptTaskID;
     }[] = [];
-    for (const { log } of entries) {
+    for (const { log, id } of entries) {
       const promptActionLog = getPromptActionLogFromActionLog(log);
       const basePromptState =
         workingPromptStates.get(promptActionLog.taskID) ?? null;
 
-      const newPromptState = updatePromptStateForLog(
-        basePromptState,
-        promptActionLog,
-      );
-      if (newPromptState) {
-        console.log("Successfully applied log for ", promptActionLog.taskID);
-        workingPromptStates.set(promptActionLog.taskID, newPromptState);
-        updates.push({
-          oldPromptState: basePromptState,
-          newPromptState,
-          taskID: promptActionLog.taskID,
+      if (basePromptState && basePromptState.headActionLogIDs.includes(id)) {
+        // We've already patched in this log.
+      } else if (
+        promptActionLogCanBeAppliedToPromptState(
+          promptActionLog,
+          basePromptState,
+        )
+      ) {
+        const newPromptState = applyActionLogToPromptState({
+          promptActionLog,
+          basePromptState,
+          schedule: "default",
         });
+        if (newPromptState instanceof Error) {
+          throw newPromptState;
+        } else {
+          console.log("Successfully applied log for ", promptActionLog.taskID);
+          workingPromptStates.set(promptActionLog.taskID, newPromptState);
+          updates.push({
+            oldPromptState: basePromptState,
+            newPromptState,
+            taskID: promptActionLog.taskID,
+          });
+        }
       } else {
-        affectedBrokenTaskIDs.set(promptActionLog.taskID, basePromptState);
-        this.brokenTaskIDs.add(promptActionLog.taskID);
+        brokenTaskIDs.set(promptActionLog.taskID, basePromptState);
         console.log(
           `Can't apply log to prompt. New log heads: ${JSON.stringify(
             log,
@@ -272,38 +357,41 @@ export default class PromptStateClient {
             null,
             "\t",
           )}`,
+          await this.actionLogStore.getActionLogsByTaskID(
+            promptActionLog.taskID,
+          ),
         );
       }
     }
 
     const latestServerTimestamp = await this.actionLogStore.saveActionLogs(
-      entries,
+      [...entries].map((e) => ({ ...e, id: getIDForActionLog(e.log) })),
     );
 
     // Try to resolve any broken log sequences.
     await Promise.all(
-      [...affectedBrokenTaskIDs.entries()].map(
-        async ([taskID, basePromptState]) => {
-          const logs = await this.actionLogStore.getActionLogsByTaskID(taskID);
-          const mergeResult = mergeActionLogs(
-            logs.map((log) => getPromptActionLogFromActionLog(log)),
-            basePromptState,
+      [...brokenTaskIDs.entries()].map(async ([taskID, basePromptState]) => {
+        const entries = await this.actionLogStore.getActionLogsByTaskID(taskID);
+        const mergeResult = mergeActionLogs(
+          entries.map(({ log, id }) => ({
+            log: getPromptActionLogFromActionLog(log),
+            id,
+          })),
+          basePromptState,
+        );
+        if (mergeResult instanceof Error) {
+          console.log(
+            `Couldn't merge logs for ${taskID}. ${mergeResult.mergeLogErrorType}: ${mergeResult.message}`,
           );
-          if (mergeResult instanceof Error) {
-            console.log(
-              `Couldn't merge logs for ${taskID}. ${mergeResult.mergeLogErrorType}: ${mergeResult.message}`,
-            );
-          } else {
-            console.log(`Resolved logs for ${taskID}`);
-            this.brokenTaskIDs.delete(taskID);
-            updates.push({
-              oldPromptState: basePromptState,
-              newPromptState: mergeResult,
-              taskID,
-            });
-          }
-        },
-      ),
+        } else {
+          console.log(`Resolved logs for ${taskID}`);
+          updates.push({
+            oldPromptState: basePromptState,
+            newPromptState: mergeResult,
+            taskID,
+          });
+        }
+      }),
     );
 
     await this.promptStateStore.savePromptStateCaches(
@@ -324,26 +412,29 @@ export default class PromptStateClient {
       }
     }
 
-    console.log(
-      `Broken task IDs (${this.brokenTaskIDs.size}): ${[
-        ...this.brokenTaskIDs,
-      ].join(", ")}`,
-    );
-
     return latestServerTimestamp;
   }
 
   async recordPromptActionLogs(
-    logs: Iterable<PromptActionLog<PromptTaskParameters>>,
+    entries: Iterable<{
+      log: PromptActionLog<PromptTaskParameters>;
+      id?: ActionLogID;
+    }>,
   ): Promise<void> {
-    const actionLogs = [...logs].map(getActionLogFromPromptActionLog);
-    // TODO: if we're still doing our initial action log sync, queue these
+    const promptLogEntries = [...entries].map(({ log, id }) => {
+      const actionLog = getActionLogFromPromptActionLog(log);
+      return {
+        log: actionLog,
+        id: id ?? getIDForActionLog(actionLog),
+        serverTimestamp: null,
+      };
+    });
 
     await Promise.all([
-      this.remoteClient.recordActionLogs(actionLogs),
-      this.updateLocalStateForLogEntries(
-        actionLogs.map((log) => ({ log, serverTimestamp: null })),
+      this.remoteClient.recordActionLogs(
+        promptLogEntries.map(({ log }) => log),
       ),
+      this.patchLocalStateFromLogEntries(promptLogEntries),
     ]);
   }
 }

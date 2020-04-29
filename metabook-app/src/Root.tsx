@@ -123,21 +123,24 @@ export default function App() {
       promptStateClient!
         .recordPromptActionLogs([
           {
-            actionLogType: repetitionActionLogType,
-            parentActionLogIDs:
-              marking.reviewItem.promptState?.headActionLogIDs ?? [],
-            taskID: getIDForPromptTask({
-              promptID: getIDForPrompt(marking.reviewItem.prompt),
-              promptType: marking.reviewItem.prompt.promptType,
-              promptParameters: marking.reviewItem.promptParameters,
-            } as PromptTask),
-            outcome: marking.outcome,
-            context: null,
-            timestampMillis: Date.now(),
-            taskParameters: getNextTaskParameters(
-              marking.reviewItem.prompt,
-              marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
-            ),
+            log: {
+              actionLogType: repetitionActionLogType,
+              parentActionLogIDs:
+                marking.reviewItem.promptState?.headActionLogIDs ?? [],
+              taskID: getIDForPromptTask({
+                promptID: getIDForPrompt(marking.reviewItem.prompt),
+                promptType: marking.reviewItem.prompt.promptType,
+                promptParameters: marking.reviewItem.promptParameters,
+              } as PromptTask),
+              outcome: marking.outcome,
+              context: null,
+              timestampMillis: Date.now(),
+              taskParameters: getNextTaskParameters(
+                marking.reviewItem.prompt,
+                marking.reviewItem.promptState?.lastReviewTaskParameters ??
+                  null,
+              ),
+            },
           },
         ])
         .then(() => {

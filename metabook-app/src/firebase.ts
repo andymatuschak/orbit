@@ -34,6 +34,9 @@ export function getFirebaseFunctions(): firebase.functions.Functions {
 export type PersistenceStatus = "pending" | "enabled" | "unavailable";
 const persistenceStatus: PersistenceStatus = "pending";
 export async function enableFirebasePersistence(): Promise<PersistenceStatus> {
+  await firestore().settings({
+    persistence: false, // disable offline persistence
+  } as any);
   shimFirebasePersistence("");
   return "enabled";
   /*if (persistenceStatus !== "pending") {

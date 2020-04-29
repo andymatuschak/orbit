@@ -1,12 +1,9 @@
-import { ActionLogID, getIDForActionLog } from "../actionLogID";
+import { ActionLogID } from "../actionLogID";
 import {
   ingestActionLogType,
   repetitionActionLogType,
 } from "../types/actionLog";
-import {
-  getActionLogFromPromptActionLog,
-  PromptActionLog,
-} from "../types/promptActionLog";
+import { PromptActionLog } from "../types/promptActionLog";
 import { PromptTaskParameters } from "../types/promptTaskParameters";
 import applyActionLogToPromptState from "./applyActionLogToPromptState";
 import promptActionLogCanBeAppliedToPromptState from "./promptActionLogCanBeAppliedToPromptState";
@@ -29,12 +26,15 @@ enum ActionLogMergeErrorType {
 }
 
 export default function mergeActionLogs(
-  logs: Iterable<PromptActionLog<PromptTaskParameters>>,
+  entries: Iterable<{
+    log: PromptActionLog<PromptTaskParameters>;
+    id: ActionLogID;
+  }>,
   basePromptState: PromptState | null,
 ): PromptState | ActionLogMergeError {
   const actionLogIDs: Set<ActionLogID> = new Set();
-  for (const log of logs) {
-    actionLogIDs.add(getIDForActionLog(getActionLogFromPromptActionLog(log)));
+  for (const { id } of entries) {
+    actionLogIDs.add(id);
   }
   if (actionLogIDs.size === 0) {
     throw new Error("mergeActionLogs requires at least one log");
@@ -57,7 +57,7 @@ export default function mergeActionLogs(
 
   // Are any logs missing?
   const missingLogIDs = new Set<ActionLogID>();
-  for (const log of logs) {
+  for (const { log } of entries) {
     switch (log.actionLogType) {
       case ingestActionLogType:
         continue;
@@ -79,7 +79,7 @@ export default function mergeActionLogs(
 
   // At least for review logs, we don't have to do any clever tree-based resolution: we can just flatten into a timestamp sequence and run through. This obviously won't work if a computer's clock is way off, but I'm not hugely worried about that.
   // TODO: at least do a sanity check that no log has an earlier timestamp than its parent
-  const logsByTimestamp = [...logs].sort((a, b) => {
+  const logsByTimestamp = [...entries].sort(({ log: a }, { log: b }) => {
     if (a.timestampMillis === b.timestampMillis) {
       if (a.actionLogType === ingestActionLogType) {
         return -1;
@@ -91,23 +91,7 @@ export default function mergeActionLogs(
     }
   });
   let runningBasePromptState: PromptState | null = null;
-  for (const log of logsByTimestamp) {
-    if (
-      !promptActionLogCanBeAppliedToPromptState(log, runningBasePromptState)
-    ) {
-      return new ActionLogMergeError(
-        ActionLogMergeErrorType.InvalidLogSequence,
-        `invalid log sequence, possible bad clock. trying to apply ${JSON.stringify(
-          log,
-          null,
-          "\t",
-        )} to ${JSON.stringify(
-          runningBasePromptState,
-          null,
-          "\t",
-        )}.  Full sequence: ${JSON.stringify(logsByTimestamp, null, "\t")}`,
-      );
-    }
+  for (const { log } of logsByTimestamp) {
     const nextPromptState: PromptState | Error = applyActionLogToPromptState({
       basePromptState: runningBasePromptState,
       promptActionLog: log,

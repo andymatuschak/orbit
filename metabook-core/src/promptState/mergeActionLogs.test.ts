@@ -4,14 +4,17 @@ import { getIDForPrompt } from "../promptID";
 import { PromptRepetitionOutcome } from "../spacedRepetition";
 import {
   ingestActionLogType,
+  RepetitionActionLog,
   repetitionActionLogType,
 } from "../types/actionLog";
 import { basicPromptType } from "../types/prompt";
 import {
   getActionLogFromPromptActionLog,
   PromptIngestActionLog,
+  PromptRepetitionActionLog,
 } from "../types/promptActionLog";
 import { getIDForPromptTask, PromptTaskID } from "../types/promptTask";
+import { PromptTaskParameters } from "../types/promptTaskParameters";
 import mergeActionLogs from "./mergeActionLogs";
 import { PromptState } from "./promptState";
 
@@ -31,9 +34,23 @@ const testIngestLogID = getIDForActionLog(
   getActionLogFromPromptActionLog(testIngestLog),
 ) as ActionLogID;
 
+const testRepetitionLog: PromptRepetitionActionLog<PromptTaskParameters> = {
+  actionLogType: repetitionActionLogType,
+  taskID: testTaskID,
+  timestampMillis: 500,
+  parentActionLogIDs: [testIngestLogID],
+  taskParameters: null,
+  outcome: PromptRepetitionOutcome.Remembered,
+  context: null,
+};
+
+const testRepetitionLogID = getIDForActionLog(
+  getActionLogFromPromptActionLog(testRepetitionLog),
+) as ActionLogID;
+
 test("fails if base prompt state is disconnected", () => {
   expect(
-    mergeActionLogs([testIngestLog], {
+    mergeActionLogs([{ log: testIngestLog, id: testIngestLogID }], {
       headActionLogIDs: ["x" as ActionLogID],
     } as PromptState),
   ).toBeInstanceOf(Error);
@@ -42,44 +59,27 @@ test("fails if base prompt state is disconnected", () => {
 test("fails if log is missing", () => {
   expect(
     mergeActionLogs(
-      [
-        {
-          actionLogType: repetitionActionLogType,
-          taskID: testTaskID,
-          timestampMillis: 500,
-          parentActionLogIDs: [testIngestLogID],
-          taskParameters: null,
-          outcome: PromptRepetitionOutcome.Remembered,
-          context: null,
-        },
-      ],
+      [{ log: testRepetitionLog, id: testRepetitionLogID }],
       null,
     ),
   ).toBeInstanceOf(Error);
 });
 
 test("merges split log", () => {
+  const secondRepetitionLog = { ...testRepetitionLog, timestampMillis: 750 };
   expect(
     mergeActionLogs(
       [
-        testIngestLog,
+        { log: testIngestLog, id: testIngestLogID },
         {
-          actionLogType: repetitionActionLogType,
-          taskID: testTaskID,
-          timestampMillis: 500,
-          parentActionLogIDs: [testIngestLogID],
-          taskParameters: null,
-          outcome: PromptRepetitionOutcome.Remembered,
-          context: null,
+          log: testRepetitionLog,
+          id: testRepetitionLogID,
         },
         {
-          actionLogType: repetitionActionLogType,
-          taskID: testTaskID,
-          timestampMillis: 750,
-          parentActionLogIDs: [testIngestLogID],
-          taskParameters: null,
-          outcome: PromptRepetitionOutcome.Remembered,
-          context: null,
+          log: secondRepetitionLog,
+          id: getIDForActionLog(
+            getActionLogFromPromptActionLog(secondRepetitionLog),
+          ),
         },
       ],
       null,

@@ -45,6 +45,7 @@ function applyPromptRepetitionActionLogToPromptState<
   P extends PromptTaskParameters
 >(
   promptActionLog: PromptRepetitionActionLog<P>,
+  actionLogID: ActionLogID,
   basePromptState: PromptState | null,
   schedule: MetabookSpacedRepetitionSchedule,
 ): PromptState | Error {
@@ -96,7 +97,7 @@ function applyPromptRepetitionActionLogToPromptState<
     headActionLogIDs: updateBaseHeadActionLogIDs(
       basePromptState?.headActionLogIDs ?? [],
       promptActionLog.parentActionLogIDs,
-      getIDForActionLog(getActionLogFromPromptActionLog(promptActionLog)),
+      actionLogID,
     ),
     lastReviewTimestampMillis: promptActionLog.timestampMillis,
     dueTimestampMillis: newDueTimestampMillis,
@@ -117,19 +118,21 @@ export default function applyActionLogToPromptState<
   P extends PromptTaskParameters
 >({
   promptActionLog,
+  actionLogID: actionLogIDHint,
   basePromptState,
   schedule,
 }: {
   promptActionLog: PromptActionLog<P>;
+  actionLogID?: ActionLogID;
   basePromptState: PromptState | null;
   schedule: MetabookSpacedRepetitionSchedule;
 }): PromptState | Error {
   const initialInterval = getInitialIntervalForSchedule("default");
+  const actionLogID =
+    actionLogIDHint ??
+    getIDForActionLog(getActionLogFromPromptActionLog(promptActionLog));
   switch (promptActionLog.actionLogType) {
     case ingestActionLogType:
-      const actionLogID = getIDForActionLog(
-        getActionLogFromPromptActionLog(promptActionLog),
-      );
       if (basePromptState) {
         // Later ingests don't impact the state; we just fast-forward to include this log.
         return {
@@ -155,6 +158,7 @@ export default function applyActionLogToPromptState<
     case repetitionActionLogType:
       return applyPromptRepetitionActionLogToPromptState(
         promptActionLog,
+        actionLogID,
         basePromptState,
         schedule,
       );

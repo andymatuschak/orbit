@@ -307,12 +307,6 @@ export async function createImportPlan(
     }) as PromptState;
     taskIDsToPromptStates.set(promptActionLog.taskID, newPromptState);
 
-    // const oneDay = 1000 * 60 * 60 * 24;
-    // (promptActionLog as any).debug = {
-    //   newInterval: newPromptState.intervalMillis / oneDay,
-    //   originalInterval: ankiLog.ivl < 0 ? ankiLog.ivl / -oneDay : ankiLog.ivl,
-    // };
-
     cardIDsToLastActionLogs.set(ankiLog.cid, promptActionLog);
   });
 
