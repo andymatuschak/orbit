@@ -51,7 +51,7 @@ function formatMillis(millis: number): string {
     appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
   });
 
-  const dueNow = plan.promptStateCaches
+  /*const dueNow = plan.promptStateCaches
     .filter(
       ({ promptState }) =>
         promptState.dueTimestampMillis <= Date.now() + 1000 * 60 * 60 * 16,
@@ -65,32 +65,41 @@ function formatMillis(millis: number): string {
       promptState.provenance,
       new Date(promptState.dueTimestampMillis),
     ]),
-  );
+  );*/
 
-  /*const startTime = Date.now();
-  let ref = getLogCollectionReference(
+  const startTime = Date.now();
+  const baseRef = getLogCollectionReference(
     app.firestore(),
     "x5EWk2UT56URxbfrl7djoxwxiqH2",
   )
     .orderBy("serverTimestamp", "asc")
-    .limit(50000);
-  // let baseServerTimestamp: admin.firestore.Timestamp | null = null;
+    .limit(1000);
+  let baseServerTimestamp: admin.firestore.Timestamp | null = new firebase.firestore.Timestamp(
+    0,
+    0,
+  );
   let baseSnapshot: any = null;
   let total = 0;
   while (true) {
-    if (baseSnapshot) {
-      ref = ref.startAfter(baseSnapshot);
+    // if (baseSnapshot) {
+    // ref = ref.startAfter(baseSnapshot);
+    // }
+    let ref = baseRef;
+    if (baseServerTimestamp) {
+      ref = ref.where("serverTimestamp", ">", baseServerTimestamp);
     }
     const snapshot = await ref.get();
     total += snapshot.size;
     // console.log(`Got ${snapshot.size} logs; ${total} total`);
     if (snapshot.size > 0) {
       baseSnapshot = snapshot.docs[snapshot.size - 1];
+      baseServerTimestamp = snapshot.docs[snapshot.size - 1].data()
+        .serverTimestamp;
     } else {
       console.log("Done", total, (Date.now() - startTime) / 1000);
       break;
     }
-  }*/
+  }
 
   /*const intervalCounts = new Map<number, number>();
   const printed = false;

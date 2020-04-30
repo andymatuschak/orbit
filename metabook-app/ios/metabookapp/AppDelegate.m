@@ -2,6 +2,7 @@
 
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
+#import <React/RCTDevLoadingView.h>
 #import <React/RCTRootView.h>
 #import <React/RCTLog.h>
 #import <Firebase.h>
@@ -82,7 +83,9 @@ static void InitializeFlipper(UIApplication *application) {
 - (void)initializeReactNativeApp {
   if (!self.bridge) {
     self.bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:nil];
-
+    #if RCT_DEV
+    [self.bridge moduleForClass:[RCTDevLoadingView class]]; // avoid a weird race that I don't really understand
+    #endif
     RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:self.bridge
                                                      moduleName:@"main"
                                               initialProperties:nil];

@@ -180,7 +180,7 @@ export default class PromptStateClient {
 
       const logs = await this.remoteClient.getActionLogs(
         currentServerTimestampThreshold,
-        100,
+        1000,
       );
       if (logs.length > 0) {
         total += logs.length;
