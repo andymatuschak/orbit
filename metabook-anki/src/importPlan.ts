@@ -15,6 +15,7 @@ import {
   getIDForAttachment,
   getIDForPrompt,
   getIDForPromptTask,
+  getPromptActionLogFromActionLog,
   imageAttachmentType,
   ingestActionLogType,
   NotePromptProvenance,
@@ -30,8 +31,9 @@ import {
   PromptTaskID,
   repetitionActionLogType,
 } from "metabook-core";
+import { rescheduleActionLogType } from "metabook-core/dist/types/actionLog";
 import * as Anki from "./ankiPkg";
-import { Card } from "./ankiPkg";
+import { Card, CardQueue, CardType, Collection } from "./ankiPkg";
 import { getModelMapping, ModelMapping } from "./modelMapping";
 import { mapNoteToPrompt } from "./noteMapping";
 
@@ -166,6 +168,42 @@ async function readAttachmentAtPath(
   } else {
     return new Error(`Unsupported attachment type: ${name}`);
   }
+}
+
+export function createRescheduleLogForCard(
+  card: Card,
+  collection: Collection,
+  lastActionLog: PromptActionLog<
+    BasicPromptTaskParameters | ClozePromptTaskParameters
+  >,
+): ActionLog | null {
+  let newTimestampMillis: number | null;
+  switch (card.queue) {
+    case CardQueue.UserBuried:
+    case CardQueue.Buried:
+    case CardQueue.Suspended:
+    case CardQueue.New:
+      return null;
+    case CardQueue.Learning:
+      // card.due is seconds since epoch
+      newTimestampMillis = card.due * 1000;
+      break;
+    case CardQueue.Due:
+    case CardQueue.LearningNotDue:
+      // card.due is days since collection's creation
+      newTimestampMillis =
+        collection.crt * 1000 + card.due * 1000 * 60 * 60 * 24;
+      break;
+  }
+  return {
+    actionLogType: rescheduleActionLogType,
+    parentActionLogIDs: [
+      getIDForActionLog(getActionLogFromPromptActionLog(lastActionLog)),
+    ],
+    timestampMillis: Date.now(),
+    newTimestampMillis,
+    taskID: lastActionLog.taskID,
+  };
 }
 
 export async function createImportPlan(
@@ -309,10 +347,35 @@ export async function createImportPlan(
     cardIDsToLastActionLogs.set(ankiLog.cid, promptActionLog);
   });
 
-  for (const cardID of cardIDsToIngest) {
-    // These cards have never actually been reviewed.
-    addIngestEventForCardID(cardID);
-  }
+  let reschedulelessCards = 0;
+  await Anki.readCards(handle, (card) => {
+    if (cardIDsToIngest.has(card.id)) {
+      // These cards have never actually been reviewed.
+      addIngestEventForCardID(card.id);
+    } else {
+      const cardLastActionLog = cardIDsToLastActionLogs.get(card.id);
+      if (!cardLastActionLog) {
+        throw new Error(`Inconsistent database. ${card.id} generated no logs`);
+      }
+      const rescheduleLog = createRescheduleLogForCard(
+        card,
+        collection,
+        cardLastActionLog,
+      );
+      if (rescheduleLog) {
+        plan.logs.push(rescheduleLog);
+        const newPromptState = applyActionLogToPromptState({
+          promptActionLog: getPromptActionLogFromActionLog(rescheduleLog),
+          schedule: "default",
+          basePromptState: taskIDsToPromptStates.get(rescheduleLog.taskID)!,
+        }) as PromptState;
+        taskIDsToPromptStates.set(rescheduleLog.taskID, newPromptState);
+      } else {
+        reschedulelessCards++;
+      }
+    }
+  });
+  console.log("cards without reschedule", reschedulelessCards);
 
   plan.promptStateCaches = [...taskIDsToPromptStates.entries()].map(
     ([taskID, promptState]) => {

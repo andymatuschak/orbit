@@ -11,6 +11,7 @@ import {
   getReferenceForActionLogID,
 } from "metabook-firebase-support";
 import { getAdminApp } from "./adminApp";
+import plan from "./importPlan.json";
 
 function formatMillis(millis: number): string {
   let working = millis;
@@ -50,13 +51,21 @@ function formatMillis(millis: number): string {
     appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
   });
 
-  const ref = getReferenceForActionLogID(
-    app.firestore(),
-    "x5EWk2UT56URxbfrl7djoxwxiqH2",
-    "zdj7WaVVJ8gaUcyQM4iZbwiYzLpC6jmzYAESK2RsqmdpMY8py" as ActionLogID,
+  const dueNow = plan.promptStateCaches
+    .filter(
+      ({ promptState }) =>
+        promptState.dueTimestampMillis <= Date.now() + 1000 * 60 * 60 * 16,
+    )
+    .sort(
+      (a, b) =>
+        a.promptState.dueTimestampMillis - b.promptState.dueTimestampMillis,
+    );
+  console.log(
+    dueNow.map(({ promptState }) => [
+      promptState.provenance,
+      new Date(promptState.dueTimestampMillis),
+    ]),
   );
-  const snapshot = await ref.get();
-  console.log(snapshot.data());
 
   /*const startTime = Date.now();
   let ref = getLogCollectionReference(
@@ -83,28 +92,9 @@ function formatMillis(millis: number): string {
     }
   }*/
 
-  /*
-  const refs = (plan.prompts as Prompt[]).map((prompt) =>
-    getReferenceForPromptID(adminDB, getIDForPrompt(prompt)),
-  );
-  console.log(`Requesting ${refs.length} prompts`, Date.now());
-  const snapshots = await adminDB.getAll(...refs);
-  console.log(`Got ${snapshots.length} snapshots`, Date.now());
-
-  const taskIDsToInspect: Set<PromptTaskID> = new Set();
-  for (const log of plan.logs) {
-    const promptState = applyActionLogToPromptState({
-      promptActionLog: getPromptActionLogFromActionLog(log),
-      schedule: "default",
-      basePromptState: promptStates.get(log.taskID) ?? null,
-    }) as PromptState;
-    logs[getIDForActionLog(log)] = log;
-    promptStates.set(log.taskID, promptState);
-  }
-
-  const intervalCounts = new Map<number, number>();
-  let printed = false;
-  for (const [taskID, promptState] of promptStates.entries()) {
+  /*const intervalCounts = new Map<number, number>();
+  const printed = false;
+  for (const { taskID, promptState } of plan.promptStateCaches) {
     if (promptState.dueTimestampMillis <= Date.now() + 1000 * 60 * 60 * 16) {
       intervalCounts.set(
         promptState.intervalMillis,

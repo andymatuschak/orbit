@@ -67,7 +67,10 @@ class ImportAnkiCollection extends Command {
         messagingSenderId: "748053153064",
         appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
       });
-      const dataClient = new MetabookFirebaseDataClient(app, app.functions());
+      const dataClient = new MetabookFirebaseDataClient(
+        app.firestore(),
+        app.functions(),
+      );
 
       await dataClient.recordAttachments(plan.attachments);
       console.log("Recorded attachments.");

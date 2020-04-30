@@ -121,10 +121,9 @@ export async function updatePromptStateCacheWithLog(
           )}`,
         );
       }
-      const promptStateCache: PromptStateCache<firebase.firestore.Timestamp> = {
+      const promptStateCache: PromptStateCache = {
         ...newPromptState,
-        taskID: log.taskID,
-        lastLogServerTimestamp: log.serverTimestamp, // TODO: when adapting this to actually join the log DAGs, take the max of the head logs' timestamps.
+        taskID: promptActionLog.taskID,
       };
       transaction.set(promptStateCacheReference, promptStateCache);
     } else {

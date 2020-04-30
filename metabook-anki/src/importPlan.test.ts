@@ -6,6 +6,7 @@ import {
   PromptIngestActionLog,
   PromptRepetitionOutcome,
 } from "metabook-core";
+import { RescheduleActionLog } from "metabook-core/dist/types/actionLog";
 import { testBasicPrompt, testClozePrompt } from "metabook-sample-data";
 import {
   testCard,
@@ -13,16 +14,17 @@ import {
   testLog,
   testNote,
 } from "./__fixtures__/testAnkiData";
-import { Collection } from "./ankiPkg";
+import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
+import { CardQueue, CardType, Collection } from "./ankiPkg";
 import {
+  createImportPlan,
   createPlanForCard,
   createPlanForLog,
   createPlanForNote,
+  createRescheduleLogForCard,
   extractPromptTaskIDForCard,
-  createImportPlan,
 } from "./importPlan";
 import { ModelMapping } from "./modelMapping";
-import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
 
 describe("createPlanForNote", () => {
   const cache: { [p: number]: ModelMapping } = {};
@@ -76,6 +78,7 @@ test("create plan for card", () => {
   const log = createPlanForCard(
     testCard,
     testBasicPrompt,
+    null,
   ) as PromptIngestActionLog;
   expect((log.provenance as AnkiPromptProvenance).cardID).toEqual(testCard.id);
 });
@@ -84,12 +87,40 @@ test("create plan for log", () => {
   const ingestLog = createPlanForCard(
     testCard,
     testBasicPrompt,
+    null,
   ) as PromptIngestActionLog;
   const log = createPlanForLog(testLog, ingestLog);
   expect(log.parentActionLogIDs).toEqual([
     getIDForActionLog(getActionLogFromPromptActionLog(ingestLog)),
   ]);
   expect(log.outcome).toEqual(PromptRepetitionOutcome.Remembered);
+});
+
+describe("reschedule logs", () => {
+  const ingestLog = createPlanForCard(
+    testCard,
+    testBasicPrompt,
+    null,
+  ) as PromptIngestActionLog;
+  test("learning card", () => {
+    expect(
+      (createRescheduleLogForCard(
+        { ...testCard, queue: CardQueue.Learning, due: 1e5 },
+        testCollection,
+        ingestLog,
+      ) as RescheduleActionLog).newTimestampMillis,
+    ).toEqual(1e8);
+  });
+
+  test("due card", () => {
+    expect(
+      (createRescheduleLogForCard(
+        { ...testCard, queue: CardQueue.Due, due: 50 },
+        { ...testCollection, crt: 1000 },
+        ingestLog,
+      ) as RescheduleActionLog).newTimestampMillis,
+    ).toEqual(1000 * 1000 + 50 * 1000 * 60 * 60 * 24);
+  });
 });
 
 test("imports full database", async () => {
