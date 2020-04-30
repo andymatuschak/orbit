@@ -3,6 +3,11 @@ import colors from "./colors";
 const fontFamily = "Libre Franklin";
 
 export default {
+  label: {
+    fontSize: 16,
+    lineHeight: 1.25 * 14,
+  },
+
   cardBodyText: {
     fontSize: 16,
     lineHeight: 1.5 * 16,

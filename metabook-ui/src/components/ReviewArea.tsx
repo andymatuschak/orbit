@@ -1,14 +1,12 @@
 import isEqual from "lodash.isequal";
 import {
   MetabookSpacedRepetitionSchedule,
-  PromptType,
   PromptRepetitionOutcome,
+  PromptType,
 } from "metabook-core";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Animated,
-  Button,
-  Platform,
   StyleProp,
   StyleSheet,
   Text,
@@ -18,12 +16,14 @@ import {
 } from "react-native";
 import { PromptReviewItem, ReviewItem } from "../reviewItem";
 import colors from "../styles/colors";
-import { gridUnit } from "../styles/layout";
-import Card, { baseCardHeight } from "./Card";
+import { gridUnit, spacing } from "../styles/layout";
+import Card, { baseCardHeight, cardWidth } from "./Card";
 import FadeView from "./FadeView";
 import usePrevious from "./hooks/usePrevious";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
+import ReviewButton from "./ReviewButton";
+import Spacer from "./Spacer";
 import WithAnimatedValue = Animated.WithAnimatedValue;
 
 type InternalReviewItem =
@@ -402,9 +402,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
         </FadeView>
 
         <Transition in={!isComplete} timeout={500} mountOnEnter unmountOnExit>
-          <View
-          // TODO style={{ opacity: isComplete ? 0 : 1 }}
-          >
+          <View style={{ opacity: isComplete ? 0 : 1, alignItems: "center" }}>
             <ReviewButtonArea
               onMark={onMarkingButton}
               onPendingMarkingInteractionStateDidChange={
@@ -455,10 +453,16 @@ const styles = StyleSheet.create({
   buttonContainer: {
     justifyContent: "center",
     flexDirection: "row",
+    width: cardWidth,
+  },
+
+  buttonLayoutStyles: {
+    flexGrow: 1,
+    flexBasis: 1,
   },
 });
 
-function ReviewButtonArea(props: {
+const ReviewButtonArea = React.memo(function ReviewButtonArea(props: {
   onMark: (outcome: PromptRepetitionOutcome) => void;
   onPendingMarkingInteractionStateDidChange: (
     state: PendingMarkingInteractionState | null,
@@ -466,57 +470,29 @@ function ReviewButtonArea(props: {
   disabled: boolean;
   promptType: PromptType | null;
 }) {
-  const {
-    onMark,
-    onPendingMarkingInteractionStateDidChange,
-    disabled,
-    promptType,
-  } = props;
-
-  const isApplicationPrompt = promptType === "applicationPrompt";
+  const { onMark, disabled, promptType } = props;
 
   return (
     <View style={styles.buttonContainer}>
-      <Button
+      <ReviewButton
         onPress={useCallback(() => onMark(PromptRepetitionOutcome.Forgotten), [
           onMark,
         ])}
-        // onStatusDidChange={useCallback(
-        //   status =>
-        //     onPendingMarkingInteractionStateDidChange(
-        //       status === "inactive"
-        //         ? null
-        //         : {
-        //           status,
-        //           pendingReviewMarking: "forgotten",
-        //         },
-        //     ),
-        //   [onPendingMarkingInteractionStateDidChange],
-        // )}
-        // glyph={<RetryGlyph />} TODO
         disabled={disabled}
-        title={isApplicationPrompt ? "Couldn’t answer" : "Didn’t remember"}
+        promptType={promptType}
+        outcome={PromptRepetitionOutcome.Forgotten}
+        extraStyles={styles.buttonLayoutStyles}
       />
-      <Button
+      <Spacer size={spacing.spacing05} />
+      <ReviewButton
         onPress={useCallback(() => onMark(PromptRepetitionOutcome.Remembered), [
           onMark,
         ])}
-        // onStatusDidChange={useCallback(
-        //   status =>
-        //     onPendingMarkingInteractionStateDidChange(
-        //       status === "inactive"
-        //         ? null
-        //         : {
-        //           status,
-        //           pendingReviewMarking: "remembered",
-        //         },
-        //     ),
-        //   [onPendingMarkingInteractionStateDidChange],
-        // )}
-        // glyph={<CheckGlyph />}
         disabled={disabled}
-        title={isApplicationPrompt ? "Answered" : "Remembered"}
+        promptType={promptType}
+        outcome={PromptRepetitionOutcome.Remembered}
+        extraStyles={styles.buttonLayoutStyles}
       />
     </View>
   );
-}
+});

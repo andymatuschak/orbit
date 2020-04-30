@@ -14,6 +14,8 @@ import CardField from "./CardField";
 import FadeView from "./FadeView";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
 
+export const cardWidth = 343;
+
 export interface CardProps {
   reviewItem: PromptReviewItem;
 
@@ -104,7 +106,7 @@ const interiorRegionHeight = 196;
 
 const styles = StyleSheet.create({
   container: {
-    width: 343,
+    width: cardWidth,
     minHeight: baseCardHeight,
     maxHeight: baseCardHeight,
 
