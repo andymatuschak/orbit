@@ -9,3 +9,5 @@ export type {
   ReviewItem,
   AttachmentResolutionMap,
 } from "./reviewItem";
+
+export { useTransitioningValue } from "./components/hooks/useTransitioningValue";

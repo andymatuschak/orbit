@@ -31,6 +31,51 @@ static void InitializeFlipper(UIApplication *application) {
 }
 #endif
 
+@interface ORNSWindowAdditions : NSObject
+@property NSUInteger styleMask;
+@property BOOL titlebarAppearsTransparent;
+@end
+@implementation ORNSWindowAdditions
+@dynamic styleMask;
+@dynamic titlebarAppearsTransparent;
+@end
+
+@interface UIWindow (PSPDFAdditions)
+
+#if TARGET_OS_UIKITFORMAC
+
+/**
+    Finds the NSWindow hosting the UIWindow.
+    @note This is a hack. Iterates over all windows to find match. Might fail.
+ */
+@property (nonatomic, readonly, nullable) id nsWindow;
+
+#endif
+
+@end
+
+@implementation UIWindow (PSPDFAdditions)
+#define PSPDF_SILENCE_CALL_TO_UNKNOWN_SELECTOR(expression) _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Warc-performSelector-leaks\"") expression _Pragma("clang diagnostic pop")
+#if TARGET_OS_UIKITFORMAC
+
+- (nullable ORNSWindowAdditions *)nsWindow {
+    id delegate = [[NSClassFromString(@"NSApplication") sharedApplication] delegate];
+    const SEL hostWinSEL = NSSelectorFromString([NSString stringWithFormat:@"_%@Window%@Window:", @"host", @"ForUI"]);
+    @try {
+        // There's also hostWindowForUIWindow 🤷‍♂️
+        PSPDF_SILENCE_CALL_TO_UNKNOWN_SELECTOR(id nsWindow = [delegate performSelector:hostWinSEL withObject:self];)
+        return nsWindow;
+    } @catch (...) {
+        NSLog(@"Failed to get NSWindow for %@.", self);
+    }
+    return nil;
+}
+
+#endif
+
+@end
+
+
 @interface AppDelegate ()
 
 @property (nonatomic, strong) NSDictionary *launchOptions;
@@ -74,8 +119,12 @@ static void InitializeFlipper(UIApplication *application) {
     #endif
 
 #if TARGET_OS_MACCATALYST
-    windowScene.titlebar.toolbar.visible = false;
     windowScene.titlebar.titleVisibility = UITitlebarTitleVisibilityHidden;
+    windowScene.titlebar.toolbar = [[NSToolbar alloc] init];
+    windowScene.titlebar.toolbar.showsBaselineSeparator = NO;
+    if (windowScene.sizeRestrictions) {
+      windowScene.sizeRestrictions.minimumSize = CGSizeMake(370, 600);
+    }
 #endif
   }
 }
@@ -96,6 +145,15 @@ static void InitializeFlipper(UIApplication *application) {
     self.window.rootViewController = rootViewController;
 
     [self.window makeKeyAndVisible];
+
+
+    #if TARGET_OS_MACCATALYST
+    dispatch_async(dispatch_get_main_queue(), ^{
+    ORNSWindowAdditions *window = [self.window nsWindow];
+    window.titlebarAppearsTransparent = YES;
+    window.styleMask |= 1<<15;
+    });
+    #endif
   }
 }
 
@@ -148,3 +206,4 @@ static void InitializeFlipper(UIApplication *application) {
 }
 
 @end
+

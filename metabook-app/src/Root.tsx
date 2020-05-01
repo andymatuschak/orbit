@@ -11,21 +11,32 @@ import {
   PromptTask,
   repetitionActionLogType,
 } from "metabook-core";
-import { ReviewArea, ReviewAreaProps, ReviewItem } from "metabook-ui";
+import {
+  ReviewArea,
+  ReviewAreaProps,
+  useTransitioningValue,
+} from "metabook-ui";
+import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
+import Spacer from "metabook-ui/dist/components/Spacer";
 import colors from "metabook-ui/dist/styles/colors";
+import {
+  borderRadius,
+  gridUnit,
+  spacing,
+} from "metabook-ui/dist/styles/layout";
 import typography from "metabook-ui/dist/styles/typography";
 import "node-libs-react-native/globals";
 import React, { useCallback, useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { Animated, Text, View } from "react-native";
 import {
   enableFirebasePersistence,
-  getFirestore,
   getFirebaseFunctions,
+  getFirestore,
   PersistenceStatus,
 } from "./firebase";
 import ActionLogStore from "./model/actionLogStore";
-import DataRecordStore from "./model/dataRecordStore";
 import DataRecordClient from "./model/dataRecordClient";
+import DataRecordStore from "./model/dataRecordStore";
 import PromptStateClient from "./model/promptStateClient";
 import PromptStateStore from "./model/promptStateStore";
 import { useReviewItems } from "./useReviewItems";
@@ -76,6 +87,117 @@ function usePersistenceStatus() {
   return persistenceStatus;
 }
 
+function onMark(
+  promptStateClient: PromptStateClient | null,
+  marking: ReviewAreaMarkingRecord,
+) {
+  console.log("[Performance] Mark prompt", Date.now() / 1000.0);
+
+  promptStateClient!
+    .recordPromptActionLogs([
+      {
+        log: {
+          actionLogType: repetitionActionLogType,
+          parentActionLogIDs:
+            marking.reviewItem.promptState?.headActionLogIDs ?? [],
+          taskID: getIDForPromptTask({
+            promptID: getIDForPrompt(marking.reviewItem.prompt),
+            promptType: marking.reviewItem.prompt.promptType,
+            promptParameters: marking.reviewItem.promptParameters,
+          } as PromptTask),
+          outcome: marking.outcome,
+          context: null,
+          timestampMillis: Date.now(),
+          taskParameters: getNextTaskParameters(
+            marking.reviewItem.prompt,
+            marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
+          ),
+        },
+      },
+    ])
+    .then(() => {
+      console.log("[Performance] Log committed to server", Date.now() / 1000.0);
+    })
+    .catch((error) => {
+      console.error("Couldn't commit", marking.reviewItem.prompt, error);
+    });
+}
+
+function ProgressBar(props: {
+  completedTaskCount: number;
+  totalTaskCount: number;
+}) {
+  const progressWidth = useTransitioningValue({
+    value: props.completedTaskCount,
+    timing: {
+      type: "spring",
+      bounciness: 0,
+    },
+    useNativeDriver: false,
+  });
+
+  return (
+    <View
+      style={{
+        position: "absolute",
+        height: gridUnit * 3,
+        top: 1,
+        left: 100,
+        right: 0,
+        flexDirection: "row",
+      }}
+    >
+      <View
+        style={{
+          flexGrow: 1,
+          justifyContent: "center",
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: colors.key10,
+            height: 15,
+            width: "100%",
+            borderRadius: borderRadius,
+          }}
+        />
+        <Animated.View
+          style={{
+            position: "absolute",
+            backgroundColor: colors.key70,
+            height: 15,
+            width: progressWidth.interpolate({
+              inputRange: [0, props.totalTaskCount],
+              outputRange: ["0%", "100%"],
+            }),
+            borderRadius: borderRadius,
+          }}
+        />
+      </View>
+      <Spacer size={spacing.spacing04} />
+      <View
+        style={{
+          minWidth: gridUnit * 2,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text
+          style={{
+            flexShrink: 0,
+            color: colors.key70,
+            fontSize: 20,
+            fontWeight: "600",
+          }}
+        >
+          {props.totalTaskCount - props.completedTaskCount}
+        </Text>
+      </View>
+      <Spacer size={spacing.spacing05} />
+    </View>
+  );
+}
+
 export default function App() {
   const persistenceStatus = usePersistenceStatus();
   const [
@@ -116,42 +238,12 @@ export default function App() {
 
   const items = useReviewItems(promptStateClient, dataRecordClient);
 
-  const onMark = useCallback<ReviewAreaProps["onMark"]>(
-    async (marking) => {
-      console.log("[Performance] Mark prompt", Date.now() / 1000.0);
+  const [completedTaskCount, setCompletedTaskCount] = useState(0);
 
-      promptStateClient!
-        .recordPromptActionLogs([
-          {
-            log: {
-              actionLogType: repetitionActionLogType,
-              parentActionLogIDs:
-                marking.reviewItem.promptState?.headActionLogIDs ?? [],
-              taskID: getIDForPromptTask({
-                promptID: getIDForPrompt(marking.reviewItem.prompt),
-                promptType: marking.reviewItem.prompt.promptType,
-                promptParameters: marking.reviewItem.promptParameters,
-              } as PromptTask),
-              outcome: marking.outcome,
-              context: null,
-              timestampMillis: Date.now(),
-              taskParameters: getNextTaskParameters(
-                marking.reviewItem.prompt,
-                marking.reviewItem.promptState?.lastReviewTaskParameters ??
-                  null,
-              ),
-            },
-          },
-        ])
-        .then(() => {
-          console.log(
-            "[Performance] Log committed to server",
-            Date.now() / 1000.0,
-          );
-        })
-        .catch((error) => {
-          console.error("Couldn't commit", marking.reviewItem.prompt, error);
-        });
+  const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>(
+    (marking) => {
+      setCompletedTaskCount((p) => p + 1);
+      onMark(promptStateClient, marking);
     },
     [promptStateClient],
   );
@@ -166,28 +258,36 @@ export default function App() {
         backgroundColor: colors.key00,
       }}
     >
-      {items && (
-        <>
-          <ReviewArea
-            items={items}
-            onMark={onMark}
-            schedule="aggressiveStart"
-            shouldLabelApplicationPrompts={false}
-            onLogin={() => {
-              return;
-            }}
-          />
+      {items ? (
+        items.length > 0 ? (
+          <>
+            <ReviewArea
+              items={items}
+              onMark={onMarkCallback}
+              schedule="aggressiveStart"
+              shouldLabelApplicationPrompts={false}
+              onLogin={() => {
+                return;
+              }}
+            />
+            <ProgressBar
+              completedTaskCount={completedTaskCount}
+              totalTaskCount={items.length}
+            />
+          </>
+        ) : (
           <Text
             style={{
-              position: "absolute",
-              right: 16,
-              top: 16,
+              textAlign: "center",
               ...typography.cardBodyText,
-              color: colors.textColor,
+              color: colors.key70,
+              opacity: 0.4,
+              fontSize: 24,
+              lineHeight: 24 * 1.5,
             }}
-          >{`Remaining: ${items.length}`}</Text>
-        </>
-      )}
+          >{`All caught up!\nNothing's due for review at the moment.`}</Text>
+        )
+      ) : null}
     </View>
   );
 }

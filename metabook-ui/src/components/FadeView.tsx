@@ -24,15 +24,15 @@ const defaultDurationMillis = 150;
 export default function FadeView(props: FadeViewProps) {
   const { isVisible, durationMillis, onTransitionEnd } = props;
 
-  const opacity = useTransitioningValue(
-    isVisible ? 1 : 0,
-    {
+  const opacity = useTransitioningValue({
+    value: isVisible ? 1 : 0,
+    timing: {
       type: "timing",
       easing: Easing.linear,
       duration: durationMillis || defaultDurationMillis,
     },
-    ({ finished }) => onTransitionEnd?.(isVisible, finished),
-  );
+    onEndCallback: ({ finished }) => onTransitionEnd?.(isVisible, finished),
+  });
 
   return (
     <Animated.View

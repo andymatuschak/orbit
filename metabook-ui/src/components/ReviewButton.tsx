@@ -57,13 +57,15 @@ export default function ReviewButton(
     <TouchableOpacity {...props} activeOpacity={0.6} style={props.extraStyles}>
       <View
         style={{
-          backgroundColor: colors.key60,
+          backgroundColor: colors.key70,
           height: gridUnit * 3,
           borderRadius: borderRadius,
+          flexDirection: "row",
           justifyContent: "center",
-          alignItems: "center",
           paddingLeft: spacing.spacing05,
           paddingRight: spacing.spacing05,
+          paddingTop: spacing.spacing05,
+          paddingBottom: spacing.spacing05,
           opacity: props.disabled ? 0.1 : 1.0,
         }}
       >

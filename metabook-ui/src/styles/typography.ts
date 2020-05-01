@@ -6,11 +6,12 @@ export default {
   label: {
     fontSize: 16,
     lineHeight: 1.25 * 14,
+    fontWeight: "600",
   },
 
   cardBodyText: {
     fontSize: 16,
-    lineHeight: 1.5 * 16,
+    lineHeight: 1.4 * 16,
     color: colors.textColor,
   },
 

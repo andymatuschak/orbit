@@ -95,9 +95,18 @@ function CardRenderer({
   children: React.ReactNode;
 }) {
   const { scale, translateY } = getTransformForStackIndex(renderedStackIndex);
-  const animatedScale = useTransitioningValue(scale, { type: "spring" });
-  const animatedTranslateY = useTransitioningValue(translateY, {
+  const springTiming = {
     type: "spring",
+    speed: 20,
+    bounciness: 0,
+  } as const;
+  const animatedScale = useTransitioningValue({
+    value: scale,
+    timing: springTiming,
+  });
+  const animatedTranslateY = useTransitioningValue({
+    value: translateY,
+    timing: springTiming,
   });
 
   const isDisplayed =
@@ -483,7 +492,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea(props: {
         outcome={PromptRepetitionOutcome.Forgotten}
         extraStyles={styles.buttonLayoutStyles}
       />
-      <Spacer size={spacing.spacing05} />
+      <Spacer size={spacing.spacing03} />
       <ReviewButton
         onPress={useCallback(() => onMark(PromptRepetitionOutcome.Remembered), [
           onMark,
