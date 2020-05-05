@@ -1,7 +1,6 @@
 import { testBasicPrompt } from "metabook-sample-data";
 import { promptReviewItemType, ReviewArea } from "metabook-ui";
 import React from "react";
-import "./App.css";
 
 function App() {
   return (
@@ -25,7 +24,6 @@ function App() {
         schedule="aggressiveStart"
         shouldLabelApplicationPrompts={false}
       />
-      ,
     </div>
   );
 }

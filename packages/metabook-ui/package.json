@@ -33,7 +33,7 @@
     "eslint-plugin-react-hooks": "^2.5.0",
     "fork-ts-checker-webpack-plugin": "^4.0.5",
     "jest": "^25.1.0",
-    "metabook-sample-data": "^0.0.1",
+    "metabook-sample-data": "file:../metabook-sample-data",
     "prettier": "^1.19.1",
     "react": "~16",
     "react-docgen-typescript-loader": "^3.6.0",
@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "lodash.isequal": "^4.5.0",
-    "metabook-core": "^0.0.1",
+    "metabook-core": "file:../metabook-core",
     "react-native-fit-image": "file:../../vendor/react-native-fit-image",
     "react-native-markdown-display": "iamacup/react-native-markdown-display",
     "react-native-web": "file:../../vendor/react-native-web/packages/react-native-web"

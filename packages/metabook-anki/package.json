@@ -8,8 +8,8 @@
   "types": "./dist/index.d.ts",
   "exports": "./dist/index.js",
   "dependencies": {
-    "metabook-core": "0.0.1",
-    "metabook-sample-data": "^0.0.1",
+    "metabook-core": "file:../metabook-core",
+    "metabook-sample-data": "file:../metabook-sample-data",
     "rehype-parse": "^6.0.2",
     "rehype-remark": "^8.0.0",
     "remark-stringify": "^8.0.0",

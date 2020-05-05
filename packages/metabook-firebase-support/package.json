@@ -12,7 +12,7 @@
     "cids": "^0.8.0",
     "firebase": "^7.14.2",
     "firebase-admin": "^8.11.0",
-    "metabook-core": "0.0.1",
+    "metabook-core": "file:../metabook-core",
     "multihashes": "^0.4.19",
     "sha.js": "^2.4.11"
   },
