@@ -33,6 +33,7 @@
     "eslint-plugin-react-hooks": "^2.5.0",
     "fork-ts-checker-webpack-plugin": "^4.0.5",
     "jest": "^25.1.0",
+    "metabook-sample-data": "^0.0.1",
     "prettier": "^1.19.1",
     "react": "~16",
     "react-docgen-typescript-loader": "^3.6.0",

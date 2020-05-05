@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "module": "esnext",
+    "noEmit": true,
+    "composite": false,
+    "jsx": "react"
+  },
+  "include": ["src"]
+}

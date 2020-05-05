@@ -319,16 +319,6 @@ export default function ReviewArea(props: ReviewAreaProps) {
 
                 if (item === null) {
                   cardComponent = null;
-                  /*} TODO else if (item.type === "login") {
-                cardComponent = (
-                  <div className="Card LoginCard">
-                    <Login
-                      isActive={renderedStackIndex === 0}
-                      onLogin={onLogin}
-                      userState={item.userState}
-                    />
-                  </div>
-                ); */
                 } else {
                   let reviewItem: PromptReviewItem;
                   let reviewMarkingInteractionState: ReviewMarkingInteractionState | null;
