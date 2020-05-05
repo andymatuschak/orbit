@@ -8,7 +8,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "rollup -c"
+    "build": "webpack"
   },
   "license": "UNLICENSED",
   "peerDependencies": {
@@ -17,8 +17,14 @@
     "react-dom": "^16.13.0"
   },
   "dependencies": {
+    "@babel/preset-react": "^7.9.4",
+    "babel-loader": "^8.1.0",
+    "babel-plugin-react-native-web": "^0.12.2",
+    "babel-plugin-transform-class-properties": "^6.24.1",
     "metabook-ui": "0.0.1",
-    "react-native-web": "file:../../vendor/react-native-web/packages/react-native-web"
+    "react-native-web": "file:../../vendor/react-native-web/packages/react-native-web",
+    "ts-loader": "^7.0.2",
+    "webpack": "^4.43.0"
   },
   "resolutions": {
     "**/react-native-web": "file:../../vendor/react-native-web/packages/react-native-web"
@@ -27,18 +33,13 @@
     "@babel/core": "^7.8.4",
     "@babel/preset-env": "^7.8.7",
     "@babel/preset-react": "^7.8.3",
-    "@rollup/plugin-commonjs": "^11.0.2",
-    "@rollup/plugin-json": "^4.0.2",
-    "@rollup/plugin-node-resolve": "^7.1.1",
-    "@rollup/plugin-replace": "^2.3.1",
     "babel-plugin-module-resolver": "^4.0.0",
     "babel-plugin-react-native-web": "^0.11.7",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "rimraf": "^3.0.2",
-    "rollup": "^2.0.0",
-    "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-typescript2": "^0.26.0",
-    "typescript": "^3.8.2"
+    "typescript": "^3.8.2",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11"
   },
   "workspaces": {
     "nohoist": [

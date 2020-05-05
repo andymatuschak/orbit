@@ -50,8 +50,9 @@
   },
   "dependencies": {
     "lodash.isequal": "^4.5.0",
-    "react-native-markdown-display": "iamacup/react-native-markdown-display",
+    "metabook-core": "^0.0.1",
     "react-native-fit-image": "file:../../vendor/react-native-fit-image",
+    "react-native-markdown-display": "iamacup/react-native-markdown-display",
     "react-native-web": "file:../../vendor/react-native-web/packages/react-native-web"
   },
   "resolutions": {
