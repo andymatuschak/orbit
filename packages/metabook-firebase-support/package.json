@@ -1,0 +1,33 @@
+{
+  "name": "metabook-firebase-support",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": "./dist/index.js",
+  "dependencies": {
+    "buffer": "^5.6.0",
+    "cids": "^0.8.0",
+    "firebase": "^7.14.2",
+    "firebase-admin": "^8.11.0",
+    "metabook-core": "0.0.1",
+    "multihashes": "^0.4.19",
+    "sha.js": "^2.4.11"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/preset-typescript": "^7.9.0",
+    "@types/jest": "^25.2.1",
+    "@types/sha.js": "^2.4.0",
+    "babel-jest": "^25.3.0",
+    "jest": "^25.3.0",
+    "typescript": "^3.8.3"
+  }
+}

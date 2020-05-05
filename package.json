@@ -1,27 +1,10 @@
 {
   "private": true,
-  "workspaces": {
-    "packages": [
-      "metabook-anki",
-      "metabook-app",
-      "metabook-client",
-      "metabook-cli",
-      "metabook-cloud-functions",
-      "metabook-firebase-support",
-      "metabook-core",
-      "metabook-sample-data",
-      "metabook-ui",
-      "metabook-ui-web",
-      "metabook-ui-web-demo",
-      "metabook-web-component",
-      "firebase-node-persistence-shim",
-      "firebase-react-native-persistence-shim"
-    ]
-  },
   "scripts": {
-    "build": "tsc -b tsconfig.base.json && (cd metabook-core && yarn run build) && (cd metabook-ui-web && yarn run build)",
-    "watch": "tsc -b -w tsconfig.base.json",
-    "test": "npx jest --projects metabook-anki metabook-core metabook-client --runInBand",
+    "prebuild": "yarn workspace metabook-core prebuild",
+    "build": "tsc -b packages/tsconfig.base.json",
+    "watch": "tsc -b -w packages/tsconfig.base.json",
+    "test": "npx jest --projects packages/metabook-anki packages/metabook-core packages/metabook-client --runInBand",
     "test:watch": "yarn run test --watch",
     "prepare": "git submodule update --init --recursive && (cd vendor/react-native-web && yarn install)"
   },
@@ -32,8 +15,11 @@
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-react": "^7.18.3",
+    "eslint-plugin-react-hooks": "^4.0.0",
+    "lerna": "^3.20.2",
     "prettier": "^2.0.2",
     "ts-node": "^8.9.1",
     "typescript": "^3.8.3"
-  }
+  },
+  "name": "metabook"
 }

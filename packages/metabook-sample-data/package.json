@@ -1,0 +1,19 @@
+{
+  "name": "metabook-sample-data",
+  "version": "0.0.1",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": "./dist/index.js",
+  "dependencies": {
+    "metabook-core": "0.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^3.8.3"
+  },
+  "scripts": {
+    "build": "tsc -b"
+  }
+}

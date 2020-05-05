@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.base",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "lib": ["dom"],
+    "types": ["jest"]
+  },
+  "include": ["./src/**/*.ts", "./@types/**/*.d.ts"]
+}

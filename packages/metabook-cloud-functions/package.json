@@ -1,0 +1,40 @@
+{
+  "name": "metabook-cloud-functions",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/main.js",
+  "exports": "./dist/main.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "webpack",
+    "predeploy": "yarn run build",
+    "deploy": "firebase deploy --only functions"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "firebase-admin": "^8.10.0",
+    "firebase-functions": "^3.5.0"
+  },
+  "engines": {
+    "node": "10"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/plugin-transform-modules-commonjs": "^7.9.0",
+    "@babel/preset-env": "^7.9.0",
+    "@babel/preset-typescript": "^7.9.0",
+    "babel-loader": "^8.1.0",
+    "ts-loader": "^7.0.2",
+    "typescript": "^3.8.3",
+    "webpack": "^4.42.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-node-externals": "^1.7.2"
+  },
+  "workspaces": {
+    "nohoist": [
+      "firebase-functions",
+      "firebase-admin"
+    ]
+  }
+}

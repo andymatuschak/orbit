@@ -1,0 +1,29 @@
+{
+  "name": "metabook-cli",
+  "version": "0.0.1",
+  "private": true,
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@oclif/command": "^1.5.19",
+    "@types/node": "^13.9.8",
+    "firebase-admin": "^8.10.0",
+    "firebase-functions": "^3.5.0",
+    "metabook-anki": "0.0.1",
+    "metabook-app": "0.0.1",
+    "metabook-client": "0.0.1",
+    "metabook-firebase-support": "0.0.1"
+  },
+  "engines": {
+    "node": "10"
+  },
+  "devDependencies": {
+    "ts-node": "^8.8.1",
+    "typescript": "^3.8.3"
+  },
+  "workspaces": {
+    "nohoist": [
+      "firebase-functions",
+      "firebase-admin"
+    ]
+  }
+}

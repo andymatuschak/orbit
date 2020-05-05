@@ -1,0 +1,34 @@
+{
+  "name": "metabook-core",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/preset-typescript": "^7.9.0",
+    "@types/jest": "^25.1.4",
+    "@types/node": "^13.9.2",
+    "@types/sha.js": "^2.4.0",
+    "babel-jest": "^25.3.0",
+    "jest": "^25.3.0",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "buffer": "^5.5.0",
+    "cids": "^0.7.4",
+    "ipld-dag-pb": "^0.18.3",
+    "multihashes": "^0.4.17",
+    "protobufjs": "^6.8.9",
+    "sha.js": "^2.4.11"
+  },
+  "scripts": {
+    "prebuild": "node scripts/compileProtobuf.js && mkdir -p dist && cp -R src/generated dist/",
+    "build": "tsc -b",
+    "test": "jest"
+  }
+}
