@@ -27,7 +27,7 @@
     "babel-loader": "^8.1.0",
     "ts-loader": "^7.0.2",
     "typescript": "^3.8.3",
-    "webpack": "^4.42.0",
+    "webpack": "4.42.0",
     "webpack-cli": "^3.3.11",
     "webpack-node-externals": "^1.7.2"
   },

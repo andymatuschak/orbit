@@ -39,9 +39,6 @@ export function Basic() {
       onMark={onMark}
       schedule="aggressiveStart"
       shouldLabelApplicationPrompts={false}
-      onLogin={() => {
-        return;
-      }}
     />
   );
 }

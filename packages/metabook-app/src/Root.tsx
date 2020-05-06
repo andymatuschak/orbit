@@ -266,9 +266,6 @@ export default function App() {
               onMark={onMarkCallback}
               schedule="aggressiveStart"
               shouldLabelApplicationPrompts={false}
-              onLogin={() => {
-                return;
-              }}
             />
             <ProgressBar
               completedTaskCount={completedTaskCount}

@@ -44,7 +44,6 @@ export interface ReviewAreaProps {
     markingRecord: ReviewAreaMarkingRecord,
   ) => //cardHandle: CardHandle, TODO
   void;
-  onLogin: () => void;
   schedule: MetabookSpacedRepetitionSchedule;
   shouldLabelApplicationPrompts: boolean;
 
@@ -201,6 +200,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
       currentItem &&
       currentItem.reviewItemType === "prompt"
     ) {
+      console.log("SET SHOWING ANSWER TO TRUE");
       setShowingAnswer(true);
 
       /*const boundingRect = containerRef.current!.getBoundingClientRect();
@@ -248,6 +248,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
     previousItems &&
     isShowingAnswer
   ) {
+    console.log("SET SHOWING ANSWER TO FALSE");
     setShowingAnswer(false);
     if (isEqual(previousItems[1], items[0])) {
       departingMarkingRecordQueueRef.current.push(

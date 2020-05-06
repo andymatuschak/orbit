@@ -12,7 +12,7 @@
     "cids": "^0.8.0",
     "firebase": "^7.14.2",
     "firebase-admin": "^8.11.0",
-    "metabook-core": "file:../metabook-core",
+    "metabook-core": "0.0.1",
     "multihashes": "^0.4.19",
     "sha.js": "^2.4.11"
   },
@@ -26,8 +26,8 @@
     "@babel/preset-typescript": "^7.9.0",
     "@types/jest": "^25.2.1",
     "@types/sha.js": "^2.4.0",
-    "babel-jest": "^25.3.0",
-    "jest": "^25.3.0",
+    "babel-jest": "^24.9.0",
+    "jest": "^24.9.0",
     "typescript": "^3.8.3"
   }
 }

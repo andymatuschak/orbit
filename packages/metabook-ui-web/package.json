@@ -24,7 +24,7 @@
     "metabook-ui": "0.0.1",
     "react-native-web": "file:../../vendor/react-native-web/packages/react-native-web",
     "ts-loader": "^7.0.2",
-    "webpack": "^4.43.0"
+    "webpack": "4.42.0"
   },
   "resolutions": {
     "**/react-native-web": "file:../../vendor/react-native-web/packages/react-native-web"
@@ -38,7 +38,7 @@
     "babel-plugin-transform-class-properties": "^6.24.1",
     "rimraf": "^3.0.2",
     "typescript": "^3.8.2",
-    "webpack": "^4.43.0",
+    "webpack": "4.42.0",
     "webpack-cli": "^3.3.11"
   },
   "workspaces": {

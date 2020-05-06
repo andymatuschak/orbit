@@ -22,5 +22,8 @@
     "ts-node": "^8.9.1",
     "typescript": "^3.8.3"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "name": "metabook"
 }

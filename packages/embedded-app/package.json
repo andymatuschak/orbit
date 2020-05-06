@@ -13,8 +13,10 @@
     "@types/react-dom": "^16.9.7",
     "babel-plugin-react-native-web": "^0.12.2",
     "babel-plugin-transform-class-properties": "^6.24.1",
-    "metabook-sample-data": "file:../metabook-sample-data",
-    "metabook-ui": "file:../metabook-ui",
+    "craco-babel-loader": "^0.1.4",
+    "metabook-core": "0.0.1",
+    "metabook-sample-data": "0.0.1",
+    "metabook-ui": "0.0.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-native-web": "^0.12.2",
@@ -36,6 +38,12 @@
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
+    ]
+  },
+  "workspaces": {
+    "nohoist": [
+      "react",
+      "react-dom"
     ]
   }
 }

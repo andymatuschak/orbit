@@ -7,6 +7,7 @@
   "type": "module",
   "license": "UNLICENSED",
   "private": true,
+  "sideEffects": false,
   "devDependencies": {
     "@babel/core": "^7.8.7",
     "@babel/preset-env": "^7.8.7",
@@ -32,8 +33,8 @@
     "babel-plugin-transform-class-properties": "^6.24.1",
     "eslint-plugin-react-hooks": "^2.5.0",
     "fork-ts-checker-webpack-plugin": "^4.0.5",
-    "jest": "^25.1.0",
-    "metabook-sample-data": "file:../metabook-sample-data",
+    "jest": "^24.9.0",
+    "metabook-sample-data": "0.0.1",
     "prettier": "^1.19.1",
     "react": "~16",
     "react-docgen-typescript-loader": "^3.6.0",
@@ -42,7 +43,7 @@
     "ts-jest": "^25.2.1",
     "ts-loader": "^6.2.1",
     "typescript": "^3.8.3",
-    "webpack": "^4.41.6"
+    "webpack": "4.42.0"
   },
   "peerDependencies": {
     "@types/react": "^16.9.23",
@@ -51,7 +52,7 @@
   },
   "dependencies": {
     "lodash.isequal": "^4.5.0",
-    "metabook-core": "file:../metabook-core",
+    "metabook-core": "0.0.1",
     "react-native-fit-image": "file:../../vendor/react-native-fit-image",
     "react-native-markdown-display": "iamacup/react-native-markdown-display",
     "react-native-web": "file:../../vendor/react-native-web/packages/react-native-web"

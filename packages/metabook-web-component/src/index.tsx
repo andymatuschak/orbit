@@ -71,9 +71,6 @@ import { StyleSheet } from "react-native-web";
               promptIndex: null,
             }))}
           onMark={this.onMark}
-          onLogin={() => {
-            return;
-          }}
           schedule="aggressiveStart"
           shouldLabelApplicationPrompts={false}
         />,
