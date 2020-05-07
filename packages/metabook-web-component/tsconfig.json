@@ -1,25 +1,9 @@
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "allowJs": true,
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "declaration": true,
-    "declarationMap": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "jsx": "react",
-    "lib": ["es2017", "dom"],
-    "module": "es6",
-    "moduleResolution": "node",
-    "outDir": "dist",
-    "resolveJsonModule": true,
-    "sourceMap": true,
-    "strict": true,
-    "target": "es2017",
-    "types": ["@types/react"],
-    "experimentalDecorators": true
+    "target": "es6",
+    "lib": ["dom", "es6"],
+    "composite": false
   },
-  "include": ["./src/**/*"],
-  "compileOnSave": true
+  "files": ["src/index.ts"]
 }
