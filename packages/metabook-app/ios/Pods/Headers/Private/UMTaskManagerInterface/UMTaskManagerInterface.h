@@ -1,1 +1,1 @@
-../../../../../../node_modules/unimodules-task-manager-interface/ios/UMTaskManagerInterface/UMTaskManagerInterface.h
+../../../../../../../node_modules/unimodules-task-manager-interface/ios/UMTaskManagerInterface/UMTaskManagerInterface.h

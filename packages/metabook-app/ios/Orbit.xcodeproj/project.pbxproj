@@ -17,9 +17,9 @@
 		2D02E4BF1E0B4AB3006451C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		2DCD954D1E0B4F2C00145EB5 /* metabookappTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* metabookappTests.m */; };
 		6161D45424549FDD0058BA07 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6161D45224549FDD0058BA07 /* GoogleService-Info.plist */; };
-		6194ADB2244E30C4000B8E21 /* app.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 6194ADB0244E30C4000B8E21 /* app.bundle */; };
-		6194ADB3244E30C4000B8E21 /* app.manifest in Resources */ = {isa = PBXBuildFile; fileRef = 6194ADB1244E30C4000B8E21 /* app.manifest */; };
-		61AFA20E244E2598005E78DA /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 61AFA20D244E2598005E78DA /* Expo.plist */; };
+		61AF28A524624D5100863AF5 /* app.manifest in Resources */ = {isa = PBXBuildFile; fileRef = 61AF28A324624D5100863AF5 /* app.manifest */; };
+		61AF28A624624D5100863AF5 /* app.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 61AF28A424624D5100863AF5 /* app.bundle */; };
+		61AF28A824624D6D00863AF5 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 61AF28A724624D6D00863AF5 /* Expo.plist */; };
 		C05D9E071649C5DDA60A245C /* libPods-Orbit-OrbitTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 32FE60FF0B9B3027DEDC45E8 /* libPods-Orbit-OrbitTests.a */; };
 		ED08E5CAE8FDEE1A6188475C /* libPods-Orbit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 97AB24DD0C57639CCED1EE76 /* libPods-Orbit.a */; };
 /* End PBXBuildFile section */
@@ -58,10 +58,10 @@
 		2D02E4901E0B4A5D006451C7 /* Orbit-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Orbit-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		32FE60FF0B9B3027DEDC45E8 /* libPods-Orbit-OrbitTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Orbit-OrbitTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6161D45224549FDD0058BA07 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		6194ADB0244E30C4000B8E21 /* app.bundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = app.bundle; sourceTree = "<group>"; };
-		6194ADB1244E30C4000B8E21 /* app.manifest */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = app.manifest; sourceTree = "<group>"; };
+		61AF28A324624D5100863AF5 /* app.manifest */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = app.manifest; sourceTree = "<group>"; };
+		61AF28A424624D5100863AF5 /* app.bundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = app.bundle; sourceTree = "<group>"; };
+		61AF28A724624D6D00863AF5 /* Expo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Expo.plist; sourceTree = "<group>"; };
 		61AFA20B244D0FB4005E78DA /* metabookapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = metabookapp.entitlements; path = metabookapp/metabookapp.entitlements; sourceTree = "<group>"; };
-		61AFA20D244E2598005E78DA /* Expo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Expo.plist; sourceTree = "<group>"; };
 		8EE67B41AA8BD9607AF61834 /* Pods-Orbit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Orbit.release.xcconfig"; path = "Target Support Files/Pods-Orbit/Pods-Orbit.release.xcconfig"; sourceTree = "<group>"; };
 		97AB24DD0C57639CCED1EE76 /* libPods-Orbit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Orbit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D78A8418E3802B726A38B265 /* Pods-Orbit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Orbit.debug.xcconfig"; path = "Target Support Files/Pods-Orbit/Pods-Orbit.debug.xcconfig"; sourceTree = "<group>"; };
@@ -162,9 +162,9 @@
 		61AFA20C244E257A005E78DA /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
-				61AFA20D244E2598005E78DA /* Expo.plist */,
-				6194ADB0244E30C4000B8E21 /* app.bundle */,
-				6194ADB1244E30C4000B8E21 /* app.manifest */,
+				61AF28A424624D5100863AF5 /* app.bundle */,
+				61AF28A324624D5100863AF5 /* app.manifest */,
+				61AF28A724624D6D00863AF5 /* Expo.plist */,
 			);
 			name = Supporting;
 			path = Orbit/Supporting;
@@ -346,11 +346,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6194ADB3244E30C4000B8E21 /* app.manifest in Resources */,
-				61AFA20E244E2598005E78DA /* Expo.plist in Resources */,
+				61AF28A824624D6D00863AF5 /* Expo.plist in Resources */,
+				61AF28A524624D5100863AF5 /* app.manifest in Resources */,
+				61AF28A624624D5100863AF5 /* app.bundle in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
-				6194ADB2244E30C4000B8E21 /* app.bundle in Resources */,
 				6161D45424549FDD0058BA07 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -385,7 +385,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "../../node_modules/expo-updates/bundle-expo-assets.sh\n";
+			shellScript = "../../../node_modules/expo-updates/bundle-expo-assets.sh\n";
 		};
 		15870636249B138C675B3FC1 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;

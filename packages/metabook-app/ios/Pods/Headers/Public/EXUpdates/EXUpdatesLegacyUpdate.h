@@ -1,1 +1,1 @@
-../../../../../../node_modules/expo-updates/ios/EXUpdates/Update/EXUpdatesLegacyUpdate.h
+../../../../../../../node_modules/expo-updates/ios/EXUpdates/Update/EXUpdatesLegacyUpdate.h

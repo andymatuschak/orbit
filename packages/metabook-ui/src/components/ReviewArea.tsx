@@ -14,7 +14,11 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { PromptReviewItem, ReviewItem } from "../reviewItem";
+import {
+  PromptReviewItem,
+  promptReviewItemType,
+  ReviewItem,
+} from "../reviewItem";
 import colors from "../styles/colors";
 import { gridUnit, spacing } from "../styles/layout";
 import Card, { baseCardHeight, cardWidth } from "./Card";
@@ -26,12 +30,12 @@ import ReviewButton from "./ReviewButton";
 import Spacer from "./Spacer";
 import WithAnimatedValue = Animated.WithAnimatedValue;
 
-type InternalReviewItem =
-  | ReviewItem
-  | {
-      reviewItemType: "completedQuestion";
-      markingRecord: ReviewAreaMarkingRecord;
-    };
+type CompletedReviewItem = {
+  reviewItemType: "completedQuestion";
+  reviewItem: PromptReviewItem;
+  outcome: PromptRepetitionOutcome | null;
+};
+type InternalReviewItem = ReviewItem | CompletedReviewItem;
 
 export type ReviewAreaMarkingRecord = {
   reviewItem: PromptReviewItem;
@@ -77,20 +81,16 @@ function getRenderedItemIndexFromRenderNodeIndex(
 }
 
 function CardRenderer({
-  departingMarkingRecordQueueRef,
   maximumCardsToDisplay,
   renderedStackIndex,
-  setPhase,
   item,
+  onDidDisappear,
   children,
 }: {
   item: InternalReviewItem;
   renderedStackIndex: number;
   maximumCardsToDisplay: number;
-  departingMarkingRecordQueueRef: React.MutableRefObject<
-    ReviewAreaMarkingRecord[]
-  >;
-  setPhase: (value: ((prevState: number) => number) | number) => void;
+  onDidDisappear: (renderedStackIndex: number) => void;
   children: React.ReactNode;
 }) {
   const { scale, translateY } = getTransformForStackIndex(renderedStackIndex);
@@ -113,31 +113,28 @@ function CardRenderer({
     item.reviewItemType !== "completedQuestion" &&
     renderedStackIndex < maximumCardsToDisplay;
 
+  const onTransitionEnd = useCallback(
+    (toVisible: boolean, didFinish: boolean) => {
+      if (!toVisible && didFinish) {
+        onDidDisappear(renderedStackIndex);
+      }
+    },
+    [onDidDisappear, renderedStackIndex],
+  );
+
   return (
     <FadeView
       isVisible={isDisplayed}
-      onTransitionEnd={(toVisible, didFinish) => {
-        // TODO this will force rerenders, so extract the container to its own node
-        if (!toVisible && didFinish) {
-          departingMarkingRecordQueueRef.current.splice(
-            -1 * renderedStackIndex - 1,
-            1,
-          );
-          setPhase((phase) => phase + 1);
-        }
-      }}
+      onTransitionEnd={onTransitionEnd}
       durationMillis={100}
-      style={
-        StyleSheet.compose<ViewStyle>(styles.cardContainer, ({
-          zIndex: maximumCardsToDisplay - renderedStackIndex + 1,
-          transform: [
-            { scale: animatedScale },
-            { translateY: animatedTranslateY },
-          ],
-        } as unknown) as StyleProp<ViewStyle>) as WithAnimatedValue<
-          StyleProp<ViewStyle>
-        >
-      }
+      style={{
+        position: "absolute",
+        zIndex: maximumCardsToDisplay - renderedStackIndex + 1,
+        transform: [
+          { scale: animatedScale },
+          { translateY: animatedTranslateY },
+        ],
+      }}
     >
       {children}
     </FadeView>
@@ -200,7 +197,6 @@ export default function ReviewArea(props: ReviewAreaProps) {
       currentItem &&
       currentItem.reviewItemType === "prompt"
     ) {
-      console.log("SET SHOWING ANSWER TO TRUE");
       setShowingAnswer(true);
 
       /*const boundingRect = containerRef.current!.getBoundingClientRect();
@@ -233,70 +229,43 @@ export default function ReviewArea(props: ReviewAreaProps) {
     [currentItem /*, context*/],
   );
 
-  const departingMarkingRecordQueueRef = useRef<ReviewAreaMarkingRecord[]>([]);
+  const departingPromptItems = useRef<CompletedReviewItem[]>([]);
 
-  const isComplete = items.length === 0 && !!showsCompletedState;
+  const onPromptDidDisappear = useCallback((renderedStackIndex) => {
+    departingPromptItems.current.splice(-1 * renderedStackIndex - 1, 1);
+    setPhase((phase) => phase + 1);
+  }, []);
 
   const maximumCardsToDisplay = 3;
   const maximumCardsToRender = 5;
   //const maximumCardsToDisplay = window.innerHeight >= 568 ? 3 : 1; // TODO
   //const maximumCardsToRender = window.innerHeight >= 568 ? 5 : 3;
 
-  if (
-    lastCommittedReviewMarkingRef.current &&
-    !isEqual(previousItems, items) &&
-    previousItems &&
-    isShowingAnswer
-  ) {
-    console.log("SET SHOWING ANSWER TO FALSE");
-    setShowingAnswer(false);
-    if (isEqual(previousItems[1], items[0])) {
-      departingMarkingRecordQueueRef.current.push(
-        lastCommittedReviewMarkingRef.current,
-      );
+  if (!isEqual(previousItems, items) && previousItems) {
+    if (
+      isEqual(previousItems[1], items[0]) &&
+      items[0].reviewItemType === promptReviewItemType &&
+      (departingPromptItems.current.length === 0 ||
+        !isEqual(departingPromptItems.current[0].reviewItem, previousItems[0]))
+    ) {
+      departingPromptItems.current.push({
+        reviewItem: previousItems[0],
+        reviewItemType: "completedQuestion",
+        outcome: lastCommittedReviewMarkingRef.current?.outcome ?? null,
+      });
       lastCommittedReviewMarkingRef.current = null;
+      setShowingAnswer(false);
     }
   }
 
-  const renderedItems = departingMarkingRecordQueueRef.current
-    .map(
-      (markingRecord) =>
-        ({
-          reviewItemType: "completedQuestion",
-          markingRecord,
-        } as InternalReviewItem),
-    )
+  const renderedItems = (departingPromptItems.current as InternalReviewItem[])
     .concat(items)
     .slice(0, maximumCardsToRender);
 
   return (
-    <TouchableWithoutFeedback
-      onPress={onPress}
-      accessible={false}
-      /*className={`ReviewArea ${isComplete ? "ReviewAreaComplete" : ""}
-      style={{
-        cursor: isComplete || isShowingAnswer ? undefined : "pointer"
-      touch-action="manipulation"
-      }} TODO*/
-    >
+    <TouchableWithoutFeedback onPress={onPress} accessible={false}>
       <View style={styles.outerContainer}>
-        <Transition in={isComplete} timeout={500} mountOnEnter unmountOnExit>
-          <View
-          //className="ReviewAreaCompleteSummary" TODO
-          //style={{ opacity: isComplete ? 1 : 0 }}
-          >
-            {/*<div className="ReviewAreaCompleteGlyph" /> TODO */}
-            <Text>Review complete</Text>
-          </View>
-        </Transition>
-
-        <FadeView
-          isVisible={!isComplete}
-          durationMillis={500}
-          style={
-            styles.stackContainer
-          } /*style={{ opacity: isComplete ? 0 : 1 }} TODO */
-        >
+        <View style={styles.stackContainer}>
           {(inViewport || disableVisibilityTesting) &&
             Array.from(new Array(maximumCardsToRender).keys()).map(
               (renderNodeIndex) => {
@@ -310,8 +279,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
 
                 // The rendered stack index is 0 for the card that's currently on top, 1 for the next card down, -1 for the card that's currently animating out.
                 const renderedStackIndex =
-                  renderedItemIndex -
-                  departingMarkingRecordQueueRef.current.length;
+                  renderedItemIndex - departingPromptItems.current.length;
                 const isRevealed =
                   (isShowingAnswer && renderedStackIndex === 0) ||
                   renderedStackIndex < 0;
@@ -354,11 +322,13 @@ export default function ReviewArea(props: ReviewAreaProps) {
                       reviewMarkingInteractionState = null;
                     }
                   } else {
-                    reviewItem = item.markingRecord.reviewItem;
-                    reviewMarkingInteractionState = {
-                      status: "committed",
-                      outcome: item.markingRecord.outcome,
-                    };
+                    reviewItem = item.reviewItem;
+                    reviewMarkingInteractionState = item.outcome
+                      ? {
+                          status: "committed",
+                          outcome: item.outcome,
+                        }
+                      : null;
                   }
 
                   cardComponent = (
@@ -371,11 +341,6 @@ export default function ReviewArea(props: ReviewAreaProps) {
                       }
                       schedule={schedule}
                       showsNeedsRetryNotice={showsNeedsRetryNotice}
-                      // ref={
-                      //   renderedStackIndex === 0
-                      //     ? currentCardHandleRef
-                      //     : undefined
-                      // } TODO
                       onToggleExplanation={onToggleTopCardExplanation}
                       shouldLabelApplicationPrompts={
                         shouldLabelApplicationPrompts
@@ -389,48 +354,30 @@ export default function ReviewArea(props: ReviewAreaProps) {
                     renderedStackIndex={renderedStackIndex}
                     item={item}
                     maximumCardsToDisplay={maximumCardsToDisplay}
-                    departingMarkingRecordQueueRef={
-                      departingMarkingRecordQueueRef
-                    }
-                    setPhase={setPhase}
+                    onDidDisappear={onPromptDidDisappear}
                   >
                     {cardComponent}
                   </CardRenderer>
                 );
               },
             )}
-        </FadeView>
+        </View>
 
-        <Transition in={!isComplete} timeout={500} mountOnEnter unmountOnExit>
-          <View style={{ opacity: isComplete ? 0 : 1, alignItems: "center" }}>
-            <ReviewButtonArea
-              onMark={onMarkingButton}
-              onPendingMarkingInteractionStateDidChange={
-                setPendingMarkingInteractionState
-              }
-              disabled={!isShowingAnswer || items.length === 0}
-              promptType={
-                currentItem?.reviewItemType === "prompt"
-                  ? currentItem.prompt.promptType
-                  : null
-              }
-            />
-          </View>
-        </Transition>
+        <ReviewButtonArea
+          onMark={onMarkingButton}
+          onPendingMarkingInteractionStateDidChange={
+            setPendingMarkingInteractionState
+          }
+          disabled={!isShowingAnswer || items.length === 0}
+          promptType={
+            currentItem?.reviewItemType === "prompt"
+              ? currentItem.prompt.promptType
+              : null
+          }
+        />
       </View>
     </TouchableWithoutFeedback>
   );
-}
-
-function Transition(props: {
-  in: boolean;
-  children: React.ReactNode;
-  onExited?: any;
-  timeout: number;
-  mountOnEnter?: boolean;
-  unmountOnExit?: boolean;
-}) {
-  return <>{props.in && props.children}</>;
 }
 
 const styles = StyleSheet.create({
@@ -439,15 +386,12 @@ const styles = StyleSheet.create({
     padding: gridUnit * 2,
     flexGrow: 1,
     justifyContent: "center",
+    alignItems: "center",
   },
 
   stackContainer: {
     alignItems: "center",
     height: baseCardHeight + gridUnit * 3,
-  },
-
-  cardContainer: {
-    position: "absolute",
   },
 
   buttonContainer: {

@@ -31,13 +31,36 @@ static void InitializeFlipper(UIApplication *application) {
 }
 #endif
 
+@interface ORNSView : UIView
+@property NSArray *subviews;
+@end
+
+@implementation ORNSView
+@dynamic subviews;
+@end
+
+
 @interface ORNSWindowAdditions : NSObject
 @property NSUInteger styleMask;
 @property BOOL titlebarAppearsTransparent;
+@property ORNSView *contentView;
+@property id backgroundColor;
+@property (getter=isOpaque) BOOL opaque;
 @end
 @implementation ORNSWindowAdditions
 @dynamic styleMask;
 @dynamic titlebarAppearsTransparent;
+@dynamic contentView;
+@end
+
+@interface ORVisualEffectView : UIView
+@property NSInteger blendingMode;
+@property NSInteger state;
+@property NSInteger material;
+@end
+
+@implementation ORVisualEffectView
+@dynamic blendingMode, state, material;
 @end
 
 @interface UIWindow (PSPDFAdditions)
@@ -138,21 +161,41 @@ static void InitializeFlipper(UIApplication *application) {
     RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:self.bridge
                                                      moduleName:@"main"
                                               initialProperties:nil];
-    rootView.backgroundColor = [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1];
 
     UIViewController *rootViewController = [UIViewController new];
     rootViewController.view = rootView;
     self.window.rootViewController = rootViewController;
 
-    [self.window makeKeyAndVisible];
+
 
 
     #if TARGET_OS_MACCATALYST
+
     dispatch_async(dispatch_get_main_queue(), ^{
     ORNSWindowAdditions *window = [self.window nsWindow];
-    window.titlebarAppearsTransparent = YES;
     window.styleMask |= 1<<15;
+
+      /*window.opaque = NO;
+      window.backgroundColor = [NSClassFromString(@"NSColor") performSelector:@selector(clearColor)];
+       rootView.backgroundColor = [UIColor clearColor];
+
+      ORVisualEffectView *visualEffect = (ORVisualEffectView *)[[NSClassFromString(@"NSVisualEffectView") alloc] init];
+      [visualEffect setFrame:window.contentView.bounds];
+      [visualEffect setAutoresizingMask:65];
+      [visualEffect setBlendingMode:(int)0];
+      [visualEffect setState:(int)0];
+      [visualEffect setMaterial:(int)11];
+      NSMutableArray *subviews = [NSMutableArray arrayWithArray:[window.contentView subviews]];
+      [[[subviews[0] layer] sublayers][0] setCompositingFilter:nil];
+      [subviews insertObject:visualEffect atIndex:0];
+      window.contentView.subviews = subviews;*/
+
+
+      window.titlebarAppearsTransparent = YES;
+      [self.window makeKeyAndVisible];
     });
+    #else
+    [self.window makeKeyAndVisible];
     #endif
   }
 }

@@ -56,9 +56,9 @@ function usePromptStates(
       Date.now() / 1000.0,
     );
     return promptStateClient.subscribeToDuePromptStates(
-      // TODO use fuzzy due dates
+      // TODO abstract fuzzy due dates
       // TODO when does this change?
-      Date.now(),
+      Date.now() + 1000 * 60 * 60 * 6,
       (update) =>
         setPromptStates((oldPromptStates) => {
           console.log(

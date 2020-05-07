@@ -1,1 +1,1 @@
-../../../../../../node_modules/unimodules-sensors-interface/ios/UMSensorsInterface/UMBarometerInterface.h
+../../../../../../../node_modules/unimodules-sensors-interface/ios/UMSensorsInterface/UMBarometerInterface.h

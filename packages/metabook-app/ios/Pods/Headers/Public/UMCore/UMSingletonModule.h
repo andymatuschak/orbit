@@ -1,1 +1,1 @@
-../../../../../../node_modules/@unimodules/core/ios/UMCore/UMSingletonModule.h
+../../../../../../../node_modules/@unimodules/core/ios/UMCore/UMSingletonModule.h

@@ -1,1 +1,1 @@
-../../../../../../node_modules/@unimodules/core/ios/UMCore/Services/UMLogManager.h
+../../../../../../../node_modules/@unimodules/core/ios/UMCore/Services/UMLogManager.h

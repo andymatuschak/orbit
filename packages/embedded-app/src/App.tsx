@@ -1,7 +1,20 @@
-import { Prompt, PromptParameters } from "metabook-core";
+import {
+  getDefaultFirebaseApp,
+  MetabookFirebaseDataClient,
+  MetabookFirebaseUserClient,
+} from "metabook-client";
+import {
+  getIDForPrompt,
+  getIDForPromptTask,
+  Prompt,
+  PromptParameters,
+  PromptTask,
+  repetitionActionLogType,
+} from "metabook-core";
 import { testBasicPrompt } from "metabook-sample-data";
 import { promptReviewItemType, ReviewArea, ReviewItem } from "metabook-ui";
-import React, { useCallback } from "react";
+import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
+import React from "react";
 
 interface EmbeddedItem {
   prompt: Prompt;
@@ -50,9 +63,47 @@ function App() {
     return defaultItems;
   });
 
-  const onMark = useCallback(() => {
-    setQueue((queue) => queue.slice(1));
-  }, []);
+  const [{ userClient, dataClient }] = React.useState(() => {
+    const app = getDefaultFirebaseApp();
+    const firestore = app.firestore();
+    return {
+      userClient: new MetabookFirebaseUserClient(firestore, "demo"),
+      dataClient: new MetabookFirebaseDataClient(firestore, app.functions()),
+    };
+  });
+
+  const onMark = React.useCallback(
+    (marking: ReviewAreaMarkingRecord) => {
+      setQueue((queue) => queue.slice(1));
+      // Ingest prompt for user
+      const promptTask = {
+        promptType: marking.reviewItem.prompt.promptType,
+        promptID: getIDForPrompt(marking.reviewItem.prompt),
+        promptParameters: marking.reviewItem.promptParameters,
+      } as PromptTask;
+
+      userClient
+        .recordActionLogs([
+          {
+            actionLogType: repetitionActionLogType,
+            taskID: getIDForPromptTask(promptTask),
+            parentActionLogIDs: [],
+            taskParameters: null,
+            outcome: marking.outcome,
+            context: null,
+            timestampMillis: Date.now(),
+          },
+        ])
+        .then(() => console.log("Recorded log"))
+        .catch((error) => console.error("Error recording log", error));
+
+      dataClient
+        .recordPrompts([marking.reviewItem.prompt])
+        .then(() => console.log("Recorded prompt."))
+        .catch((error) => console.error("Error recording prompt", error));
+    },
+    [userClient, dataClient],
+  );
 
   return (
     <div className="App">

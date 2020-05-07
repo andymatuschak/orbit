@@ -6,3 +6,5 @@ export type {
 
 export { MetabookFirebaseDataClient } from "./dataClient";
 export type { MetabookDataClient, MetabookDataSnapshot } from "./dataClient";
+
+export { getDefaultFirebaseApp } from "./firebase";

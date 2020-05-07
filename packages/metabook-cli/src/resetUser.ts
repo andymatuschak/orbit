@@ -1,5 +1,8 @@
 import { Command, flags } from "@oclif/command";
-import { getLogCollectionReference } from "metabook-firebase-support";
+import {
+  getLogCollectionReference,
+  getTaskStateCacheCollectionReference,
+} from "metabook-firebase-support";
 import { getAdminApp } from "./adminApp";
 import { deleteCollection } from "./deleteCollection";
 
@@ -20,6 +23,10 @@ class ResetUser extends Command {
     const userID = flags.userID;
 
     await deleteCollection(db, getLogCollectionReference(db, userID));
+    await deleteCollection(
+      db,
+      getTaskStateCacheCollectionReference(db, userID),
+    );
     console.log("User reset");
   }
 }

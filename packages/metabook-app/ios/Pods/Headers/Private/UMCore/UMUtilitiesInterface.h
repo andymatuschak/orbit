@@ -1,1 +1,1 @@
-../../../../../../node_modules/@unimodules/core/ios/UMCore/Protocols/UMUtilitiesInterface.h
+../../../../../../../node_modules/@unimodules/core/ios/UMCore/Protocols/UMUtilitiesInterface.h

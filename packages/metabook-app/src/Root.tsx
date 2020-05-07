@@ -16,6 +16,7 @@ import {
   ReviewAreaProps,
   useTransitioningValue,
 } from "metabook-ui";
+import { cardWidth } from "metabook-ui/dist/components/Card";
 import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
 import Spacer from "metabook-ui/dist/components/Spacer";
 import colors from "metabook-ui/dist/styles/colors";
@@ -27,7 +28,16 @@ import {
 import typography from "metabook-ui/dist/styles/typography";
 import "node-libs-react-native/globals";
 import React, { useCallback, useEffect, useState } from "react";
-import { Animated, Text, View } from "react-native";
+import {
+  Animated,
+  Platform,
+  SafeAreaView,
+  SafeAreaViewComponent,
+  StyleSheet,
+  Text,
+  View,
+  ViewComponent,
+} from "react-native";
 import {
   enableFirebasePersistence,
   getFirebaseFunctions,
@@ -123,6 +133,23 @@ function onMark(
     });
 }
 
+const progressBarStyles = StyleSheet.create({
+  common: {
+    position: "absolute",
+    height: gridUnit * 3,
+    top: 0,
+    flexDirection: "row",
+  },
+  mac: {
+    left: 100,
+    top: 1, // hack: counteracting the safe area
+    right: spacing.spacing06,
+  },
+  compact: {
+    width: cardWidth,
+  },
+});
+
 function ProgressBar(props: {
   completedTaskCount: number;
   totalTaskCount: number;
@@ -138,14 +165,12 @@ function ProgressBar(props: {
 
   return (
     <View
-      style={{
-        position: "absolute",
-        height: gridUnit * 3,
-        top: 1,
-        left: 100,
-        right: 0,
-        flexDirection: "row",
-      }}
+      style={[
+        progressBarStyles.common,
+        Platform.OS === "ios" && Platform.isPad
+          ? progressBarStyles.mac
+          : progressBarStyles.compact,
+      ]} // TODO should be Catalyst-specific
     >
       <View
         style={{
@@ -174,26 +199,23 @@ function ProgressBar(props: {
           }}
         />
       </View>
-      <Spacer size={spacing.spacing04} />
+      <Spacer size={spacing.spacing06} />
       <View
         style={{
-          minWidth: gridUnit * 2,
-          alignItems: "center",
           justifyContent: "center",
         }}
       >
         <Text
           style={{
-            flexShrink: 0,
             color: colors.key70,
             fontSize: 20,
+            textAlign: "right",
             fontWeight: "600",
           }}
         >
           {props.totalTaskCount - props.completedTaskCount}
         </Text>
       </View>
-      <Spacer size={spacing.spacing05} />
     </View>
   );
 }
@@ -211,10 +233,7 @@ export default function App() {
 
   useEffect(() => {
     if (persistenceStatus === "enabled") {
-      const userClient = new MetabookFirebaseUserClient(
-        getFirestore(),
-        "x5EWk2UT56URxbfrl7djoxwxiqH2",
-      );
+      const userClient = new MetabookFirebaseUserClient(getFirestore(), "demo");
       setPromptStateClient(
         new PromptStateClient(
           userClient,
@@ -238,11 +257,16 @@ export default function App() {
 
   const items = useReviewItems(promptStateClient, dataRecordClient);
 
-  const [completedTaskCount, setCompletedTaskCount] = useState(0);
+  // TODO: implement real queue
+  const [maxItemCount, setMaxItemCount] = useState(0);
+  useEffect(() => {
+    setMaxItemCount((maxItemCount) =>
+      Math.max(maxItemCount, items?.length ?? 0),
+    );
+  }, [items]);
 
   const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>(
     (marking) => {
-      setCompletedTaskCount((p) => p + 1);
       onMark(promptStateClient, marking);
     },
     [promptStateClient],
@@ -250,41 +274,45 @@ export default function App() {
 
   console.log("[Performance] Render", Date.now() / 1000.0);
 
-  return (
-    <View
-      style={{
-        flexGrow: 1,
+  const outerViewComponent =
+    Platform.OS === "ios" && Platform.isPad ? View : SafeAreaView; // TODO: Catalyst hack
+  return React.createElement(
+    outerViewComponent,
+    {
+      style: {
+        flex: 1,
         justifyContent: "center",
         backgroundColor: colors.key00,
-      }}
-    >
-      {items ? (
-        items.length > 0 ? (
-          <>
-            <ReviewArea
-              items={items}
-              onMark={onMarkCallback}
-              schedule="aggressiveStart"
-              shouldLabelApplicationPrompts={false}
-            />
-            <ProgressBar
-              completedTaskCount={completedTaskCount}
-              totalTaskCount={items.length}
-            />
-          </>
-        ) : (
-          <Text
-            style={{
-              textAlign: "center",
-              ...typography.cardBodyText,
-              color: colors.key70,
-              opacity: 0.4,
-              fontSize: 24,
-              lineHeight: 24 * 1.5,
-            }}
-          >{`All caught up!\nNothing's due for review at the moment.`}</Text>
-        )
-      ) : null}
-    </View>
+      },
+    },
+    items ? (
+      items.length > 0 ? (
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <ReviewArea
+            items={items}
+            onMark={onMarkCallback}
+            schedule="aggressiveStart"
+            shouldLabelApplicationPrompts={false}
+          />
+          <ProgressBar
+            completedTaskCount={maxItemCount - items.length}
+            totalTaskCount={maxItemCount}
+          />
+        </View>
+      ) : (
+        <Text
+          style={{
+            textAlign: "center",
+            ...typography.cardBodyText,
+            color: colors.key70,
+            opacity: 0.4,
+            fontSize: 24,
+            lineHeight: 24 * 1.5,
+            marginLeft: spacing.spacing05,
+            marginRight: spacing.spacing05,
+          }}
+        >{`All caught up!\nNothing's due for review.`}</Text>
+      )
+    ) : null,
   );
 }
