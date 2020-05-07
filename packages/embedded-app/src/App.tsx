@@ -75,6 +75,9 @@ function App() {
   const onMark = React.useCallback(
     (marking: ReviewAreaMarkingRecord) => {
       setQueue((queue) => queue.slice(1));
+
+      return; // TODO put behind flag
+
       // Ingest prompt for user
       const promptTask = {
         promptType: marking.reviewItem.prompt.promptType,
@@ -113,6 +116,20 @@ function App() {
         schedule="default"
         shouldLabelApplicationPrompts={true}
       />
+      <div
+        style={{
+          position: "absolute",
+          pointerEvents: "none",
+          textAlign: "center",
+          top: "10px",
+          width: "100%",
+          fontFamily: "system-ui, sans-serif",
+          fontSize: 12,
+          opacity: 0.5,
+        }}
+      >
+        For prototyping purposes; user data not persisted.
+      </div>
     </div>
   );
 }

@@ -244,7 +244,8 @@ export default function ReviewArea(props: ReviewAreaProps) {
   if (!isEqual(previousItems, items) && previousItems) {
     if (
       isEqual(previousItems[1], items[0]) &&
-      items[0].reviewItemType === promptReviewItemType &&
+      previousItems[0] &&
+      previousItems[0].reviewItemType === promptReviewItemType &&
       (departingPromptItems.current.length === 0 ||
         !isEqual(departingPromptItems.current[0].reviewItem, previousItems[0]))
     ) {

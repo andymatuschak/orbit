@@ -1,0 +1,7 @@
+{
+  "hosting": {
+    "target": "orbit-embedded-app",
+    "public": "build",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+  }
+}
