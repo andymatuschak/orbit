@@ -6,6 +6,6 @@
     "deploy": "firebase deploy"
   },
   "devDependencies": {
-    "firebase-cli": "^1.2.0"
+    "firebase-tools": "^8.2.0"
   }
 }
