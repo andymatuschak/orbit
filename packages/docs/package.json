@@ -1,0 +1,11 @@
+{
+  "name": "metabook-docs",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "deploy": "firebase deploy"
+  },
+  "devDependencies": {
+    "firebase-cli": "^1.2.0"
+  }
+}
