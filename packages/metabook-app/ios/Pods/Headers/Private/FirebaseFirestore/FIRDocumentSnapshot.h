@@ -1,0 +1,1 @@
+../../../FirebaseFirestore/Firestore/Source/Public/FIRDocumentSnapshot.h

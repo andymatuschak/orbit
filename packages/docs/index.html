@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans:wght@400;700&display=swap" rel="stylesheet">    <script type="module" src="https://cdn.withorbit.com/orbit-web-component.js"></script>
+    <title>Orbit Documentation</title>
+
+    <style type="text/css">
+      html {
+        font-family: "IBM Plex Sans", Menlo, Consolas, monospace;
+        color: #222;
+      }
+      h1,h2 {
+        color: #333;
+      }
+      h2 {
+        margin-top: 3rem;
+      }
+      body {
+        margin: 2rem;
+        max-width: 1000px;
+      }
+      p {
+        max-width: 600px;
+        line-height: 1.4;
+      }
+      pre, code {
+        font-family: "IBM Plex Mono", monospace;
+
+      }
+      pre {
+        background-color: #f3f8fa;
+        margin: 0 0 0 -2rem;
+        padding: 2rem;
+        overflow: auto;
+      }
+
+      @media screen and (max-width: 400px) {
+        body {
+          margin: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Prototyping with Orbit</h1>
+
+    <p>Hello, intrepid explorer! You're here because you've expressed interest in writing something in a new medium. I've called it the "mnemonic medium" in the past—since it makes it easy for readers to remember what they read—but more generally, the medium aspires to allow you to <a href="https://notes.andymatuschak.org/The_mnemonic_medium_keeps_readers_in_contact_with_material_over_time">author engagement with your writing over time</a>, beyond that first period your readers spend with your text.</p>
+
+    <p>I've been building an experimental platform to allow authors to explore this new medium. The working name for the platform is <em>Orbit</em>. It's early days, but it's far enough along that you can begin experimenting with embedding prompts in your texts to get a feel for the form and its impact on your prose structure.</p>
+
+    <h2>How Orbit works</h2>
+    <p>I'll assume that you're familiar with Quantum Country. Rather than explain the basic notion of spaced repetition to you, I'll explain how this platform works.</p>
+    <p>Readers are introduced to Orbit through texts like the one you might write. When you interleave a review session into the text, the interface will explain that the reader can save their progress and remember that material by making an account (which will accumulate prompts they find on other sites, too). A few days later, they'll get an email notification to review the prompts from the text they read; they can review in their browser (as on Quantum Country) or in native desktop / mobile apps I'll provide. If they haven't finished reading your text, the review session will give them the opportunity to continue reading.</p>
+
+    <h2>Prototyping with Orbit</h2>
+    <p>Orbit's designed to work anywhere on the web. I'll provide a few methods for embedding prompts, but right now I provide a <a href="https://www.webcomponents.org">Web Component</a> which can be embedded into any HTML page. After adding just one <code>&lt;script&gt;</code> tag, you can use special <code>&lt;orbit-prompt&gt;</code> tags anywhere on the page to insert prompts.</p>
+    <p>Here's how it works:</p>
+    <pre>&lt;html&gt;
+  &lt;head&gt;
+    &lt;script type="module" src="https://cdn.withorbit.com/orbit-web-component.js"&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;Here's my example web page.&lt;/p&gt;
+    &lt;orbit-reviewarea&gt;
+      &lt;orbit-prompt
+        question="What's the working name for Andy's experimental mnemonic medium platform?"
+        answer="Orbit"
+      &gt;&lt;/orbit-prompt&gt;
+      &lt;orbit-prompt
+        question="What's the new-ish web technology used to embed Orbit prompts into web pages?"
+        answer="Web components"
+      &gt;&lt;/orbit-prompt&gt;
+    &lt;/orbit-reviewarea&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+
+    <p>And that would produce a result which might look like this:</p>
+    <orbit-reviewarea>
+      <orbit-prompt question="What's the working name for Andy's experimental mnemonic medium platform?" answer="Orbit"></orbit-prompt>
+      <orbit-prompt question="What's the new-ish web technology used to embed Orbit prompts into web pages?" answer="Web components"></orbit-prompt>
+    </orbit-reviewarea>
+
+    <p>The <code>question</code> and <code>answer</code> attributes support a subset of Markdown formatting. In particular, you can use inline styling and multiple paragraphs. Support for images and LaTeX is forthcoming.</p>
+    <p>Note that the interface is a rough placeholder; I've been focused on the platform infrastructure and haven't embarked on the detailed design of the embedded interface. Besides polish, it will of course need to include elements explaining why it's there and what it's about. And the prototype here doesn't allow you to sign in to save your progress. That functionality will be available once the review apps are ready for outside testers.</p>
+
+  <h2>Development timeline</h2>
+  <p>I've imported my own Anki library into the under-development review apps, and I'm "living on" them as a forcing function to polish the rough edges. Those should be ready for outside testing by the end of June.</p>
+  <p>Under my current plans, the platform will be ready for its first publications in July. In the meantime, please don't publicly share any pages embedding this prototype interface. I'll keep you apprised as development continues.</p>
+  <p>Please do <a href="mailto:andy@andymatuschak.org">let me know</a> about your experiences as you write.</p>
+  <p>🙇👋, Andy</p>
+
+  </body>
+</html>

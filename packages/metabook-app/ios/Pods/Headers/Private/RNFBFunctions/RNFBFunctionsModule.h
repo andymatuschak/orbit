@@ -1,0 +1,1 @@
+../../../../../../../node_modules/@react-native-firebase/functions/ios/RNFBFunctions/RNFBFunctionsModule.h

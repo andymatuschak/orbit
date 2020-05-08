@@ -1,0 +1,1 @@
+../../../../../../../node_modules/@react-native-firebase/firestore/ios/RNFBFirestore/RNFBFirestoreModule.h
