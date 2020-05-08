@@ -23,6 +23,10 @@ module.exports = function ({ env }) {
         "babel-plugin-transform-class-properties",
         ["babel-plugin-react-native-web", { commonjs: true }],
       ],
+      loaderOptions: (options) => {
+        options.sourceType = "unambiguous";
+        return options;
+      },
     },
     webpack: {
       alias: {
