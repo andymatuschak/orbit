@@ -233,7 +233,10 @@ export default function App() {
 
   useEffect(() => {
     if (persistenceStatus === "enabled") {
-      const userClient = new MetabookFirebaseUserClient(getFirestore(), "demo");
+      const userClient = new MetabookFirebaseUserClient(
+        getFirestore(),
+        "x5EWk2UT56URxbfrl7djoxwxiqH2",
+      );
       setPromptStateClient(
         new PromptStateClient(
           userClient,
