@@ -1,6 +1,14 @@
 const fs = require("fs");
 const path = require("path");
 const rewireBabelLoader = require("craco-babel-loader");
+const webpack = require("webpack");
+
+const isDevelopment = process.env["NODE_ENV"] === "development";
+const userID = isDevelopment
+  ? process.env["ORBIT_USER_ID"]
+    ? process.env["ORBIT_USER_ID"]
+    : "x5EWk2UT56URxbfrl7djoxwxiqH2"
+  : null;
 
 const resolveApp = (relativePath) => path.resolve(__dirname, relativePath);
 
@@ -34,6 +42,11 @@ module.exports = function ({ env }) {
         react: resolveApp("node_modules/react"),
         "react-dom": resolveApp("node_modules/react-dom"),
       },
+      plugins: [
+        new webpack.DefinePlugin({
+          USER_ID: JSON.stringify(userID),
+        }),
+      ],
     },
   };
 };

@@ -16,6 +16,11 @@ import { promptReviewItemType, ReviewArea, ReviewItem } from "metabook-ui";
 import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
 import React from "react";
 
+declare global {
+  // suppiled by Webpack
+  const USER_ID: string | null;
+}
+
 interface EmbeddedItem {
   prompt: Prompt;
   promptParameters: PromptParameters;
@@ -64,6 +69,8 @@ function App() {
   });
 
   const [{ userClient, dataClient }] = React.useState(() => {
+    console.log("User ID:", USER_ID);
+
     const app = getDefaultFirebaseApp();
     const firestore = app.firestore();
     return {
@@ -76,7 +83,9 @@ function App() {
     (marking: ReviewAreaMarkingRecord) => {
       setQueue((queue) => queue.slice(1));
 
-      return; // TODO put behind flag
+      if (!USER_ID) {
+        return;
+      }
 
       // Ingest prompt for user
       const promptTask = {
@@ -116,20 +125,22 @@ function App() {
         schedule="default"
         shouldLabelApplicationPrompts={true}
       />
-      <div
-        style={{
-          position: "absolute",
-          pointerEvents: "none",
-          textAlign: "center",
-          top: "10px",
-          width: "100%",
-          fontFamily: "system-ui, sans-serif",
-          fontSize: 12,
-          opacity: 0.5,
-        }}
-      >
-        For prototyping purposes; user data not persisted.
-      </div>
+      {USER_ID ? null : (
+        <div
+          style={{
+            position: "absolute",
+            pointerEvents: "none",
+            textAlign: "center",
+            top: "10px",
+            width: "100%",
+            fontFamily: "system-ui, sans-serif",
+            fontSize: 12,
+            opacity: 0.5,
+          }}
+        >
+          For prototyping purposes; user data not persisted.
+        </div>
+      )}
     </div>
   );
 }

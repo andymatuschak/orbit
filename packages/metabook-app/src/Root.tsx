@@ -235,7 +235,8 @@ export default function App() {
     if (persistenceStatus === "enabled") {
       const userClient = new MetabookFirebaseUserClient(
         getFirestore(),
-        "x5EWk2UT56URxbfrl7djoxwxiqH2",
+        "demo",
+        // "x5EWk2UT56URxbfrl7djoxwxiqH2",
       );
       setPromptStateClient(
         new PromptStateClient(
