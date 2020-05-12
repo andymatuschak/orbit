@@ -17,41 +17,45 @@ export default function SignInScreen({
     false,
   );
 
+  const isUnmounted = React.useRef(false);
+  React.useEffect(() => {
+    return () => {
+      isUnmounted.current = true;
+    };
+  }, []);
+
   const onLogin = React.useCallback(
     async (email, password) => {
       setPendingServerResponse(true);
-      switch (formMode) {
-        case null:
-          console.error("Can't login with unknown mode");
-          break;
-        case "signIn":
-          try {
-            const credential = await authenticationClient.signInWithEmailAndPassword(
+
+      try {
+        switch (formMode) {
+          case null:
+            console.error("Can't login with unknown mode");
+            break;
+          case "signIn":
+            await authenticationClient.signInWithEmailAndPassword(
               email,
               password,
             );
-            console.log("Signed in:", credential);
-          } catch (error) {
-            console.error("Couldn't sign in", error.code, error.message);
-            Alert.alert("There was a problem signing in", error.message);
-          }
-          break;
-        case "register":
-          try {
-            const credential = await authenticationClient.createUserWithEmailAndPassword(
+            break;
+          case "register":
+            await authenticationClient.createUserWithEmailAndPassword(
               email,
               password,
             );
-            console.log("Registered:", credential);
-          } catch (error) {
-            console.error("Couldn't create account", error.code, error.message);
-            Alert.alert(
-              "There was a problem creating your account",
-              error.message,
-            );
-          }
+            break;
+        }
+      } catch (error) {
+        if (isUnmounted.current) {
+          return;
+        }
+        console.error("Couldn't login", error.code, error.message);
+        Alert.alert("There was a problem signing in", error.message);
       }
-      setPendingServerResponse(false);
+      if (!isUnmounted.current) {
+        setPendingServerResponse(false);
+      }
     },
     [authenticationClient, formMode],
   );
