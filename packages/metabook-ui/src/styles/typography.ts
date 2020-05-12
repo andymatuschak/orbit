@@ -4,7 +4,6 @@ const typography = {
   label: {
     fontSize: 16,
     lineHeight: 1.25 * 14,
-    fontWeight: "600",
   },
 
   cardBodyText: {

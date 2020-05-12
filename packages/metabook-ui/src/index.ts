@@ -1,7 +1,11 @@
 export { default as Card } from "./components/Card";
-export { default as ReviewArea } from "./components/ReviewArea";
 export type { CardProps } from "./components/Card";
+
+export { default as ReviewArea } from "./components/ReviewArea";
 export type { ReviewAreaProps } from "./components/ReviewArea";
+
+export { default as SignInForm } from "./components/SignInForm";
+export type { SignInFormProps } from "./components/SignInForm";
 
 export { promptReviewItemType } from "./reviewItem";
 export type {
