@@ -1,6 +1,6 @@
 import React from "react";
 import "node-libs-react-native/globals";
-import "./src/shimBase64";
+import "./src/util/shimBase64";
 import "expo-asset";
 
 import Root from "./src/Root";

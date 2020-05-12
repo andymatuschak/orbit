@@ -4,19 +4,24 @@ import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "metabook-client";
+import colors from "metabook-ui/dist/styles/colors";
 import React, { useEffect, useState } from "react";
-import {
-  enableFirebasePersistence,
-  getFirebaseFunctions,
-  getFirestore,
-  PersistenceStatus,
-} from "./firebase";
+import { ActivityIndicator, View } from "react-native";
 import ActionLogStore from "./model/actionLogStore";
 import DataRecordClient from "./model/dataRecordClient";
 import DataRecordStore from "./model/dataRecordStore";
 import PromptStateClient from "./model/promptStateClient";
 import PromptStateStore from "./model/promptStateStore";
 import ReviewSession from "./ReviewSession";
+import SignInScreen from "./SignInScreen";
+import {
+  AuthenticationClient,
+  authenticationClient,
+  enableFirebasePersistence,
+  getFirebaseFunctions,
+  getFirestore,
+  PersistenceStatus,
+} from "./util/firebase";
 
 async function cacheWriteHandler(name: string, data: Buffer): Promise<string> {
   const cacheDirectoryURI = FileSystem.cacheDirectory;
@@ -64,6 +69,17 @@ function usePersistenceStatus() {
   return persistenceStatus;
 }
 
+// undefined means we don't know yet; null means signed out.
+function useCurrentUserID(
+  authenticationClient: AuthenticationClient,
+): string | null | undefined {
+  const [userID, setUserID] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    return authenticationClient.subscribeToUserAuthState(setUserID);
+  }, [authenticationClient]);
+  return userID;
+}
+
 export default function Root() {
   const persistenceStatus = usePersistenceStatus();
   const [
@@ -75,8 +91,10 @@ export default function Root() {
     setDataRecordClient,
   ] = useState<DataRecordClient | null>(null);
 
+  const userID = useCurrentUserID(authenticationClient);
+
   useEffect(() => {
-    if (persistenceStatus === "enabled") {
+    if (persistenceStatus === "enabled" && userID) {
       const userClient = new MetabookFirebaseUserClient(
         getFirestore(),
         "x5EWk2UT56URxbfrl7djoxwxiqH2",
@@ -100,7 +118,7 @@ export default function Root() {
         }),
       );
     }
-  }, [persistenceStatus]);
+  }, [persistenceStatus, userID]);
 
   if (promptStateClient && dataRecordClient) {
     return (
@@ -109,7 +127,13 @@ export default function Root() {
         dataRecordClient={dataRecordClient}
       />
     );
+  } else if (userID === null) {
+    return <SignInScreen authenticationClient={authenticationClient} />;
   } else {
-    return null;
+    return (
+      <View style={{ flex: 1, justifyContent: "center" }}>
+        <ActivityIndicator size="large" color={colors.key50} />
+      </View>
+    );
   }
 }

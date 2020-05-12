@@ -61,7 +61,7 @@ export default function SignInForm({
       : "Create account";
 
   return (
-    <View style={{ flex: 1 }}>
+    <View>
       <Spacer size={spacing.spacing07} />
       <TextInput
         onChangeText={setEmail}

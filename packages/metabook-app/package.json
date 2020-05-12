@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@react-native-firebase/app": "^6.7.1",
+    "@react-native-firebase/auth": "^6.7.1",
     "@react-native-firebase/firestore": "^6.7.1",
     "@react-native-firebase/functions": "^6.7.1",
     "@tradle/react-native-http": "^2.0.1",
