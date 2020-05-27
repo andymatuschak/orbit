@@ -1,13 +1,20 @@
 import * as IT from "incremental-thinking";
+import { updateMetadataActionLogType } from "metabook-core/dist/types/actionLog";
+import { PromptUpdateMetadataActionLog } from "metabook-core/dist/types/promptActionLog";
 import { notePrompts } from "spaced-everything";
 import { testClozePrompt } from "metabook-sample-data";
 import { simpleOrbitPrompt } from "./__fixtures__/testData";
+import SpacedEverythingImportCache from "./importCache";
 import { getUpdatesForTaskCacheChange } from "./taskCache";
 import { getITPromptForOrbitPrompt } from "./util/cstOrbitAdapters";
 
+const clozeITPrompt = getITPromptForOrbitPrompt(
+  testClozePrompt,
+) as IT.ClozePrompt;
+
 describe("getUpdatesForTaskCacheChange", () => {
-  test("insert basic prompt", () => {
-    const { prompts, logs } = getUpdatesForTaskCacheChange(
+  test("insert basic prompt", async () => {
+    const { prompts, logs } = await getUpdatesForTaskCacheChange(
       {
         type: "insert",
         record: {
@@ -29,25 +36,22 @@ describe("getUpdatesForTaskCacheChange", () => {
         path: ["container", "id"],
       },
       500,
-      () => null,
+      {} as SpacedEverythingImportCache,
     );
 
     expect(prompts[0]).toMatchObject(simpleOrbitPrompt);
     expect(logs).toHaveLength(1);
   });
 
-  test("insert cloze prompt", () => {
-    const clozePrompt = getITPromptForOrbitPrompt(
-      testClozePrompt,
-    ) as IT.ClozePrompt;
-    const { prompts, logs } = getUpdatesForTaskCacheChange(
+  test("insert cloze prompt", async () => {
+    const { prompts, logs } = await getUpdatesForTaskCacheChange(
       {
         type: "insert",
         record: {
           type: "collection",
           value: {
             type: "clozeBlock",
-            prompt: clozePrompt,
+            prompt: clozeITPrompt,
             noteData: {
               noteTitle: "test-title",
               modificationTimestamp: 0,
@@ -59,16 +63,80 @@ describe("getUpdatesForTaskCacheChange", () => {
             },
           },
           childIDs: notePrompts.getClozeNoteTaskCollectionChildIDsForClozePrompt(
-            clozePrompt,
+            clozeITPrompt,
           ),
         },
         path: ["container", "id"],
       },
       500,
-      () => null,
+      {} as SpacedEverythingImportCache,
     );
 
     expect(prompts[0]).toMatchObject(testClozePrompt);
     expect(logs).toHaveLength(5);
+  });
+
+  test("delete prompt", async () => {
+    const mock = {} as SpacedEverythingImportCache;
+    mock.getPromptByCSTPromptID = jest
+      .fn()
+      .mockImplementation(() => clozeITPrompt);
+    mock.getNoteMetadata = jest.fn().mockImplementation(() => ({
+      metadata: {
+        headActionLogIDs: ["parent-log"],
+      },
+    }));
+    const { prompts, logs } = await getUpdatesForTaskCacheChange(
+      {
+        type: "delete",
+        path: ["container", "id"],
+      },
+      500,
+      (mock as unknown) as SpacedEverythingImportCache,
+    );
+
+    expect(prompts).toHaveLength(0);
+    expect(logs).toHaveLength(5);
+    expect(logs[0]).toMatchObject({
+      actionLogType: updateMetadataActionLogType,
+      updates: { isDeleted: true },
+      parentActionLogIDs: ["parent-log"],
+    });
+  });
+
+  test("delete note", async () => {
+    const mock = {} as SpacedEverythingImportCache;
+    mock.getPromptByCSTPromptID = jest
+      .fn()
+      .mockImplementation(() => clozeITPrompt);
+    mock.getNoteMetadata = jest.fn().mockImplementation(async () => ({
+      childIDs: ["childA", "childB"],
+      metadata: {
+        headActionLogIDs: ["parent-log"],
+      },
+    }));
+    const { prompts, logs } = await getUpdatesForTaskCacheChange(
+      {
+        type: "delete",
+        path: ["container"],
+      },
+      500,
+      (mock as unknown) as SpacedEverythingImportCache,
+    );
+
+    expect(prompts).toHaveLength(0);
+    expect(logs).toHaveLength(10);
+    expect(mock.getPromptByCSTPromptID).toHaveBeenCalledTimes(2);
+    expect(mock.getPromptByCSTPromptID).toHaveBeenLastCalledWith(
+      "container",
+      "childB",
+    );
+    expect(logs[0]).toMatchObject({
+      actionLogType: updateMetadataActionLogType,
+      updates: { isDeleted: true },
+    });
+    expect(
+      (logs[0] as PromptUpdateMetadataActionLog).parentActionLogIDs,
+    ).toMatchObject(["parent-log"]);
   });
 });

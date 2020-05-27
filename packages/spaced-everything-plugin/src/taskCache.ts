@@ -8,17 +8,17 @@ import {
   getIDForPrompt,
   getIDForPromptTask,
   getPromptTaskForID,
+  ingestActionLogType,
   Prompt,
   PromptID,
   PromptProvenance,
   PromptProvenanceType,
-  PromptState,
   PromptTask,
   PromptTaskID,
 } from "metabook-core";
+import { updateMetadataActionLogType } from "metabook-core/dist/types/actionLog";
 import { PromptStateCache } from "metabook-firebase-support";
 import { notePrompts, taskCache, TaskRecord } from "spaced-everything";
-import { getClozeNoteTaskCollectionChildIDsForClozePrompt } from "spaced-everything/dist/taskCache/notePrompts";
 import SpacedEverythingImportCache, { CachedNoteMetadata } from "./importCache";
 import {
   getITPromptForOrbitPrompt,
@@ -28,6 +28,11 @@ import {
 type NotePromptTask = notePrompts.PromptTask;
 type NotePromptTaskCollection = notePrompts.PromptTaskCollection;
 
+function flat<T>(lists: T[][]): T[] {
+  return lists.reduce((whole, part) => whole.concat(part), []);
+}
+
+// When we start up, we'll fetch all remote prompt states we don't already have locally cached. We'll also fetch all the prompt contents we don't have.
 async function initializeImportCache(
   userClient: MetabookUserClient,
   importCache: SpacedEverythingImportCache,
@@ -113,7 +118,7 @@ function approximatePromptTaskNoteData(
     modificationTimestamp: cachedNoteMetadata.modificationTimestamp,
     noteTitle: cachedNoteMetadata.title,
     externalNoteID: {
-      type: "bear", // TODO note that I'm hardcoding Bear here
+      type: "bear", // TODO HACK I'm hardcoding Bear here
       id: noteID,
       openURL: cachedNoteMetadata.URL,
     },
@@ -140,7 +145,7 @@ async function getTaskRecordForPath(
 
     case 1:
       // Note.
-      const noteData = await importCache.getNoteData(path[0]);
+      const noteData = await importCache.getNoteMetadata(path[0]);
       if (noteData) {
         return {
           type: "collection",
@@ -158,7 +163,7 @@ async function getTaskRecordForPath(
       // Prompt or Cloze block.
       const prompt = await importCache.getPromptByCSTPromptID(path[0], path[1]);
       if (prompt) {
-        const cachedNoteData = await importCache.getNoteData(path[0]);
+        const cachedNoteData = await importCache.getNoteMetadata(path[0]);
         if (cachedNoteData) {
           const noteData = approximatePromptTaskNoteData(
             path[0],
@@ -243,14 +248,43 @@ function createIngestionLog(
   });
 }
 
-export function getUpdatesForTaskCacheChange(
+function mapTasksInPrompt<R>(
+  ITPrompt: IT.Prompt,
+  orbitPrompt: Prompt,
+  f: (taskID: PromptTaskID) => R,
+): R[] {
+  const orbitPromptID = getIDForPrompt(orbitPrompt);
+  switch (ITPrompt.type) {
+    case IT.qaPromptType:
+      const promptTask: PromptTask = {
+        promptType: basicPromptType,
+        promptParameters: null,
+        promptID: orbitPromptID,
+      };
+      return [f(getIDForPromptTask(promptTask))];
+
+    case IT.clozePromptType:
+      return Array.from(
+        new Array(IT.getClozeNodesInClozePrompt(ITPrompt).length).keys(),
+      ).map((index) => {
+        const promptTask: PromptTask = {
+          promptType: clozePromptType,
+          promptParameters: { clozeIndex: index },
+          promptID: orbitPromptID,
+        };
+        return f(getIDForPromptTask(promptTask));
+      });
+  }
+}
+
+export async function getUpdatesForTaskCacheChange(
   change: taskCache.TaskCacheSessionChange<
     NotePromptTask,
     NotePromptTaskCollection
   >,
   timestampMillis: number,
-  getPromptState: (taskID: string) => PromptState | null,
-): { logs: ActionLog[]; prompts: Prompt[] } {
+  importCache: SpacedEverythingImportCache,
+): Promise<{ logs: ActionLog[]; prompts: Prompt[] }> {
   const path = change.path;
   let log = `${change.path}: ${change.type}`;
   function addNoteDataToLog(noteData: notePrompts.PromptTaskNoteData) {
@@ -267,8 +301,29 @@ export function getUpdatesForTaskCacheChange(
       addNoteDataToLog(change.record.value);
       console.log(log);
     } else if (change.type === "delete") {
-      // TODO: Implement note deletion
-      console.log(log);
+      const noteData = await importCache.getNoteMetadata(path[0]);
+      if (noteData) {
+        const updateLists = await Promise.all(
+          noteData.childIDs.map((childID) =>
+            getUpdatesForTaskCacheChange(
+              {
+                ...change,
+                path: [...change.path, childID],
+              },
+              timestampMillis,
+              importCache,
+            ),
+          ),
+        );
+        return {
+          prompts: [],
+          logs: flat(updateLists.map((update) => update.logs)),
+        };
+      } else {
+        console.error(
+          `Couldn't delete ${path} because no remote entry with that ID exists`,
+        );
+      }
     }
   } else if (path.length === 2) {
     if (change.type === "insert") {
@@ -278,72 +333,46 @@ export function getUpdatesForTaskCacheChange(
         value.type === "clozeBlock"
       ) {
         const provenance = getProvenanceForNoteData(value.noteData);
-        if (!provenance) {
-          console.log(
+        if (provenance) {
+          const orbitPrompt = getOrbitPromptForITPrompt(value.prompt);
+          return {
+            logs: mapTasksInPrompt(value.prompt, orbitPrompt, (taskID) =>
+              createIngestionLog(taskID, provenance, timestampMillis),
+            ),
+            prompts: [orbitPrompt],
+          };
+        } else {
+          console.warn(
             `Skipping ${path} ${value.noteData.noteTitle} because its metadata is invalid`,
           );
-          return { logs: [], prompts: [] };
         }
-
-        const orbitPrompt = getOrbitPromptForITPrompt(value.prompt);
-        const orbitPromptID = getIDForPrompt(orbitPrompt);
-        let actionLogs: ActionLog[];
-        if (value.type === "qaPrompt") {
-          const promptTask: PromptTask = {
-            promptType: basicPromptType,
-            promptParameters: null,
-            promptID: orbitPromptID,
-          };
-          actionLogs = [
-            createIngestionLog(
-              getIDForPromptTask(promptTask),
-              provenance,
-              timestampMillis,
-            ),
-          ];
-
-          addNoteDataToLog(value.noteData);
-          log += `\n\tQ: ${IT.processor
-            .stringify(value.prompt.question)
-            .trimRight()}\n\tA: ${IT.processor
-            .stringify(value.prompt.answer)
-            .trimRight()}`;
-        } else {
-          actionLogs = Array.from(
-            new Array(
-              IT.getClozeNodesInClozePrompt(value.prompt).length,
-            ).keys(),
-          ).map((index) => {
-            const promptTask: PromptTask = {
-              promptType: clozePromptType,
-              promptParameters: { clozeIndex: index },
-              promptID: orbitPromptID,
-            };
-            return createIngestionLog(
-              getIDForPromptTask(promptTask),
-              provenance,
-              timestampMillis,
-            );
-          });
-
-          addNoteDataToLog(value.noteData);
-          log += `\n\t${IT.processor
-            .stringify(value.prompt.block)
-            .trimRight()}`;
-        }
-
-        console.log(log);
-        return {
-          logs: actionLogs,
-          prompts: [orbitPrompt],
-        };
       }
     } else if (change.type === "delete") {
-      // TODO implement task deletion
-      console.log(log);
+      const ITPrompt = await importCache.getPromptByCSTPromptID(
+        path[0],
+        path[1],
+      );
+      const noteMetadata = await importCache.getNoteMetadata(path[0]);
+      if (ITPrompt && noteMetadata) {
+        const orbitPrompt = getOrbitPromptForITPrompt(ITPrompt);
+        return {
+          logs: mapTasksInPrompt(ITPrompt, orbitPrompt, (promptTaskID) => ({
+            actionLogType: updateMetadataActionLogType,
+            updates: { isDeleted: true },
+            taskID: promptTaskID,
+            timestampMillis,
+            parentActionLogIDs: noteMetadata.metadata.headActionLogIDs,
+          })),
+          prompts: [],
+        };
+      } else {
+        console.error(
+          `Couldn't delete ${path}: no remote entry exists at that path`,
+        );
+      }
     } else if (change.type === "update") {
       log += `\n\tUPDATE SHOULD NOT BE POSSIBLE`;
-      console.log(log);
+      console.error(log);
     }
   }
 
@@ -378,6 +407,37 @@ export function createTaskCache(
         },
 
         async writeChanges(changes) {
+          const updateTimestamp = Date.now();
+          const updateLists = await Promise.all(
+            changes.map((change) =>
+              getUpdatesForTaskCacheChange(
+                change,
+                updateTimestamp,
+                importCache,
+              ),
+            ),
+          );
+
+          const logs = flat(updateLists.map((update) => update.logs));
+          const prompts = flat(updateLists.map((update) => update.prompts));
+          console.log(logs);
+          console.log(prompts);
+
+          const deletions = logs.filter(
+            (l) => l.actionLogType === updateMetadataActionLogType,
+          );
+          const insertions = logs.filter(
+            (l) => l.actionLogType === ingestActionLogType,
+          );
+          console.log(
+            `${insertions.length} insertions; ${deletions.length} deletions; ${prompts.length} prompts to record`,
+          );
+
+          await dataClient.recordPrompts(prompts);
+          console.log("Recorded prompts.");
+
+          await userClient.recordActionLogs(logs);
+          console.log("Recorded logs.");
           return;
         },
       });

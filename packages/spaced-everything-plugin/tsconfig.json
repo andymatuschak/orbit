@@ -4,6 +4,7 @@
     "outDir": "./dist",
     "lib": ["dom", "es6"],
     "types": ["jest", "node"],
+    "module": "commonjs",
     "rootDir": "./src"
   },
   "include": ["./src/**/*"]

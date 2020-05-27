@@ -925,6 +925,7 @@ $root.ActionLog = (function() {
      * @property {ActionLog.IIngest|null} [ingest] ActionLog ingest
      * @property {ActionLog.IRepetition|null} [repetition] ActionLog repetition
      * @property {ActionLog.IReschedule|null} [reschedule] ActionLog reschedule
+     * @property {ActionLog.IUpdateMetadata|null} [updateMetadata] ActionLog updateMetadata
      */
 
     /**
@@ -974,17 +975,25 @@ $root.ActionLog = (function() {
      */
     ActionLog.prototype.reschedule = null;
 
+    /**
+     * ActionLog updateMetadata.
+     * @member {ActionLog.IUpdateMetadata|null|undefined} updateMetadata
+     * @memberof ActionLog
+     * @instance
+     */
+    ActionLog.prototype.updateMetadata = null;
+
     // OneOf field names bound to virtual getters and setters
     var $oneOfFields;
 
     /**
      * ActionLog log.
-     * @member {"ingest"|"repetition"|"reschedule"|undefined} log
+     * @member {"ingest"|"repetition"|"reschedule"|"updateMetadata"|undefined} log
      * @memberof ActionLog
      * @instance
      */
     Object.defineProperty(ActionLog.prototype, "log", {
-        get: $util.oneOfGetter($oneOfFields = ["ingest", "repetition", "reschedule"]),
+        get: $util.oneOfGetter($oneOfFields = ["ingest", "repetition", "reschedule", "updateMetadata"]),
         set: $util.oneOfSetter($oneOfFields)
     });
 
@@ -1020,6 +1029,8 @@ $root.ActionLog = (function() {
             $root.ActionLog.Repetition.encode(message.repetition, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
         if (message.reschedule != null && Object.hasOwnProperty.call(message, "reschedule"))
             $root.ActionLog.Reschedule.encode(message.reschedule, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+        if (message.updateMetadata != null && Object.hasOwnProperty.call(message, "updateMetadata"))
+            $root.ActionLog.UpdateMetadata.encode(message.updateMetadata, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
         return writer;
     };
 
@@ -1065,6 +1076,9 @@ $root.ActionLog = (function() {
                 break;
             case 4:
                 message.reschedule = $root.ActionLog.Reschedule.decode(reader, reader.uint32());
+                break;
+            case 5:
+                message.updateMetadata = $root.ActionLog.UpdateMetadata.decode(reader, reader.uint32());
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -1135,6 +1149,16 @@ $root.ActionLog = (function() {
                     return "reschedule." + error;
             }
         }
+        if (message.updateMetadata != null && message.hasOwnProperty("updateMetadata")) {
+            if (properties.log === 1)
+                return "log: multiple values";
+            properties.log = 1;
+            {
+                var error = $root.ActionLog.UpdateMetadata.verify(message.updateMetadata);
+                if (error)
+                    return "updateMetadata." + error;
+            }
+        }
         return null;
     };
 
@@ -1170,6 +1194,11 @@ $root.ActionLog = (function() {
                 throw TypeError(".ActionLog.reschedule: object expected");
             message.reschedule = $root.ActionLog.Reschedule.fromObject(object.reschedule);
         }
+        if (object.updateMetadata != null) {
+            if (typeof object.updateMetadata !== "object")
+                throw TypeError(".ActionLog.updateMetadata: object expected");
+            message.updateMetadata = $root.ActionLog.UpdateMetadata.fromObject(object.updateMetadata);
+        }
         return message;
     };
 
@@ -1204,6 +1233,11 @@ $root.ActionLog = (function() {
             object.reschedule = $root.ActionLog.Reschedule.toObject(message.reschedule, options);
             if (options.oneofs)
                 object.log = "reschedule";
+        }
+        if (message.updateMetadata != null && message.hasOwnProperty("updateMetadata")) {
+            object.updateMetadata = $root.ActionLog.UpdateMetadata.toObject(message.updateMetadata, options);
+            if (options.oneofs)
+                object.log = "updateMetadata";
         }
         return object;
     };
@@ -1939,6 +1973,216 @@ $root.ActionLog = (function() {
         };
 
         return Reschedule;
+    })();
+
+    ActionLog.UpdateMetadata = (function() {
+
+        /**
+         * Properties of an UpdateMetadata.
+         * @memberof ActionLog
+         * @interface IUpdateMetadata
+         * @property {string|null} [taskID] UpdateMetadata taskID
+         * @property {boolean|null} [isDeleted] UpdateMetadata isDeleted
+         */
+
+        /**
+         * Constructs a new UpdateMetadata.
+         * @memberof ActionLog
+         * @classdesc Represents an UpdateMetadata.
+         * @implements IUpdateMetadata
+         * @constructor
+         * @param {ActionLog.IUpdateMetadata=} [properties] Properties to set
+         */
+        function UpdateMetadata(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * UpdateMetadata taskID.
+         * @member {string} taskID
+         * @memberof ActionLog.UpdateMetadata
+         * @instance
+         */
+        UpdateMetadata.prototype.taskID = "";
+
+        /**
+         * UpdateMetadata isDeleted.
+         * @member {boolean} isDeleted
+         * @memberof ActionLog.UpdateMetadata
+         * @instance
+         */
+        UpdateMetadata.prototype.isDeleted = false;
+
+        /**
+         * Creates a new UpdateMetadata instance using the specified properties.
+         * @function create
+         * @memberof ActionLog.UpdateMetadata
+         * @static
+         * @param {ActionLog.IUpdateMetadata=} [properties] Properties to set
+         * @returns {ActionLog.UpdateMetadata} UpdateMetadata instance
+         */
+        UpdateMetadata.create = function create(properties) {
+            return new UpdateMetadata(properties);
+        };
+
+        /**
+         * Encodes the specified UpdateMetadata message. Does not implicitly {@link ActionLog.UpdateMetadata.verify|verify} messages.
+         * @function encode
+         * @memberof ActionLog.UpdateMetadata
+         * @static
+         * @param {ActionLog.IUpdateMetadata} message UpdateMetadata message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        UpdateMetadata.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.taskID != null && Object.hasOwnProperty.call(message, "taskID"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.taskID);
+            if (message.isDeleted != null && Object.hasOwnProperty.call(message, "isDeleted"))
+                writer.uint32(/* id 4, wireType 0 =*/32).bool(message.isDeleted);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified UpdateMetadata message, length delimited. Does not implicitly {@link ActionLog.UpdateMetadata.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof ActionLog.UpdateMetadata
+         * @static
+         * @param {ActionLog.IUpdateMetadata} message UpdateMetadata message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        UpdateMetadata.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes an UpdateMetadata message from the specified reader or buffer.
+         * @function decode
+         * @memberof ActionLog.UpdateMetadata
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {ActionLog.UpdateMetadata} UpdateMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        UpdateMetadata.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.ActionLog.UpdateMetadata();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.taskID = reader.string();
+                    break;
+                case 4:
+                    message.isDeleted = reader.bool();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes an UpdateMetadata message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof ActionLog.UpdateMetadata
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {ActionLog.UpdateMetadata} UpdateMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        UpdateMetadata.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies an UpdateMetadata message.
+         * @function verify
+         * @memberof ActionLog.UpdateMetadata
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        UpdateMetadata.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.taskID != null && message.hasOwnProperty("taskID"))
+                if (!$util.isString(message.taskID))
+                    return "taskID: string expected";
+            if (message.isDeleted != null && message.hasOwnProperty("isDeleted"))
+                if (typeof message.isDeleted !== "boolean")
+                    return "isDeleted: boolean expected";
+            return null;
+        };
+
+        /**
+         * Creates an UpdateMetadata message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof ActionLog.UpdateMetadata
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {ActionLog.UpdateMetadata} UpdateMetadata
+         */
+        UpdateMetadata.fromObject = function fromObject(object) {
+            if (object instanceof $root.ActionLog.UpdateMetadata)
+                return object;
+            var message = new $root.ActionLog.UpdateMetadata();
+            if (object.taskID != null)
+                message.taskID = String(object.taskID);
+            if (object.isDeleted != null)
+                message.isDeleted = Boolean(object.isDeleted);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from an UpdateMetadata message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof ActionLog.UpdateMetadata
+         * @static
+         * @param {ActionLog.UpdateMetadata} message UpdateMetadata
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        UpdateMetadata.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.taskID = "";
+                object.isDeleted = false;
+            }
+            if (message.taskID != null && message.hasOwnProperty("taskID"))
+                object.taskID = message.taskID;
+            if (message.isDeleted != null && message.hasOwnProperty("isDeleted"))
+                object.isDeleted = message.isDeleted;
+            return object;
+        };
+
+        /**
+         * Converts this UpdateMetadata to JSON.
+         * @function toJSON
+         * @memberof ActionLog.UpdateMetadata
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        UpdateMetadata.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return UpdateMetadata;
     })();
 
     ActionLog.MetadataEntry = (function() {

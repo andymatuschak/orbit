@@ -1,6 +1,8 @@
 import levelup from "levelup";
 import leveldown from "leveldown";
+import path from "path";
 
+import * as IT from "incremental-thinking";
 import {
   getDefaultFirebaseApp,
   MetabookFirebaseDataClient,
@@ -25,7 +27,12 @@ import { createTaskCache } from "./taskCache";
     levelup(leveldown("cache.db")),
   );
 
-  const noteTaskSource = notePrompts.createTaskSource(process.argv);
+  const noteDirectory = process.argv[2];
+  const noteFilenames = await IT.listNoteFiles(noteDirectory);
+  console.log(`Found ${noteFilenames.length} notes in ${noteDirectory}`);
+  const noteTaskSource = notePrompts.createTaskSource(
+    noteFilenames.map((filename) => path.join(noteDirectory, filename)),
+  );
   const orbitTaskSink = createTaskCache(userClient, dataClient, importCache);
 
   await taskCache.updateTaskCache(orbitTaskSink, noteTaskSource);

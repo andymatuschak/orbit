@@ -1,6 +1,7 @@
 import * as IT from "incremental-thinking";
 import { LevelUp } from "levelup";
 import {
+  ActionLogID,
   getPromptTaskForID,
   PromptID,
   PromptProvenanceType,
@@ -36,6 +37,7 @@ export interface CachedNoteMetadata {
   title: string;
   modificationTimestamp: number;
   URL: string | null;
+  headActionLogIDs: ActionLogID[];
 }
 
 function getPromptKey(noteID: string, CSTPromptID: string) {
@@ -120,6 +122,7 @@ export default class SpacedEverythingImportCache {
             title: provenance.noteTitle,
             modificationTimestamp: provenance.noteModificationTimestampMillis,
             URL: provenance.noteURL,
+            headActionLogIDs: promptStateCache.headActionLogIDs,
           });
         }
       }
@@ -156,7 +159,7 @@ export default class SpacedEverythingImportCache {
     return entries.map((e) => e[0]);
   }
 
-  async getNoteData(
+  async getNoteMetadata(
     noteID: string,
   ): Promise<{
     metadata: CachedNoteMetadata;
