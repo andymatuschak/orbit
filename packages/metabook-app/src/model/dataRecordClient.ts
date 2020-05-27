@@ -49,19 +49,15 @@ export default class DataRecordClient {
     await Promise.all(cachedPromptPromises);
 
     if (missingIDs.size > 0) {
-      // This looks inappropriate, but sets have stable insertion order.
       console.log("Getting remote prompts", missingIDs);
       const prompts = await this.dataClient.getPrompts(missingIDs);
-      let index = 0;
-      for (const missingID of missingIDs) {
-        const prompt = prompts[index];
+      for (const [promptID, prompt] of prompts) {
         if (prompt) {
-          promptMap.set(missingID, prompt);
-          this.cacheWrites.push(this.dataCache.savePrompt(missingID, prompt));
+          promptMap.set(promptID, prompt);
+          this.cacheWrites.push(this.dataCache.savePrompt(promptID, prompt));
         } else {
-          console.warn("Unknown prompt ID", missingID);
+          console.warn("Unknown prompt ID", promptID);
         }
-        index++;
       }
     }
     return promptMap;
@@ -95,12 +91,10 @@ export default class DataRecordClient {
     await Promise.all(cachedAttachmentPromises);
 
     if (missingIDs.size > 0) {
-      // This looks inappropriate, but sets have stable insertion order.
+      console.log("Getting remote attachments", missingIDs);
       const attachments = await this.dataClient.getAttachments(missingIDs);
-      let index = 0;
       const attachmentWritePromises: Promise<unknown>[] = [];
-      for (const missingID of missingIDs) {
-        const attachment = attachments[index];
+      for (const [attachmentID, attachment] of attachments) {
         if (attachment) {
           const extension = getFileExtensionForAttachmentMimeType(
             attachment.mimeType,
@@ -109,24 +103,23 @@ export default class DataRecordClient {
             console.warn(`Unknown attachment mime type ${attachment.mimeType}`);
           }
           const storedURI = await this.fileStore.writeFile(
-            `${missingID}.${extension}`,
+            `${attachmentID}.${extension}`,
             Buffer.from(attachment.contents, "binary"),
           );
           const attachmentURLReference = {
             type: attachment.type,
             url: storedURI,
           };
-          attachmentReferenceMap.set(missingID, attachmentURLReference);
+          attachmentReferenceMap.set(attachmentID, attachmentURLReference);
           this.cacheWrites.push(
             this.dataCache.saveAttachmentURLReference(
-              missingID,
+              attachmentID,
               attachmentURLReference,
             ),
           );
         } else {
-          console.warn("Unknown attachment ID", missingID);
+          console.warn("Unknown attachment ID", attachmentID);
         }
-        index++;
       }
       await Promise.all(attachmentWritePromises);
     }

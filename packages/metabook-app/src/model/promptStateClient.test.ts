@@ -154,7 +154,7 @@ describe("prompt state subscriptions", () => {
   test("fetches remote states when none are cached", async () => {
     actionLogStore.getLatestServerTimestamp = jest.fn().mockResolvedValue(null);
     promptStateStore.savePromptStateCaches = jest.fn();
-    remoteClient.getDuePromptStates = jest.fn().mockResolvedValue([{}]);
+    remoteClient.getPromptStates = jest.fn().mockResolvedValue([{}]);
 
     const callbackMock = jest.fn();
     const callbackPromise = promiseForNextCall(callbackMock);
@@ -236,6 +236,9 @@ describe("prompt state subscriptions", () => {
       outcome: PromptRepetitionOutcome.Remembered,
       context: null,
     };
+    const repetitionLogID = getIDForActionLog(
+      getActionLogFromPromptActionLog(repetitionLog),
+    );
 
     beforeEach(() => {
       actionLogStore.getLatestServerTimestamp = jest
@@ -269,7 +272,12 @@ describe("prompt state subscriptions", () => {
         await callbackPromise;
 
         callbackPromise = promiseForNextCall(callbackMock);
-        await promptStateClient.recordPromptActionLogs([repetitionLog]);
+        await promptStateClient.recordPromptActionLogs([
+          {
+            log: repetitionLog,
+            id: repetitionLogID,
+          },
+        ]);
         const update = (await callbackPromise) as PromptStateClientUpdate;
 
         expect(update.removedEntries.size).toEqual(1);
@@ -286,7 +294,12 @@ describe("prompt state subscriptions", () => {
           callbackMock,
         );
         unsubscribe();
-        await promptStateClient.recordPromptActionLogs([repetitionLog]);
+        await promptStateClient.recordPromptActionLogs([
+          {
+            log: repetitionLog,
+            id: repetitionLogID,
+          },
+        ]);
         expect(callbackMock).not.toHaveBeenCalled();
       });
     });
@@ -298,6 +311,7 @@ describe("prompt state subscriptions", () => {
             callback([
               {
                 log: repetitionLog,
+                id: repetitionLogID,
                 serverTimestamp: { seconds: 10, nanoseconds: 0 },
               },
             ]);

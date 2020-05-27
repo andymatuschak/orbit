@@ -1,0 +1,36 @@
+{
+  "name": "orbit-spaced-everything-plugin",
+  "version": "0.0.1",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "abstract-leveldown": "^6.3.0",
+    "incremental-thinking": "file:../../../computer-supported-thinking/vendor/incremental-thinking",
+    "leveldown": "^5.6.0",
+    "levelup": "^4.4.0",
+    "metabook-client": "0.0.1",
+    "metabook-core": "0.0.1",
+    "metabook-sample-data": "0.0.1",
+    "spaced-everything": "file:../../../computer-supported-thinking/spaced-everything",
+    "subleveldown": "^5.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
+    "@types/abstract-leveldown": "^5.0.1",
+    "@types/jest": "^25.2.2",
+    "@types/leveldown": "^4.0.2",
+    "@types/levelup": "^4.3.0",
+    "@types/memdown": "^3.0.0",
+    "@types/subleveldown": "^4.1.0",
+    "babel-jest": "^26.0.1",
+    "jest": "^26.0.1",
+    "mdast": "^3.0.0",
+    "memdown": "^5.1.0",
+    "ts-loader": "^7.0.4",
+    "typescript": "^3.9.2"
+  }
+}

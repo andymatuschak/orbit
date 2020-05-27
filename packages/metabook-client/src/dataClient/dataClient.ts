@@ -16,10 +16,12 @@ export interface MetabookDataClient {
   recordPrompts(prompts: Prompt[]): Promise<unknown>;
   recordAttachments(attachments: Attachment[]): Promise<unknown>;
 
-  getPrompts(promptIDs: Iterable<PromptID>): Promise<(Prompt | null)[]>;
+  getPrompts(
+    promptIDs: Iterable<PromptID>,
+  ): Promise<Map<PromptID, Prompt | null>>;
   getAttachments(
     attachmentIDs: Iterable<AttachmentID>,
-  ): Promise<(Attachment | null)[]>;
+  ): Promise<Map<AttachmentID, Attachment | null>>;
 }
 
 export type MetabookDataSnapshot<ID, Data> = Map<ID, Data | Error | null>; // null means the card data has not yet been fetched.
@@ -72,26 +74,29 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
 
   private async getData<R extends DataRecord, MappedData = R>(
     requestedIDs: Iterable<DataRecordID<R>>,
-  ): Promise<(R | null)[]> {
+  ): Promise<Map<DataRecordID<R>, R | null>> {
     const recordIDs = [...requestedIDs];
     if (recordIDs.length === 0) {
-      return [];
+      return new Map();
     }
 
-    return this.functions
-      .httpsCallable("getDataRecords")({ recordIDs })
-      .then(({ data }) => {
-        return data.records as (R | null)[];
-      });
+    const {
+      data: { records },
+    }: { data: { records: (R | null)[] } } = await this.functions.httpsCallable(
+      "getDataRecords",
+    )({ recordIDs });
+    return new Map(records.map((record, index) => [recordIDs[index], record]));
   }
 
-  getPrompts(promptIDs: Iterable<PromptID>): Promise<(Prompt | null)[]> {
+  getPrompts(
+    promptIDs: Iterable<PromptID>,
+  ): Promise<Map<PromptID, Prompt | null>> {
     return this.getData(promptIDs);
   }
 
   getAttachments(
     attachmentIDs: Iterable<AttachmentID>,
-  ): Promise<(Attachment | null)[]> {
+  ): Promise<Map<AttachmentID, Attachment | null>> {
     return this.getData(attachmentIDs);
   }
 }

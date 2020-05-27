@@ -49,7 +49,7 @@
 					<key>UISceneConfigurationName</key>
 					<string>Default Configuration</string>
 					<key>UISceneDelegateClassName</key>
-					<string>AppDelegate</string>
+					<string>ORSceneDelegate</string>
 				</dict>
 			</array>
 		</dict>

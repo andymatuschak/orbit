@@ -88,9 +88,9 @@ describe("prompt states", () => {
       taskID,
     });
 
-    const initialPromptStates = await client.getDuePromptStates(
-      initialPromptState.dueTimestampMillis,
-    );
+    const initialPromptStates = await client.getPromptStates({
+      dueBeforeTimestampMillis: initialPromptState.dueTimestampMillis,
+    });
     expect(initialPromptStates).toMatchObject([
       {
         taskID,
@@ -123,9 +123,7 @@ describe("security rules", () => {
 
   test("can't read cards from another user", async () => {
     await recordTestPromptStateUpdate(client).commit;
-    await expect(anotherClient.getDuePromptStates(1e10)).rejects.toBeInstanceOf(
-      Error,
-    );
+    await expect(anotherClient.getPromptStates()).rejects.toBeInstanceOf(Error);
   });
 
   test("can't write cards to another user", async () => {

@@ -20,6 +20,7 @@
 		61AF28A524624D5100863AF5 /* app.manifest in Resources */ = {isa = PBXBuildFile; fileRef = 61AF28A324624D5100863AF5 /* app.manifest */; };
 		61AF28A624624D5100863AF5 /* app.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 61AF28A424624D5100863AF5 /* app.bundle */; };
 		61AF28A824624D6D00863AF5 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 61AF28A724624D6D00863AF5 /* Expo.plist */; };
+		61AF729C246B596200679E6B /* ORDebugManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 61AF729B246B596200679E6B /* ORDebugManager.m */; };
 		C05D9E071649C5DDA60A245C /* libPods-Orbit-OrbitTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 32FE60FF0B9B3027DEDC45E8 /* libPods-Orbit-OrbitTests.a */; };
 		ED08E5CAE8FDEE1A6188475C /* libPods-Orbit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 97AB24DD0C57639CCED1EE76 /* libPods-Orbit.a */; };
 /* End PBXBuildFile section */
@@ -61,6 +62,8 @@
 		61AF28A324624D5100863AF5 /* app.manifest */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = app.manifest; sourceTree = "<group>"; };
 		61AF28A424624D5100863AF5 /* app.bundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = app.bundle; sourceTree = "<group>"; };
 		61AF28A724624D6D00863AF5 /* Expo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Expo.plist; sourceTree = "<group>"; };
+		61AF729A246B596200679E6B /* ORDebugManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ORDebugManager.h; path = Orbit/ORDebugManager.h; sourceTree = "<group>"; };
+		61AF729B246B596200679E6B /* ORDebugManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ORDebugManager.m; path = Orbit/ORDebugManager.m; sourceTree = "<group>"; };
 		61AFA20B244D0FB4005E78DA /* metabookapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = metabookapp.entitlements; path = metabookapp/metabookapp.entitlements; sourceTree = "<group>"; };
 		8EE67B41AA8BD9607AF61834 /* Pods-Orbit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Orbit.release.xcconfig"; path = "Target Support Files/Pods-Orbit/Pods-Orbit.release.xcconfig"; sourceTree = "<group>"; };
 		97AB24DD0C57639CCED1EE76 /* libPods-Orbit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Orbit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -124,6 +127,8 @@
 		13B07FAE1A68108700A75B9A /* metabookapp */ = {
 			isa = PBXGroup;
 			children = (
+				61AF729A246B596200679E6B /* ORDebugManager.h */,
+				61AF729B246B596200679E6B /* ORDebugManager.m */,
 				61AFA20B244D0FB4005E78DA /* metabookapp.entitlements */,
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
@@ -544,6 +549,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				61AF729C246B596200679E6B /* ORDebugManager.m in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 			);

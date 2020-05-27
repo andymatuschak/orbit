@@ -16,6 +16,7 @@
       <excludeFolder url="file://$MODULE_DIR$/metabook-ui-web/vendor/react-native-markdown-display/dist" />
       <excludeFolder url="file://$MODULE_DIR$/metabook-ui/.cache" />
       <excludeFolder url="file://$MODULE_DIR$/metabook-web-component/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/embedded-app/build" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/react-native-fit-image/dist" />
     </content>
     <orderEntry type="inheritedJdk" />

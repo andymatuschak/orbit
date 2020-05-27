@@ -111,6 +111,7 @@ export function mapNoteToPrompt(
       };
 
     case ModelMappingType.SpacedEverythingQA:
+      // TODO: should draw q/a from original prompt JSON
       return {
         prompt: {
           question: transformAnkiField(fields[0]),
@@ -125,6 +126,7 @@ export function mapNoteToPrompt(
       };
 
     case ModelMappingType.SpacedEverythingCloze:
+      // TODO: should draw body from original markdown instead
       return {
         prompt: {
           body: transformAnkiField(fields[0]),

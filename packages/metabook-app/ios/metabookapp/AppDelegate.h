@@ -11,7 +11,7 @@
 #import <UMCore/UMAppDelegateWrapper.h>
 #import <EXUpdates/EXUpdatesAppController.h>
 
-@interface AppDelegate : UMAppDelegateWrapper <RCTBridgeDelegate, UISceneDelegate, EXUpdatesAppControllerDelegate>
+@interface AppDelegate : UMAppDelegateWrapper <RCTBridgeDelegate, UISceneDelegate>
 
 @property (nonatomic, strong) UMModuleRegistryAdapter *moduleRegistryAdapter;
 @property (nonatomic, strong) UIWindow *window;

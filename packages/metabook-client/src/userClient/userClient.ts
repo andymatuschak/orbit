@@ -1,16 +1,23 @@
 import {
   ActionLog,
   ActionLogID,
+  PromptProvenanceType,
   PromptState,
   PromptTaskID,
 } from "metabook-core";
 import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
 
+export type PromptStateQuery =
+  | {
+      dueBeforeTimestampMillis: number;
+    }
+  | {
+      provenanceType: PromptProvenanceType;
+    };
+
 export interface MetabookUserClient {
-  getDuePromptStates(
-    thresholdTimestampMillis: number,
-  ): Promise<PromptStateCache[]>;
+  getPromptStates(query?: PromptStateQuery): Promise<PromptStateCache[]>;
 
   subscribeToActionLogs(
     afterServerTimestamp: ServerTimestamp | null,

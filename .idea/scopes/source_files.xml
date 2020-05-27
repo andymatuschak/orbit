@@ -1,3 +1,3 @@
 <component name="DependencyValidationManager">
-  <scope name="source files" pattern="file[metabook]:*/&amp;&amp;!file[metabook]:*/dist//*" />
+  <scope name="source files" pattern="file[metabook]:*/&amp;&amp;!file[metabook]:*/dist//*&amp;&amp;!file[metabook]:packages/metabook-app/ios/Pods//*&amp;&amp;!file:packages/metabook-app/ios/Orbit/Supporting/app.bundle&amp;&amp;!file[metabook]:packages/embedded-app/build//*&amp;&amp;!file:packages/metabook-app/android/app/src/main/assets/app.bundle" />
 </component>

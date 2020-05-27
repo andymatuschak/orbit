@@ -14,7 +14,7 @@ import {
 } from "metabook-firebase-support";
 import { getDefaultFirebaseApp } from "../../firebase";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
-import { MetabookUserClient } from "../userClient";
+import { MetabookUserClient, PromptStateQuery } from "../userClient";
 
 type Timestamp = firebase.firestore.Timestamp;
 
@@ -30,18 +30,29 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     this.database = firestore;
   }
 
-  async getDuePromptStates(
-    thresholdTimestampMillis: number,
-  ): Promise<PromptStateCache[]> {
+  async getPromptStates(query?: PromptStateQuery): Promise<PromptStateCache[]> {
     const output: PromptStateCache[] = [];
-    const ref = getTaskStateCacheCollectionReference(this.database, this.userID)
+    let ref = getTaskStateCacheCollectionReference(this.database, this.userID)
       .limit(1000)
-      .orderBy("dueTimestampMillis", "asc")
-      .where(
-        "dueTimestampMillis",
-        "<=",
-        thresholdTimestampMillis,
-      ) as firebase.firestore.Query<PromptStateCache>;
+      .orderBy("dueTimestampMillis", "asc") as firebase.firestore.Query<
+      PromptStateCache
+    >;
+
+    if (query) {
+      if ("dueBeforeTimestampMillis" in query) {
+        ref = ref.where(
+          "dueTimestampMillis",
+          "<=",
+          query.dueBeforeTimestampMillis,
+        );
+      } else if ("provenanceType" in query) {
+        ref = ref.where(
+          "provenance.provenanceType",
+          "==",
+          query.provenanceType,
+        );
+      }
+    }
 
     let startAfter: firebase.firestore.DocumentSnapshot<
       PromptStateCache

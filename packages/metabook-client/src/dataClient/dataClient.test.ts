@@ -52,11 +52,11 @@ describe("getData", () => {
   test("reads card data", async () => {
     await writeTestPromptData();
     const prompts = await dataClient.getPrompts(new Set([testPromptID]));
-    expect(prompts[0]).toMatchObject(testBasicPrompt);
+    expect(prompts.get(testPromptID)).toMatchObject(testBasicPrompt);
   });
 
   test("returns empty list when input is empty", async () => {
-    expect(await dataClient.getPrompts(new Set([]))).toMatchObject([]);
+    expect(await dataClient.getPrompts(new Set([]))).toMatchObject(new Map());
   });
 });
 
@@ -64,7 +64,7 @@ test("records prompt spec", async () => {
   await dataClient.recordPrompts([testBasicPrompt]);
   const testPromptTaskID = getIDForPrompt(testBasicPrompt);
   const prompts = await dataClient.getPrompts([testPromptTaskID]);
-  expect(prompts[0]).toMatchObject(testBasicPrompt);
+  expect(prompts.get(testPromptTaskID)).toMatchObject(testBasicPrompt);
 });
 
 test("records attachments", async () => {
@@ -82,5 +82,5 @@ test("records attachments", async () => {
   cacheWriteHandler.mockImplementation(() => mockURL);
 
   const attachments = await dataClient.getAttachments([testAttachmentID]);
-  expect(attachments[0]).toMatchObject(testAttachment);
+  expect(attachments.get(testAttachmentID)).toMatchObject(testAttachment);
 });
