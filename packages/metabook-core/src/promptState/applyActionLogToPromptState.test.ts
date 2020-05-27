@@ -12,6 +12,7 @@ import {
   ingestActionLogType,
   repetitionActionLogType,
   rescheduleActionLogType,
+  updateMetadataActionLogType,
 } from "../types/actionLog";
 import { applicationPromptType, basicPromptType } from "../types/prompt";
 import {
@@ -124,6 +125,7 @@ describe("ingesting", () => {
           }),
         ),
       ],
+      taskMetadata: { isDeleted: false },
       intervalMillis: scheduleSequence[1].interval,
       lastReviewTimestampMillis: 500,
       needsRetry: false,
@@ -257,6 +259,12 @@ describe("repetition", () => {
   });
 });
 
+const newlyIngestedPromptState = applyActionLogToPromptState({
+  promptActionLog: testIngestLog,
+  basePromptState: null,
+  schedule: "default",
+}) as PromptState;
+
 describe("reschedule", () => {
   test("reschedules due time", () => {
     expect(
@@ -268,13 +276,27 @@ describe("reschedule", () => {
           taskID: testIngestLog.taskID,
           newTimestampMillis: 10000,
         },
-        basePromptState: applyActionLogToPromptState({
-          promptActionLog: testIngestLog,
-          basePromptState: null,
-          schedule: "default",
-        }) as PromptState,
+        basePromptState: newlyIngestedPromptState,
         schedule: "default",
       }) as PromptState).dueTimestampMillis,
     ).toEqual(10000);
   });
+});
+
+test("update metadata", () => {
+  expect(
+    (applyActionLogToPromptState({
+      promptActionLog: {
+        actionLogType: updateMetadataActionLogType,
+        parentActionLogIDs: [testIngestLogID],
+        timestampMillis: testIngestLog.timestampMillis + 100,
+        taskID: testIngestLog.taskID,
+        updates: {
+          isDeleted: true,
+        },
+      },
+      basePromptState: newlyIngestedPromptState,
+      schedule: "default",
+    }) as PromptState).taskMetadata.isDeleted,
+  ).toBeTruthy();
 });

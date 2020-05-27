@@ -5,6 +5,10 @@ type BaseActionLog = {
   taskID: string;
 };
 
+export interface TaskMetadata {
+  isDeleted: boolean;
+}
+
 export type ActionLogMetadata = { [key: string]: string | number | null };
 
 export const ingestActionLogType = "ingest";
@@ -32,8 +36,17 @@ export type RescheduleActionLog = {
   newTimestampMillis: number;
 } & BaseActionLog;
 
+export const updateMetadataActionLogType = "updateMetadata";
+export type UpdateMetadataActionLog = {
+  actionLogType: typeof updateMetadataActionLogType;
+  parentActionLogIDs: ActionLogID[];
+
+  updates: Partial<TaskMetadata>;
+} & BaseActionLog;
+
 export type ActionLog =
   | IngestActionLog
   | RepetitionActionLog
-  | RescheduleActionLog;
+  | RescheduleActionLog
+  | UpdateMetadataActionLog;
 export type ActionLogType = ActionLog["actionLogType"];

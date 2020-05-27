@@ -2,6 +2,7 @@
 
 import { PromptProvenance } from "..";
 import { ActionLogID } from "../actionLogID";
+import { TaskMetadata } from "../types/actionLog";
 import { PromptTaskParameters } from "../types/promptTaskParameters";
 
 export interface PromptState {
@@ -11,6 +12,8 @@ export interface PromptState {
   lastReviewTaskParameters: PromptTaskParameters | null;
   dueTimestampMillis: number;
   needsRetry: boolean;
+
+  taskMetadata: TaskMetadata;
 
   intervalMillis: number;
   bestIntervalMillis: number | null;

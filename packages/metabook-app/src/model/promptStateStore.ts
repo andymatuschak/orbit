@@ -67,10 +67,15 @@ export default class PromptStateStore {
         const encodedPromptState = JSON.stringify(promptState);
         batch.put(taskID, encodedPromptState);
 
-        dueTimestampIndexBatch.put(
-          getDueTimestampIndexKey(promptState, taskID),
+        const dueTimestampIndexKey = getDueTimestampIndexKey(
+          promptState,
           taskID,
         );
+        if (promptState.taskMetadata.isDeleted) {
+          dueTimestampIndexBatch.del(dueTimestampIndexKey);
+        } else {
+          dueTimestampIndexBatch.put(dueTimestampIndexKey, taskID);
+        }
       }
 
       await Promise.all([batch.write(), dueTimestampIndexBatch.write()]);

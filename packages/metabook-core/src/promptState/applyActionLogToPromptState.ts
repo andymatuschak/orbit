@@ -9,6 +9,8 @@ import {
   ingestActionLogType,
   repetitionActionLogType,
   rescheduleActionLogType,
+  TaskMetadata,
+  updateMetadataActionLogType,
 } from "../types/actionLog";
 import { applicationPromptType } from "../types/prompt";
 import {
@@ -19,6 +21,10 @@ import {
 import { getPromptTaskForID } from "../types/promptTask";
 import { PromptTaskParameters } from "../types/promptTaskParameters";
 import { PromptState } from "./promptState";
+
+const initialPromptTaskMetadata: TaskMetadata = {
+  isDeleted: false,
+};
 
 export function updateBaseHeadActionLogIDs(
   baseHeadActionLogIDs: ActionLogID[],
@@ -109,6 +115,7 @@ function applyPromptRepetitionActionLogToPromptState<
     needsRetry:
       supportsRetry &&
       promptActionLog.outcome === PromptRepetitionOutcome.Forgotten,
+    taskMetadata: basePromptState?.taskMetadata ?? initialPromptTaskMetadata,
     intervalMillis: newInterval,
     lastReviewTaskParameters: promptActionLog.taskParameters,
     provenance: basePromptState?.provenance ?? null,
@@ -148,10 +155,11 @@ export default function applyActionLogToPromptState<
         return {
           headActionLogIDs: [actionLogID],
           lastReviewTimestampMillis: promptActionLog.timestampMillis,
-          intervalMillis: initialInterval,
+          lastReviewTaskParameters: null,
           dueTimestampMillis: promptActionLog.timestampMillis + initialInterval,
           needsRetry: false,
-          lastReviewTaskParameters: null,
+          taskMetadata: initialPromptTaskMetadata,
+          intervalMillis: initialInterval,
           bestIntervalMillis: null,
           provenance: promptActionLog.provenance,
         };
@@ -168,6 +176,18 @@ export default function applyActionLogToPromptState<
         return {
           ...basePromptState,
           dueTimestampMillis: promptActionLog.newTimestampMillis,
+        };
+      } else {
+        return new Error("Can't reschedule a prompt with no prior actions");
+      }
+    case updateMetadataActionLogType:
+      if (basePromptState) {
+        return {
+          ...basePromptState,
+          taskMetadata: {
+            ...basePromptState.taskMetadata,
+            ...promptActionLog.updates,
+          },
         };
       } else {
         return new Error("Can't reschedule a prompt with no prior actions");

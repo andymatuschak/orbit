@@ -20,6 +20,12 @@ message ActionLog {
         google.protobuf.Timestamp newTimestamp = 2;
     }
 
+    message UpdateMetadata {
+        string taskID = 1;
+
+        bool isDeleted = 4;
+    }
+
     message MetadataEntry {
         string key = 1;
         oneof value {
@@ -33,5 +39,6 @@ message ActionLog {
         Ingest ingest = 2;
         Repetition repetition = 3;
         Reschedule reschedule = 4;
+        UpdateMetadata updateMetadata = 5;
     }
 }

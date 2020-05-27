@@ -20,6 +20,7 @@ function generateCardStates(count: number, dueCount: number) {
         needsRetry: false,
         bestIntervalMillis: null,
         intervalMillis: 0,
+        taskMetadata: { isDeleted: false },
         dueTimestampMillis:
           Date.now() + 1000 * 60 * 60 * 24 * (i < dueCount ? -1 : 1),
         provenance: null,

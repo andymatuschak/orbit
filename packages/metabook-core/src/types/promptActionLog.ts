@@ -5,6 +5,8 @@ import {
   ingestActionLogType,
   repetitionActionLogType,
   rescheduleActionLogType,
+  UpdateMetadataActionLog,
+  updateMetadataActionLogType,
 } from "./actionLog";
 import { PromptProvenance } from "./promptProvenance";
 import { PromptTaskID } from "./promptTask";
@@ -41,10 +43,16 @@ export type PromptRescheduleActionLog = {
   newTimestampMillis: number;
 } & BasePromptActionLog;
 
+export type PromptUpdateMetadataActionLog = Omit<
+  UpdateMetadataActionLog,
+  "taskID"
+> & { taskID: PromptTaskID };
+
 export type PromptActionLog<P extends PromptTaskParameters> =
   | PromptIngestActionLog
   | PromptRepetitionActionLog<P>
-  | PromptRescheduleActionLog;
+  | PromptRescheduleActionLog
+  | PromptUpdateMetadataActionLog;
 
 export function getActionLogFromPromptActionLog<P extends PromptTaskParameters>(
   promptActionLog: PromptActionLog<P>,
@@ -59,6 +67,8 @@ export function getActionLogFromPromptActionLog<P extends PromptTaskParameters>(
     case repetitionActionLogType:
       return promptActionLog;
     case rescheduleActionLogType:
+      return promptActionLog;
+    case updateMetadataActionLogType:
       return promptActionLog;
   }
 }
@@ -94,6 +104,8 @@ export function getPromptActionLogFromActionLog(
         );
       }
     case rescheduleActionLogType:
+      return { ...actionLog, taskID };
+    case updateMetadataActionLogType:
       return { ...actionLog, taskID };
   }
 }
