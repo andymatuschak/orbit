@@ -13,6 +13,7 @@ import {
   rescheduleActionLogType,
   updateMetadataActionLogType,
 } from "../types/actionLog";
+import { TaskProvenance } from "../types/taskMetadata";
 
 function getProtobufTimestampFromMillis(
   millis: number,
@@ -44,6 +45,21 @@ function getProtobufRepresentationForMetadata(
     }));
 }
 
+function getProtobufRepresentationForProvenance(
+  provenance: TaskProvenance,
+): Proto.ActionLog.IProvenance {
+  return {
+    provenanceType: provenance.provenanceType,
+    externalID: provenance.externalID,
+    title: provenance.title,
+    url: provenance.url,
+    modificationTimestamp:
+      provenance.modificationTimestampMillis !== null
+        ? getProtobufTimestampFromMillis(provenance.modificationTimestampMillis)
+        : null,
+  };
+}
+
 function getProtobufRepresentationForActionLog(
   actionLog: ActionLog,
 ): Proto.IActionLog {
@@ -54,9 +70,9 @@ function getProtobufRepresentationForActionLog(
         timestamp,
         ingest: {
           taskID: actionLog.taskID,
-          metadataEntries: getProtobufRepresentationForMetadata(
-            actionLog.metadata,
-          ),
+          provenance: actionLog.provenance
+            ? getProtobufRepresentationForProvenance(actionLog.provenance)
+            : null,
         },
       };
     case repetitionActionLogType:

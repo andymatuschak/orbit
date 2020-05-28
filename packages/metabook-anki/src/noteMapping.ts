@@ -30,10 +30,10 @@ function getNotePromptProvenanceFromNoteDataField(
 
   return {
     provenanceType: PromptProvenanceType.Note,
-    noteID: noteDataField.externalNoteID.id,
-    noteURL: noteDataField.externalNoteID.openURL,
-    noteTitle: noteDataField.noteTitle,
-    noteModificationTimestampMillis: noteDataField.modificationTimestamp,
+    externalID: noteDataField.externalNoteID.id,
+    url: noteDataField.externalNoteID.openURL,
+    title: noteDataField.noteTitle,
+    modificationTimestampMillis: noteDataField.modificationTimestamp,
   };
 }
 

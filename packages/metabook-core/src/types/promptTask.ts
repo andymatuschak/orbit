@@ -6,6 +6,8 @@ import {
   basicPromptType,
   clozePromptType,
 } from "./prompt";
+import { PromptProvenance } from "./promptProvenance";
+import { TaskMetadata } from "./taskMetadata";
 
 export interface BasicPromptTask {
   promptID: PromptID;
@@ -39,6 +41,10 @@ export type PromptParameters =
   | BasicPromptParameters
   | ApplicationPromptParameters
   | ClozePromptParameters;
+
+export interface PromptTaskMetadata extends TaskMetadata {
+  provenance: PromptProvenance | null;
+}
 
 export type PromptTaskID = string & { __promptTaskIDOpaqueType: never };
 

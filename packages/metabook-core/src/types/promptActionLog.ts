@@ -9,7 +9,7 @@ import {
   updateMetadataActionLogType,
 } from "./actionLog";
 import { PromptProvenance } from "./promptProvenance";
-import { PromptTaskID } from "./promptTask";
+import { PromptTaskID, PromptTaskMetadata } from "./promptTask";
 import { PromptTaskParameters } from "./promptTaskParameters";
 
 // Prompt-specific definitions of ActionLog which include domain-specific narrowings of relevant fields.
@@ -43,10 +43,10 @@ export type PromptRescheduleActionLog = {
   newTimestampMillis: number;
 } & BasePromptActionLog;
 
-export type PromptUpdateMetadataActionLog = Omit<
-  UpdateMetadataActionLog,
-  "taskID"
-> & { taskID: PromptTaskID };
+export type PromptUpdateMetadataActionLog = UpdateMetadataActionLog & {
+  taskID: PromptTaskID;
+  updates: Partial<PromptTaskMetadata>;
+};
 
 export type PromptActionLog<P extends PromptTaskParameters> =
   | PromptIngestActionLog
@@ -57,20 +57,7 @@ export type PromptActionLog<P extends PromptTaskParameters> =
 export function getActionLogFromPromptActionLog<P extends PromptTaskParameters>(
   promptActionLog: PromptActionLog<P>,
 ): ActionLog {
-  switch (promptActionLog.actionLogType) {
-    case ingestActionLogType:
-      const { provenance, ...rest } = promptActionLog;
-      return {
-        ...rest,
-        metadata: provenance,
-      };
-    case repetitionActionLogType:
-      return promptActionLog;
-    case rescheduleActionLogType:
-      return promptActionLog;
-    case updateMetadataActionLogType:
-      return promptActionLog;
-  }
+  return promptActionLog;
 }
 
 export function getPromptActionLogFromActionLog(
@@ -79,11 +66,11 @@ export function getPromptActionLogFromActionLog(
   const taskID = actionLog.taskID as PromptTaskID;
   switch (actionLog.actionLogType) {
     case ingestActionLogType:
-      const { metadata, ...rest } = actionLog;
+      const { provenance, ...restIngest } = actionLog;
       return {
-        ...rest,
+        ...restIngest,
         taskID,
-        provenance: metadata as PromptProvenance | null,
+        provenance: provenance as PromptProvenance | null,
       };
     case repetitionActionLogType:
       if (
@@ -106,6 +93,11 @@ export function getPromptActionLogFromActionLog(
     case rescheduleActionLogType:
       return { ...actionLog, taskID };
     case updateMetadataActionLogType:
-      return { ...actionLog, taskID };
+      const { updates, ...restUpdate } = actionLog;
+      return {
+        ...restUpdate,
+        taskID,
+        updates: updates as Partial<PromptTaskMetadata>,
+      };
   }
 }

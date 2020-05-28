@@ -4,7 +4,7 @@ import "google/protobuf/timestamp.proto";
 message ActionLog {
     message Ingest {
         string taskID = 1;
-        repeated MetadataEntry metadataEntries = 2;
+        Provenance provenance = 2;
     }
 
     message Repetition {
@@ -32,6 +32,14 @@ message ActionLog {
             string string = 2;
             double number = 3;
         }
+    }
+
+    message Provenance {
+        string provenanceType = 1;
+        string externalID = 2;
+        google.protobuf.Timestamp modificationTimestamp = 3;
+        string title = 4;
+        string url = 5;
     }
 
     google.protobuf.Timestamp timestamp = 1;

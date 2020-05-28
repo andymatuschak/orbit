@@ -12,7 +12,7 @@ const basicIngestLog: IngestActionLog = {
   actionLogType: ingestActionLogType,
   timestampMillis: 0,
   taskID: "test",
-  metadata: null,
+  provenance: null,
 };
 const basicIngestLogID = getIDForActionLog(basicIngestLog);
 test("ingest logs", () => {
@@ -22,10 +22,16 @@ test("ingest logs", () => {
 
   const withMetadataID = getIDForActionLog({
     ...basicIngestLog,
-    metadata: { test: 3 },
+    provenance: {
+      provenanceType: "test",
+      externalID: "id",
+      modificationTimestampMillis: null,
+      title: null,
+      url: null,
+    },
   });
   expect(withMetadataID).toMatchInlineSnapshot(
-    `"zdj7WdK5hE3wmUdpfboMfmkFm8qmdoJYmqBF3BoqhueNy5Qw4"`,
+    `"zdj7WVRyTTqRHfU6P88K6baGCuXqyvTpYGgz79CRu9QFZqTP2"`,
   );
   expect(basicIngestLogID).not.toEqual(withMetadataID);
 });

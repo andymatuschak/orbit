@@ -9,7 +9,6 @@ import {
   ingestActionLogType,
   repetitionActionLogType,
   rescheduleActionLogType,
-  TaskMetadata,
   updateMetadataActionLogType,
 } from "../types/actionLog";
 import { applicationPromptType } from "../types/prompt";
@@ -18,13 +17,17 @@ import {
   PromptActionLog,
   PromptRepetitionActionLog,
 } from "../types/promptActionLog";
+import { PromptProvenance } from "../types/promptProvenance";
 import { getPromptTaskForID } from "../types/promptTask";
 import { PromptTaskParameters } from "../types/promptTaskParameters";
 import { PromptState } from "./promptState";
 
-const initialPromptTaskMetadata: TaskMetadata = {
-  isDeleted: false,
-};
+function getInitialPromptTaskMetadata(provenance: PromptProvenance | null) {
+  return {
+    isDeleted: false,
+    provenance,
+  };
+}
 
 export function updateBaseHeadActionLogIDs(
   baseHeadActionLogIDs: ActionLogID[],
@@ -115,10 +118,13 @@ function applyPromptRepetitionActionLogToPromptState<
     needsRetry:
       supportsRetry &&
       promptActionLog.outcome === PromptRepetitionOutcome.Forgotten,
-    taskMetadata: basePromptState?.taskMetadata ?? initialPromptTaskMetadata,
+    taskMetadata:
+      basePromptState?.taskMetadata ??
+      getInitialPromptTaskMetadata(
+        basePromptState?.taskMetadata.provenance ?? null,
+      ),
     intervalMillis: newInterval,
     lastReviewTaskParameters: promptActionLog.taskParameters,
-    provenance: basePromptState?.provenance ?? null,
   };
 }
 
@@ -158,10 +164,11 @@ export default function applyActionLogToPromptState<
           lastReviewTaskParameters: null,
           dueTimestampMillis: promptActionLog.timestampMillis + initialInterval,
           needsRetry: false,
-          taskMetadata: initialPromptTaskMetadata,
+          taskMetadata: getInitialPromptTaskMetadata(
+            promptActionLog.provenance,
+          ),
           intervalMillis: initialInterval,
           bestIntervalMillis: null,
-          provenance: promptActionLog.provenance,
         };
       }
     case repetitionActionLogType:

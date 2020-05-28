@@ -1,20 +1,17 @@
 import { ActionLogID } from "../actionLogID";
+import { TaskMetadata, TaskProvenance } from "./taskMetadata";
 
 type BaseActionLog = {
   timestampMillis: number;
   taskID: string;
 };
 
-export interface TaskMetadata {
-  isDeleted: boolean;
-}
-
 export type ActionLogMetadata = { [key: string]: string | number | null };
 
 export const ingestActionLogType = "ingest";
 export type IngestActionLog = {
   actionLogType: typeof ingestActionLogType;
-  metadata: ActionLogMetadata | null;
+  provenance: TaskProvenance | null;
 } & BaseActionLog;
 
 export const repetitionActionLogType = "repetition";

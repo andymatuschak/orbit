@@ -511,8 +511,8 @@ export namespace ActionLog {
         /** Ingest taskID */
         taskID?: (string|null);
 
-        /** Ingest metadataEntries */
-        metadataEntries?: (ActionLog.IMetadataEntry[]|null);
+        /** Ingest provenance */
+        provenance?: (ActionLog.IProvenance|null);
     }
 
     /** Represents an Ingest. */
@@ -527,8 +527,8 @@ export namespace ActionLog {
         /** Ingest taskID. */
         public taskID: string;
 
-        /** Ingest metadataEntries. */
-        public metadataEntries: ActionLog.IMetadataEntry[];
+        /** Ingest provenance. */
+        public provenance?: (ActionLog.IProvenance|null);
 
         /**
          * Creates a new Ingest instance using the specified properties.
@@ -1001,6 +1001,120 @@ export namespace ActionLog {
 
         /**
          * Converts this MetadataEntry to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a Provenance. */
+    interface IProvenance {
+
+        /** Provenance provenanceType */
+        provenanceType?: (string|null);
+
+        /** Provenance externalID */
+        externalID?: (string|null);
+
+        /** Provenance modificationTimestamp */
+        modificationTimestamp?: (google.protobuf.ITimestamp|null);
+
+        /** Provenance title */
+        title?: (string|null);
+
+        /** Provenance url */
+        url?: (string|null);
+    }
+
+    /** Represents a Provenance. */
+    class Provenance implements IProvenance {
+
+        /**
+         * Constructs a new Provenance.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: ActionLog.IProvenance);
+
+        /** Provenance provenanceType. */
+        public provenanceType: string;
+
+        /** Provenance externalID. */
+        public externalID: string;
+
+        /** Provenance modificationTimestamp. */
+        public modificationTimestamp?: (google.protobuf.ITimestamp|null);
+
+        /** Provenance title. */
+        public title: string;
+
+        /** Provenance url. */
+        public url: string;
+
+        /**
+         * Creates a new Provenance instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Provenance instance
+         */
+        public static create(properties?: ActionLog.IProvenance): ActionLog.Provenance;
+
+        /**
+         * Encodes the specified Provenance message. Does not implicitly {@link ActionLog.Provenance.verify|verify} messages.
+         * @param message Provenance message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: ActionLog.IProvenance, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Provenance message, length delimited. Does not implicitly {@link ActionLog.Provenance.verify|verify} messages.
+         * @param message Provenance message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: ActionLog.IProvenance, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Provenance message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Provenance
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): ActionLog.Provenance;
+
+        /**
+         * Decodes a Provenance message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Provenance
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): ActionLog.Provenance;
+
+        /**
+         * Verifies a Provenance message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Provenance message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Provenance
+         */
+        public static fromObject(object: { [k: string]: any }): ActionLog.Provenance;
+
+        /**
+         * Creates a plain object from a Provenance message. Also converts values to other types if specified.
+         * @param message Provenance
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: ActionLog.Provenance, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Provenance to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };

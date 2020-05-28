@@ -1,20 +1,21 @@
+import { TaskProvenance } from "./taskMetadata";
+
 export enum PromptProvenanceType {
   Anki = "anki",
   Note = "note",
 }
 
-export type AnkiPromptProvenance = {
+export interface AnkiPromptProvenance extends TaskProvenance {
   provenanceType: typeof PromptProvenanceType.Anki;
-  cardID: number;
-  cardModificationTimestampMillis: number;
-};
+  title: null;
+  url: null;
+}
 
-export type NotePromptProvenance = {
+export interface NotePromptProvenance extends TaskProvenance {
   provenanceType: typeof PromptProvenanceType.Note;
-  noteID: string;
-  noteTitle: string;
-  noteURL: string | null;
-  noteModificationTimestampMillis: number;
-};
+  externalID: string;
+  title: string;
+  modificationTimestampMillis: number;
+}
 
 export type PromptProvenance = AnkiPromptProvenance | NotePromptProvenance;

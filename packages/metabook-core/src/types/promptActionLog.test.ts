@@ -13,9 +13,11 @@ import { ApplicationPromptTaskParameters } from "./promptTaskParameters";
 describe("ingest", () => {
   const promptActionLog: PromptIngestActionLog = {
     provenance: {
-      cardID: 10,
-      cardModificationTimestampMillis: 1000,
       provenanceType: PromptProvenanceType.Anki,
+      title: null,
+      url: null,
+      externalID: "10",
+      modificationTimestampMillis: 1000,
     },
     timestampMillis: 1000,
     taskID: "3" as PromptTaskID,
@@ -23,11 +25,6 @@ describe("ingest", () => {
   };
 
   const actionLog = getActionLogFromPromptActionLog(promptActionLog);
-
-  test("encodes provenance as metadata", () => {
-    expect((actionLog as any).metadata).toEqual(promptActionLog.provenance);
-  });
-
   test("round trip", () => {
     expect(getPromptActionLogFromActionLog(actionLog)).toEqual(promptActionLog);
   });

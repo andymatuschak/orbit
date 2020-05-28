@@ -125,12 +125,11 @@ describe("ingesting", () => {
           }),
         ),
       ],
-      taskMetadata: { isDeleted: false },
+      taskMetadata: { isDeleted: false, provenance: null },
       intervalMillis: scheduleSequence[1].interval,
       lastReviewTimestampMillis: 500,
       needsRetry: false,
       lastReviewTaskParameters: null,
-      provenance: null,
     };
     expect(
       applyActionLogToPromptState({

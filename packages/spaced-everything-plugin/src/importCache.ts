@@ -94,7 +94,7 @@ export default class SpacedEverythingImportCache {
     const noteMap = new Map<string, CachedNoteMetadata>();
 
     for (const { promptStateCache, ITPrompt } of entries) {
-      const { provenance } = promptStateCache;
+      const { provenance } = promptStateCache.taskMetadata;
       if (provenance?.provenanceType !== PromptProvenanceType.Note) {
         throw new Error(
           `Unexpected prompt provenance type: ${
@@ -109,26 +109,26 @@ export default class SpacedEverythingImportCache {
           `Skipping prompt state with invalid prompt task ID ${promptStateCache.taskID}`,
         );
       } else {
-        const existingNoteMetadata = noteMap.get(provenance.noteID);
+        const existingNoteMetadata = noteMap.get(provenance.externalID);
         const CSTID = notePrompts.getIDForPrompt(ITPrompt);
-        const promptsByNoteIDKey = getPromptKey(provenance.noteID, CSTID);
+        const promptsByNoteIDKey = getPromptKey(provenance.externalID, CSTID);
         if (!promptStateCache.taskMetadata.isDeleted || !existingNoteMetadata) {
           promptBatch.put(promptsByNoteIDKey, JSON.stringify(ITPrompt));
           if (
             !existingNoteMetadata ||
             existingNoteMetadata.modificationTimestamp <
-              provenance.noteModificationTimestampMillis
+              provenance.modificationTimestampMillis
           ) {
-            noteMap.set(provenance.noteID, {
-              title: provenance.noteTitle,
-              modificationTimestamp: provenance.noteModificationTimestampMillis,
-              URL: provenance.noteURL,
+            noteMap.set(provenance.externalID, {
+              title: provenance.title,
+              modificationTimestamp: provenance.modificationTimestampMillis,
+              URL: provenance.url,
               headActionLogIDs: promptStateCache.headActionLogIDs,
             });
           }
         } else {
           promptBatch.del(promptsByNoteIDKey);
-          noteBatch.del(provenance.noteID);
+          noteBatch.del(provenance.externalID);
         }
       }
     }

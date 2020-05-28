@@ -112,8 +112,10 @@ export function createPlanForCard(
     actionLogType: ingestActionLogType,
     provenance: noteProvenance ?? {
       provenanceType: PromptProvenanceType.Anki,
-      cardModificationTimestampMillis: card.mod * 1000,
-      cardID: card.id,
+      modificationTimestampMillis: card.mod * 1000,
+      externalID: card.id.toString(),
+      url: null,
+      title: null,
     },
     taskID: extractPromptTaskIDForCard(card, prompt),
     timestampMillis: overrideTimestampMillis ?? card.id,

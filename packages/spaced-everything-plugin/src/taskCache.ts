@@ -227,10 +227,10 @@ function getProvenanceForNoteData(
   } else {
     return {
       provenanceType: PromptProvenanceType.Note,
-      noteID: noteData.externalNoteID.id,
-      noteTitle: noteData.noteTitle,
-      noteURL: noteData.externalNoteID.openURL,
-      noteModificationTimestampMillis: noteData.modificationTimestamp,
+      externalID: noteData.externalNoteID.id,
+      title: noteData.noteTitle,
+      url: noteData.externalNoteID.openURL,
+      modificationTimestampMillis: noteData.modificationTimestamp,
     };
   }
 }

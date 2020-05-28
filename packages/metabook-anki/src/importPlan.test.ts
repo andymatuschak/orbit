@@ -80,7 +80,9 @@ test("create plan for card", () => {
     testBasicPrompt,
     null,
   ) as PromptIngestActionLog;
-  expect((log.provenance as AnkiPromptProvenance).cardID).toEqual(testCard.id);
+  expect((log.provenance as AnkiPromptProvenance).externalID).toEqual(
+    testCard.id.toString(),
+  );
 });
 
 test("create plan for log", () => {

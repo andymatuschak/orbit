@@ -1260,7 +1260,7 @@ $root.ActionLog = (function() {
          * @memberof ActionLog
          * @interface IIngest
          * @property {string|null} [taskID] Ingest taskID
-         * @property {Array.<ActionLog.IMetadataEntry>|null} [metadataEntries] Ingest metadataEntries
+         * @property {ActionLog.IProvenance|null} [provenance] Ingest provenance
          */
 
         /**
@@ -1272,7 +1272,6 @@ $root.ActionLog = (function() {
          * @param {ActionLog.IIngest=} [properties] Properties to set
          */
         function Ingest(properties) {
-            this.metadataEntries = [];
             if (properties)
                 for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -1288,12 +1287,12 @@ $root.ActionLog = (function() {
         Ingest.prototype.taskID = "";
 
         /**
-         * Ingest metadataEntries.
-         * @member {Array.<ActionLog.IMetadataEntry>} metadataEntries
+         * Ingest provenance.
+         * @member {ActionLog.IProvenance|null|undefined} provenance
          * @memberof ActionLog.Ingest
          * @instance
          */
-        Ingest.prototype.metadataEntries = $util.emptyArray;
+        Ingest.prototype.provenance = null;
 
         /**
          * Creates a new Ingest instance using the specified properties.
@@ -1321,9 +1320,8 @@ $root.ActionLog = (function() {
                 writer = $Writer.create();
             if (message.taskID != null && Object.hasOwnProperty.call(message, "taskID"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.taskID);
-            if (message.metadataEntries != null && message.metadataEntries.length)
-                for (var i = 0; i < message.metadataEntries.length; ++i)
-                    $root.ActionLog.MetadataEntry.encode(message.metadataEntries[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            if (message.provenance != null && Object.hasOwnProperty.call(message, "provenance"))
+                $root.ActionLog.Provenance.encode(message.provenance, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
 
@@ -1362,9 +1360,7 @@ $root.ActionLog = (function() {
                     message.taskID = reader.string();
                     break;
                 case 2:
-                    if (!(message.metadataEntries && message.metadataEntries.length))
-                        message.metadataEntries = [];
-                    message.metadataEntries.push($root.ActionLog.MetadataEntry.decode(reader, reader.uint32()));
+                    message.provenance = $root.ActionLog.Provenance.decode(reader, reader.uint32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -1404,14 +1400,10 @@ $root.ActionLog = (function() {
             if (message.taskID != null && message.hasOwnProperty("taskID"))
                 if (!$util.isString(message.taskID))
                     return "taskID: string expected";
-            if (message.metadataEntries != null && message.hasOwnProperty("metadataEntries")) {
-                if (!Array.isArray(message.metadataEntries))
-                    return "metadataEntries: array expected";
-                for (var i = 0; i < message.metadataEntries.length; ++i) {
-                    var error = $root.ActionLog.MetadataEntry.verify(message.metadataEntries[i]);
-                    if (error)
-                        return "metadataEntries." + error;
-                }
+            if (message.provenance != null && message.hasOwnProperty("provenance")) {
+                var error = $root.ActionLog.Provenance.verify(message.provenance);
+                if (error)
+                    return "provenance." + error;
             }
             return null;
         };
@@ -1430,15 +1422,10 @@ $root.ActionLog = (function() {
             var message = new $root.ActionLog.Ingest();
             if (object.taskID != null)
                 message.taskID = String(object.taskID);
-            if (object.metadataEntries) {
-                if (!Array.isArray(object.metadataEntries))
-                    throw TypeError(".ActionLog.Ingest.metadataEntries: array expected");
-                message.metadataEntries = [];
-                for (var i = 0; i < object.metadataEntries.length; ++i) {
-                    if (typeof object.metadataEntries[i] !== "object")
-                        throw TypeError(".ActionLog.Ingest.metadataEntries: object expected");
-                    message.metadataEntries[i] = $root.ActionLog.MetadataEntry.fromObject(object.metadataEntries[i]);
-                }
+            if (object.provenance != null) {
+                if (typeof object.provenance !== "object")
+                    throw TypeError(".ActionLog.Ingest.provenance: object expected");
+                message.provenance = $root.ActionLog.Provenance.fromObject(object.provenance);
             }
             return message;
         };
@@ -1456,17 +1443,14 @@ $root.ActionLog = (function() {
             if (!options)
                 options = {};
             var object = {};
-            if (options.arrays || options.defaults)
-                object.metadataEntries = [];
-            if (options.defaults)
+            if (options.defaults) {
                 object.taskID = "";
+                object.provenance = null;
+            }
             if (message.taskID != null && message.hasOwnProperty("taskID"))
                 object.taskID = message.taskID;
-            if (message.metadataEntries && message.metadataEntries.length) {
-                object.metadataEntries = [];
-                for (var j = 0; j < message.metadataEntries.length; ++j)
-                    object.metadataEntries[j] = $root.ActionLog.MetadataEntry.toObject(message.metadataEntries[j], options);
-            }
+            if (message.provenance != null && message.hasOwnProperty("provenance"))
+                object.provenance = $root.ActionLog.Provenance.toObject(message.provenance, options);
             return object;
         };
 
@@ -2439,6 +2423,287 @@ $root.ActionLog = (function() {
         };
 
         return MetadataEntry;
+    })();
+
+    ActionLog.Provenance = (function() {
+
+        /**
+         * Properties of a Provenance.
+         * @memberof ActionLog
+         * @interface IProvenance
+         * @property {string|null} [provenanceType] Provenance provenanceType
+         * @property {string|null} [externalID] Provenance externalID
+         * @property {google.protobuf.ITimestamp|null} [modificationTimestamp] Provenance modificationTimestamp
+         * @property {string|null} [title] Provenance title
+         * @property {string|null} [url] Provenance url
+         */
+
+        /**
+         * Constructs a new Provenance.
+         * @memberof ActionLog
+         * @classdesc Represents a Provenance.
+         * @implements IProvenance
+         * @constructor
+         * @param {ActionLog.IProvenance=} [properties] Properties to set
+         */
+        function Provenance(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Provenance provenanceType.
+         * @member {string} provenanceType
+         * @memberof ActionLog.Provenance
+         * @instance
+         */
+        Provenance.prototype.provenanceType = "";
+
+        /**
+         * Provenance externalID.
+         * @member {string} externalID
+         * @memberof ActionLog.Provenance
+         * @instance
+         */
+        Provenance.prototype.externalID = "";
+
+        /**
+         * Provenance modificationTimestamp.
+         * @member {google.protobuf.ITimestamp|null|undefined} modificationTimestamp
+         * @memberof ActionLog.Provenance
+         * @instance
+         */
+        Provenance.prototype.modificationTimestamp = null;
+
+        /**
+         * Provenance title.
+         * @member {string} title
+         * @memberof ActionLog.Provenance
+         * @instance
+         */
+        Provenance.prototype.title = "";
+
+        /**
+         * Provenance url.
+         * @member {string} url
+         * @memberof ActionLog.Provenance
+         * @instance
+         */
+        Provenance.prototype.url = "";
+
+        /**
+         * Creates a new Provenance instance using the specified properties.
+         * @function create
+         * @memberof ActionLog.Provenance
+         * @static
+         * @param {ActionLog.IProvenance=} [properties] Properties to set
+         * @returns {ActionLog.Provenance} Provenance instance
+         */
+        Provenance.create = function create(properties) {
+            return new Provenance(properties);
+        };
+
+        /**
+         * Encodes the specified Provenance message. Does not implicitly {@link ActionLog.Provenance.verify|verify} messages.
+         * @function encode
+         * @memberof ActionLog.Provenance
+         * @static
+         * @param {ActionLog.IProvenance} message Provenance message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Provenance.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.provenanceType != null && Object.hasOwnProperty.call(message, "provenanceType"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.provenanceType);
+            if (message.externalID != null && Object.hasOwnProperty.call(message, "externalID"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.externalID);
+            if (message.modificationTimestamp != null && Object.hasOwnProperty.call(message, "modificationTimestamp"))
+                $root.google.protobuf.Timestamp.encode(message.modificationTimestamp, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            if (message.title != null && Object.hasOwnProperty.call(message, "title"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.title);
+            if (message.url != null && Object.hasOwnProperty.call(message, "url"))
+                writer.uint32(/* id 5, wireType 2 =*/42).string(message.url);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Provenance message, length delimited. Does not implicitly {@link ActionLog.Provenance.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof ActionLog.Provenance
+         * @static
+         * @param {ActionLog.IProvenance} message Provenance message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Provenance.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Provenance message from the specified reader or buffer.
+         * @function decode
+         * @memberof ActionLog.Provenance
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {ActionLog.Provenance} Provenance
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Provenance.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.ActionLog.Provenance();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.provenanceType = reader.string();
+                    break;
+                case 2:
+                    message.externalID = reader.string();
+                    break;
+                case 3:
+                    message.modificationTimestamp = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
+                    break;
+                case 4:
+                    message.title = reader.string();
+                    break;
+                case 5:
+                    message.url = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Provenance message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof ActionLog.Provenance
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {ActionLog.Provenance} Provenance
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Provenance.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Provenance message.
+         * @function verify
+         * @memberof ActionLog.Provenance
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Provenance.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.provenanceType != null && message.hasOwnProperty("provenanceType"))
+                if (!$util.isString(message.provenanceType))
+                    return "provenanceType: string expected";
+            if (message.externalID != null && message.hasOwnProperty("externalID"))
+                if (!$util.isString(message.externalID))
+                    return "externalID: string expected";
+            if (message.modificationTimestamp != null && message.hasOwnProperty("modificationTimestamp")) {
+                var error = $root.google.protobuf.Timestamp.verify(message.modificationTimestamp);
+                if (error)
+                    return "modificationTimestamp." + error;
+            }
+            if (message.title != null && message.hasOwnProperty("title"))
+                if (!$util.isString(message.title))
+                    return "title: string expected";
+            if (message.url != null && message.hasOwnProperty("url"))
+                if (!$util.isString(message.url))
+                    return "url: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a Provenance message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof ActionLog.Provenance
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {ActionLog.Provenance} Provenance
+         */
+        Provenance.fromObject = function fromObject(object) {
+            if (object instanceof $root.ActionLog.Provenance)
+                return object;
+            var message = new $root.ActionLog.Provenance();
+            if (object.provenanceType != null)
+                message.provenanceType = String(object.provenanceType);
+            if (object.externalID != null)
+                message.externalID = String(object.externalID);
+            if (object.modificationTimestamp != null) {
+                if (typeof object.modificationTimestamp !== "object")
+                    throw TypeError(".ActionLog.Provenance.modificationTimestamp: object expected");
+                message.modificationTimestamp = $root.google.protobuf.Timestamp.fromObject(object.modificationTimestamp);
+            }
+            if (object.title != null)
+                message.title = String(object.title);
+            if (object.url != null)
+                message.url = String(object.url);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Provenance message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof ActionLog.Provenance
+         * @static
+         * @param {ActionLog.Provenance} message Provenance
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Provenance.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults) {
+                object.provenanceType = "";
+                object.externalID = "";
+                object.modificationTimestamp = null;
+                object.title = "";
+                object.url = "";
+            }
+            if (message.provenanceType != null && message.hasOwnProperty("provenanceType"))
+                object.provenanceType = message.provenanceType;
+            if (message.externalID != null && message.hasOwnProperty("externalID"))
+                object.externalID = message.externalID;
+            if (message.modificationTimestamp != null && message.hasOwnProperty("modificationTimestamp"))
+                object.modificationTimestamp = $root.google.protobuf.Timestamp.toObject(message.modificationTimestamp, options);
+            if (message.title != null && message.hasOwnProperty("title"))
+                object.title = message.title;
+            if (message.url != null && message.hasOwnProperty("url"))
+                object.url = message.url;
+            return object;
+        };
+
+        /**
+         * Converts this Provenance to JSON.
+         * @function toJSON
+         * @memberof ActionLog.Provenance
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Provenance.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Provenance;
     })();
 
     return ActionLog;
