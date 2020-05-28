@@ -90,6 +90,7 @@ export default class SpacedEverythingImportCache {
     entries: { promptStateCache: PromptStateCache; ITPrompt: IT.Prompt }[],
   ): Promise<void> {
     const promptBatch = this.ITPromptByNoteID.batch();
+    const noteBatch = this.notesByID.batch();
     const noteMap = new Map<string, CachedNoteMetadata>();
 
     for (const { promptStateCache, ITPrompt } of entries) {
@@ -108,29 +109,32 @@ export default class SpacedEverythingImportCache {
           `Skipping prompt state with invalid prompt task ID ${promptStateCache.taskID}`,
         );
       } else {
+        const existingNoteMetadata = noteMap.get(provenance.noteID);
         const CSTID = notePrompts.getIDForPrompt(ITPrompt);
         const promptsByNoteIDKey = getPromptKey(provenance.noteID, CSTID);
-        promptBatch.put(promptsByNoteIDKey, JSON.stringify(ITPrompt));
-
-        const existingNoteMetadata = noteMap.get(provenance.noteID);
-        if (
-          !existingNoteMetadata ||
-          existingNoteMetadata.modificationTimestamp <
-            provenance.noteModificationTimestampMillis
-        ) {
-          noteMap.set(provenance.noteID, {
-            title: provenance.noteTitle,
-            modificationTimestamp: provenance.noteModificationTimestampMillis,
-            URL: provenance.noteURL,
-            headActionLogIDs: promptStateCache.headActionLogIDs,
-          });
+        if (!promptStateCache.taskMetadata.isDeleted || !existingNoteMetadata) {
+          promptBatch.put(promptsByNoteIDKey, JSON.stringify(ITPrompt));
+          if (
+            !existingNoteMetadata ||
+            existingNoteMetadata.modificationTimestamp <
+              provenance.noteModificationTimestampMillis
+          ) {
+            noteMap.set(provenance.noteID, {
+              title: provenance.noteTitle,
+              modificationTimestamp: provenance.noteModificationTimestampMillis,
+              URL: provenance.noteURL,
+              headActionLogIDs: promptStateCache.headActionLogIDs,
+            });
+          }
+        } else {
+          promptBatch.del(promptsByNoteIDKey);
+          noteBatch.del(provenance.noteID);
         }
       }
     }
 
     await promptBatch.write();
 
-    const noteBatch = this.notesByID.batch();
     const existingNoteMetadataByID = await Promise.all(
       [...noteMap.keys()].map(
         async (noteID): Promise<[string, CachedNoteMetadata | null]> => [
