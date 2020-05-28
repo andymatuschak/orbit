@@ -1,0 +1,14 @@
+{
+  "firestore": {
+    "rules": "../metabook-client/firestore.rules",
+    "indexes": "../metabook-clientfirestore.indexes.json"
+  },
+  "functions": {
+    "source": "./dist"
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    }
+  }
+}

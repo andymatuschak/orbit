@@ -9,7 +9,8 @@
   "scripts": {
     "build": "webpack",
     "predeploy": "yarn run build",
-    "deploy": "firebase deploy --only functions"
+    "deploy": "firebase deploy --only functions",
+    "test": "jest --runInBand"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -20,11 +21,15 @@
     "node": "10"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
+    "@babel/core": "^7.10.1",
     "@babel/plugin-transform-modules-commonjs": "^7.9.0",
-    "@babel/preset-env": "^7.9.0",
-    "@babel/preset-typescript": "^7.9.0",
+    "@babel/preset-env": "^7.10.1",
+    "@babel/preset-typescript": "^7.10.1",
+    "@types/jest": "^25.2.3",
+    "babel-jest": "^26.0.1",
     "babel-loader": "^8.1.0",
+    "jest": "^26.0.1",
+    "metabook-firebase-support": "0.0.1",
     "ts-loader": "^7.0.2",
     "typescript": "^3.8.3",
     "webpack": "4.42.0",

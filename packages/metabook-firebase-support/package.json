@@ -6,8 +6,13 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./firebaseTesting": "./dist/firebaseTesting.js"
+  },
+  "sideEffects": false,
   "dependencies": {
+    "@firebase/testing": "^0.19.5",
     "buffer": "^5.6.0",
     "cids": "^0.8.0",
     "firebase": "^7.14.2",
@@ -27,6 +32,7 @@
     "@types/jest": "^25.2.1",
     "@types/sha.js": "^2.4.0",
     "babel-jest": "^24.9.0",
+    "firebase-tools": "^8.4.1",
     "jest": "^24.9.0",
     "typescript": "^3.8.3"
   }

@@ -1,4 +1,4 @@
-import * as firebaseTesting from "@firebase/testing";
+import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
 import firebase from "firebase/app";
 import "firebase/firestore";
 import {
@@ -12,38 +12,25 @@ import { getReferenceForDataRecordID } from "metabook-firebase-support";
 import { testBasicPrompt } from "metabook-sample-data";
 import { MetabookFirebaseDataClient } from "./dataClient";
 
-const testProjectID = "metabook-system";
-const functionsEmulatorURL = "http://localhost:5001";
-let testApp: firebase.app.App;
-let testFunctions: firebase.functions.Functions;
+let testFirestore: firebase.firestore.Firestore;
 let dataClient: MetabookFirebaseDataClient;
 let cacheWriteHandler: jest.Mock;
 
 beforeEach(async () => {
-  testApp = firebaseTesting.initializeTestApp({
-    projectId: testProjectID,
-  });
-  const testFirestore = testApp.firestore();
-  testFunctions = testApp.functions();
-  testFunctions.useFunctionsEmulator(functionsEmulatorURL);
-
+  const { functions, firestore } = FirebaseTesting.createTestFirebaseApp();
+  testFirestore = firestore;
   cacheWriteHandler = jest.fn();
-  dataClient = new MetabookFirebaseDataClient(testFirestore, testFunctions);
+  dataClient = new MetabookFirebaseDataClient(testFirestore, functions);
 });
 
 afterEach(async () => {
-  await testApp.firestore().terminate();
-  await testApp.firestore().clearPersistence();
-  return firebaseTesting.clearFirestoreData({ projectId: testProjectID });
+  FirebaseTesting.resetTestFirebaseApp(testFirestore);
 });
 
 const testPromptID = getIDForPrompt(testBasicPrompt);
 async function writeTestPromptData() {
-  const adminApp = firebaseTesting.initializeAdminApp({
-    projectId: testProjectID,
-  });
-  const adminDatabase = adminApp.firestore();
-  await getReferenceForDataRecordID(adminDatabase, testPromptID).set(
+  const { firestore } = FirebaseTesting.createTestAdminFirebaseApp();
+  await getReferenceForDataRecordID(firestore, testPromptID).set(
     testBasicPrompt,
   );
 }
