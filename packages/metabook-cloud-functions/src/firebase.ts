@@ -1,15 +1,11 @@
 import * as firebase from "firebase-admin";
 import {
-  applyActionLogToPromptState,
   Attachment,
   AttachmentID,
   getIDForAttachment,
   getIDForPrompt,
-  getPromptActionLogFromActionLog,
   Prompt,
-  promptActionLogCanBeAppliedToPromptState,
   PromptID,
-  PromptState,
 } from "metabook-core";
 import {
   ActionLogDocument,
@@ -19,6 +15,7 @@ import {
   getTaskStateCacheReferenceForTaskID,
   PromptStateCache,
 } from "metabook-firebase-support";
+import applyActionLogToPromptStateCache from "./applyActionLogToPromptStateCache";
 
 let _database: firebase.firestore.Firestore | null = null;
 function getDatabase(): firebase.firestore.Firestore {
@@ -93,47 +90,18 @@ export async function updatePromptStateCacheWithLog(
     userID,
     log.taskID,
   );
-  const promptActionLog = getPromptActionLogFromActionLog(log);
   return db.runTransaction(async (transaction) => {
     const promptStateCacheSnapshot = await transaction.get(
       promptStateCacheReference,
     );
-    const basePromptState =
-      (promptStateCacheSnapshot.data() as PromptState) ?? null;
-    if (
-      promptActionLogCanBeAppliedToPromptState(promptActionLog, basePromptState)
-    ) {
-      const newPromptState = applyActionLogToPromptState({
-        basePromptState,
-        promptActionLog,
-        schedule: "default",
-      });
-      if (newPromptState instanceof Error) {
-        throw new Error(
-          `Error applying log to prompt state: ${newPromptState}.\nLog: ${JSON.stringify(
-            promptActionLog,
-            null,
-            "\t",
-          )}\nBase prompt state: ${JSON.stringify(
-            basePromptState,
-            null,
-            "\t",
-          )}`,
-        );
-      }
-      const promptStateCache: PromptStateCache = {
-        ...newPromptState,
-        taskID: promptActionLog.taskID,
-      };
-      transaction.set(promptStateCacheReference, promptStateCache);
+    const newPromptStateCache = applyActionLogToPromptStateCache(
+      log,
+      (promptStateCacheSnapshot.data() as PromptStateCache) ?? null,
+    );
+    if (newPromptStateCache instanceof Error) {
+      console.error(newPromptStateCache);
     } else {
-      throw new Error(
-        `Can't apply log to prompt state: ${JSON.stringify(
-          promptActionLog,
-          null,
-          "\t",
-        )}, ${JSON.stringify(basePromptState, null, "\t")}`,
-      );
+      transaction.set(promptStateCacheReference, newPromptStateCache);
     }
   });
 }

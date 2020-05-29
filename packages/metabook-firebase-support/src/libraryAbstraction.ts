@@ -13,3 +13,15 @@ export interface ServerTimestamp {
   seconds: number;
   nanoseconds: number;
 }
+
+// Returns a negative value if a < b; positive if b > a; 0 if a = b.
+export function compareServerTimestamps(
+  a: ServerTimestamp,
+  b: ServerTimestamp,
+): number {
+  if (a.seconds === b.seconds) {
+    return a.nanoseconds - b.nanoseconds;
+  } else {
+    return a.seconds - b.seconds;
+  }
+}
