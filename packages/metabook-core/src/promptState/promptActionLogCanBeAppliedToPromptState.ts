@@ -1,15 +1,15 @@
 import { ActionLogID } from "../actionLogID";
 import {
-  ActionLog,
   ingestActionLogType,
   repetitionActionLogType,
   rescheduleActionLogType,
   updateMetadataActionLogType,
 } from "../types/actionLog";
+import { PromptActionLog } from "../types/promptActionLog";
 import { PromptState } from "./promptState";
 
-export default function actionLogCanBeAppliedToPromptState(
-  actionLog: ActionLog,
+export default function promptActionLogCanBeAppliedToPromptState(
+  actionLog: PromptActionLog,
   promptState: PromptState | null,
 ): boolean {
   switch (actionLog.actionLogType) {

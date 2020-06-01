@@ -3,6 +3,7 @@ import {
   basicPromptType,
   getIDForPrompt,
   getIDForPromptTask,
+  PromptActionLog,
   PromptRepetitionOutcome,
   PromptTask,
   repetitionActionLogType,
@@ -13,7 +14,7 @@ import {
   ServerTimestamp,
 } from "metabook-firebase-support";
 import { testBasicPrompt } from "metabook-sample-data";
-import applyActionLogToPromptStateCache from "./applyActionLogToPromptStateCache";
+import applyPromptActionLogToPromptStateCache from "./applyPromptActionLogToPromptStateCache";
 
 const basicPromptID = getIDForPrompt(testBasicPrompt);
 const promptTask: PromptTask = {
@@ -44,30 +45,37 @@ describe("timestamps", () => {
     seconds: 1000,
     nanoseconds: 0,
   });
-  const promptState = applyActionLogToPromptStateCache(
-    firstRepetition,
-    null,
-  ) as PromptStateCache;
 
-  test("updates to newer timestamp", () => {
-    const newPromptState = applyActionLogToPromptStateCache(
-      createRepetitionLog([], {
+  let initialPromptState: PromptStateCache;
+  beforeAll(async () => {
+    initialPromptState = (await applyPromptActionLogToPromptStateCache({
+      actionLogDocument: firstRepetition,
+      basePromptStateCache: null,
+      fetchAllActionLogDocumentsForTask: jest.fn(),
+    })) as PromptStateCache;
+  });
+
+  test("updates to newer timestamp", async () => {
+    const newPromptState = (await applyPromptActionLogToPromptStateCache({
+      actionLogDocument: createRepetitionLog([], {
         seconds: 2000,
         nanoseconds: 0,
       }),
-      promptState,
-    ) as PromptStateCache;
+      basePromptStateCache: initialPromptState,
+      fetchAllActionLogDocumentsForTask: jest.fn(),
+    })) as PromptStateCache;
     expect(newPromptState.latestLogServerTimestamp.seconds).toEqual(2000);
   });
 
-  test("doesn't update for older timestamps", () => {
-    const newPromptState = applyActionLogToPromptStateCache(
-      createRepetitionLog([], {
+  test("doesn't update for older timestamps", async () => {
+    const newPromptState = (await applyPromptActionLogToPromptStateCache({
+      actionLogDocument: createRepetitionLog([], {
         seconds: 500,
         nanoseconds: 0,
       }),
-      promptState,
-    ) as PromptStateCache;
+      basePromptStateCache: initialPromptState,
+      fetchAllActionLogDocumentsForTask: jest.fn(),
+    })) as PromptStateCache;
     expect(newPromptState.latestLogServerTimestamp.seconds).toEqual(1000);
   });
 });

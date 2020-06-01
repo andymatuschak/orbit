@@ -48,7 +48,9 @@ export type PromptUpdateMetadataActionLog = UpdateMetadataActionLog & {
   updates: Partial<PromptTaskMetadata>;
 };
 
-export type PromptActionLog<P extends PromptTaskParameters> =
+export type PromptActionLog<
+  P extends PromptTaskParameters = PromptTaskParameters
+> =
   | PromptIngestActionLog
   | PromptRepetitionActionLog<P>
   | PromptRescheduleActionLog

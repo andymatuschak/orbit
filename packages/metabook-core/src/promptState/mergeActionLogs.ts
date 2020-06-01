@@ -4,9 +4,7 @@ import {
   repetitionActionLogType,
 } from "../types/actionLog";
 import { PromptActionLog } from "../types/promptActionLog";
-import { PromptTaskParameters } from "../types/promptTaskParameters";
 import applyActionLogToPromptState from "./applyActionLogToPromptState";
-import promptActionLogCanBeAppliedToPromptState from "./promptActionLogCanBeAppliedToPromptState";
 import { PromptState } from "./promptState";
 
 class ActionLogMergeError extends Error {
@@ -27,7 +25,7 @@ enum ActionLogMergeErrorType {
 
 export default function mergeActionLogs(
   entries: Iterable<{
-    log: PromptActionLog<PromptTaskParameters>;
+    log: PromptActionLog;
     id: ActionLogID;
   }>,
   basePromptState: PromptState | null,
@@ -50,7 +48,7 @@ export default function mergeActionLogs(
         ActionLogMergeErrorType.DisconnectedBasePromptState,
         `base prompt state disconnected; unknown log IDs ${missingBasePromptHeadLogIDs.join(
           ", ",
-        )}`,
+        )}. Have log IDs: ${[...actionLogIDs].join(", ")}`,
       );
     }
   }

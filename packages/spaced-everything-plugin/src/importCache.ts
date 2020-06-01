@@ -7,7 +7,7 @@ import {
   PromptProvenanceType,
 } from "metabook-core";
 import {
-  compareServerTimestamps,
+  maxServerTimestamp,
   PromptStateCache,
   ServerTimestamp,
 } from "metabook-firebase-support";
@@ -52,9 +52,9 @@ const latestServerTimestampKey = "latestServerTimestamp";
 
 export default class SpacedEverythingImportCache {
   private db: LevelUp;
-  private promptsByID: LevelUp;
-  private notesByID: LevelUp;
-  private ITPromptByNoteID: LevelUp;
+  private promptsByID: LevelUp; // store of actual prompt contents (formatted as incremental-thinking Prompts), indexed by Orbit IDs
+  private notesByID: LevelUp; // store of per-note metadata, indexed by external note ID
+  private ITPromptByNoteID: LevelUp; // store of actual prompt contents (formatted as incremental-thinking Prompts), indexed by CST IDs
 
   constructor(db: LevelUp) {
     this.db = db;
@@ -103,7 +103,7 @@ export default class SpacedEverythingImportCache {
   async storePromptStateCaches(
     entries: { promptStateCache: PromptStateCache; ITPrompt: IT.Prompt }[],
   ): Promise<void> {
-    const promptBatch = this.ITPromptByNoteID.batch();
+    const promptByNoteIDBatch = this.ITPromptByNoteID.batch();
     const noteBatch = this.notesByID.batch();
     const noteMap = new Map<string, CachedNoteMetadata>();
 
@@ -128,19 +128,19 @@ export default class SpacedEverythingImportCache {
           `Skipping prompt state with invalid prompt task ID ${promptStateCache.taskID}`,
         );
       } else {
-        latestServerTimestamp =
-          compareServerTimestamps(
-            latestServerTimestamp,
-            promptStateCache.latestLogServerTimestamp,
-          ) < 0
-            ? promptStateCache.latestLogServerTimestamp
-            : latestServerTimestamp;
+        latestServerTimestamp = maxServerTimestamp(
+          latestServerTimestamp,
+          promptStateCache.latestLogServerTimestamp,
+        );
 
         const existingNoteMetadata = noteMap.get(provenance.externalID);
         const CSTID = notePrompts.getIDForPrompt(ITPrompt);
         const promptsByNoteIDKey = getPromptKey(provenance.externalID, CSTID);
-        if (!promptStateCache.taskMetadata.isDeleted || !existingNoteMetadata) {
-          promptBatch.put(promptsByNoteIDKey, JSON.stringify(ITPrompt));
+        if (promptStateCache.taskMetadata.isDeleted) {
+          promptByNoteIDBatch.del(promptsByNoteIDKey);
+          noteBatch.del(provenance.externalID);
+        } else {
+          promptByNoteIDBatch.put(promptsByNoteIDKey, JSON.stringify(ITPrompt));
           if (
             !existingNoteMetadata ||
             existingNoteMetadata.modificationTimestamp <
@@ -153,9 +153,6 @@ export default class SpacedEverythingImportCache {
               headActionLogIDs: promptStateCache.headActionLogIDs,
             });
           }
-        } else {
-          promptBatch.del(promptsByNoteIDKey);
-          noteBatch.del(provenance.externalID);
         }
       }
     }
@@ -168,7 +165,7 @@ export default class SpacedEverythingImportCache {
       );
     }
 
-    await promptBatch.write();
+    await promptByNoteIDBatch.write();
 
     const existingNoteMetadataByID = await Promise.all(
       [...noteMap.keys()].map(

@@ -25,3 +25,10 @@ export function compareServerTimestamps(
     return a.seconds - b.seconds;
   }
 }
+
+export function maxServerTimestamp(
+  a: ServerTimestamp,
+  b: ServerTimestamp,
+): ServerTimestamp {
+  return compareServerTimestamps(a, b) < 0 ? b : a;
+}

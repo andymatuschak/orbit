@@ -165,6 +165,7 @@ async function getTaskRecordForPath(
 
     case 2:
       // Prompt or Cloze block.
+      // TODO: don't look up by note ID here, to find multiply-included prompts
       const prompt = await importCache.getPromptByCSTPromptID(path[0], path[1]);
       if (prompt) {
         const cachedNoteData = await importCache.getNoteMetadata(path[0]);
@@ -291,7 +292,6 @@ export async function getUpdatesForTaskCacheChange(
 ): Promise<{ logs: ActionLog[]; prompts: Prompt[] }> {
   const path = change.path;
   let log = `${change.path}: ${change.type}`;
-  function addNoteDataToLog(noteData: notePrompts.PromptTaskNoteData) {}
 
   if (path.length === 1) {
     if (
@@ -309,9 +309,11 @@ export async function getUpdatesForTaskCacheChange(
         const newNoteData = change.record.value;
         log += `\n\tOld metadata: ${noteMetadata?.metadata.title} :: ${noteMetadata?.metadata.URL}`;
         log += `\n\tNew metadata: ${newNoteData.noteTitle} :: ${newNoteData.externalNoteID?.type}/${newNoteData.externalNoteID?.id}/${newNoteData.externalNoteID?.openURL} :: ${newNoteData.modificationTimestamp}`;
+        // TODO implement metadata update
         console.log(log);
       }
     } else if (change.type === "delete") {
+      // TODO: don't delete multiply-included prompts
       const noteData = await importCache.getNoteMetadata(path[0]);
       if (noteData) {
         const updateLists = await Promise.all(
@@ -359,6 +361,7 @@ export async function getUpdatesForTaskCacheChange(
         }
       }
     } else if (change.type === "delete") {
+      // TODO: don't delete multiply-included prompts
       const ITPrompt = await importCache.getPromptByCSTPromptID(
         path[0],
         path[1],

@@ -1,5 +1,6 @@
 import * as firebase from "firebase-admin";
 import {
+  ActionLogID,
   Attachment,
   AttachmentID,
   getIDForAttachment,
@@ -11,11 +12,13 @@ import {
   ActionLogDocument,
   DataRecord,
   DataRecordID,
+  getActionLogIDForFirebaseKey,
+  getLogCollectionReference,
   getReferenceForDataRecordID,
   getTaskStateCacheReferenceForTaskID,
   PromptStateCache,
 } from "metabook-firebase-support";
-import applyActionLogToPromptStateCache from "./applyActionLogToPromptStateCache";
+import applyPromptActionLogToPromptStateCache from "./applyPromptActionLogToPromptStateCache";
 
 let _database: firebase.firestore.Firestore | null = null;
 function getDatabase(): firebase.firestore.Firestore {
@@ -81,25 +84,54 @@ export function recordAttachments(
 }
 
 export async function updatePromptStateCacheWithLog(
-  log: ActionLogDocument<firebase.firestore.Timestamp>,
+  actionLogDocument: ActionLogDocument<firebase.firestore.Timestamp>,
   userID: string,
 ) {
   const db = getDatabase();
   const promptStateCacheReference = getTaskStateCacheReferenceForTaskID(
     db,
     userID,
-    log.taskID,
+    actionLogDocument.taskID,
   );
   return db.runTransaction(async (transaction) => {
     const promptStateCacheSnapshot = await transaction.get(
       promptStateCacheReference,
     );
-    const newPromptStateCache = applyActionLogToPromptStateCache(
-      log,
-      (promptStateCacheSnapshot.data() as PromptStateCache) ?? null,
-    );
+
+    const basePromptStateCache =
+      (promptStateCacheSnapshot.data() as PromptStateCache) ?? null;
+
+    const newPromptStateCache = await applyPromptActionLogToPromptStateCache({
+      actionLogDocument,
+      basePromptStateCache,
+      fetchAllActionLogDocumentsForTask: async () => {
+        const logSnapshot = await getLogCollectionReference(db, userID)
+          .where("taskID", "==", actionLogDocument.taskID)
+          .get();
+        return logSnapshot.docs.map((doc) => {
+          const actionLogDocument = doc.data() as ActionLogDocument<
+            firebase.firestore.Timestamp
+          >;
+          return {
+            id: getActionLogIDForFirebaseKey(doc.id),
+            log: actionLogDocument,
+          };
+        });
+      },
+    });
+
     if (newPromptStateCache instanceof Error) {
-      console.error(newPromptStateCache);
+      throw new Error(
+        `Error applying log to prompt state: ${newPromptStateCache}.\nLog: ${JSON.stringify(
+          actionLogDocument,
+          null,
+          "\t",
+        )}\nBase prompt state: ${JSON.stringify(
+          basePromptStateCache,
+          null,
+          "\t",
+        )}`,
+      );
     } else {
       transaction.set(promptStateCacheReference, newPromptStateCache);
     }
