@@ -9,6 +9,7 @@ import {
   PromptField,
   PromptProvenanceType,
 } from "metabook-core";
+import { getOrbitPromptForITPrompt } from "orbit-spaced-everything-plugin";
 import { Note, splitAnkiDBNoteFields } from "./ankiPkg";
 import { AnkiAttachmentReference } from "./ankiPkg/ankiAttachmentReference";
 import parseAnkiField from "./ankiPkg/parseAnkiField";
@@ -111,14 +112,8 @@ export function mapNoteToPrompt(
       };
 
     case ModelMappingType.SpacedEverythingQA:
-      // TODO: should draw q/a from original prompt JSON
       return {
-        prompt: {
-          question: transformAnkiField(fields[0]),
-          answer: transformAnkiField(fields[1]),
-          explanation: null,
-          promptType: basicPromptType,
-        },
+        prompt: getOrbitPromptForITPrompt(JSON.parse(fields[6])),
         issues: [],
         provenance: getNotePromptProvenanceFromNoteDataField(
           JSON.parse(fields[5]) as SpacedEverything.NoteDataField,
@@ -126,10 +121,9 @@ export function mapNoteToPrompt(
       };
 
     case ModelMappingType.SpacedEverythingCloze:
-      // TODO: should draw body from original markdown instead
       return {
         prompt: {
-          body: transformAnkiField(fields[0]),
+          body: { contents: fields[2], attachments: [] },
           promptType: clozePromptType,
         },
         issues: [],
