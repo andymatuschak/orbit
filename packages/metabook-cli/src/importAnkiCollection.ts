@@ -88,7 +88,7 @@ class ImportAnkiCollection extends Command {
           ),
           {
             ...log,
-            suppressTaskStateCacheUpdate: true,
+            // TODO reenable suppressTaskStateCacheUpdate. Would have to construct prompt state caches with correct timestamps, which is a bit tricky here...
             serverTimestamp: firebase.firestore.FieldValue.serverTimestamp() as firebase.firestore.Timestamp,
           } as ActionLogDocument<firebase.firestore.Timestamp>,
         ]),
@@ -96,20 +96,6 @@ class ImportAnkiCollection extends Command {
         (ms, ns) => new firebase.firestore.Timestamp(ms, ns),
       );
       console.log("Recorded logs.");
-
-      const adminApp = getAdminApp();
-      const adminDB = adminApp.firestore();
-      await batchWriteEntries(
-        plan.promptStateCaches.map(({ taskID, promptState }) => [
-          getTaskStateCacheReferenceForTaskID(adminDB, flags.userID, taskID),
-          {
-            taskID,
-            ...promptState,
-          } as PromptStateCache,
-        ]),
-        adminDB,
-        (ms, ns) => new admin.firestore.Timestamp(ms, ns),
-      );
 
       await firebase.firestore().terminate();
       console.log("Done.");
