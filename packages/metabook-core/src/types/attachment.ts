@@ -9,6 +9,7 @@ export interface Attachment {
 export enum AttachmentMimeType {
   PNG = "image/png",
   JPEG = "image/jpeg",
+  SVG = "image/svg+xml",
 }
 
 // An intentionally quick and dirty mime type extractor: the libraries which map extensions to mime types are several kB.
@@ -23,6 +24,8 @@ export function getAttachmentMimeTypeForFilename(
     uppercaseFilename.endsWith(".JPEG")
   ) {
     return AttachmentMimeType.JPEG;
+  } else if (uppercaseFilename.endsWith(".SVG")) {
+    return AttachmentMimeType.SVG;
   } else {
     return null;
   }
@@ -36,6 +39,8 @@ export function getFileExtensionForAttachmentMimeType(
       return "jpg";
     case AttachmentMimeType.PNG:
       return "png";
+    case AttachmentMimeType.SVG:
+      return "svg";
     default:
       return null;
   }
