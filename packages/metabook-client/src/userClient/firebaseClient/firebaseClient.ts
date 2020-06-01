@@ -32,24 +32,22 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
 
   async getPromptStates(query?: PromptStateQuery): Promise<PromptStateCache[]> {
     const output: PromptStateCache[] = [];
-    const baseRef = getTaskStateCacheCollectionReference(
+    let ref = getTaskStateCacheCollectionReference(
       this.database,
       this.userID,
     ).limit(1000) as firebase.firestore.Query<PromptStateCache>;
-    let ref = baseRef.orderBy("dueTimestampMillis", "asc");
 
     if (query) {
       if ("dueBeforeTimestampMillis" in query) {
-        ref = ref.where(
-          "dueTimestampMillis",
-          "<=",
-          query.dueBeforeTimestampMillis,
-        );
+        ref = ref
+          .orderBy("dueTimestampMillis", "asc")
+          .where("dueTimestampMillis", "<=", query.dueBeforeTimestampMillis);
       } else if ("provenanceType" in query) {
+        ref = ref.orderBy("latestLogServerTimestamp", "asc");
         if (query.updatedAfterServerTimestamp) {
-          ref = baseRef.where(
+          ref = ref.where(
             "latestLogServerTimestamp",
-            ">=",
+            ">",
             new firebase.firestore.Timestamp(
               query.updatedAfterServerTimestamp.seconds,
               query.updatedAfterServerTimestamp.nanoseconds,

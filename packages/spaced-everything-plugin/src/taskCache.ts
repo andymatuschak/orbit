@@ -165,8 +165,7 @@ async function getTaskRecordForPath(
 
     case 2:
       // Prompt or Cloze block.
-      // TODO: don't look up by note ID here, to find multiply-included prompts
-      const prompt = await importCache.getPromptByCSTPromptID(path[0], path[1]);
+      const prompt = await importCache.getPromptByCSTPromptID(path[1]);
       if (prompt) {
         const cachedNoteData = await importCache.getNoteMetadata(path[0]);
         if (cachedNoteData) {
@@ -339,44 +338,50 @@ export async function getUpdatesForTaskCacheChange(
       }
     }
   } else if (path.length === 2) {
+    const existingITPrompt = await importCache.getPromptByCSTPromptID(path[1]);
     if (change.type === "insert") {
       const value = change.record.value;
       if (
         (change.record.type === "task" && value.type === "qaPrompt") ||
         value.type === "clozeBlock"
       ) {
-        const provenance = getProvenanceForNoteData(value.noteData);
-        if (provenance) {
-          const orbitPrompt = getOrbitPromptForITPrompt(value.prompt);
-          return {
-            logs: mapTasksInPrompt(value.prompt, orbitPrompt, (taskID) =>
-              createIngestionLog(taskID, provenance, timestampMillis),
-            ),
-            prompts: [orbitPrompt],
-          };
+        if (existingITPrompt) {
+          // The prompt might exist in multiple notes, in which case we won't insert it again in the second place.
+          return { logs: [], prompts: [] };
         } else {
-          console.warn(
-            `Skipping ${path} ${value.noteData.noteTitle} because its metadata is invalid`,
-          );
+          const provenance = getProvenanceForNoteData(value.noteData);
+          if (provenance) {
+            const orbitPrompt = getOrbitPromptForITPrompt(value.prompt);
+            return {
+              logs: mapTasksInPrompt(value.prompt, orbitPrompt, (taskID) =>
+                createIngestionLog(taskID, provenance, timestampMillis),
+              ),
+              prompts: [orbitPrompt],
+            };
+          } else {
+            console.warn(
+              `Skipping ${path} ${value.noteData.noteTitle} because its metadata is invalid`,
+            );
+          }
         }
       }
     } else if (change.type === "delete") {
       // TODO: don't delete multiply-included prompts
-      const ITPrompt = await importCache.getPromptByCSTPromptID(
-        path[0],
-        path[1],
-      );
       const noteMetadata = await importCache.getNoteMetadata(path[0]);
-      if (ITPrompt && noteMetadata) {
-        const orbitPrompt = getOrbitPromptForITPrompt(ITPrompt);
+      if (existingITPrompt && noteMetadata) {
+        const orbitPrompt = getOrbitPromptForITPrompt(existingITPrompt);
         return {
-          logs: mapTasksInPrompt(ITPrompt, orbitPrompt, (promptTaskID) => ({
-            actionLogType: updateMetadataActionLogType,
-            updates: { isDeleted: true },
-            taskID: promptTaskID,
-            timestampMillis,
-            parentActionLogIDs: noteMetadata.metadata.headActionLogIDs,
-          })),
+          logs: mapTasksInPrompt(
+            existingITPrompt,
+            orbitPrompt,
+            (promptTaskID) => ({
+              actionLogType: updateMetadataActionLogType,
+              updates: { isDeleted: true },
+              taskID: promptTaskID,
+              timestampMillis,
+              parentActionLogIDs: noteMetadata.metadata.headActionLogIDs,
+            }),
+          ),
           prompts: [],
         };
       } else {
@@ -388,7 +393,8 @@ export async function getUpdatesForTaskCacheChange(
       log += `\n\tUPDATE SHOULD NOT BE POSSIBLE`;
       console.error(log);
     } else if (change.type === "move") {
-      console.log(`MOVE: ${JSON.stringify(change, null, "\t")}`);
+      // TODO implement move...
+      console.log(`UNIMPLEMENTED MOVE: ${JSON.stringify(change, null, "\t")}`);
     } else {
       throw unreachableCaseError(change);
     }

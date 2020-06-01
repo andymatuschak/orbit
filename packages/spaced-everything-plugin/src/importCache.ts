@@ -52,13 +52,15 @@ const latestServerTimestampKey = "latestServerTimestamp";
 
 export default class SpacedEverythingImportCache {
   private db: LevelUp;
-  private promptsByID: LevelUp; // store of actual prompt contents (formatted as incremental-thinking Prompts), indexed by Orbit IDs
+  private promptsByOrbitID: LevelUp; // store of actual prompt contents (formatted as incremental-thinking Prompts), indexed by Orbit prompt IDs
+  private orbitIDsByCSTID: LevelUp; // mapping of CST IDs to Orbit prompt IDs
   private notesByID: LevelUp; // store of per-note metadata, indexed by external note ID
   private ITPromptByNoteID: LevelUp; // store of actual prompt contents (formatted as incremental-thinking Prompts), indexed by CST IDs
 
   constructor(db: LevelUp) {
     this.db = db;
-    this.promptsByID = subleveldown(db, "promptMapping");
+    this.promptsByOrbitID = subleveldown(db, "promptsByOrbitID");
+    this.orbitIDsByCSTID = subleveldown(db, "orbitIDsByCSTID");
     this.notesByID = subleveldown(db, "notesByID");
     this.ITPromptByNoteID = subleveldown(db, "ITPromptByNoteID");
   }
@@ -68,7 +70,7 @@ export default class SpacedEverythingImportCache {
   }
 
   async storePrompts(entries: { promptID: PromptID; ITPrompt: IT.Prompt }[]) {
-    await this.promptsByID.batch(
+    await this.promptsByOrbitID.batch(
       entries.map(({ promptID, ITPrompt }) => ({
         type: "put",
         key: promptID,
@@ -78,7 +80,10 @@ export default class SpacedEverythingImportCache {
   }
 
   async getPromptByID(promptID: PromptID): Promise<IT.Prompt | null> {
-    const result = await getJSONRecord<IT.Prompt>(this.promptsByID, promptID);
+    const result = await getJSONRecord<IT.Prompt>(
+      this.promptsByOrbitID,
+      promptID,
+    );
     return result?.record ?? null;
   }
 
@@ -103,8 +108,9 @@ export default class SpacedEverythingImportCache {
   async storePromptStateCaches(
     entries: { promptStateCache: PromptStateCache; ITPrompt: IT.Prompt }[],
   ): Promise<void> {
-    const promptByNoteIDBatch = this.ITPromptByNoteID.batch();
-    const noteBatch = this.notesByID.batch();
+    const ITPromptByNoteIDBatch = this.ITPromptByNoteID.batch();
+    const orbitPromptIDsByCSTIDBatch = this.orbitIDsByCSTID.batch();
+    const notesByIDBatch = this.notesByID.batch();
     const noteMap = new Map<string, CachedNoteMetadata>();
 
     let latestServerTimestamp = (await this.getLatestServerTimestamp()) ?? {
@@ -137,10 +143,15 @@ export default class SpacedEverythingImportCache {
         const CSTID = notePrompts.getIDForPrompt(ITPrompt);
         const promptsByNoteIDKey = getPromptKey(provenance.externalID, CSTID);
         if (promptStateCache.taskMetadata.isDeleted) {
-          promptByNoteIDBatch.del(promptsByNoteIDKey);
-          noteBatch.del(provenance.externalID);
+          ITPromptByNoteIDBatch.del(promptsByNoteIDKey);
+          orbitPromptIDsByCSTIDBatch.del(CSTID);
+          notesByIDBatch.del(provenance.externalID);
         } else {
-          promptByNoteIDBatch.put(promptsByNoteIDKey, JSON.stringify(ITPrompt));
+          ITPromptByNoteIDBatch.put(
+            promptsByNoteIDKey,
+            JSON.stringify(ITPrompt),
+          );
+          orbitPromptIDsByCSTIDBatch.put(CSTID, promptTask.promptID);
           if (
             !existingNoteMetadata ||
             existingNoteMetadata.modificationTimestamp <
@@ -157,15 +168,19 @@ export default class SpacedEverythingImportCache {
       }
     }
 
+    const writePromises: Promise<unknown>[] = [];
+    writePromises.push(ITPromptByNoteIDBatch.write());
+    writePromises.push(orbitPromptIDsByCSTIDBatch.write());
+
     if (latestServerTimestamp.seconds !== 0) {
-      await saveJSONRecord(
-        this.db,
-        latestServerTimestampKey,
-        latestServerTimestamp,
+      writePromises.push(
+        saveJSONRecord(
+          this.db,
+          latestServerTimestampKey,
+          latestServerTimestamp,
+        ),
       );
     }
-
-    await promptByNoteIDBatch.write();
 
     const existingNoteMetadataByID = await Promise.all(
       [...noteMap.keys()].map(
@@ -182,10 +197,10 @@ export default class SpacedEverythingImportCache {
         existingCachedMetadata.modificationTimestamp <
           newNoteMetadata.modificationTimestamp
       ) {
-        noteBatch.put(noteID, JSON.stringify(newNoteMetadata));
+        notesByIDBatch.put(noteID, JSON.stringify(newNoteMetadata));
       }
     }
-    await noteBatch.write();
+    writePromises.push(notesByIDBatch.write());
   }
 
   async getNoteIDs(): Promise<string[]> {
@@ -217,12 +232,15 @@ export default class SpacedEverythingImportCache {
     }
   }
 
-  async getPromptByCSTPromptID(
-    noteID: string,
-    CSTPromptID: string,
-  ): Promise<IT.Prompt | null> {
-    const key = getPromptKey(noteID, CSTPromptID);
-    const result = await getJSONRecord<IT.Prompt>(this.ITPromptByNoteID, key);
-    return result?.record ?? null;
+  async getPromptByCSTPromptID(CSTPromptID: string): Promise<IT.Prompt | null> {
+    const orbitPromptID: PromptID | null = await this.orbitIDsByCSTID
+      .get(CSTPromptID)
+      .catch((error) => (error.notFound ? null : Promise.reject(error)));
+    if (orbitPromptID) {
+      const ITPrompt = await this.getPromptByID(orbitPromptID);
+      return ITPrompt;
+    } else {
+      return null;
+    }
   }
 }

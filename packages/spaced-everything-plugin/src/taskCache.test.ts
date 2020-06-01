@@ -127,10 +127,7 @@ describe("getUpdatesForTaskCacheChange", () => {
     expect(prompts).toHaveLength(0);
     expect(logs).toHaveLength(10);
     expect(mock.getPromptByCSTPromptID).toHaveBeenCalledTimes(2);
-    expect(mock.getPromptByCSTPromptID).toHaveBeenLastCalledWith(
-      "container",
-      "childB",
-    );
+    expect(mock.getPromptByCSTPromptID).toHaveBeenLastCalledWith("childB");
     expect(logs[0]).toMatchObject({
       actionLogType: updateMetadataActionLogType,
       updates: { isDeleted: true },
