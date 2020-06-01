@@ -29,7 +29,6 @@
     "babel-jest": "^26.0.1",
     "babel-loader": "^8.1.0",
     "jest": "^26.0.1",
-    "metabook-firebase-support": "0.0.1",
     "ts-loader": "^7.0.2",
     "typescript": "^3.8.3",
     "webpack": "4.42.0",
