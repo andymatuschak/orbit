@@ -38,9 +38,13 @@ async function initializeImportCache(
   importCache: SpacedEverythingImportCache,
   dataClient: MetabookDataClient,
 ) {
-  console.log("Fetching prompt states");
+  const latestServerTimestamp = await importCache.getLatestServerTimestamp();
+  console.log(
+    `Fetching prompt states after ${latestServerTimestamp?.seconds}.${latestServerTimestamp?.nanoseconds}`,
+  );
   const promptStates = await userClient.getPromptStates({
     provenanceType: PromptProvenanceType.Note,
+    updatedAfterServerTimestamp: latestServerTimestamp ?? undefined,
   });
   console.log(`Fetched ${promptStates.length} prompt states`);
   const promptStatesToStore: {
@@ -287,9 +291,7 @@ export async function getUpdatesForTaskCacheChange(
 ): Promise<{ logs: ActionLog[]; prompts: Prompt[] }> {
   const path = change.path;
   let log = `${change.path}: ${change.type}`;
-  function addNoteDataToLog(noteData: notePrompts.PromptTaskNoteData) {
-    log += `\n\t${noteData.noteTitle} :: ${noteData.externalNoteID?.type}/${noteData.externalNoteID?.id}/${noteData.externalNoteID?.openURL} :: ${noteData.modificationTimestamp}`;
-  }
+  function addNoteDataToLog(noteData: notePrompts.PromptTaskNoteData) {}
 
   if (path.length === 1) {
     if (
@@ -297,9 +299,18 @@ export async function getUpdatesForTaskCacheChange(
       change.record.type === "collection" &&
       change.record.value.type === "note"
     ) {
-      // TODO: Implement note metadata update
-      addNoteDataToLog(change.record.value);
-      console.log(log);
+      // Should we bother to update?
+      const noteMetadata = await importCache.getNoteMetadata(path[0]);
+      if (
+        noteMetadata?.metadata.title !== change.record.value.noteTitle ||
+        noteMetadata?.metadata.URL !==
+          change.record.value.externalNoteID?.openURL
+      ) {
+        const newNoteData = change.record.value;
+        log += `\n\tOld metadata: ${noteMetadata?.metadata.title} :: ${noteMetadata?.metadata.URL}`;
+        log += `\n\tNew metadata: ${newNoteData.noteTitle} :: ${newNoteData.externalNoteID?.type}/${newNoteData.externalNoteID?.id}/${newNoteData.externalNoteID?.openURL} :: ${newNoteData.modificationTimestamp}`;
+        console.log(log);
+      }
     } else if (change.type === "delete") {
       const noteData = await importCache.getNoteMetadata(path[0]);
       if (noteData) {
@@ -373,6 +384,10 @@ export async function getUpdatesForTaskCacheChange(
     } else if (change.type === "update") {
       log += `\n\tUPDATE SHOULD NOT BE POSSIBLE`;
       console.error(log);
+    } else if (change.type === "move") {
+      console.log(`MOVE: ${JSON.stringify(change, null, "\t")}`);
+    } else {
+      throw unreachableCaseError(change);
     }
   }
 

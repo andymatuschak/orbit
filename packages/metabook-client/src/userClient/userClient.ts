@@ -14,6 +14,7 @@ export type PromptStateQuery =
     }
   | {
       provenanceType: PromptProvenanceType;
+      updatedAfterServerTimestamp?: ServerTimestamp;
     };
 
 export interface MetabookUserClient {

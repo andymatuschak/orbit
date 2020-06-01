@@ -32,11 +32,11 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
 
   async getPromptStates(query?: PromptStateQuery): Promise<PromptStateCache[]> {
     const output: PromptStateCache[] = [];
-    let ref = getTaskStateCacheCollectionReference(this.database, this.userID)
-      .limit(1000)
-      .orderBy("dueTimestampMillis", "asc") as firebase.firestore.Query<
-      PromptStateCache
-    >;
+    const baseRef = getTaskStateCacheCollectionReference(
+      this.database,
+      this.userID,
+    ).limit(1000) as firebase.firestore.Query<PromptStateCache>;
+    let ref = baseRef.orderBy("dueTimestampMillis", "asc");
 
     if (query) {
       if ("dueBeforeTimestampMillis" in query) {
@@ -46,8 +46,18 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
           query.dueBeforeTimestampMillis,
         );
       } else if ("provenanceType" in query) {
+        if (query.updatedAfterServerTimestamp) {
+          ref = baseRef.where(
+            "latestLogServerTimestamp",
+            ">=",
+            new firebase.firestore.Timestamp(
+              query.updatedAfterServerTimestamp.seconds,
+              query.updatedAfterServerTimestamp.nanoseconds,
+            ),
+          );
+        }
         ref = ref.where(
-          "provenance.provenanceType",
+          "taskMetadata.provenance.provenanceType",
           "==",
           query.provenanceType,
         );
@@ -72,7 +82,11 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
       startAfter = snapshot.empty
         ? null
         : snapshot.docs[snapshot.docs.length - 1];
-      console.log(`Fetched ${output.length} prompt states`);
+      if (!snapshot.empty) {
+        console.log(
+          `Fetched ${snapshot.size} prompt states; ${output.length} total`,
+        );
+      }
     } while (startAfter !== null);
 
     return output;

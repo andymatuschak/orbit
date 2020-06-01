@@ -6,7 +6,11 @@ import {
   PromptID,
   PromptProvenanceType,
 } from "metabook-core";
-import { PromptStateCache } from "metabook-firebase-support";
+import {
+  compareServerTimestamps,
+  PromptStateCache,
+  ServerTimestamp,
+} from "metabook-firebase-support";
 import { notePrompts } from "spaced-everything";
 import subleveldown from "subleveldown";
 import drainIterator from "./util/drainIterator";
@@ -44,6 +48,8 @@ function getPromptKey(noteID: string, CSTPromptID: string) {
   return `${noteID}!${CSTPromptID}`;
 }
 
+const latestServerTimestampKey = "latestServerTimestamp";
+
 export default class SpacedEverythingImportCache {
   private db: LevelUp;
   private promptsByID: LevelUp;
@@ -76,6 +82,14 @@ export default class SpacedEverythingImportCache {
     return result?.record ?? null;
   }
 
+  async getLatestServerTimestamp(): Promise<ServerTimestamp | null> {
+    const result = await getJSONRecord<ServerTimestamp>(
+      this.db,
+      latestServerTimestampKey,
+    );
+    return result?.record ?? null;
+  }
+
   private async getNoteMetadataByID(
     noteID: string,
   ): Promise<CachedNoteMetadata | null> {
@@ -93,6 +107,11 @@ export default class SpacedEverythingImportCache {
     const noteBatch = this.notesByID.batch();
     const noteMap = new Map<string, CachedNoteMetadata>();
 
+    let latestServerTimestamp = (await this.getLatestServerTimestamp()) ?? {
+      seconds: 0,
+      nanoseconds: 0,
+    };
+
     for (const { promptStateCache, ITPrompt } of entries) {
       const { provenance } = promptStateCache.taskMetadata;
       if (provenance?.provenanceType !== PromptProvenanceType.Note) {
@@ -109,6 +128,14 @@ export default class SpacedEverythingImportCache {
           `Skipping prompt state with invalid prompt task ID ${promptStateCache.taskID}`,
         );
       } else {
+        latestServerTimestamp =
+          compareServerTimestamps(
+            latestServerTimestamp,
+            promptStateCache.latestLogServerTimestamp,
+          ) < 0
+            ? promptStateCache.latestLogServerTimestamp
+            : latestServerTimestamp;
+
         const existingNoteMetadata = noteMap.get(provenance.externalID);
         const CSTID = notePrompts.getIDForPrompt(ITPrompt);
         const promptsByNoteIDKey = getPromptKey(provenance.externalID, CSTID);
@@ -131,6 +158,14 @@ export default class SpacedEverythingImportCache {
           noteBatch.del(provenance.externalID);
         }
       }
+    }
+
+    if (latestServerTimestamp.seconds !== 0) {
+      await saveJSONRecord(
+        this.db,
+        latestServerTimestampKey,
+        latestServerTimestamp,
+      );
     }
 
     await promptBatch.write();
