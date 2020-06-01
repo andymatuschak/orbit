@@ -76,11 +76,8 @@ class Ingest extends Command {
       appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
     });
     const dataClient = new MetabookFirebaseDataClient(
-      app,
+      app.firestore(),
       app.functions(),
-      () => {
-        throw new Error("unimplemented");
-      },
     );
 
     const imageData = await fs.promises.readFile(
@@ -118,7 +115,10 @@ class Ingest extends Command {
     await dataClient.recordAttachments([imageAttachment]);
     console.log(`Recorded 1 attachment`);
 
-    const userClient = new MetabookFirebaseUserClient(app, flags.userID);
+    const userClient = new MetabookFirebaseUserClient(
+      app.firestore(),
+      flags.userID,
+    );
     const tasks = getTasksFromPrompts(specs);
     const now = Date.now();
     const actionLogs: PromptActionLog<PromptTaskParameters>[] = tasks.map(
