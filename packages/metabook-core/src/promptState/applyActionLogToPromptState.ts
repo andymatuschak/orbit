@@ -18,7 +18,7 @@ import {
   PromptRepetitionActionLog,
 } from "../types/promptActionLog";
 import { PromptProvenance } from "../types/promptProvenance";
-import { getPromptTaskForID } from "../types/promptTask";
+import { getPromptTaskForID, PromptTaskMetadata } from "../types/promptTask";
 import { PromptTaskParameters } from "../types/promptTaskParameters";
 import { PromptState } from "./promptState";
 
@@ -148,9 +148,20 @@ export default function applyActionLogToPromptState<
   switch (promptActionLog.actionLogType) {
     case ingestActionLogType:
       if (basePromptState) {
-        // Later ingests don't impact the state; we just fast-forward to include this log.
+        // Later ingests mostly don't impact the state; we just fast-forward to include this log.
+        let taskMetadata: PromptTaskMetadata;
+        if (basePromptState.taskMetadata.isDeleted) {
+          taskMetadata = {
+            ...basePromptState.taskMetadata,
+            isDeleted: false,
+            provenance: promptActionLog.provenance,
+          };
+        } else {
+          taskMetadata = basePromptState.taskMetadata;
+        }
         return {
           ...basePromptState,
+          taskMetadata,
           headActionLogIDs: updateBaseHeadActionLogIDs(
             basePromptState.headActionLogIDs,
             [],
