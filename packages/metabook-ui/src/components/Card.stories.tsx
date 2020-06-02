@@ -206,7 +206,7 @@ function createPromptState(
     lastReviewTaskParameters,
     lastReviewTimestampMillis: Date.now(),
     headActionLogIDs: [],
-    provenance: null,
+    taskMetadata: { isDeleted: false, provenance: null },
   };
 }
 
