@@ -14,6 +14,8 @@ const clozeITPrompt = getITPromptForOrbitPrompt(
 
 describe("getUpdatesForTaskCacheChange", () => {
   test("insert basic prompt", async () => {
+    const mock = {} as SpacedEverythingImportCache;
+    mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue(null);
     const { prompts, logs } = await getUpdatesForTaskCacheChange(
       {
         type: "insert",
@@ -36,7 +38,7 @@ describe("getUpdatesForTaskCacheChange", () => {
         path: ["container", "id"],
       },
       500,
-      {} as SpacedEverythingImportCache,
+      mock,
     );
 
     expect(prompts[0]).toMatchObject(simpleOrbitPrompt);
@@ -44,6 +46,8 @@ describe("getUpdatesForTaskCacheChange", () => {
   });
 
   test("insert cloze prompt", async () => {
+    const mock = {} as SpacedEverythingImportCache;
+    mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue(null);
     const { prompts, logs } = await getUpdatesForTaskCacheChange(
       {
         type: "insert",
@@ -69,7 +73,7 @@ describe("getUpdatesForTaskCacheChange", () => {
         path: ["container", "id"],
       },
       500,
-      {} as SpacedEverythingImportCache,
+      mock,
     );
 
     expect(prompts[0]).toMatchObject(testClozePrompt);
@@ -78,14 +82,10 @@ describe("getUpdatesForTaskCacheChange", () => {
 
   test("delete prompt", async () => {
     const mock = {} as SpacedEverythingImportCache;
-    mock.getPromptByCSTPromptID = jest
-      .fn()
-      .mockImplementation(() => clozeITPrompt);
-    mock.getNoteMetadata = jest.fn().mockImplementation(() => ({
-      metadata: {
-        headActionLogIDs: ["parent-log"],
-      },
-    }));
+    mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue({
+      ITPrompt: clozeITPrompt,
+      headActionLogIDs: ["parent-log"],
+    });
     const { prompts, logs } = await getUpdatesForTaskCacheChange(
       {
         type: "delete",
@@ -106,15 +106,14 @@ describe("getUpdatesForTaskCacheChange", () => {
 
   test("delete note", async () => {
     const mock = {} as SpacedEverythingImportCache;
-    mock.getPromptByCSTPromptID = jest
-      .fn()
-      .mockImplementation(() => clozeITPrompt);
-    mock.getNoteMetadata = jest.fn().mockImplementation(async () => ({
+    mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue({
+      ITPrompt: clozeITPrompt,
+      headActionLogIDs: ["parent-log"],
+    });
+    mock.getNoteMetadata = jest.fn().mockResolvedValue({
       childIDs: ["childA", "childB"],
-      metadata: {
-        headActionLogIDs: ["parent-log"],
-      },
-    }));
+      metadata: {},
+    });
     const { prompts, logs } = await getUpdatesForTaskCacheChange(
       {
         type: "delete",
@@ -126,8 +125,8 @@ describe("getUpdatesForTaskCacheChange", () => {
 
     expect(prompts).toHaveLength(0);
     expect(logs).toHaveLength(10);
-    expect(mock.getPromptByCSTPromptID).toHaveBeenCalledTimes(2);
-    expect(mock.getPromptByCSTPromptID).toHaveBeenLastCalledWith("childB");
+    expect(mock.getPromptRecordByCSTID).toHaveBeenCalledTimes(2);
+    expect(mock.getPromptRecordByCSTID).toHaveBeenLastCalledWith("childB");
     expect(logs[0]).toMatchObject({
       actionLogType: updateMetadataActionLogType,
       updates: { isDeleted: true },
@@ -135,5 +134,50 @@ describe("getUpdatesForTaskCacheChange", () => {
     expect(
       (logs[0] as PromptUpdateMetadataActionLog).parentActionLogIDs,
     ).toMatchObject(["parent-log"]);
+  });
+
+  test("update note metadata", async () => {
+    const mock = {} as SpacedEverythingImportCache;
+    mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue({
+      ITPrompt: clozeITPrompt,
+      headActionLogIDs: ["parent-log"],
+    });
+    mock.getNoteMetadata = jest.fn().mockResolvedValue({
+      childIDs: ["childA", "childB"],
+      metadata: {
+        title: "old-title",
+        modificationTimestamp: 0,
+        URL: "old-url",
+      },
+    });
+    const { prompts, logs } = await getUpdatesForTaskCacheChange(
+      {
+        type: "update",
+        path: ["container"],
+        record: {
+          type: "collection",
+          value: {
+            type: "note",
+            externalNoteID: {
+              type: "test-type",
+              openURL: "new-url",
+              id: "test-id",
+            },
+            noteTitle: "new-title",
+            modificationTimestamp: 1,
+          },
+          childIDs: new Set(["childA", "childB"]),
+        },
+      },
+      500,
+      (mock as unknown) as SpacedEverythingImportCache,
+    );
+
+    expect(prompts).toHaveLength(0);
+    expect(logs).toHaveLength(10);
+    const log = logs[0] as PromptUpdateMetadataActionLog;
+    expect(log.parentActionLogIDs).toMatchObject(["parent-log"]);
+    expect(log.updates.provenance!.title).toEqual("new-title");
+    expect(log.updates.provenance!.url).toEqual("new-url");
   });
 });

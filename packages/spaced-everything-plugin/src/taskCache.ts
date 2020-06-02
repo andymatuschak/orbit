@@ -50,10 +50,10 @@ async function initializeImportCache(
   const promptStatesToStore: {
     promptStateCache: PromptStateCache;
     ITPrompt: IT.Prompt;
+    promptID: PromptID;
   }[] = [];
 
   // Get prompt contents for all the prompts we have cached.
-  const promptMap = new Map<PromptID, IT.Prompt>();
   const missingPromptIDs = new Map<PromptID, PromptStateCache>();
   await Promise.all(
     promptStates.map(async (promptStateCache) => {
@@ -64,10 +64,9 @@ async function initializeImportCache(
         );
       } else {
         const promptID = promptTask.promptID;
-        const ITPrompt = await importCache.getPromptByID(promptID);
+        const ITPrompt = await importCache.getPromptByOrbitPromptID(promptID);
         if (ITPrompt) {
-          promptMap.set(promptID, ITPrompt);
-          promptStatesToStore.push({ promptStateCache, ITPrompt });
+          promptStatesToStore.push({ promptStateCache, ITPrompt, promptID });
         } else {
           missingPromptIDs.set(promptID, promptStateCache);
         }
@@ -81,19 +80,14 @@ async function initializeImportCache(
     const remotePromptMap = await dataClient.getPrompts(
       missingPromptIDs.keys(),
     );
-    const promptsToStore: {
-      promptID: PromptID;
-      ITPrompt: IT.Prompt;
-    }[] = [];
     for (const [promptID, prompt] of remotePromptMap) {
       if (prompt) {
         const ITPrompt = getITPromptForOrbitPrompt(prompt);
         if (ITPrompt) {
-          promptMap.set(promptID, ITPrompt);
-          promptsToStore.push({ promptID, ITPrompt });
           promptStatesToStore.push({
             promptStateCache: missingPromptIDs.get(promptID)!,
             ITPrompt,
+            promptID,
           });
         } else {
           console.log(
@@ -104,14 +98,11 @@ async function initializeImportCache(
         console.warn(`Couldn't find source record for prompt ID ${promptID}`);
       }
     }
-
-    // Now we can store the prompt states we received.
-    await importCache.storePrompts(promptsToStore);
-    console.log(`Stored ${promptsToStore.length} prompt states`);
   }
 
   // Now we can save the prompt states.
   importCache.storePromptStateCaches(promptStatesToStore);
+  console.log(`Stored ${promptStatesToStore.length} states`);
 }
 
 function approximatePromptTaskNoteData(
@@ -165,8 +156,9 @@ async function getTaskRecordForPath(
 
     case 2:
       // Prompt or Cloze block.
-      const prompt = await importCache.getPromptByCSTPromptID(path[1]);
-      if (prompt) {
+      const promptRecord = await importCache.getPromptRecordByCSTID(path[1]);
+      if (promptRecord) {
+        const prompt = promptRecord.ITPrompt;
         const cachedNoteData = await importCache.getNoteMetadata(path[0]);
         if (cachedNoteData) {
           const noteData = approximatePromptTaskNoteData(
@@ -281,6 +273,39 @@ function mapTasksInPrompt<R>(
   }
 }
 
+async function getChildUpdatesForPromptsInNote(
+  noteID: string,
+  change: taskCache.TaskCacheSessionChange<
+    NotePromptTask,
+    NotePromptTaskCollection
+  >,
+  timestampMillis: number,
+  importCache: SpacedEverythingImportCache,
+): Promise<{ logs: ActionLog[]; prompts: Prompt[] }> {
+  const noteData = await importCache.getNoteMetadata(noteID);
+  if (noteData) {
+    const updateLists = await Promise.all(
+      noteData.childIDs.map((childID) =>
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        getUpdatesForTaskCacheChange(
+          {
+            ...change,
+            path: [...change.path, childID],
+          },
+          timestampMillis,
+          importCache,
+        ),
+      ),
+    );
+    return {
+      prompts: [],
+      logs: flat(updateLists.map((update) => update.logs)),
+    };
+  } else {
+    throw new Error(`Unknown note ID: ${noteID}`);
+  }
+}
+
 export async function getUpdatesForTaskCacheChange(
   change: taskCache.TaskCacheSessionChange<
     NotePromptTask,
@@ -291,6 +316,7 @@ export async function getUpdatesForTaskCacheChange(
 ): Promise<{ logs: ActionLog[]; prompts: Prompt[] }> {
   const path = change.path;
   let log = `${change.path}: ${change.type}`;
+  const emptyResult = { logs: [], prompts: [] };
 
   if (path.length === 1) {
     if (
@@ -308,44 +334,43 @@ export async function getUpdatesForTaskCacheChange(
         const newNoteData = change.record.value;
         log += `\n\tOld metadata: ${noteMetadata?.metadata.title} :: ${noteMetadata?.metadata.URL}`;
         log += `\n\tNew metadata: ${newNoteData.noteTitle} :: ${newNoteData.externalNoteID?.type}/${newNoteData.externalNoteID?.id}/${newNoteData.externalNoteID?.openURL} :: ${newNoteData.modificationTimestamp}`;
-        // TODO implement metadata update
         console.log(log);
+        return getChildUpdatesForPromptsInNote(
+          path[0],
+          change,
+          timestampMillis,
+          importCache,
+        ).catch((error) => {
+          console.error(`Couldn't update note ${path[0]}: ${error}`);
+          return emptyResult;
+        });
       }
     } else if (change.type === "delete") {
       // TODO: don't delete multiply-included prompts
-      const noteData = await importCache.getNoteMetadata(path[0]);
-      if (noteData) {
-        const updateLists = await Promise.all(
-          noteData.childIDs.map((childID) =>
-            getUpdatesForTaskCacheChange(
-              {
-                ...change,
-                path: [...change.path, childID],
-              },
-              timestampMillis,
-              importCache,
-            ),
-          ),
-        );
-        return {
-          prompts: [],
-          logs: flat(updateLists.map((update) => update.logs)),
-        };
-      } else {
+      console.log(log);
+      return getChildUpdatesForPromptsInNote(
+        path[0],
+        change,
+        timestampMillis,
+        importCache,
+      ).catch(() => {
         console.error(
-          `Couldn't delete ${path} because no remote entry with that ID exists`,
+          `Couldn't delete note ${path[0]} because no remote entry with that ID exists`,
         );
-      }
+        return emptyResult;
+      });
     }
   } else if (path.length === 2) {
-    const existingITPrompt = await importCache.getPromptByCSTPromptID(path[1]);
+    const existingPromptRecord = await importCache.getPromptRecordByCSTID(
+      path[1],
+    );
     if (change.type === "insert") {
       const value = change.record.value;
       if (
         (change.record.type === "task" && value.type === "qaPrompt") ||
         value.type === "clozeBlock"
       ) {
-        if (existingITPrompt) {
+        if (existingPromptRecord) {
           // The prompt might exist in multiple notes, in which case we won't insert it again in the second place.
           return { logs: [], prompts: [] };
         } else {
@@ -366,20 +391,20 @@ export async function getUpdatesForTaskCacheChange(
         }
       }
     } else if (change.type === "delete") {
-      // TODO: don't delete multiply-included prompts
-      const noteMetadata = await importCache.getNoteMetadata(path[0]);
-      if (existingITPrompt && noteMetadata) {
-        const orbitPrompt = getOrbitPromptForITPrompt(existingITPrompt);
+      if (existingPromptRecord) {
+        const orbitPrompt = getOrbitPromptForITPrompt(
+          existingPromptRecord.ITPrompt,
+        );
         return {
           logs: mapTasksInPrompt(
-            existingITPrompt,
+            existingPromptRecord.ITPrompt,
             orbitPrompt,
             (promptTaskID) => ({
               actionLogType: updateMetadataActionLogType,
               updates: { isDeleted: true },
               taskID: promptTaskID,
               timestampMillis,
-              parentActionLogIDs: noteMetadata.metadata.headActionLogIDs,
+              parentActionLogIDs: existingPromptRecord.headActionLogIDs,
             }),
           ),
           prompts: [],
@@ -390,8 +415,39 @@ export async function getUpdatesForTaskCacheChange(
         );
       }
     } else if (change.type === "update") {
-      log += `\n\tUPDATE SHOULD NOT BE POSSIBLE`;
-      console.error(log);
+      const value = change.record.value;
+      // This is a bit of a hack: we handle note updates by recursing down to the children.
+      if (value.type === "note") {
+        if (existingPromptRecord) {
+          const orbitPrompt = getOrbitPromptForITPrompt(
+            existingPromptRecord.ITPrompt,
+          );
+          return {
+            logs: mapTasksInPrompt(
+              existingPromptRecord.ITPrompt,
+              orbitPrompt,
+              (promptTaskID) => ({
+                actionLogType: updateMetadataActionLogType,
+                updates: {
+                  provenance: getProvenanceForNoteData(value),
+                },
+                taskID: promptTaskID,
+                timestampMillis,
+                parentActionLogIDs: existingPromptRecord.headActionLogIDs,
+              }),
+            ),
+            prompts: [],
+          };
+        } else {
+          console.error(
+            `Couldn't update ${path}: no remote entry exists at that path`,
+          );
+        }
+      } else {
+        console.error(
+          `Unexpected update: ${JSON.stringify(change, null, "\t")}`,
+        );
+      }
     } else if (change.type === "move") {
       // TODO implement move...
       console.log(`UNIMPLEMENTED MOVE: ${JSON.stringify(change, null, "\t")}`);
@@ -400,7 +456,7 @@ export async function getUpdatesForTaskCacheChange(
     }
   }
 
-  return { logs: [], prompts: [] };
+  return emptyResult;
 }
 
 export function createTaskCache(

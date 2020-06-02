@@ -41,50 +41,56 @@ export interface CachedNoteMetadata {
   title: string;
   modificationTimestamp: number;
   URL: string | null;
-  headActionLogIDs: ActionLogID[];
 }
 
-function getPromptKey(noteID: string, CSTPromptID: string) {
-  return `${noteID}!${CSTPromptID}`;
+export interface CachedPromptRecord {
+  headActionLogIDs: ActionLogID[];
+  ITPrompt: IT.Prompt;
 }
 
 const latestServerTimestampKey = "latestServerTimestamp";
 
 export default class SpacedEverythingImportCache {
   private db: LevelUp;
-  private promptsByOrbitID: LevelUp; // store of actual prompt contents (formatted as incremental-thinking Prompts), indexed by Orbit prompt IDs
-  private orbitIDsByCSTID: LevelUp; // mapping of CST IDs to Orbit prompt IDs
-  private notesByID: LevelUp; // store of per-note metadata, indexed by external note ID
-  private ITPromptByNoteID: LevelUp; // store of actual prompt contents (formatted as incremental-thinking Prompts), indexed by CST IDs
+  private promptRecordsByCSTID: LevelUp; // store of CachedPromptRecords indexed by CST ID
+  private CSTIDsByOrbitID: LevelUp; // mapping of Orbit prompt IDs to CST IDs
+  private noteMetadataByNoteID: LevelUp; // store of per-note metadata, indexed by external note ID
+  private CSTIDsByNoteID: LevelUp; // index of CSTIDs by note ID
 
   constructor(db: LevelUp) {
     this.db = db;
-    this.promptsByOrbitID = subleveldown(db, "promptsByOrbitID");
-    this.orbitIDsByCSTID = subleveldown(db, "orbitIDsByCSTID");
-    this.notesByID = subleveldown(db, "notesByID");
-    this.ITPromptByNoteID = subleveldown(db, "ITPromptByNoteID");
+    this.promptRecordsByCSTID = subleveldown(db, "promptRecordsByCSTID");
+    this.CSTIDsByOrbitID = subleveldown(db, "CSTIDsByOrbitID");
+    this.noteMetadataByNoteID = subleveldown(db, "noteMetadataByNoteID");
+    this.CSTIDsByNoteID = subleveldown(db, "CSTIDsByNoteID");
   }
 
   async close() {
     await this.db.close();
   }
 
-  async storePrompts(entries: { promptID: PromptID; ITPrompt: IT.Prompt }[]) {
-    await this.promptsByOrbitID.batch(
-      entries.map(({ promptID, ITPrompt }) => ({
-        type: "put",
-        key: promptID,
-        value: JSON.stringify(ITPrompt),
-      })),
-    );
-  }
-
-  async getPromptByID(promptID: PromptID): Promise<IT.Prompt | null> {
-    const result = await getJSONRecord<IT.Prompt>(
-      this.promptsByOrbitID,
-      promptID,
+  async getPromptRecordByCSTID(
+    CSTID: string,
+  ): Promise<CachedPromptRecord | null> {
+    const result = await getJSONRecord<CachedPromptRecord>(
+      this.promptRecordsByCSTID,
+      CSTID,
     );
     return result?.record ?? null;
+  }
+
+  async getPromptByOrbitPromptID(
+    promptID: PromptID,
+  ): Promise<IT.Prompt | null> {
+    const orbitPromptID: PromptID | null = await this.CSTIDsByOrbitID.get(
+      promptID,
+    ).catch((error) => (error.notFound ? null : Promise.reject(error)));
+    if (orbitPromptID) {
+      const promptRecord = await this.getPromptRecordByCSTID(orbitPromptID);
+      return promptRecord?.ITPrompt ?? null;
+    } else {
+      return null;
+    }
   }
 
   async getLatestServerTimestamp(): Promise<ServerTimestamp | null> {
@@ -99,18 +105,23 @@ export default class SpacedEverythingImportCache {
     noteID: string,
   ): Promise<CachedNoteMetadata | null> {
     const result = await getJSONRecord<CachedNoteMetadata>(
-      this.notesByID,
+      this.noteMetadataByNoteID,
       noteID,
     );
     return result?.record ?? null;
   }
 
   async storePromptStateCaches(
-    entries: { promptStateCache: PromptStateCache; ITPrompt: IT.Prompt }[],
+    entries: {
+      promptStateCache: PromptStateCache;
+      ITPrompt: IT.Prompt;
+      promptID: PromptID;
+    }[],
   ): Promise<void> {
-    const ITPromptByNoteIDBatch = this.ITPromptByNoteID.batch();
-    const orbitPromptIDsByCSTIDBatch = this.orbitIDsByCSTID.batch();
-    const notesByIDBatch = this.notesByID.batch();
+    const promptRecordsByCSTIDBatch = this.promptRecordsByCSTID.batch();
+    const CSTIDsByNoteIDBatch = this.CSTIDsByNoteID.batch();
+    const CSTIDsByOrbitIDBatch = this.CSTIDsByOrbitID.batch();
+    const noteMetadataByNoteIDBatch = this.noteMetadataByNoteID.batch();
     const noteMap = new Map<string, CachedNoteMetadata>();
 
     let latestServerTimestamp = (await this.getLatestServerTimestamp()) ?? {
@@ -141,17 +152,20 @@ export default class SpacedEverythingImportCache {
 
         const existingNoteMetadata = noteMap.get(provenance.externalID);
         const CSTID = notePrompts.getIDForPrompt(ITPrompt);
-        const promptsByNoteIDKey = getPromptKey(provenance.externalID, CSTID);
+        const promptsByNoteIDKey = `${provenance.externalID}!${CSTID}`;
         if (promptStateCache.taskMetadata.isDeleted) {
-          ITPromptByNoteIDBatch.del(promptsByNoteIDKey);
-          orbitPromptIDsByCSTIDBatch.del(CSTID);
-          notesByIDBatch.del(provenance.externalID);
+          promptRecordsByCSTIDBatch.del(CSTID);
+          CSTIDsByNoteIDBatch.del(promptsByNoteIDKey);
+          CSTIDsByOrbitIDBatch.del(promptTask.promptID);
+          noteMetadataByNoteIDBatch.del(promptsByNoteIDKey);
         } else {
-          ITPromptByNoteIDBatch.put(
-            promptsByNoteIDKey,
-            JSON.stringify(ITPrompt),
-          );
-          orbitPromptIDsByCSTIDBatch.put(CSTID, promptTask.promptID);
+          const promptRecord: CachedPromptRecord = {
+            headActionLogIDs: promptStateCache.headActionLogIDs,
+            ITPrompt: ITPrompt,
+          };
+          promptRecordsByCSTIDBatch.put(CSTID, JSON.stringify(promptRecord));
+          CSTIDsByNoteIDBatch.put(promptsByNoteIDKey, CSTID);
+          CSTIDsByOrbitIDBatch.put(promptTask.promptID, CSTID);
           if (
             !existingNoteMetadata ||
             existingNoteMetadata.modificationTimestamp <
@@ -161,7 +175,6 @@ export default class SpacedEverythingImportCache {
               title: provenance.title,
               modificationTimestamp: provenance.modificationTimestampMillis,
               URL: provenance.url,
-              headActionLogIDs: promptStateCache.headActionLogIDs,
             });
           }
         }
@@ -169,8 +182,9 @@ export default class SpacedEverythingImportCache {
     }
 
     const writePromises: Promise<unknown>[] = [];
-    writePromises.push(ITPromptByNoteIDBatch.write());
-    writePromises.push(orbitPromptIDsByCSTIDBatch.write());
+    writePromises.push(promptRecordsByCSTIDBatch.write());
+    writePromises.push(CSTIDsByNoteIDBatch.write());
+    writePromises.push(CSTIDsByOrbitIDBatch.write());
 
     if (latestServerTimestamp.seconds !== 0) {
       writePromises.push(
@@ -197,15 +211,15 @@ export default class SpacedEverythingImportCache {
         existingCachedMetadata.modificationTimestamp <
           newNoteMetadata.modificationTimestamp
       ) {
-        notesByIDBatch.put(noteID, JSON.stringify(newNoteMetadata));
+        noteMetadataByNoteIDBatch.put(noteID, JSON.stringify(newNoteMetadata));
       }
     }
-    writePromises.push(notesByIDBatch.write());
+    writePromises.push(noteMetadataByNoteIDBatch.write());
   }
 
   async getNoteIDs(): Promise<string[]> {
     const entries = await drainIterator<string, undefined>(
-      this.notesByID.iterator({ keys: true }),
+      this.noteMetadataByNoteID.iterator({ keys: true }),
     );
     return entries.map((e) => e[0]);
   }
@@ -218,27 +232,16 @@ export default class SpacedEverythingImportCache {
   } | null> {
     const metadata = await this.getNoteMetadataByID(noteID);
     if (metadata) {
-      const entries = await drainIterator<string, undefined>(
-        this.ITPromptByNoteID.iterator({
-          keys: true,
+      const entries = await drainIterator<undefined, string>(
+        this.CSTIDsByNoteID.iterator({
+          keys: false,
+          values: true,
           gte: noteID,
           lt: `${noteID}~`,
         }),
       );
-      const childIDs = entries.map(([key]) => key.split("!")[1]);
+      const childIDs = entries.map(([, value]) => value);
       return { metadata, childIDs };
-    } else {
-      return null;
-    }
-  }
-
-  async getPromptByCSTPromptID(CSTPromptID: string): Promise<IT.Prompt | null> {
-    const orbitPromptID: PromptID | null = await this.orbitIDsByCSTID
-      .get(CSTPromptID)
-      .catch((error) => (error.notFound ? null : Promise.reject(error)));
-    if (orbitPromptID) {
-      const ITPrompt = await this.getPromptByID(orbitPromptID);
-      return ITPrompt;
     } else {
       return null;
     }
