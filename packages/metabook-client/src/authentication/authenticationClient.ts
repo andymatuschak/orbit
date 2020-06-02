@@ -1,6 +1,12 @@
+export interface UserRecord {
+  userID: string; // an opaque unique identifier
+  displayName: string | null;
+  emailAddress: string | null;
+}
+
 export interface AuthenticationClient {
   subscribeToUserAuthState(
-    callback: (userID: string | null) => void,
+    callback: (userRecord: UserRecord | null) => void,
   ): () => void;
 
   signInWithEmailAndPassword(email: string, password: string): Promise<unknown>;

@@ -1,7 +1,7 @@
 import firebase from "firebase";
 import "firebase/auth";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
-import { AuthenticationClient } from "./authenticationClient";
+import { AuthenticationClient, UserRecord } from "./authenticationClient";
 
 export default class FirebaseAuthenticationClient
   implements AuthenticationClient {
@@ -12,11 +12,19 @@ export default class FirebaseAuthenticationClient
   }
 
   subscribeToUserAuthState(
-    callback: (userID: string | null) => void,
+    callback: (userRecord: UserRecord | null) => void,
   ): MetabookUnsubscribe {
     return this.auth.onAuthStateChanged((newUser) => {
       console.log("UID changed:", this.auth.currentUser);
-      callback(newUser?.uid ?? null);
+      callback(
+        newUser
+          ? {
+              userID: newUser.uid,
+              displayName: newUser.displayName,
+              emailAddress: newUser.email,
+            }
+          : null,
+      );
     });
   }
 
