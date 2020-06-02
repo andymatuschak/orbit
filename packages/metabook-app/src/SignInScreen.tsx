@@ -1,12 +1,13 @@
+import { spacing } from "metabook-ui/dist/styles/layout";
 import React from "react";
 import { Alert, View } from "react-native";
 
 import { SignInForm, SignInFormProps } from "metabook-ui";
 import colors from "metabook-ui/dist/styles/colors";
-import { AuthenticationClient } from "./util/firebase";
+import { Authentication } from "metabook-client";
 
 interface SignInScreenProps {
-  authenticationClient: AuthenticationClient;
+  authenticationClient: Authentication.AuthenticationClient;
 }
 
 export default function SignInScreen({
@@ -90,6 +91,8 @@ export default function SignInScreen({
           maxWidth: 500,
           flex: 1,
           justifyContent: "center",
+          marginLeft: spacing.spacing05,
+          marginRight: spacing.spacing05,
         }}
       >
         <SignInForm

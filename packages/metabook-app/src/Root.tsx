@@ -3,6 +3,7 @@ import * as FileSystem from "expo-file-system";
 import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
+  Authentication,
 } from "metabook-client";
 import colors from "metabook-ui/dist/styles/colors";
 import React, { useEffect, useState } from "react";
@@ -15,9 +16,8 @@ import PromptStateStore from "./model/promptStateStore";
 import ReviewSession from "./ReviewSession";
 import SignInScreen from "./SignInScreen";
 import {
-  AuthenticationClient,
-  authenticationClient,
   enableFirebasePersistence,
+  getFirebaseAuth,
   getFirebaseFunctions,
   getFirestore,
   PersistenceStatus,
@@ -71,7 +71,7 @@ function usePersistenceStatus() {
 
 // undefined means we don't know yet; null means signed out.
 function useCurrentUserID(
-  authenticationClient: AuthenticationClient,
+  authenticationClient: Authentication.AuthenticationClient,
 ): string | null | undefined {
   const [userID, setUserID] = useState<string | null | undefined>(undefined);
   useEffect(() => {
@@ -91,6 +91,9 @@ export default function Root() {
     setDataRecordClient,
   ] = useState<DataRecordClient | null>(null);
 
+  const [authenticationClient] = useState(
+    () => new Authentication.FirebaseAuthenticationClient(getFirebaseAuth()),
+  );
   const userID = useCurrentUserID(authenticationClient);
 
   useEffect(() => {

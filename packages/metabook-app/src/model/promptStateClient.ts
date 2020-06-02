@@ -104,6 +104,8 @@ export default class PromptStateClient {
       });
   }
 
+  // TODO implement "finalize" method to unsubscribe, stop operations, close DBs, etc.
+
   subscribeToDuePromptStates(
     dueThresholdMillis: number,
     onUpdate: (update: PromptStateClientUpdate) => void,
