@@ -149,9 +149,9 @@ export default class PromptStateClient {
     console.log(
       "Hasn't finished initial import. Fetching initial prompt states.",
     );
-    const initialPromptStateCaches = await this.remoteClient.getDuePromptStates(
-      Date.now(),
-    );
+    const initialPromptStateCaches = await this.remoteClient.getPromptStates({
+      dueBeforeTimestampMillis: Date.now(),
+    });
     await this.promptStateStore.savePromptStateCaches(
       initialPromptStateCaches.map((cache) => {
         const { taskID, ...promptState } = cache;

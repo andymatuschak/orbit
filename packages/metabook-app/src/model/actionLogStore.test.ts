@@ -1,6 +1,7 @@
 import shimFirebasePersistence from "firebase-node-persistence-shim";
 import {
   ActionLog,
+  getIDForActionLog,
   IngestActionLog,
   ingestActionLogType,
   PromptRepetitionOutcome,
@@ -26,8 +27,9 @@ const testIngestLog: IngestActionLog = {
   timestampMillis: 500,
   taskID: "x",
   actionLogType: ingestActionLogType,
-  metadata: null,
+  provenance: null,
 };
+const testIngestLogID = getIDForActionLog(testIngestLog);
 const testRepetitionLog: RepetitionActionLog = {
   timestampMillis: 700,
   taskID: "x",
@@ -37,11 +39,16 @@ const testRepetitionLog: RepetitionActionLog = {
   context: null,
   outcome: PromptRepetitionOutcome.Remembered,
 };
+const testRepetitionLogID = getIDForActionLog(testRepetitionLog);
 
 describe("server timestamps", () => {
   beforeEach(async () => {
     await actionLogStore.saveActionLogs([
-      { log: testIngestLog, serverTimestamp: { seconds: 10, nanoseconds: 0 } },
+      {
+        log: testIngestLog,
+        id: testIngestLogID,
+        serverTimestamp: { seconds: 10, nanoseconds: 0 },
+      },
     ]);
   });
 
@@ -50,6 +57,7 @@ describe("server timestamps", () => {
       (await actionLogStore.saveActionLogs([
         {
           log: testIngestLog,
+          id: testIngestLogID,
           serverTimestamp: { seconds: 20, nanoseconds: 0 },
         },
       ]))!.seconds,
@@ -61,6 +69,7 @@ describe("server timestamps", () => {
       (await actionLogStore.saveActionLogs([
         {
           log: testIngestLog,
+          id: testIngestLogID,
           serverTimestamp: { seconds: 6, nanoseconds: 0 },
         },
       ]))!.seconds,
@@ -73,10 +82,12 @@ describe("taskID index", () => {
     const testLogs = [
       {
         log: testIngestLog,
+        id: testIngestLogID,
         serverTimestamp: null,
       },
       {
         log: testRepetitionLog,
+        id: testRepetitionLogID,
         serverTimestamp: null,
       },
     ];
@@ -88,9 +99,11 @@ describe("taskID index", () => {
   });
 
   test("doesn't return non-matching logs by taskID", async () => {
+    const variantLog = { ...testIngestLog, taskID: "y" };
     const testLogs = [
       {
-        log: { ...testIngestLog, taskID: "y" },
+        log: variantLog,
+        id: getIDForActionLog(variantLog),
         serverTimestamp: null,
       },
     ];
@@ -99,25 +112,30 @@ describe("taskID index", () => {
   });
 
   test("iterates all logs by task ID", async () => {
+    const ingestLogVariant = { ...testIngestLog, taskID: "y" };
     const testLogs = [
       {
         log: testIngestLog,
+        id: testIngestLogID,
         serverTimestamp: null,
       },
       {
         log: testRepetitionLog,
+        id: testRepetitionLogID,
         serverTimestamp: null,
       },
       {
-        log: { ...testIngestLog, taskID: "y" },
+        log: ingestLogVariant,
+        id: getIDForActionLog(ingestLogVariant),
         serverTimestamp: null,
       },
     ];
     await actionLogStore.saveActionLogs(testLogs);
 
     const iteratedValues: { taskID: string; logs: ActionLog[] }[] = [];
-    await actionLogStore.iterateAllActionLogsByTaskID(async (taskID, logs) =>
-      iteratedValues.push({ taskID, logs }),
+    await actionLogStore.iterateAllActionLogsByTaskID(
+      async (taskID, logEntries) =>
+        iteratedValues.push({ taskID, logs: logEntries.map((e) => e.log) }),
     );
     expect(iteratedValues).toHaveLength(2);
     expect(iteratedValues[0].taskID).toEqual("x");

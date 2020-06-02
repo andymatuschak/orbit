@@ -28,12 +28,18 @@ class MockDataClient implements MetabookDataClient {
 
   async getAttachments(
     attachmentIDs: Iterable<AttachmentID>,
-  ): Promise<(Attachment | null)[]> {
-    return [...attachmentIDs].map((id) => this.testData[id]) as Attachment[];
+  ): Promise<Map<AttachmentID, Attachment | null>> {
+    return new Map(
+      [...attachmentIDs].map((id) => [id, this.testData[id] as Attachment]),
+    );
   }
 
-  async getPrompts(promptIDs: Iterable<PromptID>): Promise<(Prompt | null)[]> {
-    return [...promptIDs].map((id) => this.testData[id]) as Prompt[];
+  async getPrompts(
+    promptIDs: Iterable<PromptID>,
+  ): Promise<Map<PromptID, Prompt | null>> {
+    return new Map(
+      [...promptIDs].map((id) => [id, this.testData[id] as Prompt]),
+    );
   }
 
   recordAttachments(attachments: Attachment[]): Promise<unknown> {
