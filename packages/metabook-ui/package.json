@@ -40,7 +40,6 @@
     "react": "~16",
     "react-docgen-typescript-loader": "^3.6.0",
     "react-dom": "^16.13.0",
-    "react-native-web": "file:../../vendor/react-native-web/packages/react-native-web",
     "ts-jest": "^25.2.1",
     "ts-loader": "^6.2.1",
     "typescript": "^3.8.3",
@@ -59,8 +58,7 @@
     "react-native-markdown-display": "iamacup/react-native-markdown-display"
   },
   "resolutions": {
-    "**/react-native-fit-image": "file:./vendor/react-native-fit-image",
-    "**/react-native-web": "file:./vendor/react-native-web/packages/react-native-web"
+    "**/react-native-fit-image": "file:./vendor/react-native-fit-image"
   },
   "scripts": {
     "build": "tsc -b",
