@@ -13,14 +13,17 @@ import typography from "../styles/typography";
 
 export default function BigButton(
   props: {
+    variant?: "primary" | "secondary";
     extraStyles?: StyleProp<ViewStyle>;
   } & ButtonProps,
 ) {
+  const effectiveVariant = props.variant ?? "primary";
   return (
     <TouchableOpacity {...props} activeOpacity={0.6} style={props.extraStyles}>
       <View
         style={{
-          backgroundColor: colors.key70,
+          backgroundColor:
+            effectiveVariant === "primary" ? colors.key70 : "transparent",
           height: gridUnit * 3,
           borderRadius: borderRadius,
           flexDirection: "row",
@@ -34,7 +37,7 @@ export default function BigButton(
       >
         <Text
           style={{
-            color: colors.key00,
+            color: effectiveVariant === "primary" ? colors.key00 : colors.key70,
             ...typography.label,
             fontWeight: "600",
           }}

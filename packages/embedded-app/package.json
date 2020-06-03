@@ -11,6 +11,7 @@
     "@types/node": "^13.13.4",
     "@types/react": "^16.9.34",
     "@types/react-dom": "^16.9.7",
+    "@types/react-native": "^0.62.12",
     "babel-plugin-react-native-web": "^0.12.2",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "craco-babel-loader": "^0.1.4",
@@ -26,7 +27,8 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test"
+    "test": "craco test",
+    "analyze": "source-map-explorer build/static/js/*.js"
   },
   "browserslist": {
     "production": [
@@ -43,7 +45,8 @@
   "workspaces": {
     "nohoist": [
       "react",
-      "react-dom"
+      "react-dom",
+      "react-native-web"
     ]
   }
 }

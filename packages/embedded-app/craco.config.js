@@ -41,6 +41,7 @@ module.exports = function ({ env }) {
         // metabook-ui should use the local react, not its own.
         react: resolveApp("node_modules/react"),
         "react-dom": resolveApp("node_modules/react-dom"),
+        "react-native-web": resolveApp("node_modules/react-native-web"),
       },
       plugins: [
         new webpack.DefinePlugin({

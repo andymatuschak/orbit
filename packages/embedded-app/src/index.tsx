@@ -2,11 +2,17 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
+import Login from "./Login";
 import * as serviceWorker from "./serviceWorker";
 
-ReactDOM.render(<App />, document.getElementById("root"));
+// Doing lazy routing for now.
+let rootElement: React.ReactElement;
+if (window.location.pathname === "/login") {
+  rootElement = <Login />;
+} else {
+  rootElement = <App />;
+}
+ReactDOM.render(rootElement, document.getElementById("root"));
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
+// TODO: think through and implement service worker for embedded-app
 serviceWorker.unregister();

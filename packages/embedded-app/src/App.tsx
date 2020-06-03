@@ -2,6 +2,7 @@ import {
   getDefaultFirebaseApp,
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
+  Authentication,
 } from "metabook-client";
 import {
   getIDForPrompt,
@@ -12,13 +13,28 @@ import {
   repetitionActionLogType,
 } from "metabook-core";
 import { testBasicPrompt } from "metabook-sample-data";
-import { promptReviewItemType, ReviewArea, ReviewItem } from "metabook-ui";
-import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
+import {
+  promptReviewItemType,
+  ReviewArea,
+  ReviewAreaMarkingRecord,
+  ReviewItem,
+} from "metabook-ui";
+import BigButton from "metabook-ui/dist/components/BigButton";
+import colors from "metabook-ui/dist/styles/colors";
+import { spacing } from "metabook-ui/dist/styles/layout";
+import typography from "metabook-ui/dist/styles/typography";
+
 import React from "react";
+import { View, Text, Button } from "react-native";
 
 declare global {
-  // suppiled by Webpack
+  // supplied by Webpack
   const USER_ID: string | null;
+
+  interface Document {
+    requestStorageAccess(): Promise<undefined>;
+    hasStorageAccess(): Promise<boolean>;
+  }
 }
 
 interface EmbeddedItem {
@@ -42,6 +58,43 @@ const defaultItems: ReviewItem[] = [
     promptState: null,
   },
 ];
+
+function AuthenticationStatusIndicator(props: {
+  userRecord: Authentication.UserRecord | null;
+}) {
+  const signIn = React.useCallback(() => {
+    window.open("/login", "Sign in", "width=985,height=735");
+  }, []);
+
+  let interior: React.ReactNode;
+  if (props.userRecord) {
+    interior = (
+      <Text
+        style={{ ...typography.label, color: colors.textColor, opacity: 0.4 }}
+      >{`Signed in as ${
+        props.userRecord.displayName ??
+        props.userRecord.emailAddress ??
+        props.userRecord.userID
+      }`}</Text>
+    );
+  } else {
+    interior = (
+      <BigButton title="Sign in" onPress={signIn} variant="secondary" />
+    );
+  }
+
+  return (
+    <View
+      style={{
+        position: "absolute",
+        left: spacing.spacing07,
+        bottom: spacing.spacing07,
+      }}
+    >
+      {interior}
+    </View>
+  );
+}
 
 function App() {
   const [queue, setQueue] = React.useState<ReviewItem[]>(() => {
@@ -68,19 +121,53 @@ function App() {
     return defaultItems;
   });
 
-  const [{ userClient, dataClient }] = React.useState(() => {
-    console.log("User ID:", USER_ID);
+  const [{ userClient, dataClient, authenticationClient }] = React.useState(
+    () => {
+      console.log("User ID:", USER_ID);
 
-    const app = getDefaultFirebaseApp();
-    const firestore = app.firestore();
-    return {
-      userClient: new MetabookFirebaseUserClient(firestore, "demo"),
-      dataClient: new MetabookFirebaseDataClient(firestore, app.functions()),
-    };
-  });
+      document.hasStorageAccess().then((hasStorageAccess) => {
+        console.log("HAS STORAGE ACCESS", hasStorageAccess);
+      });
+
+      const app = getDefaultFirebaseApp();
+      const firestore = app.firestore();
+      return {
+        userClient: new MetabookFirebaseUserClient(firestore, "demo"),
+        dataClient: new MetabookFirebaseDataClient(firestore, app.functions()),
+        authenticationClient: new Authentication.FirebaseAuthenticationClient(
+          app.auth(),
+        ),
+      };
+    },
+  );
+
+  const [
+    userRecord,
+    setUserRecord,
+  ] = React.useState<Authentication.UserRecord | null>(null);
+  React.useEffect(() => {
+    if (authenticationClient) {
+      authenticationClient.subscribeToUserAuthState((userRecord) => {
+        console.log("Got user record:", userRecord);
+        setUserRecord(userRecord);
+      });
+    }
+  }, [authenticationClient]);
 
   const onMark = React.useCallback(
     (marking: ReviewAreaMarkingRecord) => {
+      // document
+      //   .requestStorageAccess()
+      //   .then(() => {
+      //     console.log("RECEIVED STORAGE ACCESS");
+      //   })
+      //   .catch(() => {
+      //     console.error("NO STORAGE ACCESS");
+      //   });
+      document.hasStorageAccess().then((hasStorageAccess) => {
+        console.log("HAS STORAGE ACCESS", hasStorageAccess);
+      });
+
       setQueue((queue) => queue.slice(1));
 
       if (!USER_ID) {
@@ -118,7 +205,7 @@ function App() {
   );
 
   return (
-    <div className="App">
+    <View style={{ position: "relative" }}>
       <ReviewArea
         items={queue}
         onMark={onMark}
@@ -141,7 +228,8 @@ function App() {
           For prototyping purposes; user data not persisted.
         </div>
       )}
-    </div>
+      <AuthenticationStatusIndicator userRecord={userRecord} />
+    </View>
   );
 }
 
