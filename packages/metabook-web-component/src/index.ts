@@ -20,6 +20,10 @@ export class OrbitReviewAreaElement extends HTMLElement {
     this.iframe.style.width = "100%";
     this.iframe.style.height = "600px";
     this.iframe.style.marginBottom = "1rem";
+    this.iframe.setAttribute(
+      "sandbox",
+      "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups",
+    );
     shadowRoot.appendChild(this.iframe);
 
     this.markNeedsRender();

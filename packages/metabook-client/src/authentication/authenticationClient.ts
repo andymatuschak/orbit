@@ -4,7 +4,7 @@ export interface UserRecord {
   emailAddress: string | null;
 }
 
-export interface AuthenticationClient {
+export interface AuthenticationClient<LoginToken = any, IDToken = any> {
   subscribeToUserAuthState(
     callback: (userRecord: UserRecord | null) => void,
   ): () => void;
@@ -17,4 +17,13 @@ export interface AuthenticationClient {
   ): Promise<unknown>;
 
   userExistsWithEmail(email: string): Promise<boolean>;
+
+  getCurrentIDToken(): Promise<IDToken>;
+
+  getLoginTokenUsingSessionCookie(): Promise<LoginToken>;
+  getLoginTokenUsingIDToken(IDToken: IDToken): Promise<LoginToken>;
+  signInWithLoginToken(loginToken: LoginToken): Promise<unknown>;
+  refreshSessionCookie(IDToken: IDToken): Promise<unknown>;
+
+  supportsCredentialPersistence(): boolean;
 }

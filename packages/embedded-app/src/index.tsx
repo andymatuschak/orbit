@@ -8,7 +8,13 @@ import * as serviceWorker from "./serviceWorker";
 // Doing lazy routing for now.
 let rootElement: React.ReactElement;
 if (window.location.pathname === "/login") {
-  rootElement = <Login />;
+  rootElement = (
+    <Login
+      shouldSendOpenerLoginToken={window.location.search.includes(
+        "shouldSendOpenerLoginToken",
+      )}
+    />
+  );
 } else {
   rootElement = <App />;
 }

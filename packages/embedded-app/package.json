@@ -28,6 +28,8 @@
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
+    "predeploy": "yarn run build",
+    "deploy": "firebase deploy",
     "analyze": "source-map-explorer build/static/js/*.js"
   },
   "browserslist": {

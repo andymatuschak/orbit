@@ -1,8 +1,8 @@
 import {
+  Authentication,
   getDefaultFirebaseApp,
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
-  Authentication,
 } from "metabook-client";
 import {
   getIDForPrompt,
@@ -25,7 +25,7 @@ import { spacing } from "metabook-ui/dist/styles/layout";
 import typography from "metabook-ui/dist/styles/typography";
 
 import React from "react";
-import { View, Text, Button } from "react-native";
+import { Text, View } from "react-native";
 
 declare global {
   // supplied by Webpack
@@ -60,27 +60,45 @@ const defaultItems: ReviewItem[] = [
 ];
 
 function AuthenticationStatusIndicator(props: {
-  userRecord: Authentication.UserRecord | null;
+  authenticationState: AuthenticationState;
+  onSignIn: () => void;
 }) {
-  const signIn = React.useCallback(() => {
-    window.open("/login", "Sign in", "width=985,height=735");
-  }, []);
-
   let interior: React.ReactNode;
-  if (props.userRecord) {
-    interior = (
-      <Text
-        style={{ ...typography.label, color: colors.textColor, opacity: 0.4 }}
-      >{`Signed in as ${
-        props.userRecord.displayName ??
-        props.userRecord.emailAddress ??
-        props.userRecord.userID
-      }`}</Text>
-    );
-  } else {
-    interior = (
-      <BigButton title="Sign in" onPress={signIn} variant="secondary" />
-    );
+  switch (props.authenticationState.status) {
+    case "signedIn":
+      const userRecord = props.authenticationState.userRecord;
+      interior = (
+        <Text
+          style={{ ...typography.label, color: colors.textColor, opacity: 0.4 }}
+        >{`Signed in as ${
+          userRecord.displayName ?? userRecord.emailAddress ?? userRecord.userID
+        }`}</Text>
+      );
+      break;
+
+    case "signedOut":
+      interior = (
+        <BigButton
+          title="Sign in"
+          onPress={props.onSignIn}
+          variant="secondary"
+        />
+      );
+      break;
+
+    case "pending":
+      interior = null;
+      break;
+
+    case "storageRestricted":
+      interior = (
+        <BigButton
+          title="Connect"
+          onPress={props.onSignIn}
+          variant="secondary"
+        />
+      );
+      break;
   }
 
   return (
@@ -94,6 +112,152 @@ function AuthenticationStatusIndicator(props: {
       {interior}
     </View>
   );
+}
+
+async function attemptLoginWithSessionCookie(
+  authenticationClient: Authentication.AuthenticationClient,
+) {
+  try {
+    console.log("Attempting login with session cookie");
+    const loginToken = await authenticationClient.getLoginTokenUsingSessionCookie();
+    await authenticationClient.signInWithLoginToken(loginToken);
+  } catch (error) {
+    console.log("Failed login with session cookie", error);
+  }
+}
+
+async function attemptRefreshSessionCookie(
+  authenticationClient: Authentication.AuthenticationClient,
+) {
+  try {
+    const idToken = await authenticationClient.getCurrentIDToken();
+    await authenticationClient.refreshSessionCookie(idToken);
+  } catch (error) {
+    console.error("Couldn't refresh session cookie", error);
+  }
+}
+
+type AuthenticationState =
+  | {
+      status: "pending" | "signedOut";
+      userRecord: null;
+    }
+  | {
+      status: "storageRestricted";
+      userRecord: null;
+      onRequestStorageAccess: () => unknown;
+    }
+  | { status: "signedIn"; userRecord: Authentication.UserRecord };
+function useAuthenticationState(
+  authenticationClient: Authentication.AuthenticationClient,
+): AuthenticationState {
+  const [authenticationState, setAuthenticationState] = React.useState<
+    AuthenticationState
+  >({ status: "pending", userRecord: null });
+  const [
+    readyToSubscribeToUserAuth,
+    setReadyToSubscribeToUserAuth,
+  ] = React.useState(false);
+
+  const [hasStorageAccess, setHasStorageAccess] = React.useState<
+    boolean | null
+  >(null);
+
+  // Check to see if we have storage access...
+  const isInvalidated = React.useRef(false);
+  React.useEffect(() => {
+    if (typeof document.hasStorageAccess === "function") {
+      document.hasStorageAccess().then((hasStorageAccess) => {
+        if (isInvalidated.current) {
+          return;
+        }
+        setHasStorageAccess(hasStorageAccess);
+      });
+    } else {
+      setHasStorageAccess(true);
+    }
+    return () => {
+      isInvalidated.current = true;
+    };
+  }, []);
+
+  // Once we know if we have storage access...
+  React.useEffect(() => {
+    if (authenticationState.status === "pending" && hasStorageAccess !== null) {
+      console.log("Has storage access", hasStorageAccess);
+      if (hasStorageAccess) {
+        setReadyToSubscribeToUserAuth(true);
+        if (!authenticationClient.supportsCredentialPersistence()) {
+          attemptLoginWithSessionCookie(authenticationClient);
+        }
+      } else {
+        setAuthenticationState({
+          status: "storageRestricted",
+          userRecord: null,
+          onRequestStorageAccess: () => {
+            document
+              .requestStorageAccess()
+              .then(() => {
+                console.log("RECEIVED STORAGE ACCESS");
+                document.hasStorageAccess().then((hasAccess) => {
+                  console.log("post grant hasStorageAccess", hasAccess);
+                });
+                setHasStorageAccess(true);
+                setAuthenticationState((authenticationState) =>
+                  authenticationState.status === "storageRestricted"
+                    ? { status: "pending", userRecord: null }
+                    : authenticationState,
+                );
+              })
+              .catch(() => {
+                console.error("NO STORAGE ACCESS");
+              });
+          },
+        });
+      }
+    }
+  }, [authenticationState, hasStorageAccess, authenticationClient]);
+
+  // Once we're ready to subscribe to user auth...
+  React.useEffect(() => {
+    // TODO wait until ready to subscribe... or not, since Safari seems to be lying about whether we have storage access
+    return authenticationClient.subscribeToUserAuthState(async (userRecord) => {
+      if (userRecord) {
+        setAuthenticationState({ status: "signedIn", userRecord });
+        if (!authenticationClient.supportsCredentialPersistence()) {
+          // TODO: avoid doing this upon receiving loginToken from popup
+          attemptRefreshSessionCookie(authenticationClient);
+        }
+      } else if (!userRecord && hasStorageAccess) {
+        setAuthenticationState({ status: "signedOut", userRecord: null });
+      }
+    });
+  }, [readyToSubscribeToUserAuth, authenticationClient]);
+
+  // Watch for messages from the login popup.
+  const onMessage = React.useCallback(
+    (event: MessageEvent) => {
+      if (event.origin === "https://embed.withorbit.com") {
+        const loginToken = event.data;
+        console.debug("Received login token from other window", event.data);
+        setReadyToSubscribeToUserAuth(true);
+        authenticationClient.signInWithLoginToken(loginToken).catch((error) => {
+          console.error(`Couldn't login with provided token: ${error}`);
+        });
+      } else {
+        console.debug("Discarding cross-origin message", event);
+      }
+    },
+    [authenticationClient],
+  );
+  React.useEffect(() => {
+    window.addEventListener("message", onMessage, false);
+    return () => {
+      window.removeEventListener("message", onMessage);
+    };
+  }, [onMessage]);
+
+  return authenticationState;
 }
 
 function App() {
@@ -123,12 +287,6 @@ function App() {
 
   const [{ userClient, dataClient, authenticationClient }] = React.useState(
     () => {
-      console.log("User ID:", USER_ID);
-
-      document.hasStorageAccess().then((hasStorageAccess) => {
-        console.log("HAS STORAGE ACCESS", hasStorageAccess);
-      });
-
       const app = getDefaultFirebaseApp();
       const firestore = app.firestore();
       return {
@@ -141,33 +299,26 @@ function App() {
     },
   );
 
-  const [
-    userRecord,
-    setUserRecord,
-  ] = React.useState<Authentication.UserRecord | null>(null);
-  React.useEffect(() => {
-    if (authenticationClient) {
-      authenticationClient.subscribeToUserAuthState((userRecord) => {
-        console.log("Got user record:", userRecord);
-        setUserRecord(userRecord);
-      });
-    }
+  const authenticationState = useAuthenticationState(authenticationClient);
+
+  const onSignIn = React.useCallback(() => {
+    window.open(
+      `/login${
+        authenticationClient.supportsCredentialPersistence()
+          ? ""
+          : "?shouldSendOpenerLoginToken=true"
+      }`,
+      "Sign in",
+      "width=985,height=735",
+    );
   }, [authenticationClient]);
 
   const onMark = React.useCallback(
     (marking: ReviewAreaMarkingRecord) => {
-      // document
-      //   .requestStorageAccess()
-      //   .then(() => {
-      //     console.log("RECEIVED STORAGE ACCESS");
-      //   })
-      //   .catch(() => {
-      //     console.error("NO STORAGE ACCESS");
-      //   });
-      document.hasStorageAccess().then((hasStorageAccess) => {
-        console.log("HAS STORAGE ACCESS", hasStorageAccess);
-      });
-
+      console.log("status", authenticationState.status);
+      if (authenticationState.status === "storageRestricted") {
+        authenticationState.onRequestStorageAccess();
+      }
       setQueue((queue) => queue.slice(1));
 
       if (!USER_ID) {
@@ -201,7 +352,7 @@ function App() {
         .then(() => console.log("Recorded prompt."))
         .catch((error) => console.error("Error recording prompt", error));
     },
-    [userClient, dataClient],
+    [authenticationState, userClient, dataClient],
   );
 
   return (
@@ -228,7 +379,10 @@ function App() {
           For prototyping purposes; user data not persisted.
         </div>
       )}
-      <AuthenticationStatusIndicator userRecord={userRecord} />
+      <AuthenticationStatusIndicator
+        authenticationState={authenticationState}
+        onSignIn={onSignIn}
+      />
     </View>
   );
 }

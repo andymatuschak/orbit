@@ -55,7 +55,7 @@
     "react-native": "0.62.0",
     "react-native-leveldown": "0.0.5",
     "react-native-unimodules": "^0.9.0",
-    "react-native-web": "~0.11.7",
+    "react-native-web": "~0.12.3",
     "readable-stream": "^1.0.33",
     "string_decoder": "^0.10.31",
     "subleveldown": "andymatuschak/subleveldown",
