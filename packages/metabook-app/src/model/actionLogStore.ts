@@ -4,7 +4,7 @@ import * as lexi from "lexicographic-integer";
 
 import { ActionLog, ActionLogID } from "metabook-core";
 import { ServerTimestamp } from "metabook-firebase-support";
-import RNLeveldown from "react-native-leveldown";
+import RNLeveldown from "../util/leveldown";
 import sub from "subleveldown";
 import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";
 

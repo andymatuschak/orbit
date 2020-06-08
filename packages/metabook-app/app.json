@@ -1,6 +1,4 @@
 {
-  "name": "orbit",
-  "displayName": "Orbit",
   "expo": {
     "name": "Orbit",
     "slug": "orbit",
@@ -17,6 +15,13 @@
     },
     "android": {
       "package": "media.ladder.orbit"
+    },
+    "web": {
+      "build": {
+        "babel": {
+          "include": "metabook-client"
+        }
+      }
     }
   }
 }

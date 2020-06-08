@@ -1,4 +1,4 @@
-import RNLeveldown from "react-native-leveldown";
+import RNLeveldown from "../util/leveldown";
 import LevelUp, * as levelup from "levelup";
 import * as lexi from "lexicographic-integer";
 

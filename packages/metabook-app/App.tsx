@@ -1,8 +1,11 @@
 import React from "react";
-import "node-libs-react-native/globals";
 import "./src/util/shimBase64";
 import "expo-asset";
-import { NativeEventEmitter, NativeModules } from "react-native";
+import { NativeEventEmitter, NativeModules, Platform } from "react-native";
+
+if (Platform.OS !== "web") {
+  require("node-libs-react-native/globals");
+}
 
 import Root from "./src/Root";
 

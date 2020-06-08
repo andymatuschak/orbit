@@ -1,8 +1,10 @@
 module.exports = function (api) {
   const isTest = api.env("test");
+  api.caller((caller) => console.log(caller));
   if (!isTest) {
     api.cache(true);
   }
+
   return {
     presets: isTest
       ? [
@@ -17,7 +19,7 @@ module.exports = function (api) {
           "@babel/preset-typescript",
         ]
       : ["babel-preset-expo"],
-    plugins: isTest
+    plugins: true
       ? []
       : [
           [

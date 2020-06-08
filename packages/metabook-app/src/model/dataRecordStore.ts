@@ -1,5 +1,5 @@
 import LevelUp, * as levelup from "levelup";
-import RNLeveldown from "react-native-leveldown";
+import RNLeveldown from "../util/leveldown";
 import {
   AttachmentID,
   AttachmentURLReference,
