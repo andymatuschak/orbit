@@ -8,11 +8,13 @@ import {
   Image,
   LayoutChangeEvent,
   StyleSheet,
+  Text,
   TextStyle,
   View,
 } from "react-native";
 import Markdown, * as MarkdownDisplay from "react-native-markdown-display";
 import { AttachmentResolutionMap } from "../reviewItem";
+import colors from "../styles/colors";
 import { gridUnit } from "../styles/layout";
 
 import typography from "../styles/typography";
@@ -74,7 +76,7 @@ export default React.memo(function CardField(props: {
 
   const renderRules = useMemo<MarkdownDisplay.RenderRules>(
     () => ({
-      body: function MarkdownRoot(node, children, parent, styles) {
+      body: function MarkdownRootRenderer(node, children, parent, styles) {
         return (
           <View
             key={node.key}
@@ -85,6 +87,71 @@ export default React.memo(function CardField(props: {
           >
             {children}
           </View>
+        );
+      },
+      text: (node, children, parent, styles, inheritedStyles = {}) => {
+        const parsedChildren: React.ReactNode[] = [];
+        let content = node.content as string;
+        let clozeTokenIndex = 0;
+
+        while (
+          (clozeTokenIndex = content.indexOf(clozeSentinelPrefix)) &&
+          clozeTokenIndex !== -1
+        ) {
+          const prefix = content.slice(0, clozeTokenIndex);
+          if (prefix.length > 0) {
+            parsedChildren.push(prefix);
+          }
+
+          content = content.slice(clozeTokenIndex);
+          if (content.startsWith(clozeBlankSentinel)) {
+            parsedChildren.push(
+              <Text
+                style={{
+                  color: "transparent",
+                  backgroundColor: colors.key30,
+                  borderRadius: 4,
+                  marginLeft: 1,
+                  marginRight: 1,
+                }}
+              >
+                {"__________"}
+              </Text>,
+            );
+            content = content.slice(clozeBlankSentinel.length);
+          }
+          if (content.startsWith(clozeAnswerStartSentinel)) {
+            const endTokenIndex = content.indexOf(clozeAnswerEndSentinel);
+            if (endTokenIndex === -1) {
+              throw new Error("Mismatched cloze answer start/end sentinels");
+            }
+            console.log(content);
+            const answerText = content.slice(
+              clozeAnswerStartSentinel.length,
+              endTokenIndex,
+            );
+            parsedChildren.push(
+              <Text
+                style={{
+                  color: colors.key50,
+                  fontWeight: "bold",
+                }}
+              >
+                {answerText}
+              </Text>,
+            );
+            content = content.slice(
+              endTokenIndex + clozeAnswerEndSentinel.length,
+            );
+          }
+        }
+        if (content.length > 0) {
+          parsedChildren.push(content);
+        }
+        return (
+          <Text key={node.key} style={[inheritedStyles, styles.text]}>
+            {parsedChildren}
+          </Text>
         );
       },
     }),
@@ -124,3 +191,8 @@ const styles = StyleSheet.create({
     overflow: "scroll",
   },
 });
+
+const clozeSentinelPrefix = "zqzCLOZE";
+export const clozeBlankSentinel = clozeSentinelPrefix + "zqz";
+export const clozeAnswerStartSentinel = clozeSentinelPrefix + "STARTzqz";
+export const clozeAnswerEndSentinel = clozeSentinelPrefix + "ENDzqz";
