@@ -103,8 +103,7 @@ describe("ingesting", () => {
       }),
     ).toMatchObject({
       bestIntervalMillis: null,
-      dueTimestampMillis:
-        testIngestLog.timestampMillis + scheduleSequence[1].interval,
+      dueTimestampMillis: testIngestLog.timestampMillis,
       headActionLogIDs: [testIngestLogID],
       intervalMillis: scheduleSequence[1].interval,
       lastReviewTimestampMillis: testIngestLog.timestampMillis,

@@ -1,3 +1,5 @@
+import MarkdownIt, { Delimiter } from "markdown-it/lib";
+import Token from "markdown-it/lib/token";
 import {
   AttachmentURLReference,
   imageAttachmentType,
@@ -18,6 +20,90 @@ import colors from "../styles/colors";
 import { gridUnit } from "../styles/layout";
 
 import typography from "../styles/typography";
+import NamedStyles = StyleSheet.NamedStyles;
+
+function clozeParsePlugin(md: MarkdownIt) {
+  const startDelimiterCode = "{".charCodeAt(0);
+  const endDelimiterCode = "}".charCodeAt(0);
+  md.inline.ruler.before("emphasis", "clozeHighlight", (state, silent) => {
+    if (silent) {
+      return false;
+    }
+
+    const marker = state.src.charCodeAt(state.pos);
+    if (!(marker === startDelimiterCode || marker === endDelimiterCode)) {
+      return false;
+    }
+
+    const scanned = state.scanDelims(state.pos, true);
+    if (scanned.length !== 1) {
+      return false;
+    }
+
+    const token = state.push("text", "", 0);
+    token.content = String.fromCharCode(marker);
+
+    state.delimiters.push({
+      marker: marker,
+      length: scanned.length,
+      jump: 0,
+      token: state.tokens.length - 1,
+      end: -1,
+      open: scanned.can_open,
+      close: scanned.can_close,
+      level: 0,
+    });
+
+    state.pos += scanned.length;
+    return true;
+  });
+
+  md.inline.ruler2.after("emphasis", "clozeHighlight", (state) => {
+    if (state.clozeHighlightActive) {
+      state.tokens.splice(
+        0,
+        0,
+        new Token("clozeHighlight_open", "clozeHighlight", 0),
+      );
+    }
+    const allDelimiters = [
+      state.delimiters,
+      ...state.tokens_meta.map(
+        (m: { delimiters: Delimiter[] }) => m?.delimiters ?? [],
+      ),
+    ].reduce<Delimiter[]>((all, current) => all.concat(current), []);
+
+    const startDelimiter = allDelimiters.find(
+      (delimiter) => delimiter.marker === startDelimiterCode,
+    );
+    if (startDelimiter) {
+      state.tokens.splice(
+        startDelimiter.token,
+        1,
+        new Token("clozeHighlight_open", "clozeHighlight", 0),
+      );
+      state.clozeHighlightActive = true;
+    }
+
+    const endDelimiter = allDelimiters.find(
+      (delimiter) => delimiter.marker === endDelimiterCode,
+    );
+    if (endDelimiter) {
+      state.tokens.splice(
+        endDelimiter.token,
+        1,
+        new Token("clozeHighlight_close", "clozeHighlight", 0),
+      );
+      state.clozeHighlightActive = false;
+    } else if (state.clozeHighlightActive) {
+      state.tokens.splice(
+        state.tokens.length - 1,
+        0,
+        new Token("clozeHighlight_close", "clozeHighlight", 0),
+      );
+    }
+  });
+}
 
 function getMarkdownStyles(shrinkFactor: number) {
   let paragraphStyles: TextStyle;
@@ -37,6 +123,89 @@ function getMarkdownStyles(shrinkFactor: number) {
   paragraphStyles.marginBottom = paragraphStyles.lineHeight! / 2.0;
   return {
     paragraph: paragraphStyles,
+    clozeHighlight: {
+      color: colors.key50,
+      fontWeight: "bold",
+    },
+  };
+}
+
+function getMarkdownRenderRules(
+  setMarkdownHeight: (value: number) => void,
+): MarkdownDisplay.RenderRules {
+  return {
+    body: function MarkdownRootRenderer(node, children, parent, styles) {
+      return (
+        <View
+          key={node.key}
+          style={styles._VIEW_SAFE_body}
+          onLayout={(event) =>
+            setMarkdownHeight(event.nativeEvent.layout.height)
+          }
+        >
+          {children}
+        </View>
+      );
+    },
+    clozeHighlight: function MarkdownClozeRenderer(
+      node,
+      children,
+      parent,
+      styles,
+      inheritedStyles = {},
+    ) {
+      return (
+        <Text key={node.key} style={[styles.clozeHighlight, inheritedStyles]}>
+          {children}
+        </Text>
+      );
+    },
+
+    text: function MarkdownTextRenderer(
+      node,
+      children,
+      parent,
+      styles,
+      inheritedStyles = {},
+    ) {
+      const parsedChildren: React.ReactNode[] = [];
+      let content = node.content as string;
+      for (
+        let clozeTokenIndex = content.indexOf(clozeBlankSentinel);
+        clozeTokenIndex !== -1;
+        clozeTokenIndex = content.indexOf(clozeBlankSentinel)
+      ) {
+        const prefix = content.slice(0, clozeTokenIndex);
+        if (prefix.length > 0) {
+          parsedChildren.push(prefix);
+        }
+
+        content = content.slice(clozeTokenIndex);
+        parsedChildren.push(
+          <Text
+            key={clozeTokenIndex}
+            style={{
+              color: "transparent",
+              backgroundColor: colors.key30,
+              borderRadius: 4,
+              marginLeft: 1,
+              marginRight: 1,
+            }}
+          >
+            {"__________"}
+          </Text>,
+        );
+        content = content.slice(clozeBlankSentinel.length);
+      }
+      if (content.length > 0) {
+        parsedChildren.push(content);
+      }
+      return (
+        <Text key={node.key} style={[styles.text, inheritedStyles]}>
+          {parsedChildren}
+        </Text>
+      );
+    },
   };
 }
 
@@ -59,6 +228,10 @@ export default React.memo(function CardField(props: {
   }
 
   const [shrinkFactor, setShrinkFactor] = useState(0);
+  // Reset shrink factor when prompt field changes.
+  useEffect(() => {
+    setShrinkFactor(0);
+  }, [promptField]);
 
   const [markdownHeight, setMarkdownHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number | null>(null);
@@ -75,86 +248,7 @@ export default React.memo(function CardField(props: {
   );
 
   const renderRules = useMemo<MarkdownDisplay.RenderRules>(
-    () => ({
-      body: function MarkdownRootRenderer(node, children, parent, styles) {
-        return (
-          <View
-            key={node.key}
-            style={styles._VIEW_SAFE_body}
-            onLayout={(event) =>
-              setMarkdownHeight(event.nativeEvent.layout.height)
-            }
-          >
-            {children}
-          </View>
-        );
-      },
-      text: (node, children, parent, styles, inheritedStyles = {}) => {
-        const parsedChildren: React.ReactNode[] = [];
-        let content = node.content as string;
-        let clozeTokenIndex = 0;
-
-        while (
-          (clozeTokenIndex = content.indexOf(clozeSentinelPrefix)) &&
-          clozeTokenIndex !== -1
-        ) {
-          const prefix = content.slice(0, clozeTokenIndex);
-          if (prefix.length > 0) {
-            parsedChildren.push(prefix);
-          }
-
-          content = content.slice(clozeTokenIndex);
-          if (content.startsWith(clozeBlankSentinel)) {
-            parsedChildren.push(
-              <Text
-                style={{
-                  color: "transparent",
-                  backgroundColor: colors.key30,
-                  borderRadius: 4,
-                  marginLeft: 1,
-                  marginRight: 1,
-                }}
-              >
-                {"__________"}
-              </Text>,
-            );
-            content = content.slice(clozeBlankSentinel.length);
-          }
-          if (content.startsWith(clozeAnswerStartSentinel)) {
-            const endTokenIndex = content.indexOf(clozeAnswerEndSentinel);
-            if (endTokenIndex === -1) {
-              throw new Error("Mismatched cloze answer start/end sentinels");
-            }
-            console.log(content);
-            const answerText = content.slice(
-              clozeAnswerStartSentinel.length,
-              endTokenIndex,
-            );
-            parsedChildren.push(
-              <Text
-                style={{
-                  color: colors.key50,
-                  fontWeight: "bold",
-                }}
-              >
-                {answerText}
-              </Text>,
-            );
-            content = content.slice(
-              endTokenIndex + clozeAnswerEndSentinel.length,
-            );
-          }
-        }
-        if (content.length > 0) {
-          parsedChildren.push(content);
-        }
-        return (
-          <Text key={node.key} style={[inheritedStyles, styles.text]}>
-            {parsedChildren}
-          </Text>
-        );
-      },
-    }),
+    () => getMarkdownRenderRules(setMarkdownHeight),
     [],
   );
 
@@ -162,9 +256,19 @@ export default React.memo(function CardField(props: {
     shrinkFactor,
   ]);
 
+  const plugins = useMemo(
+    () => [new MarkdownDisplay.PluginContainer(clozeParsePlugin)],
+    [],
+  );
+
   return (
     <View style={styles.container} onLayout={onContainerLayout}>
-      <Markdown rules={renderRules} style={markdownStyles} mergeStyle={false}>
+      <Markdown
+        rules={renderRules}
+        style={markdownStyles as NamedStyles<unknown>}
+        mergeStyle={false}
+        plugins={plugins}
+      >
         {promptField.contents}
       </Markdown>
       {imageURL && (
@@ -192,7 +296,4 @@ const styles = StyleSheet.create({
   },
 });
 
-const clozeSentinelPrefix = "zqzCLOZE";
-export const clozeBlankSentinel = clozeSentinelPrefix + "zqz";
-export const clozeAnswerStartSentinel = clozeSentinelPrefix + "STARTzqz";
-export const clozeAnswerEndSentinel = clozeSentinelPrefix + "ENDzqz";
+export const clozeBlankSentinel = "zqzCLOZEzqz";

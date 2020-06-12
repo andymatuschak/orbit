@@ -173,7 +173,7 @@ export default function applyActionLogToPromptState<
           headActionLogIDs: [actionLogID],
           lastReviewTimestampMillis: promptActionLog.timestampMillis,
           lastReviewTaskParameters: null,
-          dueTimestampMillis: promptActionLog.timestampMillis + initialInterval,
+          dueTimestampMillis: promptActionLog.timestampMillis,
           needsRetry: false,
           taskMetadata: getInitialPromptTaskMetadata(
             promptActionLog.provenance,

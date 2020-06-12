@@ -2,7 +2,6 @@ import {
   ApplicationPromptTaskParameters,
   applicationPromptType,
   basicPromptType,
-  ClozePromptParameters,
   clozePromptType,
   getNextTaskParameters,
   MetabookSpacedRepetitionSchedule,
@@ -18,11 +17,7 @@ import {
 } from "../reviewItem";
 import colors from "../styles/colors";
 import { borderRadius } from "../styles/layout";
-import CardField, {
-  clozeAnswerEndSentinel,
-  clozeAnswerStartSentinel,
-  clozeBlankSentinel,
-} from "./CardField";
+import CardField, { clozeBlankSentinel } from "./CardField";
 import FadeView from "./FadeView";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
 
@@ -91,25 +86,32 @@ function formatClozePromptContents(
   let matchIndex = 0;
   const clozeRegexp = /{([^}]+?)}/g;
   let match: RegExpExecArray | null;
+
+  let output = "";
+  let previousMatchStartIndex = 0;
+  let foundSelectedClozeDeletion = false;
   for (; (match = clozeRegexp.exec(clozeContents)); matchIndex++) {
+    output += clozeContents.slice(previousMatchStartIndex, match.index);
     if (matchIndex === clozeIndex) {
-      let substitution: string;
+      foundSelectedClozeDeletion = true;
       if (isRevealed) {
-        substitution =
-          clozeAnswerStartSentinel +
-          clozeContents.slice(match.index, clozeRegexp.lastIndex) +
-          clozeAnswerEndSentinel;
+        // We emit the original delimeted string (i.e. "{cloze}"), which is styled in CardField.
+        output += clozeContents.slice(match.index, clozeRegexp.lastIndex);
       } else {
-        substitution = clozeBlankSentinel;
+        output += clozeBlankSentinel;
       }
-      return (
-        clozeContents.slice(0, match.index) +
-        substitution +
-        clozeContents.slice(clozeRegexp.lastIndex)
-      ).replace(clozeRegexp, "$1");
+    } else {
+      output += match[1]; // strip the braces
     }
+    previousMatchStartIndex = clozeRegexp.lastIndex;
   }
-  return `(invalid cloze: couldn't find cloze deletion with index ${clozeIndex})`;
+  output += clozeContents.slice(previousMatchStartIndex);
+
+  if (foundSelectedClozeDeletion) {
+    return output;
+  } else {
+    return `(invalid cloze: couldn't find cloze deletion with index ${clozeIndex})`;
+  }
 }
 
 function ClozePromptCard(

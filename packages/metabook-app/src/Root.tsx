@@ -70,10 +70,12 @@ function usePersistenceStatus() {
 }
 
 // undefined means we don't know yet; null means signed out.
-function useCurrentUserID(
+function useCurrentUserRecord(
   authenticationClient: Authentication.AuthenticationClient,
-): string | null | undefined {
-  const [userID, setUserID] = useState<string | null | undefined>(undefined);
+): Authentication.UserRecord | null | undefined {
+  const [userID, setUserID] = useState<
+    Authentication.UserRecord | null | undefined
+  >(undefined);
   useEffect(() => {
     return authenticationClient.subscribeToUserAuthState(setUserID);
   }, [authenticationClient]);
@@ -94,13 +96,13 @@ export default function Root() {
   const [authenticationClient] = useState(
     () => new Authentication.FirebaseAuthenticationClient(getFirebaseAuth()),
   );
-  const userID = useCurrentUserID(authenticationClient);
+  const userRecord = useCurrentUserRecord(authenticationClient);
 
   useEffect(() => {
-    if (persistenceStatus === "enabled" && userID) {
+    if (persistenceStatus === "enabled" && userRecord) {
       const userClient = new MetabookFirebaseUserClient(
         getFirestore(),
-        "x5EWk2UT56URxbfrl7djoxwxiqH2",
+        userRecord.userID,
       );
       setPromptStateClient(
         new PromptStateClient(
@@ -121,7 +123,7 @@ export default function Root() {
         }),
       );
     }
-  }, [persistenceStatus, userID]);
+  }, [persistenceStatus, userRecord]);
 
   if (promptStateClient && dataRecordClient) {
     return (
@@ -130,7 +132,7 @@ export default function Root() {
         dataRecordClient={dataRecordClient}
       />
     );
-  } else if (userID === null) {
+  } else if (userRecord === null) {
     return <SignInScreen authenticationClient={authenticationClient} />;
   } else {
     return (

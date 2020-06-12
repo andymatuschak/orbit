@@ -16,7 +16,7 @@ import { createTaskCache } from "./taskCache";
   const app = getDefaultFirebaseApp();
   const userClient = new MetabookFirebaseUserClient(
     app.firestore(),
-    "x5EWk2UT56URxbfrl7djoxwxiqH2",
+    "VkPiAU6PVGgR20iLlyekhun8BU03",
   );
   const dataClient = new MetabookFirebaseDataClient(
     app.firestore(),

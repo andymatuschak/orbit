@@ -3,10 +3,6 @@ import "./src/util/shimBase64";
 import "expo-asset";
 import { NativeEventEmitter, NativeModules, Platform } from "react-native";
 
-if (Platform.OS !== "web") {
-  require("node-libs-react-native/globals");
-}
-
 import Root from "./src/Root";
 
 export default function App() {

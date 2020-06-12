@@ -166,10 +166,7 @@ export default class PromptStateClient {
   }
 
   private async performInitialLogImport() {
-    let currentServerTimestampThreshold: ServerTimestamp = (await this.actionLogStore.getLatestServerTimestamp()) ?? {
-      seconds: 0,
-      nanoseconds: 0,
-    };
+    let currentServerTimestampThreshold: ServerTimestamp | null = await this.actionLogStore.getLatestServerTimestamp();
     console.log("[Action log import] Starting initial import");
 
     let total = 0;
@@ -177,7 +174,11 @@ export default class PromptStateClient {
     const downloadStartTime = Date.now();
     while (true) {
       console.log(
-        `[Action log import] Fetching logs after ${currentServerTimestampThreshold.seconds}.${currentServerTimestampThreshold.nanoseconds}.`,
+        `[Action log import] Fetching logs after ${
+          currentServerTimestampThreshold
+            ? `${currentServerTimestampThreshold.seconds}.${currentServerTimestampThreshold?.nanoseconds}`
+            : "start"
+        }.`,
       );
 
       const logs = await this.remoteClient.getActionLogs(

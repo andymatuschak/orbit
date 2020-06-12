@@ -108,17 +108,37 @@ export const applicationPrompt = () => (
 );
 
 export const clozePrompt = () => (
-  <TestCard
-    showsNeedsRetryNotice={false}
-    reviewItem={{
-      reviewItemType: "prompt",
-      prompt: testClozePrompt,
-      promptParameters: { clozeIndex: 1 },
-      promptState: null,
-      attachmentResolutionMap: null,
-    }}
-    shouldLabelApplicationPrompts={true}
-  />
+  <View>
+    <TestCard
+      showsNeedsRetryNotice={false}
+      reviewItem={{
+        reviewItemType: "prompt",
+        prompt: testClozePrompt,
+        promptParameters: { clozeIndex: 1 },
+        promptState: null,
+        attachmentResolutionMap: null,
+      }}
+      shouldLabelApplicationPrompts={true}
+    />
+    <TestCard
+      showsNeedsRetryNotice={false}
+      reviewItem={{
+        reviewItemType: "prompt",
+        prompt: {
+          ...testClozePrompt,
+          body: {
+            contents:
+              "This is a {cloze\n\nspanning multiple paragraphs\n\nand ending in the middle of} one.",
+            attachments: [],
+          },
+        },
+        promptParameters: { clozeIndex: 0 },
+        promptState: null,
+        attachmentResolutionMap: null,
+      }}
+      shouldLabelApplicationPrompts={true}
+    />
+  </View>
 );
 
 export const image = () => (
