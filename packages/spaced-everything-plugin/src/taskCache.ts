@@ -17,7 +17,7 @@ import {
   PromptTaskID,
 } from "metabook-core";
 import { updateMetadataActionLogType } from "metabook-core/dist/types/actionLog";
-import { PromptStateCache } from "metabook-firebase-support";
+import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
 import { notePrompts, taskCache, TaskRecord } from "spaced-everything";
 import SpacedEverythingImportCache, { CachedNoteMetadata } from "./importCache";
 import {
@@ -42,10 +42,25 @@ async function initializeImportCache(
   console.log(
     `Fetching prompt states after ${latestServerTimestamp?.seconds}.${latestServerTimestamp?.nanoseconds}`,
   );
-  const promptStates = await userClient.getPromptStates({
-    provenanceType: PromptProvenanceType.Note,
-    updatedAfterServerTimestamp: latestServerTimestamp ?? undefined,
-  });
+
+  const promptStates: PromptStateCache[] = [];
+
+  let updatedAfterServerTimestamp: ServerTimestamp | undefined =
+    latestServerTimestamp ?? undefined;
+  while (true) {
+    const newPromptStates = await userClient.getPromptStates({
+      provenanceType: PromptProvenanceType.Note,
+      updatedAfterServerTimestamp,
+    });
+    if (newPromptStates.length > 0) {
+      promptStates.push(...newPromptStates);
+      updatedAfterServerTimestamp =
+        newPromptStates[newPromptStates.length - 1].latestLogServerTimestamp;
+    } else {
+      break;
+    }
+  }
+
   console.log(`Fetched ${promptStates.length} prompt states`);
   const promptStatesToStore: {
     promptStateCache: PromptStateCache;

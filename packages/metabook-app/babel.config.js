@@ -1,6 +1,5 @@
 module.exports = function (api) {
   const isTest = api.env("test");
-  api.caller((caller) => console.log(caller));
   if (!isTest) {
     api.cache(true);
   }
@@ -17,6 +16,7 @@ module.exports = function (api) {
             },
           ],
           "@babel/preset-typescript",
+          "module:metro-react-native-babel-preset",
         ]
       : ["babel-preset-expo"],
     plugins: true

@@ -8,17 +8,21 @@ import {
 import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
 import { MetabookUnsubscribe } from "../types/unsubscribe";
 
-export type PromptStateQuery =
+export type PromptStateQuery = { limit?: number } & (
   | {
       dueBeforeTimestampMillis: number;
     }
   | {
       provenanceType: PromptProvenanceType;
       updatedAfterServerTimestamp?: ServerTimestamp;
-    };
+    }
+  | {
+      updatedAfterServerTimestamp?: ServerTimestamp;
+    }
+);
 
 export interface MetabookUserClient {
-  getPromptStates(query?: PromptStateQuery): Promise<PromptStateCache[]>;
+  getPromptStates(query: PromptStateQuery): Promise<PromptStateCache[]>;
 
   subscribeToActionLogs(
     afterServerTimestamp: ServerTimestamp | null,

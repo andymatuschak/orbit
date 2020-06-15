@@ -123,7 +123,9 @@ describe("security rules", () => {
 
   test("can't read cards from another user", async () => {
     await recordTestPromptStateUpdate(client).commit;
-    await expect(anotherClient.getPromptStates()).rejects.toBeInstanceOf(Error);
+    await expect(anotherClient.getPromptStates({})).rejects.toBeInstanceOf(
+      Error,
+    );
   });
 
   test("can't write cards to another user", async () => {

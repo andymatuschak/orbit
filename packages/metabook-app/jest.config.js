@@ -6,4 +6,5 @@ module.exports = {
   transform: {
     "\\.[jt]s$": ["babel-jest", { cwd: __dirname }],
   },
+  preset: "react-native",
 };

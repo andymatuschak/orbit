@@ -30,19 +30,18 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     this.database = firestore;
   }
 
-  async getPromptStates(query?: PromptStateQuery): Promise<PromptStateCache[]> {
-    const output: PromptStateCache[] = [];
+  async getPromptStates(query: PromptStateQuery): Promise<PromptStateCache[]> {
     let ref = getTaskStateCacheCollectionReference(
       this.database,
       this.userID,
-    ).limit(1000) as firebase.firestore.Query<PromptStateCache>;
+    ).limit(query.limit || 1000) as firebase.firestore.Query<PromptStateCache>;
 
     if (query) {
       if ("dueBeforeTimestampMillis" in query) {
         ref = ref
           .orderBy("dueTimestampMillis", "asc")
           .where("dueTimestampMillis", "<=", query.dueBeforeTimestampMillis);
-      } else if ("provenanceType" in query) {
+      } else {
         ref = ref.orderBy("latestLogServerTimestamp", "asc");
         if (query.updatedAfterServerTimestamp) {
           ref = ref.where(
@@ -54,40 +53,18 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
             ),
           );
         }
-        ref = ref.where(
-          "taskMetadata.provenance.provenanceType",
-          "==",
-          query.provenanceType,
-        );
+        if ("provenanceType" in query) {
+          ref = ref.where(
+            "taskMetadata.provenance.provenanceType",
+            "==",
+            query.provenanceType,
+          );
+        }
       }
     }
 
-    let startAfter: firebase.firestore.DocumentSnapshot<
-      PromptStateCache
-    > | null = null;
-    do {
-      const offsetRef: firebase.firestore.Query<PromptStateCache> = startAfter
-        ? ref.startAfter(startAfter)
-        : ref;
-
-      // We'll try from cache first, but if we don't have anything in the cache, we'll look to the server.
-      const snapshot = await offsetRef.get();
-
-      for (const doc of snapshot.docs) {
-        output.push(doc.data() as PromptStateCache);
-      }
-
-      startAfter = snapshot.empty
-        ? null
-        : snapshot.docs[snapshot.docs.length - 1];
-      if (!snapshot.empty) {
-        console.log(
-          `Fetched ${snapshot.size} prompt states; ${output.length} total`,
-        );
-      }
-    } while (startAfter !== null);
-
-    return output;
+    const snapshot = await ref.get();
+    return snapshot.docs.map((doc) => doc.data() as PromptStateCache);
   }
 
   subscribeToActionLogs(

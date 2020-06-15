@@ -3,9 +3,14 @@ import LevelUp, * as levelup from "levelup";
 import * as lexi from "lexicographic-integer";
 
 import { PromptState, PromptTaskID } from "metabook-core";
-import { ServerTimestamp } from "metabook-firebase-support";
+import {
+  maxServerTimestamp,
+  PromptStateCache,
+  ServerTimestamp,
+} from "metabook-firebase-support";
 import { Transform } from "stream";
 import sub from "subleveldown";
+import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";
 
 function getDueTimestampIndexKey(
   promptState: PromptState,
@@ -13,6 +18,9 @@ function getDueTimestampIndexKey(
 ) {
   return `${lexi.pack(promptState.dueTimestampMillis, "hex")}!${taskID}`;
 }
+
+const latestLogServerTimestampKey = "latestLogServerTimestamp";
+const hasFinishedInitialImportKey = "hasFinishedInitialImport";
 
 export default class PromptStateStore {
   private rootDB: levelup.LevelUp;
@@ -53,19 +61,49 @@ export default class PromptStateStore {
     });
   }
 
-  // Can only be called from the op queue
+  async getLatestLogServerTimestamp(): Promise<ServerTimestamp | null> {
+    return this.runOp(async () => this._getLatestLogServerTimestamp());
+  }
+
+  async getHasFinishedInitialImport(): Promise<boolean> {
+    return this.runOp(async () => {
+      const result = await getJSONRecord<boolean>(
+        this.rootDB,
+        hasFinishedInitialImportKey,
+      );
+      return result?.record ?? false;
+    });
+  }
+
+  async setHasFinishedInitialImport(): Promise<void> {
+    return this.runOp(async () => {
+      await saveJSONRecord(this.rootDB, hasFinishedInitialImportKey, true);
+    });
+  }
+
   async savePromptStateCaches(
-    entries: Iterable<{
-      promptState: PromptState;
-      taskID: PromptTaskID;
-    }>,
+    entries: Iterable<PromptStateCache>,
   ): Promise<void> {
     return this.runOp(async () => {
+      const initialLatestLogServerTimestamp = await this._getLatestLogServerTimestamp();
+      let maxLatestLogServerTimestamp = initialLatestLogServerTimestamp;
+
       const batch = this.promptStateDB.batch();
       const dueTimestampIndexBatch = this.dueTimestampIndexDB.batch();
-      for (const { promptState, taskID } of entries) {
+      for (const {
+        latestLogServerTimestamp,
+        taskID,
+        ...promptState
+      } of entries) {
         const encodedPromptState = JSON.stringify(promptState);
         batch.put(taskID, encodedPromptState);
+
+        maxLatestLogServerTimestamp = maxLatestLogServerTimestamp
+          ? maxServerTimestamp(
+              latestLogServerTimestamp,
+              maxLatestLogServerTimestamp,
+            )
+          : latestLogServerTimestamp;
 
         const dueTimestampIndexKey = getDueTimestampIndexKey(
           promptState,
@@ -78,10 +116,37 @@ export default class PromptStateStore {
         }
       }
 
-      await Promise.all([batch.write(), dueTimestampIndexBatch.write()]);
+      const promises: Promise<unknown>[] = [
+        batch.write(),
+        dueTimestampIndexBatch.write(),
+      ];
+      if (maxLatestLogServerTimestamp !== initialLatestLogServerTimestamp) {
+        promises.push(
+          saveJSONRecord(
+            this.rootDB,
+            latestLogServerTimestampKey,
+            maxLatestLogServerTimestamp,
+          ),
+        );
+        this.cachedLatestLogServerTimestamp = maxLatestLogServerTimestamp;
+      }
+      await Promise.all(promises);
     });
   }
 
+  // Can only be called from the op queue
+  private async _getLatestLogServerTimestamp(): Promise<ServerTimestamp | null> {
+    if (this.cachedLatestLogServerTimestamp === undefined) {
+      const result = await getJSONRecord<ServerTimestamp>(
+        this.rootDB,
+        latestLogServerTimestampKey,
+      );
+      this.cachedLatestLogServerTimestamp = result?.record ?? null;
+    }
+    return this.cachedLatestLogServerTimestamp;
+  }
+
+  // Can only be called from the op queue
   private async _getPromptState(
     taskID: PromptTaskID,
   ): Promise<PromptState | null> {
@@ -110,18 +175,28 @@ export default class PromptStateStore {
         new Promise((resolve, reject) => {
           const output: Map<PromptTaskID, PromptState> = new Map();
 
+          const promises: Promise<unknown>[] = [];
+
           const indexUpdateTransformer = new Transform({
             objectMode: true,
             transform: async (chunk, inc, done) => {
               const indexKey = chunk.key;
+              const dueTimestamp = lexi.unpack(indexKey.split("!")[0]);
               const taskID = indexKey.split("!")[1];
               const promptState = await this._getPromptState(taskID);
-              if (!promptState) {
+              if (promptState) {
+                if (promptState.dueTimestampMillis === dueTimestamp) {
+                  done(null, { taskID, promptState });
+                } else {
+                  // Stale index. Remove the key.
+                  promises.push(this.dueTimestampIndexDB.del(indexKey));
+                  done(null);
+                }
+              } else {
                 throw new Error(
                   `Inconsistent index: contains index for prompt state with key ${taskID}, which doesn't exist`,
                 );
               }
-              done(null, { taskID, promptState });
             },
           });
 
@@ -136,9 +211,18 @@ export default class PromptStateStore {
             .on("data", ({ taskID, promptState }) => {
               output.set(taskID, promptState);
             })
-            .on("error", reject)
-            .on("close", () => reject(new Error(`Database unexpected closed`)))
-            .on("end", () => resolve(output));
+            .on("error", async (error) => {
+              await Promise.all(promises);
+              reject(error);
+            })
+            .on("close", async () => {
+              await Promise.all(promises);
+              reject(new Error(`Database unexpected closed`));
+            })
+            .on("end", async () => {
+              await Promise.all(promises);
+              resolve(output);
+            });
         }),
     );
   }
