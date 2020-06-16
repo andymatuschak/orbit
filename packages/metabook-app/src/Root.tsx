@@ -82,12 +82,44 @@ function useCurrentUserRecord(
   return userID;
 }
 
+interface Closeable {
+  close(): Promise<unknown>;
+}
+
+function useCloseable<C extends Closeable>(constructor: () => C): C {
+  const [closeable] = useState(constructor);
+  useEffect(() => {
+    return () => {
+      closeable.close();
+    };
+  }, [closeable]);
+  return closeable;
+}
+
+function useActionLogStore(): ActionLogStore {
+  const [actionLogStore] = useState(() => new ActionLogStore());
+  useEffect(() => {
+    return () => {
+      actionLogStore.close();
+    };
+  }, [actionLogStore]);
+  return actionLogStore;
+}
+
 export default function Root() {
   const persistenceStatus = usePersistenceStatus();
+  const promptStateStore = useCloseable(() => new PromptStateStore());
+  const actionLogStore = useCloseable(() => new ActionLogStore());
+  const dataRecordStore = useCloseable(() => new DataRecordStore());
+
   const [
     promptStateClient,
     setPromptStateClient,
   ] = useState<PromptStateClient | null>(null);
+  const [
+    userClient,
+    setUserClient,
+  ] = useState<MetabookFirebaseUserClient | null>(null);
   const [
     dataRecordClient,
     setDataRecordClient,
@@ -104,20 +136,16 @@ export default function Root() {
         getFirestore(),
         userRecord.userID,
       );
+      setUserClient(userClient);
       setPromptStateClient(
-        new PromptStateClient(
-          userClient,
-          new PromptStateStore(),
-          new ActionLogStore(),
-        ),
+        new PromptStateClient(userClient, promptStateStore, actionLogStore),
       );
       const dataClient = new MetabookFirebaseDataClient(
         getFirestore(),
         getFirebaseFunctions(),
       );
-      const dataCache = new DataRecordStore();
       setDataRecordClient(
-        new DataRecordClient(dataClient, dataCache, {
+        new DataRecordClient(dataClient, dataRecordStore, {
           writeFile: cacheWriteHandler,
           fileExistsAtURL,
         }),
@@ -125,11 +153,13 @@ export default function Root() {
     }
   }, [persistenceStatus, userRecord]);
 
-  if (promptStateClient && dataRecordClient) {
+  if (promptStateClient && dataRecordClient && userClient) {
     return (
       <ReviewSession
         promptStateClient={promptStateClient}
         dataRecordClient={dataRecordClient}
+        userClient={userClient}
+        promptStateStore={promptStateStore}
       />
     );
   } else if (userRecord === null) {

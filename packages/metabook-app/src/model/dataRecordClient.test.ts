@@ -16,8 +16,9 @@ import DataRecordClient, {
   DataRecordClientFileStore,
 } from "./dataRecordClient";
 
-beforeAll(() => {
-  shimFirebasePersistence();
+jest.mock("../util/leveldown", () => {
+  const Memdown = require("memdown");
+  return Memdown;
 });
 
 class MockDataClient implements MetabookDataClient {

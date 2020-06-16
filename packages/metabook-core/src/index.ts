@@ -36,7 +36,7 @@ export {
 export { getIDForPrompt } from "./promptID";
 export type { PromptID } from "./promptID";
 
-export { default as getDuePromptTaskIDs } from "./getDuePromptTaskIDs";
+export { default as getDuePromptTasks } from "./getDuePromptTasks";
 
 export { getIDForPromptTask, getPromptTaskForID } from "./types/promptTask";
 export type {

@@ -49,7 +49,7 @@ export default class DataRecordClient {
     await Promise.all(cachedPromptPromises);
 
     if (missingIDs.size > 0) {
-      console.log("Getting remote prompts", missingIDs);
+      console.log(`Getting ${missingIDs.size} remote prompts`);
       const prompts = await this.dataClient.getPrompts(missingIDs);
       for (const [promptID, prompt] of prompts) {
         if (prompt) {
@@ -65,7 +65,7 @@ export default class DataRecordClient {
 
   async getAttachments(
     attachmentIDs: Iterable<AttachmentID>,
-  ): Promise<Map<AttachmentID, AttachmentURLReference | null>> {
+  ): Promise<Map<AttachmentID, AttachmentURLReference>> {
     const cachedAttachmentPromises: Promise<unknown>[] = [];
     const attachmentReferenceMap = new Map<
       AttachmentID,
@@ -91,7 +91,7 @@ export default class DataRecordClient {
     await Promise.all(cachedAttachmentPromises);
 
     if (missingIDs.size > 0) {
-      console.log("Getting remote attachments", missingIDs);
+      console.log(`Getting ${missingIDs.size} remote attachments`);
       const attachments = await this.dataClient.getAttachments(missingIDs);
       const attachmentWritePromises: Promise<unknown>[] = [];
       for (const [attachmentID, attachment] of attachments) {

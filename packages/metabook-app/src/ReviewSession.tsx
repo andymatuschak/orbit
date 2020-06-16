@@ -1,3 +1,4 @@
+import { MetabookUserClient } from "metabook-client";
 import {
   getIDForPrompt,
   getIDForPromptTask,
@@ -5,17 +6,18 @@ import {
   PromptTask,
   repetitionActionLogType,
 } from "metabook-core";
-import { ReviewArea, ReviewAreaProps } from "metabook-ui";
+import { ReviewArea, ReviewAreaProps, ReviewItem } from "metabook-ui";
 import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
 import colors from "metabook-ui/dist/styles/colors";
 import { spacing } from "metabook-ui/dist/styles/layout";
 import typography from "metabook-ui/dist/styles/typography";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Platform, SafeAreaView, Text, View } from "react-native";
+import fetchReviewItemQueue from "./model/fetchReviewItemQueue";
 import DataRecordClient from "./model/dataRecordClient";
 import PromptStateClient from "./model/promptStateClient";
+import PromptStateStore from "./model/promptStateStore";
 import ReviewSessionProgressBar from "./ReviewSessionProgressBar";
-import { useReviewItems } from "./useReviewItems";
 
 function onMark(
   promptStateClient: PromptStateClient | null,
@@ -55,26 +57,46 @@ function onMark(
 
 interface ReviewSessionProps {
   promptStateClient: PromptStateClient;
+  promptStateStore: PromptStateStore;
+  userClient: MetabookUserClient;
   dataRecordClient: DataRecordClient;
 }
 
 export default function ReviewSession({
   promptStateClient,
+  promptStateStore,
+  userClient,
   dataRecordClient,
 }: ReviewSessionProps) {
-  const items = useReviewItems(promptStateClient, dataRecordClient);
-
-  // TODO: implement real queue
-  const [maxItemCount, setMaxItemCount] = useState(0);
+  const [items, setItems] = useState<ReviewItem[] | null>(null);
+  const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
   useEffect(() => {
-    setMaxItemCount((maxItemCount) =>
-      Math.max(maxItemCount, items?.length ?? 0),
-    );
-  }, [items]);
+    let isCanceled = false;
+
+    fetchReviewItemQueue({
+      dataRecordClient,
+      promptStateStore,
+      userClient,
+      dueBeforeTimestampMillis: Date.now(),
+    }).then((newItems) => {
+      if (!isCanceled) {
+        setItems(newItems);
+      }
+    });
+    return () => {
+      isCanceled = true;
+    };
+  }, [dataRecordClient, promptStateStore, userClient]);
+
+  const remainingItems = useMemo(() => items?.slice(currentQueueIndex), [
+    items,
+    currentQueueIndex,
+  ]);
 
   const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>(
     (marking) => {
       onMark(promptStateClient, marking);
+      setCurrentQueueIndex((currentQueueIndex) => currentQueueIndex + 1);
     },
     [promptStateClient],
   );
@@ -92,18 +114,18 @@ export default function ReviewSession({
         backgroundColor: colors.key00,
       },
     },
-    items ? (
-      items.length > 0 ? (
+    remainingItems ? (
+      remainingItems.length > 0 ? (
         <View style={{ flex: 1, alignItems: "center" }}>
           <ReviewArea
-            items={items}
+            items={remainingItems}
             onMark={onMarkCallback}
             schedule="aggressiveStart"
             shouldLabelApplicationPrompts={false}
           />
           <ReviewSessionProgressBar
-            completedTaskCount={maxItemCount - items.length}
-            totalTaskCount={maxItemCount}
+            completedTaskCount={currentQueueIndex}
+            totalTaskCount={items!.length}
           />
         </View>
       ) : (

@@ -1,5 +1,12 @@
 import shimFirebasePersistence from "firebase-node-persistence-shim";
-import { PromptState, PromptTaskID } from "metabook-core";
+import {
+  basicPromptType,
+  getIDForPromptTask,
+  PromptID,
+  PromptState,
+  PromptTask,
+  PromptTaskID,
+} from "metabook-core";
 import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
 import PromptStateStore from "./promptStateStore";
 
@@ -95,8 +102,14 @@ test("returns null for missing keys", async () => {
 });
 
 describe("access by due timestamp", () => {
+  const testTask: PromptTask = {
+    promptID: "x" as PromptID,
+    promptType: basicPromptType,
+    promptParameters: null,
+  };
+  const testTaskID = getIDForPromptTask(testTask);
+
   test("accesses due prompts", async () => {
-    const testTaskID = "x" as PromptTaskID;
     await store.savePromptStateCaches([
       {
         ...testPromptStateCache,
@@ -106,17 +119,19 @@ describe("access by due timestamp", () => {
       {
         ...testPromptStateCache,
         dueTimestampMillis: 5000,
-        taskID: "another" as PromptTaskID,
+        taskID: getIDForPromptTask({
+          ...testTask,
+          promptID: "another" as PromptID,
+        }),
       },
     ]);
 
     expect(await store.getDuePromptStates(1000)).toMatchObject(
-      new Map([[testTaskID, { ...testPromptState, dueTimestampMillis: 1000 }]]),
+      new Map([[testTask, { ...testPromptState, dueTimestampMillis: 1000 }]]),
     );
   });
 
   test("indexed due times update when overwritten", async () => {
-    const testTaskID = "x" as PromptTaskID;
     await store.savePromptStateCaches([
       {
         ...testPromptStateCache,

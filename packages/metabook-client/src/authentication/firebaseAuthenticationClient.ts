@@ -42,16 +42,15 @@ export default class FirebaseAuthenticationClient
     callback: (userRecord: UserRecord | null) => void,
   ): MetabookUnsubscribe {
     return this.auth.onAuthStateChanged((newUser) => {
-      console.log("UID changed:", this.auth.currentUser);
-      callback(
-        newUser
-          ? {
-              userID: newUser.uid,
-              displayName: newUser.displayName,
-              emailAddress: newUser.email,
-            }
-          : null,
-      );
+      const newUserRecord = newUser
+        ? {
+            userID: newUser.uid,
+            displayName: newUser.displayName,
+            emailAddress: newUser.email,
+          }
+        : null;
+      console.log("UID changed:", newUserRecord);
+      callback(newUserRecord);
     });
   }
 

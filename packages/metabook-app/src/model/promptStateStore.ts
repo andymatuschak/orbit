@@ -1,15 +1,20 @@
-import RNLeveldown from "../util/leveldown";
+import { AbstractIteratorOptions } from "abstract-leveldown";
 import LevelUp, * as levelup from "levelup";
 import * as lexi from "lexicographic-integer";
 
-import { PromptState, PromptTaskID } from "metabook-core";
+import {
+  getPromptTaskForID,
+  PromptState,
+  PromptTask,
+  PromptTaskID,
+} from "metabook-core";
 import {
   maxServerTimestamp,
   PromptStateCache,
   ServerTimestamp,
 } from "metabook-firebase-support";
-import { Transform } from "stream";
 import sub from "subleveldown";
+import RNLeveldown from "../util/leveldown";
 import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";
 
 function getDueTimestampIndexKey(
@@ -28,22 +33,29 @@ export default class PromptStateStore {
   private dueTimestampIndexDB: levelup.LevelUp;
   private opQueue: (() => Promise<unknown>)[];
 
+  private isClosed: boolean;
+
   private cachedLatestLogServerTimestamp: ServerTimestamp | null | undefined;
+  private cachedHasFinishedInitialImport: boolean | undefined;
 
   constructor(cacheName = "PromptStateStore") {
-    console.log("[Performance] Opening prompt store", Date.now() / 1000.0);
-    this.rootDB = LevelUp(new RNLeveldown(cacheName), () => {
-      console.log("[Performance] Opened database", Date.now() / 1000.0);
-    });
+    this.rootDB = LevelUp(new RNLeveldown(cacheName));
     this.promptStateDB = sub(this.rootDB, "promptStates");
     this.dueTimestampIndexDB = sub(this.rootDB, "dueTimestampMillis");
-    this.cachedLatestLogServerTimestamp = undefined;
     this.opQueue = [];
+
+    this.isClosed = false;
+
+    this.cachedLatestLogServerTimestamp = undefined;
+    this.cachedHasFinishedInitialImport = undefined;
   }
 
   private runOp<T>(op: () => Promise<T>): Promise<T> {
     return new Promise((resolve, reject) => {
       const runOp = () => {
+        if (this.isClosed) {
+          reject();
+        }
         return op()
           .then(resolve, reject)
           .finally(() => {
@@ -67,17 +79,21 @@ export default class PromptStateStore {
 
   async getHasFinishedInitialImport(): Promise<boolean> {
     return this.runOp(async () => {
-      const result = await getJSONRecord<boolean>(
-        this.rootDB,
-        hasFinishedInitialImportKey,
-      );
-      return result?.record ?? false;
+      if (this.cachedHasFinishedInitialImport === undefined) {
+        const result = await getJSONRecord<boolean>(
+          this.rootDB,
+          hasFinishedInitialImportKey,
+        );
+        this.cachedHasFinishedInitialImport = result?.record ?? false;
+      }
+      return this.cachedHasFinishedInitialImport;
     });
   }
 
   async setHasFinishedInitialImport(): Promise<void> {
     return this.runOp(async () => {
       await saveJSONRecord(this.rootDB, hasFinishedInitialImportKey, true);
+      this.cachedHasFinishedInitialImport = true;
     });
   }
 
@@ -105,14 +121,20 @@ export default class PromptStateStore {
             )
           : latestLogServerTimestamp;
 
-        const dueTimestampIndexKey = getDueTimestampIndexKey(
-          promptState,
-          taskID,
-        );
-        if (promptState.taskMetadata.isDeleted) {
-          dueTimestampIndexBatch.del(dueTimestampIndexKey);
-        } else {
-          dueTimestampIndexBatch.put(dueTimestampIndexKey, taskID);
+        // We'll remove our due timestamp index if we already had one.
+        const oldPromptState = await this._getPromptState(taskID);
+        if (oldPromptState) {
+          dueTimestampIndexBatch.del(
+            getDueTimestampIndexKey(oldPromptState, taskID),
+          );
+        }
+
+        if (!promptState.taskMetadata.isDeleted) {
+          const dueTimestampIndexKey = getDueTimestampIndexKey(
+            promptState,
+            taskID,
+          );
+          dueTimestampIndexBatch.put(dueTimestampIndexKey, encodedPromptState);
         }
       }
 
@@ -169,69 +191,57 @@ export default class PromptStateStore {
   async getDuePromptStates(
     dueThresholdMillis: number,
     limit?: number,
-  ): Promise<Map<PromptTaskID, PromptState>> {
+  ): Promise<Map<PromptTask, PromptState>> {
     return this.runOp(
       () =>
         new Promise((resolve, reject) => {
-          const output: Map<PromptTaskID, PromptState> = new Map();
+          const output: Map<PromptTask, PromptState> = new Map();
+          const options: AbstractIteratorOptions = {
+            lt: `${lexi.pack(dueThresholdMillis, "hex")}~`, // i.e. the character after the due timestamp
+            keys: true,
+            values: true,
+          };
+          if (limit !== undefined) {
+            options.limit = limit;
+          }
+          const iterator = this.dueTimestampIndexDB.iterator(options);
 
-          const promises: Promise<unknown>[] = [];
-
-          const indexUpdateTransformer = new Transform({
-            objectMode: true,
-            transform: async (chunk, inc, done) => {
-              const indexKey = chunk.key;
-              const dueTimestamp = lexi.unpack(indexKey.split("!")[0]);
-              const taskID = indexKey.split("!")[1];
-              const promptState = await this._getPromptState(taskID);
-              if (promptState) {
-                if (promptState.dueTimestampMillis === dueTimestamp) {
-                  done(null, { taskID, promptState });
-                } else {
-                  // Stale index. Remove the key.
-                  promises.push(this.dueTimestampIndexDB.del(indexKey));
-                  done(null);
-                }
-              } else {
-                throw new Error(
-                  `Inconsistent index: contains index for prompt state with key ${taskID}, which doesn't exist`,
-                );
-              }
-            },
-          });
-
-          this.dueTimestampIndexDB
-            .createReadStream({
-              lt: `${lexi.pack(dueThresholdMillis, "hex")}~`, // i.e. the character after the due timestamp
-              keys: true,
-              values: true,
-              limit,
-            })
-            .pipe(indexUpdateTransformer)
-            .on("data", ({ taskID, promptState }) => {
-              output.set(taskID, promptState);
-            })
-            .on("error", async (error) => {
-              await Promise.all(promises);
+          function next(error: Error | undefined, key: string, value: string) {
+            if (error) {
               reject(error);
-            })
-            .on("close", async () => {
-              await Promise.all(promises);
-              reject(new Error(`Database unexpected closed`));
-            })
-            .on("end", async () => {
-              await Promise.all(promises);
-              resolve(output);
-            });
+            } else if (!key && !value) {
+              iterator.end(() => {
+                resolve(output);
+              });
+            } else {
+              const taskID = key.split("!")[1] as PromptTaskID;
+              const promptState = JSON.parse(value);
+              const promptTask = getPromptTaskForID(taskID);
+              if (promptTask instanceof Error) {
+                console.error("Unparseable task ID", taskID, promptTask);
+              } else {
+                output.set(promptTask, promptState);
+              }
+
+              iterator.next(next);
+            }
+          }
+
+          iterator.next(next);
         }),
     );
   }
 
   async clear(): Promise<void> {
-    await this.rootDB.clear();
+    await this.runOp(async () => {
+      await this.rootDB.clear();
+    });
   }
 
   async close(): Promise<void> {
-    await this.rootDB.close();
+    await this.runOp(async () => {
+      this.isClosed = true;
+      await this.rootDB.close();
+    });
   }
 }

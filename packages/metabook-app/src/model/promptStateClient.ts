@@ -17,6 +17,7 @@ import {
 } from "metabook-core";
 import { ServerTimestamp } from "metabook-firebase-support";
 import ActionLogStore from "./actionLogStore";
+import promptStateInitialImportOperation from "./promptStateInitialImportOperation";
 import PromptStateStore from "./promptStateStore";
 
 export function computeSubscriberUpdate(
@@ -88,6 +89,15 @@ export default class PromptStateClient {
     this.remoteLogSubscription = null;
     this.initialPromptStatePromise = null;
 
+    this.promptStateStore
+      .getHasFinishedInitialImport()
+      .then((hasCompletedInitialImport) => {
+        if (!hasCompletedInitialImport) {
+          promptStateInitialImportOperation(remoteClient, promptStateStore);
+        }
+      });
+
+    return;
     this.actionLogStore
       .hasCompletedInitialImport()
       .then(async (hasCompletedInitialImport) => {
