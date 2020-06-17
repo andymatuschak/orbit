@@ -14,7 +14,11 @@ import {
 } from "metabook-firebase-support";
 import { getDefaultFirebaseApp } from "../../firebase";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
-import { MetabookUserClient, PromptStateQuery } from "../userClient";
+import {
+  ActionLogQuery,
+  MetabookUserClient,
+  PromptStateQuery,
+} from "../userClient";
 
 type Timestamp = firebase.firestore.Timestamp;
 
@@ -43,7 +47,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
           .where("dueTimestampMillis", "<=", query.dueBeforeTimestampMillis);
       } else {
         ref = ref.orderBy("latestLogServerTimestamp", "asc");
-        if (query.updatedAfterServerTimestamp) {
+        if (query.updatedAfterServerTimestamp !== undefined) {
           ref = ref.where(
             "latestLogServerTimestamp",
             ">",
@@ -53,7 +57,17 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
             ),
           );
         }
-        if ("provenanceType" in query) {
+        if (query.updatedOnOrBeforeServerTimestamp !== undefined) {
+          ref = ref.where(
+            "latestLogServerTimestamp",
+            "<=",
+            new firebase.firestore.Timestamp(
+              query.updatedOnOrBeforeServerTimestamp.seconds,
+              query.updatedOnOrBeforeServerTimestamp.nanoseconds,
+            ),
+          );
+        }
+        if (query.provenanceType) {
           ref = ref.where(
             "taskMetadata.provenance.provenanceType",
             "==",
@@ -68,7 +82,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
   }
 
   subscribeToActionLogs(
-    afterServerTimestamp: ServerTimestamp | null,
+    query: ActionLogQuery,
     onNewLogs: (
       newLogs: {
         log: ActionLog;
@@ -78,77 +92,80 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
     ) => void,
     onError: (error: Error) => void,
   ): MetabookUnsubscribe {
-    return this.getActionLogRef(afterServerTimestamp, 1000).onSnapshot(
-      (snapshot) => {
-        const newLogs: {
-          log: ActionLog;
-          id: ActionLogID;
-          serverTimestamp: ServerTimestamp;
-        }[] = [];
-        for (const change of snapshot.docChanges()) {
-          if (!change.doc.metadata.hasPendingWrites) {
-            switch (change.type) {
-              case "added":
-              case "modified":
-                const {
-                  serverTimestamp,
-                  suppressTaskStateCacheUpdate,
-                  ...log
-                } = change.doc.data({ serverTimestamps: "none" });
-                newLogs.push({
-                  log,
-                  id: getActionLogIDForFirebaseKey(change.doc.id),
-                  serverTimestamp,
-                });
-                break;
-              case "removed":
-                // TODO make more robust against client failures to persist / sync
-                throw new Error(
-                  `Log entries shouldn't change after their creation. Unsupported change type ${
-                    change.type
-                  } with doc ${change.doc.data()}`,
-                );
-            }
+    return this.getActionLogRef(query).onSnapshot((snapshot) => {
+      const newLogs: {
+        log: ActionLog;
+        id: ActionLogID;
+        serverTimestamp: ServerTimestamp;
+      }[] = [];
+      for (const change of snapshot.docChanges()) {
+        if (!change.doc.metadata.hasPendingWrites) {
+          switch (change.type) {
+            case "added":
+            case "modified":
+              const {
+                serverTimestamp,
+                suppressTaskStateCacheUpdate,
+                ...log
+              } = change.doc.data({ serverTimestamps: "none" });
+              newLogs.push({
+                log,
+                id: getActionLogIDForFirebaseKey(change.doc.id),
+                serverTimestamp,
+              });
+              break;
+            case "removed":
+              // TODO make more robust against client failures to persist / sync
+              throw new Error(
+                `Log entries shouldn't change after their creation. Unsupported change type ${
+                  change.type
+                } with doc ${change.doc.data()}`,
+              );
           }
         }
-        if (newLogs.length > 0) {
-          onNewLogs(newLogs);
-        }
-      },
-      onError,
-    );
+      }
+      if (newLogs.length > 0) {
+        onNewLogs(newLogs);
+      }
+    }, onError);
   }
 
-  private getActionLogRef(
-    afterServerTimestamp: ServerTimestamp | null,
-    limit: number,
-  ) {
+  private getActionLogRef(query: ActionLogQuery) {
     let userStateLogsRef = getLogCollectionReference(this.database, this.userID)
       .orderBy("serverTimestamp", "asc")
-      .limit(limit) as firebase.firestore.Query<ActionLogDocument<Timestamp>>;
-    if (afterServerTimestamp) {
+      .limit(query.limit || 1000) as firebase.firestore.Query<
+      ActionLogDocument<Timestamp>
+    >;
+    if (query.afterServerTimestamp) {
       userStateLogsRef = userStateLogsRef.where(
         "serverTimestamp",
         ">",
         new firebase.firestore.Timestamp(
-          afterServerTimestamp.seconds,
-          afterServerTimestamp.nanoseconds,
+          query.afterServerTimestamp.seconds,
+          query.afterServerTimestamp.nanoseconds,
         ),
       );
     }
+    if (query.onOrBeforeServerTimestamp) {
+      userStateLogsRef = userStateLogsRef.where(
+        "serverTimestamp",
+        "<=",
+        new firebase.firestore.Timestamp(
+          query.onOrBeforeServerTimestamp.seconds,
+          query.onOrBeforeServerTimestamp.nanoseconds,
+        ),
+      );
+    }
+
     return userStateLogsRef;
   }
 
   async getActionLogs(
-    afterServerTimestamp: ServerTimestamp,
-    limit: number,
+    query: ActionLogQuery,
   ): Promise<
     { log: ActionLog; id: ActionLogID; serverTimestamp: ServerTimestamp }[]
   > {
-    const snapshot = await this.getActionLogRef(
-      afterServerTimestamp,
-      limit,
-    ).get();
+    const snapshot = await this.getActionLogRef(query).get();
     return snapshot.docs.map((doc) => {
       const {
         serverTimestamp,

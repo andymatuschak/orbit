@@ -93,8 +93,8 @@ describe("taskID index", () => {
     ];
     await actionLogStore.saveActionLogs(testLogs);
     expect(await actionLogStore.getActionLogsByTaskID("x")).toMatchObject([
-      testLogs[0].log,
-      testLogs[1].log,
+      { id: testIngestLogID, log: testLogs[0].log },
+      { id: testRepetitionLogID, log: testLogs[1].log },
     ]);
   });
 

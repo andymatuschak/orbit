@@ -1,6 +1,6 @@
 import isEqual from "lodash.isequal";
 
-import { MetabookUserClient } from "metabook-client";
+import { ActionLogQuery, MetabookUserClient } from "metabook-client";
 import {
   ActionLog,
   ActionLogID,
@@ -99,7 +99,7 @@ export default class PromptStateClient {
 
     return;
     this.actionLogStore
-      .hasCompletedInitialImport()
+      .getHasFinishedInitialImport()
       .then(async (hasCompletedInitialImport) => {
         if (hasCompletedInitialImport) {
           this.ensureSubscriptionToRemoteLogs(
@@ -128,7 +128,7 @@ export default class PromptStateClient {
 
     (async () => {
       if (
-        !(await this.actionLogStore.hasCompletedInitialImport()) &&
+        !(await this.actionLogStore.getHasFinishedInitialImport()) &&
         this.initialPromptStatePromise
       ) {
         await this.initialPromptStatePromise;
@@ -191,10 +191,12 @@ export default class PromptStateClient {
         }.`,
       );
 
-      const logs = await this.remoteClient.getActionLogs(
-        currentServerTimestampThreshold,
-        1000,
-      );
+      const logs = await this.remoteClient.getActionLogs({
+        limit: 1000,
+        ...(currentServerTimestampThreshold && {
+          afterServerTimestamp: currentServerTimestampThreshold,
+        }),
+      });
       if (logs.length > 0) {
         total += logs.length;
         console.log(
@@ -278,7 +280,7 @@ export default class PromptStateClient {
       (Date.now() - startTime) / 1000,
     );
 
-    await this.actionLogStore.markInitialImportCompleted();
+    await this.actionLogStore.setHasFinishedInitialImport();
     this.ensureSubscriptionToRemoteLogs(currentServerTimestampThreshold);
   }
 

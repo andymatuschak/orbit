@@ -3,13 +3,13 @@ import LevelUp, * as levelup from "levelup";
 import * as lexi from "lexicographic-integer";
 
 import { ActionLog, ActionLogID } from "metabook-core";
-import { ServerTimestamp } from "metabook-firebase-support";
+import { maxServerTimestamp, ServerTimestamp } from "metabook-firebase-support";
 import RNLeveldown from "../util/leveldown";
 import sub from "subleveldown";
 import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";
 
 const latestLogServerTimestampDBKey = "_latestLogServerTimestamp";
-const hasCompletedInitialImportDBKey = "_hasCompletedInitialImport";
+const hasCompletedInitialImportDBKey = "_hasFinishedInitialImport";
 
 function getActionLogIDFromTaskIDIndexDBKey(key: string) {
   return key.split("!")[2] as ActionLogID;
@@ -21,7 +21,7 @@ export default class ActionLogStore {
   private taskIDIndexDB: levelup.LevelUp;
 
   private cachedLatestServerTimestamp: ServerTimestamp | null | undefined;
-  private cachedHasCompletedInitialImport: boolean | undefined;
+  private cachedHasFinishedInitialImport: boolean | undefined;
 
   constructor(storeName = "ActionLogStore") {
     this.rootDB = LevelUp(new RNLeveldown(storeName));
@@ -41,25 +41,24 @@ export default class ActionLogStore {
     return this.cachedLatestServerTimestamp ?? null;
   }
 
-  async hasCompletedInitialImport(): Promise<boolean> {
-    if (this.cachedHasCompletedInitialImport === undefined) {
+  async getHasFinishedInitialImport(): Promise<boolean> {
+    if (this.cachedHasFinishedInitialImport === undefined) {
       const result = await getJSONRecord(
         this.actionLogDB,
         hasCompletedInitialImportDBKey,
       );
-      this.cachedHasCompletedInitialImport =
-        (result?.record as boolean) ?? null;
+      this.cachedHasFinishedInitialImport = (result?.record as boolean) ?? null;
     }
-    return this.cachedHasCompletedInitialImport ?? null;
+    return this.cachedHasFinishedInitialImport ?? null;
   }
 
-  async markInitialImportCompleted(): Promise<void> {
+  async setHasFinishedInitialImport(): Promise<void> {
     await saveJSONRecord(
       this.actionLogDB,
       hasCompletedInitialImportDBKey,
       true,
     );
-    this.cachedHasCompletedInitialImport = true;
+    this.cachedHasFinishedInitialImport = true;
   }
 
   async saveActionLogs(
@@ -83,21 +82,18 @@ export default class ActionLogStore {
         value: encodedLog,
       });
 
-      if (
-        serverTimestamp &&
-        (latestServerTimestamp === null ||
-          serverTimestamp.seconds > latestServerTimestamp.seconds ||
-          (serverTimestamp.seconds === latestServerTimestamp.seconds &&
-            serverTimestamp.nanoseconds > latestServerTimestamp.nanoseconds))
-      ) {
-        latestServerTimestamp = {
-          seconds: serverTimestamp.seconds,
-          nanoseconds: serverTimestamp.nanoseconds,
-        };
-      }
+      latestServerTimestamp = latestServerTimestamp
+        ? serverTimestamp
+          ? maxServerTimestamp(serverTimestamp, latestServerTimestamp)
+          : latestServerTimestamp
+        : serverTimestamp;
     }
 
-    if (latestServerTimestamp !== initialLatestServerTimestamp) {
+    if (
+      latestServerTimestamp?.seconds !==
+        initialLatestServerTimestamp?.seconds ||
+      latestServerTimestamp?.nanoseconds !== latestServerTimestamp?.nanoseconds
+    ) {
       operations.push({
         type: "put",
         key: latestLogServerTimestampDBKey,

@@ -8,8 +8,12 @@ import {
 } from "metabook-core";
 import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";
 
+const hasFinishedInitialImportKey = "__hasFinishedInitialImport";
+
 export default class DataRecordStore {
   private db: levelup.LevelUp;
+  private cachedHasFinishedInitialImport: boolean | undefined;
+
   constructor(cacheName = "DataRecordStore") {
     this.db = LevelUp(new RNLeveldown(cacheName));
   }
@@ -37,7 +41,24 @@ export default class DataRecordStore {
     return (result?.record as AttachmentURLReference) ?? null;
   }
 
+  async getHasFinishedInitialImport(): Promise<boolean> {
+    if (this.cachedHasFinishedInitialImport === undefined) {
+      const result = await getJSONRecord<boolean>(
+        this.db,
+        hasFinishedInitialImportKey,
+      );
+      this.cachedHasFinishedInitialImport = result?.record ?? false;
+    }
+    return this.cachedHasFinishedInitialImport;
+  }
+
+  async setHasFinishedInitialImport(): Promise<void> {
+    await saveJSONRecord(this.db, hasFinishedInitialImportKey, true);
+    this.cachedHasFinishedInitialImport = true;
+  }
+
   async clear(): Promise<void> {
+    this.cachedHasFinishedInitialImport = undefined;
     await this.db.clear();
   }
 

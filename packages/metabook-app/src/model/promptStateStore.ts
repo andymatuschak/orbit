@@ -3,6 +3,7 @@ import LevelUp, * as levelup from "levelup";
 import * as lexi from "lexicographic-integer";
 
 import {
+  getIDForPromptTask,
   getPromptTaskForID,
   PromptState,
   PromptTask,
@@ -97,8 +98,12 @@ export default class PromptStateStore {
     });
   }
 
-  async savePromptStateCaches(
-    entries: Iterable<PromptStateCache>,
+  async savePromptStates(
+    entries: Iterable<{
+      promptState: PromptState;
+      taskID: PromptTaskID;
+      latestLogServerTimestamp: ServerTimestamp | null;
+    }>,
   ): Promise<void> {
     return this.runOp(async () => {
       const initialLatestLogServerTimestamp = await this._getLatestLogServerTimestamp();
@@ -106,19 +111,17 @@ export default class PromptStateStore {
 
       const batch = this.promptStateDB.batch();
       const dueTimestampIndexBatch = this.dueTimestampIndexDB.batch();
-      for (const {
-        latestLogServerTimestamp,
-        taskID,
-        ...promptState
-      } of entries) {
+      for (const { latestLogServerTimestamp, taskID, promptState } of entries) {
         const encodedPromptState = JSON.stringify(promptState);
         batch.put(taskID, encodedPromptState);
 
         maxLatestLogServerTimestamp = maxLatestLogServerTimestamp
-          ? maxServerTimestamp(
-              latestLogServerTimestamp,
-              maxLatestLogServerTimestamp,
-            )
+          ? latestLogServerTimestamp
+            ? maxServerTimestamp(
+                latestLogServerTimestamp,
+                maxLatestLogServerTimestamp,
+              )
+            : maxLatestLogServerTimestamp
           : latestLogServerTimestamp;
 
         // We'll remove our due timestamp index if we already had one.
@@ -142,7 +145,12 @@ export default class PromptStateStore {
         batch.write(),
         dueTimestampIndexBatch.write(),
       ];
-      if (maxLatestLogServerTimestamp !== initialLatestLogServerTimestamp) {
+      if (
+        maxLatestLogServerTimestamp?.seconds !==
+          initialLatestLogServerTimestamp?.seconds ||
+        maxLatestLogServerTimestamp?.nanoseconds !==
+          initialLatestLogServerTimestamp?.nanoseconds
+      ) {
         promises.push(
           saveJSONRecord(
             this.rootDB,
@@ -188,23 +196,25 @@ export default class PromptStateStore {
     });
   }
 
-  async getDuePromptStates(
-    dueThresholdMillis: number,
-    limit?: number,
+  private async getPrompts(
+    db: levelup.LevelUp,
+    options: AbstractIteratorOptions,
+    keyMapper: (key: string) => PromptTaskID,
+    limit: number | undefined,
   ): Promise<Map<PromptTask, PromptState>> {
     return this.runOp(
       () =>
         new Promise((resolve, reject) => {
           const output: Map<PromptTask, PromptState> = new Map();
-          const options: AbstractIteratorOptions = {
-            lt: `${lexi.pack(dueThresholdMillis, "hex")}~`, // i.e. the character after the due timestamp
+          const mergedOptions: AbstractIteratorOptions = {
+            ...options,
             keys: true,
             values: true,
           };
           if (limit !== undefined) {
-            options.limit = limit;
+            mergedOptions.limit = limit;
           }
-          const iterator = this.dueTimestampIndexDB.iterator(options);
+          const iterator = db.iterator(mergedOptions);
 
           function next(error: Error | undefined, key: string, value: string) {
             if (error) {
@@ -214,7 +224,7 @@ export default class PromptStateStore {
                 resolve(output);
               });
             } else {
-              const taskID = key.split("!")[1] as PromptTaskID;
+              const taskID = keyMapper(key);
               const promptState = JSON.parse(value);
               const promptTask = getPromptTaskForID(taskID);
               if (promptTask instanceof Error) {
@@ -232,8 +242,40 @@ export default class PromptStateStore {
     );
   }
 
+  async getAllPromptStates(
+    afterPromptTask: PromptTask | null,
+    limit?: number,
+  ): Promise<Map<PromptTask, PromptState>> {
+    const options: AbstractIteratorOptions = {};
+    if (afterPromptTask) {
+      options.gt = getIDForPromptTask(afterPromptTask);
+    }
+    return this.getPrompts(
+      this.promptStateDB,
+      options,
+      (key) => key as PromptTaskID,
+      limit,
+    );
+  }
+
+  async getDuePromptStates(
+    dueThresholdMillis: number,
+    limit?: number,
+  ): Promise<Map<PromptTask, PromptState>> {
+    return this.getPrompts(
+      this.dueTimestampIndexDB,
+      {
+        lt: `${lexi.pack(dueThresholdMillis, "hex")}~`, // i.e. the character after the due timestamp
+      },
+      (key) => key.split("!")[1] as PromptTaskID,
+      limit,
+    );
+  }
+
   async clear(): Promise<void> {
     await this.runOp(async () => {
+      this.cachedHasFinishedInitialImport = undefined;
+      this.cachedLatestLogServerTimestamp = undefined;
       await this.rootDB.clear();
     });
   }

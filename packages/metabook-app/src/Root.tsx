@@ -1,18 +1,12 @@
-import base64 from "base64-js";
-import * as FileSystem from "expo-file-system";
 import {
+  Authentication,
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
-  Authentication,
 } from "metabook-client";
 import colors from "metabook-ui/dist/styles/colors";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import ActionLogStore from "./model/actionLogStore";
-import DataRecordClient from "./model/dataRecordClient";
-import DataRecordStore from "./model/dataRecordStore";
-import PromptStateClient from "./model/promptStateClient";
-import PromptStateStore from "./model/promptStateStore";
+import DatabaseManager from "./model/databaseManager";
 import ReviewSession from "./ReviewSession";
 import SignInScreen from "./SignInScreen";
 import {
@@ -22,26 +16,6 @@ import {
   getFirestore,
   PersistenceStatus,
 } from "./util/firebase";
-
-async function cacheWriteHandler(name: string, data: Buffer): Promise<string> {
-  const cacheDirectoryURI = FileSystem.cacheDirectory;
-  if (cacheDirectoryURI === null) {
-    throw new Error("Unknown cache directory");
-  }
-  const cachedAttachmentURI = cacheDirectoryURI + name;
-  await FileSystem.writeAsStringAsync(
-    cachedAttachmentURI,
-    base64.fromByteArray(Uint8Array.from(data)),
-    { encoding: "base64" },
-  );
-  console.log(`Wrote file to cache: ${cachedAttachmentURI}`);
-  return cachedAttachmentURI;
-}
-
-async function fileExistsAtURL(url: string): Promise<boolean> {
-  const info = await FileSystem.getInfoAsync(url);
-  return info.exists;
-}
 
 function usePersistenceStatus() {
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(
@@ -82,53 +56,20 @@ function useCurrentUserRecord(
   return userID;
 }
 
-interface Closeable {
-  close(): Promise<unknown>;
-}
-
-function useCloseable<C extends Closeable>(constructor: () => C): C {
-  const [closeable] = useState(constructor);
-  useEffect(() => {
-    return () => {
-      closeable.close();
-    };
-  }, [closeable]);
-  return closeable;
-}
-
-function useActionLogStore(): ActionLogStore {
-  const [actionLogStore] = useState(() => new ActionLogStore());
-  useEffect(() => {
-    return () => {
-      actionLogStore.close();
-    };
-  }, [actionLogStore]);
-  return actionLogStore;
-}
-
-export default function Root() {
+function useDatabaseManager(
+  userRecord: Authentication.UserRecord | null | undefined,
+): DatabaseManager | null {
   const persistenceStatus = usePersistenceStatus();
-  const promptStateStore = useCloseable(() => new PromptStateStore());
-  const actionLogStore = useCloseable(() => new ActionLogStore());
-  const dataRecordStore = useCloseable(() => new DataRecordStore());
 
   const [
-    promptStateClient,
-    setPromptStateClient,
-  ] = useState<PromptStateClient | null>(null);
-  const [
-    userClient,
-    setUserClient,
-  ] = useState<MetabookFirebaseUserClient | null>(null);
-  const [
-    dataRecordClient,
-    setDataRecordClient,
-  ] = useState<DataRecordClient | null>(null);
-
-  const [authenticationClient] = useState(
-    () => new Authentication.FirebaseAuthenticationClient(getFirebaseAuth()),
-  );
-  const userRecord = useCurrentUserRecord(authenticationClient);
+    databaseManager,
+    setDatabaseManager,
+  ] = useState<DatabaseManager | null>(null);
+  useEffect(() => {
+    return () => {
+      databaseManager?.close();
+    };
+  }, [databaseManager]);
 
   useEffect(() => {
     if (persistenceStatus === "enabled" && userRecord) {
@@ -136,32 +77,26 @@ export default function Root() {
         getFirestore(),
         userRecord.userID,
       );
-      setUserClient(userClient);
-      setPromptStateClient(
-        new PromptStateClient(userClient, promptStateStore, actionLogStore),
-      );
       const dataClient = new MetabookFirebaseDataClient(
         getFirestore(),
         getFirebaseFunctions(),
       );
-      setDataRecordClient(
-        new DataRecordClient(dataClient, dataRecordStore, {
-          writeFile: cacheWriteHandler,
-          fileExistsAtURL,
-        }),
-      );
+      setDatabaseManager(new DatabaseManager(userClient, dataClient));
     }
   }, [persistenceStatus, userRecord]);
 
-  if (promptStateClient && dataRecordClient && userClient) {
-    return (
-      <ReviewSession
-        promptStateClient={promptStateClient}
-        dataRecordClient={dataRecordClient}
-        userClient={userClient}
-        promptStateStore={promptStateStore}
-      />
-    );
+  return databaseManager;
+}
+
+export default function Root() {
+  const [authenticationClient] = useState(
+    () => new Authentication.FirebaseAuthenticationClient(getFirebaseAuth()),
+  );
+  const userRecord = useCurrentUserRecord(authenticationClient);
+
+  const databaseManager = useDatabaseManager(userRecord);
+  if (databaseManager) {
+    return <ReviewSession databaseManager={databaseManager} />;
   } else if (userRecord === null) {
     return <SignInScreen authenticationClient={authenticationClient} />;
   } else {

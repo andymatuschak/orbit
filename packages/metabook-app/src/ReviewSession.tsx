@@ -1,4 +1,3 @@
-import { MetabookUserClient } from "metabook-client";
 import {
   getIDForPrompt,
   getIDForPromptTask,
@@ -13,10 +12,8 @@ import { spacing } from "metabook-ui/dist/styles/layout";
 import typography from "metabook-ui/dist/styles/typography";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Platform, SafeAreaView, Text, View } from "react-native";
-import fetchReviewItemQueue from "./model/fetchReviewItemQueue";
-import DataRecordClient from "./model/dataRecordClient";
+import DatabaseManager from "./model/databaseManager";
 import PromptStateClient from "./model/promptStateClient";
-import PromptStateStore from "./model/promptStateStore";
 import ReviewSessionProgressBar from "./ReviewSessionProgressBar";
 
 function onMark(
@@ -56,50 +53,32 @@ function onMark(
 }
 
 interface ReviewSessionProps {
-  promptStateClient: PromptStateClient;
-  promptStateStore: PromptStateStore;
-  userClient: MetabookUserClient;
-  dataRecordClient: DataRecordClient;
+  databaseManager: DatabaseManager;
 }
 
-export default function ReviewSession({
-  promptStateClient,
-  promptStateStore,
-  userClient,
-  dataRecordClient,
-}: ReviewSessionProps) {
+export default function ReviewSession({ databaseManager }: ReviewSessionProps) {
   const [items, setItems] = useState<ReviewItem[] | null>(null);
   const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
   useEffect(() => {
     let isCanceled = false;
-
-    fetchReviewItemQueue({
-      dataRecordClient,
-      promptStateStore,
-      userClient,
-      dueBeforeTimestampMillis: Date.now(),
-    }).then((newItems) => {
-      if (!isCanceled) {
-        setItems(newItems);
-      }
+    databaseManager.fetchReviewQueue().then((items) => {
+      if (isCanceled) return;
+      setItems(items);
     });
     return () => {
       isCanceled = true;
     };
-  }, [dataRecordClient, promptStateStore, userClient]);
+  }, [databaseManager]);
 
   const remainingItems = useMemo(() => items?.slice(currentQueueIndex), [
     items,
     currentQueueIndex,
   ]);
 
-  const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>(
-    (marking) => {
-      onMark(promptStateClient, marking);
-      setCurrentQueueIndex((currentQueueIndex) => currentQueueIndex + 1);
-    },
-    [promptStateClient],
-  );
+  const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>((marking) => {
+    // onMark(promptStateClient, marking);
+    setCurrentQueueIndex((currentQueueIndex) => currentQueueIndex + 1);
+  }, []);
 
   console.log("[Performance] Render", Date.now() / 1000.0);
 

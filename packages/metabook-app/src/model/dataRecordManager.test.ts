@@ -1,4 +1,3 @@
-import shimFirebasePersistence from "firebase-node-persistence-shim";
 import { MetabookDataClient } from "metabook-client";
 import {
   Attachment,
@@ -11,15 +10,11 @@ import {
   PromptID,
 } from "metabook-core";
 import { testApplicationPrompt, testBasicPrompt } from "metabook-sample-data";
+import dataRecordClient from "./dataRecordManager";
 import DataRecordStore from "./dataRecordStore";
-import DataRecordClient, {
+import DataRecordManager, {
   DataRecordClientFileStore,
-} from "./dataRecordClient";
-
-jest.mock("../util/leveldown", () => {
-  const Memdown = require("memdown");
-  return Memdown;
-});
+} from "./dataRecordManager";
 
 class MockDataClient implements MetabookDataClient {
   private testData: { [key: string]: unknown };
@@ -52,25 +47,25 @@ class MockDataClient implements MetabookDataClient {
   }
 }
 
-let cache: DataRecordStore;
+let dataRecordStore: DataRecordStore;
 const testBasicPromptID = getIDForPrompt(testBasicPrompt);
 beforeEach(() => {
-  cache = new DataRecordStore();
+  dataRecordStore = new DataRecordStore();
 });
 
 afterEach(async () => {
-  await cache.clear();
-  await cache.close();
+  await dataRecordStore.clear();
+  await dataRecordStore.close();
 });
 
 describe("prompts", () => {
   test("fetches cached prompts", async () => {
-    const client = new DataRecordClient(
+    const client = new DataRecordManager(
       {} as MetabookDataClient,
-      cache,
+      dataRecordStore,
       {} as DataRecordClientFileStore,
     );
-    await cache.savePrompt(testBasicPromptID, testBasicPrompt);
+    await dataRecordStore.savePrompt(testBasicPromptID, testBasicPrompt);
     const prompts = await client.getPrompts(new Set([testBasicPromptID]));
     expect(prompts).toMatchObject(
       new Map([[testBasicPromptID, testBasicPrompt]]),
@@ -78,9 +73,9 @@ describe("prompts", () => {
   });
 
   test("leaves unknown prompts undefined", async () => {
-    const client = new DataRecordClient(
+    const client = new DataRecordManager(
       new MockDataClient({}),
-      cache,
+      dataRecordStore,
       {} as DataRecordClientFileStore,
     );
     const prompts = await client.getPrompts(new Set([testBasicPromptID]));
@@ -88,9 +83,9 @@ describe("prompts", () => {
   });
 
   test("fetches source prompts when necessary", async () => {
-    const client = new DataRecordClient(
+    const client = new DataRecordManager(
       new MockDataClient({ [testBasicPromptID]: testBasicPrompt }),
-      cache,
+      dataRecordStore,
       {} as DataRecordClientFileStore,
     );
     const prompts = await client.getPrompts(new Set([testBasicPromptID]));
@@ -98,18 +93,18 @@ describe("prompts", () => {
       new Map([[testBasicPromptID, testBasicPrompt]]),
     );
 
-    expect(await cache.getPrompt(testBasicPromptID)).toMatchObject(
+    expect(await dataRecordStore.getPrompt(testBasicPromptID)).toMatchObject(
       testBasicPrompt,
     );
   });
 
   test("mixes local and remote data", async () => {
-    const client = new DataRecordClient(
+    const client = new DataRecordManager(
       new MockDataClient({ [testBasicPromptID]: testBasicPrompt }),
-      cache,
+      dataRecordStore,
       {} as DataRecordClientFileStore,
     );
-    await cache.savePrompt("x" as PromptID, testApplicationPrompt);
+    await dataRecordStore.savePrompt("x" as PromptID, testApplicationPrompt);
     const prompts = await client.getPrompts(
       new Set([testBasicPromptID, "x" as PromptID]),
     );
@@ -130,10 +125,14 @@ describe("attachments", () => {
   } as AttachmentURLReference;
 
   test("fetches attachments when present on-disk", async () => {
-    const client = new DataRecordClient({} as MetabookDataClient, cache, {
-      fileExistsAtURL: async (url) => url === "url",
-    } as DataRecordClientFileStore);
-    await cache.saveAttachmentURLReference(
+    const client = new DataRecordManager(
+      {} as MetabookDataClient,
+      dataRecordStore,
+      {
+        fileExistsAtURL: async (url) => url === "url",
+      } as DataRecordClientFileStore,
+    );
+    await dataRecordStore.saveAttachmentURLReference(
       testAttachmentID,
       testAttachmentReference,
     );
@@ -146,10 +145,14 @@ describe("attachments", () => {
   });
 
   test("doesn't return cached attachments which are missing on-disk", async () => {
-    const client = new DataRecordClient(new MockDataClient({}), cache, {
-      fileExistsAtURL: async (url) => false,
-    } as DataRecordClientFileStore);
-    await cache.saveAttachmentURLReference(
+    const client = new DataRecordManager(
+      new MockDataClient({}),
+      dataRecordStore,
+      {
+        fileExistsAtURL: async (url) => false,
+      } as DataRecordClientFileStore,
+    );
+    await dataRecordStore.saveAttachmentURLReference(
       testAttachmentID,
       testAttachmentReference,
     );
@@ -162,7 +165,7 @@ describe("attachments", () => {
   test("writes cached attachments to disk", async () => {
     const writeMock = jest.fn();
     writeMock.mockResolvedValue("url");
-    const client = new DataRecordClient(
+    const client = new DataRecordManager(
       new MockDataClient({
         [testAttachmentID]: {
           type: imageAttachmentType,
@@ -170,7 +173,7 @@ describe("attachments", () => {
           contents: "foo",
         } as Attachment,
       }),
-      cache,
+      dataRecordStore,
       ({
         writeFile: writeMock,
       } as unknown) as DataRecordClientFileStore,
@@ -187,7 +190,18 @@ describe("attachments", () => {
     );
 
     expect(
-      await cache.getAttachmentURLReference(testAttachmentID),
+      await dataRecordStore.getAttachmentURLReference(testAttachmentID),
     ).toMatchObject(testAttachmentReference);
+  });
+});
+
+describe("has finished initial import flag", () => {
+  test("starts false", async () => {
+    expect(await dataRecordStore.getHasFinishedInitialImport()).toEqual(false);
+  });
+
+  test("round trips", async () => {
+    await dataRecordStore.setHasFinishedInitialImport();
+    expect(await dataRecordStore.getHasFinishedInitialImport()).toEqual(true);
   });
 });

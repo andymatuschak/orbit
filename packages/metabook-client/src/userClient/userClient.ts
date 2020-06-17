@@ -13,19 +13,23 @@ export type PromptStateQuery = { limit?: number } & (
       dueBeforeTimestampMillis: number;
     }
   | {
-      provenanceType: PromptProvenanceType;
+      provenanceType?: PromptProvenanceType;
       updatedAfterServerTimestamp?: ServerTimestamp;
-    }
-  | {
-      updatedAfterServerTimestamp?: ServerTimestamp;
+      updatedOnOrBeforeServerTimestamp?: ServerTimestamp;
     }
 );
+
+export type ActionLogQuery = {
+  limit?: number;
+  afterServerTimestamp?: ServerTimestamp;
+  onOrBeforeServerTimestamp?: ServerTimestamp;
+};
 
 export interface MetabookUserClient {
   getPromptStates(query: PromptStateQuery): Promise<PromptStateCache[]>;
 
   subscribeToActionLogs(
-    afterServerTimestamp: ServerTimestamp | null,
+    query: ActionLogQuery,
     onNewLogs: (
       newLogs: {
         log: ActionLog;
@@ -37,8 +41,7 @@ export interface MetabookUserClient {
   ): MetabookUnsubscribe;
 
   getActionLogs(
-    afterServerTimestamp: ServerTimestamp | null,
-    limit: number,
+    query: ActionLogQuery,
   ): Promise<
     { log: ActionLog; id: ActionLogID; serverTimestamp: ServerTimestamp }[]
   >;

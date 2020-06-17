@@ -1,4 +1,5 @@
 module.exports = {
+  setupFiles: ["./src/util/__tests__/mockLeveldown.ts"],
   testEnvironment: "jest-environment-uint8array",
   testMatch: ["**/?(*.)+(spec|test).ts?(x)"],
   testPathIgnorePatterns: ["dist", "node_modules"],

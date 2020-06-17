@@ -13,7 +13,7 @@ export interface DataRecordClientFileStore {
   writeFile(name: string, contents: Buffer): Promise<string>;
 }
 
-export default class DataRecordClient {
+export default class DataRecordManager {
   private dataClient: MetabookDataClient;
   private dataCache: DataRecordStore;
   private fileStore: DataRecordClientFileStore;
@@ -127,8 +127,10 @@ export default class DataRecordClient {
   }
 
   async close() {
-    // TODO: guard against races
-    await Promise.all(this.cacheWrites);
-    await this.dataCache.close();
+    while (this.cacheWrites.length > 0) {
+      const promise = Promise.all(this.cacheWrites);
+      this.cacheWrites = [];
+      await promise;
+    }
   }
 }
