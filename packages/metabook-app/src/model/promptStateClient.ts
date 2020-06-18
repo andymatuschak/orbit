@@ -1,6 +1,6 @@
 import isEqual from "lodash.isequal";
 
-import { ActionLogQuery, MetabookUserClient } from "metabook-client";
+import { MetabookUserClient } from "metabook-client";
 import {
   ActionLog,
   ActionLogID,

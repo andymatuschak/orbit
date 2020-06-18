@@ -4958,6 +4958,11 @@
   resolved "https://registry.yarnpkg.com/@react-native-firebase/functions/-/functions-6.8.1.tgz#0098f1609418f76556e903fc7c96ae9ae9338558"
   integrity sha512-F775T2Ef05UcophtCBpBm8o0U+76Zcv9x3jsqaQiG5gl3K7+0MhDp3CUUwWDI3+ldP9SKi3SMY6qogWpE7k40g==
 
+"@react-native-firebase/storage@^7.1.4":
+  version "7.1.4"
+  resolved "https://registry.yarnpkg.com/@react-native-firebase/storage/-/storage-7.1.4.tgz#1be6c53381440dc1ad4b5252e14b06cded37d637"
+  integrity sha512-o4II2QQJEBqYTyiQe03qtLDsdzCKcCV/EFn323JGNa8w+NCBM/6LstkCUmFnwfrO5Lb9Pyb5Jixpwjwe0n+UvQ==
+
 "@segment/loosely-validate-event@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@segment/loosely-validate-event/-/loosely-validate-event-2.0.0.tgz#87dfc979e5b4e7b82c5f1d8b722dfd5d77644681"
@@ -24924,7 +24929,7 @@ space-separated-tokens@^1.0.0:
     citation-js "^0.4.8"
     exiftool-vendored "~8"
     file-metadata "^1.0.0"
-    incremental-thinking "file:../../../Library/Caches/Yarn/v6/npm-spaced-everything-0.0.1-b9aa4be8-16fe-4169-b7f6-6cf651ccc9c0-1591658327629/node_modules/vendor/incremental-thinking"
+    incremental-thinking "file:../../../Library/Caches/Yarn/v6/npm-spaced-everything-0.0.1-41c61b2a-556c-4ff4-b68e-80a88d439b3b-1592501411528/node_modules/vendor/incremental-thinking"
     lodash.isequal "^4.5.0"
     moment "^2.24.0"
     node-getpocket vicchi/node-getpocket

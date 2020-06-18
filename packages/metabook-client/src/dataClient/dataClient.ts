@@ -4,7 +4,6 @@ import "firebase/functions";
 
 import { Attachment, AttachmentID, Prompt, PromptID } from "metabook-core";
 import { DataRecord, DataRecordID } from "metabook-firebase-support";
-import { getDefaultFirebaseApp } from "../firebase";
 
 type MetabookDataClientCacheWriteHandler = (
   name: string,
