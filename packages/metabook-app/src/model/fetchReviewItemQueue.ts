@@ -37,7 +37,7 @@ async function getInitialDuePromptStates(
 ): Promise<Map<PromptTask, PromptState>> {
   if (hasFinishedInitialImport) {
     console.log("Review queue: getting prompt data from cache");
-    return promptStateStore.getDuePromptStates(dueBeforeTimestampMillis);
+    return promptStateStore.getDuePromptStates(dueBeforeTimestampMillis, limit);
   } else {
     console.log("Review queue: getting prompt data from server");
     const promptStateCaches = await userClient.getPromptStates({

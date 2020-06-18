@@ -2,7 +2,7 @@ import * as AbstractLeveldown from "abstract-leveldown";
 import LevelUp, * as levelup from "levelup";
 import * as lexi from "lexicographic-integer";
 
-import { ActionLog, ActionLogID } from "metabook-core";
+import { ActionLog, ActionLogID, PromptTaskID } from "metabook-core";
 import { maxServerTimestamp, ServerTimestamp } from "metabook-firebase-support";
 import RNLeveldown from "../util/leveldown";
 import sub from "subleveldown";
@@ -19,6 +19,7 @@ export default class ActionLogStore {
   private rootDB: levelup.LevelUp;
   private actionLogDB: levelup.LevelUp;
   private taskIDIndexDB: levelup.LevelUp;
+  private danglingTaskIDsIndexDB: levelup.LevelUp;
 
   private cachedLatestServerTimestamp: ServerTimestamp | null | undefined;
   private cachedHasFinishedInitialImport: boolean | undefined;
@@ -27,6 +28,7 @@ export default class ActionLogStore {
     this.rootDB = LevelUp(new RNLeveldown(storeName));
     this.actionLogDB = sub(this.rootDB, "logs");
     this.taskIDIndexDB = sub(this.rootDB, "taskIDIndex");
+    this.danglingTaskIDsIndexDB = sub(this.rootDB, "danglingTaskIDsIndex"); // task IDs with merge errors
   }
 
   async getLatestServerTimestamp(): Promise<ServerTimestamp | null> {
@@ -152,6 +154,44 @@ export default class ActionLogStore {
       }
       iterator.next(iterate);
     });
+  }
+
+  async getDanglingTaskIDs(): Promise<PromptTaskID[]> {
+    return new Promise((resolve, reject) => {
+      const output: PromptTaskID[] = [];
+
+      const iterator = this.danglingTaskIDsIndexDB.iterator({
+        keys: true,
+        values: false,
+      });
+      function iterate(error: Error | undefined, key: string) {
+        if (error) {
+          reject(error);
+        } else if (key) {
+          output.push(key as PromptTaskID);
+          iterator.next(iterate);
+        } else {
+          iterator.end((error) => (error ? reject(error) : resolve(output)));
+        }
+      }
+      iterator.next(iterate);
+    });
+  }
+
+  async markDanglingTaskIDs(taskIDs: Iterable<PromptTaskID>) {
+    const batch = this.danglingTaskIDsIndexDB.batch();
+    for (const promptTaskID of taskIDs) {
+      batch.put(promptTaskID, "");
+    }
+    await batch.write();
+  }
+
+  async clearDanglingTaskIDs(taskIDs: Iterable<PromptTaskID>) {
+    const batch = this.danglingTaskIDsIndexDB.batch();
+    for (const promptTaskID of taskIDs) {
+      batch.del(promptTaskID);
+    }
+    await batch.write();
   }
 
   async iterateAllActionLogsByTaskID(

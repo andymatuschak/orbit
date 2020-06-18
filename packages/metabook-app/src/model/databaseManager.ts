@@ -3,6 +3,7 @@ import * as FileSystem from "expo-file-system";
 import { MetabookDataClient, MetabookUserClient } from "metabook-client";
 import {
   ActionLogID,
+  ActionLogMergeError,
   applyActionLogToPromptState,
   getActionLogFromPromptActionLog,
   getIDForActionLog,
@@ -135,16 +136,15 @@ export default class DatabaseManager {
   }
 
   private async patchLocalStateFromLogEntries(
-    entries: Iterable<{
+    entries: {
       log: PromptActionLog;
       id: ActionLogID;
       serverTimestamp: ServerTimestamp | null;
-    }>,
+    }[],
   ): Promise<void> {
-    const taskIDs = new Set<PromptTaskID>();
-    for (const { log } of entries) {
-      taskIDs.add(log.taskID);
-    }
+    const taskIDs = new Set<PromptTaskID>(
+      entries.map(({ log: { taskID } }) => taskID),
+    );
 
     // First, we get the current prompt states for these logs.
     const workingPromptStates = new Map<PromptTaskID, PromptState | null>();
@@ -159,7 +159,7 @@ export default class DatabaseManager {
     await Promise.all(promptStateGetPromises);
 
     // Now we try to directly apply all the new prompt states.
-    const brokenTaskIDs = new Map<PromptTaskID, PromptState | null>();
+    const brokenTaskIDs = new Set<PromptTaskID>();
     const updates: {
       oldPromptState: PromptState | null;
       newPromptState: PromptState;
@@ -179,7 +179,7 @@ export default class DatabaseManager {
           schedule: "default",
         });
         if (newPromptState instanceof Error) {
-          throw newPromptState;
+          throw newPromptState; // shouldn't happen
         } else {
           console.log("Successfully applied log for ", log.taskID);
           workingPromptStates.set(log.taskID, newPromptState);
@@ -190,7 +190,7 @@ export default class DatabaseManager {
           });
         }
       } else {
-        brokenTaskIDs.set(log.taskID, basePromptState);
+        brokenTaskIDs.add(log.taskID);
         console.log(
           `Can't apply log to prompt. New log heads: ${JSON.stringify(
             log,
@@ -210,39 +210,17 @@ export default class DatabaseManager {
       [...entries].map((e) => ({ ...e, id: getIDForActionLog(e.log) })),
     );
 
-    // Try to resolve any broken log sequences.
-    // TODO: defer, perform after all logs are synchronized
-    await Promise.all(
-      [...brokenTaskIDs.entries()].map(async ([taskID, basePromptState]) => {
-        const entries = await this.actionLogStore.getActionLogsByTaskID(taskID);
-        const mergeResult = mergeActionLogs(
-          entries.map(({ log, id }) => ({
-            log: getPromptActionLogFromActionLog(log),
-            id,
-          })),
-          basePromptState,
-        );
-        if (mergeResult instanceof Error) {
-          console.log(
-            `Couldn't merge logs for ${taskID}. ${mergeResult.mergeLogErrorType}: ${mergeResult.message}`,
-          );
-        } else {
-          console.log(`Resolved logs for ${taskID}`);
-          updates.push({
-            oldPromptState: basePromptState,
-            newPromptState: mergeResult,
-            taskID,
-          });
-        }
-      }),
-    );
-
     await this.promptStateStore.savePromptStates(
       updates.map(({ newPromptState, taskID }) => ({
         promptState: newPromptState,
         taskID,
       })),
     );
+
+    if (brokenTaskIDs.size > 0) {
+      this.actionLogStore.markDanglingTaskIDs(brokenTaskIDs);
+    }
+    this.resolveDanglingTaskIDs();
   }
 
   async close(): Promise<void> {
@@ -258,6 +236,44 @@ export default class DatabaseManager {
       this.dataRecordStore.close(),
       this.promptStateStore.close(),
     ]);
+  }
+
+  private async resolveDanglingTaskIDs() {
+    const danglingTaskIDs = await this.actionLogStore.getDanglingTaskIDs();
+    if (danglingTaskIDs.length === 0) return;
+    console.log(`[Resolve dangling task IDs]: ${danglingTaskIDs}`);
+
+    const resolvedEntries: {
+      taskID: PromptTaskID;
+      promptState: PromptState;
+    }[] = [];
+    await Promise.all(
+      danglingTaskIDs.map(async (taskID) => {
+        const entries = await this.actionLogStore.getActionLogsByTaskID(taskID);
+        const promptState = mergeActionLogs(
+          entries.map(({ log, id }) => ({
+            log: getPromptActionLogFromActionLog(log),
+            id,
+          })),
+        );
+        if (promptState instanceof Error) {
+          console.log(
+            `Couldn't merge logs for ${taskID}. ${promptState.mergeLogErrorType}: ${promptState.message}`,
+          );
+        } else {
+          resolvedEntries.push({ taskID, promptState });
+        }
+      }),
+    );
+
+    if (resolvedEntries.length > 0) {
+      const resolvedTaskIDs = resolvedEntries.map(({ taskID }) => taskID);
+      console.log(`[Resolve dangling task IDs]: Resolved ${resolvedTaskIDs}`);
+      await Promise.all([
+        this.actionLogStore.clearDanglingTaskIDs(resolvedTaskIDs),
+        this.promptStateStore.savePromptStates(resolvedEntries),
+      ]);
+    }
   }
 
   private async listenForNewLogsAfterTimestamp(
@@ -340,5 +356,8 @@ export default class DatabaseManager {
     }
 
     await this.actionLogStore.setHasFinishedInitialImport();
+    if (this.isClosed) return;
+
+    this.resolveDanglingTaskIDs();
   }
 }

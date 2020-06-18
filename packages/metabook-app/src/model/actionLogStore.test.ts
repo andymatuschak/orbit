@@ -5,6 +5,7 @@ import {
   IngestActionLog,
   ingestActionLogType,
   PromptRepetitionOutcome,
+  PromptTaskID,
   RepetitionActionLog,
   repetitionActionLogType,
 } from "metabook-core";
@@ -142,5 +143,20 @@ describe("taskID index", () => {
     expect(iteratedValues[0].logs).toHaveLength(2);
     expect(iteratedValues[1].taskID).toEqual("y");
     expect(iteratedValues[1].logs).toHaveLength(1);
+  });
+});
+
+describe("dangling task IDs", () => {
+  test("round trips", async () => {
+    await actionLogStore.markDanglingTaskIDs(["x" as PromptTaskID]);
+    expect(await actionLogStore.getDanglingTaskIDs()).toEqual([
+      "x" as PromptTaskID,
+    ]);
+  });
+
+  test("clears", async () => {
+    await actionLogStore.markDanglingTaskIDs(["x" as PromptTaskID]);
+    await actionLogStore.clearDanglingTaskIDs(["x" as PromptTaskID]);
+    expect(await actionLogStore.getDanglingTaskIDs()).toEqual([]);
   });
 });

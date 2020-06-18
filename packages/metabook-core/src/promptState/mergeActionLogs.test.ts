@@ -48,14 +48,6 @@ const testRepetitionLogID = getIDForActionLog(
   getActionLogFromPromptActionLog(testRepetitionLog),
 ) as ActionLogID;
 
-test("fails if base prompt state is disconnected", () => {
-  expect(
-    mergeActionLogs([{ log: testIngestLog, id: testIngestLogID }], {
-      headActionLogIDs: ["x" as ActionLogID],
-    } as PromptState),
-  ).toBeInstanceOf(Error);
-});
-
 test("fails if log is missing", () => {
   expect(
     mergeActionLogs(

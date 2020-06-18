@@ -59,13 +59,7 @@ function clozeParsePlugin(md: MarkdownIt) {
   });
 
   md.inline.ruler2.after("emphasis", "clozeHighlight", (state) => {
-    if (state.clozeHighlightActive) {
-      state.tokens.splice(
-        0,
-        0,
-        new Token("clozeHighlight_open", "clozeHighlight", 0),
-      );
-    }
+    const clozeHighlightWasActive = state.env.clozeHighlightActive;
     const allDelimiters = [
       state.delimiters,
       ...state.tokens_meta.map(
@@ -80,9 +74,9 @@ function clozeParsePlugin(md: MarkdownIt) {
       state.tokens.splice(
         startDelimiter.token,
         1,
-        new Token("clozeHighlight_open", "clozeHighlight", 0),
+        new Token("clozeHighlight_open", "clozeHighlight", 1),
       );
-      state.clozeHighlightActive = true;
+      state.env.clozeHighlightActive = true;
     }
 
     const endDelimiter = allDelimiters.find(
@@ -92,14 +86,22 @@ function clozeParsePlugin(md: MarkdownIt) {
       state.tokens.splice(
         endDelimiter.token,
         1,
-        new Token("clozeHighlight_close", "clozeHighlight", 0),
+        new Token("clozeHighlight_close", "clozeHighlight", -1),
       );
-      state.clozeHighlightActive = false;
-    } else if (state.clozeHighlightActive) {
+      state.env.clozeHighlightActive = false;
+    } else if (state.env.clozeHighlightActive) {
       state.tokens.splice(
-        state.tokens.length - 1,
+        state.tokens.length,
         0,
-        new Token("clozeHighlight_close", "clozeHighlight", 0),
+        new Token("clozeHighlight_close", "clozeHighlight", -1),
+      );
+    }
+
+    if (clozeHighlightWasActive) {
+      state.tokens.splice(
+        0,
+        0,
+        new Token("clozeHighlight_open", "clozeHighlight", 1),
       );
     }
   });

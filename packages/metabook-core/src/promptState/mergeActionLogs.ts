@@ -7,7 +7,7 @@ import { PromptActionLog } from "../types/promptActionLog";
 import applyActionLogToPromptState from "./applyActionLogToPromptState";
 import { PromptState } from "./promptState";
 
-class ActionLogMergeError extends Error {
+export class ActionLogMergeError extends Error {
   mergeLogErrorType: ActionLogMergeErrorType;
   constructor(mergeLogErrorType: ActionLogMergeErrorType, message: string) {
     super(message);
@@ -16,7 +16,7 @@ class ActionLogMergeError extends Error {
   }
 }
 
-enum ActionLogMergeErrorType {
+export enum ActionLogMergeErrorType {
   DisconnectedBasePromptState = "disconnectedBasePromptState",
   MissingInternalLogs = "missingInternalLogs",
   InvalidLogSequence = "invalidLogSequence",
@@ -28,7 +28,6 @@ export default function mergeActionLogs(
     log: PromptActionLog;
     id: ActionLogID;
   }>,
-  basePromptState: PromptState | null,
 ): PromptState | ActionLogMergeError {
   const actionLogIDs: Set<ActionLogID> = new Set();
   for (const { id } of entries) {
@@ -36,21 +35,6 @@ export default function mergeActionLogs(
   }
   if (actionLogIDs.size === 0) {
     throw new Error("mergeActionLogs requires at least one log");
-  }
-
-  // If the base prompt state is derived from some logs we don't know about (i.e. because we downloaded a remote cache), we can't merge.
-  if (basePromptState) {
-    const missingBasePromptHeadLogIDs = basePromptState.headActionLogIDs.filter(
-      (id) => !actionLogIDs.has(id),
-    );
-    if (missingBasePromptHeadLogIDs.length > 0) {
-      return new ActionLogMergeError(
-        ActionLogMergeErrorType.DisconnectedBasePromptState,
-        `base prompt state disconnected; unknown log IDs ${missingBasePromptHeadLogIDs.join(
-          ", ",
-        )}. Have log IDs: ${[...actionLogIDs].join(", ")}`,
-      );
-    }
   }
 
   // Are any logs missing?
@@ -76,6 +60,7 @@ export default function mergeActionLogs(
   }
 
   // At least for review logs, we don't have to do any clever tree-based resolution: we can just flatten into a timestamp sequence and run through. This obviously won't work if a computer's clock is way off, but I'm not hugely worried about that.
+  // TODO: do a topo-sort
   // TODO: at least do a sanity check that no log has an earlier timestamp than its parent
   const logsByTimestamp = [...entries].sort(({ log: a }, { log: b }) => {
     if (a.timestampMillis === b.timestampMillis) {
