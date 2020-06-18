@@ -5,10 +5,7 @@ import PromptStateStore from "./promptStateStore";
 
 const userClient = {} as MetabookUserClient;
 const promptStateStore = {} as PromptStateStore;
-promptStateStore.savePromptStateCaches = jest.fn().mockResolvedValue(undefined);
-promptStateStore.getLatestLogServerTimestamp = jest
-  .fn()
-  .mockResolvedValue(null);
+promptStateStore.savePromptStates = jest.fn().mockResolvedValue(undefined);
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -20,7 +17,7 @@ test("basic run", async () => {
     return [{}];
   });
   await promptStateInitialImportOperation(userClient, promptStateStore).promise;
-  expect(promptStateStore.savePromptStateCaches).toHaveBeenCalledTimes(1);
+  expect(promptStateStore.savePromptStates).toHaveBeenCalledTimes(1);
 });
 
 test("canceling", async () => {
@@ -39,5 +36,5 @@ test("canceling", async () => {
   );
   cancel();
   expect(promise).rejects.toBeInstanceOf(CancelledError);
-  expect(promptStateStore.savePromptStateCaches).toHaveBeenCalledTimes(0);
+  expect(promptStateStore.savePromptStates).toHaveBeenCalledTimes(0);
 });

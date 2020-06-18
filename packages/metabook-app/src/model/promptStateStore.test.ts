@@ -7,7 +7,7 @@ import {
   PromptTask,
   PromptTaskID,
 } from "metabook-core";
-import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
+import { ServerTimestamp } from "metabook-firebase-support";
 import PromptStateStore from "./promptStateStore";
 
 jest.mock("../util/leveldown", () => {
@@ -29,24 +29,16 @@ afterEach(async () => {
   await store.close();
 });
 
-const testServerTimestamp: ServerTimestamp = { seconds: 0, nanoseconds: 100 };
-
 const testPromptState = ({
   test: true,
   dueTimestampMillis: 0,
   taskMetadata: { isDeleted: false },
 } as unknown) as PromptState;
 
-const testPromptStateCache: PromptStateCache = {
-  ...testPromptState,
-  taskID: "x" as PromptTaskID,
-  latestLogServerTimestamp: testServerTimestamp,
-};
-
 async function saveTestPromptState() {
-  return await store.savePromptStateCaches([
+  return await store.savePromptStates([
     {
-      ...testPromptStateCache,
+      promptState: testPromptState,
       taskID: "x" as PromptTaskID,
     },
   ]);
@@ -56,44 +48,6 @@ test("round trips data", async () => {
   await saveTestPromptState();
   const record = await store.getPromptState("x" as PromptTaskID);
   expect(record).toMatchObject(testPromptState);
-});
-
-describe("latest server timestamp cache", () => {
-  test("sets latest server timestamp", async () => {
-    await saveTestPromptState();
-    expect(await store.getLatestLogServerTimestamp()).toMatchObject(
-      testServerTimestamp,
-    );
-  });
-
-  test("updates with newer server timestamp", async () => {
-    await saveTestPromptState();
-    const testTimestamp = { seconds: 10, nanoseconds: 0 };
-    await store.savePromptStateCaches([
-      {
-        ...testPromptStateCache,
-        latestLogServerTimestamp: testTimestamp,
-        taskID: "x" as PromptTaskID,
-      },
-    ]);
-    expect(await store.getLatestLogServerTimestamp()).toMatchObject(
-      testTimestamp,
-    );
-  });
-
-  test("doesn't update with older server timestamp", async () => {
-    await saveTestPromptState();
-    await store.savePromptStateCaches([
-      {
-        ...testPromptStateCache,
-        latestLogServerTimestamp: { seconds: 0, nanoseconds: 1 },
-        taskID: "x" as PromptTaskID,
-      },
-    ]);
-    expect(await store.getLatestLogServerTimestamp()).toMatchObject(
-      testServerTimestamp,
-    );
-  });
 });
 
 test("returns null for missing keys", async () => {
@@ -110,15 +64,13 @@ describe("access by due timestamp", () => {
   const testTaskID = getIDForPromptTask(testTask);
 
   test("accesses due prompts", async () => {
-    await store.savePromptStateCaches([
+    await store.savePromptStates([
       {
-        ...testPromptStateCache,
-        dueTimestampMillis: 1000,
+        promptState: { ...testPromptState, dueTimestampMillis: 1000 },
         taskID: testTaskID,
       },
       {
-        ...testPromptStateCache,
-        dueTimestampMillis: 5000,
+        promptState: { ...testPromptState, dueTimestampMillis: 5000 },
         taskID: getIDForPromptTask({
           ...testTask,
           promptID: "another" as PromptID,
@@ -132,19 +84,23 @@ describe("access by due timestamp", () => {
   });
 
   test("indexed due times update when overwritten", async () => {
-    await store.savePromptStateCaches([
+    await store.savePromptStates([
       {
-        ...testPromptStateCache,
-        dueTimestampMillis: 1000,
+        promptState: {
+          ...testPromptState,
+          dueTimestampMillis: 1000,
+        },
         taskID: testTaskID,
-      } as PromptStateCache,
+      },
     ]);
-    await store.savePromptStateCaches([
+    await store.savePromptStates([
       {
-        ...testPromptStateCache,
-        dueTimestampMillis: 5000,
+        promptState: {
+          ...testPromptState,
+          dueTimestampMillis: 5000,
+        },
         taskID: testTaskID,
-      } as PromptStateCache,
+      },
     ]);
 
     expect(await store.getDuePromptStates(1000)).toMatchObject(new Map());

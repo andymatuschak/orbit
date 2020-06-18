@@ -82,11 +82,10 @@ export default class ActionLogStore {
         value: encodedLog,
       });
 
-      latestServerTimestamp = latestServerTimestamp
-        ? serverTimestamp
-          ? maxServerTimestamp(serverTimestamp, latestServerTimestamp)
-          : latestServerTimestamp
-        : serverTimestamp;
+      latestServerTimestamp = maxServerTimestamp(
+        serverTimestamp,
+        latestServerTimestamp,
+      );
     }
 
     if (
@@ -97,7 +96,14 @@ export default class ActionLogStore {
       operations.push({
         type: "put",
         key: latestLogServerTimestampDBKey,
-        value: JSON.stringify(latestServerTimestamp),
+        value: JSON.stringify(
+          latestServerTimestamp
+            ? {
+                seconds: latestServerTimestamp.seconds,
+                nanoseconds: latestServerTimestamp.nanoseconds,
+              }
+            : null,
+        ),
       });
       this.cachedLatestServerTimestamp = latestServerTimestamp;
     }

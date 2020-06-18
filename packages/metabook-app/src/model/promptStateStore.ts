@@ -9,11 +9,6 @@ import {
   PromptTask,
   PromptTaskID,
 } from "metabook-core";
-import {
-  maxServerTimestamp,
-  PromptStateCache,
-  ServerTimestamp,
-} from "metabook-firebase-support";
 import sub from "subleveldown";
 import RNLeveldown from "../util/leveldown";
 import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";
@@ -25,7 +20,6 @@ function getDueTimestampIndexKey(
   return `${lexi.pack(promptState.dueTimestampMillis, "hex")}!${taskID}`;
 }
 
-const latestLogServerTimestampKey = "latestLogServerTimestamp";
 const hasFinishedInitialImportKey = "hasFinishedInitialImport";
 
 export default class PromptStateStore {
@@ -36,7 +30,6 @@ export default class PromptStateStore {
 
   private isClosed: boolean;
 
-  private cachedLatestLogServerTimestamp: ServerTimestamp | null | undefined;
   private cachedHasFinishedInitialImport: boolean | undefined;
 
   constructor(cacheName = "PromptStateStore") {
@@ -47,7 +40,6 @@ export default class PromptStateStore {
 
     this.isClosed = false;
 
-    this.cachedLatestLogServerTimestamp = undefined;
     this.cachedHasFinishedInitialImport = undefined;
   }
 
@@ -74,10 +66,6 @@ export default class PromptStateStore {
     });
   }
 
-  async getLatestLogServerTimestamp(): Promise<ServerTimestamp | null> {
-    return this.runOp(async () => this._getLatestLogServerTimestamp());
-  }
-
   async getHasFinishedInitialImport(): Promise<boolean> {
     return this.runOp(async () => {
       if (this.cachedHasFinishedInitialImport === undefined) {
@@ -102,27 +90,14 @@ export default class PromptStateStore {
     entries: Iterable<{
       promptState: PromptState;
       taskID: PromptTaskID;
-      latestLogServerTimestamp: ServerTimestamp | null;
     }>,
   ): Promise<void> {
     return this.runOp(async () => {
-      const initialLatestLogServerTimestamp = await this._getLatestLogServerTimestamp();
-      let maxLatestLogServerTimestamp = initialLatestLogServerTimestamp;
-
       const batch = this.promptStateDB.batch();
       const dueTimestampIndexBatch = this.dueTimestampIndexDB.batch();
-      for (const { latestLogServerTimestamp, taskID, promptState } of entries) {
+      for (const { taskID, promptState } of entries) {
         const encodedPromptState = JSON.stringify(promptState);
         batch.put(taskID, encodedPromptState);
-
-        maxLatestLogServerTimestamp = maxLatestLogServerTimestamp
-          ? latestLogServerTimestamp
-            ? maxServerTimestamp(
-                latestLogServerTimestamp,
-                maxLatestLogServerTimestamp,
-              )
-            : maxLatestLogServerTimestamp
-          : latestLogServerTimestamp;
 
         // We'll remove our due timestamp index if we already had one.
         const oldPromptState = await this._getPromptState(taskID);
@@ -141,39 +116,8 @@ export default class PromptStateStore {
         }
       }
 
-      const promises: Promise<unknown>[] = [
-        batch.write(),
-        dueTimestampIndexBatch.write(),
-      ];
-      if (
-        maxLatestLogServerTimestamp?.seconds !==
-          initialLatestLogServerTimestamp?.seconds ||
-        maxLatestLogServerTimestamp?.nanoseconds !==
-          initialLatestLogServerTimestamp?.nanoseconds
-      ) {
-        promises.push(
-          saveJSONRecord(
-            this.rootDB,
-            latestLogServerTimestampKey,
-            maxLatestLogServerTimestamp,
-          ),
-        );
-        this.cachedLatestLogServerTimestamp = maxLatestLogServerTimestamp;
-      }
-      await Promise.all(promises);
+      await Promise.all([batch.write(), dueTimestampIndexBatch.write()]);
     });
-  }
-
-  // Can only be called from the op queue
-  private async _getLatestLogServerTimestamp(): Promise<ServerTimestamp | null> {
-    if (this.cachedLatestLogServerTimestamp === undefined) {
-      const result = await getJSONRecord<ServerTimestamp>(
-        this.rootDB,
-        latestLogServerTimestampKey,
-      );
-      this.cachedLatestLogServerTimestamp = result?.record ?? null;
-    }
-    return this.cachedLatestLogServerTimestamp;
   }
 
   // Can only be called from the op queue
@@ -275,7 +219,6 @@ export default class PromptStateStore {
   async clear(): Promise<void> {
     await this.runOp(async () => {
       this.cachedHasFinishedInitialImport = undefined;
-      this.cachedLatestLogServerTimestamp = undefined;
       await this.rootDB.clear();
     });
   }

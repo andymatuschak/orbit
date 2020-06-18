@@ -28,7 +28,28 @@ export function compareServerTimestamps(
 
 export function maxServerTimestamp(
   a: ServerTimestamp,
+  b: ServerTimestamp | null,
+): ServerTimestamp;
+export function maxServerTimestamp(
+  a: ServerTimestamp | null,
   b: ServerTimestamp,
-): ServerTimestamp {
-  return compareServerTimestamps(a, b) < 0 ? b : a;
+): ServerTimestamp;
+export function maxServerTimestamp(a: null, b: null): null;
+export function maxServerTimestamp(
+  a: ServerTimestamp | null,
+  b: ServerTimestamp | null,
+): ServerTimestamp | null;
+export function maxServerTimestamp(
+  a: ServerTimestamp | null,
+  b: ServerTimestamp | null,
+): ServerTimestamp | null {
+  if (a !== null && b !== null) {
+    return compareServerTimestamps(a, b) < 0 ? b : a;
+  } else if (a === null && b) {
+    return b;
+  } else if (a && b === null) {
+    return a;
+  } else {
+    return null;
+  }
 }

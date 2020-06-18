@@ -13,35 +13,32 @@ import typography from "metabook-ui/dist/styles/typography";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Platform, SafeAreaView, Text, View } from "react-native";
 import DatabaseManager from "./model/databaseManager";
-import PromptStateClient from "./model/promptStateClient";
 import ReviewSessionProgressBar from "./ReviewSessionProgressBar";
 
 function onMark(
-  promptStateClient: PromptStateClient | null,
+  databaseManager: DatabaseManager | null,
   marking: ReviewAreaMarkingRecord,
 ) {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
-  promptStateClient!
+  databaseManager!
     .recordPromptActionLogs([
       {
-        log: {
-          actionLogType: repetitionActionLogType,
-          parentActionLogIDs:
-            marking.reviewItem.promptState?.headActionLogIDs ?? [],
-          taskID: getIDForPromptTask({
-            promptID: getIDForPrompt(marking.reviewItem.prompt),
-            promptType: marking.reviewItem.prompt.promptType,
-            promptParameters: marking.reviewItem.promptParameters,
-          } as PromptTask),
-          outcome: marking.outcome,
-          context: null,
-          timestampMillis: Date.now(),
-          taskParameters: getNextTaskParameters(
-            marking.reviewItem.prompt,
-            marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
-          ),
-        },
+        actionLogType: repetitionActionLogType,
+        parentActionLogIDs:
+          marking.reviewItem.promptState?.headActionLogIDs ?? [],
+        taskID: getIDForPromptTask({
+          promptID: getIDForPrompt(marking.reviewItem.prompt),
+          promptType: marking.reviewItem.prompt.promptType,
+          promptParameters: marking.reviewItem.promptParameters,
+        } as PromptTask),
+        outcome: marking.outcome,
+        context: null, // TODO
+        timestampMillis: Date.now(),
+        taskParameters: getNextTaskParameters(
+          marking.reviewItem.prompt,
+          marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
+        ),
       },
     ])
     .then(() => {
@@ -76,7 +73,7 @@ export default function ReviewSession({ databaseManager }: ReviewSessionProps) {
   ]);
 
   const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>((marking) => {
-    // onMark(promptStateClient, marking);
+    onMark(databaseManager, marking);
     setCurrentQueueIndex((currentQueueIndex) => currentQueueIndex + 1);
   }, []);
 

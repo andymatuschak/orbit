@@ -1,4 +1,5 @@
 import { MetabookUserClient } from "metabook-client";
+import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
 import { createTask, Task } from "../util/task";
 import PromptStateStore from "./promptStateStore";
 
@@ -6,40 +7,44 @@ import PromptStateStore from "./promptStateStore";
 export default function promptStateInitialImportOperation(
   userClient: MetabookUserClient,
   promptStateStore: PromptStateStore,
-): Task<void> {
-  return createTask(async (taskStatus) => {
-    let afterServerTimestamp = await promptStateStore.getLatestLogServerTimestamp();
-    let totalImported = 0;
+): Task<ServerTimestamp | null> {
+  return createTask(
+    async (taskStatus): Promise<ServerTimestamp | null> => {
+      let afterServerTimestamp: ServerTimestamp | null = null;
+      let totalImported = 0;
 
-    console.log("Prompt state import: starting");
-    while (!taskStatus.isCancelled) {
-      const promptStateCaches = await userClient.getPromptStates({
-        limit: 500,
-        updatedAfterServerTimestamp: afterServerTimestamp ?? undefined,
-      });
-      if (taskStatus.isCancelled) return;
-      if (promptStateCaches.length > 0) {
-        totalImported += promptStateCaches.length;
-        console.log(
-          `Prompt state import: imported ${promptStateCaches.length} prompt states (${totalImported} total)`,
+      console.log("Prompt state import: starting");
+      while (!taskStatus.isCancelled) {
+        const promptStateCaches: PromptStateCache[] = await userClient.getPromptStates(
+          {
+            limit: 500,
+            updatedAfterServerTimestamp: afterServerTimestamp ?? undefined,
+          },
         );
-        afterServerTimestamp =
-          promptStateCaches[promptStateCaches.length - 1]
-            .latestLogServerTimestamp;
+        if (taskStatus.isCancelled) return;
+        if (promptStateCaches.length > 0) {
+          totalImported += promptStateCaches.length;
+          console.log(
+            `Prompt state import: imported ${promptStateCaches.length} prompt states (${totalImported} total)`,
+          );
+          afterServerTimestamp =
+            promptStateCaches[promptStateCaches.length - 1]
+              .latestLogServerTimestamp;
 
-        await promptStateStore.savePromptStates(
-          promptStateCaches.map(
-            ({ latestLogServerTimestamp, taskID, ...promptState }) => ({
-              latestLogServerTimestamp,
-              taskID,
-              promptState,
-            }),
-          ),
-        );
-      } else {
-        console.log("Prompt state import: finished");
-        break;
+          await promptStateStore.savePromptStates(
+            promptStateCaches.map(
+              ({ latestLogServerTimestamp, taskID, ...promptState }) => ({
+                taskID,
+                promptState,
+              }),
+            ),
+          );
+        } else {
+          console.log("Prompt state import: finished");
+          break;
+        }
       }
-    }
-  });
+      return afterServerTimestamp;
+    },
+  );
 }

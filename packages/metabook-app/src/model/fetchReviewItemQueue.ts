@@ -12,6 +12,7 @@ import {
   ReviewItem,
 } from "metabook-ui";
 import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";
+import actionLogStore from "./actionLogStore";
 import DataRecordManager from "./dataRecordManager";
 import PromptStateStore from "./promptStateStore";
 
@@ -32,8 +33,9 @@ async function getInitialDuePromptStates(
   userClient: MetabookUserClient,
   dueBeforeTimestampMillis: number,
   limit: number,
+  hasFinishedInitialImport: boolean,
 ): Promise<Map<PromptTask, PromptState>> {
-  if (await promptStateStore.getHasFinishedInitialImport()) {
+  if (hasFinishedInitialImport) {
     console.log("Review queue: getting prompt data from cache");
     return promptStateStore.getDuePromptStates(dueBeforeTimestampMillis);
   } else {
@@ -97,11 +99,13 @@ export default async function fetchReviewItemQueue({
   dataRecordManager,
   userClient,
   dueBeforeTimestampMillis,
+  hasFinishedInitialImport,
 }: {
   promptStateStore: PromptStateStore;
   dataRecordManager: DataRecordManager;
   userClient: MetabookUserClient;
   dueBeforeTimestampMillis: number;
+  hasFinishedInitialImport: boolean;
 }) {
   console.log("Review queue: fetching due prompt states");
   const duePromptStates = await getInitialDuePromptStates(
@@ -109,6 +113,7 @@ export default async function fetchReviewItemQueue({
     userClient,
     dueBeforeTimestampMillis,
     reviewQueueLengthLimit,
+    hasFinishedInitialImport,
   );
   console.log(
     `Review queue: fetched ${duePromptStates.size} due prompt states`,
