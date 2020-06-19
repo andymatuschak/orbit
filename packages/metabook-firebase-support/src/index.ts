@@ -8,4 +8,8 @@ export {
   maxServerTimestamp,
 } from "./libraryAbstraction";
 export type { ServerTimestamp } from "./libraryAbstraction";
-export { getActionLogIDForFirebaseKey } from "./cdidEncoding";
+export {
+  getActionLogIDForFirebaseKey,
+  getFirebaseKeyForCIDString,
+} from "./cdidEncoding";
+export * from "./storage";

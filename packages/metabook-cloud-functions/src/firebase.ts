@@ -18,7 +18,10 @@ import {
   getReferenceForDataRecordID,
   getTaskStateCacheReferenceForTaskID,
   PromptStateCache,
+  storageAttachmentsPathComponent,
+  storageBucketName,
 } from "metabook-firebase-support";
+import { getAttachmentIDForFirebaseKey } from "metabook-firebase-support/dist/cdidEncoding";
 import applyPromptActionLogToPromptStateCache from "./applyPromptActionLogToPromptStateCache";
 
 let _app: firebase.app.App | null = null;
@@ -73,30 +76,6 @@ export async function getDataRecords<R extends DataRecord>(
     ...recordIDs.map((recordID) => getReferenceForDataRecordID(db, recordID)),
   )) as firebase.firestore.DocumentSnapshot<R>[];
   return snapshots.map((snapshot) => snapshot.data() ?? null);
-}
-
-export function recordAttachments(
-  attachments: Attachment[],
-): Promise<AttachmentID[]> {
-  // TODO probably add something about provenance
-  // TODO something about user quotas, billing
-  return Promise.all(
-    attachments.map(async (attachment) => {
-      const attachmentID = getIDForAttachment(
-        Buffer.from(attachment.contents, "binary"),
-      );
-      const dataRef = getReferenceForDataRecordID(getDatabase(), attachmentID);
-      await dataRef
-        .create(attachment)
-        .then(() => {
-          console.log("Recorded attachment", attachmentID);
-        })
-        .catch(() => {
-          return;
-        });
-      return attachmentID as AttachmentID;
-    }),
-  );
 }
 
 export async function updatePromptStateCacheWithLog(
@@ -181,4 +160,35 @@ export async function getCustomLoginTokenForSessionCookie(
   const auth = getAuth();
   const decodedToken = await auth.verifySessionCookie(sessionCookie); // will reject on error
   return auth.createCustomToken(decodedToken.uid);
+}
+
+export async function validateAttachmentWithObjectName(
+  objectName: string,
+): Promise<unknown> {
+  const claimedAttachmentID = getAttachmentIDForFirebaseKey(
+    objectName.slice(storageAttachmentsPathComponent.length + 1),
+  );
+  console.log(`Checking attachment at ${objectName}: ${claimedAttachmentID}`);
+
+  const bucket = getApp().storage().bucket(storageBucketName);
+  const file = bucket.file(objectName);
+  const readStream = file.createReadStream();
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    readStream.on("error", reject);
+    readStream.on("end", async () => {
+      const buffer = Buffer.concat(chunks);
+      const computedAttachmentID = await getIDForAttachment(buffer);
+      if (computedAttachmentID === claimedAttachmentID) {
+        console.log("Attachment matches claimed ID");
+      } else {
+        console.error(
+          `Deleting attachment with non-matching ID ${computedAttachmentID}`,
+        );
+        await file.delete();
+      }
+      resolve();
+    });
+    readStream.on("data", (chunk: Buffer) => chunks.push(chunk));
+  });
 }

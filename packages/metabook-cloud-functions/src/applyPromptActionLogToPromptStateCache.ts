@@ -40,18 +40,12 @@ export default async function applyActionLogDocumentToPromptStateCache({
     if (newPromptState instanceof Error) {
       return newPromptState;
     } else {
-      let latestLogServerTimestamp: ServerTimestamp;
-      if (basePromptStateCache) {
-        latestLogServerTimestamp = maxServerTimestamp(
-          actionLogDocument.serverTimestamp,
-          basePromptStateCache.latestLogServerTimestamp,
-        );
-      } else {
-        latestLogServerTimestamp = actionLogDocument.serverTimestamp;
-      }
       return {
         ...newPromptState,
-        latestLogServerTimestamp: latestLogServerTimestamp,
+        latestLogServerTimestamp: maxServerTimestamp(
+          actionLogDocument.serverTimestamp,
+          basePromptStateCache?.latestLogServerTimestamp ?? null,
+        ),
         taskID: promptActionLog.taskID,
       };
     }
@@ -62,7 +56,6 @@ export default async function applyActionLogDocumentToPromptStateCache({
         id,
         log: getPromptActionLogFromActionLog(log),
       })),
-      basePromptStateCache,
     );
     if (mergedPromptState instanceof Error) {
       return mergedPromptState;

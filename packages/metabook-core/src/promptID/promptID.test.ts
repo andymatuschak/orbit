@@ -1,5 +1,6 @@
 import CID from "cids";
 import multihash from "multihashes";
+import createTestAttachmentData from "../__tests__/createTestAttachmentData";
 import {
   testApplicationPrompt,
   testBasicPrompt,
@@ -27,15 +28,15 @@ test("encoding stability", () => {
   );
 });
 
-describe("encoding attachments", () => {
+describe("encoding attachments", async () => {
   const testAttachmentReference: AttachmentIDReference = {
     type: "image",
-    id: getIDForAttachment(Buffer.from("abc")),
+    id: await getIDForAttachment(createTestAttachmentData("abc")),
     byteLength: 10,
   };
   const testAttachmentReference2 = {
     ...testAttachmentReference,
-    id: getIDForAttachment(Buffer.from("def")),
+    id: await getIDForAttachment(createTestAttachmentData("def")),
   };
 
   test("basic prompt attachments", () => {

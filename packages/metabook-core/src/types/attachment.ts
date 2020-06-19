@@ -3,7 +3,7 @@ import { AttachmentType } from "./attachmentType";
 export interface Attachment {
   type: AttachmentType;
   mimeType: AttachmentMimeType;
-  contents: string;
+  contents: Uint8Array;
 }
 
 export enum AttachmentMimeType {

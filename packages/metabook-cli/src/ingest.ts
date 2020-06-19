@@ -1,5 +1,4 @@
 import { Command, flags } from "@oclif/command";
-import firebase from "firebase/app";
 import "firebase/firestore";
 import fs from "fs";
 
@@ -29,6 +28,8 @@ import {
   testClozePrompt,
 } from "metabook-sample-data";
 import path from "path";
+import { uploadAttachment } from "./adminApp";
+import { getClientApp } from "./clientApp";
 
 function getTasksFromPrompts(prompts: Prompt[]): PromptTaskID[] {
   const taskLists: PromptTaskID[][] = prompts.map((spec) => {
@@ -66,18 +67,11 @@ class Ingest extends Command {
   async run() {
     const { flags } = this.parse(Ingest);
 
-    const app = firebase.initializeApp({
-      apiKey: "AIzaSyAwlVFBlx4D3s3eSrwOvUyqOKr_DXFmj0c",
-      authDomain: "metabook-system.firebaseapp.com",
-      databaseURL: "https://metabook-system.firebaseio.com",
-      projectId: "metabook-system",
-      storageBucket: "metabook-system.appspot.com",
-      messagingSenderId: "748053153064",
-      appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
-    });
+    const app = getClientApp();
     const dataClient = new MetabookFirebaseDataClient(
       app.firestore(),
       app.functions(),
+      uploadAttachment,
     );
 
     const imageData = await fs.promises.readFile(
@@ -86,11 +80,11 @@ class Ingest extends Command {
     const imageAttachment: Attachment = {
       type: imageAttachmentType,
       mimeType: AttachmentMimeType.PNG,
-      contents: imageData.toString("binary"),
+      contents: imageData,
     };
     const imageAttachmentIDReference: AttachmentIDReference = {
       type: imageAttachmentType,
-      id: getIDForAttachment(imageData),
+      id: await getIDForAttachment(imageData),
       byteLength: imageData.byteLength,
     };
 
@@ -112,7 +106,7 @@ class Ingest extends Command {
     await dataClient.recordPrompts(specs);
     console.log(`Recorded ${specs.length} spec(s)`);
 
-    await dataClient.recordAttachments([imageAttachment]);
+    await dataClient.recordAttachments([{ attachment: imageAttachment }]);
     console.log(`Recorded 1 attachment`);
 
     const userClient = new MetabookFirebaseUserClient(
