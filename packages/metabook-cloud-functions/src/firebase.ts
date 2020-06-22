@@ -4,6 +4,7 @@ import {
   ActionLogID,
   Attachment,
   AttachmentID,
+  getFileExtensionForAttachmentMimeType,
   getIDForAttachment,
   getIDForPrompt,
   Prompt,
@@ -162,8 +163,10 @@ export async function getCustomLoginTokenForSessionCookie(
   return auth.createCustomToken(decodedToken.uid);
 }
 
-export async function validateAttachmentWithObjectName(
+// When attachments are uploaded, we check them to make sure they match their named ID. Then we make them publicly accessible.
+export async function validateAndPrepareAttachmentWithObjectName(
   objectName: string,
+  contentType: string | undefined,
 ): Promise<unknown> {
   const claimedAttachmentID = getAttachmentIDForFirebaseKey(
     objectName.slice(storageAttachmentsPathComponent.length + 1),
@@ -179,12 +182,27 @@ export async function validateAttachmentWithObjectName(
     readStream.on("end", async () => {
       const buffer = Buffer.concat(chunks);
       const computedAttachmentID = await getIDForAttachment(buffer);
-      if (computedAttachmentID === claimedAttachmentID) {
+
+      const hasMatchingID = computedAttachmentID === claimedAttachmentID;
+      const contentTypeIsValid =
+        !!contentType &&
+        getFileExtensionForAttachmentMimeType(contentType) !== null;
+      if (hasMatchingID && contentTypeIsValid) {
         console.log("Attachment matches claimed ID");
+        await file.setMetadata({
+          cacheControl: "public, max-age=604800, immutable",
+        });
+        await file.makePublic();
       } else {
-        console.error(
-          `Deleting attachment with non-matching ID ${computedAttachmentID}`,
-        );
+        if (!hasMatchingID) {
+          console.error(
+            `Deleting attachment with non-matching ID ${computedAttachmentID}`,
+          );
+        } else if (!contentTypeIsValid) {
+          console.error(
+            `Deleting attachment with unknown content type ${contentType}`,
+          );
+        }
         await file.delete();
       }
       resolve();

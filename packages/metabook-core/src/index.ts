@@ -54,6 +54,7 @@ export type {
 export type { Attachment } from "./types/attachment";
 export {
   AttachmentMimeType,
+  getAttachmentTypeForAttachmentMimeType,
   getAttachmentMimeTypeForFilename,
   getFileExtensionForAttachmentMimeType,
 } from "./types/attachment";

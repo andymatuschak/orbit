@@ -11,6 +11,7 @@ import ReviewSession from "./ReviewSession";
 import SignInScreen from "./SignInScreen";
 import {
   enableFirebasePersistence,
+  getAttachmentUploader,
   getFirebaseAuth,
   getFirebaseFunctions,
   getFirestore,
@@ -80,6 +81,7 @@ function useDatabaseManager(
       const dataClient = new MetabookFirebaseDataClient(
         getFirestore(),
         getFirebaseFunctions(),
+        getAttachmentUploader,
       );
       setDatabaseManager(new DatabaseManager(userClient, dataClient));
     }

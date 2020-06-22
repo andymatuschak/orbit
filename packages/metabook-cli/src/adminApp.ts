@@ -32,9 +32,11 @@ export async function uploadAttachment(
         attachmentID,
       )}`,
     );
-  const writeStream = ref.createWriteStream();
+  const writeStream = ref.createWriteStream({
+    contentType: attachment.mimeType,
+  });
   return new Promise((resolve, reject) => {
-    writeStream.on("close", resolve);
+    writeStream.on("finish", resolve);
     writeStream.on("error", reject);
     writeStream.write(attachment.contents);
     writeStream.end();

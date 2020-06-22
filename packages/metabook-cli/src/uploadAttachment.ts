@@ -2,7 +2,10 @@ import { Command, flags } from "@oclif/command";
 import "firebase/firestore";
 import fs from "fs";
 
-import { MetabookFirebaseDataClient } from "metabook-client";
+import {
+  getDefaultFirebaseApp,
+  MetabookFirebaseDataClient,
+} from "metabook-client";
 import {
   getAttachmentMimeTypeForFilename,
   getIDForAttachment,
@@ -11,7 +14,6 @@ import {
 import { getFirebaseKeyForCIDString } from "metabook-firebase-support/dist/cdidEncoding";
 import path from "path";
 import { uploadAttachment } from "./adminApp";
-import { getClientApp } from "./clientApp";
 
 class UploadAttachment extends Command {
   static flags = {
@@ -23,7 +25,7 @@ class UploadAttachment extends Command {
   async run() {
     const { args } = this.parse(UploadAttachment);
 
-    const app = getClientApp();
+    const app = getDefaultFirebaseApp();
     const dataClient = new MetabookFirebaseDataClient(
       app.firestore(),
       app.functions(),

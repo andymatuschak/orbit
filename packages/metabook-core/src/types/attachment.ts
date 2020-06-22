@@ -1,4 +1,4 @@
-import { AttachmentType } from "./attachmentType";
+import { AttachmentType, imageAttachmentType } from "./attachmentType";
 
 export interface Attachment {
   type: AttachmentType;
@@ -33,6 +33,12 @@ export function getAttachmentMimeTypeForFilename(
 
 export function getFileExtensionForAttachmentMimeType(
   attachmentMimeType: AttachmentMimeType,
+): string;
+export function getFileExtensionForAttachmentMimeType(
+  attachmentMimeType: string,
+): string | null;
+export function getFileExtensionForAttachmentMimeType(
+  attachmentMimeType: AttachmentMimeType | string,
 ): string | null {
   switch (attachmentMimeType) {
     case AttachmentMimeType.JPEG:
@@ -43,5 +49,16 @@ export function getFileExtensionForAttachmentMimeType(
       return "svg";
     default:
       return null;
+  }
+}
+
+export function getAttachmentTypeForAttachmentMimeType(
+  attachmentMimeType: AttachmentMimeType,
+): AttachmentType {
+  switch (attachmentMimeType) {
+    case AttachmentMimeType.SVG:
+    case AttachmentMimeType.PNG:
+    case AttachmentMimeType.JPEG:
+      return imageAttachmentType;
   }
 }

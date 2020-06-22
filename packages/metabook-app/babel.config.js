@@ -32,6 +32,7 @@ module.exports = function (api) {
                 "firebase/app": "@react-native-firebase/app",
                 "firebase/firestore": "@react-native-firebase/firestore",
                 "firebase/functions": "@react-native-firebase/functions",
+                crypto: "crypto-browserify",
               },
               throwForNonStringLiteral: true,
             },

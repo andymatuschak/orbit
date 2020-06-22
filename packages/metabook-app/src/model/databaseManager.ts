@@ -1,9 +1,6 @@
-import base64 from "base64-js";
-import * as FileSystem from "expo-file-system";
 import { MetabookDataClient, MetabookUserClient } from "metabook-client";
 import {
   ActionLogID,
-  ActionLogMergeError,
   applyActionLogToPromptState,
   getActionLogFromPromptActionLog,
   getIDForActionLog,
@@ -19,39 +16,13 @@ import { ReviewItem } from "metabook-ui";
 import { Task } from "../util/task";
 import actionLogInitialImportOperation from "./actionLogInitialImportOperation";
 import ActionLogStore from "./actionLogStore";
-import DataRecordManager, {
-  DataRecordClientFileStore,
-} from "./dataRecordManager";
+import dataRecordClientFileStore from "./dataRecordClientFileStore";
+import DataRecordManager from "./dataRecordManager";
 import DataRecordStore from "./dataRecordStore";
 import fetchReviewItemQueue from "./fetchReviewItemQueue";
 import promptDataInitialImportOperation from "./promptDataInitialImportOperation";
 import promptStateInitialImportOperation from "./promptStateInitialImportOperation";
 import PromptStateStore from "./promptStateStore";
-
-async function cacheWriteHandler(name: string, data: Buffer): Promise<string> {
-  const cacheDirectoryURI = FileSystem.cacheDirectory;
-  if (cacheDirectoryURI === null) {
-    throw new Error("Unknown cache directory");
-  }
-  const cachedAttachmentURI = cacheDirectoryURI + name;
-  await FileSystem.writeAsStringAsync(
-    cachedAttachmentURI,
-    base64.fromByteArray(Uint8Array.from(data)),
-    { encoding: "base64" },
-  );
-  console.log(`Wrote file to cache: ${cachedAttachmentURI}`);
-  return cachedAttachmentURI;
-}
-
-async function fileExistsAtURL(url: string): Promise<boolean> {
-  const info = await FileSystem.getInfoAsync(url);
-  return info.exists;
-}
-
-const fileStore: DataRecordClientFileStore = {
-  writeFile: cacheWriteHandler,
-  fileExistsAtURL,
-};
 
 export default class DatabaseManager {
   private actionLogStore: ActionLogStore;
@@ -78,7 +49,7 @@ export default class DatabaseManager {
     this.dataRecordManager = new DataRecordManager(
       dataClient,
       this.dataRecordStore,
-      fileStore,
+      dataRecordClientFileStore,
     );
     this.isClosed = false;
     this.currentTask = null;
@@ -228,9 +199,7 @@ export default class DatabaseManager {
 
     this.remoteLogSubscription?.();
 
-    // Finish writes before closing stores.
     this.currentTask?.cancel();
-    await this.dataRecordManager.close();
     await Promise.all([
       this.actionLogStore.close(),
       this.dataRecordStore.close(),

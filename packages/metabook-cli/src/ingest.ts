@@ -3,6 +3,7 @@ import "firebase/firestore";
 import fs from "fs";
 
 import {
+  getDefaultFirebaseApp,
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "metabook-client";
@@ -29,7 +30,6 @@ import {
 } from "metabook-sample-data";
 import path from "path";
 import { uploadAttachment } from "./adminApp";
-import { getClientApp } from "./clientApp";
 
 function getTasksFromPrompts(prompts: Prompt[]): PromptTaskID[] {
   const taskLists: PromptTaskID[][] = prompts.map((spec) => {
@@ -67,7 +67,7 @@ class Ingest extends Command {
   async run() {
     const { flags } = this.parse(Ingest);
 
-    const app = getClientApp();
+    const app = getDefaultFirebaseApp();
     const dataClient = new MetabookFirebaseDataClient(
       app.firestore(),
       app.functions(),

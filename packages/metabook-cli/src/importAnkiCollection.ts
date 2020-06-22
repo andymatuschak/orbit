@@ -21,7 +21,7 @@ import {
   createImportPlan,
   readAnkiCollectionPackage,
 } from "../../metabook-anki";
-import { getAdminApp } from "./adminApp";
+import { getAdminApp, uploadAttachment } from "./adminApp";
 
 class ImportAnkiCollection extends Command {
   static flags = {
@@ -70,9 +70,14 @@ class ImportAnkiCollection extends Command {
       const dataClient = new MetabookFirebaseDataClient(
         app.firestore(),
         app.functions(),
+        uploadAttachment,
       );
 
-      await dataClient.recordAttachments(plan.attachments);
+      await dataClient.recordAttachments(
+        plan.attachments.map((a) => ({
+          attachment: a,
+        })),
+      );
       console.log("Recorded attachments.");
 
       await dataClient.recordPrompts(plan.prompts);

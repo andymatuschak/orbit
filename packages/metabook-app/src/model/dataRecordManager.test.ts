@@ -10,11 +10,10 @@ import {
   PromptID,
 } from "metabook-core";
 import { testApplicationPrompt, testBasicPrompt } from "metabook-sample-data";
-import dataRecordClient from "./dataRecordManager";
-import DataRecordStore from "./dataRecordStore";
 import DataRecordManager, {
   DataRecordClientFileStore,
 } from "./dataRecordManager";
+import DataRecordStore from "./dataRecordStore";
 
 class MockDataClient implements MetabookDataClient {
   private testData: { [key: string]: unknown };
@@ -38,12 +37,16 @@ class MockDataClient implements MetabookDataClient {
     );
   }
 
-  recordAttachments(attachments: Attachment[]): Promise<unknown> {
+  recordAttachments(): Promise<unknown> {
     throw new Error("Unimplemented");
   }
 
   recordPrompts(prompts: Prompt[]): Promise<unknown> {
     throw new Error("Unimplemented");
+  }
+
+  getAttachmentURL(attachmentID: AttachmentID): string {
+    return attachmentID;
   }
 }
 
@@ -129,7 +132,7 @@ describe("attachments", () => {
       {} as MetabookDataClient,
       dataRecordStore,
       {
-        fileExistsAtURL: async (url) => url === "url",
+        storedURLExists: async (url) => url === "url",
       } as DataRecordClientFileStore,
     );
     await dataRecordStore.saveAttachmentURLReference(
@@ -149,7 +152,7 @@ describe("attachments", () => {
       new MockDataClient({}),
       dataRecordStore,
       {
-        fileExistsAtURL: async (url) => false,
+        storedURLExists: async (url) => false,
       } as DataRecordClientFileStore,
     );
     await dataRecordStore.saveAttachmentURLReference(
@@ -164,26 +167,27 @@ describe("attachments", () => {
 
   test("writes cached attachments to disk", async () => {
     const writeMock = jest.fn();
-    writeMock.mockResolvedValue("url");
+    writeMock.mockResolvedValue({ url: "url", type: imageAttachmentType });
     const client = new DataRecordManager(
       new MockDataClient({
         [testAttachmentID]: {
           type: imageAttachmentType,
           mimeType: AttachmentMimeType.PNG,
-          contents: "foo",
+          contents: Buffer.from("foo"),
         } as Attachment,
       }),
       dataRecordStore,
-      ({
-        writeFile: writeMock,
-      } as unknown) as DataRecordClientFileStore,
+      {
+        storeFileFromURL: writeMock,
+        storedURLExists: () => Promise.resolve(false),
+      },
     );
 
     const attachments = await client.getAttachments(
       new Set([testAttachmentID]),
     );
-    expect(writeMock.mock.calls[0][0]).toEqual(`${testAttachmentID}.png`);
-    expect(writeMock.mock.calls[0][1].toString()).toEqual("foo");
+    expect(writeMock.mock.calls[0][0]).toEqual(testAttachmentID);
+    expect(writeMock.mock.calls[0][1]).toEqual(testAttachmentID);
 
     expect(attachments).toMatchObject(
       new Map([[testAttachmentID, testAttachmentReference]]),

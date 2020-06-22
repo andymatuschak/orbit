@@ -8,6 +8,8 @@ export type {
 
 export { MetabookFirebaseDataClient } from "./dataClient";
 export type { MetabookDataClient, MetabookDataSnapshot } from "./dataClient";
+export type { default as AttachmentUploader } from "./dataClient/attachmentUploader";
+export { default as firebaseAttachmentUploader } from "./dataClient/firebaseAttachmentUploader";
 
 export * as Authentication from "./authentication";
 

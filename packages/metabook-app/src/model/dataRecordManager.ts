@@ -1,24 +1,27 @@
 import { MetabookDataClient } from "metabook-client";
 import {
   AttachmentID,
+  AttachmentMimeType,
   AttachmentURLReference,
   getFileExtensionForAttachmentMimeType,
+  imageAttachmentType,
   Prompt,
   PromptID,
 } from "metabook-core";
 import DataRecordStore from "./dataRecordStore";
 
 export interface DataRecordClientFileStore {
-  fileExistsAtURL(url: string): Promise<boolean>;
-  writeFile(name: string, contents: Buffer): Promise<string>;
+  storeFileFromURL(
+    url: string,
+    attachmentID: AttachmentID,
+  ): Promise<AttachmentURLReference>;
+  storedURLExists(url: string): Promise<boolean>;
 }
 
 export default class DataRecordManager {
   private dataClient: MetabookDataClient;
   private dataCache: DataRecordStore;
   private fileStore: DataRecordClientFileStore;
-
-  private cacheWrites: Promise<unknown>[];
 
   constructor(
     dataClient: MetabookDataClient,
@@ -28,7 +31,6 @@ export default class DataRecordManager {
     this.dataClient = dataClient;
     this.dataCache = dataCache;
     this.fileStore = fileStore;
-    this.cacheWrites = [];
   }
 
   async getPrompts(promptIDs: Set<PromptID>): Promise<Map<PromptID, Prompt>> {
@@ -54,13 +56,29 @@ export default class DataRecordManager {
       for (const [promptID, prompt] of prompts) {
         if (prompt) {
           promptMap.set(promptID, prompt);
-          this.cacheWrites.push(this.dataCache.savePrompt(promptID, prompt));
+          this.dataCache.savePrompt(promptID, prompt);
         } else {
           console.warn("Unknown prompt ID", promptID);
         }
       }
     }
     return promptMap;
+  }
+
+  private async cacheAttachment(
+    attachmentID: AttachmentID,
+  ): Promise<AttachmentURLReference> {
+    console.log("Caching attachment", attachmentID);
+    const url = this.dataClient.getAttachmentURL(attachmentID);
+    const attachmentURLReference = await this.fileStore.storeFileFromURL(
+      url,
+      attachmentID,
+    );
+    await this.dataCache.saveAttachmentURLReference(
+      attachmentID,
+      attachmentURLReference,
+    );
+    return attachmentURLReference;
   }
 
   async getAttachments(
@@ -76,7 +94,7 @@ export default class DataRecordManager {
       cachedAttachmentPromises.push(
         this.dataCache.getAttachmentURLReference(id).then(async (reference) => {
           if (reference) {
-            const exists = await this.fileStore.fileExistsAtURL(reference.url);
+            const exists = await this.fileStore.storedURLExists(reference.url);
             if (exists) {
               attachmentReferenceMap.set(id, reference);
             } else {
@@ -92,45 +110,25 @@ export default class DataRecordManager {
 
     if (missingIDs.size > 0) {
       console.log(`Getting ${missingIDs.size} remote attachments`);
-      const attachments = await this.dataClient.getAttachments(missingIDs);
-      const attachmentWritePromises: Promise<unknown>[] = [];
-      for (const [attachmentID, attachment] of attachments) {
-        if (attachment) {
-          const extension = getFileExtensionForAttachmentMimeType(
-            attachment.mimeType,
-          );
-          if (!extension) {
-            console.warn(`Unknown attachment mime type ${attachment.mimeType}`);
-          }
-          const storedURI = await this.fileStore.writeFile(
-            `${attachmentID}.${extension}`,
-            Buffer.from(attachment.contents, "binary"),
-          );
-          const attachmentURLReference = {
-            type: attachment.type,
-            url: storedURI,
-          };
-          attachmentReferenceMap.set(attachmentID, attachmentURLReference);
-          this.cacheWrites.push(
-            this.dataCache.saveAttachmentURLReference(
-              attachmentID,
-              attachmentURLReference,
-            ),
-          );
-        } else {
-          console.warn("Unknown attachment ID", attachmentID);
-        }
+
+      const cachePromises: Promise<void>[] = [];
+      for (const id of missingIDs) {
+        cachePromises.push(
+          this.cacheAttachment(id)
+            .catch<Error>((error) => error)
+            .then((attachmentURLReference) => {
+              if (attachmentURLReference instanceof Error) {
+                console.error(
+                  `Couldn't download attachment ${id}: ${attachmentURLReference}`,
+                );
+              } else {
+                attachmentReferenceMap.set(id, attachmentURLReference);
+              }
+            }),
+        );
       }
-      await Promise.all(attachmentWritePromises);
+      await Promise.all(cachePromises);
     }
     return attachmentReferenceMap;
-  }
-
-  async close() {
-    while (this.cacheWrites.length > 0) {
-      const promise = Promise.all(this.cacheWrites);
-      this.cacheWrites = [];
-      await promise;
-    }
   }
 }

@@ -1,5 +1,9 @@
 import type firebase from "firebase/app";
-import { getDefaultFirebaseApp } from "metabook-client";
+import {
+  AttachmentUploader,
+  firebaseAttachmentUploader,
+  getDefaultFirebaseApp,
+} from "metabook-client";
 
 export function getFirestore(): firebase.firestore.Firestore {
   return getDefaultFirebaseApp().firestore();
@@ -23,4 +27,8 @@ export async function enableFirebasePersistence(): Promise<PersistenceStatus> {
   } catch {
     return "unavailable";
   }
+}
+
+export function getAttachmentUploader(): AttachmentUploader {
+  firebaseAttachmentUploader(getDefaultFirebaseApp().storage());
 }
