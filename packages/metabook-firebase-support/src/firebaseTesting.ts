@@ -50,12 +50,15 @@ export async function stopFirebaseTestingEmulator() {
   }
 }
 
-export function createTestFirebaseApp(): {
+export function createTestFirebaseApp(
+  uid: string,
+): {
   firestore: firebase.firestore.Firestore;
   functions: firebase.functions.Functions;
 } {
   const testApp = firebaseTesting.initializeTestApp({
     projectId: projectID,
+    auth: { uid },
   });
   const testFunctions = testApp.functions();
   testFunctions.useFunctionsEmulator(functionsEmulatorURL);

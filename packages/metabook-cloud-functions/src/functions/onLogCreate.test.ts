@@ -7,25 +7,25 @@ import {
   PromptIngestActionLog,
   PromptTask,
 } from "metabook-core";
-import FirebaseTesting, {
+import {
+  FirebaseTesting,
   getTaskStateCacheReferenceForTaskID,
 } from "metabook-firebase-support";
 import { testBasicPrompt } from "metabook-sample-data";
 
 let testFirestore: firebase.firestore.Firestore;
 
+const testUserID = "test";
 beforeEach(async () => {
-  const { firestore } = FirebaseTesting.createTestFirebaseApp();
+  const { firestore } = FirebaseTesting.createTestFirebaseApp(testUserID);
   testFirestore = firestore;
 });
 
 afterEach(async () => {
-  FirebaseTesting.resetTestFirestore(testFirestore);
+  await FirebaseTesting.resetTestFirestore(testFirestore);
 });
 
-test.skip("updates prompt state", async () => {
-  const testUserID = "test";
-
+test("updates prompt state when writing log", async () => {
   const basicPromptID = getIDForPrompt(testBasicPrompt);
   const promptTask: PromptTask = {
     promptID: basicPromptID,
@@ -52,12 +52,12 @@ test.skip("updates prompt state", async () => {
     promptTaskID,
   );
 
-  return new Promise((reject, resolve) => {
+  await new Promise((resolve, reject) => {
     const unsubscribe = collectionReference.onSnapshot((snapshot) => {
       if (snapshot.exists) {
         unsubscribe();
         resolve();
       }
-    });
+    }, reject);
   });
 });
