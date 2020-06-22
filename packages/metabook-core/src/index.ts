@@ -71,18 +71,23 @@ export { default as getNextTaskParameters } from "./getNextTaskParameters";
 export {
   ingestActionLogType,
   repetitionActionLogType,
+  updateMetadataActionLogType,
+  rescheduleActionLogType,
 } from "./types/actionLog";
 export type {
   ActionLog,
   ActionLogType,
   IngestActionLog,
   RepetitionActionLog,
+  RescheduleActionLog,
 } from "./types/actionLog";
 
 export type {
   PromptRepetitionActionLog,
   PromptActionLog,
   PromptIngestActionLog,
+  PromptRescheduleActionLog,
+  PromptUpdateMetadataActionLog,
 } from "./types/promptActionLog";
 export {
   getActionLogFromPromptActionLog,

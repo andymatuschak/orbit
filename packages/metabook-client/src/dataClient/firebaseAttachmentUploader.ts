@@ -1,6 +1,6 @@
 import firebase from "firebase/app";
 import "firebase/storage";
-import { getFirebaseKeyForCIDString } from "metabook-firebase-support/dist/cdidEncoding";
+import { getFirebaseKeyForCIDString } from "metabook-firebase-support";
 import AttachmentUploader from "./attachmentUploader";
 
 const attachmentBucketSubpath = "attachments";

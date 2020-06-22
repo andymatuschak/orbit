@@ -15,8 +15,8 @@ import {
   PromptProvenanceType,
   PromptTask,
   PromptTaskID,
+  updateMetadataActionLogType,
 } from "metabook-core";
-import { updateMetadataActionLogType } from "metabook-core/dist/types/actionLog";
 import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
 import { notePrompts, taskCache, TaskRecord } from "spaced-everything";
 import SpacedEverythingImportCache, { CachedNoteMetadata } from "./importCache";

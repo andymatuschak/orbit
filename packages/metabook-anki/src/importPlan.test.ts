@@ -5,8 +5,8 @@ import {
   getIDForActionLog,
   PromptIngestActionLog,
   PromptRepetitionOutcome,
+  RescheduleActionLog,
 } from "metabook-core";
-import { RescheduleActionLog } from "metabook-core/dist/types/actionLog";
 import { testBasicPrompt, testClozePrompt } from "metabook-sample-data";
 import {
   testCard,
@@ -15,7 +15,7 @@ import {
   testNote,
 } from "./__fixtures__/testAnkiData";
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
-import { CardQueue, CardType, Collection } from "./ankiPkg";
+import { CardQueue, Collection } from "./ankiPkg";
 import {
   createImportPlan,
   createPlanForCard,

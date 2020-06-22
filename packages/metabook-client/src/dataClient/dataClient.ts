@@ -10,20 +10,13 @@ import {
   PromptID,
 } from "metabook-core";
 import {
-  attachmentsPath,
   storageBucketName,
   DataRecord,
   DataRecordID,
   storageAttachmentsPathComponent,
+  getFirebaseKeyForCIDString,
 } from "metabook-firebase-support";
-import { getFirebaseKeyForCIDString } from "metabook-firebase-support/dist/cdidEncoding";
 import AttachmentUploader from "./attachmentUploader";
-
-type MetabookDataClientCacheWriteHandler = (
-  name: string,
-  extension: string,
-  data: Buffer,
-) => Promise<string>;
 
 export interface MetabookDataClient {
   recordPrompts(prompts: Prompt[]): Promise<unknown>;

@@ -11,7 +11,7 @@ import {
   getIDForAttachment,
   imageAttachmentType,
 } from "metabook-core";
-import { getFirebaseKeyForCIDString } from "metabook-firebase-support/dist/cdidEncoding";
+import { getFirebaseKeyForCIDString } from "metabook-firebase-support";
 import path from "path";
 import { uploadAttachment } from "./adminApp";
 

@@ -10,6 +10,9 @@ export {
 export type { ServerTimestamp } from "./libraryAbstraction";
 export {
   getActionLogIDForFirebaseKey,
+  getAttachmentIDForFirebaseKey,
   getFirebaseKeyForCIDString,
 } from "./cdidEncoding";
 export * from "./storage";
+
+export * as FirebaseTesting from "./firebaseTesting";

@@ -30,10 +30,10 @@ import {
   PromptTask,
   PromptTaskID,
   repetitionActionLogType,
+  rescheduleActionLogType,
 } from "metabook-core";
-import { rescheduleActionLogType } from "metabook-core/dist/types/actionLog";
 import * as Anki from "./ankiPkg";
-import { Card, CardQueue, CardType, Collection } from "./ankiPkg";
+import { Card, CardQueue, Collection } from "./ankiPkg";
 import { getModelMapping, ModelMapping } from "./modelMapping";
 import { mapNoteToPrompt } from "./noteMapping";
 
@@ -165,7 +165,7 @@ async function readAttachmentAtPath(
 ): Promise<Attachment | Error> {
   const mimeType = getAttachmentMimeTypeForFilename(name);
   if (mimeType) {
-    const contents = await fs.promises.readFile(path, { encoding: "binary" });
+    const contents = await fs.promises.readFile(path);
     return { type: imageAttachmentType, mimeType, contents };
   } else {
     return new Error(`Unsupported attachment type: ${name}`);
@@ -247,7 +247,7 @@ export async function createImportPlan(
             attachmentNamesToAttachmentIDReferences.set(attachmentName, {
               type: result.type,
               byteLength: result.contents.length,
-              id: getIDForAttachment(Buffer.from(result.contents, "binary")),
+              id: await getIDForAttachment(result.contents),
             });
           }
         },

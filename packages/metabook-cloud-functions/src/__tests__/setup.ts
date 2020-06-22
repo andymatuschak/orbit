@@ -1,4 +1,4 @@
-import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
+import { FirebaseTesting } from "metabook-firebase-support";
 
 export default function () {
   return FirebaseTesting.startFirebaseTestingEmulator();

@@ -1,4 +1,3 @@
-import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
 import firebase from "firebase/app";
 import "firebase/firestore";
 import {
@@ -8,7 +7,10 @@ import {
   getIDForPrompt,
   imageAttachmentType,
 } from "metabook-core";
-import { getReferenceForDataRecordID } from "metabook-firebase-support";
+import {
+  FirebaseTesting,
+  getReferenceForDataRecordID,
+} from "metabook-firebase-support";
 import { testBasicPrompt } from "metabook-sample-data";
 import { MetabookFirebaseDataClient } from "./dataClient";
 
@@ -24,7 +26,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  FirebaseTesting.resetTestFirebaseApp(testFirestore);
+  await FirebaseTesting.resetTestFirestore(testFirestore);
 });
 
 const testPromptID = getIDForPrompt(testBasicPrompt);
@@ -58,16 +60,15 @@ test("records attachments", async () => {
   const testAttachment: Attachment = {
     type: imageAttachmentType,
     mimeType: AttachmentMimeType.PNG,
-    contents: "test attachment",
+    contents: Buffer.from("test attachment"),
   };
-  await dataClient.recordAttachments([testAttachment]);
-  const testAttachmentID = getIDForAttachment(
+  await dataClient.recordAttachments([{ attachment: testAttachment }]);
+  const testAttachmentID = await getIDForAttachment(
     Buffer.from(testAttachment.contents),
   );
 
   const mockURL = "https://test.org";
   cacheWriteHandler.mockImplementation(() => mockURL);
 
-  const attachments = await dataClient.getAttachments([testAttachmentID]);
-  expect(attachments.get(testAttachmentID)).toMatchObject(testAttachment);
+  expect(dataClient.getAttachmentURL(testAttachmentID)).toMatchInlineSnapshot();
 });

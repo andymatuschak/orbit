@@ -1,9 +1,5 @@
 import * as firebase from "firebase-admin";
-import { decode } from "firebase-functions/lib/providers/https";
 import {
-  ActionLogID,
-  Attachment,
-  AttachmentID,
   getFileExtensionForAttachmentMimeType,
   getIDForAttachment,
   getIDForPrompt,
@@ -15,6 +11,7 @@ import {
   DataRecord,
   DataRecordID,
   getActionLogIDForFirebaseKey,
+  getAttachmentIDForFirebaseKey,
   getLogCollectionReference,
   getReferenceForDataRecordID,
   getTaskStateCacheReferenceForTaskID,
@@ -22,7 +19,6 @@ import {
   storageAttachmentsPathComponent,
   storageBucketName,
 } from "metabook-firebase-support";
-import { getAttachmentIDForFirebaseKey } from "metabook-firebase-support/dist/cdidEncoding";
 import applyPromptActionLogToPromptStateCache from "./applyPromptActionLogToPromptStateCache";
 
 let _app: firebase.app.App | null = null;

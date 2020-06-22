@@ -1,6 +1,8 @@
 import * as IT from "incremental-thinking";
-import { updateMetadataActionLogType } from "metabook-core/dist/types/actionLog";
-import { PromptUpdateMetadataActionLog } from "metabook-core/dist/types/promptActionLog";
+import {
+  PromptUpdateMetadataActionLog,
+  updateMetadataActionLogType,
+} from "metabook-core";
 import { notePrompts } from "spaced-everything";
 import { testClozePrompt } from "metabook-sample-data";
 import { simpleOrbitPrompt } from "./__fixtures__/testData";
