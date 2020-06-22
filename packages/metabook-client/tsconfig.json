@@ -7,6 +7,5 @@
     "lib": ["es6", "dom"],
     "types": ["jest"]
   },
-  "include": ["./src/**/*.ts"],
-  "exclude": ["./src/**/*.test.ts"]
+  "include": ["./src/**/*.ts"]
 }

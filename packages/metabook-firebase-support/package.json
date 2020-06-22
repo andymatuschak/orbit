@@ -12,7 +12,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@firebase/testing": "^0.19.5",
+    "@firebase/testing": "^0.20.4",
     "buffer": "^5.6.0",
     "cids": "^0.8.0",
     "firebase": "^7.14.2",

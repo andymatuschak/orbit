@@ -42,7 +42,7 @@ afterEach(async () => {
 test("recording a review triggers new log", async () => {
   const mockFunction = jest.fn();
   const unsubscribe = client.subscribeToActionLogs(
-    null,
+    {},
     mockFunction,
     (error) => {
       fail(error);
@@ -86,6 +86,7 @@ describe("prompt states", () => {
     await ref.set({
       ...initialPromptState,
       taskID,
+      latestLogServerTimestamp: new firebase.firestore.Timestamp(0, 0),
     });
 
     const initialPromptStates = await client.getPromptStates({
@@ -102,11 +103,7 @@ describe("prompt states", () => {
 
 test("no events after unsubscribing", async () => {
   const mockFunction = jest.fn();
-  const unsubscribe = client.subscribeToActionLogs(
-    null,
-    mockFunction,
-    jest.fn(),
-  );
+  const unsubscribe = client.subscribeToActionLogs({}, mockFunction, jest.fn());
   unsubscribe();
   await recordTestPromptStateUpdate(client).commit;
   expect(mockFunction).not.toHaveBeenCalled();

@@ -1,5 +1,7 @@
-import { stopFirebaseTestingEmulator } from "./firebaseTesting";
+require("ts-node").register("../../tsconfig.json");
 
-export default function() {
-  return stopFirebaseTestingEmulator();
+const { FirebaseTesting } = require("metabook-firebase-support");
+
+export default function () {
+  return FirebaseTesting.stopFirebaseTestingEmulator();
 }

@@ -11,7 +11,6 @@
     "@babel/core": "^7.9.0",
     "@babel/preset-env": "^7.9.0",
     "@babel/preset-typescript": "^7.9.0",
-    "@firebase/testing": "^0.19.2",
     "@types/base64-js": "^1.2.5",
     "@types/jest": "^25.1.4",
     "@types/node": "^13.9.1",
@@ -21,6 +20,7 @@
     "jest-environment-uint8array": "^1.0.0",
     "jest-workspace-resolver": "^1.0.0",
     "metabook-sample-data": "0.0.1",
+    "ts-node": "^8.9.1",
     "typescript": "^3.8.3"
   },
   "dependencies": {
