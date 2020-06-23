@@ -1,4 +1,3 @@
-import * as firebaseTesting from "@firebase/testing";
 import firebase from "firebase/app";
 import {
   applyActionLogToPromptState,
@@ -14,6 +13,7 @@ import {
   getTaskStateCacheReferenceForTaskID,
   PromptStateCache,
 } from "metabook-firebase-support";
+import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
 import { testBasicPrompt } from "metabook-sample-data";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
@@ -23,20 +23,13 @@ let testFirestore: firebase.firestore.Firestore;
 let client: MetabookFirebaseUserClient;
 
 const testUserID = "testUser";
-const testProjectID = "firebase-client-test";
 beforeEach(() => {
-  const testApp = firebaseTesting.initializeTestApp({
-    projectId: testProjectID,
-    auth: { uid: testUserID, email: "test@test.com" },
-  });
-  testFirestore = testApp.firestore();
+  testFirestore = FirebaseTesting.createTestFirebaseApp(testUserID).firestore;
   client = new MetabookFirebaseUserClient(testFirestore, testUserID);
 });
 
 afterEach(async () => {
-  await testFirestore.terminate();
-  await testFirestore.clearPersistence();
-  return firebaseTesting.clearFirestoreData({ projectId: testProjectID });
+  return FirebaseTesting.resetTestFirestore(testFirestore);
 });
 
 test("recording a review triggers new log", async () => {

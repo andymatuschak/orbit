@@ -1,6 +1,6 @@
 module.exports = {
-  globalSetup: "../metabook-firebase-support/src/__tests__/setup.ts",
-  globalTeardown: "../metabook-firebase-support/src/__tests__/teardown.ts",
+  globalSetup: "./metabook-firebase-support/__tests__/setup.ts",
+  globalTeardown: "./metabook-firebase-support/__tests__/tearDown.ts",
   testEnvironment: "jest-environment-uint8array",
   testMatch: ["**/?(*.)+(spec|test).ts?(x)"],
   testPathIgnorePatterns: ["dist", "node_modules"],

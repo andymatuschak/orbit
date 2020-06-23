@@ -14,5 +14,3 @@ export {
   getFirebaseKeyForCIDString,
 } from "./cdidEncoding";
 export * from "./storage";
-
-export * as FirebaseTesting from "./firebaseTesting";

@@ -6,10 +6,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": {
-    ".": "./dist/index.js",
-    "./firebaseTesting": "./dist/firebaseTesting.js"
-  },
+  "exports": "./dist/index.js",
   "sideEffects": false,
   "dependencies": {
     "@firebase/testing": "^0.20.4",

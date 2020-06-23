@@ -7,10 +7,7 @@ import {
   getIDForPrompt,
   imageAttachmentType,
 } from "metabook-core";
-import {
-  FirebaseTesting,
-  getReferenceForDataRecordID,
-} from "metabook-firebase-support";
+import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
 import { testBasicPrompt } from "metabook-sample-data";
 import { MetabookFirebaseDataClient } from "./dataClient";
 
@@ -33,21 +30,7 @@ afterEach(async () => {
   await FirebaseTesting.resetTestFirestore(testFirestore);
 });
 
-const testPromptID = getIDForPrompt(testBasicPrompt);
-async function writeTestPromptData() {
-  const { firestore } = FirebaseTesting.createTestAdminFirebaseApp();
-  await getReferenceForDataRecordID(firestore, testPromptID).set(
-    testBasicPrompt,
-  );
-}
-
 describe("getData", () => {
-  test("reads card data", async () => {
-    await writeTestPromptData();
-    const prompts = await dataClient.getPrompts([testPromptID]);
-    expect(prompts.get(testPromptID)).toMatchObject(testBasicPrompt);
-  });
-
   test("returns empty list when input is empty", async () => {
     expect(await dataClient.getPrompts([])).toMatchObject(new Map());
   });

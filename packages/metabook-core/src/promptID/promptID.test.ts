@@ -28,16 +28,21 @@ test("encoding stability", () => {
   );
 });
 
-describe("encoding attachments", async () => {
-  const testAttachmentReference: AttachmentIDReference = {
-    type: "image",
-    id: await getIDForAttachment(createTestAttachmentData("abc")),
-    byteLength: 10,
-  };
-  const testAttachmentReference2 = {
-    ...testAttachmentReference,
-    id: await getIDForAttachment(createTestAttachmentData("def")),
-  };
+describe("encoding attachments", () => {
+  let testAttachmentReference: AttachmentIDReference;
+  let testAttachmentReference2: AttachmentIDReference;
+
+  beforeAll(async () => {
+    testAttachmentReference = {
+      type: "image",
+      id: await getIDForAttachment(createTestAttachmentData("abc")),
+      byteLength: 10,
+    };
+    testAttachmentReference2 = {
+      ...testAttachmentReference,
+      id: await getIDForAttachment(createTestAttachmentData("def")),
+    };
+  });
 
   test("basic prompt attachments", () => {
     const basicPromptID = getIDForPrompt(testBasicPrompt).toString();

@@ -17,8 +17,8 @@ export function startFirebaseTestingEmulator() {
 
   console.log(`Starting emulator in ${path.resolve(__dirname, "..")}`);
   const localEmulatorProcess = childProcess.spawn(
-    "firebase",
-    ["emulators:start"],
+    "npx",
+    ["firebase", "emulators:start"],
     {
       cwd: path.resolve(__dirname, ".."),
     },
@@ -51,14 +51,15 @@ export async function stopFirebaseTestingEmulator() {
 }
 
 export function createTestFirebaseApp(
-  uid: string,
+  uid = "testUserID",
+  email = "test@test.com",
 ): {
   firestore: firebase.firestore.Firestore;
   functions: firebase.functions.Functions;
 } {
   const testApp = firebaseTesting.initializeTestApp({
     projectId: projectID,
-    auth: { uid },
+    auth: { uid, email },
   });
   const testFunctions = testApp.functions();
   testFunctions.useFunctionsEmulator(functionsEmulatorURL);

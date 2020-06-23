@@ -7,10 +7,8 @@ import {
   PromptIngestActionLog,
   PromptTask,
 } from "metabook-core";
-import {
-  FirebaseTesting,
-  getTaskStateCacheReferenceForTaskID,
-} from "metabook-firebase-support";
+import { getTaskStateCacheReferenceForTaskID } from "metabook-firebase-support";
+import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
 import { testBasicPrompt } from "metabook-sample-data";
 
 let testFirestore: firebase.firestore.Firestore;

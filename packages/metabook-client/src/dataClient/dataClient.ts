@@ -79,11 +79,10 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
       return new Map();
     }
 
-    const {
-      data: { records },
-    }: { data: { records: (R | null)[] } } = await this.functions.httpsCallable(
-      "getDataRecords",
-    )({ recordIDs });
+    const response = await this.functions.httpsCallable("getDataRecords")({
+      recordIDs,
+    });
+    const records = response.data.records as (R | null)[];
     return new Map(records.map((record, index) => [recordIDs[index], record]));
   }
 
