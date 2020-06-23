@@ -1,4 +1,3 @@
-import shimFirebasePersistence from "firebase-node-persistence-shim";
 import {
   ActionLog,
   getIDForActionLog,
@@ -10,10 +9,6 @@ import {
   repetitionActionLogType,
 } from "metabook-core";
 import ActionLogStore from "./actionLogStore";
-
-beforeAll(() => {
-  shimFirebasePersistence();
-});
 
 let actionLogStore: ActionLogStore;
 beforeEach(() => {

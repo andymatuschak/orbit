@@ -1,4 +1,3 @@
-import shimFirebasePersistence from "firebase-node-persistence-shim";
 import {
   basicPromptType,
   getIDForPromptTask,
@@ -7,16 +6,11 @@ import {
   PromptTask,
   PromptTaskID,
 } from "metabook-core";
-import { ServerTimestamp } from "metabook-firebase-support";
 import PromptStateStore from "./promptStateStore";
 
 jest.mock("../util/leveldown", () => {
   const Memdown = require("memdown");
   return Memdown;
-});
-
-beforeAll(() => {
-  shimFirebasePersistence();
 });
 
 let store: PromptStateStore;
