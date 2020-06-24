@@ -5,5 +5,5 @@ export default async function sha256(data: Uint8Array): Promise<Buffer> {
   if (!window.crypto.subtle) {
     throw new Error("Crypto unavailable");
   }
-  return new Buffer(await window.crypto.subtle.digest("sha256", data));
+  return new Buffer(await window.crypto.subtle.digest("SHA-256", data));
 }

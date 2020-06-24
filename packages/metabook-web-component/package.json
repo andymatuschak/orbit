@@ -17,6 +17,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsc -b"
+    "build": "cross-env NODE_ENV=production webpack",
+    "dev": "(cd test; serve -S) & cross-env NODE_ENV=development webpack -w"
   }
 }

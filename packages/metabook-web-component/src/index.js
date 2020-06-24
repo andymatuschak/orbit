@@ -30,22 +30,22 @@ export class OrbitReviewAreaElement extends HTMLElement {
         if (!this.iframe) {
             return;
         }
+        // TODO de-dupe with embedded-app
         const items = [];
         this.querySelectorAll(":scope > orbit-prompt").forEach((element) => {
+            var _a, _b;
             items.push({
-                prompt: {
-                    promptType: basicPromptType,
-                    question: {
-                        contents: element.getAttribute("question") || "<missing>",
-                        attachments: [],
-                    },
-                    answer: {
-                        contents: element.getAttribute("answer") || "<missing>",
-                        attachments: [],
-                    },
-                    explanation: null,
+                type: basicPromptType,
+                question: {
+                    contents: element.getAttribute("question") || "<missing>",
+                    attachmentURLs: (_a = element
+                        .getAttribute("question-attachments")) === null || _a === void 0 ? void 0 : _a.split(";"),
                 },
-                promptParameters: null,
+                answer: {
+                    contents: element.getAttribute("answer") || "<missing>",
+                    attachmentURLs: (_b = element
+                        .getAttribute("answer-attachments")) === null || _b === void 0 ? void 0 : _b.split(";"),
+                },
             });
         });
         const itemsParameterString = encodeURIComponent(JSON.stringify(items));

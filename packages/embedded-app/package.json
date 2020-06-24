@@ -7,12 +7,11 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
-    "@types/jest": "^25.2.1",
     "@types/node": "^13.13.4",
     "@types/react": "^16.9.34",
     "@types/react-dom": "^16.9.7",
     "@types/react-native": "^0.62.12",
-    "babel-plugin-react-native-web": "^0.12.2",
+    "babel-plugin-react-native-web": "^0.12.3",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "craco-babel-loader": "^0.1.4",
     "metabook-core": "0.0.1",
@@ -50,5 +49,15 @@
       "react-dom",
       "react-native-web"
     ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.10.3",
+    "@babel/preset-env": "^7.10.3",
+    "@babel/preset-react": "^7.10.1",
+    "@babel/preset-typescript": "^7.10.1",
+    "@types/jest": "^26.0.0",
+    "babel-jest": "^26.1.0",
+    "jest": "^26.1.0",
+    "jest-environment-uint8array": "^1.0.0"
   }
 }

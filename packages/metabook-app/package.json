@@ -85,7 +85,6 @@
     "babel-preset-react-native": "^4.0.1",
     "expo-cli": "^3.21.5",
     "expo-yarn-workspaces": "^1.2.1",
-    "firebase-node-persistence-shim": "0.0.1",
     "husky": "^4.2.3",
     "jest": "^24.9.0",
     "jest-expo": "~36.0.1",

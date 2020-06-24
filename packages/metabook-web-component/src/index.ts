@@ -1,4 +1,5 @@
-import { basicPromptType, Prompt, PromptParameters } from "metabook-core";
+import { EmbeddedItem } from "embedded-app/src/embeddedItem";
+import { basicPromptType } from "metabook-core";
 
 declare global {
   // supplied by Webpack
@@ -46,28 +47,23 @@ export class OrbitReviewAreaElement extends HTMLElement {
     }
 
     // TODO de-dupe with embedded-app
-    interface EmbeddedItem {
-      prompt: Prompt;
-      promptParameters: PromptParameters;
-    }
-
     const items: EmbeddedItem[] = [];
     this.querySelectorAll<OrbitPromptElement>(":scope > orbit-prompt").forEach(
       (element) => {
         items.push({
-          prompt: {
-            promptType: basicPromptType,
-            question: {
-              contents: element.getAttribute("question") || "<missing>",
-              attachments: [],
-            },
-            answer: {
-              contents: element.getAttribute("answer") || "<missing>",
-              attachments: [],
-            },
-            explanation: null,
+          type: basicPromptType,
+          question: {
+            contents: element.getAttribute("question") || "<missing>",
+            attachmentURLs: element
+              .getAttribute("question-attachments")
+              ?.split(";"),
           },
-          promptParameters: null,
+          answer: {
+            contents: element.getAttribute("answer") || "<missing>",
+            attachmentURLs: element
+              .getAttribute("answer-attachments")
+              ?.split(";"),
+          },
         });
       },
     );

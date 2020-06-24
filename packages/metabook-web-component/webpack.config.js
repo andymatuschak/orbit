@@ -37,4 +37,7 @@ module.exports = {
       ),
     }),
   ],
+  resolve: {
+    extensions: [".web.ts", ".ts", ".web.js", ".js"],
+  },
 };
