@@ -3,7 +3,10 @@
   "compilerOptions": {
     "target": "es6",
     "lib": ["dom", "es6"],
-    "composite": false
+    "types": ["jest"],
+    "composite": false,
+    "outDir": "./dist",
+    "rootDir": "./src"
   },
-  "files": ["src/index.ts"]
+  "include": ["./src/**/*.ts"]
 }

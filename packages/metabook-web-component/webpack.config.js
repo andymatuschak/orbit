@@ -23,7 +23,7 @@ module.exports = {
   },
   output: {
     filename: "orbit-web-component.js",
-    path: path.resolve(__dirname, "dist"),
+    path: path.resolve(__dirname, "build"),
   },
   experiments: {
     outputModule: true,

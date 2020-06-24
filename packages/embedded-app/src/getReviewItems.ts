@@ -39,6 +39,7 @@ function getAttachmentType(
 }
 
 async function fetchAttachment(url: string): Promise<AttachmentIDReference> {
+  // TODO: move this to a service worker to avoid fetching the resource twice.
   const response = await fetch(url);
   const responseIsOK = response.status >= 200 && response.status < 300;
   if (!responseIsOK) {
