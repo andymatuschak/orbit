@@ -17,7 +17,8 @@
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "firebase-admin": "^8.10.0",
-    "firebase-functions": "^3.5.0"
+    "firebase-functions": "^3.5.0",
+    "node-fetch": "^2.6.0"
   },
   "engines": {
     "node": "10"
@@ -30,6 +31,7 @@
     "@types/cookie-parser": "^1.4.2",
     "@types/cors": "^2.8.6",
     "@types/jest": "^25.2.3",
+    "@types/node-fetch": "^2.5.7",
     "babel-jest": "^26.0.1",
     "babel-loader": "^8.1.0",
     "jest": "^26.0.1",

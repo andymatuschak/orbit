@@ -1,7 +1,7 @@
 import firebase from "firebase-admin";
 import * as functions from "firebase-functions";
 import { ActionLogDocument } from "metabook-firebase-support";
-import { updatePromptStateCacheWithLog } from "../firebase";
+import { updatePromptStateCacheWithLog } from "../firebase/firebase";
 
 export default functions.firestore
   .document("users/{userID}/logs/{logID}")

@@ -68,7 +68,7 @@ async function getReviewItemsForPromptStates(
   const prompts = await dataRecordManager.getPrompts(promptIDs);
   console.log("Review queue: fetched prompt data");
 
-  const attachmentIDs = getAttachmentIDsInPrompts(prompts);
+  const attachmentIDs = getAttachmentIDsInPrompts(prompts.values());
   console.log("Review queue: fetching attachments");
   const attachmentResolutionMap = await dataRecordManager.getAttachments(
     attachmentIDs,

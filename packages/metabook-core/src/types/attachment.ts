@@ -1,4 +1,7 @@
+import { URL } from "url";
+import { AttachmentID } from "./attachmentID";
 import { AttachmentType, imageAttachmentType } from "./attachmentType";
+import { Prompt, PromptField, QAPrompt } from "./prompt";
 
 export interface Attachment {
   type: AttachmentType;
@@ -61,4 +64,51 @@ export function getAttachmentTypeForAttachmentMimeType(
     case AttachmentMimeType.JPEG:
       return imageAttachmentType;
   }
+}
+
+export function getAttachmentMimeTypeFromResourceMetadata(
+  contentType: string | null,
+  urlString: string | null,
+): AttachmentMimeType | null {
+  // Our quick way to validate MIME types is with our extension lookup table.
+  const attachmentExtension =
+    contentType && getFileExtensionForAttachmentMimeType(contentType);
+  if (attachmentExtension) {
+    return contentType as AttachmentMimeType;
+  } else if (urlString) {
+    const url = new URL(urlString);
+    return getAttachmentMimeTypeForFilename(url.pathname);
+  } else {
+    return null;
+  }
+}
+
+export function getAttachmentIDsInPrompt(spec: Prompt): Set<AttachmentID> {
+  const output = new Set<AttachmentID>();
+
+  function visitQAPrompt(qaPrompt: QAPrompt) {
+    function visitPromptField(promptField: PromptField) {
+      promptField.attachments.forEach((attachmentIDReference) =>
+        output.add(attachmentIDReference.id),
+      );
+    }
+
+    visitPromptField(qaPrompt.question);
+    visitPromptField(qaPrompt.answer);
+    if (qaPrompt.explanation) {
+      visitPromptField(qaPrompt.explanation);
+    }
+  }
+
+  switch (spec.promptType) {
+    case "basic":
+      visitQAPrompt(spec);
+      break;
+    case "applicationPrompt":
+      spec.variants.forEach(visitQAPrompt);
+      break;
+    case "cloze":
+      break;
+  }
+  return output;
 }

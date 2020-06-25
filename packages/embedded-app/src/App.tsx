@@ -1,9 +1,7 @@
+import "firebase/functions";
+import { Authentication, getDefaultFirebaseApp } from "metabook-client";
 import {
-  Authentication,
-  getDefaultFirebaseApp,
-  MetabookFirebaseUserClient,
-} from "metabook-client";
-import {
+  ActionLog,
   getIDForPrompt,
   getIDForPromptTask,
   PromptTask,
@@ -23,6 +21,7 @@ import {
   useAuthenticationState,
 } from "./useAuthenticationState";
 import useReviewItems from "./useReviewItems";
+import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
 
 declare global {
   // supplied by Webpack
@@ -93,17 +92,11 @@ function App() {
   const items = useReviewItems();
   const [queueOffset, setQueueOffset] = React.useState(0);
 
-  const [{ userClient, authenticationClient }] = React.useState(() => {
-    const app = getDefaultFirebaseApp();
-    const firestore = app.firestore();
-    return {
-      userClient: new MetabookFirebaseUserClient(firestore, "demo"),
-      authenticationClient: new Authentication.FirebaseAuthenticationClient(
-        app.auth(),
-      ),
-    };
-  });
+  const [app] = React.useState(() => getDefaultFirebaseApp()); // TODO abstract
 
+  const [authenticationClient] = React.useState(
+    () => new Authentication.FirebaseAuthenticationClient(app.auth()),
+  );
   const authenticationState = useAuthenticationState(authenticationClient);
 
   const onSignIn = React.useCallback(() => {
@@ -126,19 +119,15 @@ function App() {
       }
       setQueueOffset((queueOffset) => queueOffset + 1);
 
-      if (!USER_ID) {
-        return;
-      }
+      if (authenticationState.userRecord) {
+        // Ingest prompt for user
+        const promptTask = {
+          promptType: marking.reviewItem.prompt.promptType,
+          promptID: getIDForPrompt(marking.reviewItem.prompt),
+          promptParameters: marking.reviewItem.promptParameters,
+        } as PromptTask;
 
-      // Ingest prompt for user
-      const promptTask = {
-        promptType: marking.reviewItem.prompt.promptType,
-        promptID: getIDForPrompt(marking.reviewItem.prompt),
-        promptParameters: marking.reviewItem.promptParameters,
-      } as PromptTask;
-
-      userClient
-        .recordActionLogs([
+        const logs: ActionLog[] = [
           {
             actionLogType: repetitionActionLogType,
             taskID: getIDForPromptTask(promptTask),
@@ -148,16 +137,25 @@ function App() {
             context: null,
             timestampMillis: Date.now(),
           },
-        ])
-        .then(() => console.log("Recorded log"))
-        .catch((error) => console.error("Error recording log", error));
+        ];
 
-      // dataClient
-      //   .recordPrompts([marking.reviewItem.prompt])
-      //   .then(() => console.log("Recorded prompt."))
-      //   .catch((error) => console.error("Error recording prompt", error));
+        const prompt = marking.reviewItem.prompt;
+
+        app
+          .functions()
+          .httpsCallable("recordEmbeddedActions")({
+            logs,
+            promptsByID: { [getIDForPrompt(prompt)]: prompt },
+            attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
+              marking.reviewItem.prompt,
+              marking.reviewItem.attachmentResolutionMap,
+            ),
+          })
+          .then(() => console.log("Recorded action"))
+          .catch((error) => console.error(error));
+      }
     },
-    [authenticationState, userClient],
+    [app, authenticationState],
   );
 
   const currentQueue = React.useMemo(() => items?.slice(queueOffset), [

@@ -2,6 +2,7 @@ import type { firestore as ClientFirestore } from "firebase";
 import type { firestore as AdminFirestore } from "firebase-admin";
 
 export type Database = ClientFirestore.Firestore | AdminFirestore.Firestore;
+export type FieldValue = ClientFirestore.FieldValue | AdminFirestore.FieldValue;
 export type CollectionReference<D extends Database> = ReturnType<
   D["collection"]
 >;

@@ -1,16 +1,15 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
 
-import { ActionLog, ActionLogID, getIDForActionLog } from "metabook-core";
+import { ActionLog, ActionLogID } from "metabook-core";
 import {
   ActionLogDocument,
-  batchWriteEntries,
   getActionLogIDForFirebaseKey,
   getLogCollectionReference,
-  getReferenceForActionLogID,
   getTaskStateCacheCollectionReference,
   PromptStateCache,
   ServerTimestamp,
+  storeLogs,
 } from "metabook-firebase-support";
 import { getDefaultFirebaseApp } from "../../firebase";
 import { MetabookUnsubscribe } from "../../types/unsubscribe";
@@ -177,23 +176,12 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
   }
 
   async recordActionLogs(logs: ActionLog[]): Promise<void> {
-    await batchWriteEntries(
-      logs.map((log) => {
-        const logDocument: ActionLogDocument<firebase.firestore.Timestamp> = {
-          ...log,
-          serverTimestamp: firebase.firestore.FieldValue.serverTimestamp() as firebase.firestore.Timestamp,
-        };
-        return [
-          getReferenceForActionLogID(
-            this.database,
-            this.userID,
-            getIDForActionLog(log),
-          ),
-          logDocument,
-        ];
-      }),
+    await storeLogs(
+      logs,
+      this.userID,
       this.database,
-      (ms, ns) => new firebase.firestore.Timestamp(ms, ns),
+      firebase.firestore.FieldValue.serverTimestamp(),
+      (ms: number, ns: number) => new firebase.firestore.Timestamp(ms, ns),
     );
   }
 }

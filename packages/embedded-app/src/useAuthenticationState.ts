@@ -120,7 +120,7 @@ export function useAuthenticationState(
         setAuthenticationState({ status: "signedOut", userRecord: null });
       }
     });
-  }, [readyToSubscribeToUserAuth, authenticationClient]);
+  }, [hasStorageAccess, readyToSubscribeToUserAuth, authenticationClient]);
 
   // Watch for messages from the login popup.
   const onMessage = React.useCallback(
@@ -132,8 +132,6 @@ export function useAuthenticationState(
         authenticationClient.signInWithLoginToken(loginToken).catch((error) => {
           console.error(`Couldn't login with provided token: ${error}`);
         });
-      } else {
-        console.debug("Discarding cross-origin message", event);
       }
     },
     [authenticationClient],

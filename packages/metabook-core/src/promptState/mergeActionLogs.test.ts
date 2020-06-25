@@ -50,31 +50,25 @@ const testRepetitionLogID = getIDForActionLog(
 
 test("fails if log is missing", () => {
   expect(
-    mergeActionLogs(
-      [{ log: testRepetitionLog, id: testRepetitionLogID }],
-      null,
-    ),
+    mergeActionLogs([{ log: testRepetitionLog, id: testRepetitionLogID }]),
   ).toBeInstanceOf(Error);
 });
 
 test("merges split log", () => {
   const secondRepetitionLog = { ...testRepetitionLog, timestampMillis: 750 };
   expect(
-    mergeActionLogs(
-      [
-        { log: testIngestLog, id: testIngestLogID },
-        {
-          log: testRepetitionLog,
-          id: testRepetitionLogID,
-        },
-        {
-          log: secondRepetitionLog,
-          id: getIDForActionLog(
-            getActionLogFromPromptActionLog(secondRepetitionLog),
-          ),
-        },
-      ],
-      null,
-    ),
+    mergeActionLogs([
+      { log: testIngestLog, id: testIngestLogID },
+      {
+        log: testRepetitionLog,
+        id: testRepetitionLogID,
+      },
+      {
+        log: secondRepetitionLog,
+        id: getIDForActionLog(
+          getActionLogFromPromptActionLog(secondRepetitionLog),
+        ),
+      },
+    ]),
   ).toBeTruthy();
 });

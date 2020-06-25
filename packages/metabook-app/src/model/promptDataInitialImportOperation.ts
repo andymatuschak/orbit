@@ -9,7 +9,7 @@ export default function promptDataInitialImportOperation(
   promptStateStore: PromptStateStore,
 ): Task<void> {
   return createTask(async (taskStatus) => {
-    let latestPromptTaskID: PromptTaskID | null = null;
+    let latestPromptTask: PromptTask | null = null;
     let promptTotal = 0;
     let attachmentTotal = 0;
     console.log("Prompt data import: starting");
@@ -17,7 +17,7 @@ export default function promptDataInitialImportOperation(
       const promptStates: Map<
         PromptTask,
         PromptState
-      > = await promptStateStore.getAllPromptStates(latestPromptTaskID, 100);
+      > = await promptStateStore.getAllPromptStates(latestPromptTask, 100);
       if (taskStatus.isCancelled) return;
 
       if (promptStates.size > 0) {
@@ -32,7 +32,7 @@ export default function promptDataInitialImportOperation(
           `Prompt data import: imported ${prompts.size} prompt records (${promptTotal} total)`,
         );
 
-        const attachmentIDs = getAttachmentIDsInPrompts(prompts);
+        const attachmentIDs = getAttachmentIDsInPrompts(prompts.values());
         if (attachmentIDs.size > 0) {
           const attachments = await dataRecordManager.getAttachments(
             attachmentIDs,
@@ -44,7 +44,7 @@ export default function promptDataInitialImportOperation(
         }
 
         promptTotal += prompts.size;
-        latestPromptTaskID = orderedPromptTasks[orderedPromptTasks.length - 1];
+        latestPromptTask = orderedPromptTasks[orderedPromptTasks.length - 1];
       } else {
         console.log("Prompt data import: finished");
         break;

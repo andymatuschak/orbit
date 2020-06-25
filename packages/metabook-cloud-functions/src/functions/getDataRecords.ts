@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import { DataRecord, DataRecordID } from "metabook-firebase-support";
-import { getDataRecords } from "../firebase";
+import { getDataRecords } from "../firebase/firebase";
 
 interface GetDataRecordsArguments<R extends DataRecord> {
   recordIDs: DataRecordID<R>[];

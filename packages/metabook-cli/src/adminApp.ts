@@ -1,8 +1,7 @@
 import admin from "firebase-admin";
 import { Attachment, AttachmentID } from "metabook-core";
 import {
-  getFirebaseKeyForCIDString,
-  storageAttachmentsPathComponent,
+  getStorageObjectNameForAttachmentID,
   storageBucketName,
 } from "metabook-firebase-support";
 import serviceAccount from "./adminKey.json";
@@ -27,11 +26,7 @@ export async function uploadAttachment(
   const ref = getAdminApp()
     .storage()
     .bucket(storageBucketName)
-    .file(
-      `${storageAttachmentsPathComponent}/${getFirebaseKeyForCIDString(
-        attachmentID,
-      )}`,
-    );
+    .file(getStorageObjectNameForAttachmentID(attachmentID));
   const writeStream = ref.createWriteStream({
     contentType: attachment.mimeType,
   });

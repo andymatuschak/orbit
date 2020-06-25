@@ -1,10 +1,7 @@
 import {
   AttachmentIDReference,
-  AttachmentMimeType,
-  AttachmentType,
-  getAttachmentMimeTypeForFilename,
+  getAttachmentMimeTypeFromResourceMetadata,
   getAttachmentTypeForAttachmentMimeType,
-  getFileExtensionForAttachmentMimeType,
   getIDForAttachment,
 } from "metabook-core";
 import { AttachmentResolutionMap, ReviewItem } from "metabook-ui";
@@ -14,45 +11,24 @@ import {
   getReviewItemFromEmbeddedItem,
 } from "./embeddedItem";
 
-function getAttachmentType(
-  contentType: string | null,
-  url: string,
-): AttachmentType | null {
-  const attachmentExtension =
-    contentType && getFileExtensionForAttachmentMimeType(contentType);
-  if (attachmentExtension) {
-    return getAttachmentTypeForAttachmentMimeType(
-      contentType as AttachmentMimeType,
-    );
-  } else {
-    const attachmentMimeTypeFromExtension = getAttachmentMimeTypeForFilename(
-      url,
-    );
-    if (attachmentMimeTypeFromExtension) {
-      return getAttachmentTypeForAttachmentMimeType(
-        attachmentMimeTypeFromExtension,
-      );
-    } else {
-      return null;
-    }
-  }
-}
-
 async function fetchAttachment(url: string): Promise<AttachmentIDReference> {
   // TODO: move this to a service worker to avoid fetching the resource twice.
   const response = await fetch(url);
   const responseIsOK = response.status >= 200 && response.status < 300;
   if (!responseIsOK) {
     throw new Error(
-      `Error retrieving attachment at ${url}: ${response.status}`,
+      `Error retrieving attachment at ${url}: ${response.status} ${response.type}`,
     );
   }
 
   const contentType = response.headers.get("Content-Type");
-  const attachmentType = getAttachmentType(contentType, url);
-  if (!attachmentType) {
+  const attachmentMimeType = getAttachmentMimeTypeFromResourceMetadata(
+    contentType,
+    url,
+  );
+  if (!attachmentMimeType) {
     throw new Error(
-      `Attachment at ${url} has unsupported content type ${contentType} and unsupported extension`,
+      `Attachment at ${url} has unsupported MIME type ${contentType} and unsupported extension`,
     );
   }
 
@@ -62,7 +38,7 @@ async function fetchAttachment(url: string): Promise<AttachmentIDReference> {
   return {
     id: attachmentID,
     byteLength: attachmentData.byteLength,
-    type: attachmentType,
+    type: getAttachmentTypeForAttachmentMimeType(attachmentMimeType),
   };
 }
 
