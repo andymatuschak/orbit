@@ -154,6 +154,8 @@ export default class PromptStateStore {
             ...options,
             keys: true,
             values: true,
+            keyAsBuffer: false,
+            valueAsBuffer: false,
           };
           if (limit !== undefined) {
             mergedOptions.limit = limit;

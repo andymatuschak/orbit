@@ -135,6 +135,8 @@ export default class ActionLogStore {
         gte: taskID,
         lt: taskID + "~", // ~ is sorted after all ASCII characters
         limit: limit ?? -1,
+        keyAsBuffer: false,
+        valueAsBuffer: false,
       });
       async function iterate(
         error: Error | undefined,

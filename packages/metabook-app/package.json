@@ -54,7 +54,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.9.0",
     "react-native": "0.62.0",
-    "react-native-leveldown": "0.0.5",
+    "react-native-leveldown": "^0.0.6",
     "react-native-unimodules": "^0.9.0",
     "react-native-web": "~0.11.7",
     "readable-stream": "^1.0.33",
