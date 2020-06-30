@@ -304,7 +304,7 @@
 						TestTargetID = 13B07F861A680F5B00A75B9A;
 					};
 					13B07F861A680F5B00A75B9A = {
-						DevelopmentTeam = H824UX64GY;
+						DevelopmentTeam = MQ22N839N8;
 						LastSwiftMigration = 1120;
 					};
 					2D02E47A1E0B4A5D006451C7 = {
@@ -390,7 +390,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "../../../node_modules/expo-updates/bundle-expo-assets.sh\n";
+			shellScript = "source ~/.nvm/nvm.sh\n../../../node_modules/expo-updates/bundle-expo-assets.sh\n";
 		};
 		15870636249B138C675B3FC1 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -651,7 +651,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = metabookapp/metabookapp.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = H824UX64GY;
+				DEVELOPMENT_TEAM = MQ22N839N8;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -665,7 +665,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = media.ladder.orbit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.withorbit.app;
 				PRODUCT_NAME = Orbit;
 				SUPPORTS_MACCATALYST = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -683,7 +683,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = metabookapp/metabookapp.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = H824UX64GY;
+				DEVELOPMENT_TEAM = MQ22N839N8;
 				INFOPLIST_FILE = metabookapp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -692,7 +692,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = media.ladder.orbit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.withorbit.app;
 				PRODUCT_NAME = Orbit;
 				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;

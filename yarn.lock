@@ -23246,12 +23246,13 @@ react-native-fit-image@^1.5.5, "react-native-fit-image@file:vendor/react-native-
   dependencies:
     prop-types "^15.5.10"
 
-react-native-leveldown@0.0.5:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/react-native-leveldown/-/react-native-leveldown-0.0.5.tgz#7c7b73b57be02f7bb5263fcab7649d21ba4d4981"
-  integrity sha512-yuIVS2JGSUR/n8hpeAg98rczDY1HnH3N9KrOaoveSJt/aj3RMuJKMCKlvkODDDJXX8bowkigj7b8Z/Y8gxRTiw==
+react-native-leveldown@^0.0.6:
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/react-native-leveldown/-/react-native-leveldown-0.0.6.tgz#fc43243ca916abb8abc508dd91aa297bfdea051b"
+  integrity sha512-Wt368fXe7v+e9H5pf76NH8G+4LYTdY15zBwtoAq6YTWzho0GLYid1NmDoU1FUbuwqu56ZWUxpNjLXZkGM9tgLQ==
   dependencies:
     abstract-leveldown "^6.3.0"
+    buffer "^5.6.0"
     level-supports "^1.0.1"
 
 react-native-markdown-display@iamacup/react-native-markdown-display:
@@ -25259,7 +25260,7 @@ space-separated-tokens@^1.0.0:
     citation-js "^0.4.8"
     exiftool-vendored "~8"
     file-metadata "^1.0.0"
-    incremental-thinking "file:../../../Library/Caches/Yarn/v6/npm-spaced-everything-0.0.1-0bb737ea-5e98-413a-8070-cf0c89c1ee29-1593022557334/node_modules/vendor/incremental-thinking"
+    incremental-thinking "file:../../../Library/Caches/Yarn/v6/npm-spaced-everything-0.0.1-41562604-e5da-4a01-8c2a-45c7fa3d911c-1593139728097/node_modules/vendor/incremental-thinking"
     lodash.isequal "^4.5.0"
     moment "^2.24.0"
     node-getpocket vicchi/node-getpocket

@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import crypto from "crypto";
 
 // This one's marked as async becuase the .web variant actually is async.

@@ -1,4 +1,3 @@
-import "buffer";
 import { Buffer } from "buffer";
 import CID from "cids";
 import DAGPB from "ipld-dag-pb";
