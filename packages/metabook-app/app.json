@@ -11,10 +11,10 @@
       "config": "metro.config.js"
     },
     "ios": {
-      "bundleIdentifier": "media.ladder.orbit"
+      "bundleIdentifier": "com.withorbit.app"
     },
     "android": {
-      "package": "media.ladder.orbit"
+      "package": "com.withorbit.app"
     },
     "web": {
       "build": {
