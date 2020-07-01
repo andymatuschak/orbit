@@ -138,6 +138,10 @@ static void InitializeFlipper(UIApplication *application) {
     self.bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:nil];
 #if RCT_DEV
     [self.bridge moduleForClass:[RCTDevLoadingView class]]; // avoid a weird race that I don't really understand
+
+    typeof(self) __weak weakSelf = self;
+    [self.bridge.devMenu addItem:[RCTDevMenuItem buttonItemWithTitle:@"Clear caches" handler:^{ [weakSelf clearCaches]; }]];
+    [self.bridge.devMenu addItem:[RCTDevMenuItem buttonItemWithTitle:@"Sign out" handler:^{ [weakSelf signOut]; }]];
 #endif
   }
 }
@@ -253,27 +257,9 @@ static void InitializeFlipper(UIApplication *application) {
   self.window.rootViewController = rootViewController;
 
 #if TARGET_OS_MACCATALYST
-
   dispatch_async(dispatch_get_main_queue(), ^{
     ORNSWindowAdditions *window = [self.window nsWindow];
     window.styleMask |= 1<<15;
-
-    /*window.opaque = NO;
-     window.backgroundColor = [NSClassFromString(@"NSColor") performSelector:@selector(clearColor)];
-     rootView.backgroundColor = [UIColor clearColor];
-
-     ORVisualEffectView *visualEffect = (ORVisualEffectView *)[[NSClassFromString(@"NSVisualEffectView") alloc] init];
-     [visualEffect setFrame:window.contentView.bounds];
-     [visualEffect setAutoresizingMask:65];
-     [visualEffect setBlendingMode:(int)0];
-     [visualEffect setState:(int)0];
-     [visualEffect setMaterial:(int)11];
-     NSMutableArray *subviews = [NSMutableArray arrayWithArray:[window.contentView subviews]];
-     [[[subviews[0] layer] sublayers][0] setCompositingFilter:nil];
-     [subviews insertObject:visualEffect atIndex:0];
-     window.contentView.subviews = subviews;*/
-
-
     window.titlebarAppearsTransparent = YES;
     [self.window makeKeyAndVisible];
   });
