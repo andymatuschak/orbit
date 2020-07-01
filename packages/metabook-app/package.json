@@ -9,6 +9,8 @@
     "web": "expo start --web",
     "start": "react-native start",
     "test": "jest",
+    "build:web": "expo build:web",
+    "deploy:web": "yarn run build:web && firebase deploy",
     "postinstall": "expo-yarn-workspaces postinstall"
   },
   "dependencies": {
@@ -85,6 +87,7 @@
     "babel-preset-react-native": "^4.0.1",
     "expo-cli": "^3.21.5",
     "expo-yarn-workspaces": "^1.2.1",
+    "firebase-tools": "^8.4.3",
     "husky": "^4.2.3",
     "jest": "^24.9.0",
     "jest-expo": "~36.0.1",

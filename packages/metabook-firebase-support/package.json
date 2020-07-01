@@ -20,7 +20,8 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "test": "jest"
+    "test": "jest",
+    "updateCORS": "gsutil cors set firebase-storage-cors.json gs://metabook-system.appspot.com"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

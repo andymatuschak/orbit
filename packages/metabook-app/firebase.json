@@ -1,0 +1,7 @@
+{
+  "hosting": {
+    "target": "orbit-app",
+    "public": "web-build",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+  }
+}
