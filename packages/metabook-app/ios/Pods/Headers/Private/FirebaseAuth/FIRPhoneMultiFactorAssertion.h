@@ -1,0 +1,1 @@
+../../../FirebaseAuth/FirebaseAuth/Sources/Public/FIRPhoneMultiFactorAssertion.h
