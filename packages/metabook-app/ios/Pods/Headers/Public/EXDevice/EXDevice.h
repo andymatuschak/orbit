@@ -1,0 +1,1 @@
+../../../../../../../node_modules/expo-device/ios/EXDevice/EXDevice.h

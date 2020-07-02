@@ -9,26 +9,29 @@ module.exports = function (api) {
     api.cache(true);
   }
 
-  return {
-    presets: isTest
-      ? [
-          [
-            "@babel/preset-env",
-            {
-              targets: {
-                node: "current",
-              },
+  if (isTest) {
+    return {
+      presets: [
+        [
+          "@babel/preset-env",
+          {
+            targets: {
+              node: "current",
             },
-          ],
-          "@babel/preset-typescript",
-          "module:metro-react-native-babel-preset",
-        ]
-      : ["babel-preset-expo"],
-    plugins:
-      isTest || isWeb
-        ? []
-        : // TODO: these substitutions must only apply on native, not on the web
-          [
+          },
+        ],
+        "@babel/preset-typescript",
+        "module:metro-react-native-babel-preset",
+      ],
+      plugins: [],
+    };
+  } else {
+    return {
+      presets: ["babel-preset-expo"],
+      plugins: isWeb
+        ? ["macros"]
+        : [
+            "macros",
             [
               require("babel-plugin-rewrite-require"),
               {
@@ -43,5 +46,6 @@ module.exports = function (api) {
               },
             ],
           ],
-  };
+    };
+  }
 };

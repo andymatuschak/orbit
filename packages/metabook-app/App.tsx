@@ -1,12 +1,15 @@
-import React from "react";
-import "./src/util/shimBase64";
 import "expo-asset";
-import { NativeEventEmitter, NativeModules, Platform } from "react-native";
+import React from "react";
+import { NativeEventEmitter, NativeModules } from "react-native";
+import { initializeReporter } from "./src/errorReporting/reporter";
 
 import Root from "./src/Root";
+import "./src/util/shimBase64";
 
 export default function App() {
   React.useEffect(() => {
+    initializeReporter();
+
     setTimeout(() => {
       console.log("Debug manager", NativeModules.DebugManager);
       if (NativeModules.DebugManager) {

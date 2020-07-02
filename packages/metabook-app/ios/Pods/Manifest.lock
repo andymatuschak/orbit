@@ -220,8 +220,10 @@ PODS:
     - BoringSSL-GRPC/Interface (= 0.0.7)
   - BoringSSL-GRPC/Interface (0.0.7)
   - DoubleConversion (1.1.6)
-  - EXConstants (9.0.0):
+  - EXConstants (9.1.1):
     - UMConstantsInterface
+    - UMCore
+  - EXDevice (2.2.1):
     - UMCore
   - EXErrorRecovery (1.1.0):
     - UMCore
@@ -246,7 +248,7 @@ PODS:
   - EXPermissions (8.1.0):
     - UMCore
     - UMPermissionsInterface
-  - EXRandom (8.1.0):
+  - EXRandom (8.2.1):
     - UMCore
   - EXSQLite (8.1.0):
     - UMCore
@@ -620,6 +622,12 @@ PODS:
     - Firebase/Storage (~> 6.25.0)
     - React
     - RNFBApp
+  - RNSentry (1.5.0):
+    - React
+    - Sentry (~> 5.1.4)
+  - Sentry (5.1.6):
+    - Sentry/Core (= 5.1.6)
+  - Sentry/Core (5.1.6)
   - UMAppLoader (1.0.2)
   - UMBarCodeScannerInterface (5.1.0)
   - UMCameraInterface (5.1.0)
@@ -641,7 +649,8 @@ PODS:
 
 DEPENDENCIES:
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
-  - EXConstants (from `../../../node_modules/expo-constants/ios`)
+  - EXConstants (from `../../../node_modules/expo-linking/node_modules/expo-constants/ios`)
+  - EXDevice (from `../../../node_modules/expo-device/ios`)
   - EXErrorRecovery (from `../../../node_modules/expo-error-recovery/ios`)
   - EXFileSystem (from `../../../node_modules/expo-file-system/ios`)
   - EXFont (from `../../../node_modules/expo-font/ios`)
@@ -685,6 +694,7 @@ DEPENDENCIES:
   - "RNFBFirestore (from `../../../node_modules/@react-native-firebase/firestore`)"
   - "RNFBFunctions (from `../../../node_modules/@react-native-firebase/functions`)"
   - "RNFBStorage (from `../../../node_modules/@react-native-firebase/storage`)"
+  - "RNSentry (from `../../../node_modules/@sentry/react-native`)"
   - UMAppLoader (from `../../../node_modules/unimodules-app-loader/ios`)
   - UMBarCodeScannerInterface (from `../../../node_modules/unimodules-barcode-scanner-interface/ios`)
   - UMCameraInterface (from `../../../node_modules/unimodules-camera-interface/ios`)
@@ -723,12 +733,15 @@ SPEC REPOS:
     - leveldb-library
     - nanopb
     - PromisesObjC
+    - Sentry
 
 EXTERNAL SOURCES:
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   EXConstants:
-    :path: "../../../node_modules/expo-constants/ios"
+    :path: "../../../node_modules/expo-linking/node_modules/expo-constants/ios"
+  EXDevice:
+    :path: "../../../node_modules/expo-device/ios"
   EXErrorRecovery:
     :path: "../../../node_modules/expo-error-recovery/ios"
   EXFileSystem:
@@ -809,6 +822,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/@react-native-firebase/functions"
   RNFBStorage:
     :path: "../../../node_modules/@react-native-firebase/storage"
+  RNSentry:
+    :path: "../../../node_modules/@sentry/react-native"
   UMAppLoader:
     :path: "../../../node_modules/unimodules-app-loader/ios"
   UMBarCodeScannerInterface:
@@ -843,7 +858,8 @@ SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   BoringSSL-GRPC: 8edf627ee524575e2f8d19d56f068b448eea3879
   DoubleConversion: 5805e889d232975c086db112ece9ed034df7a0b2
-  EXConstants: 5304709b1bea70a4828f48ba4c7fc3ec3b2d9b17
+  EXConstants: f907b3b6ce16e20d1750f22af1e095e924574bcb
+  EXDevice: befd3b2619915e615c3753c9f83309808aa0cdf5
   EXErrorRecovery: 8f4c21ab2f51bf75defe4536f841a37de59b0661
   EXFileSystem: cf4232ba7c62dc49b78c2d36005f97b6fddf0b01
   EXFont: b60f7a8900e3a12e7be3b2a40e19b22c7b5f89ba
@@ -852,7 +868,7 @@ SPEC CHECKSUMS:
   EXLinearGradient: 97d8095d1e4ad96f7893e010e564796ed8aeea42
   EXLocation: bbd487fd96a18a3ad9725389bbb94c4a5f78edf3
   EXPermissions: 24b97f734ce9172d245a5be38ad9ccfcb6135964
-  EXRandom: cafbaebd177d38a4c4ee514e75824245e6fc2046
+  EXRandom: a375fb6bed8a0919a795766b8d5218b1200538b7
   EXSQLite: 877ad6c8eb169353a2f94d5ad26510ffadd46a1f
   EXUpdates: badd6ceaf867bcf39f7f906121c1e45f621ebb94
   FBLazyVector: 545eccf4f6ef2de8fd450fd8a1edb3f913c7371a
@@ -902,6 +918,8 @@ SPEC CHECKSUMS:
   RNFBFirestore: 2bc12c2d202de8da298566ebb5cbd9659ebbbb5f
   RNFBFunctions: 970ccefbd22689692cf8b8cd0e2167d1928c0092
   RNFBStorage: 5780441e5362a5a30426a7f5ff9ae6684f464951
+  RNSentry: edba19169f665609fb092ba5eaf4be3c0776f50a
+  Sentry: e5796ec31a481474d2f94553213278470f9e302d
   UMAppLoader: ee77a072f9e15128f777ccd6d2d00f52ab4387e6
   UMBarCodeScannerInterface: 9dc692b87e5f20fe277fa57aa47f45d418c3cc6c
   UMCameraInterface: 625878bbf2ba188a8548675e1d1d2e438a653e6d

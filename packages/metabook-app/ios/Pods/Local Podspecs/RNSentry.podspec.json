@@ -1,0 +1,27 @@
+{
+  "name": "RNSentry",
+  "version": "1.5.0",
+  "license": "MIT",
+  "summary": "Official Sentry SDK for react-native",
+  "authors": "Sentry",
+  "homepage": "https://github.com/getsentry/sentry-react-native",
+  "source": {
+    "git": "https://github.com/getsentry/sentry-react-native.git",
+    "tag": "1.5.0"
+  },
+  "platforms": {
+    "ios": "8.0",
+    "tvos": "9.0"
+  },
+  "preserve_paths": "*.js",
+  "dependencies": {
+    "React": [
+
+    ],
+    "Sentry": [
+      "~> 5.1.4"
+    ]
+  },
+  "source_files": "ios/RNSentry.{h,m}",
+  "public_header_files": "ios/RNSentry.h"
+}
