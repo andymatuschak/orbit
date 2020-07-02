@@ -1,5 +1,3 @@
-set -x
-
 export SENTRY_AUTH_TOKEN=$(firebase functions:config:get sentry.auth_token | sed -e "s/\"//g")
 export SENTRY_ORG=$(ts-node -p -e "import serviceConfig from './serviceConfig'; serviceConfig.sentryOrg")
 export SENTRY_PROJECT=$(ts-node -p -e "import serviceConfig from './serviceConfig'; serviceConfig.sentryProject")
