@@ -5,15 +5,7 @@ import {
   PromptType,
 } from "metabook-core";
 import React, { useCallback, useRef, useState } from "react";
-import {
-  Animated,
-  StyleProp,
-  StyleSheet,
-  Text,
-  TouchableWithoutFeedback,
-  View,
-  ViewStyle,
-} from "react-native";
+import { StyleSheet, TouchableWithoutFeedback, View } from "react-native";
 import {
   PromptReviewItem,
   promptReviewItemType,
@@ -28,7 +20,6 @@ import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
 import ReviewButton from "./ReviewButton";
 import Spacer from "./Spacer";
-import WithAnimatedValue = Animated.WithAnimatedValue;
 
 type CompletedReviewItem = {
   reviewItemType: "completedQuestion";

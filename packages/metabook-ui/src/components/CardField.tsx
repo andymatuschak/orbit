@@ -107,6 +107,10 @@ function clozeParsePlugin(md: MarkdownIt) {
   });
 }
 
+const markdownItInstance = MarkdownDisplay.MarkdownIt({
+  typographer: true,
+}).use(clozeParsePlugin);
+
 function getMarkdownStyles(shrinkFactor: number) {
   let paragraphStyles: TextStyle;
   switch (shrinkFactor) {
@@ -258,18 +262,13 @@ export default React.memo(function CardField(props: {
     shrinkFactor,
   ]);
 
-  const plugins = useMemo(
-    () => [new MarkdownDisplay.PluginContainer(clozeParsePlugin)],
-    [],
-  );
-
   return (
     <View style={styles.container} onLayout={onContainerLayout}>
       <Markdown
         rules={renderRules}
         style={markdownStyles as NamedStyles<unknown>}
         mergeStyle={false}
-        plugins={plugins}
+        markdownit={markdownItInstance}
       >
         {promptField.contents}
       </Markdown>

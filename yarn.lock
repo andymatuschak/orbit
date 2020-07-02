@@ -22164,8 +22164,10 @@ react-native-crypto@^2.0.1:
     public-encrypt "^4.0.0"
     randomfill "^1.0.3"
 
-react-native-fit-image@^1.5.5, "react-native-fit-image@file:vendor/react-native-fit-image":
+react-native-fit-image@^1.5.5:
   version "1.5.5"
+  resolved "https://registry.yarnpkg.com/react-native-fit-image/-/react-native-fit-image-1.5.5.tgz#c660d1ad74b9dcaa1cba27a0d9c23837e000226c"
+  integrity sha512-Wl3Vq2DQzxgsWKuW4USfck9zS7YzhvLNPpkwUUCF90bL32e1a0zOVQ3WsJILJOwzmPdHfzZmWasiiAUNBkhNkg==
   dependencies:
     prop-types "^15.5.10"
 
@@ -22178,9 +22180,10 @@ react-native-leveldown@^0.0.6:
     buffer "^5.6.0"
     level-supports "^1.0.1"
 
-react-native-markdown-display@iamacup/react-native-markdown-display:
+react-native-markdown-display@^6.1.4:
   version "6.1.4"
-  resolved "https://codeload.github.com/iamacup/react-native-markdown-display/tar.gz/293993a5f605c714275e3538c32b8aa0e54e1e44"
+  resolved "https://registry.yarnpkg.com/react-native-markdown-display/-/react-native-markdown-display-6.1.4.tgz#374a59f1bad99eb00f3c8cd12c8bf35715733b3e"
+  integrity sha512-HjTN5lbShueu1x9QYUj6mJ9WtanzSGGDKc3+qybxjQnV/SikPYbEb0sRpSoUGbhJ0svZbUtUFV7V3pjcXeuEjg==
   dependencies:
     css-to-react-native "^3.0.0"
     markdown-it "^10.0.0"
@@ -24176,7 +24179,7 @@ space-separated-tokens@^1.0.0:
     citation-js "^0.4.8"
     exiftool-vendored "~8"
     file-metadata "^1.0.0"
-    incremental-thinking "file:../../../Library/Caches/Yarn/v6/npm-spaced-everything-0.0.1-83238965-b6d6-47b1-bccb-d5bcba78ed61-1593715337899/node_modules/vendor/incremental-thinking"
+    incremental-thinking "file:../../../Library/Caches/Yarn/v6/npm-spaced-everything-0.0.1-118b2e7c-3f2d-442a-807d-d14a0243b405-1593717012866/node_modules/vendor/incremental-thinking"
     lodash.isequal "^4.5.0"
     moment "^2.24.0"
     node-getpocket vicchi/node-getpocket

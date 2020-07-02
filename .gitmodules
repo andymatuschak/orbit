@@ -1,3 +1,0 @@
-[submodule "vendor/react-native-fit-image"]
-	path = vendor/react-native-fit-image
-	url = git@github.com:andymatuschak/react-native-fit-image.git
