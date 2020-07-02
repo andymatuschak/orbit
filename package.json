@@ -6,7 +6,7 @@
     "watch": "tsc -b -w packages/tsconfig.base.json",
     "test": "npx jest --projects packages/metabook-anki packages/metabook-core packages/metabook-client --runInBand",
     "test:watch": "yarn run test --watch",
-    "prepare": "git submodule update --init --recursive && (cd vendor/react-native-web && yarn install)"
+    "prepare": "git submodule update --init --recursive"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.22.0",
