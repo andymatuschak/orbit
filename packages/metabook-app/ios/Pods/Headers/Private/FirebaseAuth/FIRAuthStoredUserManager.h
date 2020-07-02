@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/SystemService/FIRAuthStoredUserManager.h
+../../../FirebaseAuth/FirebaseAuth/Sources/SystemService/FIRAuthStoredUserManager.h

@@ -69,7 +69,6 @@ class Ingest extends Command {
 
     const app = getDefaultFirebaseApp();
     const dataClient = new MetabookFirebaseDataClient(
-      app.firestore(),
       app.functions(),
       uploadAttachment,
     );

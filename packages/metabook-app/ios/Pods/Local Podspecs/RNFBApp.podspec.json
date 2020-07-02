@@ -1,6 +1,6 @@
 {
   "name": "RNFBApp",
-  "version": "6.7.1",
+  "version": "8.0.0",
   "description": "A well tested, feature rich Firebase implementation for React Native, supporting iOS & Android. Individual module support for Admob, Analytics, Auth, Crash Reporting, Cloud Firestore, Database, Dynamic Links, Functions, Messaging (FCM), Remote Config, Storage and more.",
   "summary": "A well tested feature rich Firebase implementation for React Native, supporting iOS & Android.",
   "homepage": "http://invertase.io/oss/react-native-firebase",
@@ -8,7 +8,7 @@
   "authors": "Invertase Limited",
   "source": {
     "git": "https://github.com/invertase/react-native-firebase.git",
-    "tag": "v6.7.1"
+    "tag": "v8.0.0"
   },
   "social_media_url": "http://twitter.com/invertaseio",
   "platforms": {
@@ -19,8 +19,8 @@
     "React": [
 
     ],
-    "Firebase/Core": [
-      "~> 6.13.0"
+    "Firebase/CoreOnly": [
+      "~> 6.25.0"
     ]
   },
   "static_framework": false

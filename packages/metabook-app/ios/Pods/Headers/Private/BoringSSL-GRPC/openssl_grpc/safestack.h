@@ -1,1 +1,1 @@
-../../../../BoringSSL-GRPC/include/openssl/safestack.h
+../../../../BoringSSL-GRPC/src/include/openssl/safestack.h

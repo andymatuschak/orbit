@@ -20,7 +20,6 @@
 
 #include <cstring>
 #include <memory>
-#include <mutex>
 
 #include <grpc/grpc.h>
 #include <grpc/slice.h>
@@ -42,8 +41,7 @@
 #include "src/core/lib/gpr/string.h"
 #include "src/core/lib/surface/completion_queue.h"
 
-void grpc::experimental::ChannelResetConnectionBackoff(
-    ::grpc::Channel* channel) {
+void ::grpc::experimental::ChannelResetConnectionBackoff(Channel* channel) {
   grpc_impl::experimental::ChannelResetConnectionBackoff(channel);
 }
 
@@ -145,7 +143,7 @@ void ChannelResetConnectionBackoff(Channel* channel) {
 
   // ClientRpcInfo should be set before call because set_call also checks
   // whether the call has been cancelled, and if the call was cancelled, we
-  // should notify the interceptors too/
+  // should notify the interceptors too.
   auto* info =
       context->set_client_rpc_info(method.name(), method.method_type(), this,
                                    interceptor_creators_, interceptor_pos);
@@ -156,7 +154,7 @@ void ChannelResetConnectionBackoff(Channel* channel) {
 
 ::grpc::internal::Call Channel::CreateCall(
     const ::grpc::internal::RpcMethod& method, ::grpc::ClientContext* context,
-    ::grpc::CompletionQueue* cq) {
+    CompletionQueue* cq) {
   return CreateCallInternal(method, context, cq, 0);
 }
 
@@ -181,7 +179,7 @@ class TagSaver final : public ::grpc::internal::CompletionQueueTag {
  public:
   explicit TagSaver(void* tag) : tag_(tag) {}
   ~TagSaver() override {}
-  bool FinalizeResult(void** tag, bool* status) override {
+  bool FinalizeResult(void** tag, bool* /*status*/) override {
     *tag = tag_;
     delete this;
     return true;
@@ -215,7 +213,14 @@ bool Channel::WaitForStateChangeImpl(grpc_connectivity_state last_observed,
 namespace {
 class ShutdownCallback : public grpc_experimental_completion_queue_functor {
  public:
-  ShutdownCallback() { functor_run = &ShutdownCallback::Run; }
+  ShutdownCallback() {
+    functor_run = &ShutdownCallback::Run;
+    // Set inlineable to true since this callback is trivial and thus does not
+    // need to be run from the executor (triggering a thread hop). This should
+    // only be used by internal callbacks like this and not by user application
+    // code.
+    inlineable = true;
+  }
   // TakeCQ takes ownership of the cq into the shutdown callback
   // so that the shutdown callback will be responsible for destroying it
   void TakeCQ(::grpc::CompletionQueue* cq) { cq_ = cq; }

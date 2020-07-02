@@ -1,1 +1,0 @@
-../../../../../../../../../gRPC-C++/src/core/tsi/alts/handshaker/handshaker.pb.h

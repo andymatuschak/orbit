@@ -19,6 +19,7 @@
 #ifndef GRPCPP_IMPL_CODEGEN_CORE_CODEGEN_INTERFACE_H
 #define GRPCPP_IMPL_CODEGEN_CORE_CODEGEN_INTERFACE_H
 
+#include <grpc/impl/codegen/byte_buffer.h>
 #include <grpc/impl/codegen/byte_buffer_reader.h>
 #include <grpc/impl/codegen/grpc_types.h>
 #include <grpc/impl/codegen/sync.h>
@@ -113,6 +114,7 @@ class CoreCodegenInterface {
   virtual void grpc_call_ref(grpc_call* call) = 0;
   virtual void grpc_call_unref(grpc_call* call) = 0;
   virtual void* grpc_call_arena_alloc(grpc_call* call, size_t length) = 0;
+  virtual const char* grpc_call_error_to_string(grpc_call_error error) = 0;
   virtual grpc_slice grpc_empty_slice() = 0;
   virtual grpc_slice grpc_slice_malloc(size_t length) = 0;
   virtual void grpc_slice_unref(grpc_slice slice) = 0;
@@ -143,7 +145,7 @@ extern CoreCodegenInterface* g_core_codegen_interface;
 /// Codegen specific version of \a GPR_ASSERT.
 #define GPR_CODEGEN_ASSERT(x)                                              \
   do {                                                                     \
-    if (!(x)) {                                                            \
+    if (GPR_UNLIKELY(!(x))) {                                              \
       grpc::g_core_codegen_interface->assert_fail(#x, __FILE__, __LINE__); \
     }                                                                      \
   } while (0)

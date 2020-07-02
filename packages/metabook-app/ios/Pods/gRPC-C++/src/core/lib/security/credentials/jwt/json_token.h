@@ -24,13 +24,17 @@
 #include "src/core/tsi/grpc_shadow_boringssl.h"
 
 #include <grpc/slice.h>
-#include <openssl/rsa.h>
+#if COCOAPODS==1
+  #include <openssl_grpc/rsa.h>
+#else
+  #include <openssl/rsa.h>
+#endif
 
 #include "src/core/lib/json/json.h"
 
 /* --- Constants. --- */
 
-#define GRPC_JWT_OAUTH2_AUDIENCE "https://www.googleapis.com/oauth2/v3/token"
+#define GRPC_JWT_OAUTH2_AUDIENCE "https://oauth2.googleapis.com/token"
 
 /* --- auth_json_key parsing. --- */
 
@@ -52,7 +56,8 @@ grpc_auth_json_key grpc_auth_json_key_create_from_string(
 
 /* Creates a json_key object from parsed json. Returns an invalid object if a
    parsing error has been encountered. */
-grpc_auth_json_key grpc_auth_json_key_create_from_json(const grpc_json* json);
+grpc_auth_json_key grpc_auth_json_key_create_from_json(
+    const grpc_core::Json& json);
 
 /* Destructs the object. */
 void grpc_auth_json_key_destruct(grpc_auth_json_key* json_key);

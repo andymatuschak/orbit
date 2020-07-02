@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/Public/FIRPhoneAuthProvider.h
+../../../FirebaseAuth/FirebaseAuth/Sources/Public/FIRPhoneAuthProvider.h

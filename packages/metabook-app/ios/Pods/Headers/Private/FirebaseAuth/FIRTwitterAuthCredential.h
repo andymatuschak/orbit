@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/AuthProvider/Twitter/FIRTwitterAuthCredential.h
+../../../FirebaseAuth/FirebaseAuth/Sources/AuthProvider/Twitter/FIRTwitterAuthCredential.h

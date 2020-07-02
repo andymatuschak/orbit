@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/Auth/FIRAuthSerialTaskQueue.h
+../../../FirebaseAuth/FirebaseAuth/Sources/Auth/FIRAuthSerialTaskQueue.h

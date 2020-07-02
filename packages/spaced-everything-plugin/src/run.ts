@@ -16,12 +16,11 @@ import { createTaskCache } from "./taskCache";
   const app = getDefaultFirebaseApp();
   const userClient = new MetabookFirebaseUserClient(
     app.firestore(),
-    "VkPiAU6PVGgR20iLlyekhun8BU03",
+    "VkPiAU6PVGgR20iLlyekhun8BU03", // TODO
   );
-  const dataClient = new MetabookFirebaseDataClient(
-    app.firestore(),
-    app.functions(),
-  );
+  const dataClient = new MetabookFirebaseDataClient(app.functions(), () => {
+    throw new Error("Unimplemented");
+  });
 
   const importCache = new SpacedEverythingImportCache(
     levelup(leveldown("cache.db")),

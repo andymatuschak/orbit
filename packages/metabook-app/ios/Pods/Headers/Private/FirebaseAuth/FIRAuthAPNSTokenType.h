@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/Public/FIRAuthAPNSTokenType.h
+../../../FirebaseAuth/FirebaseAuth/Sources/Public/FIRAuthAPNSTokenType.h

@@ -1,1 +1,1 @@
-../../../../BoringSSL-GRPC/include/openssl/type_check.h
+../../../../BoringSSL-GRPC/src/include/openssl/type_check.h

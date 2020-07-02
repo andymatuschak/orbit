@@ -14,7 +14,7 @@
     "postinstall": "expo-yarn-workspaces postinstall"
   },
   "dependencies": {
-    "@react-native-firebase/app": "^7.1.7",
+    "@react-native-firebase/app": "^8.0.0",
     "@react-native-firebase/auth": "^8.0.9",
     "@react-native-firebase/firestore": "^7.1.7",
     "@react-native-firebase/functions": "^7.1.7",
@@ -61,7 +61,7 @@
     "react-native-web": "~0.11.7",
     "readable-stream": "^1.0.33",
     "string_decoder": "^0.10.31",
-    "subleveldown": "andymatuschak/subleveldown",
+    "subleveldown": "^5.0.1",
     "timers-browserify": "^1.4.2",
     "tty-browserify": "0.0.0",
     "url": "^0.11.0",

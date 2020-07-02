@@ -63,7 +63,7 @@
  * check the next-upload clocks of all targets to determine if an upload attempt can be made.
  */
 - (void)startTimer {
-  dispatch_sync(_coordinationQueue, ^{
+  dispatch_async(_coordinationQueue, ^{
     self->_timer =
         dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, self->_coordinationQueue);
     dispatch_source_set_timer(self->_timer, DISPATCH_TIME_NOW, self->_timerInterval,
@@ -139,27 +139,17 @@
  * @return The current upload conditions.
  */
 - (GDTCORUploadConditions)uploadConditions {
-#if TARGET_OS_WATCH
-  return GDTCORUploadConditionNoNetwork;
-#else
-  SCNetworkReachabilityFlags currentFlags = [GDTCORReachability currentFlags];
-  BOOL reachable =
-      (currentFlags & kSCNetworkReachabilityFlagsReachable) == kSCNetworkReachabilityFlagsReachable;
-  BOOL connectionRequired = (currentFlags & kSCNetworkReachabilityFlagsConnectionRequired) ==
-                            kSCNetworkReachabilityFlagsConnectionRequired;
-  BOOL networkConnected = reachable && !connectionRequired;
-
+  GDTCORNetworkReachabilityFlags currentFlags = [GDTCORReachability currentFlags];
+  BOOL networkConnected = GDTCORReachabilityFlagsReachable(currentFlags);
   if (!networkConnected) {
     return GDTCORUploadConditionNoNetwork;
   }
-
   BOOL isWWAN = GDTCORReachabilityFlagsContainWWAN(currentFlags);
   if (isWWAN) {
     return GDTCORUploadConditionMobileData;
   } else {
     return GDTCORUploadConditionWifiData;
   }
-#endif
 }
 
 #pragma mark - NSSecureCoding support
@@ -206,7 +196,7 @@ static NSString *const ktargetToInFlightPackagesKey =
 }
 
 - (void)appWillBackground:(GDTCORApplication *)app {
-  dispatch_sync(_coordinationQueue, ^{
+  dispatch_async(_coordinationQueue, ^{
     [self stopTimer];
   });
 }

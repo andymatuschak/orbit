@@ -1,1 +1,1 @@
-../../../../BoringSSL-GRPC/include/openssl/thread.h
+../../../../BoringSSL-GRPC/src/include/openssl/thread.h

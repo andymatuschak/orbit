@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/User/FIRUserInfoImpl.h
+../../../FirebaseAuth/FirebaseAuth/Sources/User/FIRUserInfoImpl.h

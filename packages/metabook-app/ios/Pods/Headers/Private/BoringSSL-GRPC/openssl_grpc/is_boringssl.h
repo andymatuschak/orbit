@@ -1,1 +1,1 @@
-../../../../BoringSSL-GRPC/include/openssl/is_boringssl.h
+../../../../BoringSSL-GRPC/src/include/openssl/is_boringssl.h

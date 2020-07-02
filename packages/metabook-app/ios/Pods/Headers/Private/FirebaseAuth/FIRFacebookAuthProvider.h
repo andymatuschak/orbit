@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/Public/FIRFacebookAuthProvider.h
+../../../FirebaseAuth/FirebaseAuth/Sources/Public/FIRFacebookAuthProvider.h

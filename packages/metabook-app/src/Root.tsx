@@ -79,7 +79,6 @@ function useDatabaseManager(
         userRecord.userID,
       );
       const dataClient = new MetabookFirebaseDataClient(
-        getFirestore(),
         getFirebaseFunctions(),
         getAttachmentUploader,
       );

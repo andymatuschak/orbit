@@ -19,9 +19,9 @@
 #include <memory>
 #include <string>
 
-#include "Firestore/core/src/firebase/firestore/api/firestore.h"
-#include "Firestore/core/src/firebase/firestore/auth/credentials_provider.h"
-#include "Firestore/core/src/firebase/firestore/util/async_queue.h"
+#include "Firestore/core/src/api/firestore.h"
+#include "Firestore/core/src/auth/credentials_provider.h"
+#include "Firestore/core/src/util/async_queue.h"
 
 @class FIRApp;
 @class FSTFirestoreClient;
@@ -58,9 +58,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Internal FIRFirestore API we don't want exposed in our public header files. */
 @interface FIRFirestore (Internal)
-
-/** Checks to see if logging is is globally enabled for the Firestore client. */
-+ (BOOL)isLoggingEnabled;
 
 + (FIRFirestore *)recoverFromFirestore:(std::shared_ptr<api::Firestore>)firestore;
 

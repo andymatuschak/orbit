@@ -68,7 +68,6 @@ class ImportAnkiCollection extends Command {
         appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
       });
       const dataClient = new MetabookFirebaseDataClient(
-        app.firestore(),
         app.functions(),
         uploadAttachment,
       );

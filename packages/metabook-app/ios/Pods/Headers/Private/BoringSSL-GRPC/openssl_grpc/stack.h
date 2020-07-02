@@ -1,1 +1,1 @@
-../../../../BoringSSL-GRPC/include/openssl/stack.h
+../../../../BoringSSL-GRPC/src/include/openssl/stack.h

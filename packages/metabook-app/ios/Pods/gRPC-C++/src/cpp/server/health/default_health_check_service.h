@@ -20,7 +20,6 @@
 #define GRPC_INTERNAL_CPP_SERVER_DEFAULT_HEALTH_CHECK_SERVICE_H
 
 #include <atomic>
-#include <mutex>
 #include <set>
 
 #include <grpc/support/log.h>
@@ -28,6 +27,7 @@
 #include <grpcpp/health_check_service_interface.h>
 #include <grpcpp/impl/codegen/async_generic_service.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
+#include <grpcpp/impl/codegen/completion_queue.h>
 #include <grpcpp/impl/codegen/service_type.h>
 #include <grpcpp/support/byte_buffer.h>
 
@@ -119,8 +119,8 @@ class DefaultHealthCheckService final : public HealthCheckServiceInterface {
                        HealthCheckServiceImpl* service);
 
       // Not used for Check.
-      void SendHealth(std::shared_ptr<CallHandler> self,
-                      ServingStatus status) override {}
+      void SendHealth(std::shared_ptr<CallHandler> /*self*/,
+                      ServingStatus /*status*/) override {}
 
      private:
       // Called when we receive a call.

@@ -1,1 +1,1 @@
-../../../../BoringSSL-GRPC/include/openssl/obj_mac.h
+../../../../BoringSSL-GRPC/src/include/openssl/obj_mac.h

@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>748053153064-mhodiq0b77gke1tm04md0fk70tde8fti.apps.googleusercontent.com</string>
+	<string>748053153064-ol69loh0gk1dn63pucndksbkpj1kvi14.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.748053153064-mhodiq0b77gke1tm04md0fk70tde8fti</string>
+	<string>com.googleusercontent.apps.748053153064-ol69loh0gk1dn63pucndksbkpj1kvi14</string>
 	<key>API_KEY</key>
 	<string>AIzaSyBXjkmtBQwVgq5gRTklScWMgywWyPPQAbY</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>media.ladder.orbit</string>
+	<string>com.withorbit.app</string>
 	<key>PROJECT_ID</key>
 	<string>metabook-system</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,7 +29,7 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:748053153064:ios:0b7372b4fc0aaca412bc1d</string>
+	<string>1:748053153064:ios:3e745d68bd6d00e312bc1d</string>
 	<key>DATABASE_URL</key>
 	<string>https://metabook-system.firebaseio.com</string>
 </dict>

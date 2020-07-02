@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/Backend/RPC/FIRSecureTokenResponse.h
+../../../FirebaseAuth/FirebaseAuth/Sources/Backend/RPC/FIRSecureTokenResponse.h

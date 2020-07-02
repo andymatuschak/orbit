@@ -1,1 +1,1 @@
-../../../../BoringSSL-GRPC/include/openssl/ripemd.h
+../../../../BoringSSL-GRPC/src/include/openssl/ripemd.h

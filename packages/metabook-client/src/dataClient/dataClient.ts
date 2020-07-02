@@ -34,16 +34,13 @@ export type MetabookDataSnapshot<ID, Data> = Map<ID, Data | Error | null>; // nu
 
 export class MetabookFirebaseDataClient implements MetabookDataClient {
   private readonly functions: firebase.functions.Functions;
-  private readonly database: firebase.firestore.Firestore;
   private readonly attachmentUploader: AttachmentUploader;
 
   constructor(
-    firestore: firebase.firestore.Firestore,
     functions: firebase.functions.Functions,
     attachmentUploader: AttachmentUploader,
   ) {
     this.attachmentUploader = attachmentUploader;
-    this.database = firestore;
     this.functions = functions;
   }
 

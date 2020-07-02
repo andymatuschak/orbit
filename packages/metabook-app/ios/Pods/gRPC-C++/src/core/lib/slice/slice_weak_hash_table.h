@@ -44,10 +44,14 @@ class SliceWeakHashTable : public RefCounted<SliceWeakHashTable<T, Size>> {
     return MakeRefCounted<SliceWeakHashTable<T, Size>>();
   }
 
+  /// Use Create function instead of using this directly.
+  SliceWeakHashTable() = default;
+  ~SliceWeakHashTable() = default;
+
   /// Add a mapping from \a key to \a value, taking ownership of \a key. This
   /// operation will always succeed. It may discard older entries.
   void Add(const grpc_slice& key, T value) {
-    const size_t idx = grpc_slice_hash(key) % Size;
+    const size_t idx = grpc_slice_hash_internal(key) % Size;
     entries_[idx].Set(key, std::move(value));
     return;
   }
@@ -55,23 +59,12 @@ class SliceWeakHashTable : public RefCounted<SliceWeakHashTable<T, Size>> {
   /// Returns the value from the table associated with / \a key or null if not
   /// found.
   const T* Get(const grpc_slice& key) const {
-    const size_t idx = grpc_slice_hash(key) % Size;
+    const size_t idx = grpc_slice_hash_internal(key) % Size;
     const auto& entry = entries_[idx];
     return grpc_slice_eq(entry.key(), key) ? entry.value() : nullptr;
   }
 
  private:
-  // So New() can call our private ctor.
-  template <typename T2, typename... Args>
-  friend T2* New(Args&&... args);
-
-  // So Delete() can call our private dtor.
-  template <typename T2>
-  friend void Delete(T2*);
-
-  SliceWeakHashTable() = default;
-  ~SliceWeakHashTable() = default;
-
   /// The type of the table "rows".
   class Entry {
    public:

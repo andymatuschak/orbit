@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/SystemService/FIRAuthNotificationManager.h
+../../../FirebaseAuth/FirebaseAuth/Sources/SystemService/FIRAuthNotificationManager.h

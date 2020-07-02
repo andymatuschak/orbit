@@ -31,6 +31,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "src/core/lib/gpr/useful.h"
 #include "src/core/lib/gprpp/fork.h"
@@ -47,6 +48,26 @@ struct thd_arg {
   bool joinable;
   bool tracked;
 };
+
+size_t RoundUpToPageSize(size_t size) {
+  // TODO(yunjiaw): Change this variable (page_size) to a function-level static
+  // when possible
+  size_t page_size = static_cast<size_t>(sysconf(_SC_PAGESIZE));
+  return (size + page_size - 1) & ~(page_size - 1);
+}
+
+// Returns the minimum valid stack size that can be passed to
+// pthread_attr_setstacksize.
+size_t MinValidStackSize(size_t request_size) {
+  size_t min_stacksize = sysconf(_SC_THREAD_STACK_MIN);
+  if (request_size < min_stacksize) {
+    request_size = min_stacksize;
+  }
+
+  // On some systems, pthread_attr_setstacksize() can fail if stacksize is
+  // not a multiple of the system page size.
+  return RoundUpToPageSize(request_size);
+}
 
 class ThreadInternalsPosix : public internal::ThreadInternalsInterface {
  public:
@@ -79,6 +100,11 @@ class ThreadInternalsPosix : public internal::ThreadInternalsInterface {
                  0);
     }
 
+    if (options.stack_size() != 0) {
+      size_t stack_size = MinValidStackSize(options.stack_size());
+      GPR_ASSERT(pthread_attr_setstacksize(&attr, stack_size) == 0);
+    }
+
     *success =
         (pthread_create(&pthread_id_, &attr,
                         [](void* v) -> void* {
@@ -108,7 +134,7 @@ class ThreadInternalsPosix : public internal::ThreadInternalsInterface {
                           gpr_mu_unlock(&arg.thread->mu_);
 
                           if (!arg.joinable) {
-                            Delete(arg.thread);
+                            delete arg.thread;
                           }
 
                           (*arg.body)(arg.arg);
@@ -157,12 +183,12 @@ Thread::Thread(const char* thd_name, void (*thd_body)(void* arg), void* arg,
                bool* success, const Options& options)
     : options_(options) {
   bool outcome = false;
-  impl_ = New<ThreadInternalsPosix>(thd_name, thd_body, arg, &outcome, options);
+  impl_ = new ThreadInternalsPosix(thd_name, thd_body, arg, &outcome, options);
   if (outcome) {
     state_ = ALIVE;
   } else {
     state_ = FAILED;
-    Delete(impl_);
+    delete impl_;
     impl_ = nullptr;
   }
 

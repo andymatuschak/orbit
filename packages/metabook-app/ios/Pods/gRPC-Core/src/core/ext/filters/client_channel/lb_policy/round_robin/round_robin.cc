@@ -38,7 +38,6 @@
 #include "src/core/lib/debug/trace.h"
 #include "src/core/lib/gprpp/ref_counted_ptr.h"
 #include "src/core/lib/gprpp/sync.h"
-#include "src/core/lib/iomgr/combiner.h"
 #include "src/core/lib/iomgr/sockaddr_utils.h"
 #include "src/core/lib/transport/connectivity_state.h"
 #include "src/core/lib/transport/static_metadata.h"
@@ -63,8 +62,6 @@ class RoundRobin : public LoadBalancingPolicy {
 
   void UpdateLocked(UpdateArgs args) override;
   void ResetBackoffLocked() override;
-  void FillChildRefsForChannelz(channelz::ChildRefsList* child_subchannels,
-                                channelz::ChildRefsList* ignored) override;
 
  private:
   ~RoundRobin();
@@ -83,22 +80,29 @@ class RoundRobin : public LoadBalancingPolicy {
     RoundRobinSubchannelData(
         SubchannelList<RoundRobinSubchannelList, RoundRobinSubchannelData>*
             subchannel_list,
-        const ServerAddress& address, Subchannel* subchannel,
-        grpc_combiner* combiner)
-        : SubchannelData(subchannel_list, address, subchannel, combiner) {}
+        const ServerAddress& address,
+        RefCountedPtr<SubchannelInterface> subchannel)
+        : SubchannelData(subchannel_list, address, std::move(subchannel)) {}
 
     grpc_connectivity_state connectivity_state() const {
       return last_connectivity_state_;
     }
 
+    bool seen_failure_since_ready() const { return seen_failure_since_ready_; }
+
+    // Performs connectivity state updates that need to be done both when we
+    // first start watching and when a watcher notification is received.
     void UpdateConnectivityStateLocked(
         grpc_connectivity_state connectivity_state);
 
    private:
+    // Performs connectivity state updates that need to be done only
+    // after we have started watching.
     void ProcessConnectivityChangeLocked(
         grpc_connectivity_state connectivity_state) override;
 
     grpc_connectivity_state last_connectivity_state_ = GRPC_CHANNEL_IDLE;
+    bool seen_failure_since_ready_ = false;
   };
 
   // A list of subchannels.
@@ -108,9 +112,8 @@ class RoundRobin : public LoadBalancingPolicy {
    public:
     RoundRobinSubchannelList(RoundRobin* policy, TraceFlag* tracer,
                              const ServerAddressList& addresses,
-                             grpc_combiner* combiner,
                              const grpc_channel_args& args)
-        : SubchannelList(policy, tracer, addresses, combiner,
+        : SubchannelList(policy, tracer, addresses,
                          policy->channel_control_helper(), args) {
       // Need to maintain a ref to the LB policy as long as we maintain
       // any references to subchannels, since the subchannels'
@@ -150,31 +153,17 @@ class RoundRobin : public LoadBalancingPolicy {
    public:
     Picker(RoundRobin* parent, RoundRobinSubchannelList* subchannel_list);
 
-    PickResult Pick(PickArgs* pick, grpc_error** error) override;
+    PickResult Pick(PickArgs args) override;
 
    private:
     // Using pointer value only, no ref held -- do not dereference!
     RoundRobin* parent_;
 
     size_t last_picked_index_;
-    InlinedVector<RefCountedPtr<ConnectedSubchannel>, 10> subchannels_;
-  };
-
-  // Helper class to ensure that any function that modifies the child refs
-  // data structures will update the channelz snapshot data structures before
-  // returning.
-  class AutoChildRefsUpdater {
-   public:
-    explicit AutoChildRefsUpdater(RoundRobin* rr) : rr_(rr) {}
-    ~AutoChildRefsUpdater() { rr_->UpdateChildRefsLocked(); }
-
-   private:
-    RoundRobin* rr_;
+    InlinedVector<RefCountedPtr<SubchannelInterface>, 10> subchannels_;
   };
 
   void ShutdownLocked() override;
-
-  void UpdateChildRefsLocked();
 
   /** list of subchannels */
   OrphanablePtr<RoundRobinSubchannelList> subchannel_list_;
@@ -186,11 +175,6 @@ class RoundRobin : public LoadBalancingPolicy {
   OrphanablePtr<RoundRobinSubchannelList> latest_pending_subchannel_list_;
   /** are we shutting down? */
   bool shutdown_ = false;
-  /// Lock and data used to capture snapshots of this channel's child
-  /// channels and subchannels. This data is consumed by channelz.
-  Mutex child_refs_mu_;
-  channelz::ChildRefsList child_subchannels_;
-  channelz::ChildRefsList child_channels_;
 };
 
 //
@@ -201,10 +185,9 @@ RoundRobin::Picker::Picker(RoundRobin* parent,
                            RoundRobinSubchannelList* subchannel_list)
     : parent_(parent) {
   for (size_t i = 0; i < subchannel_list->num_subchannels(); ++i) {
-    auto* connected_subchannel =
-        subchannel_list->subchannel(i)->connected_subchannel();
-    if (connected_subchannel != nullptr) {
-      subchannels_.push_back(connected_subchannel->Ref());
+    RoundRobinSubchannelData* sd = subchannel_list->subchannel(i);
+    if (sd->connectivity_state() == GRPC_CHANNEL_READY) {
+      subchannels_.push_back(sd->subchannel()->Ref());
     }
   }
   // For discussion on why we generate a random starting index for
@@ -221,18 +204,18 @@ RoundRobin::Picker::Picker(RoundRobin* parent,
   }
 }
 
-RoundRobin::PickResult RoundRobin::Picker::Pick(PickArgs* pick,
-                                                grpc_error** error) {
+RoundRobin::PickResult RoundRobin::Picker::Pick(PickArgs /*args*/) {
   last_picked_index_ = (last_picked_index_ + 1) % subchannels_.size();
   if (GRPC_TRACE_FLAG_ENABLED(grpc_lb_round_robin_trace)) {
     gpr_log(GPR_INFO,
-            "[RR %p picker %p] returning index %" PRIuPTR
-            ", connected_subchannel=%p",
+            "[RR %p picker %p] returning index %" PRIuPTR ", subchannel=%p",
             parent_, this, last_picked_index_,
             subchannels_[last_picked_index_].get());
   }
-  pick->connected_subchannel = subchannels_[last_picked_index_];
-  return PICK_COMPLETE;
+  PickResult result;
+  result.type = PickResult::PICK_COMPLETE;
+  result.subchannel = subchannels_[last_picked_index_];
+  return result;
 }
 
 //
@@ -254,7 +237,6 @@ RoundRobin::~RoundRobin() {
 }
 
 void RoundRobin::ShutdownLocked() {
-  AutoChildRefsUpdater guard(this);
   if (GRPC_TRACE_FLAG_ENABLED(grpc_lb_round_robin_trace)) {
     gpr_log(GPR_INFO, "[RR %p] Shutting down", this);
   }
@@ -268,40 +250,6 @@ void RoundRobin::ResetBackoffLocked() {
   if (latest_pending_subchannel_list_ != nullptr) {
     latest_pending_subchannel_list_->ResetBackoffLocked();
   }
-}
-
-void RoundRobin::FillChildRefsForChannelz(
-    channelz::ChildRefsList* child_subchannels_to_fill,
-    channelz::ChildRefsList* ignored) {
-  MutexLock lock(&child_refs_mu_);
-  for (size_t i = 0; i < child_subchannels_.size(); ++i) {
-    // TODO(ncteisen): implement a de dup loop that is not O(n^2). Might
-    // have to implement lightweight set. For now, we don't care about
-    // performance when channelz requests are made.
-    bool found = false;
-    for (size_t j = 0; j < child_subchannels_to_fill->size(); ++j) {
-      if ((*child_subchannels_to_fill)[j] == child_subchannels_[i]) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      child_subchannels_to_fill->push_back(child_subchannels_[i]);
-    }
-  }
-}
-
-void RoundRobin::UpdateChildRefsLocked() {
-  channelz::ChildRefsList cs;
-  if (subchannel_list_ != nullptr) {
-    subchannel_list_->PopulateChildRefsList(&cs);
-  }
-  if (latest_pending_subchannel_list_ != nullptr) {
-    latest_pending_subchannel_list_->PopulateChildRefsList(&cs);
-  }
-  // atomically update the data that channelz will actually be looking at.
-  MutexLock lock(&child_refs_mu_);
-  child_subchannels_ = std::move(cs);
 }
 
 void RoundRobin::RoundRobinSubchannelList::StartWatchingLocked() {
@@ -320,6 +268,7 @@ void RoundRobin::RoundRobinSubchannelList::StartWatchingLocked() {
   for (size_t i = 0; i < num_subchannels(); i++) {
     if (subchannel(i)->subchannel() != nullptr) {
       subchannel(i)->StartConnectivityWatchLocked();
+      subchannel(i)->subchannel()->AttemptToConnect();
     }
   }
   // Now set the LB policy's state based on the subchannels' states.
@@ -373,12 +322,12 @@ void RoundRobin::RoundRobinSubchannelList::
   if (num_ready_ > 0) {
     /* 1) READY */
     p->channel_control_helper()->UpdateState(
-        GRPC_CHANNEL_READY, UniquePtr<SubchannelPicker>(New<Picker>(p, this)));
+        GRPC_CHANNEL_READY, absl::make_unique<Picker>(p, this));
   } else if (num_connecting_ > 0) {
     /* 2) CONNECTING */
     p->channel_control_helper()->UpdateState(
         GRPC_CHANNEL_CONNECTING,
-        UniquePtr<SubchannelPicker>(New<QueuePicker>(p->Ref())));
+        absl::make_unique<QueuePicker>(p->Ref(DEBUG_LOCATION, "QueuePicker")));
   } else if (num_transient_failure_ == num_subchannels()) {
     /* 3) TRANSIENT_FAILURE */
     grpc_error* error =
@@ -387,14 +336,13 @@ void RoundRobin::RoundRobinSubchannelList::
                            GRPC_ERROR_INT_GRPC_STATUS, GRPC_STATUS_UNAVAILABLE);
     p->channel_control_helper()->UpdateState(
         GRPC_CHANNEL_TRANSIENT_FAILURE,
-        UniquePtr<SubchannelPicker>(New<TransientFailurePicker>(error)));
+        absl::make_unique<TransientFailurePicker>(error));
   }
 }
 
 void RoundRobin::RoundRobinSubchannelList::
     UpdateRoundRobinStateFromSubchannelStateCountsLocked() {
   RoundRobin* p = static_cast<RoundRobin*>(policy());
-  AutoChildRefsUpdater guard(p);
   if (num_ready_ > 0) {
     if (p->subchannel_list_.get() != this) {
       // Promote this list to p->subchannel_list_.
@@ -431,11 +379,28 @@ void RoundRobin::RoundRobinSubchannelData::UpdateConnectivityStateLocked(
         "(index %" PRIuPTR " of %" PRIuPTR "): prev_state=%s new_state=%s",
         p, subchannel(), subchannel_list(), Index(),
         subchannel_list()->num_subchannels(),
-        grpc_connectivity_state_name(last_connectivity_state_),
-        grpc_connectivity_state_name(connectivity_state));
+        ConnectivityStateName(last_connectivity_state_),
+        ConnectivityStateName(connectivity_state));
   }
-  subchannel_list()->UpdateStateCountersLocked(last_connectivity_state_,
-                                               connectivity_state);
+  // Decide what state to report for aggregation purposes.
+  // If we haven't seen a failure since the last time we were in state
+  // READY, then we report the state change as-is.  However, once we do see
+  // a failure, we report TRANSIENT_FAILURE and do not report any subsequent
+  // state changes until we go back into state READY.
+  if (!seen_failure_since_ready_) {
+    if (connectivity_state == GRPC_CHANNEL_TRANSIENT_FAILURE) {
+      seen_failure_since_ready_ = true;
+    }
+    subchannel_list()->UpdateStateCountersLocked(last_connectivity_state_,
+                                                 connectivity_state);
+  } else {
+    if (connectivity_state == GRPC_CHANNEL_READY) {
+      seen_failure_since_ready_ = false;
+      subchannel_list()->UpdateStateCountersLocked(
+          GRPC_CHANNEL_TRANSIENT_FAILURE, connectivity_state);
+    }
+  }
+  // Record last seen connectivity state.
   last_connectivity_state_ = connectivity_state;
 }
 
@@ -448,6 +413,7 @@ void RoundRobin::RoundRobinSubchannelData::ProcessConnectivityChangeLocked(
   // Otherwise, if the subchannel was already in state TRANSIENT_FAILURE
   // when the subchannel list was created, we'd wind up in a constant
   // loop of re-resolution.
+  // Also attempt to reconnect.
   if (connectivity_state == GRPC_CHANNEL_TRANSIENT_FAILURE) {
     if (GRPC_TRACE_FLAG_ENABLED(grpc_lb_round_robin_trace)) {
       gpr_log(GPR_INFO,
@@ -456,9 +422,8 @@ void RoundRobin::RoundRobinSubchannelData::ProcessConnectivityChangeLocked(
               p, subchannel());
     }
     p->channel_control_helper()->RequestReresolution();
+    subchannel()->AttemptToConnect();
   }
-  // Renew connectivity watch.
-  RenewConnectivityWatchLocked();
   // Update state counters.
   UpdateConnectivityStateLocked(connectivity_state);
   // Update overall state and renew notification.
@@ -466,7 +431,6 @@ void RoundRobin::RoundRobinSubchannelData::ProcessConnectivityChangeLocked(
 }
 
 void RoundRobin::UpdateLocked(UpdateArgs args) {
-  AutoChildRefsUpdater guard(this);
   if (GRPC_TRACE_FLAG_ENABLED(grpc_lb_round_robin_trace)) {
     gpr_log(GPR_INFO, "[RR %p] received update with %" PRIuPTR " addresses",
             this, args.addresses.size());
@@ -480,7 +444,7 @@ void RoundRobin::UpdateLocked(UpdateArgs args) {
     }
   }
   latest_pending_subchannel_list_ = MakeOrphanable<RoundRobinSubchannelList>(
-      this, &grpc_lb_round_robin_trace, args.addresses, combiner(), *args.args);
+      this, &grpc_lb_round_robin_trace, args.addresses, *args.args);
   if (latest_pending_subchannel_list_->num_subchannels() == 0) {
     // If the new list is empty, immediately promote the new list to the
     // current list and transition to TRANSIENT_FAILURE.
@@ -489,7 +453,7 @@ void RoundRobin::UpdateLocked(UpdateArgs args) {
                            GRPC_ERROR_INT_GRPC_STATUS, GRPC_STATUS_UNAVAILABLE);
     channel_control_helper()->UpdateState(
         GRPC_CHANNEL_TRANSIENT_FAILURE,
-        UniquePtr<SubchannelPicker>(New<TransientFailurePicker>(error)));
+        absl::make_unique<TransientFailurePicker>(error));
     subchannel_list_ = std::move(latest_pending_subchannel_list_);
   } else if (subchannel_list_ == nullptr) {
     // If there is no current list, immediately promote the new list to
@@ -503,7 +467,7 @@ void RoundRobin::UpdateLocked(UpdateArgs args) {
   }
 }
 
-class ParsedRoundRobinConfig : public ParsedLoadBalancingConfig {
+class RoundRobinConfig : public LoadBalancingPolicy::Config {
  public:
   const char* name() const override { return kRoundRobin; }
 };
@@ -516,18 +480,14 @@ class RoundRobinFactory : public LoadBalancingPolicyFactory {
  public:
   OrphanablePtr<LoadBalancingPolicy> CreateLoadBalancingPolicy(
       LoadBalancingPolicy::Args args) const override {
-    return OrphanablePtr<LoadBalancingPolicy>(New<RoundRobin>(std::move(args)));
+    return MakeOrphanable<RoundRobin>(std::move(args));
   }
 
   const char* name() const override { return kRoundRobin; }
 
-  RefCountedPtr<ParsedLoadBalancingConfig> ParseLoadBalancingConfig(
-      const grpc_json* json, grpc_error** error) const override {
-    if (json != nullptr) {
-      GPR_DEBUG_ASSERT(strcmp(json->key, name()) == 0);
-    }
-    return RefCountedPtr<ParsedLoadBalancingConfig>(
-        New<ParsedRoundRobinConfig>());
+  RefCountedPtr<LoadBalancingPolicy::Config> ParseLoadBalancingConfig(
+      const Json& /*json*/, grpc_error** /*error*/) const override {
+    return MakeRefCounted<RoundRobinConfig>();
   }
 };
 
@@ -538,8 +498,7 @@ class RoundRobinFactory : public LoadBalancingPolicyFactory {
 void grpc_lb_policy_round_robin_init() {
   grpc_core::LoadBalancingPolicyRegistry::Builder::
       RegisterLoadBalancingPolicyFactory(
-          grpc_core::UniquePtr<grpc_core::LoadBalancingPolicyFactory>(
-              grpc_core::New<grpc_core::RoundRobinFactory>()));
+          absl::make_unique<grpc_core::RoundRobinFactory>());
 }
 
 void grpc_lb_policy_round_robin_shutdown() {}

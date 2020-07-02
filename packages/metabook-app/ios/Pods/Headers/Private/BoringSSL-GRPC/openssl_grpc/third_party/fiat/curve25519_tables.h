@@ -1,1 +1,1 @@
-../../../../../../BoringSSL-GRPC/third_party/fiat/curve25519_tables.h
+../../../../../../BoringSSL-GRPC/src/third_party/fiat/curve25519_tables.h

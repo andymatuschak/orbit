@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/Utilities/NSData+FIRBase64.h
+../../../FirebaseAuth/FirebaseAuth/Sources/Utilities/NSData+FIRBase64.h

@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/Public/FIRAuthDataResult.h
+../../../FirebaseAuth/FirebaseAuth/Sources/Public/FIRAuthDataResult.h

@@ -1,1 +1,1 @@
-../../../../../BoringSSL-GRPC/crypto/internal.h
+../../../../../BoringSSL-GRPC/src/crypto/internal.h

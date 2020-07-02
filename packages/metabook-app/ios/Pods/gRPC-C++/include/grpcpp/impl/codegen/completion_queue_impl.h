@@ -32,11 +32,14 @@
 #ifndef GRPCPP_IMPL_CODEGEN_COMPLETION_QUEUE_IMPL_H
 #define GRPCPP_IMPL_CODEGEN_COMPLETION_QUEUE_IMPL_H
 
+#include <list>
+
 #include <grpc/impl/codegen/atm.h>
 #include <grpcpp/impl/codegen/completion_queue_tag.h>
 #include <grpcpp/impl/codegen/core_codegen_interface.h>
 #include <grpcpp/impl/codegen/grpc_library.h>
 #include <grpcpp/impl/codegen/status.h>
+#include <grpcpp/impl/codegen/sync.h>
 #include <grpcpp/impl/codegen/time.h>
 
 struct grpc_completion_queue;
@@ -46,9 +49,6 @@ namespace grpc_impl {
 class Channel;
 class Server;
 class ServerBuilder;
-}  // namespace grpc_impl
-namespace grpc {
-
 template <class R>
 class ClientReader;
 template <class W>
@@ -59,31 +59,31 @@ template <class R>
 class ServerReader;
 template <class W>
 class ServerWriter;
+class ServerContextBase;
 namespace internal {
 template <class W, class R>
 class ServerReaderWriterBody;
-}  // namespace internal
 
-class ChannelInterface;
-class ClientContext;
-class ServerContext;
-class ServerInterface;
-
-namespace internal {
-class CompletionQueueTag;
-class RpcMethod;
 template <class ServiceType, class RequestType, class ResponseType>
 class RpcMethodHandler;
 template <class ServiceType, class RequestType, class ResponseType>
 class ClientStreamingHandler;
 template <class ServiceType, class RequestType, class ResponseType>
 class ServerStreamingHandler;
-template <class ServiceType, class RequestType, class ResponseType>
-class BidiStreamingHandler;
 template <class Streamer, bool WriteNeeded>
 class TemplatedBidiStreamingHandler;
-template <StatusCode code>
+template <::grpc::StatusCode code>
 class ErrorMethodHandler;
+}  // namespace internal
+}  // namespace grpc_impl
+namespace grpc {
+
+class ChannelInterface;
+class ServerInterface;
+
+namespace internal {
+class CompletionQueueTag;
+class RpcMethod;
 template <class InputMessage, class OutputMessage>
 class BlockingUnaryCallImpl;
 template <class Op1, class Op2, class Op3, class Op4, class Op5, class Op6>
@@ -186,8 +186,8 @@ class CompletionQueue : private ::grpc::GrpcLibraryCodegen {
   /// within the \a deadline).  A \a tag points to an arbitrary location usually
   /// employed to uniquely identify an event.
   ///
-  /// \param tag [out] Upon sucess, updated to point to the event's tag.
-  /// \param ok [out] Upon sucess, true if a successful event, false otherwise
+  /// \param tag [out] Upon success, updated to point to the event's tag.
+  /// \param ok [out] Upon success, true if a successful event, false otherwise
   ///        See documentation for CompletionQueue::Next for explanation of ok
   /// \param deadline [in] How long to block in wait for an event.
   ///
@@ -206,8 +206,8 @@ class CompletionQueue : private ::grpc::GrpcLibraryCodegen {
   /// employed to uniquely identify an event.
   ///
   /// \param f [in] Function to execute before calling AsyncNext on this queue.
-  /// \param tag [out] Upon sucess, updated to point to the event's tag.
-  /// \param ok [out] Upon sucess, true if read a regular event, false
+  /// \param tag [out] Upon success, updated to point to the event's tag.
+  /// \param ok [out] Upon success, true if read a regular event, false
   /// otherwise.
   /// \param deadline [in] How long to block in wait for an event.
   ///
@@ -253,32 +253,36 @@ class CompletionQueue : private ::grpc::GrpcLibraryCodegen {
   }
 
  private:
+  // Friends for access to server registration lists that enable checking and
+  // logging on shutdown
+  friend class ::grpc_impl::ServerBuilder;
+  friend class ::grpc_impl::Server;
+
   // Friend synchronous wrappers so that they can access Pluck(), which is
   // a semi-private API geared towards the synchronous implementation.
   template <class R>
-  friend class ::grpc::ClientReader;
+  friend class ::grpc_impl::ClientReader;
   template <class W>
-  friend class ::grpc::ClientWriter;
+  friend class ::grpc_impl::ClientWriter;
   template <class W, class R>
-  friend class ::grpc::ClientReaderWriter;
+  friend class ::grpc_impl::ClientReaderWriter;
   template <class R>
-  friend class ::grpc::ServerReader;
+  friend class ::grpc_impl::ServerReader;
   template <class W>
-  friend class ::grpc::ServerWriter;
+  friend class ::grpc_impl::ServerWriter;
   template <class W, class R>
-  friend class ::grpc::internal::ServerReaderWriterBody;
+  friend class ::grpc_impl::internal::ServerReaderWriterBody;
   template <class ServiceType, class RequestType, class ResponseType>
-  friend class ::grpc::internal::RpcMethodHandler;
+  friend class ::grpc_impl::internal::RpcMethodHandler;
   template <class ServiceType, class RequestType, class ResponseType>
-  friend class ::grpc::internal::ClientStreamingHandler;
+  friend class ::grpc_impl::internal::ClientStreamingHandler;
   template <class ServiceType, class RequestType, class ResponseType>
-  friend class ::grpc::internal::ServerStreamingHandler;
+  friend class ::grpc_impl::internal::ServerStreamingHandler;
   template <class Streamer, bool WriteNeeded>
-  friend class ::grpc::internal::TemplatedBidiStreamingHandler;
+  friend class ::grpc_impl::internal::TemplatedBidiStreamingHandler;
   template <::grpc::StatusCode code>
-  friend class ::grpc::internal::ErrorMethodHandler;
-  friend class ::grpc_impl::Server;
-  friend class ::grpc::ServerContext;
+  friend class ::grpc_impl::internal::ErrorMethodHandler;
+  friend class ::grpc_impl::ServerContextBase;
   friend class ::grpc::ServerInterface;
   template <class InputMessage, class OutputMessage>
   friend class ::grpc::internal::BlockingUnaryCallImpl;
@@ -382,13 +386,41 @@ class CompletionQueue : private ::grpc::GrpcLibraryCodegen {
     }
   }
 
+  void RegisterServer(const Server* server) {
+    (void)server;
+#ifndef NDEBUG
+    grpc::internal::MutexLock l(&server_list_mutex_);
+    server_list_.push_back(server);
+#endif
+  }
+  void UnregisterServer(const Server* server) {
+    (void)server;
+#ifndef NDEBUG
+    grpc::internal::MutexLock l(&server_list_mutex_);
+    server_list_.remove(server);
+#endif
+  }
+  bool ServerListEmpty() const {
+#ifndef NDEBUG
+    grpc::internal::MutexLock l(&server_list_mutex_);
+    return server_list_.empty();
+#endif
+    return true;
+  }
+
   grpc_completion_queue* cq_;  // owned
 
   gpr_atm avalanches_in_flight_;
+
+  // List of servers associated with this CQ. Even though this is only used with
+  // NDEBUG, instantiate it in all cases since otherwise the size will be
+  // inconsistent.
+  mutable grpc::internal::Mutex server_list_mutex_;
+  std::list<const Server*> server_list_ /* GUARDED_BY(server_list_mutex_) */;
 };
 
 /// A specific type of completion queue used by the processing of notifications
-/// by servers. Instantiated by \a ServerBuilder.
+/// by servers. Instantiated by \a ServerBuilder or Server (for health checker).
 class ServerCompletionQueue : public CompletionQueue {
  public:
   bool IsFrequentlyPolled() { return polling_type_ != GRPC_CQ_NON_LISTENING; }

@@ -1,1 +1,1 @@
-../../../../BoringSSL-GRPC/include/openssl/curve25519.h
+../../../../BoringSSL-GRPC/src/include/openssl/curve25519.h

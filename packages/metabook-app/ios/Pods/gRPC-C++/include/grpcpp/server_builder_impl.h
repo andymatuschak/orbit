@@ -24,6 +24,8 @@
 #include <memory>
 #include <vector>
 
+#include <grpc/impl/codegen/port_platform.h>
+
 #include <grpc/compression.h>
 #include <grpc/support/cpu.h>
 #include <grpc/support/workaround_list.h>
@@ -44,19 +46,48 @@ class Server;
 class ServerCompletionQueue;
 class ServerCredentials;
 }  // namespace grpc_impl
+
 namespace grpc {
 
 class AsyncGenericService;
 class Service;
-
 namespace testing {
 class ServerBuilderPluginTest;
 }  // namespace testing
 
+namespace internal {
+class ExternalConnectionAcceptorImpl;
+}  // namespace internal
+
+#ifndef GRPC_CALLBACK_API_NONEXPERIMENTAL
 namespace experimental {
+#endif
 class CallbackGenericService;
-}
+#ifndef GRPC_CALLBACK_API_NONEXPERIMENTAL
+}  // namespace experimental
+#endif
+
+namespace experimental {
+// EXPERIMENTAL API:
+// Interface for a grpc server to build transports with connections created out
+// of band.
+// See ServerBuilder's AddExternalConnectionAcceptor API.
+class ExternalConnectionAcceptor {
+ public:
+  struct NewConnectionParameters {
+    int listener_fd = -1;
+    int fd = -1;
+    ByteBuffer read_buffer;  // data intended for the grpc server
+  };
+  virtual ~ExternalConnectionAcceptor() {}
+  // If called before grpc::Server is started or after it is shut down, the new
+  // connection will be closed.
+  virtual void HandleNewConnection(NewConnectionParameters* p) = 0;
+};
+
+}  // namespace experimental
 }  // namespace grpc
+
 namespace grpc_impl {
 
 /// A builder class for the creation and startup of \a grpc::Server instances.
@@ -242,16 +273,39 @@ class ServerBuilder {
       builder_->interceptor_creators_ = std::move(interceptor_creators);
     }
 
+#ifndef GRPC_CALLBACK_API_NONEXPERIMENTAL
     /// Register a generic service that uses the callback API.
     /// Matches requests with any :authority
     /// This is mostly useful for writing generic gRPC Proxies where the exact
     /// serialization format is unknown
     ServerBuilder& RegisterCallbackGenericService(
         grpc::experimental::CallbackGenericService* service);
+#endif
+
+    enum class ExternalConnectionType {
+      FROM_FD = 0  // in the form of a file descriptor
+    };
+
+    /// Register an acceptor to handle the externally accepted connection in
+    /// grpc server. The returned acceptor can be used to pass the connection
+    /// to grpc server, where a channel will be created with the provided
+    /// server credentials.
+    std::unique_ptr<grpc::experimental::ExternalConnectionAcceptor>
+    AddExternalConnectionAcceptor(ExternalConnectionType type,
+                                  std::shared_ptr<ServerCredentials> creds);
 
    private:
     ServerBuilder* builder_;
   };
+
+#ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+  /// Register a generic service that uses the callback API.
+  /// Matches requests with any :authority
+  /// This is mostly useful for writing generic gRPC Proxies where the exact
+  /// serialization format is unknown
+  ServerBuilder& RegisterCallbackGenericService(
+      grpc::CallbackGenericService* service);
+#endif
 
   /// NOTE: The function experimental() is not stable public API. It is a view
   /// to the experimental components of this class. It may be changed or removed
@@ -334,8 +388,13 @@ class ServerBuilder {
   std::vector<std::unique_ptr<grpc::ServerBuilderPlugin>> plugins_;
   grpc_resource_quota* resource_quota_;
   grpc::AsyncGenericService* generic_service_{nullptr};
+#ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+  grpc::CallbackGenericService* callback_generic_service_{nullptr};
+#else
   grpc::experimental::CallbackGenericService* callback_generic_service_{
       nullptr};
+#endif
+
   struct {
     bool is_set;
     grpc_compression_level level;
@@ -348,6 +407,8 @@ class ServerBuilder {
   std::vector<
       std::unique_ptr<grpc::experimental::ServerInterceptorFactoryInterface>>
       interceptor_creators_;
+  std::vector<std::shared_ptr<grpc::internal::ExternalConnectionAcceptorImpl>>
+      acceptors_;
 };
 
 }  // namespace grpc_impl

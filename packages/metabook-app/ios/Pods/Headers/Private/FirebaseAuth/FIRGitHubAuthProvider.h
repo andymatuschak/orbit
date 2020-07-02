@@ -1,1 +1,1 @@
-../../../FirebaseAuth/Firebase/Auth/Source/Public/FIRGitHubAuthProvider.h
+../../../FirebaseAuth/FirebaseAuth/Sources/Public/FIRGitHubAuthProvider.h

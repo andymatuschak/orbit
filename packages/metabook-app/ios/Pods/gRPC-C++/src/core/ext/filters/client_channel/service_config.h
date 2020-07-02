@@ -62,8 +62,6 @@ class ServiceConfig : public RefCounted<ServiceConfig> {
   class ParsedConfig {
    public:
     virtual ~ParsedConfig() = default;
-
-    GRPC_ABSTRACT_BASE_CLASS;
   };
 
   /// This is the base class that all service config parsers should derive from.
@@ -71,24 +69,26 @@ class ServiceConfig : public RefCounted<ServiceConfig> {
    public:
     virtual ~Parser() = default;
 
-    virtual UniquePtr<ParsedConfig> ParseGlobalParams(const grpc_json* json,
-                                                      grpc_error** error) {
+    virtual std::unique_ptr<ParsedConfig> ParseGlobalParams(
+        const Json& /* json */, grpc_error** error) {
+      // Avoid unused parameter warning on debug-only parameter
+      (void)error;
       GPR_DEBUG_ASSERT(error != nullptr);
       return nullptr;
     }
 
-    virtual UniquePtr<ParsedConfig> ParsePerMethodParams(const grpc_json* json,
-                                                         grpc_error** error) {
+    virtual std::unique_ptr<ParsedConfig> ParsePerMethodParams(
+        const Json& /* json */, grpc_error** error) {
+      // Avoid unused parameter warning on debug-only parameter
+      (void)error;
       GPR_DEBUG_ASSERT(error != nullptr);
       return nullptr;
     }
-
-    GRPC_ABSTRACT_BASE_CLASS;
   };
 
   static constexpr int kNumPreallocatedParsers = 4;
-  typedef InlinedVector<UniquePtr<ParsedConfig>, kNumPreallocatedParsers>
-      ServiceConfigObjectsVector;
+  typedef InlinedVector<std::unique_ptr<ParsedConfig>, kNumPreallocatedParsers>
+      ParsedConfigVector;
 
   /// When a service config is applied to a call in the client_channel_filter,
   /// we create an instance of this object and store it in the call_data for
@@ -102,104 +102,90 @@ class ServiceConfig : public RefCounted<ServiceConfig> {
         : service_config_(std::move(svc_cfg)) {
       if (service_config_ != nullptr) {
         method_params_vector_ =
-            service_config_->GetMethodServiceConfigObjectsVector(path);
+            service_config_->GetMethodParsedConfigVector(path);
       }
     }
 
     ServiceConfig* service_config() { return service_config_.get(); }
 
-    ParsedConfig* GetMethodParsedObject(size_t index) const {
+    ParsedConfig* GetMethodParsedConfig(size_t index) const {
       return method_params_vector_ != nullptr
                  ? (*method_params_vector_)[index].get()
                  : nullptr;
     }
 
-    ParsedConfig* GetGlobalParsedObject(size_t index) const {
-      return service_config_->GetParsedGlobalServiceConfigObject(index);
+    ParsedConfig* GetGlobalParsedConfig(size_t index) const {
+      return service_config_->GetGlobalParsedConfig(index);
     }
 
    private:
     RefCountedPtr<ServiceConfig> service_config_;
-    const ServiceConfigObjectsVector* method_params_vector_ = nullptr;
+    const ParsedConfigVector* method_params_vector_ = nullptr;
   };
 
   /// Creates a new service config from parsing \a json_string.
   /// Returns null on parse error.
-  static RefCountedPtr<ServiceConfig> Create(const char* json,
+  static RefCountedPtr<ServiceConfig> Create(StringView json_string,
                                              grpc_error** error);
 
-  ~ServiceConfig();
+  ServiceConfig(std::string json_string, Json json, grpc_error** error);
 
-  const char* service_config_json() const { return service_config_json_.get(); }
+  const std::string& json_string() const { return json_string_; }
 
-  /// Retrieves the parsed global service config object at index \a index. The
+  /// Retrieves the global parsed config at index \a index. The
   /// lifetime of the returned object is tied to the lifetime of the
   /// ServiceConfig object.
-  ParsedConfig* GetParsedGlobalServiceConfigObject(size_t index) {
-    GPR_DEBUG_ASSERT(index < parsed_global_service_config_objects_.size());
-    return parsed_global_service_config_objects_[index].get();
+  ParsedConfig* GetGlobalParsedConfig(size_t index) {
+    GPR_DEBUG_ASSERT(index < parsed_global_configs_.size());
+    return parsed_global_configs_[index].get();
   }
 
-  /// Retrieves the vector of method service config objects for a given path \a
-  /// path. The lifetime of the returned vector and contained objects is tied to
-  /// the lifetime of the ServiceConfig object.
-  const ServiceConfigObjectsVector* GetMethodServiceConfigObjectsVector(
-      const grpc_slice& path);
+  /// Retrieves the vector of parsed configs for the method identified
+  /// by \a path.  The lifetime of the returned vector and contained objects
+  /// is tied to the lifetime of the ServiceConfig object.
+  const ParsedConfigVector* GetMethodParsedConfigVector(const grpc_slice& path);
 
   /// Globally register a service config parser. On successful registration, it
   /// returns the index at which the parser was registered. On failure, -1 is
   /// returned. Each new service config update will go through all the
   /// registered parser. Each parser is responsible for reading the service
-  /// config json and returning a parsed object. This parsed object can later be
+  /// config json and returning a parsed config. This parsed config can later be
   /// retrieved using the same index that was returned at registration time.
-  static size_t RegisterParser(UniquePtr<Parser> parser);
+  static size_t RegisterParser(std::unique_ptr<Parser> parser);
 
   static void Init();
 
   static void Shutdown();
 
  private:
-  // So New() can call our private ctor.
-  template <typename T, typename... Args>
-  friend T* New(Args&&... args);
-
-  // Takes ownership of \a json_tree.
-  ServiceConfig(UniquePtr<char> service_config_json,
-                UniquePtr<char> json_string, grpc_json* json_tree,
-                grpc_error** error);
-
   // Helper functions to parse the service config
-  grpc_error* ParseGlobalParams(const grpc_json* json_tree);
-  grpc_error* ParsePerMethodParams(const grpc_json* json_tree);
-
-  // Returns the number of names specified in the method config \a json.
-  static int CountNamesInMethodConfig(grpc_json* json);
+  grpc_error* ParseGlobalParams();
+  grpc_error* ParsePerMethodParams();
 
   // Returns a path string for the JSON name object specified by \a json.
   // Returns null on error, and stores error in \a error.
-  static UniquePtr<char> ParseJsonMethodName(grpc_json* json,
+  static UniquePtr<char> ParseJsonMethodName(const Json& json,
                                              grpc_error** error);
 
-  grpc_error* ParseJsonMethodConfigToServiceConfigObjectsTable(
-      const grpc_json* json,
-      SliceHashTable<const ServiceConfigObjectsVector*>::Entry* entries,
-      size_t* idx);
+  grpc_error* ParseJsonMethodConfigToServiceConfigVectorTable(
+      const Json& json,
+      InlinedVector<SliceHashTable<const ParsedConfigVector*>::Entry, 10>*
+          entries);
 
-  UniquePtr<char> service_config_json_;
-  UniquePtr<char> json_string_;  // Underlying storage for json_tree.
-  grpc_json* json_tree_;
+  std::string json_string_;
+  Json json_;
 
-  InlinedVector<UniquePtr<ParsedConfig>, kNumPreallocatedParsers>
-      parsed_global_service_config_objects_;
-  // A map from the method name to the service config objects vector. Note that
-  // we are using a raw pointer and not a unique pointer so that we can use the
-  // same vector for multiple names.
-  RefCountedPtr<SliceHashTable<const ServiceConfigObjectsVector*>>
-      parsed_method_service_config_objects_table_;
+  InlinedVector<std::unique_ptr<ParsedConfig>, kNumPreallocatedParsers>
+      parsed_global_configs_;
+  // A map from the method name to the parsed config vector. Note that we are
+  // using a raw pointer and not a unique pointer so that we can use the same
+  // vector for multiple names.
+  RefCountedPtr<SliceHashTable<const ParsedConfigVector*>>
+      parsed_method_configs_table_;
   // Storage for all the vectors that are being used in
-  // parsed_method_service_config_objects_table_.
-  InlinedVector<UniquePtr<ServiceConfigObjectsVector>, 32>
-      service_config_objects_vectors_storage_;
+  // parsed_method_configs_table_.
+  InlinedVector<std::unique_ptr<ParsedConfigVector>, 32>
+      parsed_method_config_vectors_storage_;
 };
 
 }  // namespace grpc_core

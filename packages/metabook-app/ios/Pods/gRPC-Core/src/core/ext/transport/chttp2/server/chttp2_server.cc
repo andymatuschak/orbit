@@ -20,16 +20,18 @@
 
 #include "src/core/ext/transport/chttp2/server/chttp2_server.h"
 
-#include <grpc/grpc.h>
-
 #include <inttypes.h>
 #include <limits.h>
 #include <string.h>
 
+#include <grpc/grpc.h>
+#include <grpc/impl/codegen/grpc_types.h>
 #include <grpc/support/alloc.h>
 #include <grpc/support/log.h>
 #include <grpc/support/string_util.h>
 #include <grpc/support/sync.h>
+
+#include "absl/strings/str_format.h"
 
 #include "src/core/ext/filters/http/server/http_server_filter.h"
 #include "src/core/ext/transport/chttp2/transport/chttp2_transport.h"
@@ -37,7 +39,6 @@
 #include "src/core/lib/channel/channel_args.h"
 #include "src/core/lib/channel/handshaker.h"
 #include "src/core/lib/channel/handshaker_registry.h"
-#include "src/core/lib/gpr/host_port.h"
 #include "src/core/lib/iomgr/endpoint.h"
 #include "src/core/lib/iomgr/resolve_address.h"
 #include "src/core/lib/iomgr/resource_quota.h"
@@ -241,7 +242,7 @@ static void on_accept(void* arg, grpc_endpoint* tcp,
 }
 
 /* Server callback: start listening on our ports */
-static void server_start_listener(grpc_server* server, void* arg,
+static void server_start_listener(grpc_server* /*server*/, void* arg,
                                   grpc_pollset** pollsets,
                                   size_t pollset_count) {
   server_state* state = static_cast<server_state*>(arg);
@@ -267,7 +268,8 @@ static void tcp_server_shutdown_complete(void* arg, grpc_error* error) {
   // may do a synchronous unref.
   grpc_core::ExecCtx::Get()->Flush();
   if (destroy_done != nullptr) {
-    destroy_done->cb(destroy_done->cb_arg, GRPC_ERROR_REF(error));
+    grpc_core::ExecCtx::Run(DEBUG_LOCATION, destroy_done,
+                            GRPC_ERROR_REF(error));
     grpc_core::ExecCtx::Get()->Flush();
   }
   grpc_channel_args_destroy(state->args);
@@ -277,7 +279,7 @@ static void tcp_server_shutdown_complete(void* arg, grpc_error* error) {
 
 /* Server callback: destroy the tcp listener (so we don't generate further
    callbacks) */
-static void server_destroy_listener(grpc_server* server, void* arg,
+static void server_destroy_listener(grpc_server* /*server*/, void* arg,
                                     grpc_closure* destroy_done) {
   server_state* state = static_cast<server_state*>(arg);
   gpr_mu_lock(&state->mu);
@@ -287,6 +289,50 @@ static void server_destroy_listener(grpc_server* server, void* arg,
   gpr_mu_unlock(&state->mu);
   grpc_tcp_server_shutdown_listeners(tcp_server);
   grpc_tcp_server_unref(tcp_server);
+}
+
+static grpc_error* chttp2_server_add_acceptor(grpc_server* server,
+                                              const char* name,
+                                              grpc_channel_args* args) {
+  grpc_tcp_server* tcp_server = nullptr;
+  grpc_error* err = GRPC_ERROR_NONE;
+  server_state* state = nullptr;
+  const grpc_arg* arg = nullptr;
+  grpc_core::TcpServerFdHandler** arg_val = nullptr;
+  state = static_cast<server_state*>(gpr_zalloc(sizeof(*state)));
+  GRPC_CLOSURE_INIT(&state->tcp_server_shutdown_complete,
+                    tcp_server_shutdown_complete, state,
+                    grpc_schedule_on_exec_ctx);
+  err = grpc_tcp_server_create(&state->tcp_server_shutdown_complete, args,
+                               &tcp_server);
+  if (err != GRPC_ERROR_NONE) {
+    goto error;
+  }
+  state->server = server;
+  state->tcp_server = tcp_server;
+  state->args = args;
+  state->shutdown = true;
+  gpr_mu_init(&state->mu);
+  // TODO(yangg) channelz
+  arg = grpc_channel_args_find(args, name);
+  GPR_ASSERT(arg->type == GRPC_ARG_POINTER);
+  arg_val = static_cast<grpc_core::TcpServerFdHandler**>(arg->value.pointer.p);
+  *arg_val = grpc_tcp_server_create_fd_handler(tcp_server);
+
+  grpc_server_add_listener(server, state, server_start_listener,
+                           server_destroy_listener, /* node */ nullptr);
+  return err;
+
+/* Error path: cleanup and return */
+error:
+  GPR_ASSERT(err != GRPC_ERROR_NONE);
+  if (tcp_server) {
+    grpc_tcp_server_unref(tcp_server);
+  } else {
+    grpc_channel_args_destroy(args);
+    gpr_free(state);
+  }
+  return err;
 }
 
 grpc_error* grpc_chttp2_server_add_port(grpc_server* server, const char* addr,
@@ -302,9 +348,12 @@ grpc_error* grpc_chttp2_server_add_port(grpc_server* server, const char* addr,
   grpc_error** errors = nullptr;
   size_t naddrs = 0;
   const grpc_arg* arg = nullptr;
-  intptr_t socket_uuid = 0;
 
   *port_num = -1;
+
+  if (strncmp(addr, "external:", 9) == 0) {
+    return chttp2_server_add_acceptor(server, addr, args);
+  }
 
   /* resolve address */
   err = grpc_blocking_resolve_address(addr, "https", &resolved);
@@ -368,13 +417,13 @@ grpc_error* grpc_chttp2_server_add_port(grpc_server* server, const char* addr,
   if (grpc_channel_arg_get_bool(arg, GRPC_ENABLE_CHANNELZ_DEFAULT)) {
     state->channelz_listen_socket =
         grpc_core::MakeRefCounted<grpc_core::channelz::ListenSocketNode>(
-            grpc_core::UniquePtr<char>(gpr_strdup(addr)));
-    socket_uuid = state->channelz_listen_socket->uuid();
+            addr, absl::StrFormat("chttp2 listener %s", addr));
   }
 
   /* Register with the server only upon success */
   grpc_server_add_listener(server, state, server_start_listener,
-                           server_destroy_listener, socket_uuid);
+                           server_destroy_listener,
+                           state->channelz_listen_socket);
   goto done;
 
 /* Error path: cleanup and return */

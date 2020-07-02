@@ -22,92 +22,29 @@
 #include <grpc/support/port_platform.h>
 
 #include <grpc/support/alloc.h>
+#include <grpc/support/log.h>
 
 #include <limits>
 #include <memory>
 #include <utility>
 
-// Add this to a class that want to use Delete(), but has a private or
-// protected destructor.
-#define GPRC_ALLOW_CLASS_TO_USE_NON_PUBLIC_DELETE \
-  template <typename T>                           \
-  friend void grpc_core::Delete(T*);
-// Add this to a class that want to use New(), but has a private or
-// protected constructor.
-#define GPRC_ALLOW_CLASS_TO_USE_NON_PUBLIC_NEW \
-  template <typename T, typename... Args>      \
-  friend T* grpc_core::New(Args&&...);
+#include "absl/memory/memory.h"
 
 namespace grpc_core {
 
-// Alternative to new, since we cannot use it (for fear of libstdc++)
-template <typename T, typename... Args>
-inline T* New(Args&&... args) {
-  void* p = gpr_malloc(sizeof(T));
-  return new (p) T(std::forward<Args>(args)...);
-}
-
-// Alternative to delete, since we cannot use it (for fear of libstdc++)
-template <typename T>
-inline void Delete(T* p) {
-  if (p == nullptr) return;
-  p->~T();
-  gpr_free(p);
-}
-
-template <typename T>
-class DefaultDelete {
+class DefaultDeleteChar {
  public:
-  void operator()(T* p) { Delete(p); }
+  void operator()(char* p) {
+    if (p == nullptr) return;
+    gpr_free(p);
+  }
 };
 
-template <typename T, typename Deleter = DefaultDelete<T>>
-using UniquePtr = std::unique_ptr<T, Deleter>;
-
-template <typename T, typename... Args>
-inline UniquePtr<T> MakeUnique(Args&&... args) {
-  return UniquePtr<T>(New<T>(std::forward<Args>(args)...));
-}
-
-// an allocator that uses gpr_malloc/gpr_free
-template <class T>
-class Allocator {
- public:
-  typedef T value_type;
-  typedef T* pointer;
-  typedef const T* const_pointer;
-  typedef T& reference;
-  typedef const T& const_reference;
-  typedef std::size_t size_type;
-  typedef std::ptrdiff_t difference_type;
-  typedef std::false_type propagate_on_container_move_assignment;
-  template <class U>
-  struct rebind {
-    typedef Allocator<U> other;
-  };
-  typedef std::true_type is_always_equal;
-
-  pointer address(reference x) const { return &x; }
-  const_pointer address(const_reference x) const { return &x; }
-  pointer allocate(std::size_t n,
-                   std::allocator<void>::const_pointer hint = nullptr) {
-    return static_cast<pointer>(gpr_malloc(n * sizeof(T)));
-  }
-  void deallocate(T* p, std::size_t n) { gpr_free(p); }
-  size_t max_size() const {
-    return std::numeric_limits<size_type>::max() / sizeof(value_type);
-  }
-  void construct(pointer p, const_reference val) { new ((void*)p) T(val); }
-  template <class U, class... Args>
-  void construct(U* p, Args&&... args) {
-    ::new ((void*)p) U(std::forward<Args>(args)...);
-  }
-  void destroy(pointer p) { p->~T(); }
-  template <class U>
-  void destroy(U* p) {
-    p->~U();
-  }
-};
+// UniquePtr<T> is only allowed for char and UniquePtr<char> is deprecated
+// in favor of std::string. UniquePtr<char> is equivalent std::unique_ptr
+// except that it uses gpr_free for deleter.
+template <typename T>
+using UniquePtr = std::unique_ptr<T, DefaultDeleteChar>;
 
 }  // namespace grpc_core
 

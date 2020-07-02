@@ -43,23 +43,8 @@ LoadBalancingPolicy::~LoadBalancingPolicy() {
 }
 
 void LoadBalancingPolicy::Orphan() {
-  // Invoke ShutdownAndUnrefLocked() inside of the combiner.
-  // TODO(roth): Is this actually needed?  We should already be in the
-  // combiner here.  Note that if we directly call ShutdownLocked(),
-  // then we can probably remove the hack whereby the helper is
-  // destroyed at shutdown instead of at destruction.
-  GRPC_CLOSURE_SCHED(
-      GRPC_CLOSURE_CREATE(&LoadBalancingPolicy::ShutdownAndUnrefLocked, this,
-                          grpc_combiner_scheduler(combiner_)),
-      GRPC_ERROR_NONE);
-}
-
-void LoadBalancingPolicy::ShutdownAndUnrefLocked(void* arg,
-                                                 grpc_error* ignored) {
-  LoadBalancingPolicy* policy = static_cast<LoadBalancingPolicy*>(arg);
-  policy->ShutdownLocked();
-  policy->channel_control_helper_.reset();
-  policy->Unref();
+  ShutdownLocked();
+  Unref(DEBUG_LOCATION, "Orphan");
 }
 
 //
@@ -105,7 +90,7 @@ LoadBalancingPolicy::UpdateArgs& LoadBalancingPolicy::UpdateArgs::operator=(
 //
 
 LoadBalancingPolicy::PickResult LoadBalancingPolicy::QueuePicker::Pick(
-    PickArgs* pick, grpc_error** error) {
+    PickArgs /*args*/) {
   // We invoke the parent's ExitIdleLocked() via a closure instead
   // of doing it directly here, for two reasons:
   // 1. ExitIdleLocked() may cause the policy's state to change and
@@ -119,20 +104,34 @@ LoadBalancingPolicy::PickResult LoadBalancingPolicy::QueuePicker::Pick(
   //    ExitIdleLocked().
   if (!exit_idle_called_) {
     exit_idle_called_ = true;
-    parent_->Ref().release();  // ref held by closure.
-    GRPC_CLOSURE_SCHED(
-        GRPC_CLOSURE_CREATE(&CallExitIdle, parent_.get(),
-                            grpc_combiner_scheduler(parent_->combiner())),
+    // Ref held by closure.
+    parent_->Ref(DEBUG_LOCATION, "QueuePicker::CallExitIdle").release();
+    parent_->combiner()->Run(
+        GRPC_CLOSURE_CREATE(&CallExitIdle, parent_.get(), nullptr),
         GRPC_ERROR_NONE);
   }
-  return PICK_QUEUE;
+  PickResult result;
+  result.type = PickResult::PICK_QUEUE;
+  return result;
 }
 
 void LoadBalancingPolicy::QueuePicker::CallExitIdle(void* arg,
-                                                    grpc_error* error) {
+                                                    grpc_error* /*error*/) {
   LoadBalancingPolicy* parent = static_cast<LoadBalancingPolicy*>(arg);
   parent->ExitIdleLocked();
-  parent->Unref();
+  parent->Unref(DEBUG_LOCATION, "QueuePicker::CallExitIdle");
+}
+
+//
+// LoadBalancingPolicy::TransientFailurePicker
+//
+
+LoadBalancingPolicy::PickResult
+LoadBalancingPolicy::TransientFailurePicker::Pick(PickArgs /*args*/) {
+  PickResult result;
+  result.type = PickResult::PICK_FAILED;
+  result.error = GRPC_ERROR_REF(error_);
+  return result;
 }
 
 }  // namespace grpc_core

@@ -19,11 +19,7 @@ beforeEach(async () => {
   const { functions, firestore } = FirebaseTesting.createTestFirebaseApp();
   testFirestore = firestore;
   cacheWriteHandler = jest.fn();
-  dataClient = new MetabookFirebaseDataClient(
-    testFirestore,
-    functions,
-    cacheWriteHandler,
-  );
+  dataClient = new MetabookFirebaseDataClient(functions, cacheWriteHandler);
 });
 
 afterEach(async () => {

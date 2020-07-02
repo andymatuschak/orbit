@@ -26,6 +26,7 @@
 #include <grpc/support/alloc.h>
 #include <grpc/support/log.h>
 
+#include "src/core/lib/channel/channel_args.h"
 #include "src/core/lib/iomgr/error.h"
 #include "src/core/lib/iomgr/exec_ctx.h"
 #include "src/core/lib/iomgr/iomgr_custom.h"
@@ -72,6 +73,7 @@ struct grpc_tcp_server {
   grpc_closure* shutdown_complete;
 
   bool shutdown;
+  bool so_reuseport;
 
   grpc_resource_quota* resource_quota;
 };
@@ -80,8 +82,13 @@ static grpc_error* tcp_server_create(grpc_closure* shutdown_complete,
                                      const grpc_channel_args* args,
                                      grpc_tcp_server** server) {
   grpc_tcp_server* s = (grpc_tcp_server*)gpr_malloc(sizeof(grpc_tcp_server));
+  // Let the implementation decide if so_reuseport can be enabled or not.
+  s->so_reuseport = true;
   s->resource_quota = grpc_resource_quota_create(nullptr);
   for (size_t i = 0; i < (args == nullptr ? 0 : args->num_args); i++) {
+    if (!grpc_channel_args_find_bool(args, GRPC_ARG_ALLOW_REUSEPORT, true)) {
+      s->so_reuseport = false;
+    }
     if (0 == strcmp(GRPC_ARG_RESOURCE_QUOTA, args->args[i].key)) {
       if (args->args[i].type == GRPC_ARG_POINTER) {
         grpc_resource_quota_unref_internal(s->resource_quota);
@@ -124,7 +131,8 @@ static void tcp_server_shutdown_starting_add(grpc_tcp_server* s,
 static void finish_shutdown(grpc_tcp_server* s) {
   GPR_ASSERT(s->shutdown);
   if (s->shutdown_complete != nullptr) {
-    GRPC_CLOSURE_SCHED(s->shutdown_complete, GRPC_ERROR_NONE);
+    grpc_core::ExecCtx::Run(DEBUG_LOCATION, s->shutdown_complete,
+                            GRPC_ERROR_NONE);
   }
 
   while (s->head) {
@@ -195,7 +203,7 @@ static void tcp_server_unref(grpc_tcp_server* s) {
   if (gpr_unref(&s->refs)) {
     /* Complete shutdown_starting work before destroying. */
     grpc_core::ExecCtx exec_ctx;
-    GRPC_CLOSURE_LIST_SCHED(&s->shutdown_starting);
+    grpc_core::ExecCtx::RunList(DEBUG_LOCATION, &s->shutdown_starting);
     grpc_core::ExecCtx::Get()->Flush();
     tcp_server_destroy(s);
   }
@@ -233,6 +241,7 @@ static void finish_accept(grpc_tcp_listener* sp, grpc_custom_socket* socket) {
   acceptor->from_server = sp->server;
   acceptor->port_index = sp->port_index;
   acceptor->fd_index = 0;
+  acceptor->external_connection = false;
   sp->server->on_accept_cb(sp->server->on_accept_cb_arg, ep, nullptr, acceptor);
   gpr_free(peer_name_string);
 }
@@ -244,6 +253,7 @@ static void custom_accept_callback(grpc_custom_socket* socket,
 static void custom_accept_callback(grpc_custom_socket* socket,
                                    grpc_custom_socket* client,
                                    grpc_error* error) {
+  grpc_core::ApplicationCallbackExecCtx callback_exec_ctx;
   grpc_core::ExecCtx exec_ctx;
   grpc_tcp_listener* sp = socket->listener;
   if (error != GRPC_ERROR_NONE) {
@@ -277,9 +287,15 @@ static grpc_error* add_socket_to_server(grpc_tcp_server* s,
   grpc_error* error;
   grpc_resolved_address sockname_temp;
 
-  // The last argument to uv_tcp_bind is flags
+  // NOTE(lidiz) The last argument is "flags" which is unused by other
+  // implementations. Python IO managers uses it to specify SO_REUSEPORT.
+  int flags = 0;
+  if (s->so_reuseport) {
+    flags |= GRPC_CUSTOM_SOCKET_OPT_SO_REUSEPORT;
+  }
+
   error = grpc_custom_socket_vtable->bind(socket, (grpc_sockaddr*)addr->addr,
-                                          addr->len, 0);
+                                          addr->len, flags);
   if (error != GRPC_ERROR_NONE) {
     return error;
   }
@@ -390,7 +406,7 @@ static grpc_error* tcp_server_add_port(grpc_tcp_server* s,
   socket->endpoint = nullptr;
   socket->listener = nullptr;
   socket->connector = nullptr;
-  grpc_custom_socket_vtable->init(socket, family);
+  error = grpc_custom_socket_vtable->init(socket, family);
 
   if (error == GRPC_ERROR_NONE) {
     error = add_socket_to_server(s, socket, addr, port_index, &sp);
@@ -437,13 +453,13 @@ static void tcp_server_start(grpc_tcp_server* server, grpc_pollset** pollsets,
   }
 }
 
-static unsigned tcp_server_port_fd_count(grpc_tcp_server* s,
-                                         unsigned port_index) {
+static unsigned tcp_server_port_fd_count(grpc_tcp_server* /*s*/,
+                                         unsigned /*port_index*/) {
   return 0;
 }
 
-static int tcp_server_port_fd(grpc_tcp_server* s, unsigned port_index,
-                              unsigned fd_index) {
+static int tcp_server_port_fd(grpc_tcp_server* /*s*/, unsigned /*port_index*/,
+                              unsigned /*fd_index*/) {
   return -1;
 }
 
@@ -456,16 +472,17 @@ static void tcp_server_shutdown_listeners(grpc_tcp_server* s) {
   }
 }
 
+static grpc_core::TcpServerFdHandler* tcp_server_create_fd_handler(
+    grpc_tcp_server* /*s*/) {
+  return nullptr;
+}
+
 grpc_tcp_server_vtable custom_tcp_server_vtable = {
-    tcp_server_create,
-    tcp_server_start,
-    tcp_server_add_port,
-    tcp_server_port_fd_count,
-    tcp_server_port_fd,
-    tcp_server_ref,
-    tcp_server_shutdown_starting_add,
-    tcp_server_unref,
-    tcp_server_shutdown_listeners};
+    tcp_server_create,        tcp_server_start,
+    tcp_server_add_port,      tcp_server_create_fd_handler,
+    tcp_server_port_fd_count, tcp_server_port_fd,
+    tcp_server_ref,           tcp_server_shutdown_starting_add,
+    tcp_server_unref,         tcp_server_shutdown_listeners};
 
 #ifdef GRPC_UV_TEST
 grpc_tcp_server_vtable* default_tcp_server_vtable = &custom_tcp_server_vtable;

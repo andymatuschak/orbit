@@ -23,10 +23,10 @@
 
 #import "Firestore/Source/API/FIRFieldPath+Internal.h"
 
-#include "Firestore/core/src/firebase/firestore/model/field_path.h"
-#include "Firestore/core/src/firebase/firestore/util/exception.h"
-#include "Firestore/core/src/firebase/firestore/util/hashing.h"
-#include "Firestore/core/src/firebase/firestore/util/string_apple.h"
+#include "Firestore/core/src/model/field_path.h"
+#include "Firestore/core/src/util/exception.h"
+#include "Firestore/core/src/util/hashing.h"
+#include "Firestore/core/src/util/string_apple.h"
 
 namespace util = firebase::firestore::util;
 using firebase::firestore::model::FieldPath;
@@ -73,17 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
       [[FIRFieldPath alloc] initPrivate:FieldPath::FromDotSeparatedString(util::MakeString(path))];
 }
 
-/** Matches any characters in a field path string that are reserved. */
-+ (NSRegularExpression *)reservedCharactersRegex {
-  static NSRegularExpression *regex = nil;
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    regex = [NSRegularExpression regularExpressionWithPattern:@"[~*/\\[\\]]" options:0 error:nil];
-  });
-  return regex;
-}
-
-- (id)copyWithZone:(NSZone *__nullable)zone {
+- (id)copyWithZone:(__unused NSZone *_Nullable)zone {
   return [[[self class] alloc] initPrivate:_internalValue];
 }
 

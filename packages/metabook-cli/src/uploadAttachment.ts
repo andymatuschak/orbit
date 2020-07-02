@@ -27,7 +27,6 @@ class UploadAttachment extends Command {
 
     const app = getDefaultFirebaseApp();
     const dataClient = new MetabookFirebaseDataClient(
-      app.firestore(),
       app.functions(),
       uploadAttachment,
     );
