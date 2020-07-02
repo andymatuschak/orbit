@@ -21,7 +21,7 @@ export default function promptStateInitialImportOperation(
             updatedAfterServerTimestamp: afterServerTimestamp ?? undefined,
           },
         );
-        if (taskStatus.isCancelled) return;
+        if (taskStatus.isCancelled) return null;
         if (promptStateCaches.length > 0) {
           totalImported += promptStateCaches.length;
           console.log(

@@ -8,11 +8,6 @@ import {
 } from "metabook-core";
 import PromptStateStore from "./promptStateStore";
 
-jest.mock("../util/leveldown", () => {
-  const Memdown = require("memdown");
-  return Memdown;
-});
-
 let store: PromptStateStore;
 beforeEach(() => {
   store = new PromptStateStore();

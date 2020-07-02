@@ -1,3 +1,5 @@
+// Web implementation of Firebase interface; see firebase.native.ts for native implementation.
+
 import type firebase from "firebase/app";
 import {
   AttachmentUploader,
@@ -18,17 +20,20 @@ export function getFirebaseAuth(): firebase.auth.Auth {
 }
 
 export type PersistenceStatus = "pending" | "enabled" | "unavailable";
-const persistenceStatus: PersistenceStatus = "pending";
+let persistenceStatus: PersistenceStatus = "pending";
 // TODO rename and rationalize this nonsense
 export async function enableFirebasePersistence(): Promise<PersistenceStatus> {
-  try {
-    await getFirestore().enablePersistence();
-    return "enabled";
-  } catch {
-    return "unavailable";
+  if (persistenceStatus === "pending") {
+    try {
+      await getFirestore().enablePersistence();
+      persistenceStatus = "enabled";
+    } catch {
+      persistenceStatus = "unavailable";
+    }
   }
+  return persistenceStatus;
 }
 
 export function getAttachmentUploader(): AttachmentUploader {
-  firebaseAttachmentUploader(getDefaultFirebaseApp().storage());
+  return firebaseAttachmentUploader(getDefaultFirebaseApp().storage());
 }

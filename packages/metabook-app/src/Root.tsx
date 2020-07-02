@@ -80,7 +80,7 @@ function useDatabaseManager(
       );
       const dataClient = new MetabookFirebaseDataClient(
         getFirebaseFunctions(),
-        getAttachmentUploader,
+        getAttachmentUploader(),
       );
       setDatabaseManager(new DatabaseManager(userClient, dataClient));
     }
