@@ -1,10 +1,9 @@
-import "expo-asset";
+import "./src/util/nodeShims";
 import React from "react";
 import { NativeEventEmitter, NativeModules } from "react-native";
 import { initializeReporter } from "./src/errorReporting/reporter";
 
 import Root from "./src/Root";
-import "./src/util/shimBase64";
 
 export default function App() {
   React.useEffect(() => {

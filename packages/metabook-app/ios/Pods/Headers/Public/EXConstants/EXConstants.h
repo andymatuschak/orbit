@@ -1,1 +1,1 @@
-../../../../../../../node_modules/expo-linking/node_modules/expo-constants/ios/EXConstants/EXConstants.h
+../../../../../../../node_modules/expo-constants/ios/EXConstants/EXConstants.h

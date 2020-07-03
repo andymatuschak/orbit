@@ -15,6 +15,16 @@ Object.assign(
 );
 config.resolver.extraNodeModules["vm"] = require.resolve("vm-browserify");
 
+config.resolver.extraNodeModules[
+  "@react-native-firebase/app"
+] = require.resolve("@react-native-firebase/app");
+config.resolver.extraNodeModules[
+  "@react-native-firebase/firestore"
+] = require.resolve("@react-native-firebase/firestore");
+config.resolver.extraNodeModules[
+  "@react-native-firebase/functions"
+] = require.resolve("@react-native-firebase/functions");
+
 // Make react-native import from files in other workspace resolve to node_modules in this dir
 config.resolver.extraNodeModules[
   "react-native"

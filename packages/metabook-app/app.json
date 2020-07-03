@@ -4,9 +4,14 @@
     "slug": "orbit",
     "privacy": "unlisted",
     "version": "1.0.0",
-    "sdkVersion": "37.0.0",
-    "assetBundlePatterns": ["**/*"],
-    "platforms": ["ios", "android", "web"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "packagerOpts": {
       "config": "metro.config.js"
     },

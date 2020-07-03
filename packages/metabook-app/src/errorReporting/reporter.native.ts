@@ -38,7 +38,6 @@ class ExpoIntegration {
   name = ExpoIntegration.id;
 
   setupOnce() {
-    console.log("SETTING UP EXPO INTEGRATION");
     setExtras({
       manifest: Constants.manifest,
       deviceYearClass: Constants.deviceYearClass,

@@ -13,7 +13,6 @@
     "./src/**/*.tsx",
     "./src/**/*.ts",
     "./App.tsx",
-    "./src/shimBase64.js",
     "../@types/**/*.d.ts"
   ]
 }

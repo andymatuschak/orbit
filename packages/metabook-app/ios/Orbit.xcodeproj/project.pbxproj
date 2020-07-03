@@ -12,10 +12,8 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		6161D45424549FDD0058BA07 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6161D45224549FDD0058BA07 /* GoogleService-Info.plist */; };
 		61AF729C246B596200679E6B /* ORDebugManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 61AF729B246B596200679E6B /* ORDebugManager.m */; };
-		61D31C8124AD2FB2009823BC /* app.manifest in Resources */ = {isa = PBXBuildFile; fileRef = 61D31C7D24AD2FB2009823BC /* app.manifest */; };
-		61D31C8224AD2FB2009823BC /* app.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 61D31C7E24AD2FB2009823BC /* app.bundle */; };
 		61D31C8324AD2FB2009823BC /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 61D31C7F24AD2FB2009823BC /* Expo.plist */; };
-		61D31C8624AD3317009823BC /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 61D31C8524AD3317009823BC /* LaunchScreen.storyboard */; };
+		61D31C8624AD3317009823BC /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 61D31C8524AD3317009823BC /* SplashScreen.storyboard */; };
 		ED08E5CAE8FDEE1A6188475C /* libPods-Orbit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 97AB24DD0C57639CCED1EE76 /* libPods-Orbit.a */; };
 /* End PBXBuildFile section */
 
@@ -31,11 +29,9 @@
 		6161D45224549FDD0058BA07 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		61AF729B246B596200679E6B /* ORDebugManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ORDebugManager.m; sourceTree = "<group>"; };
 		61AFA20B244D0FB4005E78DA /* Orbit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Orbit.entitlements; sourceTree = "<group>"; };
-		61D31C7D24AD2FB2009823BC /* app.manifest */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = app.manifest; sourceTree = "<group>"; };
-		61D31C7E24AD2FB2009823BC /* app.bundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = app.bundle; sourceTree = "<group>"; };
 		61D31C7F24AD2FB2009823BC /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		61D31C8424AD3132009823BC /* ORDebugManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ORDebugManager.h; sourceTree = "<group>"; };
-		61D31C8524AD3317009823BC /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		61D31C8524AD3317009823BC /* SplashScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = SplashScreen.storyboard; sourceTree = "<group>"; };
 		8EE67B41AA8BD9607AF61834 /* Pods-Orbit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Orbit.release.xcconfig"; path = "Target Support Files/Pods-Orbit/Pods-Orbit.release.xcconfig"; sourceTree = "<group>"; };
 		97AB24DD0C57639CCED1EE76 /* libPods-Orbit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Orbit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D78A8418E3802B726A38B265 /* Pods-Orbit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Orbit.debug.xcconfig"; path = "Target Support Files/Pods-Orbit/Pods-Orbit.debug.xcconfig"; sourceTree = "<group>"; };
@@ -84,7 +80,7 @@
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.m */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
-				61D31C8524AD3317009823BC /* LaunchScreen.storyboard */,
+				61D31C8524AD3317009823BC /* SplashScreen.storyboard */,
 				61D31C8424AD3132009823BC /* ORDebugManager.h */,
 				61AF729B246B596200679E6B /* ORDebugManager.m */,
 				61D31C7C24AD2FB2009823BC /* Supporting */,
@@ -95,8 +91,6 @@
 		61D31C7C24AD2FB2009823BC /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
-				61D31C7E24AD2FB2009823BC /* app.bundle */,
-				61D31C7D24AD2FB2009823BC /* app.manifest */,
 				61D31C7F24AD2FB2009823BC /* Expo.plist */,
 				6161D45224549FDD0058BA07 /* GoogleService-Info.plist */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -190,10 +184,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				61D31C8124AD2FB2009823BC /* app.manifest in Resources */,
-				61D31C8224AD2FB2009823BC /* app.bundle in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
-				61D31C8624AD3317009823BC /* LaunchScreen.storyboard in Resources */,
+				61D31C8624AD3317009823BC /* SplashScreen.storyboard in Resources */,
 				61D31C8324AD2FB2009823BC /* Expo.plist in Resources */,
 				6161D45424549FDD0058BA07 /* GoogleService-Info.plist in Resources */,
 			);
@@ -214,7 +206,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "source ~/.nvm/nvm.sh\n../../../node_modules/expo-updates/bundle-expo-assets.sh\n";
+			shellScript = "source ~/.nvm/nvm.sh\nexport NODE_BINARY=node\n\n../../../node_modules/react-native/scripts/react-native-xcode.sh\n../../../node_modules/expo-updates/bundle-expo-assets.sh\n";
 		};
 		15870636249B138C675B3FC1 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -296,7 +288,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"$CONFIGURATION\" == \"Release\" ]; then\n  exit 0;\nfi\n\n\nexport RCT_METRO_PORT=\"${RCT_METRO_PORT:=8081}\"\necho \"export RCT_METRO_PORT=${RCT_METRO_PORT}\" > \"${SRCROOT}/../node_modules/react-native/scripts/.packager.env\"\nif [ -z \"${RCT_NO_LAUNCH_PACKAGER+xxx}\" ] ; then\n  if nc -w 5 -z localhost ${RCT_METRO_PORT} ; then\n    if ! curl -s \"http://localhost:${RCT_METRO_PORT}/status\" | grep -q \"packager-status:running\" ; then\n      echo \"Port ${RCT_METRO_PORT} already in use, packager is either not running or not running correctly\"\n      exit 2\n    fi\n  else\n    open \"$SRCROOT/../node_modules/react-native/scripts/launchPackager.command\" || echo \"Can't start packager automatically\"\n  fi\nfi\n";
+			shellScript = "export RCT_METRO_PORT=\"${RCT_METRO_PORT:=8081}\"\necho \"export RCT_METRO_PORT=${RCT_METRO_PORT}\" > \"${SRCROOT}/../node_modules/react-native/scripts/.packager.env\"\nif [ -z \"${RCT_NO_LAUNCH_PACKAGER+xxx}\" ] ; then\n  if nc -w 5 -z localhost ${RCT_METRO_PORT} ; then\n    if ! curl -s \"http://localhost:${RCT_METRO_PORT}/status\" | grep -q \"packager-status:running\" ; then\n      echo \"Port ${RCT_METRO_PORT} already in use, packager is either not running or not running correctly\"\n      exit 2\n    fi\n  else\n    open \"$SRCROOT/../node_modules/react-native/scripts/launchPackager.command\" || echo \"Can't start packager automatically\"\n  fi\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -325,6 +317,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = MQ22N839N8;
 				ENABLE_BITCODE = NO;
+				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
@@ -356,6 +349,7 @@
 				CODE_SIGN_ENTITLEMENTS = Orbit/Supporting/Orbit.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = MQ22N839N8;
+				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				INFOPLIST_FILE = Orbit/Supporting/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
