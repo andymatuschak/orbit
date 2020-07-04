@@ -1,18 +1,52 @@
-import { spacing } from "metabook-ui/dist/styles/layout";
-import React from "react";
-import { Alert, View } from "react-native";
-
+import { Authentication } from "metabook-client";
 import { SignInForm, SignInFormProps } from "metabook-ui";
 import colors from "metabook-ui/dist/styles/colors";
-import { Authentication } from "metabook-client";
+import { spacing } from "metabook-ui/dist/styles/layout";
+import React from "react";
+import { Alert, Platform, View } from "react-native";
+import {
+  useAuthenticationClient,
+  useCurrentUserRecord,
+} from "../util/authContext";
 
-interface SignInScreenProps {
-  authenticationClient: Authentication.AuthenticationClient;
+function shouldSendOpenerLoginToken() {
+  return (
+    Platform.OS === "web" &&
+    window.location.search.includes("shouldSendOpenerLoginToken")
+  );
 }
 
-export default function SignInScreen({
-  authenticationClient,
-}: SignInScreenProps) {
+async function sendTokenToOpenerAndClose(
+  authenticationClient: Authentication.AuthenticationClient,
+) {
+  // TODO error handling
+  const idToken = await authenticationClient.getCurrentIDToken();
+  const loginToken = await authenticationClient.getLoginTokenUsingIDToken(
+    idToken,
+  );
+  console.log("Got login token", loginToken);
+
+  if (!window.opener) {
+    throw new Error(
+      `shouldSendOpenerLoginToken is set but window.opener is unset`,
+    );
+  }
+  window.opener.postMessage({ loginToken }, "https://app.withorbit.com");
+  window.close();
+}
+
+export default function SignInScreen() {
+  const authenticationClient = useAuthenticationClient();
+
+  const userRecord = useCurrentUserRecord(authenticationClient);
+  React.useEffect(() => {
+    if (userRecord) {
+      if (shouldSendOpenerLoginToken()) {
+        sendTokenToOpenerAndClose(authenticationClient);
+      } // TODO: redirect or something outside the embedded case
+    }
+  }, [authenticationClient, userRecord]);
+
   const [formMode, setFormMode] = React.useState<SignInFormProps["mode"]>(null);
   const [isPendingServerResponse, setPendingServerResponse] = React.useState(
     false,

@@ -21,9 +21,9 @@
   },
   "dependencies": {
     "buffer": "^5.5.0",
-    "cids": "^0.7.4",
-    "ipld-dag-pb": "^0.18.3",
-    "multihashes": "^0.4.17",
+    "cids": "^0.8.3",
+    "ipld-dag-pb": "^0.18.5",
+    "multihashes": "^1.0.1",
     "protobufjs": "^6.8.9",
     "sha.js": "^2.4.11"
   },

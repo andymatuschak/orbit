@@ -1,4 +1,4 @@
-import { Authentication } from "metabook-client";
+import * as Authentication from "../authentication";
 import React from "react";
 
 async function attemptLoginWithSessionCookie(
@@ -24,7 +24,7 @@ async function attemptRefreshSessionCookie(
   }
 }
 
-export type AuthenticationState =
+export type EmbeddedAuthenticationState =
   | {
       status: "pending" | "signedOut";
       userRecord: null;
@@ -36,11 +36,11 @@ export type AuthenticationState =
     }
   | { status: "signedIn"; userRecord: Authentication.UserRecord };
 
-export function useAuthenticationState(
+export function useEmbeddedAuthenticationState(
   authenticationClient: Authentication.AuthenticationClient,
-): AuthenticationState {
+): EmbeddedAuthenticationState {
   const [authenticationState, setAuthenticationState] = React.useState<
-    AuthenticationState
+    EmbeddedAuthenticationState
   >({ status: "pending", userRecord: null });
   const [
     readyToSubscribeToUserAuth,
@@ -125,8 +125,11 @@ export function useAuthenticationState(
   // Watch for messages from the login popup.
   const onMessage = React.useCallback(
     (event: MessageEvent) => {
-      if (event.origin === "https://embed.withorbit.com") {
-        const loginToken = event.data;
+      if (
+        event.origin === "https://app.withorbit.com" &&
+        event.data.loginToken
+      ) {
+        const { loginToken } = event.data;
         console.debug("Received login token from other window", event.data);
         setReadyToSubscribeToUserAuth(true);
         authenticationClient.signInWithLoginToken(loginToken).catch((error) => {

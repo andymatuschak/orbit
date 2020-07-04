@@ -11,6 +11,4 @@ export type { MetabookDataClient, MetabookDataSnapshot } from "./dataClient";
 export type { default as AttachmentUploader } from "./dataClient/attachmentUploader";
 export { default as firebaseAttachmentUploader } from "./dataClient/firebaseAttachmentUploader";
 
-export * as Authentication from "./authentication";
-
 export { getDefaultFirebaseApp } from "./firebase";

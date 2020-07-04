@@ -23,6 +23,8 @@
   "private": true,
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack",
-    "dev": "(cd test; serve -S) & cross-env NODE_ENV=development webpack -w"
+    "dev": "(cd test; serve -S) & cross-env NODE_ENV=development webpack -w",
+    "predeploy": "yarn run build",
+    "deploy": "firebase deploy"
   }
 }

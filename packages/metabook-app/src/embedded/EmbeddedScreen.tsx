@@ -1,5 +1,4 @@
 import "firebase/functions";
-import { Authentication, getDefaultFirebaseApp } from "metabook-client";
 import {
   ActionLog,
   getIDForPrompt,
@@ -16,17 +15,16 @@ import typography from "metabook-ui/dist/styles/typography";
 
 import React from "react";
 import { Text, View } from "react-native";
+import { useAuthenticationClient } from "../util/authContext";
+import { getFirebaseFunctions } from "../util/firebase";
 import {
-  AuthenticationState,
-  useAuthenticationState,
-} from "./useAuthenticationState";
+  EmbeddedAuthenticationState,
+  useEmbeddedAuthenticationState,
+} from "./useEmbeddedAuthenticationState";
 import useReviewItems from "./useReviewItems";
 import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
 
 declare global {
-  // supplied by Webpack
-  const USER_ID: string | null;
-
   interface Document {
     requestStorageAccess(): Promise<undefined>;
     hasStorageAccess(): Promise<boolean>;
@@ -34,7 +32,7 @@ declare global {
 }
 
 function AuthenticationStatusIndicator(props: {
-  authenticationState: AuthenticationState;
+  authenticationState: EmbeddedAuthenticationState;
   onSignIn: () => void;
 }) {
   let interior: React.ReactNode;
@@ -88,16 +86,14 @@ function AuthenticationStatusIndicator(props: {
   );
 }
 
-function App() {
+function EmbeddedScreen() {
   const items = useReviewItems();
   const [queueOffset, setQueueOffset] = React.useState(0);
 
-  const [app] = React.useState(() => getDefaultFirebaseApp()); // TODO abstract
-
-  const [authenticationClient] = React.useState(
-    () => new Authentication.FirebaseAuthenticationClient(app.auth()),
+  const authenticationClient = useAuthenticationClient();
+  const authenticationState = useEmbeddedAuthenticationState(
+    authenticationClient,
   );
-  const authenticationState = useAuthenticationState(authenticationClient);
 
   const onSignIn = React.useCallback(() => {
     window.open(
@@ -141,8 +137,7 @@ function App() {
 
         const prompt = marking.reviewItem.prompt;
 
-        app
-          .functions()
+        getFirebaseFunctions()
           .httpsCallable("recordEmbeddedActions")({
             logs,
             promptsByID: { [getIDForPrompt(prompt)]: prompt },
@@ -155,7 +150,7 @@ function App() {
           .catch((error) => console.error(error));
       }
     },
-    [app, authenticationState],
+    [authenticationState],
   );
 
   const currentQueue = React.useMemo(() => items?.slice(queueOffset), [
@@ -171,22 +166,6 @@ function App() {
           schedule="default"
           shouldLabelApplicationPrompts={true}
         />
-        {USER_ID ? null : (
-          <div
-            style={{
-              position: "absolute",
-              pointerEvents: "none",
-              textAlign: "center",
-              top: "10px",
-              width: "100%",
-              fontFamily: "system-ui, sans-serif",
-              fontSize: 12,
-              opacity: 0.5,
-            }}
-          >
-            For prototyping purposes; user data not persisted.
-          </div>
-        )}
         <AuthenticationStatusIndicator
           authenticationState={authenticationState}
           onSignIn={onSignIn}
@@ -198,4 +177,4 @@ function App() {
   }
 }
 
-export default App;
+export default EmbeddedScreen;

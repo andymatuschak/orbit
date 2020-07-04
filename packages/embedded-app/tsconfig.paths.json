@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "baseUrl": "./",
-    "paths": {
-      "metabook-core": ["../metabook-core"],
-      "metabook-ui": ["../metabook-ui"]
-    }
-  }
-}

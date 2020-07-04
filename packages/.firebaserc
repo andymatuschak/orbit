@@ -8,8 +8,7 @@
         "orbit-docs": [
           "orbit-docs"
         ],
-        "orbit-cdn": ["orbit-cdn"],
-        "orbit-embedded-app": ["orbit-embedded-app"]
+        "orbit-cdn": ["orbit-cdn"]
       }
     }
   }

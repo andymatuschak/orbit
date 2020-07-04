@@ -1,9 +1,8 @@
-import firebase from "firebase";
-import "firebase/auth";
-import { MetabookUnsubscribe } from "../types/unsubscribe";
+import type firebase from "firebase/app";
+import { MetabookUnsubscribe } from "metabook-client/dist/types/unsubscribe";
 import { AuthenticationClient, UserRecord } from "./authenticationClient";
 
-const httpsAPIBaseURLString = "https://embed.withorbit.com/api";
+const httpsAPIBaseURLString = "https://app.withorbit.com/api";
 
 export class FirebaseOpaqueLoginToken {
   _token: string;

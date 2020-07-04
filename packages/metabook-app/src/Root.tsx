@@ -1,110 +1,73 @@
-import {
-  Authentication,
-  MetabookFirebaseDataClient,
-  MetabookFirebaseUserClient,
-} from "metabook-client";
+import * as Authentication from "./authentication";
 import colors from "metabook-ui/dist/styles/colors";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
-import DatabaseManager from "./model/databaseManager";
-import ReviewSession from "./ReviewSession";
-import SignInScreen from "./SignInScreen";
+import React, { useState } from "react";
+import { ActivityIndicator, Platform, View } from "react-native";
 import {
-  enableFirebasePersistence,
-  getAttachmentUploader,
-  getFirebaseAuth,
-  getFirebaseFunctions,
-  getFirestore,
-  PersistenceStatus,
-} from "./util/firebase";
+  AuthenticationClientContext,
+  useCurrentUserRecord,
+} from "./util/authContext";
+import { getFirebaseAuth } from "./util/firebase";
 
-function usePersistenceStatus() {
-  const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(
-    "pending",
-  );
-
-  useEffect(() => {
-    let hasUnmounted = false;
-
-    function safeSetPersistenceStatus(newStatus: PersistenceStatus) {
-      if (!hasUnmounted) {
-        setPersistenceStatus(newStatus);
-      }
-    }
-
-    enableFirebasePersistence()
-      .then(() => safeSetPersistenceStatus("enabled"))
-      .catch(() => safeSetPersistenceStatus("unavailable"));
-
-    return () => {
-      hasUnmounted = true;
-    };
-  }, []);
-
-  return persistenceStatus;
+enum RootScreen {
+  Loading = "Loading",
+  Review = "Review",
+  SignIn = "SignIn",
+  Embed = "Embed",
 }
 
-// undefined means we don't know yet; null means signed out.
-function useCurrentUserRecord(
+function useNavigationState(
   authenticationClient: Authentication.AuthenticationClient,
-): Authentication.UserRecord | null | undefined {
-  const [userID, setUserID] = useState<
-    Authentication.UserRecord | null | undefined
-  >(undefined);
-  useEffect(() => {
-    return authenticationClient.subscribeToUserAuthState(setUserID);
-  }, [authenticationClient]);
-  return userID;
-}
+): RootScreen {
+  const userRecord = useCurrentUserRecord(authenticationClient);
 
-function useDatabaseManager(
-  userRecord: Authentication.UserRecord | null | undefined,
-): DatabaseManager | null {
-  const persistenceStatus = usePersistenceStatus();
-
-  const [
-    databaseManager,
-    setDatabaseManager,
-  ] = useState<DatabaseManager | null>(null);
-  useEffect(() => {
-    return () => {
-      databaseManager?.close();
-    };
-  }, [databaseManager]);
-
-  useEffect(() => {
-    if (persistenceStatus === "enabled" && userRecord) {
-      const userClient = new MetabookFirebaseUserClient(
-        getFirestore(),
-        userRecord.userID,
-      );
-      const dataClient = new MetabookFirebaseDataClient(
-        getFirebaseFunctions(),
-        getAttachmentUploader(),
-      );
-      setDatabaseManager(new DatabaseManager(userClient, dataClient));
+  if (Platform.OS === "web") {
+    const pathname = window.location.pathname;
+    if (pathname.startsWith("/login")) {
+      return RootScreen.SignIn;
+    } else if (pathname.startsWith("/embed")) {
+      return RootScreen.Embed;
     }
-  }, [persistenceStatus, userRecord]);
+  }
 
-  return databaseManager;
+  if (userRecord) {
+    return RootScreen.Review;
+  } else if (userRecord === null) {
+    return RootScreen.SignIn;
+  } else {
+    return RootScreen.Loading;
+  }
 }
+
+const SignInScreen = React.lazy(() => import("./signIn/SignInScreen"));
+const ReviewSessionScreen = React.lazy(() =>
+  import("./reviewSession/ReviewSession"),
+);
+const EmbedScreen = React.lazy(() => import("./embedded/EmbeddedScreen"));
+const LoadingScreen = () => (
+  <View style={{ flex: 1, justifyContent: "center" }}>
+    <ActivityIndicator size="large" color={colors.key50} />
+  </View>
+);
+const screens: Record<RootScreen, React.ComponentType<unknown>> = {
+  [RootScreen.SignIn]: SignInScreen,
+  [RootScreen.Review]: ReviewSessionScreen,
+  [RootScreen.Embed]: EmbedScreen,
+  [RootScreen.Loading]: LoadingScreen,
+};
 
 export default function Root() {
   const [authenticationClient] = useState(
     () => new Authentication.FirebaseAuthenticationClient(getFirebaseAuth()),
   );
-  const userRecord = useCurrentUserRecord(authenticationClient);
 
-  const databaseManager = useDatabaseManager(userRecord);
-  if (databaseManager) {
-    return <ReviewSession databaseManager={databaseManager} />;
-  } else if (userRecord === null) {
-    return <SignInScreen authenticationClient={authenticationClient} />;
-  } else {
-    return (
-      <View style={{ flex: 1, justifyContent: "center" }}>
-        <ActivityIndicator size="large" color={colors.key50} />
-      </View>
-    );
-  }
+  const navigationState = useNavigationState(authenticationClient);
+  const screen = React.useMemo(
+    () => React.createElement(screens[navigationState]),
+    [navigationState],
+  );
+  return (
+    <AuthenticationClientContext.Provider value={authenticationClient}>
+      <React.Suspense fallback={null}>{screen}</React.Suspense>
+    </AuthenticationClientContext.Provider>
+  );
 }

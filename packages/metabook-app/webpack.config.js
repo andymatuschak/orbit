@@ -4,7 +4,7 @@ const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
 
-  if (env.ANALYZE) {
+  if (process.env["ANALYZE"]) {
     config.plugins.push(
       new BundleAnalyzerPlugin({
         path: "web-report",

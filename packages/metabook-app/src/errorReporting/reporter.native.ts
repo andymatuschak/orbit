@@ -15,7 +15,7 @@ import * as Device from "expo-device";
 import { Platform } from "react-native";
 import serviceConfig from "../../serviceConfig";
 
-const useSentryInDevelopment = true;
+const useSentryInDevelopment = false;
 
 /**
  * Expo bundles are hosted on cloudfront. Expo bundle filename will change
@@ -46,12 +46,11 @@ class ExpoIntegration {
 
     setTags({
       deviceId: Constants.installationId,
-      appOwnership: Constants.appOwnership,
       platform: Platform.OS,
     });
 
     if (!!Constants.manifest) {
-      setTag("expoReleaseChannel", Constants.manifest.releaseChannel);
+      setTag("expoReleaseChannel", Constants.manifest.releaseChannel ?? "");
       setTag("appVersion", Constants.manifest.version ?? "");
       setTag("appPublishedTime", Constants.manifest.publishedTime);
       setTag("expoSdkVersion", Constants.manifest.sdkVersion ?? "");

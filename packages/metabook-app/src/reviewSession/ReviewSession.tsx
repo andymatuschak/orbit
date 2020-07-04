@@ -1,4 +1,9 @@
 import {
+  Authentication,
+  MetabookFirebaseDataClient,
+  MetabookFirebaseUserClient,
+} from "metabook-client";
+import {
   getIDForPrompt,
   getIDForPromptTask,
   getNextTaskParameters,
@@ -12,16 +17,85 @@ import { spacing } from "metabook-ui/dist/styles/layout";
 import typography from "metabook-ui/dist/styles/typography";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Platform, SafeAreaView, Text, View } from "react-native";
-import DatabaseManager from "./model/databaseManager";
+import DatabaseManager from "../model/databaseManager";
+import {
+  useAuthenticationClient,
+  useCurrentUserRecord,
+} from "../util/authContext";
+import {
+  enableFirebasePersistence,
+  getAttachmentUploader,
+  getFirebaseFunctions,
+  getFirestore,
+  PersistenceStatus,
+} from "../util/firebase";
 import ReviewSessionProgressBar from "./ReviewSessionProgressBar";
 
+function usePersistenceStatus() {
+  const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(
+    "pending",
+  );
+
+  useEffect(() => {
+    let hasUnmounted = false;
+
+    function safeSetPersistenceStatus(newStatus: PersistenceStatus) {
+      if (!hasUnmounted) {
+        setPersistenceStatus(newStatus);
+      }
+    }
+
+    enableFirebasePersistence()
+      .then(() => safeSetPersistenceStatus("enabled"))
+      .catch(() => safeSetPersistenceStatus("unavailable"));
+
+    return () => {
+      hasUnmounted = true;
+    };
+  }, []);
+
+  return persistenceStatus;
+}
+
+export function useDatabaseManager(
+  userRecord: Authentication.UserRecord | null | undefined,
+): DatabaseManager | null {
+  const persistenceStatus = usePersistenceStatus();
+
+  const [
+    databaseManager,
+    setDatabaseManager,
+  ] = useState<DatabaseManager | null>(null);
+  useEffect(() => {
+    return () => {
+      databaseManager?.close();
+    };
+  }, [databaseManager]);
+
+  useEffect(() => {
+    if (persistenceStatus === "enabled" && userRecord) {
+      const userClient = new MetabookFirebaseUserClient(
+        getFirestore(),
+        userRecord.userID,
+      );
+      const dataClient = new MetabookFirebaseDataClient(
+        getFirebaseFunctions(),
+        getAttachmentUploader(),
+      );
+      setDatabaseManager(new DatabaseManager(userClient, dataClient));
+    }
+  }, [persistenceStatus, userRecord]);
+
+  return databaseManager;
+}
+
 function onMark(
-  databaseManager: DatabaseManager | null,
+  databaseManager: DatabaseManager,
   marking: ReviewAreaMarkingRecord,
 ) {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
-  databaseManager!
+  databaseManager
     .recordPromptActionLogs([
       {
         actionLogType: repetitionActionLogType,
@@ -49,14 +123,15 @@ function onMark(
     });
 }
 
-interface ReviewSessionProps {
-  databaseManager: DatabaseManager;
-}
+export default function ReviewSession() {
+  const userRecord = useCurrentUserRecord(useAuthenticationClient());
+  const databaseManager = useDatabaseManager(userRecord);
 
-export default function ReviewSession({ databaseManager }: ReviewSessionProps) {
   const [items, setItems] = useState<ReviewItem[] | null>(null);
   const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
   useEffect(() => {
+    if (!databaseManager) return;
+
     let isCanceled = false;
     databaseManager.fetchReviewQueue().then((items) => {
       if (isCanceled) return;
@@ -72,10 +147,13 @@ export default function ReviewSession({ databaseManager }: ReviewSessionProps) {
     currentQueueIndex,
   ]);
 
-  const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>((marking) => {
-    onMark(databaseManager, marking);
-    setCurrentQueueIndex((currentQueueIndex) => currentQueueIndex + 1);
-  }, []);
+  const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>(
+    (marking) => {
+      onMark(databaseManager!, marking);
+      setCurrentQueueIndex((currentQueueIndex) => currentQueueIndex + 1);
+    },
+    [databaseManager],
+  );
 
   console.log("[Performance] Render", Date.now() / 1000.0);
 

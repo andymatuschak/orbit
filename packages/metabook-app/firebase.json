@@ -2,6 +2,20 @@
   "hosting": {
     "target": "orbit-app",
     "public": "web-build",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "/api/getLoginToken",
+        "function": "getLoginToken"
+      },
+      {
+        "source": "/api/refreshSessionCookie",
+        "function": "refreshSessionCookie"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }
