@@ -1,3 +1,4 @@
+import { withKnobs, number } from "@storybook/addon-knobs";
 import React from "react";
 import { View, Text } from "react-native";
 import Starburst from "./Starburst";
@@ -5,11 +6,15 @@ import Starburst from "./Starburst";
 export default {
   title: "Starburst",
   component: Starburst,
+  decorators: [withKnobs],
 };
 
 function StarburstGrid(props: { size: number }) {
-  const children = Array.from(new Array(120).keys()).map((i) => {
-    const strokeCount = i + 5;
+  const minCount = number("Min count", 5);
+  const children = Array.from(
+    new Array(number("Count", number("Max count", 120) - minCount)).keys(),
+  ).map((i) => {
+    const strokeCount = i + minCount;
     const values = Array.from(new Array(strokeCount)).map(() => Math.random());
     return (
       <View key={i}>
@@ -17,7 +22,7 @@ function StarburstGrid(props: { size: number }) {
         <Starburst
           size={props.size}
           lengths={values}
-          thickness={4}
+          thickness={number("Thickness", 4)}
           color="black"
         />
       </View>
@@ -29,9 +34,9 @@ function StarburstGrid(props: { size: number }) {
 }
 
 export function MediumSize() {
-  return <StarburstGrid size={300} />;
+  return <StarburstGrid size={number("Size", 300)} />;
 }
 
 export function ReviewSize() {
-  return <StarburstGrid size={700} />;
+  return <StarburstGrid size={number("Size", 700)} />;
 }

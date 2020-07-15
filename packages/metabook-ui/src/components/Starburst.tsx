@@ -24,9 +24,6 @@ function lerp(
   return clip(output, toMin, toMax);
 }
 
-const innerRadiusSpacing = 1.2; // The space between spokes at their tapered points.
-const outerRadiusSpacing = 1.0; // The tightest margin between spokes at their thickest points.
-
 const quillPath =
   "M0.875 0.10825C0.5835 0.18575 0.29175 0.293 0 0.5C0.29175 0.707 0.5835 0.81425 0.875 0.89175C1.16675 0.965 1.45825 0.99925 1.75 1V0C1.45825 0.000750005 1.16675 0.035 0.875 0.10825Z";
 // const quillPath = "M0 0.5L1.75 0V1";
@@ -40,11 +37,12 @@ export default function Starburst({
   color,
 }: StarburstProps) {
   const segmentSin = Math.sin((2 * Math.PI) / lengths.length);
+  const innerRadiusSpacing = thickness / 3.25; // The space between spokes at their tapered points.
+  const outerRadiusSpacing = thickness / 2.75; // The tightest margin between spokes at their thickest points.
   const innerRadius = (innerRadiusSpacing * 2.0) / size / segmentSin;
   const outerRadius =
     (thickness + outerRadiusSpacing * 2.0) / size / segmentSin;
   const unitThickness = thickness / size;
-  // const innerRadius = lerp(lengths.length, 8, 120, 0.015, 0.1);
   return (
     <Svg height={size} width={size} viewBox="0 0 1 1">
       {lengths.map((length, index) => {
