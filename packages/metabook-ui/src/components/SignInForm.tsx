@@ -3,7 +3,7 @@ import React from "react";
 import { ActivityIndicator, StyleSheet, TextInput, View } from "react-native";
 import colors from "../styles/colors";
 import { borderRadius, gridUnit, spacing } from "../styles/layout";
-import typography from "../styles/typography";
+import type from "../styles/type";
 import BigButton from "./BigButton";
 import Spacer from "./Spacer";
 
@@ -113,7 +113,7 @@ export default function SignInForm({
 
 const styles = StyleSheet.create({
   textInput: {
-    ...typography.label,
+    ...type.label,
     height: gridUnit * 3,
     backgroundColor: "white",
     paddingLeft: spacing.spacing04,
@@ -124,5 +124,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
 
-  label: { ...typography.label },
+  label: { ...type.label },
 });

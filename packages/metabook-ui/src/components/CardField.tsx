@@ -19,7 +19,7 @@ import { AttachmentResolutionMap } from "../reviewItem";
 import colors from "../styles/colors";
 import { gridUnit } from "../styles/layout";
 
-import typography from "../styles/typography";
+import type from "../styles/type";
 import NamedStyles = StyleSheet.NamedStyles;
 
 function clozeParsePlugin(md: MarkdownIt) {
@@ -115,13 +115,13 @@ function getMarkdownStyles(shrinkFactor: number) {
   let paragraphStyles: TextStyle;
   switch (shrinkFactor) {
     case 0:
-      paragraphStyles = typography.cardBodyText;
+      paragraphStyles = type.cardBodyText;
       break;
     case 1:
-      paragraphStyles = typography.smallCardBodyText;
+      paragraphStyles = type.smallCardBodyText;
       break;
     case 2:
-      paragraphStyles = typography.smallestCardBodyText;
+      paragraphStyles = type.smallestCardBodyText;
       break;
     default:
       throw new Error("Unknown shrink factor");

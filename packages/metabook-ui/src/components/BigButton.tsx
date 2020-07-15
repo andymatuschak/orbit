@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import colors from "../styles/colors";
 import { borderRadius, gridUnit, spacing } from "../styles/layout";
-import typography from "../styles/typography";
+import type from "../styles/type";
 
 export default function BigButton(
   props: {
@@ -38,7 +38,7 @@ export default function BigButton(
         <Text
           style={{
             color: effectiveVariant === "primary" ? colors.key00 : colors.key70,
-            ...typography.label,
+            ...type.label,
             fontWeight: "600",
           }}
           selectable={false}

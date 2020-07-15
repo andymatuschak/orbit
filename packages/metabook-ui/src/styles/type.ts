@@ -1,6 +1,6 @@
 import colors from "./colors";
 
-const typography = {
+const type = {
   label: {
     fontSize: 16,
     lineHeight: 1.25 * 14,
@@ -24,4 +24,4 @@ const typography = {
     color: colors.textColor,
   },
 } as const;
-export default typography;
+export default type;
