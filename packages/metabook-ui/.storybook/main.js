@@ -3,7 +3,7 @@ const path = require("path");
 module.exports = {
   stories: ["../src/**/*.stories.tsx"],
   addons: ["@storybook/addon-actions", "@storybook/addon-links"],
-  webpackFinal: async config => {
+  webpackFinal: async (config) => {
     // Annoyingly, our Markdown library has JSX (and other fancy features) in its built distribution JS files.
     config.module.rules.push({
       test: /\.js$/,
@@ -36,7 +36,8 @@ module.exports = {
       ],
     });
     config.resolve.alias["react-native$"] = "react-native-web";
-    config.resolve.extensions.push(".ts", ".tsx");
+    // config.resolve.alias["react-native-svg$"] = "svgs";
+    config.resolve.extensions.unshift(".web.js", ".ts", ".tsx");
     return config;
   },
 };

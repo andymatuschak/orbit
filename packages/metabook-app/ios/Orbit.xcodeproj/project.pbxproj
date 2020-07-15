@@ -206,7 +206,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "source ~/.nvm/nvm.sh\nexport NODE_BINARY=node\n\n../../../node_modules/react-native/scripts/react-native-xcode.sh\n../../../node_modules/expo-updates/bundle-expo-assets.sh\n";
+			shellScript = "source ~/.nvm/nvm.sh\nexport PROJECT_ROOT=$PWD/.. # necessary for monorepo support, since some packages are installed at monorepo root\nexport NODE_BINARY=node\n\n../../../node_modules/react-native/scripts/react-native-xcode.sh\n../../../node_modules/expo-updates/bundle-expo-assets.sh\n";
 		};
 		15870636249B138C675B3FC1 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;

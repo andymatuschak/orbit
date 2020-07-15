@@ -41,6 +41,7 @@
     "react": "~16",
     "react-docgen-typescript-loader": "^3.6.0",
     "react-dom": "^16.13.0",
+    "svgs": "^4.1.1",
     "ts-jest": "^25.2.1",
     "ts-loader": "^6.2.1",
     "typescript": "^3.8.3",
@@ -55,7 +56,8 @@
     "isemail": "^3.2.0",
     "lodash.isequal": "^4.5.0",
     "metabook-core": "0.0.1",
-    "react-native-markdown-display": "^6.1.4"
+    "react-native-markdown-display": "^6.1.4",
+    "react-native-svg": "^12.1.0"
   },
   "scripts": {
     "build": "tsc -b",
