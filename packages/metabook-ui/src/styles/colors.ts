@@ -40,49 +40,6 @@ export default {
     "rgba(232,23,255,1)",
     "rgba(249,0,214,1)",
   ],
-  black: "rgba(0,0,0,1)",
+  ink: "rgba(0,0,0,0.8)",
   white: "rgba(255,255,255,1)",
 };
-
-/*@mixin font-display-2 {
-  font-size:96px;
-  font-family:"Dr";
-  font-weight:light;
-  line-height:84px;
-}
-@mixin font-display-1 {
-  font-size:60px;
-  font-family:"Dr";
-  font-weight:normal;
-  line-height:56px;
-}
-@mixin font-title {
-  font-size:48px;
-  font-family:"Dr";
-  font-weight:medium;
-  line-height:40px;
-}
-@mixin font-headline {
-  font-size:36px;
-  font-family:"Dr";
-  font-weight:bold;
-  line-height:32px;
-}
-@mixin font-body {
-  font-size:24px;
-  font-family:"Dr";
-  font-weight:extrabold;
-  line-height:24px;
-}
-@mixin font-label {
-  font-size:24px;
-  font-family:"Dr";
-  font-weight:extrabold;
-  line-height:24px;
-}
-@mixin font-caption {
-  font-size:12px;
-  font-family:"Dr";
-  font-weight:extrabold;
-  line-height:16px;
-}*/

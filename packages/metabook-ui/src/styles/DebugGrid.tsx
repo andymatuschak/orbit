@@ -3,11 +3,13 @@ import { StyleSheet, View } from "react-native";
 import Svg, { Line, Rect } from "react-native-svg";
 import * as layout from "./layout";
 
-export default function DebugGrid() {
+export default function DebugGrid(props: {
+  shouldShowMajorDivisions?: boolean;
+}) {
   const [size, setSize] = useState<[number, number] | null>(null);
   return (
     <View
-      style={{ ...StyleSheet.absoluteFillObject }}
+      style={{ ...StyleSheet.absoluteFillObject, zIndex: -1 }}
       onLayout={useCallback(
         ({
           nativeEvent: {
@@ -36,7 +38,7 @@ export default function DebugGrid() {
                   strokeWidth={1}
                   stroke="#00b8f2"
                 />
-                {row % 6 === 0 && (
+                {props.shouldShowMajorDivisions && row % 6 === 0 && (
                   <Rect
                     key={`${row}-fill`}
                     x={0}
