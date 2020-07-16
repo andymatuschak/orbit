@@ -18,3 +18,6 @@ export type {
 } from "./reviewItem";
 
 export { useTransitioningValue } from "./components/hooks/useTransitioningValue";
+
+export { default as Starburst } from "./components/Starburst";
+export * from "./components/Text";

@@ -77,7 +77,7 @@ export function MultilineSamples() {
       {shouldShowGrid && <DebugGrid />}
       <TypeSample shouldShowGrid={shouldShowGrid}>
         <DisplayLarge>
-          Display Large: is so large! a shorter multiline sample
+          Display Large: is so large! a shorter sample
         </DisplayLarge>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>

@@ -1,3 +1,12 @@
+function softLight(topInteger: number, bottomInteger: number) {
+  const top = topInteger / 255.0;
+  const bottom = bottomInteger / 255.0;
+  const unitOutput = (1 - 2 * top) * bottom * bottom + 2 * top * bottom; // Pegtop's soft light blend mode: http://www.pegtop.net/delphi/articles/blendmodes/softlight.htm
+  return unitOutput * 255;
+}
+
+const tertiaryAlpha = 0.8;
+
 export default {
   backgroundGray: "#eeeeee",
   shadowColor: "rgba(0, 0, 0, 0.05)",
@@ -40,6 +49,57 @@ export default {
     "rgba(232,23,255,1)",
     "rgba(249,0,214,1)",
   ],
+  tertiary: [
+    `rgba(${softLight(255, 237)}, ${softLight(41, 55)}, ${softLight(
+      92,
+      73,
+    )}, 1.0)`,
+    `rgba(${softLight(255, 230)}, ${softLight(135, 93)}, ${softLight(
+      46,
+      2,
+    )}, 0.9)`,
+    `rgba(${softLight(249, 211)}, ${softLight(166, 149)}, ${softLight(
+      0,
+      66,
+    )}, 1.0)`,
+    `rgba(${softLight(226, 214)}, ${softLight(220, 178)}, ${softLight(
+      0,
+      24,
+    )}, 0.7)`,
+    `rgba(${softLight(192, 198)}, ${softLight(226, 193)}, ${softLight(
+      27,
+      18,
+    )}, 0.5)`,
+    `rgba(${softLight(76, 74)}, ${softLight(221, 186)}, ${softLight(
+      0,
+      74,
+    )}, 0.5)`,
+    `rgba(${softLight(92, 71)}, ${softLight(229, 197)}, ${softLight(
+      225,
+      214,
+    )}, 0.6)`,
+    `rgba(${softLight(44, 46)}, ${softLight(170, 134)}, ${softLight(
+      255,
+      229,
+    )}, ${tertiaryAlpha})`,
+    `rgba(${softLight(128, 108)}, ${softLight(128, 108)}, ${softLight(
+      255,
+      229,
+    )}, 0.8)`,
+    `rgba(${softLight(255, 134)}, ${softLight(255, 112)}, ${softLight(
+      255,
+      224,
+    )}, 0.3)`,
+    `rgba(${softLight(232, 205)}, ${softLight(23, 65)}, ${softLight(
+      255,
+      229,
+    )}, 0.9)`,
+    `rgba(${softLight(249, 216)}, ${softLight(0, 42)}, ${softLight(
+      214,
+      167,
+    )}, 0.7)`,
+  ],
+
   ink: "rgba(0,0,0,0.8)",
   white: "rgba(255,255,255,1)",
 };

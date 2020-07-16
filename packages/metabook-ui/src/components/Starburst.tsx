@@ -3,8 +3,12 @@ import Svg, { G, Line, Path } from "react-native-svg";
 
 export interface StarburstProps {
   size: number;
-  lengths: number[];
+  entries: StarburstEntry[];
   thickness: number;
+}
+
+export interface StarburstEntry {
+  length: number; // [0,1]
   color: string;
 }
 
@@ -31,12 +35,11 @@ const quillPathLength = 1.75;
 const quillPathWidth = 1.0;
 
 export default function Starburst({
-  lengths,
+  entries,
   size,
   thickness,
-  color,
 }: StarburstProps) {
-  const segmentSin = Math.sin((2 * Math.PI) / lengths.length);
+  const segmentSin = Math.sin((2 * Math.PI) / entries.length);
   const innerRadiusSpacing = thickness / 3.25; // The space between spokes at their tapered points.
   const outerRadiusSpacing = thickness / 2.75; // The tightest margin between spokes at their thickest points.
   const innerRadius = (innerRadiusSpacing * 2.0) / size / segmentSin;
@@ -45,8 +48,8 @@ export default function Starburst({
   const unitThickness = thickness / size;
   return (
     <Svg height={size} width={size} viewBox="0 0 1 1">
-      {lengths.map((length, index) => {
-        const theta = (index / lengths.length) * 2 * Math.PI;
+      {entries.map(({ length, color }, index) => {
+        const theta = (index / entries.length) * 2 * Math.PI;
         const unitX = Math.cos(theta);
         const unitY = -1 * Math.sin(theta);
         const strokeRadius = lerp(length, 0, 1, outerRadius, 0.5);
@@ -54,7 +57,7 @@ export default function Starburst({
           <>
             <G
               transform={`rotate(${
-                (theta * 180) / Math.PI
+                (-theta * 180) / Math.PI
               }, 0.5, 0.5) translate(${
                 0.5 + innerRadius + (outerRadius - innerRadius) / 2.0
               }, 0.5) scale(${(outerRadius - innerRadius) / quillPathLength} ${

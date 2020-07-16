@@ -15,15 +15,17 @@ function StarburstGrid(props: { size: number }) {
     new Array(number("Count", number("Max count", 120) - minCount)).keys(),
   ).map((i) => {
     const strokeCount = i + minCount;
-    const values = Array.from(new Array(strokeCount)).map(() => Math.random());
+    const entries = Array.from(new Array(strokeCount)).map(() => ({
+      length: Math.random(),
+      color: "black",
+    }));
     return (
       <View key={i}>
         <Text>{strokeCount}</Text>
         <Starburst
           size={props.size}
-          lengths={values}
+          entries={entries}
           thickness={number("Thickness", 4)}
-          color="black"
         />
       </View>
     );
