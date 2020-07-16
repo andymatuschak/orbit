@@ -1,6 +1,6 @@
 import React from "react";
 import { TextProps, Text, StyleSheet, View, TextStyle } from "react-native";
-import * as type from "./type";
+import * as type from "../styles/type";
 
 // These components compensate for the silly baseline-ignoring layout that the web (and hence RN do). These components position the baselines on a baseline, and they don't add any extra padding below.
 

@@ -2,7 +2,7 @@ import { boolean, withKnobs } from "@storybook/addon-knobs";
 import React from "react";
 import { View } from "react-native";
 import DebugGrid from "./DebugGrid";
-import * as layout from "./layout";
+import * as layout from "../styles/layout";
 import {
   Body,
   Caption,

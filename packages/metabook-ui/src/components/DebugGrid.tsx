@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import Svg, { Line, Rect } from "react-native-svg";
-import * as layout from "./layout";
+import * as layout from "../styles/layout";
 
 export default function DebugGrid(props: {
   shouldShowMajorDivisions?: boolean;
