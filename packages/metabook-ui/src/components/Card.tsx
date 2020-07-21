@@ -15,11 +15,13 @@ import {
   ClozePromptReviewItem,
   PromptReviewItem,
 } from "../reviewItem";
+import { layout } from "../styles";
 import colors from "../styles/colors";
 import { borderRadius } from "../styles/layout";
 import CardField, { clozeBlankSentinel } from "./CardField";
 import FadeView from "./FadeView";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
+import { Caption } from "./Text";
 
 export const cardWidth = 343;
 
@@ -50,6 +52,8 @@ function getQAPrompt(
   }
 }
 
+const fadeDurationMillis = 150;
+
 function QAPromptCard(
   props: Omit<CardProps, "reviewItem"> & {
     reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem;
@@ -57,22 +61,54 @@ function QAPromptCard(
 ) {
   const spec = getQAPrompt(props.reviewItem);
   return (
-    <View style={styles.container}>
-      <View style={[styles.questionArea, styles.qaPromptContentArea]}>
-        <CardField
-          promptField={spec.question}
-          attachmentResolutionMap={props.reviewItem.attachmentResolutionMap}
-        />
+    <View style={{ flex: 1 }}>
+      <FadeView
+        isVisible={props.isRevealed}
+        durationMillis={fadeDurationMillis}
+        style={{ marginBottom: layout.gridUnit }}
+      >
+        <Caption>Source context</Caption>
+      </FadeView>
+      <View style={{ flex: 2 }}>
+        <FadeView
+          isVisible={props.isRevealed}
+          durationMillis={fadeDurationMillis}
+          style={{
+            position: "absolute",
+            top: "-25%",
+            left: "-16.667%",
+            width: "100%",
+            height: "150%",
+            transform: [{ scaleX: 0.6667 }, { scaleY: 0.6667 }],
+          }}
+        >
+          <CardField
+            promptField={spec.question}
+            attachmentResolutionMap={props.reviewItem.attachmentResolutionMap}
+          />
+        </FadeView>
       </View>
-      <View style={styles.bottomArea}>
-        <View style={[styles.answerArea, styles.qaPromptContentArea]}>
+      <View style={{ flex: 3 }}>
+        <FadeView
+          isVisible={props.isRevealed}
+          durationMillis={fadeDurationMillis}
+          style={StyleSheet.absoluteFill}
+        >
           <CardField
             promptField={spec.answer}
             attachmentResolutionMap={props.reviewItem.attachmentResolutionMap}
           />
-        </View>
-        <View style={styles.progressIndicator} />
-        <FadeView isVisible={!props.isRevealed} style={styles.answerCover} />
+        </FadeView>
+        <FadeView
+          isVisible={!props.isRevealed}
+          durationMillis={fadeDurationMillis}
+          style={StyleSheet.absoluteFill}
+        >
+          <CardField
+            promptField={spec.question}
+            attachmentResolutionMap={props.reviewItem.attachmentResolutionMap}
+          />
+        </FadeView>
       </View>
     </View>
   );

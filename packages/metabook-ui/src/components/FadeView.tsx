@@ -30,6 +30,7 @@ export default function FadeView(props: FadeViewProps) {
       type: "timing",
       easing: Easing.linear,
       duration: durationMillis || defaultDurationMillis,
+      useNativeDriver: true,
     },
     onEndCallback: ({ finished }) => onTransitionEnd?.(isVisible, finished),
   });

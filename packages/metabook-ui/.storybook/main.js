@@ -3,7 +3,7 @@ const path = require("path");
 module.exports = {
   stories: ["../src/**/*.stories.tsx"],
   addons: [
-    "@storybook/addon-actions",
+    "@storybook/addon-actions/register",
     "@storybook/addon-links",
     "@storybook/addon-knobs/register",
   ],
@@ -40,7 +40,6 @@ module.exports = {
       ],
     });
     config.resolve.alias["react-native$"] = "react-native-web";
-    // config.resolve.alias["react-native-svg$"] = "svgs";
     config.resolve.extensions.unshift(".web.js", ".ts", ".tsx");
     return config;
   },

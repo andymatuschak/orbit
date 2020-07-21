@@ -1,19 +1,19 @@
-import { number } from "@storybook/addon-knobs";
+import { boolean, number, withKnobs } from "@storybook/addon-knobs";
 import {
   applyActionLogToPromptState,
   AttachmentID,
-  PromptTask,
-  getNextTaskParameters,
-  getIDForPromptTask,
-  getIDForPrompt,
-  repetitionActionLogType,
   AttachmentIDReference,
+  getIDForPrompt,
+  getIDForPromptTask,
   getIntervalSequenceForSchedule,
+  getNextTaskParameters,
   imageAttachmentType,
   MetabookSpacedRepetitionSchedule,
-  PromptState,
-  PromptTaskParameters,
   PromptRepetitionOutcome,
+  PromptState,
+  PromptTask,
+  PromptTaskParameters,
+  repetitionActionLogType,
 } from "metabook-core";
 import {
   testApplicationPrompt,
@@ -23,8 +23,10 @@ import {
 import React, { ReactNode, useState } from "react";
 import { Button, View } from "react-native";
 import { AttachmentResolutionMap, PromptReviewItem } from "../reviewItem";
+import { layout } from "../styles";
 import testCardProps from "./__fixtures__/testCardProps";
 import Card from "./Card";
+import DebugGrid from "./DebugGrid";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
 
 const testIntervalSequence = getIntervalSequenceForSchedule("default");
@@ -33,6 +35,7 @@ const testIntervalSequence = getIntervalSequenceForSchedule("default");
 export default {
   title: "Card",
   component: Card,
+  decorators: [withKnobs],
 };
 
 const testAttachmentIDReference: AttachmentIDReference = {
@@ -184,7 +187,14 @@ function TestCard(props: {
         {(promptState, reviewMarkingInteractionState) =>
           [false, true].map((isRevealed, index) => {
             return (
-              <View key={index}>
+              <View
+                key={index}
+                style={{
+                  width: 375 - 16,
+                  height: layout.gridUnit * (5 * 10 + 2), // 2 fixed grid units for caption and its margin; the rest for 2:3 ratio of answer:question
+                }}
+              >
+                {boolean("Show grid", true) && <DebugGrid />}
                 <Card
                   {...testCardProps}
                   reviewItem={

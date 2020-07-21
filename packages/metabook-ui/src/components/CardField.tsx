@@ -17,9 +17,9 @@ import {
 import Markdown, * as MarkdownDisplay from "react-native-markdown-display";
 import { AttachmentResolutionMap } from "../reviewItem";
 import colors from "../styles/colors";
-import { gridUnit } from "../styles/layout";
 
-import type from "../styles/type";
+import { type } from "../styles";
+import { getVariantStyles } from "../styles/type";
 import NamedStyles = StyleSheet.NamedStyles;
 
 function clozeParsePlugin(md: MarkdownIt) {
@@ -111,24 +111,33 @@ const markdownItInstance = MarkdownDisplay.MarkdownIt({
   typographer: true,
 }).use(clozeParsePlugin);
 
+const maxShrinkFactor = 4;
+
 function getMarkdownStyles(shrinkFactor: number) {
-  let paragraphStyles: TextStyle;
+  let paragraphStyle: TextStyle;
   switch (shrinkFactor) {
     case 0:
-      paragraphStyles = type.cardBodyText;
+      paragraphStyle = type.display.layoutStyle;
       break;
     case 1:
-      paragraphStyles = type.smallCardBodyText;
+      paragraphStyle = type.title.layoutStyle;
       break;
     case 2:
-      paragraphStyles = type.smallestCardBodyText;
+      paragraphStyle = type.headline.layoutStyle;
+      break;
+    case 3:
+      paragraphStyle = type.body.layoutStyle;
+      break;
+    case 4:
+      paragraphStyle = type.bodySmall.layoutStyle;
       break;
     default:
       throw new Error("Unknown shrink factor");
   }
-  paragraphStyles.marginBottom = paragraphStyles.lineHeight! / 2.0;
   return {
-    paragraph: paragraphStyles,
+    textgroup: paragraphStyle,
+    paragraph: {},
+    paragraphSpacing: { marginTop: paragraphStyle.lineHeight! },
     clozeHighlight: {
       color: colors.key50,
       fontWeight: "bold",
@@ -167,6 +176,27 @@ function getMarkdownRenderRules(
       );
     },
 
+    paragraph: function MarkdownTextRenderer(
+      node,
+      children,
+      parent,
+      styles,
+      inheritedStyles = {},
+    ) {
+      return (
+        <View
+          key={node.key}
+          style={[
+            styles._VIEW_SAFE_paragraph,
+            styles.paragraph,
+            parent[0].children[0] !== node && styles.paragraphSpacing,
+          ]}
+        >
+          {children}
+        </View>
+      );
+    },
+
     text: function MarkdownTextRenderer(
       node,
       children,
@@ -195,7 +225,7 @@ function getMarkdownRenderRules(
               backgroundColor: colors.key30,
               borderRadius: 4,
               marginLeft: 1,
-              marginRight: 1,
+              marginRight: 1, // TODO update for new styling
             }}
           >
             {"__________"}
@@ -206,8 +236,20 @@ function getMarkdownRenderRules(
       if (content.length > 0) {
         parsedChildren.push(content);
       }
+
       return (
-        <Text key={node.key} style={[styles.text, inheritedStyles]}>
+        <Text
+          key={node.key}
+          style={[
+            styles.text,
+            inheritedStyles,
+            getVariantStyles(
+              inheritedStyles.fontFamily,
+              inheritedStyles.fontWeight === "bold",
+              inheritedStyles.fontStyle === "italic",
+            ),
+          ]}
+        >
           {parsedChildren}
         </Text>
       );
@@ -234,16 +276,29 @@ export default React.memo(function CardField(props: {
   }
 
   const [shrinkFactor, setShrinkFactor] = useState(0);
+  const [isLayoutReady, setLayoutReady] = useState(false);
   // Reset shrink factor when prompt field changes.
   useEffect(() => {
     setShrinkFactor(0);
+    setLayoutReady(false);
   }, [promptField]);
 
   const [markdownHeight, setMarkdownHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number | null>(null);
   useEffect(() => {
-    if (markdownHeight && containerHeight && markdownHeight > containerHeight) {
-      setShrinkFactor((shrinkFactor) => Math.min(shrinkFactor + 1, 2));
+    if (markdownHeight && containerHeight) {
+      if (markdownHeight > containerHeight) {
+        setShrinkFactor((shrinkFactor) => {
+          if (shrinkFactor < maxShrinkFactor) {
+            return shrinkFactor + 1;
+          } else {
+            setLayoutReady(true);
+            return shrinkFactor;
+          }
+        });
+      } else {
+        setLayoutReady(true);
+      }
     }
   }, [markdownHeight, containerHeight]);
 
@@ -263,7 +318,10 @@ export default React.memo(function CardField(props: {
   ]);
 
   return (
-    <View style={styles.container} onLayout={onContainerLayout}>
+    <View
+      style={{ flex: 1, opacity: isLayoutReady ? 1 : 0 }}
+      onLayout={onContainerLayout}
+    >
       <Markdown
         rules={renderRules}
         style={markdownStyles as NamedStyles<unknown>}
@@ -287,14 +345,6 @@ export default React.memo(function CardField(props: {
       )}
     </View>
   );
-});
-
-const styles = StyleSheet.create({
-  container: {
-    padding: gridUnit,
-    flex: 1,
-    overflow: "scroll",
-  },
 });
 
 export const clozeBlankSentinel = "zqzCLOZEzqz";

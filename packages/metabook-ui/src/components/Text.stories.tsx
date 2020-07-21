@@ -1,10 +1,12 @@
 import { boolean, withKnobs } from "@storybook/addon-knobs";
 import React from "react";
-import { View } from "react-native";
+import { Text, TextStyle, View } from "react-native";
+import { layout, type } from "../styles";
+import { getVariantStyles } from "../styles/type";
 import DebugGrid from "./DebugGrid";
-import * as layout from "../styles/layout";
 import {
   Body,
+  BodySmall,
   Caption,
   Display,
   DisplayLarge,
@@ -59,6 +61,9 @@ export function Hierarchy() {
         <Body>Body</Body>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
+        <BodySmall>Body Small</BodySmall>
+      </TypeSample>
+      <TypeSample shouldShowGrid={shouldShowGrid}>
         <Label>Label</Label>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
@@ -93,11 +98,60 @@ export function MultilineSamples() {
         <Body>Body: {sample}</Body>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
+        <BodySmall>Body Small: {sample}</BodySmall>
+      </TypeSample>
+      <TypeSample shouldShowGrid={shouldShowGrid}>
         <Label>Label: {sample}</Label>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
         <Caption>Caption: {sample}</Caption>
       </TypeSample>
+    </View>
+  );
+}
+
+export function Variants() {
+  const shouldShowGrid = boolean("Show grid", true);
+
+  function WithVariants(props: { typeStyle: TextStyle; text: string }) {
+    return (
+      <View style={{ marginBottom: layout.gridUnit * 5 }}>
+        <Text style={props.typeStyle}>
+          {props.text}{" "}
+          <Text
+            style={getVariantStyles(props.typeStyle.fontFamily!, true, false)}
+          >
+            Bold
+          </Text>{" "}
+          <Text
+            style={getVariantStyles(props.typeStyle.fontFamily!, false, true)}
+          >
+            Italic
+          </Text>{" "}
+          <Text
+            style={getVariantStyles(props.typeStyle.fontFamily!, true, true)}
+          >
+            Bold+Italic
+          </Text>
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ paddingBottom: layout.gridUnit * 6, paddingLeft: 16 }}>
+      {shouldShowGrid && <DebugGrid />}
+      <WithVariants
+        typeStyle={type.displayLarge.layoutStyle}
+        text="Display Large"
+      />
+      <WithVariants typeStyle={type.display.layoutStyle} text="Display" />
+      <WithVariants typeStyle={type.title.layoutStyle} text="Title" />
+      <WithVariants typeStyle={type.headline.layoutStyle} text="Headline" />
+      <WithVariants typeStyle={type.body.layoutStyle} text="Body" />
+      <WithVariants typeStyle={type.bodySmall.layoutStyle} text="Body Small" />
+      <WithVariants typeStyle={type.label.layoutStyle} text="Label" />
+      <WithVariants typeStyle={type.caption.layoutStyle} text="Caption" />
     </View>
   );
 }

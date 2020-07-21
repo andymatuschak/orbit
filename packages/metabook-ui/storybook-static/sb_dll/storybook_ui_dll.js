@@ -7243,8 +7243,8 @@ var storybook_ui_dll = (function (e) {
           fontSize: "".concat(t.typography.size.s1, "px"),
           color:
             "light" === t.base
-              ? (0, a.transparentize)(0.4, t.color.defaultText)
-              : (0, a.transparentize)(0.6, t.color.defaultText),
+              ? (0, a.transparentize)(0.4, t.textColor.defaultText)
+              : (0, a.transparentize)(0.6, t.textColor.defaultText),
         };
       }),
       p = o.styled.div({
@@ -15596,15 +15596,15 @@ var storybook_ui_dll = (function (e) {
             display: "inline-block",
             transition: "all 150ms ease-out",
             textDecoration: "none",
-            color: t.color.secondary,
+            color: t.textColor.secondary,
             "&:hover, &:focus": {
               cursor: "pointer",
-              color: (0, a.darken)(0.07, t.color.secondary),
-              "svg path": { fill: (0, a.darken)(0.07, t.color.secondary) },
+              color: (0, a.darken)(0.07, t.textColor.secondary),
+              "svg path": { fill: (0, a.darken)(0.07, t.textColor.secondary) },
             },
             "&:active": {
-              color: (0, a.darken)(0.1, t.color.secondary),
-              "svg path": { fill: (0, a.darken)(0.1, t.color.secondary) },
+              color: (0, a.darken)(0.1, t.textColor.secondary),
+              "svg path": { fill: (0, a.darken)(0.1, t.textColor.secondary) },
             },
             svg: {
               display: "inline-block",
@@ -15614,7 +15614,7 @@ var storybook_ui_dll = (function (e) {
               position: "relative",
               bottom: "-0.125em",
               marginRight: "0.4em",
-              "& path": { fill: t.color.secondary },
+              "& path": { fill: t.textColor.secondary },
             },
           };
         },
@@ -15624,8 +15624,18 @@ var storybook_ui_dll = (function (e) {
             r = e.secondary,
             i = e.tertiary;
           return (
-            r && (t = [n.color.mediumdark, n.color.dark, n.color.darker]),
-            i && (t = [n.color.dark, n.color.darkest, n.color.mediumdark]),
+            r &&
+              (t = [
+                n.textColor.mediumdark,
+                n.textColor.dark,
+                n.textColor.darker,
+              ]),
+            i &&
+              (t = [
+                n.textColor.dark,
+                n.textColor.darkest,
+                n.textColor.mediumdark,
+              ]),
             t
               ? {
                   color: t[0],
@@ -15651,15 +15661,15 @@ var storybook_ui_dll = (function (e) {
           var t = e.theme;
           return e.inverse
             ? {
-                color: t.color.lightest,
-                "svg path": { fill: t.color.lightest },
+                color: t.textColor.lightest,
+                "svg path": { fill: t.textColor.lightest },
                 "&:hover": {
-                  color: t.color.lighter,
-                  "svg path": { fill: t.color.lighter },
+                  color: t.textColor.lighter,
+                  "svg path": { fill: t.textColor.lighter },
                 },
                 "&:active": {
-                  color: t.color.light,
-                  "svg path": { fill: t.color.light },
+                  color: t.textColor.light,
+                  "svg path": { fill: t.textColor.light },
                 },
               }
             : {};
@@ -23115,7 +23125,7 @@ var storybook_ui_dll = (function (e) {
       var t = e.theme;
       return l(
         {
-          color: t.color.defaultText,
+          color: t.textColor.defaultText,
           fontSize: t.typography.size.m3,
           fontWeight: t.typography.weight.black,
           lineHeight: "32px",
@@ -23148,7 +23158,7 @@ var storybook_ui_dll = (function (e) {
             marginBottom: 24,
           },
         ),
-        l(t, "color", (0, a.transparentize)(0.25, n.color.defaultText)),
+        l(t, "color", (0, a.transparentize)(0.25, n.textColor.defaultText)),
         t
       );
     });
@@ -23681,7 +23691,7 @@ var storybook_ui_dll = (function (e) {
         h5: { fontSize: "".concat(t.typography.size.s2, "px") },
         h6: {
           fontSize: "".concat(t.typography.size.s2, "px"),
-          color: t.color.dark,
+          color: t.textColor.dark,
         },
         "pre:not(.hljs)": {
           background: "transparent",
@@ -23712,7 +23722,7 @@ var storybook_ui_dll = (function (e) {
         "pre code, pre tt": { backgroundColor: "transparent", border: "none" },
         "body > *:first-of-type": { marginTop: "0 !important" },
         "body > *:last-child": { marginBottom: "0 !important" },
-        a: { color: t.color.secondary, textDecoration: "none" },
+        a: { color: t.textColor.secondary, textDecoration: "none" },
         "a.absent": { color: "#cc0000" },
         "a.anchor": {
           display: "block",
@@ -23769,9 +23779,9 @@ var storybook_ui_dll = (function (e) {
           "& > :last-child": { marginBottom: 0 },
         },
         blockquote: {
-          borderLeft: "4px solid ".concat(t.color.medium),
+          borderLeft: "4px solid ".concat(t.textColor.medium),
           padding: "0 15px",
-          color: t.color.dark,
+          color: t.textColor.dark,
           "& > :first-of-type": { marginTop: 0 },
           "& > :last-child": { marginBottom: 0 },
         },
@@ -23796,7 +23806,7 @@ var storybook_ui_dll = (function (e) {
               margin: 0,
               padding: "6px 13px",
             },
-            "&:nth-of-type(2n)": { backgroundColor: t.color.lighter },
+            "&:nth-of-type(2n)": { backgroundColor: t.textColor.lighter },
             "& th :first-of-type, & td :first-of-type": { marginTop: 0 },
             "& th :last-child, & td :last-child": { marginBottom: 0 },
           },
@@ -23806,7 +23816,7 @@ var storybook_ui_dll = (function (e) {
           display: "block",
           overflow: "hidden",
           "& > span": {
-            border: "1px solid ".concat(t.color.medium),
+            border: "1px solid ".concat(t.textColor.medium),
             display: "block",
             float: "left",
             overflow: "hidden",
@@ -23817,7 +23827,7 @@ var storybook_ui_dll = (function (e) {
           "& span img": { display: "block", float: "left" },
           "& span span": {
             clear: "both",
-            color: t.color.darkest,
+            color: t.textColor.darkest,
             display: "block",
             padding: "5px 0 0",
           },
@@ -23869,10 +23879,10 @@ var storybook_ui_dll = (function (e) {
           margin: "0 2px",
           padding: "0 5px",
           whiteSpace: "nowrap",
-          border: "1px solid ".concat(t.color.mediumlight),
-          backgroundColor: t.color.lighter,
+          border: "1px solid ".concat(t.textColor.mediumlight),
+          backgroundColor: t.textColor.lighter,
           borderRadius: 3,
-          color: "dark" === t.base && t.color.darkest,
+          color: "dark" === t.base && t.textColor.darkest,
         },
       };
     });
@@ -26986,19 +26996,19 @@ var storybook_ui_dll = (function (e) {
         colorPrimary: "#FF4785",
         colorSecondary: "#1EA7FD",
         appBg: r.background.app,
-        appContentBg: r.color.lightest,
-        appBorderColor: r.color.border,
+        appContentBg: r.textColor.lightest,
+        appBorderColor: r.textColor.border,
         appBorderRadius: 4,
         fontBase: r.typography.fonts.base,
         fontCode: r.typography.fonts.mono,
-        textColor: r.color.darkest,
-        textInverseColor: r.color.lightest,
-        barTextColor: r.color.mediumdark,
-        barSelectedColor: r.color.secondary,
-        barBg: r.color.lightest,
-        inputBg: r.color.lightest,
-        inputBorder: r.color.border,
-        inputTextColor: r.color.darkest,
+        textColor: r.textColor.darkest,
+        textInverseColor: r.textColor.lightest,
+        barTextColor: r.textColor.mediumdark,
+        barSelectedColor: r.textColor.secondary,
+        barBg: r.textColor.lightest,
+        inputBg: r.textColor.lightest,
+        inputBorder: r.textColor.border,
+        inputTextColor: r.textColor.darkest,
         inputBorderRadius: 4,
       };
     t.default = i;
@@ -27552,31 +27562,51 @@ var storybook_ui_dll = (function (e) {
         function (e) {
           return (
             "critical" === e.status &&
-            (0, o.css)(u(), e.theme.color.critical, e.theme.background.critical)
+            (0, o.css)(
+              u(),
+              e.theme.textColor.critical,
+              e.theme.background.critical,
+            )
           );
         },
         function (e) {
           return (
             "negative" === e.status &&
-            (0, o.css)(c(), e.theme.color.negative, e.theme.background.negative)
+            (0, o.css)(
+              c(),
+              e.theme.textColor.negative,
+              e.theme.background.negative,
+            )
           );
         },
         function (e) {
           return (
             "warning" === e.status &&
-            (0, o.css)(l(), e.theme.color.warning, e.theme.background.warning)
+            (0, o.css)(
+              l(),
+              e.theme.textColor.warning,
+              e.theme.background.warning,
+            )
           );
         },
         function (e) {
           return (
             "neutral" === e.status &&
-            (0, o.css)(s(), e.theme.color.dark, e.theme.color.mediumlight)
+            (0, o.css)(
+              s(),
+              e.theme.textColor.dark,
+              e.theme.textColor.mediumlight,
+            )
           );
         },
         function (e) {
           return (
             "positive" === e.status &&
-            (0, o.css)(a(), e.theme.color.positive, e.theme.background.positive)
+            (0, o.css)(
+              a(),
+              e.theme.textColor.positive,
+              e.theme.background.positive,
+            )
           );
         },
       ),
@@ -27795,7 +27825,7 @@ var storybook_ui_dll = (function (e) {
             fontSize: 13,
             "&:focus": {
               outline: "0 none",
-              borderBottomColor: e.theme.color.secondary,
+              borderBottomColor: e.theme.textColor.secondary,
             },
           };
         },
@@ -27826,7 +27856,7 @@ var storybook_ui_dll = (function (e) {
           transition: "color 0.2s linear, border-bottom-color 0.2s linear",
           "&:hover, &:focus": {
             outline: "0 none",
-            color: e.theme.color.secondary,
+            color: e.theme.textColor.secondary,
           },
           "& > svg": { width: 15 },
         };
@@ -27835,7 +27865,7 @@ var storybook_ui_dll = (function (e) {
         var t = e.active,
           n = e.theme;
         return t
-          ? { outline: "0 none", borderBottomColor: n.color.secondary }
+          ? { outline: "0 none", borderBottomColor: n.textColor.secondary }
           : {};
       },
     );
@@ -29811,7 +29841,7 @@ var storybook_ui_dll = (function (e) {
           fontWeight: t.typography.weight.black,
           fontSize: t.typography.size.s1 - 1,
           lineHeight: "24px",
-          color: (0, r.transparentize)(0.5, t.color.defaultText),
+          color: (0, r.transparentize)(0.5, t.textColor.defaultText),
         };
       });
     i.defaultProps = { className: "sidebar-subheading" };
@@ -36514,7 +36544,7 @@ var storybook_ui_dll = (function (e) {
           lineHeight: "16px",
           boxShadow:
             "0 5px 15px 0 rgba(0, 0, 0, 0.1), 0 2px 5px 0 rgba(0, 0, 0, 0.05)",
-          color: t.color.inverseText,
+          color: t.textColor.inverseText,
           backgroundColor:
             "light" === t.base
               ? (0, o.darken)(t.background.app)
@@ -37249,7 +37279,7 @@ var storybook_ui_dll = (function (e) {
               width: 8,
               height: 8,
               borderRadius: 8,
-              background: n.color.positive,
+              background: n.textColor.positive,
             },
           },
         );
@@ -40296,7 +40326,8 @@ var storybook_ui_dll = (function (e) {
           right: 0,
           opacity: 0,
           transition: "opacity 0.2s linear",
-          background: "light" === e.base ? e.color.darkest : e.color.lightest,
+          background:
+            "light" === e.base ? e.textColor.darkest : e.textColor.lightest,
         },
         ".simplebar-track .simplebar-scrollbar.simplebar-visible:before": {
           opacity: 0.5,
@@ -41803,7 +41834,7 @@ var storybook_ui_dll = (function (e) {
         return e.theme.typography.weight.black;
       }),
       b = o.styled.div(u(), function (e) {
-        return e.theme.color.darker;
+        return e.theme.textColor.darker;
       }),
       E = o.styled.div(c()),
       v = function (e) {
@@ -44027,7 +44058,7 @@ var storybook_ui_dll = (function (e) {
           n = e.theme;
         return "valid" === t
           ? {
-              color: n.color.positive,
+              color: n.textColor.positive,
               animation: "".concat(x, " 2s ease forwards"),
             }
           : { opacity: 0 };
@@ -45406,7 +45437,7 @@ var storybook_ui_dll = (function (e) {
         function (e) {
           var t = e.theme;
           return {
-            color: t.color.defaultText,
+            color: t.textColor.defaultText,
             fontWeight: t.typography.weight.regular,
           };
         },
@@ -45414,7 +45445,10 @@ var storybook_ui_dll = (function (e) {
           var t = e.active,
             n = e.theme;
           return t
-            ? { color: n.color.primary, fontWeight: n.typography.weight.bold }
+            ? {
+                color: n.textColor.primary,
+                fontWeight: n.typography.weight.bold,
+              }
             : {};
         },
         function (e) {
@@ -45431,7 +45465,7 @@ var storybook_ui_dll = (function (e) {
           var t = e.disabled,
             n = e.theme;
           return t
-            ? { color: (0, a.transparentize)(0.7, n.color.defaultText) }
+            ? { color: (0, a.transparentize)(0.7, n.textColor.defaultText) }
             : {};
         },
       ),
@@ -45451,7 +45485,10 @@ var storybook_ui_dll = (function (e) {
           var t = e.active,
             n = e.theme;
           return t
-            ? { "& svg": { opacity: 1 }, "& path": { fill: n.color.primary } }
+            ? {
+                "& svg": { opacity: 1 },
+                "& path": { fill: n.textColor.primary },
+              }
             : {};
         },
       ),
@@ -45466,18 +45503,18 @@ var storybook_ui_dll = (function (e) {
         function (e) {
           var t = e.active,
             n = e.theme;
-          return t ? { color: n.color.primary } : {};
+          return t ? { color: n.textColor.primary } : {};
         },
         function (e) {
           var t = e.theme;
-          return e.disabled ? { color: t.color.mediumdark } : {};
+          return e.disabled ? { color: t.textColor.mediumdark } : {};
         },
       ),
       m = i.styled.span(function (e) {
         var t = e.active,
           n = e.theme;
         return t
-          ? { "& svg": { opacity: 1 }, "& path": { fill: n.color.primary } }
+          ? { "& svg": { opacity: 1 }, "& path": { fill: n.textColor.primary } }
           : {};
       }),
       _ = i.styled.a(
@@ -45486,7 +45523,7 @@ var storybook_ui_dll = (function (e) {
           return {
             fontSize: t.typography.size.s1,
             transition: "all 150ms ease-out",
-            color: (0, a.transparentize)(0.5, t.color.defaultText),
+            color: (0, a.transparentize)(0.5, t.textColor.defaultText),
             textDecoration: "none",
             cursor: "pointer",
             justifyContent: "space-between",
@@ -46762,18 +46799,18 @@ var storybook_ui_dll = (function (e) {
             (n
               ? {
                   cursor: "default",
-                  background: t.color.secondary,
-                  color: t.color.lightest,
+                  background: t.textColor.secondary,
+                  color: t.textColor.lightest,
                   fontWeight: t.typography.weight.bold,
                 }
               : {
                   cursor: "pointer",
                   color:
                     "light" === t.base
-                      ? t.color.defaultText
-                      : (0, a.transparentize)(0.2, t.color.defaultText),
+                      ? t.textColor.defaultText
+                      : (0, a.transparentize)(0.2, t.textColor.defaultText),
                   "&:hover": {
-                    color: t.color.defaultText,
+                    color: t.textColor.defaultText,
                     background: t.background.hoverable,
                   },
                 })
@@ -46783,7 +46820,7 @@ var storybook_ui_dll = (function (e) {
           var t = e.theme;
           return (
             e.loading && {
-              "&& > svg + span": { background: t.color.medium },
+              "&& > svg + span": { background: t.textColor.medium },
               "&& > *": t.animation.inlineGlow,
               "&& > span": { borderColor: "transparent" },
             }
@@ -47022,7 +47059,7 @@ var storybook_ui_dll = (function (e) {
         var t = e.theme;
         return {
           fontWeight: t.typography.weight.bold,
-          color: t.color.defaultText,
+          color: t.textColor.defaultText,
         };
       }),
       p = o.styled.div(function (e) {
@@ -47030,8 +47067,8 @@ var storybook_ui_dll = (function (e) {
         return {
           color:
             "light" === t.base
-              ? (0, a.transparentize)(0.2, t.color.defaultText)
-              : (0, a.transparentize)(0.6, t.color.defaultText),
+              ? (0, a.transparentize)(0.2, t.textColor.defaultText)
+              : (0, a.transparentize)(0.6, t.textColor.defaultText),
         };
       }),
       f = o.styled.div({ flex: "0 0 30%", lineHeight: "20px", marginTop: 5 }),
@@ -47046,8 +47083,8 @@ var storybook_ui_dll = (function (e) {
           overflow: "hidden",
           color:
             "light" === t.base
-              ? (0, a.transparentize)(0.4, t.color.defaultText)
-              : (0, a.transparentize)(0.6, t.color.defaultText),
+              ? (0, a.transparentize)(0.4, t.textColor.defaultText)
+              : (0, a.transparentize)(0.6, t.textColor.defaultText),
           "> div": {
             display: "inline-block",
             overflow: "hidden",
@@ -47088,8 +47125,8 @@ var storybook_ui_dll = (function (e) {
           fontWeight: t.typography.weight.bold,
           color:
             "light" === t.base
-              ? (0, a.transparentize)(0.4, t.color.defaultText)
-              : (0, a.transparentize)(0.6, t.color.defaultText),
+              ? (0, a.transparentize)(0.4, t.textColor.defaultText)
+              : (0, a.transparentize)(0.6, t.textColor.defaultText),
         };
       }),
       O = o.styled.div(function (e) {
@@ -47584,7 +47621,7 @@ var storybook_ui_dll = (function (e) {
       _ = o.styled.div(
         c(),
         function (e) {
-          return e.theme.color.defaultText;
+          return e.theme.textColor.defaultText;
         },
         function (e) {
           return e.theme.typography.size.s2 - 1;
@@ -48205,14 +48242,14 @@ var storybook_ui_dll = (function (e) {
         appBorderRadius: 4,
         fontBase: r.typography.fonts.base,
         fontCode: r.typography.fonts.mono,
-        textColor: r.color.lightest,
-        textInverseColor: r.color.darkest,
+        textColor: r.textColor.lightest,
+        textInverseColor: r.textColor.darkest,
         barTextColor: "#999999",
-        barSelectedColor: r.color.secondary,
-        barBg: r.color.darkest,
+        barSelectedColor: r.textColor.secondary,
+        barBg: r.textColor.darkest,
         inputBg: "#3f3f3f",
         inputBorder: "rgba(0,0,0,.3)",
-        inputTextColor: r.color.lightest,
+        inputTextColor: r.textColor.lightest,
         inputBorderRadius: 4,
       };
     t.default = i;
@@ -48273,11 +48310,11 @@ var storybook_ui_dll = (function (e) {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          color: e.isDragging ? t.color.secondary : t.appBorderColor,
+          color: e.isDragging ? t.textColor.secondary : t.appBorderColor,
           overflow: "hidden",
           transition:
             "color 0.2s linear, background-position 0.2s linear, background-size 0.2s linear, background 0.2s linear",
-          "&:hover": { color: t.color.secondary },
+          "&:hover": { color: t.textColor.secondary },
         };
       },
       function (e) {
@@ -49296,7 +49333,7 @@ var storybook_ui_dll = (function (e) {
       var t = e.theme;
       return {
         fontSize: "".concat(t.typography.size.s2, "px"),
-        color: t.color.dark,
+        color: t.textColor.dark,
       };
     });
     t.H6 = m;
@@ -49348,7 +49385,7 @@ var storybook_ui_dll = (function (e) {
       return {
         fontSize: t.typography.size.s2,
         lineHeight: "24px",
-        color: t.color.secondary,
+        color: t.textColor.secondary,
         textDecoration: "none",
         "&.absent": { color: "#cc0000" },
         "&.anchor": {
@@ -49397,9 +49434,9 @@ var storybook_ui_dll = (function (e) {
     var v = o.styled.blockquote(a.withReset, a.withMargin, function (e) {
       var t = e.theme;
       return {
-        borderLeft: "4px solid ".concat(t.color.medium),
+        borderLeft: "4px solid ".concat(t.textColor.medium),
         padding: "0 15px",
-        color: t.color.dark,
+        color: t.textColor.dark,
         "& > :first-of-type": { marginTop: 0 },
         "& > :last-child": { marginBottom: 0 },
       };
@@ -49418,7 +49455,9 @@ var storybook_ui_dll = (function (e) {
           margin: 0,
           padding: 0,
         },
-        "& tr:nth-of-type(2n)": { backgroundColor: "".concat(t.color.lighter) },
+        "& tr:nth-of-type(2n)": {
+          backgroundColor: "".concat(t.textColor.lighter),
+        },
         "& tr th": {
           fontWeight: "bold",
           border: "1px solid ".concat(t.appBorderColor),
@@ -49448,7 +49487,7 @@ var storybook_ui_dll = (function (e) {
           display: "block",
           overflow: "hidden",
           "& > span": {
-            border: "1px solid ".concat(t.color.medium),
+            border: "1px solid ".concat(t.textColor.medium),
             display: "block",
             float: "left",
             overflow: "hidden",
@@ -49459,7 +49498,7 @@ var storybook_ui_dll = (function (e) {
           "& span img": { display: "block", float: "left" },
           "& span span": {
             clear: "both",
-            color: t.color.darkest,
+            color: t.textColor.darkest,
             display: "block",
             padding: "5px 0 0",
           },
@@ -49519,7 +49558,7 @@ var storybook_ui_dll = (function (e) {
         var t = e.theme;
         return {
           fontSize: t.typography.size.s2,
-          color: t.color.defaultText,
+          color: t.textColor.defaultText,
           lineHeight: "24px",
           "& + li": { marginTop: ".25em" },
           "& ul, & ol": { marginTop: ".25em", marginBottom: 0 },
@@ -49536,7 +49575,7 @@ var storybook_ui_dll = (function (e) {
       return {
         fontSize: t.typography.size.s2,
         lineHeight: "24px",
-        color: t.color.defaultText,
+        color: t.textColor.defaultText,
         "& code": (0, a.codeCommon)({ theme: t }),
       };
     });
@@ -52813,7 +52852,7 @@ var storybook_ui_dll = (function (e) {
           return e.theme.typography.weight.bold;
         },
         function (e) {
-          return e.theme.color.lightest;
+          return e.theme.textColor.lightest;
         },
       ),
       s = function (e) {
@@ -53913,30 +53952,30 @@ var storybook_ui_dll = (function (e) {
         return {
           primary: e.colorPrimary,
           secondary: e.colorSecondary,
-          tertiary: i.color.tertiary,
-          ancillary: i.color.ancillary,
-          orange: i.color.orange,
-          gold: i.color.gold,
-          green: i.color.green,
-          seafoam: i.color.seafoam,
-          purple: i.color.purple,
-          ultraviolet: i.color.ultraviolet,
-          lightest: i.color.lightest,
-          lighter: i.color.lighter,
-          light: i.color.light,
-          mediumlight: i.color.mediumlight,
-          medium: i.color.medium,
-          mediumdark: i.color.mediumdark,
-          dark: i.color.dark,
-          darker: i.color.darker,
-          darkest: i.color.darkest,
-          border: i.color.border,
-          positive: i.color.positive,
-          negative: i.color.negative,
-          warning: i.color.warning,
-          critical: i.color.critical,
-          defaultText: e.textColor || i.color.darkest,
-          inverseText: e.textInverseColor || i.color.lightest,
+          tertiary: i.textColor.tertiary,
+          ancillary: i.textColor.ancillary,
+          orange: i.textColor.orange,
+          gold: i.textColor.gold,
+          green: i.textColor.green,
+          seafoam: i.textColor.seafoam,
+          purple: i.textColor.purple,
+          ultraviolet: i.textColor.ultraviolet,
+          lightest: i.textColor.lightest,
+          lighter: i.textColor.lighter,
+          light: i.textColor.light,
+          mediumlight: i.textColor.mediumlight,
+          medium: i.textColor.medium,
+          mediumdark: i.textColor.mediumdark,
+          dark: i.textColor.dark,
+          darker: i.textColor.darker,
+          darkest: i.textColor.darkest,
+          border: i.textColor.border,
+          positive: i.textColor.positive,
+          negative: i.textColor.negative,
+          warning: i.textColor.warning,
+          critical: i.textColor.critical,
+          defaultText: e.textColor || i.textColor.darkest,
+          inverseText: e.textInverseColor || i.textColor.lightest,
         };
       };
     t.convert = function () {
@@ -57796,7 +57835,7 @@ var storybook_ui_dll = (function (e) {
     });
     t.createReset = o;
     var a = (0, i.default)(1)(function (e) {
-      var t = e.color,
+      var t = e.textColor,
         n = e.background,
         r = e.typography,
         i = o({ typography: r });
@@ -57928,8 +57967,8 @@ var storybook_ui_dll = (function (e) {
           margin: "25px 0 40px",
           color:
             "light" === t.base
-              ? (0, a.transparentize)(0.4, t.color.defaultText)
-              : (0, a.transparentize)(0.6, t.color.defaultText),
+              ? (0, a.transparentize)(0.4, t.textColor.defaultText)
+              : (0, a.transparentize)(0.6, t.textColor.defaultText),
         };
       }),
       u = function (e) {
@@ -58762,7 +58801,7 @@ var storybook_ui_dll = (function (e) {
         padding: 0,
         cursor: "text",
         position: "relative",
-        color: e.theme.color.defaultText,
+        color: e.theme.textColor.defaultText,
         "&:first-of-type": { marginTop: 0, paddingTop: 0 },
         "&:hover a.anchor": { textDecoration: "none" },
         "& tt, & code": { fontSize: "inherit" },
@@ -58779,13 +58818,14 @@ var storybook_ui_dll = (function (e) {
         fontSize: t.typography.size.s2 - 1,
         border:
           "light" === t.base
-            ? "1px solid ".concat(t.color.mediumlight)
-            : "1px solid ".concat(t.color.darker),
+            ? "1px solid ".concat(t.textColor.mediumlight)
+            : "1px solid ".concat(t.textColor.darker),
         color:
           "light" === t.base
-            ? (0, r.transparentize)(0.1, t.color.defaultText)
-            : (0, r.transparentize)(0.3, t.color.defaultText),
-        backgroundColor: "light" === t.base ? t.color.lighter : t.color.border,
+            ? (0, r.transparentize)(0.1, t.textColor.defaultText)
+            : (0, r.transparentize)(0.3, t.textColor.defaultText),
+        backgroundColor:
+          "light" === t.base ? t.textColor.lighter : t.textColor.border,
       };
     };
     t.withReset = function (e) {
@@ -59808,7 +59848,7 @@ var storybook_ui_dll = (function (e) {
         { position: "absolute", borderStyle: "solid" },
         function (e) {
           var t = e.theme,
-            n = e.color,
+            n = e.textColor,
             r = e.placement;
           return {
             marginBottom: "".concat(c("top", r, "0", 8), "px"),
@@ -59826,7 +59866,7 @@ var storybook_ui_dll = (function (e) {
             borderTopColor: c(
               "top",
               r,
-              t.color[n] || n || "light" === t.base
+              t.textColor[n] || n || "light" === t.base
                 ? (0, o.lighten)(t.background.app)
                 : (0, o.darken)(t.background.app),
               "transparent",
@@ -59834,7 +59874,7 @@ var storybook_ui_dll = (function (e) {
             borderBottomColor: c(
               "bottom",
               r,
-              t.color[n] || n || "light" === t.base
+              t.textColor[n] || n || "light" === t.base
                 ? (0, o.lighten)(t.background.app)
                 : (0, o.darken)(t.background.app),
               "transparent",
@@ -59842,7 +59882,7 @@ var storybook_ui_dll = (function (e) {
             borderLeftColor: c(
               "left",
               r,
-              t.color[n] || n || "light" === t.base
+              t.textColor[n] || n || "light" === t.base
                 ? (0, o.lighten)(t.background.app)
                 : (0, o.darken)(t.background.app),
               "transparent",
@@ -59850,7 +59890,7 @@ var storybook_ui_dll = (function (e) {
             borderRightColor: c(
               "right",
               r,
-              t.color[n] || n || "light" === t.base
+              t.textColor[n] || n || "light" === t.base
                 ? (0, o.lighten)(t.background.app)
                 : (0, o.darken)(t.background.app),
               "transparent",
@@ -59867,7 +59907,7 @@ var storybook_ui_dll = (function (e) {
         },
         function (e) {
           var t = e.theme,
-            n = e.color,
+            n = e.textColor,
             r = e.hasChrome,
             i = e.placement;
           return r
@@ -59877,7 +59917,7 @@ var storybook_ui_dll = (function (e) {
                 marginLeft: "".concat(c("right", i, 10, 0), "px"),
                 marginRight: "".concat(c("left", i, 10, 0), "px"),
                 background:
-                  t.color[n] || n || "light" === t.base
+                  t.textColor[n] || n || "light" === t.base
                     ? (0, o.lighten)(t.background.app)
                     : (0, o.darken)(t.background.app),
                 filter:
@@ -59900,7 +59940,7 @@ var storybook_ui_dll = (function (e) {
           o = e.arrowProps,
           a = e.tooltipRef,
           c = e.arrowRef,
-          p = e.color,
+          p = e.textColor,
           f = l(e, [
             "placement",
             "hasChrome",
@@ -61926,7 +61966,7 @@ var storybook_ui_dll = (function (e) {
       f = s.styled.span(function (e) {
         var t = e.theme;
         return {
-          color: t.color.negative,
+          color: t.textColor.negative,
           fontFamily: t.typography.fonts.mono,
           cursor: "help",
         };
@@ -61945,8 +61985,8 @@ var storybook_ui_dll = (function (e) {
         return {
           color:
             "light" === t.base
-              ? (0, a.transparentize)(0.1, t.color.defaultText)
-              : (0, a.transparentize)(0.2, t.color.defaultText),
+              ? (0, a.transparentize)(0.1, t.textColor.defaultText)
+              : (0, a.transparentize)(0.2, t.textColor.defaultText),
           marginTop: n ? 4 : 0,
         };
       }),
@@ -61956,8 +61996,8 @@ var storybook_ui_dll = (function (e) {
         return {
           color:
             "light" === t.base
-              ? (0, a.transparentize)(0.1, t.color.defaultText)
-              : (0, a.transparentize)(0.2, t.color.defaultText),
+              ? (0, a.transparentize)(0.1, t.textColor.defaultText)
+              : (0, a.transparentize)(0.2, t.textColor.defaultText),
           marginTop: n ? 12 : 0,
           marginBottom: 12,
         };
@@ -63505,7 +63545,7 @@ var storybook_ui_dll = (function (e) {
           fontWeight: t.typography.weight.black,
           fontSize: t.typography.size.s2 - 1,
           lineHeight: "24px",
-          color: t.color.mediumdark,
+          color: t.textColor.mediumdark,
         };
       }),
       h = (0, s.styled)(u.Link)(function (e) {
@@ -63522,10 +63562,10 @@ var storybook_ui_dll = (function (e) {
           var t = e.status,
             n = e.theme;
           return "positive" === t
-            ? { background: n.background.positive, color: n.color.positive }
+            ? { background: n.background.positive, color: n.textColor.positive }
             : "negative" === t
-            ? { background: n.background.negative, color: n.color.negative }
-            : { background: "#EAF3FC", color: n.color.darkest };
+            ? { background: n.background.negative, color: n.textColor.negative }
+            : { background: "#EAF3FC", color: n.textColor.darkest };
         },
         function (e) {
           var t = e.theme;
@@ -77201,7 +77241,7 @@ var storybook_ui_dll = (function (e) {
               var r = e.props,
                 o = r.title,
                 a = r.id,
-                s = r.color,
+                s = r.textColor,
                 l = r.children,
                 c = Array.isArray(l) ? l[0] : l;
               return {
@@ -77238,7 +77278,7 @@ var storybook_ui_dll = (function (e) {
                     var t = e.title,
                       n = e.id,
                       o = e.active,
-                      a = e.color;
+                      a = e.textColor;
                     return i.default.createElement(
                       c.TabButton,
                       {
@@ -77812,8 +77852,8 @@ var storybook_ui_dll = (function (e) {
           lineHeight: "24px",
           color:
             "light" === t.base
-              ? (0, o.transparentize)(0.4, t.color.defaultText)
-              : (0, o.transparentize)(0.6, t.color.defaultText),
+              ? (0, o.transparentize)(0.4, t.textColor.defaultText)
+              : (0, o.transparentize)(0.6, t.textColor.defaultText),
           background: "".concat(t.background.app, " !important"),
         };
       }),
@@ -78606,7 +78646,7 @@ var storybook_ui_dll = (function (e) {
         var t = e.theme;
         return Object.assign({}, p, {
           transition: "all 200ms ease-out",
-          color: t.input.color || "inherit",
+          color: t.input.textColor || "inherit",
           background: t.input.background,
           boxShadow: "".concat(t.input.border, " 0 0 0 1px inset"),
           borderRadius: t.input.borderRadius,
@@ -78614,13 +78654,16 @@ var storybook_ui_dll = (function (e) {
           lineHeight: "20px",
           padding: ".42em 1em",
           "&:focus": {
-            boxShadow: "".concat(t.color.secondary, " 0 0 0 1px inset"),
+            boxShadow: "".concat(t.textColor.secondary, " 0 0 0 1px inset"),
           },
           "&[disabled]": { cursor: "not-allowed", opacity: 0.5 },
           "&:-webkit-autofill": {
-            WebkitBoxShadow: "0 0 0 3em ".concat(t.color.lightest, " inset"),
+            WebkitBoxShadow: "0 0 0 3em ".concat(
+              t.textColor.lightest,
+              " inset",
+            ),
           },
-          "::placeholder": { color: t.color.mediumdark },
+          "::placeholder": { color: t.textColor.mediumdark },
         });
       },
       m = function (e) {
@@ -78652,20 +78695,20 @@ var storybook_ui_dll = (function (e) {
           case "valid":
             return {
               boxShadow: "".concat(
-                n.color.positive,
+                n.textColor.positive,
                 " 0 0 0 1px inset !important",
               ),
             };
           case "error":
             return {
               boxShadow: "".concat(
-                n.color.negative,
+                n.textColor.negative,
                 " 0 0 0 1px inset !important",
               ),
             };
           case "warn":
             return {
-              boxShadow: "".concat(n.color.warning, " 0 0 0 1px inset"),
+              boxShadow: "".concat(n.textColor.warning, " 0 0 0 1px inset"),
             };
           case void 0:
           case null:
@@ -79850,7 +79893,7 @@ var storybook_ui_dll = (function (e) {
         var t = e.theme;
         return {
           fontFamily: t.typography.fonts.mono,
-          color: t.color.secondary,
+          color: t.textColor.secondary,
           margin: 0,
           whiteSpace: "nowrap",
           display: "flex",
@@ -82662,7 +82705,7 @@ var storybook_ui_dll = (function (e) {
             "light" === t.base
               ? "rgba(0, 0, 0, 0.85)"
               : (0, a.darken)(0.05, t.background.content),
-          color: t.color.lightest,
+          color: t.textColor.lightest,
           button: {
             background:
               "light" === t.base
@@ -90728,7 +90771,7 @@ var storybook_ui_dll = (function (e) {
           "&&": {
             borderCollapse: "collapse",
             borderSpacing: 0,
-            color: t.color.defaultText,
+            color: t.textColor.defaultText,
             tr: { border: "none", background: "none" },
             "td, th": { padding: 0, border: "none", verticalAlign: "top" },
             fontSize: t.typography.size.s2,
@@ -90745,8 +90788,8 @@ var storybook_ui_dll = (function (e) {
             th: {
               color:
                 "light" === t.base
-                  ? (0, a.transparentize)(0.25, t.color.defaultText)
-                  : (0, a.transparentize)(0.45, t.color.defaultText),
+                  ? (0, a.transparentize)(0.25, t.textColor.defaultText)
+                  : (0, a.transparentize)(0.45, t.textColor.defaultText),
               paddingTop: 10,
               paddingBottom: 10,
               "&:not(:first-of-type)": { paddingLeft: 15, paddingRight: 15 },
@@ -91956,7 +91999,7 @@ var storybook_ui_dll = (function (e) {
           return {
             position: "relative",
             overflow: "hidden",
-            color: e.theme.color.defaultText,
+            color: e.theme.textColor.defaultText,
           };
         },
         function (e) {
@@ -92300,9 +92343,12 @@ var storybook_ui_dll = (function (e) {
           padding: 0,
           fontSize: "inherit",
           "&:-webkit-autofill": {
-            WebkitBoxShadow: "0 0 0 3em ".concat(t.color.lightest, " inset"),
+            WebkitBoxShadow: "0 0 0 3em ".concat(
+              t.textColor.lightest,
+              " inset",
+            ),
           },
-          "::placeholder": { color: t.color.mediumdark },
+          "::placeholder": { color: t.textColor.mediumdark },
           "&:placeholder-shown ~ button": { opacity: 0 },
         };
       }),
@@ -92326,7 +92372,7 @@ var storybook_ui_dll = (function (e) {
             display: "block",
             height: 8,
             width: 8,
-            color: t.input.color,
+            color: t.input.textColor,
             transition: "all 150ms ease-out",
           },
           "&:hover": { background: (0, a.opacify)(0.1, t.appBorderColor) },
@@ -92344,7 +92390,7 @@ var storybook_ui_dll = (function (e) {
           outline: 0,
           position: "relative",
           input: {
-            color: t.input.color,
+            color: t.input.textColor,
             fontSize: t.typography.size.s2 - 1,
             lineHeight: "20px",
             paddingTop: 2,
@@ -92609,7 +92655,7 @@ var storybook_ui_dll = (function (e) {
     }
     var p = (0, o.css)(u()),
       f = (0, o.styled)(a.Icons)(c(), p, function (e) {
-        return e.theme.color.secondary;
+        return e.theme.textColor.secondary;
       }),
       m = o.styled.img(l(), p),
       _ = o.styled.div(s(), p),
@@ -94396,7 +94442,7 @@ var storybook_ui_dll = (function (e) {
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            color: t.color.defaultText,
+            color: t.textColor.defaultText,
             background: t.background.content,
             fontSize: 12,
             lineHeight: "16px",
@@ -94414,7 +94460,7 @@ var storybook_ui_dll = (function (e) {
               borderRadius: 0,
             },
             "&:focus": {
-              boxShadow: "".concat(t.color.secondary, " 0 -3px 0 0 inset"),
+              boxShadow: "".concat(t.textColor.secondary, " 0 -3px 0 0 inset"),
               outline: "0 none",
             },
           };
@@ -94974,12 +95020,12 @@ var storybook_ui_dll = (function (e) {
             r = e.primary,
             i = e.secondary;
           return (
-            r && (t = n.color.primary),
-            i && (t = n.color.secondary),
+            r && (t = n.textColor.primary),
+            i && (t = n.textColor.secondary),
             t
               ? {
                   background: t,
-                  color: n.color.lightest,
+                  color: n.textColor.lightest,
                   "&:hover": { background: (0, a.darken)(0.05, t) },
                   "&:active": {
                     boxShadow: "rgba(0, 0, 0, 0.1) 0 0 0 3em inset",
@@ -95007,7 +95053,7 @@ var storybook_ui_dll = (function (e) {
                   "light" === t.base
                     ? (0, a.darken)(0.02, t.input.background)
                     : (0, a.lighten)(0.02, t.input.background),
-                color: t.input.color,
+                color: t.input.textColor,
                 boxShadow: "".concat(t.input.border, " 0 0 0 1px inset"),
                 borderRadius: t.input.borderRadius,
                 "&:hover": Object.assign(
@@ -95027,7 +95073,7 @@ var storybook_ui_dll = (function (e) {
                 "&:active": { background: t.input.background },
                 "&:focus": {
                   boxShadow: "".concat(
-                    (0, a.rgba)(t.color.secondary, 0.4),
+                    (0, a.rgba)(t.textColor.secondary, 0.4),
                     " 0 0 0 1px inset",
                   ),
                 },
@@ -95039,23 +95085,23 @@ var storybook_ui_dll = (function (e) {
           return e.outline
             ? {
                 boxShadow: "".concat(
-                  (0, a.transparentize)(0.8, t.color.defaultText),
+                  (0, a.transparentize)(0.8, t.textColor.defaultText),
                   " 0 0 0 1px inset",
                 ),
-                color: (0, a.transparentize)(0.3, t.color.defaultText),
+                color: (0, a.transparentize)(0.3, t.textColor.defaultText),
                 background: "transparent",
                 "&:hover": {
                   boxShadow: "".concat(
-                    (0, a.transparentize)(0.5, t.color.defaultText),
+                    (0, a.transparentize)(0.5, t.textColor.defaultText),
                     " 0 0 0 1px inset",
                   ),
                 },
                 "&:active": {
                   boxShadow: "".concat(
-                    (0, a.transparentize)(0.5, t.color.defaultText),
+                    (0, a.transparentize)(0.5, t.textColor.defaultText),
                     " 0 0 0 2px inset",
                   ),
-                  color: (0, a.transparentize)(0, t.color.defaultText),
+                  color: (0, a.transparentize)(0, t.textColor.defaultText),
                 },
               }
             : {};
@@ -95064,7 +95110,7 @@ var storybook_ui_dll = (function (e) {
           var t = e.theme,
             n = e.outline,
             r = e.primary,
-            i = t.color.primary;
+            i = t.textColor.primary;
           return n && r
             ? {
                 boxShadow: "".concat(i, " 0 0 0 1px inset"),
@@ -95077,7 +95123,7 @@ var storybook_ui_dll = (function (e) {
                 "&:active": {
                   background: i,
                   boxShadow: "".concat(i, " 0 0 0 1px inset"),
-                  color: t.color.lightest,
+                  color: t.textColor.lightest,
                 },
                 "&:focus": {
                   boxShadow: ""
@@ -95099,8 +95145,8 @@ var storybook_ui_dll = (function (e) {
             i = e.primary,
             o = e.secondary;
           return (
-            i && (t = n.color.primary),
-            o && (t = n.color.secondary),
+            i && (t = n.textColor.primary),
+            o && (t = n.textColor.secondary),
             r && t
               ? {
                   boxShadow: "".concat(t, " 0 0 0 1px inset"),
@@ -95113,7 +95159,7 @@ var storybook_ui_dll = (function (e) {
                   "&:active": {
                     background: t,
                     boxShadow: "".concat(t, " 0 0 0 1px inset"),
-                    color: n.color.lightest,
+                    color: n.textColor.lightest,
                   },
                   "&:focus": {
                     boxShadow: ""

@@ -89,6 +89,7 @@ function CardRenderer({
     type: "spring",
     speed: 20,
     bounciness: 0,
+    useNativeDriver: true,
   } as const;
   const animatedScale = useTransitioningValue({
     value: scale,

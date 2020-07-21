@@ -25,7 +25,7 @@
     "@types/lodash.isequal": "^4.5.5",
     "@types/markdown-it": "^0.0.9",
     "@types/react": "^16.9.23",
-    "@types/react-native": "^0.61.17",
+    "@types/react-native": "^0.63.1",
     "@types/react-transition-group": "^4.2.3",
     "@types/webpack": "^4.41.7",
     "awesome-typescript-loader": "^5.2.1",

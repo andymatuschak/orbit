@@ -28,9 +28,8 @@ export default function DebugGrid(props: {
           ).map((row) => {
             const y = row * layout.gridUnit - 0.5;
             return (
-              <>
+              <React.Fragment key={row}>
                 <Line
-                  key={row}
                   x1={0}
                   x2={size[0]}
                   y1={y}
@@ -40,7 +39,6 @@ export default function DebugGrid(props: {
                 />
                 {props.shouldShowMajorDivisions && row % 6 === 0 && (
                   <Rect
-                    key={`${row}-fill`}
                     x={0}
                     y={y}
                     width={size[0]}
@@ -48,7 +46,7 @@ export default function DebugGrid(props: {
                     fill="#00b8f2"
                   />
                 )}
-              </>
+              </React.Fragment>
             );
           })}
         </Svg>

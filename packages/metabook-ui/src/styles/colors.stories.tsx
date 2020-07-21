@@ -135,7 +135,7 @@ function CompositionTest({
       </Caption>
 
       <Body
-        textStyle={{ color: accentColor }}
+        color={accentColor}
         style={{
           marginBottom: layout.gridUnit,
           marginTop: layout.gridUnit * 18,
@@ -144,7 +144,9 @@ function CompositionTest({
         Source context
       </Body>
       <Title>Primary content</Title>
-      <Label textStyle={{ color: colors.white, marginTop: 128 }}>Button</Label>
+      <Label color={colors.white} style={{ marginTop: 128 }}>
+        Button
+      </Label>
     </View>
   );
 }
