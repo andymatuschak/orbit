@@ -13,10 +13,18 @@ function makeTextComponent(
   layoutStyle: TextStyle,
   name: string,
 ): React.ComponentType<TextElementProps> {
-  const component = (props: TextElementProps) => (
-    <View style={props.style}>
-      <Text style={layoutStyle} selectable={props.selectable ?? true}>
-        {props.children}
+  const component = ({
+    children,
+    color,
+    selectable,
+    style,
+  }: TextElementProps) => (
+    <View style={style}>
+      <Text
+        style={[layoutStyle, !!color && { color: color }]}
+        selectable={selectable ?? true}
+      >
+        {children}
       </Text>
     </View>
   );

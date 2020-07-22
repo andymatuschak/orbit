@@ -23,7 +23,7 @@ import {
 import React, { ReactNode, useState } from "react";
 import { Button, View } from "react-native";
 import { AttachmentResolutionMap, PromptReviewItem } from "../reviewItem";
-import { layout } from "../styles";
+import { layout, colors } from "../styles";
 import testCardProps from "./__fixtures__/testCardProps";
 import Card from "./Card";
 import DebugGrid from "./DebugGrid";
@@ -172,14 +172,17 @@ function TestCard(props: { reviewItem: PromptReviewItem }) {
                 style={{
                   width: 375 - 16,
                   height: layout.gridUnit * (5 * 10 + 2), // 2 fixed grid units for caption and its margin; the rest for 2:3 ratio of answer:question
+                  borderWidth: 1,
+                  borderColor: "gray",
+                  margin: 16,
                 }}
               >
                 {boolean("Show grid", true) && <DebugGrid />}
                 <Card
                   {...testCardProps}
+                  contextColor={colors.fg[0]}
                   reviewItem={reviewItem}
                   backIsRevealed={isRevealed}
-                  reviewMarkingInteractionState={reviewMarkingInteractionState}
                 />
               </View>
             );

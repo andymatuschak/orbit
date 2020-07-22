@@ -7,16 +7,22 @@ import {
   QAPrompt,
 } from "metabook-core";
 import React from "react";
-import { Animated, StyleSheet, View, ViewStyle } from "react-native";
+import {
+  Animated,
+  ColorValue,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from "react-native";
 import { PromptReviewItem } from "../reviewItem";
-import { layout } from "../styles";
+import { layout, colors } from "../styles";
 import CardField, { clozeBlankSentinel } from "./CardField";
 import FadeView from "./FadeView";
 import {
   AnimationSpec,
   useTransitioningValue,
 } from "./hooks/useTransitioningValue";
-import { Caption } from "./Text";
+import { Caption, Label } from "./Text";
 import WithAnimatedValue = Animated.WithAnimatedValue;
 
 export const cardWidth = 343; // TODO remove
@@ -24,8 +30,9 @@ export const baseCardHeight = 439; // TODO REMOVE
 
 export interface CardProps {
   reviewItem: PromptReviewItem;
-
   backIsRevealed: boolean;
+
+  contextColor?: ColorValue;
   isDisplayed?: boolean;
   onToggleExplanation?: (isExplanationExpanded: boolean) => unknown;
 }
@@ -169,8 +176,11 @@ function formatClozePromptContents(
   }
 }
 
-export default function Card(props: CardProps) {
-  const { reviewItem, backIsRevealed } = props;
+export default function Card({
+  backIsRevealed,
+  contextColor,
+  reviewItem,
+}: CardProps) {
   const animatingStyles = useAnimatingStyles(backIsRevealed);
   const spec = getQAPrompt(reviewItem);
   return (
@@ -181,7 +191,9 @@ export default function Card(props: CardProps) {
         delayMillis={topAreaFadeDelayMillis}
         style={animatingStyles.topAreaContextStyle}
       >
-        <Caption>Source context TODO</Caption>
+        <Caption color={contextColor ?? colors.ink}>
+          Source context TODO
+        </Caption>
       </FadeView>
       <View style={styles.topAreaContainer}>
         <FadeView
@@ -212,6 +224,12 @@ export default function Card(props: CardProps) {
           durationMillis={70}
           style={animatingStyles.bottomFrontStyle}
         >
+          <Label
+            style={styles.bottomContextLabel}
+            color={contextColor ?? colors.ink}
+          >
+            Source context TODO
+          </Label>
           <CardField
             promptField={spec.question}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
@@ -246,5 +264,10 @@ const styles = StyleSheet.create({
 
   bottomAreaContainer: {
     flex: 3,
+  },
+
+  bottomContextLabel: {
+    position: "absolute",
+    top: layout.gridUnit * -3,
   },
 });
