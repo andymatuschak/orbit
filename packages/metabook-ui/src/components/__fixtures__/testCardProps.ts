@@ -9,8 +9,6 @@ const testCardProps: CardProps = {
     promptState: null,
     attachmentResolutionMap: null,
   },
-  reviewMarkingInteractionState: null,
-  schedule: "aggressiveStart",
   backIsRevealed: false,
   isDisplayed: false,
 };

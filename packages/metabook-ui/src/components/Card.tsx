@@ -4,17 +4,11 @@ import {
   basicPromptType,
   clozePromptType,
   getNextTaskParameters,
-  MetabookSpacedRepetitionSchedule,
   QAPrompt,
 } from "metabook-core";
 import React from "react";
-import { StyleSheet, View } from "react-native";
-import {
-  ApplicationPromptReviewItem,
-  BasicPromptReviewItem,
-  ClozePromptReviewItem,
-  PromptReviewItem,
-} from "../reviewItem";
+import { Animated, StyleSheet, View, ViewStyle } from "react-native";
+import { PromptReviewItem } from "../reviewItem";
 import { layout } from "../styles";
 import CardField, { clozeBlankSentinel } from "./CardField";
 import FadeView from "./FadeView";
@@ -22,33 +16,33 @@ import {
   AnimationSpec,
   useTransitioningValue,
 } from "./hooks/useTransitioningValue";
-import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
 import { Caption } from "./Text";
+import WithAnimatedValue = Animated.WithAnimatedValue;
 
 export const cardWidth = 343; // TODO remove
+export const baseCardHeight = 439; // TODO REMOVE
 
 export interface CardProps {
   reviewItem: PromptReviewItem;
 
   backIsRevealed: boolean;
   isDisplayed?: boolean;
-  reviewMarkingInteractionState: ReviewMarkingInteractionState | null;
-  schedule: MetabookSpacedRepetitionSchedule;
   onToggleExplanation?: (isExplanationExpanded: boolean) => unknown;
 }
 
-function getQAPrompt(
-  reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem,
-): QAPrompt {
+function getQAPrompt(reviewItem: PromptReviewItem): QAPrompt {
+  // TODO return some front/back type instead
   switch (reviewItem.prompt.promptType) {
-    case "basic":
+    case basicPromptType:
       return reviewItem.prompt;
-    case "applicationPrompt":
+    case applicationPromptType:
       const taskParameters = getNextTaskParameters(
         reviewItem.prompt,
         reviewItem.promptState?.lastReviewTaskParameters ?? null,
       ) as ApplicationPromptTaskParameters;
       return reviewItem.prompt.variants[taskParameters.variantIndex];
+    case clozePromptType:
+      throw new Error("Unimplemented"); // TODO
   }
 }
 
@@ -67,131 +61,76 @@ const topAreaTranslationAnimationSpec: AnimationSpec = {
   delay: 50,
 };
 
-function QAPromptCard(
-  props: Omit<CardProps, "reviewItem"> & {
-    reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem;
-  },
-) {
-  const bottomAreaRevealAnimation = useTransitioningValue({
-    value: props.backIsRevealed ? 1 : 0,
-    timing: bottomAreaTranslationAnimationSpec,
-  });
-  const topAreaRevealAnimation = useTransitioningValue({
-    value: props.backIsRevealed ? 1 : 0,
+function useAnimatingStyles(
+  backIsRevealed: boolean,
+): {
+  topAreaContextStyle: WithAnimatedValue<ViewStyle>;
+  topAreaInteriorStyle: WithAnimatedValue<ViewStyle>;
+  bottomFrontStyle: WithAnimatedValue<ViewStyle>;
+  bottomBackStyle: WithAnimatedValue<ViewStyle>;
+} {
+  const topAreaTranslateAnimation = useTransitioningValue({
+    value: backIsRevealed ? 1 : 0,
     timing: topAreaTranslationAnimationSpec,
   });
-  const topAreaTranslation = React.useMemo(
-    () => ({
-      translateY: topAreaRevealAnimation.interpolate({
+  const bottomAreaTranslateAnimation = useTransitioningValue({
+    value: backIsRevealed ? 1 : 0,
+    timing: bottomAreaTranslationAnimationSpec,
+  });
+
+  return React.useMemo(() => {
+    const topAreaTranslation = {
+      translateY: topAreaTranslateAnimation.interpolate({
         inputRange: [0, 1],
         outputRange: [16, 0],
       }),
-    }),
-    [topAreaRevealAnimation],
-  );
+    };
 
-  const topAreaContextStyle = React.useMemo(
-    () => [
-      styles.topAreaContext,
-      {
-        transform: [topAreaTranslation],
-      },
-    ],
-    [topAreaTranslation],
-  );
-
-  const topAreaInteriorStyle = React.useMemo(
-    () => [
-      styles.topAreaInterior,
-      {
-        transform: [topAreaTranslation, { scaleX: 0.6667 }, { scaleY: 0.6667 }],
-      },
-    ],
-    [topAreaTranslation],
-  );
-
-  const bottomFrontStyle = React.useMemo(
-    () => [
-      StyleSheet.absoluteFill,
-      {
-        transform: [
-          {
-            translateY: bottomAreaRevealAnimation.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, -8],
-            }),
-          },
-        ],
-      },
-    ],
-    [bottomAreaRevealAnimation],
-  );
-
-  const bottomBackStyle = React.useMemo(
-    () => [
-      StyleSheet.absoluteFill,
-      {
-        transform: [
-          {
-            translateY: bottomAreaRevealAnimation.interpolate({
-              inputRange: [0, 1],
-              outputRange: [30, 0],
-            }),
-          },
-        ],
-      },
-    ],
-    [bottomAreaRevealAnimation],
-  );
-
-  const spec = getQAPrompt(props.reviewItem);
-  return (
-    <View style={styles.cardContainer}>
-      <FadeView
-        isVisible={props.backIsRevealed}
-        durationMillis={topAreaFadeDurationMillis}
-        delayMillis={topAreaFadeDelayMillis}
-        style={topAreaContextStyle}
-      >
-        <Caption>Source context TODO</Caption>
-      </FadeView>
-      <View style={styles.topAreaContainer}>
-        <FadeView
-          isVisible={props.backIsRevealed}
-          durationMillis={topAreaFadeDurationMillis}
-          delayMillis={topAreaFadeDelayMillis}
-          style={topAreaInteriorStyle}
-        >
-          <CardField
-            promptField={spec.question}
-            attachmentResolutionMap={props.reviewItem.attachmentResolutionMap}
-          />
-        </FadeView>
-      </View>
-      <View style={styles.bottomAreaContainer}>
-        <FadeView
-          isVisible={props.backIsRevealed}
-          durationMillis={100}
-          style={bottomBackStyle}
-        >
-          <CardField
-            promptField={spec.answer}
-            attachmentResolutionMap={props.reviewItem.attachmentResolutionMap}
-          />
-        </FadeView>
-        <FadeView
-          isVisible={!props.backIsRevealed}
-          durationMillis={70}
-          style={bottomFrontStyle}
-        >
-          <CardField
-            promptField={spec.question}
-            attachmentResolutionMap={props.reviewItem.attachmentResolutionMap}
-          />
-        </FadeView>
-      </View>
-    </View>
-  );
+    return {
+      topAreaContextStyle: [
+        styles.topAreaContext,
+        {
+          transform: [topAreaTranslation],
+        },
+      ],
+      topAreaInteriorStyle: [
+        styles.topAreaInterior,
+        {
+          transform: [
+            topAreaTranslation,
+            { scaleX: 0.6667 },
+            { scaleY: 0.6667 },
+          ],
+        },
+      ],
+      bottomFrontStyle: [
+        StyleSheet.absoluteFill,
+        {
+          transform: [
+            {
+              translateY: bottomAreaTranslateAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, -8],
+              }),
+            },
+          ],
+        },
+      ],
+      bottomBackStyle: [
+        StyleSheet.absoluteFill,
+        {
+          transform: [
+            {
+              translateY: bottomAreaTranslateAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [30, 0],
+              }),
+            },
+          ],
+        },
+      ],
+    };
+  }, [bottomAreaTranslateAnimation, topAreaTranslateAnimation]);
 }
 
 function formatClozePromptContents(
@@ -230,40 +169,58 @@ function formatClozePromptContents(
   }
 }
 
-function ClozePromptCard(
-  props: Omit<CardProps, "reviewItem"> & {
-    reviewItem: ClozePromptReviewItem;
-  },
-) {
-  return null;
-}
-
 export default function Card(props: CardProps) {
-  const prompt = props.reviewItem.prompt;
-  switch (prompt.promptType) {
-    case basicPromptType:
-    case applicationPromptType:
-      return (
-        <QAPromptCard
-          {...props}
-          reviewItem={
-            props.reviewItem as
-              | BasicPromptReviewItem
-              | ApplicationPromptReviewItem
-          }
-        />
-      );
-    case clozePromptType:
-      return (
-        <ClozePromptCard
-          {...props}
-          reviewItem={props.reviewItem as ClozePromptReviewItem}
-        />
-      );
-  }
+  const { reviewItem, backIsRevealed } = props;
+  const animatingStyles = useAnimatingStyles(backIsRevealed);
+  const spec = getQAPrompt(reviewItem);
+  return (
+    <View style={styles.cardContainer}>
+      <FadeView
+        isVisible={backIsRevealed}
+        durationMillis={topAreaFadeDurationMillis}
+        delayMillis={topAreaFadeDelayMillis}
+        style={animatingStyles.topAreaContextStyle}
+      >
+        <Caption>Source context TODO</Caption>
+      </FadeView>
+      <View style={styles.topAreaContainer}>
+        <FadeView
+          isVisible={backIsRevealed}
+          durationMillis={topAreaFadeDurationMillis}
+          delayMillis={topAreaFadeDelayMillis}
+          style={animatingStyles.topAreaInteriorStyle}
+        >
+          <CardField
+            promptField={spec.question}
+            attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+          />
+        </FadeView>
+      </View>
+      <View style={styles.bottomAreaContainer}>
+        <FadeView
+          isVisible={backIsRevealed}
+          durationMillis={100}
+          style={animatingStyles.bottomBackStyle}
+        >
+          <CardField
+            promptField={spec.answer}
+            attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+          />
+        </FadeView>
+        <FadeView
+          isVisible={!backIsRevealed}
+          durationMillis={70}
+          style={animatingStyles.bottomFrontStyle}
+        >
+          <CardField
+            promptField={spec.question}
+            attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+          />
+        </FadeView>
+      </View>
+    </View>
+  );
 }
-
-export const baseCardHeight = 439; // TODO REMOVE
 
 const styles = StyleSheet.create({
   cardContainer: {

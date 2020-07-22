@@ -327,10 +327,6 @@ export default function ReviewArea(props: ReviewAreaProps) {
                       backIsRevealed={isRevealed}
                       isDisplayed={renderedStackIndex > 0}
                       reviewItem={reviewItem}
-                      reviewMarkingInteractionState={
-                        reviewMarkingInteractionState
-                      }
-                      schedule={schedule}
                       onToggleExplanation={onToggleTopCardExplanation}
                     />
                   );
