@@ -36,8 +36,8 @@ export default function ReviewSessionProgressBar(props: {
     timing: {
       type: "spring",
       bounciness: 0,
+      useNativeDriver: true,
     },
-    useNativeDriver: false,
   });
 
   return (

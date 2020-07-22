@@ -1,4 +1,3 @@
-/// <reference lib="dom" />
 // Adapted from https://codesandbox.io/s/o9q8vy70l5?file=/src/HoverState.js:0-1159
 
 import React from "react";
@@ -29,6 +28,11 @@ function disableHover() {
   if (_isEnabled) {
     _isEnabled = false;
   }
+}
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const document: any;
 }
 
 function _initializeHoverStateIfNeeded() {

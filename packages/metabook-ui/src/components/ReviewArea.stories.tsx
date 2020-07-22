@@ -34,11 +34,6 @@ export function Basic() {
   }, []);
 
   return (
-    <ReviewArea
-      items={items}
-      onMark={onMark}
-      schedule="aggressiveStart"
-      shouldLabelApplicationPrompts={false}
-    />
+    <ReviewArea items={items} onMark={onMark} schedule="aggressiveStart" />
   );
 }

@@ -13,18 +13,15 @@ function makeTextComponent(
   layoutStyle: TextStyle,
   name: string,
 ): React.ComponentType<TextElementProps> {
-  const component = (props: TextElementProps) => {
-    console.log(name, layoutStyle.marginBottom);
-    return (
-      <View style={props.style}>
-        <Text style={layoutStyle} selectable={props.selectable ?? true}>
-          {props.children}
-        </Text>
-      </View>
-    );
-  };
+  const component = (props: TextElementProps) => (
+    <View style={props.style}>
+      <Text style={layoutStyle} selectable={props.selectable ?? true}>
+        {props.children}
+      </Text>
+    </View>
+  );
   component.displayName = name;
-  return component;
+  return React.memo(component);
 }
 
 export const DisplayLarge = makeTextComponent(

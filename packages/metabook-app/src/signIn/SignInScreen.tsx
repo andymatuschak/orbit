@@ -1,9 +1,9 @@
-import { Authentication } from "metabook-client";
 import { SignInForm, SignInFormProps } from "metabook-ui";
 import colors from "metabook-ui/dist/styles/colors";
 import { spacing } from "metabook-ui/dist/styles/layout";
 import React from "react";
 import { Alert, Platform, View } from "react-native";
+import { AuthenticationClient } from "../authentication";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
@@ -17,7 +17,7 @@ function shouldSendOpenerLoginToken() {
 }
 
 async function sendTokenToOpenerAndClose(
-  authenticationClient: Authentication.AuthenticationClient,
+  authenticationClient: AuthenticationClient,
 ) {
   // TODO error handling
   const idToken = await authenticationClient.getCurrentIDToken();

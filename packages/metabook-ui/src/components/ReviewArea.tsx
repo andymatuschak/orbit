@@ -40,7 +40,6 @@ export interface ReviewAreaProps {
   ) => //cardHandle: CardHandle, TODO
   void;
   schedule: MetabookSpacedRepetitionSchedule;
-  shouldLabelApplicationPrompts: boolean;
 
   showsCompletedState?: boolean;
   showsNeedsRetryNotice?: boolean;
@@ -142,7 +141,6 @@ export default function ReviewArea(props: ReviewAreaProps) {
     showsNeedsRetryNotice,
     forceShowAnswer,
     disableVisibilityTesting,
-    shouldLabelApplicationPrompts,
   } = props;
 
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
@@ -326,18 +324,14 @@ export default function ReviewArea(props: ReviewAreaProps) {
 
                   cardComponent = (
                     <Card
-                      isRevealed={isRevealed}
-                      isOccluded={renderedStackIndex > 0}
+                      backIsRevealed={isRevealed}
+                      isDisplayed={renderedStackIndex > 0}
                       reviewItem={reviewItem}
                       reviewMarkingInteractionState={
                         reviewMarkingInteractionState
                       }
                       schedule={schedule}
-                      showsNeedsRetryNotice={showsNeedsRetryNotice}
                       onToggleExplanation={onToggleTopCardExplanation}
-                      shouldLabelApplicationPrompts={
-                        shouldLabelApplicationPrompts
-                      }
                     />
                   );
                 }

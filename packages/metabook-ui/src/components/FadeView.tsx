@@ -14,6 +14,7 @@ export interface FadeViewProps {
 
   children?: React.ReactNode;
   durationMillis?: number;
+  delayMillis?: number;
   style?: WithAnimatedValue<StyleProp<ViewStyle>>;
   onTransitionEnd?: (toVisible: boolean, didFinish: boolean) => void;
   // TODO: implement unmountOnExit etc
@@ -22,7 +23,13 @@ export interface FadeViewProps {
 const defaultDurationMillis = 150;
 
 export default function FadeView(props: FadeViewProps) {
-  const { isVisible, durationMillis, onTransitionEnd } = props;
+  const {
+    isVisible,
+    durationMillis,
+    onTransitionEnd,
+    delayMillis,
+    style,
+  } = props;
 
   const opacity = useTransitioningValue({
     value: isVisible ? 1 : 0,
@@ -30,6 +37,7 @@ export default function FadeView(props: FadeViewProps) {
       type: "timing",
       easing: Easing.linear,
       duration: durationMillis || defaultDurationMillis,
+      delay: delayMillis || 0,
       useNativeDriver: true,
     },
     onEndCallback: ({ finished }) => onTransitionEnd?.(isVisible, finished),
@@ -37,14 +45,15 @@ export default function FadeView(props: FadeViewProps) {
 
   return (
     <Animated.View
-      {...props}
-      style={
-        StyleSheet.compose(props.style || [], ({
-          opacity,
-        } as unknown) as StyleProp<ViewStyle>) as WithAnimatedValue<
-          StyleProp<ViewStyle>
-        > // HACK: Taking advantage of the fact that StyleSheet.compose can work with animated values, even though its type doesn't claim it can.
-      }
+      style={React.useMemo(
+        () => [
+          style,
+          {
+            opacity,
+          },
+        ],
+        [style, opacity],
+      )}
     >
       {props.children}
     </Animated.View>

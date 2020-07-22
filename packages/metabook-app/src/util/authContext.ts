@@ -1,11 +1,11 @@
-import { Authentication } from "metabook-client";
 import React, { useEffect, useState } from "react";
+import { AuthenticationClient, UserRecord } from "../authentication";
 
-export const AuthenticationClientContext = React.createContext<Authentication.AuthenticationClient | null>(
+export const AuthenticationClientContext = React.createContext<AuthenticationClient | null>(
   null,
 );
 
-export function useAuthenticationClient(): Authentication.AuthenticationClient {
+export function useAuthenticationClient(): AuthenticationClient {
   const client = React.useContext(AuthenticationClientContext);
   if (!client) {
     throw new Error(
@@ -17,11 +17,11 @@ export function useAuthenticationClient(): Authentication.AuthenticationClient {
 
 // undefined means we don't know yet; null means signed out.
 export function useCurrentUserRecord(
-  authenticationClient: Authentication.AuthenticationClient,
-): Authentication.UserRecord | null | undefined {
-  const [userRecord, setUserRecord] = useState<
-    Authentication.UserRecord | null | undefined
-  >(undefined);
+  authenticationClient: AuthenticationClient,
+): UserRecord | null | undefined {
+  const [userRecord, setUserRecord] = useState<UserRecord | null | undefined>(
+    undefined,
+  );
   useEffect(() => {
     return authenticationClient.subscribeToUserAuthState(setUserRecord);
   }, [authenticationClient]);

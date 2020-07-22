@@ -1,5 +1,4 @@
 import {
-  Authentication,
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "metabook-client";
@@ -30,6 +29,7 @@ import {
   PersistenceStatus,
 } from "../util/firebase";
 import ReviewSessionProgressBar from "./ReviewSessionProgressBar";
+import { UserRecord } from "../authentication";
 
 function usePersistenceStatus() {
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(
@@ -58,7 +58,7 @@ function usePersistenceStatus() {
 }
 
 export function useDatabaseManager(
-  userRecord: Authentication.UserRecord | null | undefined,
+  userRecord: UserRecord | null | undefined,
 ): DatabaseManager | null {
   const persistenceStatus = usePersistenceStatus();
 
@@ -175,7 +175,6 @@ export default function ReviewSession() {
             items={remainingItems}
             onMark={onMarkCallback}
             schedule="aggressiveStart"
-            shouldLabelApplicationPrompts={false}
           />
           <ReviewSessionProgressBar
             completedTaskCount={currentQueueIndex}

@@ -56,7 +56,6 @@ const testAttachmentResolutionMap: AttachmentResolutionMap = new Map([
 
 export const basic = () => (
   <TestCard
-    showsNeedsRetryNotice={false}
     reviewItem={{
       reviewItemType: "prompt",
       prompt: testBasicPrompt,
@@ -64,14 +63,12 @@ export const basic = () => (
       promptState: null,
       attachmentResolutionMap: null,
     }}
-    shouldLabelApplicationPrompts={false}
   />
 );
 
 export const longText = () => (
   <View>
     <TestCard
-      showsNeedsRetryNotice={false}
       reviewItem={{
         reviewItemType: "prompt",
         prompt: {
@@ -91,14 +88,12 @@ export const longText = () => (
         promptState: null,
         attachmentResolutionMap: null,
       }}
-      shouldLabelApplicationPrompts={false}
     />
   </View>
 );
 
 export const applicationPrompt = () => (
   <TestCard
-    showsNeedsRetryNotice={false}
     reviewItem={{
       reviewItemType: "prompt",
       prompt: testApplicationPrompt,
@@ -106,14 +101,12 @@ export const applicationPrompt = () => (
       promptState: null,
       attachmentResolutionMap: null,
     }}
-    shouldLabelApplicationPrompts={true}
   />
 );
 
 export const clozePrompt = () => (
   <View>
     <TestCard
-      showsNeedsRetryNotice={false}
       reviewItem={{
         reviewItemType: "prompt",
         prompt: testClozePrompt,
@@ -121,10 +114,8 @@ export const clozePrompt = () => (
         promptState: null,
         attachmentResolutionMap: null,
       }}
-      shouldLabelApplicationPrompts={true}
     />
     <TestCard
-      showsNeedsRetryNotice={false}
       reviewItem={{
         reviewItemType: "prompt",
         prompt: {
@@ -139,14 +130,12 @@ export const clozePrompt = () => (
         promptState: null,
         attachmentResolutionMap: null,
       }}
-      shouldLabelApplicationPrompts={true}
     />
   </View>
 );
 
 export const image = () => (
   <TestCard
-    showsNeedsRetryNotice={false}
     reviewItem={{
       reviewItemType: "prompt",
       prompt: {
@@ -160,20 +149,11 @@ export const image = () => (
       promptState: null,
       attachmentResolutionMap: testAttachmentResolutionMap,
     }}
-    shouldLabelApplicationPrompts={false}
   />
 );
 
-function TestCard(props: {
-  showsNeedsRetryNotice: boolean;
-  shouldLabelApplicationPrompts: boolean;
-  reviewItem: PromptReviewItem;
-}) {
-  const {
-    showsNeedsRetryNotice,
-    shouldLabelApplicationPrompts,
-    reviewItem,
-  } = props;
+function TestCard(props: { reviewItem: PromptReviewItem }) {
+  const { reviewItem } = props;
   return (
     <View>
       <h2>{JSON.stringify(props)}</h2>
@@ -184,8 +164,8 @@ function TestCard(props: {
         schedule="aggressiveStart"
         reviewItem={reviewItem}
       >
-        {(promptState, reviewMarkingInteractionState) =>
-          [false, true].map((isRevealed, index) => {
+        {(promptState, reviewMarkingInteractionState, isRevealed) =>
+          [isRevealed, true].map((isRevealed, index) => {
             return (
               <View
                 key={index}
@@ -197,19 +177,9 @@ function TestCard(props: {
                 {boolean("Show grid", true) && <DebugGrid />}
                 <Card
                   {...testCardProps}
-                  reviewItem={
-                    {
-                      ...reviewItem,
-                      promptState: {
-                        ...promptState,
-                        needsRetry: showsNeedsRetryNotice,
-                      },
-                    } as PromptReviewItem
-                  }
-                  isRevealed={isRevealed}
+                  reviewItem={reviewItem}
+                  backIsRevealed={isRevealed}
                   reviewMarkingInteractionState={reviewMarkingInteractionState}
-                  showsNeedsRetryNotice={showsNeedsRetryNotice}
-                  shouldLabelApplicationPrompts={shouldLabelApplicationPrompts}
                 />
               </View>
             );
@@ -249,6 +219,7 @@ function WithReviewState(props: {
   children: (
     promptState: PromptState,
     reviewMarkingInteractionState: ReviewMarkingInteractionState | null,
+    isRevealed: boolean,
   ) => ReactNode;
 }) {
   const [promptState, setPromptState] = useState<PromptState>(
@@ -273,6 +244,8 @@ function WithReviewState(props: {
     reviewMarkingInterationState,
     setReviewMarkingInterationState,
   ] = useState<ReviewMarkingInteractionState | null>(null);
+
+  const [isRevealed, setRevealed] = useState(false);
 
   /*const onHoverDidChange = useCallback(
     (isHovering: boolean, outcome: MetabookActionOutcome) => {
@@ -305,9 +278,16 @@ function WithReviewState(props: {
       }}
     >
       <View style={{ flexDirection: "row" }}>
-        {props.children(promptState, reviewMarkingInterationState)}
+        {props.children(promptState, reviewMarkingInterationState, isRevealed)}
       </View>
       <View style={{ flexDirection: "row" }}>
+        <Button
+          title="Toggle revealed"
+          onPress={() => {
+            setRevealed((isRevealed) => !isRevealed);
+          }}
+        />
+
         <Button
           title="Mark remembered"
           onPress={() => {

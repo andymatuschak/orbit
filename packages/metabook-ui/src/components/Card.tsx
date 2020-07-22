@@ -7,7 +7,7 @@ import {
   MetabookSpacedRepetitionSchedule,
   QAPrompt,
 } from "metabook-core";
-import React, { useMemo } from "react";
+import React from "react";
 import { StyleSheet, View } from "react-native";
 import {
   ApplicationPromptReviewItem,
@@ -16,25 +16,25 @@ import {
   PromptReviewItem,
 } from "../reviewItem";
 import { layout } from "../styles";
-import colors from "../styles/colors";
-import { borderRadius } from "../styles/layout";
 import CardField, { clozeBlankSentinel } from "./CardField";
 import FadeView from "./FadeView";
+import {
+  AnimationSpec,
+  useTransitioningValue,
+} from "./hooks/useTransitioningValue";
 import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
 import { Caption } from "./Text";
 
-export const cardWidth = 343;
+export const cardWidth = 343; // TODO remove
 
 export interface CardProps {
   reviewItem: PromptReviewItem;
 
-  isRevealed: boolean;
-  isOccluded?: boolean;
-  showsNeedsRetryNotice?: boolean;
+  backIsRevealed: boolean;
+  isDisplayed?: boolean;
   reviewMarkingInteractionState: ReviewMarkingInteractionState | null;
   schedule: MetabookSpacedRepetitionSchedule;
   onToggleExplanation?: (isExplanationExpanded: boolean) => unknown;
-  shouldLabelApplicationPrompts: boolean;
 }
 
 function getQAPrompt(
@@ -52,35 +52,115 @@ function getQAPrompt(
   }
 }
 
-const fadeDurationMillis = 150;
+const topAreaFadeDurationMillis = 100;
+const topAreaFadeDelayMillis = 60;
+
+const bottomAreaTranslationAnimationSpec: AnimationSpec = {
+  type: "spring",
+  bounciness: 0,
+  speed: 28,
+  useNativeDriver: true,
+};
+
+const topAreaTranslationAnimationSpec: AnimationSpec = {
+  ...bottomAreaTranslationAnimationSpec,
+  delay: 50,
+};
 
 function QAPromptCard(
   props: Omit<CardProps, "reviewItem"> & {
     reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem;
   },
 ) {
+  const bottomAreaRevealAnimation = useTransitioningValue({
+    value: props.backIsRevealed ? 1 : 0,
+    timing: bottomAreaTranslationAnimationSpec,
+  });
+  const topAreaRevealAnimation = useTransitioningValue({
+    value: props.backIsRevealed ? 1 : 0,
+    timing: topAreaTranslationAnimationSpec,
+  });
+  const topAreaTranslation = React.useMemo(
+    () => ({
+      translateY: topAreaRevealAnimation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [16, 0],
+      }),
+    }),
+    [topAreaRevealAnimation],
+  );
+
+  const topAreaContextStyle = React.useMemo(
+    () => [
+      styles.topAreaContext,
+      {
+        transform: [topAreaTranslation],
+      },
+    ],
+    [topAreaTranslation],
+  );
+
+  const topAreaInteriorStyle = React.useMemo(
+    () => [
+      styles.topAreaInterior,
+      {
+        transform: [topAreaTranslation, { scaleX: 0.6667 }, { scaleY: 0.6667 }],
+      },
+    ],
+    [topAreaTranslation],
+  );
+
+  const bottomFrontStyle = React.useMemo(
+    () => [
+      StyleSheet.absoluteFill,
+      {
+        transform: [
+          {
+            translateY: bottomAreaRevealAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, -8],
+            }),
+          },
+        ],
+      },
+    ],
+    [bottomAreaRevealAnimation],
+  );
+
+  const bottomBackStyle = React.useMemo(
+    () => [
+      StyleSheet.absoluteFill,
+      {
+        transform: [
+          {
+            translateY: bottomAreaRevealAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [30, 0],
+            }),
+          },
+        ],
+      },
+    ],
+    [bottomAreaRevealAnimation],
+  );
+
   const spec = getQAPrompt(props.reviewItem);
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.cardContainer}>
       <FadeView
-        isVisible={props.isRevealed}
-        durationMillis={fadeDurationMillis}
-        style={{ marginBottom: layout.gridUnit }}
+        isVisible={props.backIsRevealed}
+        durationMillis={topAreaFadeDurationMillis}
+        delayMillis={topAreaFadeDelayMillis}
+        style={topAreaContextStyle}
       >
-        <Caption>Source context</Caption>
+        <Caption>Source context TODO</Caption>
       </FadeView>
-      <View style={{ flex: 2 }}>
+      <View style={styles.topAreaContainer}>
         <FadeView
-          isVisible={props.isRevealed}
-          durationMillis={fadeDurationMillis}
-          style={{
-            position: "absolute",
-            top: "-25%",
-            left: "-16.667%",
-            width: "100%",
-            height: "150%",
-            transform: [{ scaleX: 0.6667 }, { scaleY: 0.6667 }],
-          }}
+          isVisible={props.backIsRevealed}
+          durationMillis={topAreaFadeDurationMillis}
+          delayMillis={topAreaFadeDelayMillis}
+          style={topAreaInteriorStyle}
         >
           <CardField
             promptField={spec.question}
@@ -88,11 +168,11 @@ function QAPromptCard(
           />
         </FadeView>
       </View>
-      <View style={{ flex: 3 }}>
+      <View style={styles.bottomAreaContainer}>
         <FadeView
-          isVisible={props.isRevealed}
-          durationMillis={fadeDurationMillis}
-          style={StyleSheet.absoluteFill}
+          isVisible={props.backIsRevealed}
+          durationMillis={100}
+          style={bottomBackStyle}
         >
           <CardField
             promptField={spec.answer}
@@ -100,9 +180,9 @@ function QAPromptCard(
           />
         </FadeView>
         <FadeView
-          isVisible={!props.isRevealed}
-          durationMillis={fadeDurationMillis}
-          style={StyleSheet.absoluteFill}
+          isVisible={!props.backIsRevealed}
+          durationMillis={70}
+          style={bottomFrontStyle}
         >
           <CardField
             promptField={spec.question}
@@ -155,37 +235,7 @@ function ClozePromptCard(
     reviewItem: ClozePromptReviewItem;
   },
 ) {
-  const { isRevealed } = props;
-  const {
-    promptParameters: { clozeIndex },
-    prompt: { body },
-    attachmentResolutionMap,
-  } = props.reviewItem;
-  const promptField = useMemo(
-    () => ({
-      contents: formatClozePromptContents(
-        body.contents,
-        isRevealed,
-        clozeIndex,
-      ),
-      attachments: body.attachments,
-    }),
-    [isRevealed, clozeIndex, body],
-  );
-  return (
-    <View style={styles.container}>
-      <View style={[styles.questionArea, { flexGrow: 1 }]}>
-        <CardField
-          promptField={promptField}
-          attachmentResolutionMap={attachmentResolutionMap}
-        />
-      </View>
-      <View style={styles.bottomArea}>
-        <View style={styles.progressIndicator} />
-        <FadeView isVisible={!isRevealed} style={styles.answerCover} />
-      </View>
-    </View>
-  );
+  return null;
 }
 
 export default function Card(props: CardProps) {
@@ -213,62 +263,31 @@ export default function Card(props: CardProps) {
   }
 }
 
-export const baseCardHeight = 439;
-const interiorRegionHeight = 196;
+export const baseCardHeight = 439; // TODO REMOVE
 
 const styles = StyleSheet.create({
-  container: {
-    width: cardWidth,
-    minHeight: baseCardHeight,
-    maxHeight: baseCardHeight,
-
-    shadowColor: colors.key80,
-    shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 0.07,
-    shadowRadius: 50,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.backgroundGray,
-    borderRadius,
-
-    flexDirection: "column",
+  cardContainer: {
+    flex: 1,
   },
 
-  qaPromptContentArea: {
-    flexBasis: interiorRegionHeight,
+  topAreaContainer: {
+    flex: 2,
   },
 
-  questionArea: {
-    borderTopLeftRadius: borderRadius,
-    borderTopRightRadius: borderRadius,
-    overflow: "hidden",
-    backgroundColor: "white",
-    borderBottomColor: colors.key10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+  topAreaInterior: {
+    position: "absolute",
+    width: "100%",
+    height: "150%", // pre-shrunken size should be equivalent to flex-3 in this flex-2 container
+    // There's no transform origin in RN, so the view is scaled from its center. We translate to compensate:
+    left: "-16.667%", // Scaling down by 2/3 leaves margins of 1/6 the original size.
+    top: "-25%", // This is 1/6 scaled up by 150%
   },
 
-  answerArea: {
-    backgroundColor: colors.key00,
-    borderBottomColor: colors.key10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+  topAreaContext: {
+    marginBottom: layout.gridUnit,
   },
 
-  progressIndicator: {
-    backgroundColor: "white",
-    height: 47,
-    borderBottomLeftRadius: borderRadius,
-    borderBottomRightRadius: borderRadius,
-    overflow: "hidden",
+  bottomAreaContainer: {
+    flex: 3,
   },
-
-  bottomArea: {},
-
-  answerCover: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.key00,
-    borderBottomLeftRadius: borderRadius,
-    borderBottomRightRadius: borderRadius,
-    overflow: "hidden",
-  },
-
-  answerCoverInterior: {},
 });

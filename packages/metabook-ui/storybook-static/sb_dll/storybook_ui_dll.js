@@ -50233,13 +50233,13 @@ var storybook_ui_dll = (function (e) {
             highlightAllUnder: function (e, t, n) {
               var i = {
                 callback: n,
-                container: e,
+                cardContainer: e,
                 selector:
                   'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code',
               };
               r.hooks.run("before-highlightall", i),
                 (i.elements = Array.prototype.slice.apply(
-                  i.container.querySelectorAll(i.selector),
+                  i.cardContainer.querySelectorAll(i.selector),
                 )),
                 r.hooks.run("before-all-elements-highlight", i);
               for (var o, a = 0; (o = i.elements[a++]); )
@@ -62705,7 +62705,7 @@ var storybook_ui_dll = (function (e) {
             ((root = value),
             refs.forEach(function (e) {
               var t = e.target,
-                n = e.container,
+                n = e.cardContainer,
                 r = e.replacement;
               n[t] =
                 "root" === r
@@ -62755,7 +62755,7 @@ var storybook_ui_dll = (function (e) {
           : "string" == typeof value && value.startsWith("_duplicate_")
           ? (refs.push({
               target: key,
-              container: this,
+              cardContainer: this,
               replacement: value.replace("_duplicate_", ""),
             }),
             null)
@@ -63950,7 +63950,7 @@ var storybook_ui_dll = (function (e) {
           (this.ctr = 0),
           (this.nonce = e.nonce),
           (this.key = e.key),
-          (this.container = e.container),
+          (this.cardContainer = e.cardContainer),
           (this.before = null);
       }
       var t = e.prototype;
@@ -63971,7 +63971,7 @@ var storybook_ui_dll = (function (e) {
               0 === this.tags.length
                 ? this.before
                 : this.tags[this.tags.length - 1].nextSibling),
-              this.container.insertBefore(n, t),
+              this.cardContainer.insertBefore(n, t),
               this.tags.push(n);
           }
           var r = this.tags[this.tags.length - 1];
@@ -66176,7 +66176,7 @@ var storybook_ui_dll = (function (e) {
             this.sheet = new c.StyleSheet({
               key: this.props.cache.key + "-global",
               nonce: this.props.cache.sheet.nonce,
-              container: this.props.cache.sheet.container,
+              cardContainer: this.props.cache.sheet.cardContainer,
             });
             var e = document.querySelector(
               "style[data-emotion-" +
@@ -76418,10 +76418,10 @@ var storybook_ui_dll = (function (e) {
         }
       }
       function d(e) {
-        return i(e).container.childNodes[0].childNodes[0].childNodes[0];
+        return i(e).cardContainer.childNodes[0].childNodes[0].childNodes[0];
       }
       function p(e) {
-        return i(e).container.childNodes[0].childNodes[0].childNodes[1];
+        return i(e).cardContainer.childNodes[0].childNodes[0].childNodes[1];
       }
       return (
         s(window.document),
@@ -76436,7 +76436,7 @@ var storybook_ui_dll = (function (e) {
               }
             }
             function m(e) {
-              var t = i(e).container.childNodes[0],
+              var t = i(e).cardContainer.childNodes[0],
                 n = window.getComputedStyle(t);
               return !n.width || -1 === n.width.indexOf("px");
             }
@@ -76494,7 +76494,7 @@ var storybook_ui_dll = (function (e) {
                 (i.scrollTop = l);
             }
             function T() {
-              var e = i(s).container;
+              var e = i(s).cardContainer;
               if (!e) {
                 ((e = document.createElement("div")).className =
                   "erd_scroll_detection_container"),
@@ -76508,7 +76508,7 @@ var storybook_ui_dll = (function (e) {
                     "margin: 0",
                     "padding: 0",
                   ])),
-                  (i(s).container = e),
+                  (i(s).cardContainer = e),
                   (function (e) {
                     e.className +=
                       " erd_scroll_detection_container_animation_active";
@@ -76556,7 +76556,7 @@ var storybook_ui_dll = (function (e) {
                       r(t, s, n, "left");
                   }
                 })();
-                var n = i(s).container;
+                var n = i(s).cardContainer;
                 n || (n = T());
                 var r,
                   o,
@@ -76708,7 +76708,7 @@ var storybook_ui_dll = (function (e) {
                     });
               }
               function c() {
-                return !!i(s).container;
+                return !!i(s).cardContainer;
               }
               function u() {
                 f("notifyListenersIfNeeded invoked");
@@ -76815,8 +76815,8 @@ var storybook_ui_dll = (function (e) {
               (t.onExpandScroll && u(d(e), "scroll", t.onExpandScroll),
               t.onShrinkScroll && u(p(e), "scroll", t.onShrinkScroll),
               t.onAnimationStart &&
-                u(t.container, "animationstart", t.onAnimationStart),
-              t.container && e.removeChild(t.container));
+                u(t.cardContainer, "animationstart", t.onAnimationStart),
+              t.cardContainer && e.removeChild(t.cardContainer));
           },
           initDocument: s,
         }
@@ -94345,7 +94345,7 @@ var storybook_ui_dll = (function (e) {
       var o = new i.default(t);
       var l,
         c = {};
-      l = e.container || document.head;
+      l = e.cardContainer || document.head;
       var u,
         d = document.querySelectorAll("style[data-emotion-" + n + "]");
       Array.prototype.forEach.call(d, function (e) {
@@ -94366,7 +94366,7 @@ var storybook_ui_dll = (function (e) {
         key: n,
         sheet: new r.StyleSheet({
           key: n,
-          container: l,
+          cardContainer: l,
           nonce: e.nonce,
           speedy: e.speedy,
         }),

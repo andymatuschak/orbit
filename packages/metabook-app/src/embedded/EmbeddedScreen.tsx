@@ -160,12 +160,7 @@ function EmbeddedScreen() {
   if (currentQueue) {
     return (
       <View style={{ position: "relative" }}>
-        <ReviewArea
-          items={currentQueue}
-          onMark={onMark}
-          schedule="default"
-          shouldLabelApplicationPrompts={true}
-        />
+        <ReviewArea items={currentQueue} onMark={onMark} schedule="default" />
         <AuthenticationStatusIndicator
           authenticationState={authenticationState}
           onSignIn={onSignIn}

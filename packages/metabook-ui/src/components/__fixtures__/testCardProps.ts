@@ -11,9 +11,7 @@ const testCardProps: CardProps = {
   },
   reviewMarkingInteractionState: null,
   schedule: "aggressiveStart",
-  showsNeedsRetryNotice: false,
-  shouldLabelApplicationPrompts: true,
-  isRevealed: false,
-  isOccluded: false,
+  backIsRevealed: false,
+  isDisplayed: false,
 };
 export default testCardProps;

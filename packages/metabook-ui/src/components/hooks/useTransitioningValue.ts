@@ -1,9 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Animated } from "react-native";
 import unreachableCaseError from "../../util/unreachableCaseError";
-import usePrevious from "./usePrevious";
 
-type AnimationSpec =
+export type AnimationSpec =
   | ({ type: "timing" } & Omit<Animated.TimingAnimationConfig, "toValue">)
   | ({ type: "spring" } & Omit<Animated.SpringAnimationConfig, "toValue">);
 
@@ -11,36 +10,33 @@ export function useTransitioningValue({
   value,
   timing,
   onEndCallback,
-  useNativeDriver,
 }: {
   value: number;
   timing: AnimationSpec;
   onEndCallback?: Animated.EndCallback;
-  useNativeDriver?: boolean;
 }): Animated.Value {
   const animatedValue = useRef(new Animated.Value(value));
-  const oldValue = usePrevious(value);
+  const oldValue = useRef<number>();
   useEffect(() => {
-    if (oldValue !== undefined && oldValue !== value) {
+    if (oldValue.current !== undefined && oldValue.current !== value) {
       let animation: Animated.CompositeAnimation;
       if (timing.type === "timing") {
         animation = Animated.timing(animatedValue.current, {
           ...timing,
           toValue: value,
-          useNativeDriver: useNativeDriver ?? true,
         });
       } else if (timing.type === "spring") {
         animation = Animated.spring(animatedValue.current, {
           ...timing,
           toValue: value,
-          useNativeDriver: useNativeDriver ?? true,
         });
       } else {
         throw unreachableCaseError(timing);
       }
       animation.start(onEndCallback);
     }
-  }, [value]);
+    oldValue.current = value;
+  }, [value, timing, onEndCallback]);
 
   return animatedValue.current;
 }
