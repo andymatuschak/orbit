@@ -175,7 +175,7 @@ function formatClozePromptContents(
   }
 }
 
-export default function Card({
+export default React.memo(function Card({
   backIsRevealed,
   contextColor,
   reviewItem,
@@ -237,7 +237,7 @@ export default function Card({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   cardContainer: {

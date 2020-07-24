@@ -41,11 +41,10 @@ export function Basic() {
         margin: 16,
         padding: 16,
         backgroundColor: colors.bg[0],
-        width: 750,
         height: 500,
       }}
     >
-      <View style={{ borderWidth: 1, borderColor: "gray", flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <ReviewArea items={items} onMark={onMark} schedule="aggressiveStart" />
       </View>
     </View>

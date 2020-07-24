@@ -44,7 +44,7 @@ const ButtonImpl = React.memo(function ButtonImpl({
   if (wasPressed && !isPressed) {
     Animated.timing(opacity, {
       easing: Easing.linear,
-      duration: 150,
+      duration: 100,
       toValue: 1,
       useNativeDriver: true,
     }).start();

@@ -12,3 +12,28 @@ export const spacing = {
   spacing08: gridUnit * 2.5,
   spacing09: gridUnit * 3,
 };
+
+const baseColumnWidth = 174;
+export const columnMargin = gridUnit;
+
+export function getColumnSpan(columnCount: number, columnWidth: number) {
+  if (columnCount < 1) {
+    throw new Error(`Can't get column span for column count of ${columnCount}`);
+  }
+  return columnCount * columnWidth + (columnCount - 1) * columnMargin;
+}
+
+export interface ColumnLayout {
+  columnCount: number;
+  columnWidth: number;
+}
+
+export function getColumnLayout(width: number): ColumnLayout {
+  const columnCount = Math.floor(
+    (width + columnMargin) / (baseColumnWidth + columnMargin),
+  );
+  return {
+    columnCount,
+    columnWidth: (width - columnMargin * (columnCount - 1)) / columnCount,
+  };
+}

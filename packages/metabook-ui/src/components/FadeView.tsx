@@ -1,18 +1,12 @@
 import React from "react";
-import {
-  Animated,
-  Easing,
-  StyleProp,
-  StyleSheet,
-  ViewStyle,
-} from "react-native";
+import { Animated, Easing, StyleProp, ViewStyle } from "react-native";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import WithAnimatedValue = Animated.WithAnimatedValue;
 
 export interface FadeViewProps {
   isVisible: boolean;
 
-  children?: React.ReactNode;
+  children: React.ReactNode;
   durationMillis?: number;
   delayMillis?: number;
   style?: WithAnimatedValue<StyleProp<ViewStyle>>;

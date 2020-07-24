@@ -11,6 +11,8 @@ import colors from "../styles/colors";
 import { borderRadius, gridUnit, spacing } from "../styles/layout";
 import type from "../styles/type";
 
+// TODO remove
+
 export default function BigButton(
   props: {
     variant?: "primary" | "secondary";

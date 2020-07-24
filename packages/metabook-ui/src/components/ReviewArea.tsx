@@ -10,16 +10,15 @@ import {
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { ColorValue, StyleSheet, View } from "react-native";
 import { PromptReviewItem, ReviewItem } from "../reviewItem";
-import { colors } from "../styles";
-import { gridUnit } from "../styles/layout";
+import { colors, layout } from "../styles";
+import { columnMargin, getColumnSpan } from "../styles/layout";
 import unreachableCaseError from "../util/unreachableCaseError";
 import Button from "./Button";
-import Card from "./Card";
+import Card, { CardProps } from "./Card";
 import FadeView from "./FadeView";
 import usePrevious from "./hooks/usePrevious";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import { IconName } from "./Icon";
-import Spacer from "./Spacer";
 
 type Size = { width: number; height: number };
 
@@ -45,46 +44,53 @@ interface PendingMarkingInteractionState {
 const maximumCardsToRender = 3;
 const promptRotation = "16deg";
 
-function PromptContainer({
-  size,
-  renderedStackIndex,
-  item,
-  onDidDisappear,
-  children,
-}: {
-  size: { width: number; height: number };
-  item: PromptReviewItem;
-  renderedStackIndex: number;
-  onDidDisappear: (renderedStackIndex: number) => void;
-  children: React.ReactNode;
-}) {
-  const isDisplayed = item !== null && renderedStackIndex === 0;
+const rotationAnimationTiming = {
+  type: "spring",
+  useNativeDriver: true,
+  bounciness: 0,
+  speed: 25,
+} as const;
 
+type PromptContainerState = "displayed" | "disappearing" | "hidden";
+
+const PromptContainer = React.memo(function PromptContainer({
+  size,
+  displayState,
+  onDidDisappear,
+  reviewItem,
+  onToggleExplanation,
+  contextColor,
+  backIsRevealed,
+}: {
+  size: Size;
+  displayState: PromptContainerState;
+  onDidDisappear: (reviewItem: ReviewItem) => void;
+} & CardProps) {
   const onTransitionEnd = useCallback(
     (toVisible: boolean, didFinish: boolean) => {
       if (!toVisible && didFinish) {
-        onDidDisappear(renderedStackIndex);
+        onDidDisappear(reviewItem);
       }
     },
-    [onDidDisappear, renderedStackIndex],
+    [onDidDisappear, reviewItem],
   );
 
   const rotationUnit = useTransitioningValue({
-    value: renderedStackIndex < 0 ? -1 : renderedStackIndex === 0 ? 0 : 1,
-    timing: {
-      type: "spring",
-      useNativeDriver: true,
-      bounciness: 0,
-      speed: 25,
-    },
+    value:
+      displayState === "disappearing"
+        ? -1
+        : displayState === "displayed"
+        ? 0
+        : 1,
+    timing: rotationAnimationTiming,
   });
 
   const style = useMemo(
     () => [
       StyleSheet.absoluteFill,
       {
-        zIndex: maximumCardsToRender - renderedStackIndex + 1,
         transform: [
+          // The translations shift the transform origin to the upper-left corner.
           { translateX: -size.width / 2.0 },
           { translateY: -size.height / 2.0 },
           {
@@ -98,21 +104,26 @@ function PromptContainer({
         ],
       },
     ],
-    [size, renderedStackIndex, rotationUnit],
+    [size, rotationUnit],
   );
 
   return (
     <FadeView
-      isVisible={isDisplayed}
+      isVisible={displayState === "displayed"}
       onTransitionEnd={onTransitionEnd}
-      durationMillis={renderedStackIndex === 0 ? 40 : 100}
-      delayMillis={renderedStackIndex === 0 ? 60 : 0}
+      durationMillis={displayState === "displayed" ? 40 : 100}
+      delayMillis={displayState === "displayed" ? 60 : 0}
       style={style}
     >
-      {children}
+      <Card
+        reviewItem={reviewItem}
+        onToggleExplanation={onToggleExplanation}
+        contextColor={contextColor}
+        backIsRevealed={backIsRevealed}
+      />
     </FadeView>
   );
-}
+});
 
 export default function ReviewArea(props: ReviewAreaProps) {
   const accentColor = colors.fg[6]; // TODO
@@ -155,23 +166,18 @@ export default function ReviewArea(props: ReviewAreaProps) {
     }
   }, [isShowingAnswer, currentItem]);
 
-  const onTogglePromptExplanation = useCallback(
-    (isExplanationExpanded) => {
-      if (currentItem?.reviewItemType !== "prompt") {
-        throw new Error(
-          "How are we toggling the top card's explanation when it's not a question?",
-        );
-      }
-
-      throw new Error("Unimplemented"); // TODO
-    },
-    [currentItem],
-  );
+  const onTogglePromptExplanation = useCallback((isExplanationExpanded) => {
+    throw new Error("Unimplemented"); // TODO
+  }, []);
 
   const departingPromptItems = useRef<ReviewItem[]>([]);
 
-  const onPromptDidDisappear = useCallback((renderedStackIndex) => {
-    departingPromptItems.current.splice(-1 * renderedStackIndex - 1, 1);
+  const onPromptDidDisappear = useCallback((item) => {
+    const itemIndex = departingPromptItems.current.indexOf(item);
+    if (itemIndex === -1) {
+      throw new Error("Unknown prompt disappeared");
+    }
+    departingPromptItems.current.splice(itemIndex, 1);
     setPhase((phase) => phase + 1);
   }, []);
 
@@ -192,6 +198,24 @@ export default function ReviewArea(props: ReviewAreaProps) {
   }
 
   const [size, setSize] = useState<Size | null>(null);
+  const width = size?.width;
+  const columnLayout = useMemo(
+    () => (width ? layout.getColumnLayout(width) : null),
+    [width],
+  );
+
+  const promptContainerStyles = useMemo(
+    () => [
+      styles.promptContainer,
+      columnLayout && {
+        maxWidth: getColumnSpan(
+          Math.min(3, columnLayout.columnCount),
+          columnLayout.columnWidth,
+        ),
+      },
+    ],
+    [columnLayout],
+  );
 
   const renderedItems = departingPromptItems.current
     .concat(items)
@@ -209,58 +233,62 @@ export default function ReviewArea(props: ReviewAreaProps) {
         [],
       )}
     >
-      <View style={styles.promptContainer}>
-        {size &&
-          Array.from(new Array(maximumCardsToRender).keys()).map(
-            (renderNodeIndex) => {
-              const renderedItemIndex =
-                (((renderNodeIndex - phase) % maximumCardsToRender) +
-                  maximumCardsToRender) %
-                maximumCardsToRender;
-              // The rendered stack index is 0 for the prompt that's currently on top, 1 for the prompt card down, -1 for the prompt that's currently animating out.
-              const renderedStackIndex =
-                renderedItemIndex - departingPromptItems.current.length;
+      {size && (
+        <>
+          <View style={promptContainerStyles}>
+            {Array.from(new Array(maximumCardsToRender).keys()).map(
+              (renderNodeIndex) => {
+                const renderedItemIndex =
+                  (((renderNodeIndex - phase) % maximumCardsToRender) +
+                    maximumCardsToRender) %
+                  maximumCardsToRender;
+                // The rendered stack index is 0 for the prompt that's currently on top, 1 for the prompt card down, -1 for the prompt that's currently animating out.
+                const renderedStackIndex =
+                  renderedItemIndex - departingPromptItems.current.length;
+                const displayState =
+                  renderedStackIndex < 0
+                    ? "disappearing"
+                    : renderedStackIndex === 0
+                    ? "displayed"
+                    : "hidden";
 
-              return (
-                <PromptContainer
-                  key={renderNodeIndex}
-                  renderedStackIndex={renderedStackIndex}
-                  item={renderedItems[renderedItemIndex] || null}
-                  onDidDisappear={onPromptDidDisappear}
-                  size={size}
-                >
-                  {(renderedItems[renderedItemIndex] || null) && (
-                    <Card
-                      backIsRevealed={
-                        (isShowingAnswer && renderedStackIndex === 0) ||
-                        renderedStackIndex < 0
-                      }
-                      reviewItem={renderedItems[renderedItemIndex] || null}
-                      onToggleExplanation={onTogglePromptExplanation}
-                      contextColor={accentColor}
-                    />
-                  )}
-                </PromptContainer>
-              );
-            },
-          )}
-      </View>
+                return (
+                  <PromptContainer
+                    key={renderNodeIndex}
+                    displayState={displayState}
+                    reviewItem={renderedItems[renderedItemIndex] || null}
+                    onDidDisappear={onPromptDidDisappear}
+                    size={size}
+                    onToggleExplanation={onTogglePromptExplanation}
+                    contextColor={accentColor}
+                    backIsRevealed={
+                      (isShowingAnswer && displayState === "displayed") ||
+                      displayState === "disappearing"
+                    }
+                  />
+                );
+              },
+            )}
+          </View>
 
-      <ReviewButtonArea
-        onMark={onMarkingButton}
-        onReveal={onReveal}
-        onPendingMarkingInteractionStateDidChange={
-          setPendingMarkingInteractionState
-        }
-        disabled={items.length === 0}
-        promptType={
-          currentItem?.reviewItemType === "prompt"
-            ? currentItem.prompt.promptType
-            : null
-        }
-        accentColor={colors.fg[6]} // TODO
-        isShowingAnswer={isShowingAnswer}
-      />
+          <ReviewButtonArea
+            onMark={onMarkingButton}
+            onReveal={onReveal}
+            onPendingMarkingInteractionStateDidChange={
+              setPendingMarkingInteractionState
+            }
+            disabled={items.length === 0}
+            promptType={
+              currentItem?.reviewItemType === "prompt"
+                ? currentItem.prompt.promptType
+                : null
+            }
+            accentColor={colors.fg[6]} // TODO
+            isShowingAnswer={isShowingAnswer}
+            columnLayout={columnLayout!}
+          />
+        </>
+      )}
     </View>
   );
 }
@@ -271,16 +299,15 @@ const styles = StyleSheet.create({
   },
 
   promptContainer: {
-    marginTop: gridUnit * 9, // TODO
+    marginTop: layout.gridUnit * 9, // TODO
     flex: 1,
   },
 
   buttonContainer: {
-    flexDirection: "row",
-    height: gridUnit * 5,
+    flexWrap: "wrap",
+    minHeight: layout.gridUnit * 5,
     alignItems: "flex-end",
     justifyContent: "flex-end",
-    maxWidth: 175 * 2 + gridUnit, // TODO
   },
 
   buttonLayoutStyles: {
@@ -324,6 +351,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
   onReveal,
   promptType,
   isShowingAnswer,
+  columnLayout,
 }: {
   onMark: (outcome: PromptRepetitionOutcome) => void;
   onReveal: () => void;
@@ -334,28 +362,24 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
   promptType: PromptType | null;
   accentColor: ColorValue;
   isShowingAnswer: boolean;
+  columnLayout: layout.ColumnLayout;
 }) {
   const children: React.ReactNode[] = [];
   function addButton(button: React.ReactNode) {
     if (children.length > 0) {
-      children.push(<Spacer units={1} />);
+      children.push(
+        <View
+          key={`spacer-${children.length}`}
+          style={{ width: columnMargin, height: layout.gridUnit }}
+        />,
+      );
     }
     children.push(button);
   }
 
-  const onForgot = useCallback(
-    () => onMark(PromptRepetitionOutcome.Forgotten),
-    [onMark],
-  );
-
-  const onRemembered = useCallback(
-    () => onMark(PromptRepetitionOutcome.Remembered),
-    [onMark],
-  );
-
   const sharedButtonProps = {
     disabled,
-    style: styles.buttonLayoutStyles,
+    style: { width: columnLayout.columnWidth },
     color: buttonColor,
     accentColor,
   } as const;
@@ -365,7 +389,8 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
       addButton(
         <Button
           {...sharedButtonProps}
-          onPress={onForgot}
+          key={1}
+          onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
           iconName={IconName.Cross}
           title={getButtonTitle(promptType, PromptRepetitionOutcome.Forgotten)}
         />,
@@ -373,7 +398,8 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
       addButton(
         <Button
           {...sharedButtonProps}
-          onPress={onRemembered}
+          key={2}
+          onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
           iconName={IconName.Check}
           title={getButtonTitle(promptType, PromptRepetitionOutcome.Remembered)}
         />,
@@ -382,6 +408,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
       addButton(
         <Button
           {...sharedButtonProps}
+          key={2}
           onPress={onReveal}
           // iconName={IconName.Cross}
           title={"Reveal answer"}
@@ -390,5 +417,20 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
     }
   }
 
-  return <View style={styles.buttonContainer}>{children}</View>;
+  return (
+    <View
+      style={[
+        styles.buttonContainer,
+        {
+          maxWidth: getColumnSpan(
+            Math.min(2, columnLayout.columnCount),
+            columnLayout.columnWidth,
+          ),
+          flexDirection: columnLayout.columnCount > 1 ? "row" : "column",
+        },
+      ]}
+    >
+      {children}
+    </View>
+  );
 });
