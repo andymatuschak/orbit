@@ -76,7 +76,7 @@ export default function ReviewSessionProgressBar(props: {
           }}
         />
       </View>
-      <Spacer size={spacing.spacing06} />
+      <Spacer units={1} />
       <View
         style={{
           justifyContent: "center",

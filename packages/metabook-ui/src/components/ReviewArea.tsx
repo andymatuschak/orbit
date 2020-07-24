@@ -1,32 +1,27 @@
 import isEqual from "lodash.isequal";
 import {
+  applicationPromptType,
+  basicPromptType,
+  clozePromptType,
   MetabookSpacedRepetitionSchedule,
   PromptRepetitionOutcome,
   PromptType,
 } from "metabook-core";
-import React, { useCallback, useRef, useState } from "react";
-import { StyleSheet, TouchableWithoutFeedback, View } from "react-native";
-import {
-  PromptReviewItem,
-  promptReviewItemType,
-  ReviewItem,
-} from "../reviewItem";
-import colors from "../styles/colors";
-import { gridUnit, spacing } from "../styles/layout";
-import Card, { baseCardHeight, cardWidth } from "./Card";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { ColorValue, StyleSheet, View } from "react-native";
+import { PromptReviewItem, ReviewItem } from "../reviewItem";
+import { colors } from "../styles";
+import { gridUnit } from "../styles/layout";
+import unreachableCaseError from "../util/unreachableCaseError";
+import Button from "./Button";
+import Card from "./Card";
 import FadeView from "./FadeView";
 import usePrevious from "./hooks/usePrevious";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
-import { ReviewMarkingInteractionState } from "./QuestionProgressIndicator";
-import ReviewButton from "./ReviewButton";
+import { IconName } from "./Icon";
 import Spacer from "./Spacer";
 
-type CompletedReviewItem = {
-  reviewItemType: "completedQuestion";
-  reviewItem: PromptReviewItem;
-  outcome: PromptRepetitionOutcome | null;
-};
-type InternalReviewItem = ReviewItem | CompletedReviewItem;
+type Size = { width: number; height: number };
 
 export type ReviewAreaMarkingRecord = {
   reviewItem: PromptReviewItem;
@@ -35,18 +30,11 @@ export type ReviewAreaMarkingRecord = {
 
 export interface ReviewAreaProps {
   items: ReviewItem[];
-  onMark: (
-    markingRecord: ReviewAreaMarkingRecord,
-  ) => //cardHandle: CardHandle, TODO
-  void;
+  onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
   schedule: MetabookSpacedRepetitionSchedule;
-
-  showsCompletedState?: boolean;
-  showsNeedsRetryNotice?: boolean;
 
   // Debug flags
   forceShowAnswer?: boolean;
-  disableVisibilityTesting?: boolean;
 }
 
 interface PendingMarkingInteractionState {
@@ -54,55 +42,23 @@ interface PendingMarkingInteractionState {
   status: "hover" | "active";
 }
 
-function getTransformForStackIndex(stackIndex: number) {
-  return { scale: 1 - stackIndex * 0.05, translateY: stackIndex * 20 };
-}
+const maximumCardsToRender = 3;
+const promptRotation = "16deg";
 
-function getRenderedItemIndexFromRenderNodeIndex(
-  renderNodeIndex: number,
-  phase: number,
-  maximumCardsToRender: number,
-) {
-  return (
-    (((renderNodeIndex - phase) % maximumCardsToRender) +
-      maximumCardsToRender) %
-    maximumCardsToRender
-  );
-}
-
-function CardRenderer({
-  maximumCardsToDisplay,
+function PromptContainer({
+  size,
   renderedStackIndex,
   item,
   onDidDisappear,
   children,
 }: {
-  item: InternalReviewItem;
+  size: { width: number; height: number };
+  item: PromptReviewItem;
   renderedStackIndex: number;
-  maximumCardsToDisplay: number;
   onDidDisappear: (renderedStackIndex: number) => void;
   children: React.ReactNode;
 }) {
-  const { scale, translateY } = getTransformForStackIndex(renderedStackIndex);
-  const springTiming = {
-    type: "spring",
-    speed: 20,
-    bounciness: 0,
-    useNativeDriver: true,
-  } as const;
-  const animatedScale = useTransitioningValue({
-    value: scale,
-    timing: springTiming,
-  });
-  const animatedTranslateY = useTransitioningValue({
-    value: translateY,
-    timing: springTiming,
-  });
-
-  const isDisplayed =
-    item !== null &&
-    item.reviewItemType !== "completedQuestion" &&
-    renderedStackIndex < maximumCardsToDisplay;
+  const isDisplayed = item !== null && renderedStackIndex === 0;
 
   const onTransitionEnd = useCallback(
     (toVisible: boolean, didFinish: boolean) => {
@@ -113,19 +69,45 @@ function CardRenderer({
     [onDidDisappear, renderedStackIndex],
   );
 
+  const rotationUnit = useTransitioningValue({
+    value: renderedStackIndex < 0 ? -1 : renderedStackIndex === 0 ? 0 : 1,
+    timing: {
+      type: "spring",
+      useNativeDriver: true,
+      bounciness: 0,
+      speed: 25,
+    },
+  });
+
+  const style = useMemo(
+    () => [
+      StyleSheet.absoluteFill,
+      {
+        zIndex: maximumCardsToRender - renderedStackIndex + 1,
+        transform: [
+          { translateX: -size.width / 2.0 },
+          { translateY: -size.height / 2.0 },
+          {
+            rotateZ: rotationUnit.interpolate({
+              inputRange: [0, 1],
+              outputRange: ["0deg", promptRotation],
+            }),
+          },
+          { translateX: size.width / 2.0 },
+          { translateY: size.height / 2.0 },
+        ],
+      },
+    ],
+    [size, renderedStackIndex, rotationUnit],
+  );
+
   return (
     <FadeView
       isVisible={isDisplayed}
       onTransitionEnd={onTransitionEnd}
-      durationMillis={100}
-      style={{
-        position: "absolute",
-        zIndex: maximumCardsToDisplay - renderedStackIndex + 1,
-        transform: [
-          { scale: animatedScale },
-          { translateY: animatedTranslateY },
-        ],
-      }}
+      durationMillis={renderedStackIndex === 0 ? 40 : 100}
+      delayMillis={renderedStackIndex === 0 ? 60 : 0}
+      style={style}
     >
       {children}
     </FadeView>
@@ -133,21 +115,14 @@ function CardRenderer({
 }
 
 export default function ReviewArea(props: ReviewAreaProps) {
-  const {
-    items,
-    onMark,
-    schedule,
-    showsCompletedState,
-    showsNeedsRetryNotice,
-    forceShowAnswer,
-    disableVisibilityTesting,
-  } = props;
+  const accentColor = colors.fg[6]; // TODO
+
+  const { items, onMark, forceShowAnswer } = props;
 
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
   const lastCommittedReviewMarkingRef = useRef<ReviewAreaMarkingRecord | null>(
     null,
   );
-  const previousItems = usePrevious(props.items);
 
   const [
     pendingMarkingInteractionState,
@@ -155,25 +130,13 @@ export default function ReviewArea(props: ReviewAreaProps) {
   ] = useState<PendingMarkingInteractionState | null>(null);
   const [phase, setPhase] = useState(0);
 
-  // const containerRef = useRef<HTMLDivElement | null>(null);
-  /*const { inViewport } = useInViewport(
-    containerRef,
-    { rootMargin: "200px" },
-    { disconnectOnLeave: false },
-    {},
-  ); TODO */
-  const inViewport = true;
-  //useScrollBehaviorPolyfill(); TODO
-
-  // const currentCardHandleRef = useRef<CardHandle | null>(null);
-
   const currentItem = items[0] || null;
   const onMarkingButton = useCallback(
     (outcome: PromptRepetitionOutcome) => {
       if (currentItem && currentItem.reviewItemType === "prompt") {
         const markingRecord = { reviewItem: currentItem, outcome };
         lastCommittedReviewMarkingRef.current = markingRecord;
-        onMark(markingRecord /*, currentCardHandleRef.current! TODO */);
+        onMark(markingRecord);
       } else {
         throw new Error(`Marked invalid item: ${currentItem}`);
       }
@@ -181,245 +144,251 @@ export default function ReviewArea(props: ReviewAreaProps) {
     [currentItem, onMark],
   );
 
-  const onPress = useCallback(() => {
+  const onReveal = useCallback(() => {
     if (
       !isShowingAnswer &&
       currentItem &&
       currentItem.reviewItemType === "prompt"
     ) {
       setShowingAnswer(true);
-
-      /*const boundingRect = containerRef.current!.getBoundingClientRect();
-      if (boundingRect.bottom - 40 > window.innerHeight) {
-        if (!isScrollBehaviorPolyfillReady()) {
-          console.error("Scroll behavior polyfill still not loaded!");
-        }
-        window.scrollTo({
-          behavior: "smooth",
-          top: window.scrollY + (boundingRect.bottom - window.innerHeight) + 45,
-          left: 0,
-        });
-      } TODO */
+      // TODO: scroll into view if necessary
     }
   }, [isShowingAnswer, currentItem]);
 
-  const onToggleTopCardExplanation = useCallback(
+  const onTogglePromptExplanation = useCallback(
     (isExplanationExpanded) => {
       if (currentItem?.reviewItemType !== "prompt") {
         throw new Error(
           "How are we toggling the top card's explanation when it's not a question?",
         );
       }
-      /* TODO context?.onToggleExplanation(
-        isExplanationExpanded,
-        currentItem.cardData.cardID,
-        currentItem.promptIndex,
-      ); */
+
+      throw new Error("Unimplemented"); // TODO
     },
-    [currentItem /*, context*/],
+    [currentItem],
   );
 
-  const departingPromptItems = useRef<CompletedReviewItem[]>([]);
+  const departingPromptItems = useRef<ReviewItem[]>([]);
 
   const onPromptDidDisappear = useCallback((renderedStackIndex) => {
     departingPromptItems.current.splice(-1 * renderedStackIndex - 1, 1);
     setPhase((phase) => phase + 1);
   }, []);
 
-  const maximumCardsToDisplay = 3;
-  const maximumCardsToRender = 5;
-  //const maximumCardsToDisplay = window.innerHeight >= 568 ? 3 : 1; // TODO
-  //const maximumCardsToRender = window.innerHeight >= 568 ? 5 : 3;
-
-  if (!isEqual(previousItems, items) && previousItems) {
+  const previousItems = usePrevious(items);
+  if (previousItems !== items && previousItems) {
     if (
       isEqual(previousItems[1], items[0]) &&
       previousItems[0] &&
-      previousItems[0].reviewItemType === promptReviewItemType &&
       (departingPromptItems.current.length === 0 ||
-        !isEqual(departingPromptItems.current[0].reviewItem, previousItems[0]))
+        !isEqual(departingPromptItems.current[0], previousItems[0]))
     ) {
-      departingPromptItems.current.push({
-        reviewItem: previousItems[0],
-        reviewItemType: "completedQuestion",
-        outcome: lastCommittedReviewMarkingRef.current?.outcome ?? null,
-      });
+      departingPromptItems.current.push(previousItems[0]);
       lastCommittedReviewMarkingRef.current = null;
+    }
+    if (!isEqual(items[0], previousItems[0]) && isShowingAnswer) {
       setShowingAnswer(false);
     }
   }
 
-  const renderedItems = (departingPromptItems.current as InternalReviewItem[])
+  const [size, setSize] = useState<Size | null>(null);
+
+  const renderedItems = departingPromptItems.current
     .concat(items)
     .slice(0, maximumCardsToRender);
 
   return (
-    <TouchableWithoutFeedback onPress={onPress} accessible={false}>
-      <View style={styles.outerContainer}>
-        <View style={styles.stackContainer}>
-          {(inViewport || disableVisibilityTesting) &&
-            Array.from(new Array(maximumCardsToRender).keys()).map(
-              (renderNodeIndex) => {
-                const renderedItemIndex = getRenderedItemIndexFromRenderNodeIndex(
-                  renderNodeIndex,
-                  phase,
-                  maximumCardsToRender,
-                );
-                const item: InternalReviewItem | null =
-                  renderedItems[renderedItemIndex] || null;
+    <View
+      style={styles.outerContainer}
+      onLayout={useCallback(
+        ({
+          nativeEvent: {
+            layout: { width, height },
+          },
+        }) => setSize({ width, height }),
+        [],
+      )}
+    >
+      <View style={styles.promptContainer}>
+        {size &&
+          Array.from(new Array(maximumCardsToRender).keys()).map(
+            (renderNodeIndex) => {
+              const renderedItemIndex =
+                (((renderNodeIndex - phase) % maximumCardsToRender) +
+                  maximumCardsToRender) %
+                maximumCardsToRender;
+              // The rendered stack index is 0 for the prompt that's currently on top, 1 for the prompt card down, -1 for the prompt that's currently animating out.
+              const renderedStackIndex =
+                renderedItemIndex - departingPromptItems.current.length;
 
-                // The rendered stack index is 0 for the card that's currently on top, 1 for the next card down, -1 for the card that's currently animating out.
-                const renderedStackIndex =
-                  renderedItemIndex - departingPromptItems.current.length;
-                const isRevealed =
-                  (isShowingAnswer && renderedStackIndex === 0) ||
-                  renderedStackIndex < 0;
-
-                let cardComponent: React.ReactNode;
-
-                if (item === null) {
-                  cardComponent = null;
-                } else {
-                  let reviewItem: PromptReviewItem;
-                  let reviewMarkingInteractionState: ReviewMarkingInteractionState | null;
-
-                  if (item.reviewItemType === "prompt") {
-                    reviewItem = item;
-                    if (
-                      lastCommittedReviewMarkingRef.current &&
-                      isEqual(
-                        lastCommittedReviewMarkingRef.current.reviewItem,
-                        reviewItem,
-                      )
-                    ) {
-                      reviewMarkingInteractionState = {
-                        status: "committed",
-                        outcome: lastCommittedReviewMarkingRef.current.outcome,
-                      } as const;
-                    } else if (
-                      renderedStackIndex === 0 &&
-                      pendingMarkingInteractionState !== null &&
-                      isShowingAnswer
-                    ) {
-                      reviewMarkingInteractionState = {
-                        status:
-                          pendingMarkingInteractionState.status === "hover"
-                            ? "pending"
-                            : "committed",
-                        outcome:
-                          pendingMarkingInteractionState.pendingActionOutcome,
-                      } as const;
-                    } else {
-                      reviewMarkingInteractionState = null;
-                    }
-                  } else {
-                    reviewItem = item.reviewItem;
-                    reviewMarkingInteractionState = item.outcome
-                      ? {
-                          status: "committed",
-                          outcome: item.outcome,
-                        }
-                      : null;
-                  }
-
-                  cardComponent = (
+              return (
+                <PromptContainer
+                  key={renderNodeIndex}
+                  renderedStackIndex={renderedStackIndex}
+                  item={renderedItems[renderedItemIndex] || null}
+                  onDidDisappear={onPromptDidDisappear}
+                  size={size}
+                >
+                  {(renderedItems[renderedItemIndex] || null) && (
                     <Card
-                      backIsRevealed={isRevealed}
-                      isDisplayed={renderedStackIndex > 0}
-                      reviewItem={reviewItem}
-                      onToggleExplanation={onToggleTopCardExplanation}
+                      backIsRevealed={
+                        (isShowingAnswer && renderedStackIndex === 0) ||
+                        renderedStackIndex < 0
+                      }
+                      reviewItem={renderedItems[renderedItemIndex] || null}
+                      onToggleExplanation={onTogglePromptExplanation}
+                      contextColor={accentColor}
                     />
-                  );
-                }
-                return (
-                  <CardRenderer
-                    key={renderNodeIndex}
-                    renderedStackIndex={renderedStackIndex}
-                    item={item}
-                    maximumCardsToDisplay={maximumCardsToDisplay}
-                    onDidDisappear={onPromptDidDisappear}
-                  >
-                    {cardComponent}
-                  </CardRenderer>
-                );
-              },
-            )}
-        </View>
-
-        <ReviewButtonArea
-          onMark={onMarkingButton}
-          onPendingMarkingInteractionStateDidChange={
-            setPendingMarkingInteractionState
-          }
-          disabled={!isShowingAnswer || items.length === 0}
-          promptType={
-            currentItem?.reviewItemType === "prompt"
-              ? currentItem.prompt.promptType
-              : null
-          }
-        />
+                  )}
+                </PromptContainer>
+              );
+            },
+          )}
       </View>
-    </TouchableWithoutFeedback>
+
+      <ReviewButtonArea
+        onMark={onMarkingButton}
+        onReveal={onReveal}
+        onPendingMarkingInteractionStateDidChange={
+          setPendingMarkingInteractionState
+        }
+        disabled={items.length === 0}
+        promptType={
+          currentItem?.reviewItemType === "prompt"
+            ? currentItem.prompt.promptType
+            : null
+        }
+        accentColor={colors.fg[6]} // TODO
+        isShowingAnswer={isShowingAnswer}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   outerContainer: {
-    backgroundColor: colors.key00,
-    padding: gridUnit * 2,
-    flexGrow: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    flex: 1,
   },
 
-  stackContainer: {
-    alignItems: "center",
-    height: baseCardHeight + gridUnit * 3,
+  promptContainer: {
+    marginTop: gridUnit * 9, // TODO
+    flex: 1,
   },
 
   buttonContainer: {
-    justifyContent: "center",
     flexDirection: "row",
-    width: cardWidth,
+    height: gridUnit * 5,
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+    maxWidth: 175 * 2 + gridUnit, // TODO
   },
 
   buttonLayoutStyles: {
-    flexGrow: 1,
-    flexBasis: 1,
+    width: 175, // TODO
   },
 });
 
-const ReviewButtonArea = React.memo(function ReviewButtonArea(props: {
+function getButtonTitle(
+  promptType: PromptType | null,
+  outcome: PromptRepetitionOutcome,
+) {
+  switch (outcome) {
+    case PromptRepetitionOutcome.Remembered:
+      switch (promptType) {
+        case basicPromptType:
+        case clozePromptType:
+        case null:
+          return "Remembered";
+        case applicationPromptType:
+          return "Answered";
+      }
+      throw unreachableCaseError(promptType);
+    case PromptRepetitionOutcome.Forgotten:
+      switch (promptType) {
+        case basicPromptType:
+        case clozePromptType:
+        case null:
+          return "Didn’t remember";
+        case applicationPromptType:
+          return "Couldn’t answer";
+      }
+  }
+}
+
+const buttonColor = colors.white;
+
+const ReviewButtonArea = React.memo(function ReviewButtonArea({
+  accentColor,
+  disabled,
+  onMark,
+  onReveal,
+  promptType,
+  isShowingAnswer,
+}: {
   onMark: (outcome: PromptRepetitionOutcome) => void;
+  onReveal: () => void;
   onPendingMarkingInteractionStateDidChange: (
     state: PendingMarkingInteractionState | null,
   ) => void;
   disabled: boolean;
   promptType: PromptType | null;
+  accentColor: ColorValue;
+  isShowingAnswer: boolean;
 }) {
-  const { onMark, disabled, promptType } = props;
+  const children: React.ReactNode[] = [];
+  function addButton(button: React.ReactNode) {
+    if (children.length > 0) {
+      children.push(<Spacer units={1} />);
+    }
+    children.push(button);
+  }
 
-  return (
-    <View style={styles.buttonContainer}>
-      <ReviewButton
-        onPress={useCallback(() => onMark(PromptRepetitionOutcome.Forgotten), [
-          onMark,
-        ])}
-        disabled={disabled}
-        promptType={promptType}
-        outcome={PromptRepetitionOutcome.Forgotten}
-        extraStyles={styles.buttonLayoutStyles}
-      />
-      <Spacer size={spacing.spacing03} />
-      <ReviewButton
-        onPress={useCallback(() => onMark(PromptRepetitionOutcome.Remembered), [
-          onMark,
-        ])}
-        disabled={disabled}
-        promptType={promptType}
-        outcome={PromptRepetitionOutcome.Remembered}
-        extraStyles={styles.buttonLayoutStyles}
-      />
-    </View>
+  const onForgot = useCallback(
+    () => onMark(PromptRepetitionOutcome.Forgotten),
+    [onMark],
   );
+
+  const onRemembered = useCallback(
+    () => onMark(PromptRepetitionOutcome.Remembered),
+    [onMark],
+  );
+
+  const sharedButtonProps = {
+    disabled,
+    style: styles.buttonLayoutStyles,
+    color: buttonColor,
+    accentColor,
+  } as const;
+
+  if (!disabled) {
+    if (isShowingAnswer) {
+      addButton(
+        <Button
+          {...sharedButtonProps}
+          onPress={onForgot}
+          iconName={IconName.Cross}
+          title={getButtonTitle(promptType, PromptRepetitionOutcome.Forgotten)}
+        />,
+      );
+      addButton(
+        <Button
+          {...sharedButtonProps}
+          onPress={onRemembered}
+          iconName={IconName.Check}
+          title={getButtonTitle(promptType, PromptRepetitionOutcome.Remembered)}
+        />,
+      );
+    } else {
+      addButton(
+        <Button
+          {...sharedButtonProps}
+          onPress={onReveal}
+          // iconName={IconName.Cross}
+          title={"Reveal answer"}
+        />,
+      );
+    }
+  }
+
+  return <View style={styles.buttonContainer}>{children}</View>;
 });

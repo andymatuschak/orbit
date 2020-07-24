@@ -62,7 +62,7 @@ export default function SignInForm({
 
   return (
     <View>
-      <Spacer size={spacing.spacing07} />
+      <Spacer units={1} />
       <TextInput
         onChangeText={setEmail}
         value={email}
@@ -77,7 +77,7 @@ export default function SignInForm({
         onBlur={onBlurEmail}
         returnKeyType={"next"}
       />
-      <Spacer size={spacing.spacing03} />
+      <Spacer units={1} />
       <TextInput
         ref={emailInputRef}
         onChangeText={setPassword}
@@ -93,20 +93,20 @@ export default function SignInForm({
         returnKeyLabel={mode ? buttonTitle : undefined}
         returnKeyType={buttonEnabled ? "done" : undefined}
       />
-      <Spacer size={spacing.spacing07} />
+      <Spacer units={1} />
       <BigButton
         title={buttonTitle}
         onPress={onPress}
         disabled={!buttonEnabled}
       />
-      <Spacer size={spacing.spacing05} />
+      <Spacer units={1} />
       <ActivityIndicator
         animating={
           isPendingServerResponse || (hasValidFormEntries && mode === null)
         }
         color={colors.key50}
       />
-      <Spacer size={spacing.spacing07} />
+      <Spacer units={1} />
     </View>
   );
 }

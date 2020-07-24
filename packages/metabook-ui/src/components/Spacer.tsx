@@ -1,10 +1,9 @@
 import React from "react";
-import { spacing } from "../styles/layout";
 import { View } from "react-native";
+import { gridUnit } from "../styles/layout";
 
-const Spacer = React.memo(function Spacer(props: {
-  size: typeof spacing[keyof typeof spacing];
-}) {
-  return <View style={{ width: props.size, height: props.size }} />;
+const Spacer = React.memo(function Spacer(props: { units: number }) {
+  const size = props.units * gridUnit;
+  return <View style={{ width: size, height: size }} />;
 });
 export default Spacer;

@@ -1,8 +1,15 @@
 import React from "react";
-import { Image, ImageStyle, StyleProp, StyleSheet } from "react-native";
+import {
+  ColorValue,
+  FlexStyle,
+  Image,
+  ImageStyle,
+  StyleProp,
+} from "react-native";
 
 export enum IconName {
   Check = "check",
+  Cross = "cross",
 }
 
 export enum IconPosition {
@@ -15,14 +22,20 @@ export enum IconPosition {
 export interface IconProps {
   name: IconName;
   position: IconPosition;
-  style?: StyleProp<ImageStyle>;
+  style?: StyleProp<FlexStyle>;
+  tintColor?: ColorValue;
 }
 
-export default function Icon(props: IconProps) {
+export default React.memo(function Icon(props: IconProps) {
+  const { tintColor, style, position, name } = props;
   return (
     <Image
-      source={require(`../assets/icons/${props.name} ${props.position}.png`)}
-      style={StyleSheet.compose(props.style, { width: 24, height: 24 })}
+      source={require(`../assets/icons/${name} ${position}.png`)}
+      style={[
+        { width: 24, height: 24 },
+        !!tintColor && { tintColor: tintColor },
+        style as StyleProp<ImageStyle>,
+      ]}
     />
   );
-}
+});

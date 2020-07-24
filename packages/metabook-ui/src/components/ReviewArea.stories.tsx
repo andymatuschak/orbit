@@ -1,7 +1,9 @@
 import { testBasicPrompt } from "metabook-sample-data";
 import React, { useCallback, useState } from "react";
+import { View } from "react-native";
 import { ReviewItem } from "../reviewItem";
 import ReviewArea from "./ReviewArea";
+import { colors } from "../styles";
 
 // noinspection JSUnusedGlobalSymbols
 export default {
@@ -34,6 +36,18 @@ export function Basic() {
   }, []);
 
   return (
-    <ReviewArea items={items} onMark={onMark} schedule="aggressiveStart" />
+    <View
+      style={{
+        margin: 16,
+        padding: 16,
+        backgroundColor: colors.bg[0],
+        width: 750,
+        height: 500,
+      }}
+    >
+      <View style={{ borderWidth: 1, borderColor: "gray", flex: 1 }}>
+        <ReviewArea items={items} onMark={onMark} schedule="aggressiveStart" />
+      </View>
+    </View>
   );
 }

@@ -10,6 +10,5 @@ const testCardProps: CardProps = {
     attachmentResolutionMap: null,
   },
   backIsRevealed: false,
-  isDisplayed: false,
 };
 export default testCardProps;

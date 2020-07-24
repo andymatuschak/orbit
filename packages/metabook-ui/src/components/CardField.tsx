@@ -280,7 +280,6 @@ export default React.memo(function CardField(props: {
   // Reset shrink factor when prompt field changes.
   useEffect(() => {
     setShrinkFactor(0);
-    setLayoutReady(false);
   }, [promptField]);
 
   const [markdownHeight, setMarkdownHeight] = useState<number | null>(null);

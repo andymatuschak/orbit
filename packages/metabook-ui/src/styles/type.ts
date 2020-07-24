@@ -163,7 +163,7 @@ export const label = makeTypeSpec(
     fontSize: 24,
     fontFamily: "Dr-ExtraBold",
     lineHeight: 24,
-    letterSpacing: 24 * 0.01,
+    // letterSpacing: 24 * 0.0,
   },
   -6,
   -8,

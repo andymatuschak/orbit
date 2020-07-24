@@ -1,43 +1,45 @@
 import React from "react";
 import {
   Animated,
+  ColorValue,
   Easing,
   FlexStyle,
   Pressable,
   StyleProp,
   StyleSheet,
-  ViewStyle,
 } from "react-native";
-import { layout } from "../styles";
+import { layout, colors } from "../styles";
 import usePrevious from "./hooks/usePrevious";
 import Hoverable from "./Hoverable";
 import Icon, { IconName, IconPosition } from "./Icon";
 import { Label } from "./Text";
-import WithAnimatedValue = Animated.WithAnimatedValue;
 
 export interface ButtonProps {
   title: string;
   onPress: () => void;
-  textColor?: string;
+  color?: string;
+  disabled?: boolean;
 
   iconName?: IconName;
-  accentColor?: string;
+  accentColor?: ColorValue;
 
   style?: StyleProp<FlexStyle>;
 }
 
 const pressedButtonOpacity = 0.2;
+const defaultButtonColor = colors.ink;
 
 const ButtonImpl = React.memo(function ButtonImpl({
   title,
-  textColor,
+  color,
+  disabled,
   iconName,
   accentColor,
   isHovered,
   isPressed,
-  ...rest
+  style,
 }: ButtonProps & { isHovered: boolean; isPressed: boolean }) {
-  const [opacity] = React.useState(new Animated.Value(1));
+  const opacity = React.useRef(new Animated.Value(1)).current;
   const wasPressed = usePrevious(isPressed);
   if (wasPressed && !isPressed) {
     Animated.timing(opacity, {
@@ -52,35 +54,42 @@ const ButtonImpl = React.memo(function ButtonImpl({
 
   return (
     <Animated.View
-      {...rest}
-      style={
-        StyleSheet.compose(rest.style, ({
-          opacity,
-        } as unknown) as StyleProp<ViewStyle>) as WithAnimatedValue<
-          StyleProp<ViewStyle>
-        > // HACK: Taking advantage of the fact that StyleSheet.compose can work with animated values, even though its type doesn't claim it can.
-      }
+      style={React.useMemo(
+        () => [
+          style,
+          {
+            opacity,
+          },
+          !!disabled && styles.disabled,
+        ],
+        [disabled, opacity, style],
+      )}
     >
       {iconName && (
         <Icon
           name={iconName}
-          position={IconPosition.BottomLeft}
-          style={{
-            tintColor: accentColor,
-            marginBottom: layout.gridUnit,
-          }}
+          position={IconPosition.TopLeft}
+          tintColor={(disabled ? color : accentColor) || defaultButtonColor}
         />
       )}
       <Label
         selectable={false}
         color={
-          (isHovered || isPressed) && accentColor ? accentColor : textColor
+          ((isHovered || isPressed) && accentColor && !disabled
+            ? accentColor
+            : color) || defaultButtonColor
         }
       >
         {title}
       </Label>
     </Animated.View>
   );
+});
+
+const styles = StyleSheet.create({
+  disabled: {
+    opacity: 0.3,
+  },
 });
 
 export default function Button(props: ButtonProps) {
@@ -92,6 +101,7 @@ export default function Button(props: ButtonProps) {
           accessibilityRole="button"
           accessibilityLabel={props.title}
           onPress={props.onPress}
+          disabled={props.disabled}
         >
           {({ pressed }) => (
             <ButtonImpl {...props} isHovered={isHovered} isPressed={pressed} />

@@ -33,7 +33,6 @@ export interface CardProps {
   backIsRevealed: boolean;
 
   contextColor?: ColorValue;
-  isDisplayed?: boolean;
   onToggleExplanation?: (isExplanationExpanded: boolean) => unknown;
 }
 
