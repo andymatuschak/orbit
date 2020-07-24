@@ -39,15 +39,13 @@ export default function FadeView(props: FadeViewProps) {
 
   return (
     <Animated.View
-      style={React.useMemo(
-        () => [
-          style,
-          {
-            opacity,
-          },
-        ],
-        [style, opacity],
-      )}
+      style={[
+        style,
+        {
+          opacity,
+          ...(!isVisible && { pointerEvents: "none" }),
+        },
+      ]}
     >
       {props.children}
     </Animated.View>
