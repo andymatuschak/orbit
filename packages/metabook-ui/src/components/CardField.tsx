@@ -20,6 +20,7 @@ import colors from "../styles/colors";
 
 import { type } from "../styles";
 import { getVariantStyles } from "../styles/type";
+import useWeakRef from "./hooks/useWeakRef";
 import NamedStyles = StyleSheet.NamedStyles;
 
 function clozeParsePlugin(md: MarkdownIt) {
@@ -111,25 +112,26 @@ const markdownItInstance = MarkdownDisplay.MarkdownIt({
   typographer: true,
 }).use(clozeParsePlugin);
 
-const maxShrinkFactor = 4;
+const sizeVariantCount = 5;
+const defaultSmallestSizeVariant = 4;
 
-function getMarkdownStyles(shrinkFactor: number) {
+function getMarkdownStyles(sizeVariant: number) {
   let paragraphStyle: TextStyle;
-  switch (shrinkFactor) {
+  switch (sizeVariant) {
     case 0:
       paragraphStyle = type.display.layoutStyle;
       break;
     case 1:
-      paragraphStyle = type.title.layoutStyle;
-      break;
-    case 2:
       paragraphStyle = type.headline.layoutStyle;
       break;
-    case 3:
+    case 2:
       paragraphStyle = type.body.layoutStyle;
       break;
-    case 4:
+    case 3:
       paragraphStyle = type.bodySmall.layoutStyle;
+      break;
+    case 4:
+      paragraphStyle = type.caption.layoutStyle;
       break;
     default:
       throw new Error("Unknown shrink factor");
@@ -260,8 +262,18 @@ function getMarkdownRenderRules(
 export default React.memo(function CardField(props: {
   promptField: PromptField;
   attachmentResolutionMap: AttachmentResolutionMap | null;
+
+  onLayout?: (sizeVariant: number) => void;
+  largestSizeVariant?: number;
+  smallestSizeVariant?: number; // TODO: use better types.
 }) {
-  const { promptField, attachmentResolutionMap } = props;
+  const {
+    promptField,
+    attachmentResolutionMap,
+    onLayout,
+    largestSizeVariant,
+    smallestSizeVariant,
+  } = props;
   let imageURL: string | null = null;
   if (promptField.attachments.length > 0 && attachmentResolutionMap) {
     const images = promptField.attachments.filter(
@@ -275,24 +287,28 @@ export default React.memo(function CardField(props: {
     }
   }
 
-  const [shrinkFactor, setShrinkFactor] = useState(0);
+  const [sizeVariant, setSizeVariant] = useState(largestSizeVariant ?? 0);
   const [isLayoutReady, setLayoutReady] = useState(false);
   // Reset shrink factor when prompt field changes.
   useEffect(() => {
-    setShrinkFactor(0);
-  }, [promptField]);
+    setSizeVariant(Math.min(largestSizeVariant ?? 0, sizeVariantCount));
+  }, [promptField, largestSizeVariant]);
 
   const [markdownHeight, setMarkdownHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number | null>(null);
   useEffect(() => {
     if (markdownHeight && containerHeight) {
+      console.log(sizeVariant, markdownHeight, containerHeight);
       if (markdownHeight > containerHeight) {
-        setShrinkFactor((shrinkFactor) => {
-          if (shrinkFactor < maxShrinkFactor) {
-            return shrinkFactor + 1;
+        setSizeVariant((sizeVariant) => {
+          if (
+            sizeVariant < (smallestSizeVariant ?? defaultSmallestSizeVariant)
+          ) {
+            setLayoutReady(false);
+            return sizeVariant + 1;
           } else {
             setLayoutReady(true);
-            return shrinkFactor;
+            return sizeVariant;
           }
         });
       } else {
@@ -300,6 +316,11 @@ export default React.memo(function CardField(props: {
       }
     }
   }, [markdownHeight, containerHeight]);
+
+  const sizeVariantRef = useWeakRef(sizeVariant);
+  useEffect(() => {
+    onLayout?.(sizeVariantRef.current);
+  }, [isLayoutReady, onLayout, sizeVariantRef]);
 
   const onContainerLayout = useCallback(
     (event: LayoutChangeEvent) =>
@@ -312,8 +333,8 @@ export default React.memo(function CardField(props: {
     [],
   );
 
-  const markdownStyles = useMemo(() => getMarkdownStyles(shrinkFactor), [
-    shrinkFactor,
+  const markdownStyles = useMemo(() => getMarkdownStyles(sizeVariant), [
+    sizeVariant,
   ]);
 
   return (

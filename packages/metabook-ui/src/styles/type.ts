@@ -173,9 +173,9 @@ export const caption = makeTypeSpec(
   {
     fontSize: 12,
     fontFamily: "Dr-ExtraBold",
-    lineHeight: 16,
-    letterSpacing: 13 * 0.05,
+    lineHeight: 12,
+    letterSpacing: 13 * 0.06,
   },
-  -5,
-  -8,
+  -3,
+  -4,
 );

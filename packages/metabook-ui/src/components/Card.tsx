@@ -15,7 +15,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { PromptReviewItem } from "../reviewItem";
-import { layout, colors } from "../styles";
+import { colors, layout } from "../styles";
 import CardField, { clozeBlankSentinel } from "./CardField";
 import FadeView from "./FadeView";
 import {
@@ -52,9 +52,6 @@ function getQAPrompt(reviewItem: PromptReviewItem): QAPrompt {
   }
 }
 
-const topAreaFadeDurationMillis = 100;
-const topAreaFadeDelayMillis = 60;
-
 const bottomAreaTranslationAnimationSpec: AnimationSpec = {
   type: "spring",
   bounciness: 0,
@@ -70,8 +67,7 @@ const topAreaTranslationAnimationSpec: AnimationSpec = {
 function useAnimatingStyles(
   backIsRevealed: boolean,
 ): {
-  topAreaContextStyle: WithAnimatedValue<ViewStyle>;
-  topAreaInteriorStyle: WithAnimatedValue<ViewStyle>;
+  topAreaStyle: WithAnimatedValue<ViewStyle>;
   bottomFrontStyle: WithAnimatedValue<ViewStyle>;
   bottomBackStyle: WithAnimatedValue<ViewStyle>;
 } {
@@ -85,27 +81,17 @@ function useAnimatingStyles(
   });
 
   return React.useMemo(() => {
-    const topAreaTranslation = {
-      translateY: topAreaTranslateAnimation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [16, 0],
-      }),
-    };
-
     return {
-      topAreaContextStyle: [
-        styles.topAreaContext,
-        {
-          transform: [topAreaTranslation],
-        },
-      ],
-      topAreaInteriorStyle: [
-        styles.topAreaInterior,
+      topAreaStyle: [
+        styles.topAreaContainer,
         {
           transform: [
-            topAreaTranslation,
-            { scaleX: 0.6667 },
-            { scaleY: 0.6667 },
+            {
+              translateY: topAreaTranslateAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [16, 0],
+              }),
+            },
           ],
         },
       ],
@@ -182,31 +168,36 @@ export default React.memo(function Card({
 }: CardProps) {
   const animatingStyles = useAnimatingStyles(backIsRevealed);
   const spec = getQAPrompt(reviewItem);
+
+  const [frontSizeVariant, setFrontSizeVariant] = React.useState<
+    number | undefined
+  >(undefined);
+
   return (
     <View style={styles.cardContainer}>
       <FadeView
         isVisible={backIsRevealed}
-        durationMillis={topAreaFadeDurationMillis}
-        delayMillis={topAreaFadeDelayMillis}
-        style={animatingStyles.topAreaContextStyle}
+        durationMillis={100}
+        delayMillis={60}
+        style={animatingStyles.topAreaStyle}
       >
-        <Caption color={contextColor ?? colors.ink}>
+        <Caption
+          color={contextColor ?? colors.ink}
+          style={styles.topContextLabel}
+        >
           Source context TODO
         </Caption>
-      </FadeView>
-      <View style={styles.topAreaContainer}>
-        <FadeView
-          isVisible={backIsRevealed}
-          durationMillis={topAreaFadeDurationMillis}
-          delayMillis={topAreaFadeDelayMillis}
-          style={animatingStyles.topAreaInteriorStyle}
-        >
+        <View style={styles.topTextContainer}>
           <CardField
             promptField={spec.question}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+            largestSizeVariant={
+              frontSizeVariant === undefined ? undefined : frontSizeVariant + 1
+            }
+            smallestSizeVariant={4}
           />
-        </FadeView>
-      </View>
+        </View>
+      </FadeView>
       <View style={styles.bottomAreaContainer}>
         <FadeView
           isVisible={backIsRevealed}
@@ -232,6 +223,7 @@ export default React.memo(function Card({
           <CardField
             promptField={spec.question}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+            onLayout={setFrontSizeVariant}
           />
         </FadeView>
       </View>
@@ -246,19 +238,19 @@ const styles = StyleSheet.create({
 
   topAreaContainer: {
     flex: 2,
+    // This is a bit tricky: we want the text regions of the front and back to have a 3:2 ratio; this excludes the context label, which is printed above. So we leave room at the top of the top area for the context label then shift it up.
+    paddingTop: layout.gridUnit * 2,
   },
 
-  topAreaInterior: {
-    position: "absolute",
-    width: "100%",
-    height: "150%", // pre-shrunken size should be equivalent to flex-3 in this flex-2 container
-    // There's no transform origin in RN, so the view is scaled from its center. We translate to compensate:
-    left: "-16.667%", // Scaling down by 2/3 leaves margins of 1/6 the original size.
-    top: "-25%", // This is 1/6 scaled up by 150%
-  },
-
-  topAreaContext: {
+  topContextLabel: {
+    marginTop: -layout.gridUnit * 2,
     marginBottom: layout.gridUnit,
+  },
+
+  topTextContainer: {
+    flex: 1,
+    overflow: "hidden",
+    width: "66.67%",
   },
 
   bottomAreaContainer: {

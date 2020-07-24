@@ -115,12 +115,14 @@ const PromptContainer = React.memo(function PromptContainer({
       delayMillis={displayState === "displayed" ? 60 : 0}
       style={style}
     >
-      <Card
-        reviewItem={reviewItem}
-        onToggleExplanation={onToggleExplanation}
-        contextColor={contextColor}
-        backIsRevealed={backIsRevealed}
-      />
+      {reviewItem && (
+        <Card
+          reviewItem={reviewItem}
+          onToggleExplanation={onToggleExplanation}
+          contextColor={contextColor}
+          backIsRevealed={backIsRevealed}
+        />
+      )}
     </FadeView>
   );
 });

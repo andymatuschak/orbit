@@ -32,7 +32,7 @@ function TypeSample(props: {
       style={{
         backgroundColor,
         marginTop: layout.gridUnit * 5,
-        width: 650,
+        maxWidth: 650,
       }}
     >
       {props.children}
