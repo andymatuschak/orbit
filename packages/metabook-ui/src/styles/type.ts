@@ -1,5 +1,5 @@
-import { TextStyle } from "react-native";
-import colors from "./colors";
+import { Platform, TextStyle } from "react-native";
+import * as colors from "./colors";
 
 const type = {
   label: {
@@ -69,16 +69,24 @@ export function getVariantStyles(
   };
 }
 
+const commonTypeColor = colors.ink;
+const commonTypeStyles =
+  Platform.OS === "web"
+    ? {
+        color: commonTypeColor,
+        WebkitFontSmoothing: "antialiased",
+        MozOsxFontSmoothing: "antialiased",
+        textRendering: "optimizeLegibility",
+      }
+    : { color: commonTypeColor };
+
 function makeTypeSpec(
   typeStyle: TextStyle,
   topShift: number,
   bottomShift: number,
 ): TypeSpec {
   const typeWithCommonStyles = {
-    color: colors.ink,
-    WebkitFontSmoothing: "antialiased",
-    MozOsxFontSmoothing: "antialiased",
-    textRendering: "optimizeLegibility",
+    ...commonTypeStyles,
     ...typeStyle,
   };
   return {

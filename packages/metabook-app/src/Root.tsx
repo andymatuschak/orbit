@@ -1,5 +1,5 @@
 import * as Authentication from "./authentication";
-import colors from "metabook-ui/dist/styles/colors";
+import { styles } from "metabook-ui";
 import React, { useState } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import {
@@ -44,8 +44,9 @@ const ReviewSessionScreen = React.lazy(() =>
 );
 const EmbedScreen = React.lazy(() => import("./embedded/EmbeddedScreen"));
 const LoadingScreen = () => (
+  // TODO
   <View style={{ flex: 1, justifyContent: "center" }}>
-    <ActivityIndicator size="large" color={colors.key50} />
+    <ActivityIndicator size="large" color={styles.colors.fg[0]} />
   </View>
 );
 const screens: Record<RootScreen, React.ComponentType<unknown>> = {

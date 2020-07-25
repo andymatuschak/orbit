@@ -172,7 +172,8 @@ function TestCard(props: { reviewItem: PromptReviewItem }) {
                 {boolean("Show grid", true) && <DebugGrid />}
                 <Card
                   {...testCardProps}
-                  contextColor={colors.fg[0]}
+                  contextColor={colors.bg[5]}
+                  accentColor={colors.fg[0]}
                   reviewItem={reviewItem}
                   backIsRevealed={isRevealed}
                 />

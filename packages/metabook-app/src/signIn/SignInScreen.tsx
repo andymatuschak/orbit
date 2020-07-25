@@ -1,6 +1,4 @@
-import { SignInForm, SignInFormProps } from "metabook-ui";
-import colors from "metabook-ui/dist/styles/colors";
-import { spacing } from "metabook-ui/dist/styles/layout";
+import { SignInForm, SignInFormProps, styles } from "metabook-ui";
 import React from "react";
 import { Alert, Platform, View } from "react-native";
 import { AuthenticationClient } from "../authentication";
@@ -114,7 +112,7 @@ export default function SignInScreen() {
     <View
       style={{
         flex: 1,
-        backgroundColor: colors.key00,
+        backgroundColor: styles.colors.bg[0], // TODO
         justifyContent: "center",
         alignItems: "center",
       }}
@@ -125,8 +123,8 @@ export default function SignInScreen() {
           maxWidth: 500,
           flex: 1,
           justifyContent: "center",
-          marginLeft: spacing.spacing05,
-          marginRight: spacing.spacing05,
+          marginLeft: styles.layout.gridUnit,
+          marginRight: styles.layout.gridUnit,
         }}
       >
         <SignInForm

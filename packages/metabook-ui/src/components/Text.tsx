@@ -4,7 +4,7 @@ import * as type from "../styles/type";
 
 interface TextElementProps {
   children: React.ReactNode;
-  style?: FlexStyle;
+  style?: TextStyle;
   color?: ColorValue;
   selectable?: boolean;
 }

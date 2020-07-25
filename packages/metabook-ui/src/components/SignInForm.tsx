@@ -1,7 +1,7 @@
 import isEmail from "isemail";
 import React from "react";
 import { ActivityIndicator, StyleSheet, TextInput, View } from "react-native";
-import colors from "../styles/colors";
+import * as colors from "../styles/colors";
 import { borderRadius, gridUnit, spacing } from "../styles/layout";
 import type from "../styles/type";
 import BigButton from "./BigButton";

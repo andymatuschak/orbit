@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import colors from "../styles/colors";
+import * as colors from "../styles/colors";
 import SignInForm, { SignInFormProps } from "./SignInForm";
 
 export default {

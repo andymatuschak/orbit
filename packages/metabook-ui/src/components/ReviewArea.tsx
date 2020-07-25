@@ -32,6 +32,10 @@ export interface ReviewAreaProps {
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
   schedule: MetabookSpacedRepetitionSchedule;
 
+  accentColor: string;
+  secondaryColor: string;
+  tertiaryColor: string;
+
   // Debug flags
   forceShowAnswer?: boolean;
 }
@@ -128,9 +132,7 @@ const PromptContainer = React.memo(function PromptContainer({
 });
 
 export default function ReviewArea(props: ReviewAreaProps) {
-  const accentColor = colors.fg[6]; // TODO
-
-  const { items, onMark, forceShowAnswer } = props;
+  const { items, onMark, forceShowAnswer, accentColor } = props;
 
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
   const lastCommittedReviewMarkingRef = useRef<ReviewAreaMarkingRecord | null>(
@@ -285,7 +287,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
                 ? currentItem.prompt.promptType
                 : null
             }
-            accentColor={colors.fg[6]} // TODO
+            accentColor={accentColor}
             isShowingAnswer={isShowingAnswer}
             columnLayout={columnLayout!}
           />
@@ -301,7 +303,7 @@ const styles = StyleSheet.create({
   },
 
   promptContainer: {
-    marginTop: layout.gridUnit * 9, // TODO
+    marginTop: layout.gridUnit * 9, // TODO starburst
     flex: 1,
   },
 
@@ -310,10 +312,6 @@ const styles = StyleSheet.create({
     minHeight: layout.gridUnit * 5,
     alignItems: "flex-end",
     justifyContent: "flex-end",
-  },
-
-  buttonLayoutStyles: {
-    width: 175, // TODO
   },
 });
 

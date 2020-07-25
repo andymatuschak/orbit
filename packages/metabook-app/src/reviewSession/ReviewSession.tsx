@@ -9,13 +9,24 @@ import {
   PromptTask,
   repetitionActionLogType,
 } from "metabook-core";
-import { ReviewArea, ReviewAreaProps, ReviewItem } from "metabook-ui";
+import {
+  ReviewArea,
+  ReviewAreaProps,
+  ReviewItem,
+  useTransitioningValue,
+  styles,
+  Headline,
+} from "metabook-ui";
 import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
-import colors from "metabook-ui/dist/styles/colors";
-import { spacing } from "metabook-ui/dist/styles/layout";
-import typography from "metabook-ui/dist/styles/typography";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform, SafeAreaView, Text, View } from "react-native";
+import {
+  Animated,
+  Platform,
+  SafeAreaView,
+  Text,
+  View,
+  Easing,
+} from "react-native";
 import DatabaseManager from "../model/databaseManager";
 import {
   useAuthenticationClient,
@@ -28,7 +39,6 @@ import {
   getFirestore,
   PersistenceStatus,
 } from "../util/firebase";
-import ReviewSessionProgressBar from "./ReviewSessionProgressBar";
 import { UserRecord } from "../authentication";
 
 function usePersistenceStatus() {
@@ -123,6 +133,8 @@ function onMark(
     });
 }
 
+const AnimatedSafeAreaView = Animated.createAnimatedComponent(SafeAreaView);
+
 export default function ReviewSession() {
   const userRecord = useCurrentUserRecord(useAuthenticationClient());
   const databaseManager = useDatabaseManager(userRecord);
@@ -147,6 +159,23 @@ export default function ReviewSession() {
     currentQueueIndex,
   ]);
 
+  const topItem = remainingItems?.[0];
+  const colorCompositionAnimatedIndex = useTransitioningValue({
+    value:
+      (topItem?.promptState?.dueTimestampMillis ?? 0) %
+      styles.colors.compositions.length,
+    timing: {
+      type: "timing",
+      useNativeDriver: false,
+      duration: 80,
+      easing: Easing.linear,
+    },
+  });
+  const backgroundColor = colorCompositionAnimatedIndex.interpolate({
+    inputRange: Array.from(new Array(styles.colors.compositions.length).keys()),
+    outputRange: styles.colors.compositions.map((c) => c.backgroundColor),
+  });
+
   const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>(
     (marking) => {
       onMark(databaseManager!, marking);
@@ -155,17 +184,25 @@ export default function ReviewSession() {
     [databaseManager],
   );
 
+  const colorComposition =
+    styles.colors.compositions[
+      (topItem?.promptState?.dueTimestampMillis ?? 0) %
+        styles.colors.compositions.length
+    ];
+
   console.log("[Performance] Render", Date.now() / 1000.0);
 
   const outerViewComponent =
-    Platform.OS === "ios" && Platform.isPad ? View : SafeAreaView; // TODO: Catalyst hack
+    Platform.OS === "ios" && Platform.isPad
+      ? Animated.View
+      : AnimatedSafeAreaView; // TODO: Catalyst hack
   return React.createElement(
     outerViewComponent,
     {
       style: {
         flex: 1,
         justifyContent: "center",
-        backgroundColor: colors.key00,
+        backgroundColor,
       },
     },
     remainingItems ? (
@@ -175,25 +212,18 @@ export default function ReviewSession() {
             items={remainingItems}
             onMark={onMarkCallback}
             schedule="aggressiveStart"
-          />
-          <ReviewSessionProgressBar
-            completedTaskCount={currentQueueIndex}
-            totalTaskCount={items!.length}
+            {...colorComposition}
           />
         </View>
       ) : (
-        <Text
+        <Headline
           style={{
             textAlign: "center",
-            ...typography.cardBodyText,
-            color: colors.key70,
-            opacity: 0.4,
-            fontSize: 24,
-            lineHeight: 24 * 1.5,
-            marginLeft: spacing.spacing05,
-            marginRight: spacing.spacing05,
+            color: styles.colors.white,
+            marginLeft: styles.layout.gridUnit,
+            marginRight: styles.layout.gridUnit,
           }}
-        >{`All caught up!\nNothing's due for review.`}</Text>
+        >{`All caught up!\nNothing's due for review.`}</Headline>
       )
     ) : null,
   );

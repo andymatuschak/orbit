@@ -6,15 +6,17 @@ import {
   PromptTask,
   repetitionActionLogType,
 } from "metabook-core";
-import { ReviewArea, ReviewAreaMarkingRecord } from "metabook-ui";
+import {
+  Caption,
+  ReviewArea,
+  ReviewAreaMarkingRecord,
+  styles,
+} from "metabook-ui";
 
 import BigButton from "metabook-ui/dist/components/BigButton";
-import colors from "metabook-ui/dist/styles/colors";
-import { spacing } from "metabook-ui/dist/styles/layout";
-import typography from "metabook-ui/dist/styles/typography";
 
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import {
@@ -40,11 +42,9 @@ function AuthenticationStatusIndicator(props: {
     case "signedIn":
       const userRecord = props.authenticationState.userRecord;
       interior = (
-        <Text
-          style={{ ...typography.label, color: colors.textColor, opacity: 0.4 }}
-        >{`Signed in as ${
+        <Caption color={styles.colors.ink}>{`Signed in as ${
           userRecord.displayName ?? userRecord.emailAddress ?? userRecord.userID
-        }`}</Text>
+        }`}</Caption>
       );
       break;
 
@@ -77,8 +77,8 @@ function AuthenticationStatusIndicator(props: {
     <View
       style={{
         position: "absolute",
-        left: spacing.spacing07,
-        bottom: spacing.spacing07,
+        left: styles.layout.gridUnit,
+        bottom: styles.layout.gridUnit,
       }}
     >
       {interior}
@@ -160,7 +160,15 @@ function EmbeddedScreen() {
   if (currentQueue) {
     return (
       <View style={{ position: "relative" }}>
-        <ReviewArea items={currentQueue} onMark={onMark} schedule="default" />
+        <ReviewArea
+          items={currentQueue}
+          onMark={onMark}
+          schedule="default"
+          // TODO colors
+          accentColor={styles.colors.fg[1]}
+          secondaryColor={styles.colors.bg[5]}
+          tertiaryColor={styles.colors.ink}
+        />
         <AuthenticationStatusIndicator
           authenticationState={authenticationState}
           onSignIn={onSignIn}

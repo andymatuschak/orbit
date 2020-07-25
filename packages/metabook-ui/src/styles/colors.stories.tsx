@@ -2,10 +2,10 @@ import { number, withKnobs } from "@storybook/addon-knobs";
 import React from "react";
 import { View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
+import { colors } from ".";
 import Starburst from "../components/Starburst";
-import colors from "./colors";
+import { Body, Caption, Label, Title } from "../components/Text";
 import * as layout from "./layout";
-import { Title, Label, Body, Caption } from "../components/Text";
 
 export default {
   title: "Style/Colors",
@@ -154,78 +154,15 @@ function CompositionTest({
 export function Compositions() {
   return (
     <View style={{ flexWrap: "wrap", flexDirection: "row" }}>
-      <CompositionTest
-        backgroundColor={colors.bg[0]}
-        accentColor={colors.fg[6]}
-        secondaryColor={colors.bg[3]}
-        tertiaryColor={colors.fg[0]}
-      />
-      <CompositionTest
-        backgroundColor={colors.bg[1]}
-        accentColor={colors.fg[7]}
-        secondaryColor={colors.bg[3]}
-        tertiaryColor={colors.tertiary[1]}
-      />
-      <CompositionTest
-        backgroundColor={colors.bg[2]}
-        accentColor={colors.fg[8]}
-        secondaryColor={colors.bg[1]}
-        tertiaryColor={colors.fg[2]}
-      />
-      <CompositionTest
-        backgroundColor={colors.bg[3]}
-        accentColor={colors.fg[9]}
-        secondaryColor={colors.bg[1]}
-        tertiaryColor={colors.tertiary[3]}
-      />
-      <CompositionTest
-        backgroundColor={colors.bg[4]}
-        accentColor={colors.fg[9]}
-        secondaryColor={colors.bg[1]}
-        tertiaryColor={colors.tertiary[4]}
-      />
-      <CompositionTest
-        backgroundColor={colors.bg[5]}
-        accentColor={colors.fg[3]}
-        secondaryColor={colors.bg[3]}
-        tertiaryColor={colors.tertiary[5]}
-      />
-      <CompositionTest
-        backgroundColor={colors.bg[6]}
-        accentColor={colors.fg[3]}
-        secondaryColor={colors.bg[7]}
-        tertiaryColor={colors.tertiary[6]}
-      />
-      <CompositionTest
-        backgroundColor={colors.bg[7]}
-        accentColor={colors.fg[3]}
-        secondaryColor={colors.bg[5]}
-        tertiaryColor={colors.tertiary[7]}
-      />
-      <CompositionTest
-        backgroundColor={colors.bg[8]}
-        accentColor={colors.fg[3]}
-        secondaryColor={colors.bg[6]}
-        tertiaryColor={colors.fg[8]}
-      />
-      <CompositionTest
-        backgroundColor={colors.bg[9]}
-        accentColor={colors.fg[3]}
-        secondaryColor={colors.bg[6]}
-        tertiaryColor={colors.tertiary[9]}
-      />
-      <CompositionTest
-        backgroundColor={colors.bg[10]}
-        accentColor={colors.fg[4]}
-        secondaryColor={colors.bg[8]}
-        tertiaryColor={colors.tertiary[10]}
-      />
-      <CompositionTest
-        backgroundColor={colors.bg[11]}
-        accentColor={colors.fg[4]}
-        secondaryColor={colors.bg[1]}
-        tertiaryColor={colors.tertiary[11]}
-      />
+      {colors.compositions.map((c, i) => (
+        <CompositionTest
+          key={i}
+          backgroundColor={c.backgroundColor}
+          accentColor={c.accentColor}
+          secondaryColor={c.secondaryColor}
+          tertiaryColor={c.tertiaryColor}
+        />
+      ))}
     </View>
   );
 }

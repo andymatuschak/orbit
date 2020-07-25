@@ -7,6 +7,7 @@ import {
 } from "metabook-core";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ColorValue,
   Image,
   LayoutChangeEvent,
   StyleSheet,
@@ -16,9 +17,8 @@ import {
 } from "react-native";
 import Markdown, * as MarkdownDisplay from "react-native-markdown-display";
 import { AttachmentResolutionMap } from "../reviewItem";
-import colors from "../styles/colors";
 
-import { type } from "../styles";
+import { type, colors } from "../styles";
 import { getVariantStyles } from "../styles/type";
 import useWeakRef from "./hooks/useWeakRef";
 import NamedStyles = StyleSheet.NamedStyles;
@@ -115,7 +115,7 @@ const markdownItInstance = MarkdownDisplay.MarkdownIt({
 const sizeVariantCount = 5;
 const defaultSmallestSizeVariant = 4;
 
-function getMarkdownStyles(sizeVariant: number) {
+function getMarkdownStyles(sizeVariant: number, accentColor: ColorValue) {
   let paragraphStyle: TextStyle;
   switch (sizeVariant) {
     case 0:
@@ -141,14 +141,15 @@ function getMarkdownStyles(sizeVariant: number) {
     paragraph: {},
     paragraphSpacing: { marginTop: paragraphStyle.lineHeight! },
     clozeHighlight: {
-      color: colors.key50,
-      fontWeight: "bold",
+      ...getVariantStyles(paragraphStyle.fontFamily!, true, false),
+      color: accentColor,
     },
   };
 }
 
 function getMarkdownRenderRules(
   setMarkdownHeight: (value: number) => void,
+  accentColor: ColorValue,
 ): MarkdownDisplay.RenderRules {
   return {
     body: function MarkdownRootRenderer(node, children, parent, styles) {
@@ -178,13 +179,7 @@ function getMarkdownRenderRules(
       );
     },
 
-    paragraph: function MarkdownTextRenderer(
-      node,
-      children,
-      parent,
-      styles,
-      inheritedStyles = {},
-    ) {
+    paragraph: function MarkdownTextRenderer(node, children, parent, styles) {
       return (
         <View
           key={node.key}
@@ -224,13 +219,13 @@ function getMarkdownRenderRules(
             key={clozeTokenIndex}
             style={{
               color: "transparent",
-              backgroundColor: colors.key30,
-              borderRadius: 4,
+              borderBottomWidth: 2,
+              borderBottomColor: accentColor,
               marginLeft: 1,
               marginRight: 1, // TODO update for new styling
             }}
           >
-            {"__________"}
+            {"_______"}
           </Text>,
         );
         content = content.slice(clozeBlankSentinel.length);
@@ -263,6 +258,8 @@ export default React.memo(function CardField(props: {
   promptField: PromptField;
   attachmentResolutionMap: AttachmentResolutionMap | null;
 
+  accentColor?: ColorValue;
+
   onLayout?: (sizeVariant: number) => void;
   largestSizeVariant?: number;
   smallestSizeVariant?: number; // TODO: use better types.
@@ -271,6 +268,7 @@ export default React.memo(function CardField(props: {
     promptField,
     attachmentResolutionMap,
     onLayout,
+    accentColor,
     largestSizeVariant,
     smallestSizeVariant,
   } = props;
@@ -298,7 +296,6 @@ export default React.memo(function CardField(props: {
   const [containerHeight, setContainerHeight] = useState<number | null>(null);
   useEffect(() => {
     if (markdownHeight && containerHeight) {
-      console.log(sizeVariant, markdownHeight, containerHeight);
       if (markdownHeight > containerHeight) {
         setSizeVariant((sizeVariant) => {
           if (
@@ -315,7 +312,7 @@ export default React.memo(function CardField(props: {
         setLayoutReady(true);
       }
     }
-  }, [markdownHeight, containerHeight]);
+  }, [markdownHeight, containerHeight, smallestSizeVariant]);
 
   const sizeVariantRef = useWeakRef(sizeVariant);
   useEffect(() => {
@@ -328,14 +325,16 @@ export default React.memo(function CardField(props: {
     [],
   );
 
+  const effectiveAccentColor = accentColor ?? colors.ink;
   const renderRules = useMemo<MarkdownDisplay.RenderRules>(
-    () => getMarkdownRenderRules(setMarkdownHeight),
-    [],
+    () => getMarkdownRenderRules(setMarkdownHeight, effectiveAccentColor),
+    [effectiveAccentColor],
   );
 
-  const markdownStyles = useMemo(() => getMarkdownStyles(sizeVariant), [
-    sizeVariant,
-  ]);
+  const markdownStyles = useMemo(
+    () => getMarkdownStyles(sizeVariant, effectiveAccentColor),
+    [effectiveAccentColor, sizeVariant],
+  );
 
   return (
     <View

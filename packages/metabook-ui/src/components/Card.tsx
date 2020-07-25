@@ -14,7 +14,12 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { PromptReviewItem } from "../reviewItem";
+import {
+  ApplicationPromptReviewItem,
+  BasicPromptReviewItem,
+  ClozePromptReviewItem,
+  PromptReviewItem,
+} from "../reviewItem";
 import { colors, layout } from "../styles";
 import CardField, { clozeBlankSentinel } from "./CardField";
 import FadeView from "./FadeView";
@@ -33,11 +38,13 @@ export interface CardProps {
   backIsRevealed: boolean;
 
   contextColor?: ColorValue;
+  accentColor?: ColorValue;
   onToggleExplanation?: (isExplanationExpanded: boolean) => unknown;
 }
 
-function getQAPrompt(reviewItem: PromptReviewItem): QAPrompt {
-  // TODO return some front/back type instead
+function getQAPrompt(
+  reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem,
+): QAPrompt {
   switch (reviewItem.prompt.promptType) {
     case basicPromptType:
       return reviewItem.prompt;
@@ -47,8 +54,6 @@ function getQAPrompt(reviewItem: PromptReviewItem): QAPrompt {
         reviewItem.promptState?.lastReviewTaskParameters ?? null,
       ) as ApplicationPromptTaskParameters;
       return reviewItem.prompt.variants[taskParameters.variantIndex];
-    case clozePromptType:
-      throw new Error("Unimplemented"); // TODO
   }
 }
 
@@ -161,11 +166,14 @@ function formatClozePromptContents(
   }
 }
 
-export default React.memo(function Card({
+type QAPromptRendererType = CardProps & {
+  reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem;
+};
+function QAPromptRenderer({
   backIsRevealed,
   contextColor,
   reviewItem,
-}: CardProps) {
+}: QAPromptRendererType) {
   const animatingStyles = useAnimatingStyles(backIsRevealed);
   const spec = getQAPrompt(reviewItem);
 
@@ -229,6 +237,92 @@ export default React.memo(function Card({
       </View>
     </View>
   );
+}
+
+type ClozePromptRendererProps = CardProps & {
+  reviewItem: ClozePromptReviewItem;
+};
+
+function ClozePromptRenderer({
+  backIsRevealed,
+  contextColor,
+  reviewItem,
+  accentColor,
+}: ClozePromptRendererProps) {
+  const {
+    prompt: { body },
+    promptParameters: { clozeIndex },
+  } = reviewItem;
+  const front = {
+    ...body,
+    contents: formatClozePromptContents(body.contents, false, clozeIndex),
+  };
+  const back = {
+    ...body,
+    contents: formatClozePromptContents(body.contents, true, clozeIndex),
+  };
+  return (
+    <View style={styles.cardContainer}>
+      <View style={styles.topAreaContainer} />
+      <View style={styles.bottomAreaContainer}>
+        <Label
+          style={styles.bottomContextLabel}
+          color={contextColor ?? colors.ink}
+        >
+          Source context TODO
+        </Label>
+        <FadeView
+          isVisible={backIsRevealed}
+          durationMillis={100}
+          style={StyleSheet.absoluteFill}
+        >
+          <CardField
+            promptField={back}
+            attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+            accentColor={accentColor}
+          />
+        </FadeView>
+        <FadeView
+          isVisible={!backIsRevealed}
+          durationMillis={70}
+          style={StyleSheet.absoluteFill}
+        >
+          <CardField
+            promptField={front}
+            attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+            accentColor={accentColor}
+          />
+        </FadeView>
+      </View>
+    </View>
+  );
+}
+
+export default React.memo(function Card(props: CardProps) {
+  const {
+    reviewItem: { prompt },
+  } = props;
+  switch (prompt.promptType) {
+    case basicPromptType:
+    case applicationPromptType:
+      return (
+        <QAPromptRenderer
+          {...props}
+          reviewItem={
+            props.reviewItem as
+              | BasicPromptReviewItem
+              | ApplicationPromptReviewItem
+          }
+        />
+      );
+    case clozePromptType:
+      return (
+        <ClozePromptRenderer
+          {...props}
+          reviewItem={props.reviewItem as ClozePromptReviewItem}
+        />
+      );
+  }
 });
 
 const styles = StyleSheet.create({

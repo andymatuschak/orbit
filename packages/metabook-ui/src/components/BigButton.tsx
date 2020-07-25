@@ -7,7 +7,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import colors from "../styles/colors";
+import * as colors from "../styles/colors";
 import { borderRadius, gridUnit, spacing } from "../styles/layout";
 import type from "../styles/type";
 

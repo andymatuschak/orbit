@@ -21,3 +21,5 @@ export { useTransitioningValue } from "./components/hooks/useTransitioningValue"
 
 export { default as Starburst } from "./components/Starburst";
 export * from "./components/Text";
+
+export * as styles from "./styles";
