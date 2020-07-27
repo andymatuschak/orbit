@@ -36,13 +36,7 @@ SentryNSURLRequest ()
                          andLevel:kSentryLogLevelVerbose];
     } else {
         NSDictionary *serialized = [event serialize];
-        jsonData = [SentrySerialization
-            dataWithJSONObject:serialized
-                       options:[SentrySDK.currentHub getClient].options.logLevel
-                               == kSentryLogLevelVerbose
-                           ? NSJSONWritingPrettyPrinted
-                           : 0
-                         error:error];
+        jsonData = [SentrySerialization dataWithJSONObject:serialized error:error];
         if (nil == jsonData) {
             if (error) {
                 // TODO: We're possibly overriding an error set by the actual

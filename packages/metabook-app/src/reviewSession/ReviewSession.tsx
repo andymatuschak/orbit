@@ -207,7 +207,7 @@ export default function ReviewSession() {
     },
     remainingItems ? (
       remainingItems.length > 0 ? (
-        <View style={{ flex: 1, alignItems: "center" }}>
+        <View style={{ flex: 1 }}>
           <ReviewArea
             items={remainingItems}
             onMark={onMarkCallback}

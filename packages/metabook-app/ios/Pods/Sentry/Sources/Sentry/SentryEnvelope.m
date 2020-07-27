@@ -1,6 +1,8 @@
 #import "SentryEnvelope.h"
 #import "SentryEnvelopeItemType.h"
 #import "SentryEvent.h"
+#import "SentryMeta.h"
+#import "SentrySdkInfo.h"
 #import "SentrySession.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -10,9 +12,20 @@ NS_ASSUME_NONNULL_BEGIN
 // id can be null if no event in the envelope or attachment related to event
 - (instancetype)initWithId:(NSString *_Nullable)eventId
 {
+    SentrySdkInfo *sdkInfo = [[SentrySdkInfo alloc] initWithName:SentryMeta.sdkName
+                                                      andVersion:SentryMeta.versionString];
+    self = [self initWithId:eventId andSdkInfo:sdkInfo];
+
+    return self;
+}
+
+- (instancetype)initWithId:(NSString *_Nullable)eventId andSdkInfo:(SentrySdkInfo *_Nullable)sdkInfo
+{
     if (self = [super init]) {
         _eventId = eventId;
+        _sdkInfo = sdkInfo;
     }
+
     return self;
 }
 

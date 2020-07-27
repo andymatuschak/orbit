@@ -10,7 +10,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithReport:(NSDictionary *)report;
 
-- (SentryEvent *)convertReportToEvent;
+/**
+ * Converts the report to an SentryEvent.
+ *
+ * @return The converted event or nil if an error occured during the conversion.
+ */
+- (SentryEvent *_Nullable)convertReportToEvent;
 
 @end
 

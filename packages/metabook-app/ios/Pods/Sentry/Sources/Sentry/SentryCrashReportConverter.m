@@ -7,6 +7,7 @@
 #import "SentryException.h"
 #import "SentryFrame.h"
 #import "SentryHexAddressFormatter.h"
+#import "SentryLog.h"
 #import "SentryMechanism.h"
 #import "SentryStacktrace.h"
 #import "SentryThread.h"
@@ -46,7 +47,21 @@ SentryCrashReportConverter ()
 
         self.diagnosis = crashContext[@"diagnosis"];
         self.exceptionContext = crashContext[@"error"];
-        self.threads = crashContext[@"threads"];
+        [self initThreads:crashContext[@"threads"]];
+    }
+    return self;
+}
+
+- (void)initThreads:(NSArray<NSDictionary *> *)threads
+{
+    if (nil != threads && [threads isKindOfClass:[NSArray class]]) {
+        // SentryCrash sometimes produces recrash_reports where an element of threads is a
+        // NSString instead of a NSDictionary. When this happens we can't read the details of
+        // the thread, but we have to discard it. Otherwise we would crash.
+        NSPredicate *onlyNSDictionary = [NSPredicate predicateWithBlock:^BOOL(id object,
+            NSDictionary *bindings) { return [object isKindOfClass:[NSDictionary class]]; }];
+        self.threads = [threads filteredArrayUsingPredicate:onlyNSDictionary];
+
         for (NSUInteger i = 0; i < self.threads.count; i++) {
             NSDictionary *thread = self.threads[i];
             if ([thread[@"crashed"] boolValue]) {
@@ -55,51 +70,60 @@ SentryCrashReportConverter ()
             }
         }
     }
-    return self;
 }
 
-- (SentryEvent *)convertReportToEvent
+- (SentryEvent *_Nullable)convertReportToEvent
 {
-    SentryEvent *event = [[SentryEvent alloc] initWithLevel:kSentryLevelFatal];
-    if ([self.report[@"report"][@"timestamp"] isKindOfClass:NSNumber.class]) {
-        event.timestamp = [NSDate
-            dateWithTimeIntervalSince1970:[self.report[@"report"][@"timestamp"] integerValue]];
-    } else {
-        event.timestamp = [NSDate sentry_fromIso8601String:self.report[@"report"][@"timestamp"]];
+    @try {
+        SentryEvent *event = [[SentryEvent alloc] initWithLevel:kSentryLevelFatal];
+        if ([self.report[@"report"][@"timestamp"] isKindOfClass:NSNumber.class]) {
+            event.timestamp = [NSDate
+                dateWithTimeIntervalSince1970:[self.report[@"report"][@"timestamp"] integerValue]];
+        } else {
+            event.timestamp =
+                [NSDate sentry_fromIso8601String:self.report[@"report"][@"timestamp"]];
+        }
+        event.debugMeta = [self convertDebugMeta];
+        event.threads = [self convertThreads];
+        event.exceptions = [self convertExceptions];
+
+        // The releaseName must be set on the userInfo of SentryCrash.sharedInstance
+        event.releaseName = self.userContext[@"release"];
+
+        event.dist = self.userContext[@"dist"];
+        event.environment = self.userContext[@"environment"];
+        event.context = self.userContext[@"context"];
+        event.extra = self.userContext[@"extra"];
+        event.tags = self.userContext[@"tags"];
+        //    event.level we do not set the level here since this always resulted
+        //    from a fatal crash
+
+        event.user = [self convertUser];
+        event.breadcrumbs = [self convertBreadcrumbs];
+
+        NSDictionary *appContext = event.context[@"app"];
+        // We want to set the release and dist to the version from the crash report
+        // itself otherwise it can happend that we have two different version when
+        // the app crashes right before an app update #218 #219
+        if (nil == event.releaseName && appContext[@"app_identifier"] && appContext[@"app_version"]
+            && appContext[@"app_build"]) {
+            event.releaseName =
+                [NSString stringWithFormat:@"%@@%@+%@", appContext[@"app_identifier"],
+                          appContext[@"app_version"], appContext[@"app_build"]];
+        }
+
+        if (nil == event.dist && appContext[@"app_build"]) {
+            event.dist = appContext[@"app_build"];
+        }
+
+        return event;
+    } @catch (NSException *exception) {
+        NSString *errorMessage =
+            [NSString stringWithFormat:@"Could not convert report:%@", exception.description];
+        [SentryLog logWithMessage:errorMessage andLevel:kSentryLogLevelError];
     }
-    event.debugMeta = [self convertDebugMeta];
-    event.threads = [self convertThreads];
-    event.exceptions = [self convertExceptions];
 
-    // The releaseName must be set on the userInfo of SentryCrash.sharedInstance
-    event.releaseName = self.userContext[@"release"];
-
-    event.dist = self.userContext[@"dist"];
-    event.environment = self.userContext[@"environment"];
-    event.context = self.userContext[@"context"];
-    event.extra = self.userContext[@"extra"];
-    event.tags = self.userContext[@"tags"];
-    //    event.level we do not set the level here since this always resulted
-    //    from a fatal crash
-
-    event.user = [self convertUser];
-    event.breadcrumbs = [self convertBreadcrumbs];
-
-    NSDictionary *appContext = event.context[@"app"];
-    // We want to set the release and dist to the version from the crash report
-    // itself otherwise it can happend that we have two different version when
-    // the app crashes right before an app update #218 #219
-    if (nil == event.releaseName && appContext[@"app_identifier"] && appContext[@"app_version"]
-        && appContext[@"app_build"]) {
-        event.releaseName = [NSString stringWithFormat:@"%@@%@+%@", appContext[@"app_identifier"],
-                                      appContext[@"app_version"], appContext[@"app_build"]];
-    }
-
-    if (nil == event.dist && appContext[@"app_build"]) {
-        event.dist = appContext[@"app_build"];
-    }
-
-    return event;
+    return nil;
 }
 
 - (SentryUser *_Nullable)convertUser

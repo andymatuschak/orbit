@@ -149,9 +149,7 @@ SentryHttpTransport ()
 {
     return [[SentryNSURLRequest alloc]
         initEnvelopeRequestWithDsn:self.options.parsedDsn
-                           andData:[SentrySerialization dataWithEnvelope:envelope
-                                                                 options:0
-                                                                   error:&error]
+                           andData:[SentrySerialization dataWithEnvelope:envelope error:&error]
                   didFailWithError:&error];
 }
 

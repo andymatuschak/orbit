@@ -1,15 +1,36 @@
 #import <Foundation/Foundation.h>
 
-#import "SentryEvent.h"
-#import "SentrySession.h"
+#import "SentryDefines.h"
+
+@class SentryEvent, SentrySession, SentrySdkInfo;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface SentryEnvelopeHeader : NSObject
 SENTRY_NO_INIT
 
-// id can be null if no event in the envelope or attachment related to event
-- (instancetype)initWithId:(NSString *_Nullable)eventId NS_DESIGNATED_INITIALIZER;
+/**
+ * Initializes an SentryEnvelopeHeader object with the specified eventId.
+ *
+ * Sets the sdkInfo from SentryMeta.
+ *
+ * @param eventId The identifier of the event. Can be nil if no event in the envelope or attachment
+ * related to event.
+ */
+- (instancetype)initWithId:(NSString *_Nullable)eventId;
+
+/**
+ * Initializes an SentryEnvelopeHeader object with the specified eventId and skdInfo.
+ *
+ * It is recommended to use initWithId:eventId: because it sets the sdkInfo for you.
+ *
+ * @param eventId The identifier of the event. Can be nil if no event in the envelope or attachment
+ * related to event.
+ * @param sdkInfo sdkInfo Describes the Sentry SDK. Can be nil for backwards compatibility. New
+ * instances should always provide a version.
+ */
+- (instancetype)initWithId:(NSString *_Nullable)eventId
+                andSdkInfo:(SentrySdkInfo *_Nullable)sdkInfo NS_DESIGNATED_INITIALIZER;
 
 /**
  * The event identifier, if available.
@@ -17,6 +38,8 @@ SENTRY_NO_INIT
  * related. i.e Attachments
  */
 @property (nonatomic, readonly, copy) NSString *_Nullable eventId;
+
+@property (nonatomic, readonly, copy) SentrySdkInfo *_Nullable sdkInfo;
 
 @end
 

@@ -30,7 +30,9 @@
                 [[SentryCrashReportConverter alloc] initWithReport:report];
             if (nil != [SentrySDK.currentHub getClient]) {
                 SentryEvent *event = [reportConverter convertReportToEvent];
-                [self handleConvertedEvent:event report:report sentReports:sentReports];
+                if (nil != event) {
+                    [self handleConvertedEvent:event report:report sentReports:sentReports];
+                }
             } else {
                 [SentryLog logWithMessage:@"Crash reports were found but no "
                                           @"[SentrySDK.currentHub getClient] is set. Cannot send "

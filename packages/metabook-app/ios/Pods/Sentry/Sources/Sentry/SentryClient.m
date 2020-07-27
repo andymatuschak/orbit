@@ -63,6 +63,17 @@ SentryClient ()
         self.threadInspector =
             [[SentryThreadInspector alloc] initWithStacktraceBuilder:stacktraceBuilder
                                             andMachineContextWrapper:machineContextWrapper];
+
+        NSError *error = nil;
+        self.fileManager = [[SentryFileManager alloc] initWithDsn:self.options.parsedDsn
+                                                 didFailWithError:&error];
+        if (nil != error) {
+            [SentryLog logWithMessage:error.localizedDescription andLevel:kSentryLogLevelError];
+            return nil;
+        }
+
+        self.transport = [SentryTransportFactory initTransport:self.options
+                                             sentryFileManager:self.fileManager];
     }
     return self;
 }
@@ -80,27 +91,8 @@ SentryClient ()
     return self;
 }
 
-- (id<SentryTransport>)transport
-{
-    if (_transport == nil) {
-        _transport = [SentryTransportFactory initTransport:self.options
-                                         sentryFileManager:self.fileManager];
-    }
-    return _transport;
-}
-
 - (SentryFileManager *)fileManager
 {
-    if (_fileManager == nil) {
-        NSError *error = nil;
-        SentryFileManager *fileManager =
-            [[SentryFileManager alloc] initWithDsn:self.options.parsedDsn didFailWithError:&error];
-        if (nil != error) {
-            [SentryLog logWithMessage:(error).localizedDescription andLevel:kSentryLogLevelError];
-            return nil;
-        }
-        _fileManager = fileManager;
-    }
     return _fileManager;
 }
 
@@ -140,11 +132,11 @@ SentryClient ()
                              alwaysAttachStacktrace:alwaysAttachStacktrace];
     if (nil != preparedEvent) {
         if (nil != self.options.beforeSend) {
-            event = self.options.beforeSend(event);
+            preparedEvent = self.options.beforeSend(preparedEvent);
         }
-        if (nil != event) {
+        if (nil != preparedEvent) {
             [self.transport sendEvent:preparedEvent withCompletionHandler:nil];
-            return event.eventId;
+            return preparedEvent.eventId;
         }
     }
     return nil;
@@ -234,9 +226,17 @@ SentryClient ()
         event.sdk = sdk;
     }
 
-    if (alwaysAttachStacktrace || [self.options.attachStacktrace boolValue] ||
-        [event.exceptions count] > 0) {
+    BOOL shouldAttachStacktrace = alwaysAttachStacktrace ||
+        [self.options.attachStacktrace boolValue]
+        || (nil != event.exceptions && [event.exceptions count] > 0);
+
+    BOOL debugMetaNotAttached = !(nil != event.debugMeta && event.debugMeta.count > 0);
+    if (shouldAttachStacktrace && debugMetaNotAttached) {
         event.debugMeta = [self.debugMetaBuilder buildDebugMeta];
+    }
+
+    BOOL threadsNotAttached = !(nil != event.threads && event.threads.count > 0);
+    if (shouldAttachStacktrace && threadsNotAttached) {
         // We don't want to add the stacktrace of attaching the stacktrace.
         // Therefore we skip three frames.
         event.threads = [self.threadInspector getCurrentThreadsSkippingFrames:3];

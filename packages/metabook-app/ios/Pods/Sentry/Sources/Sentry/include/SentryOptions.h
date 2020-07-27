@@ -107,8 +107,11 @@ NS_SWIFT_NAME(Options)
 @property (nonatomic, assign) NSUInteger sessionTrackingIntervalMillis;
 
 /**
- * WIP! This feature is not finished yet. The plan is to attach the stack trace to all threads when
- * logging events. When enabling this currently only the debug meta data is attached to events.
+ * When enabled, stack traces are automatically attached to all messages logged. Stack traces are
+ * always attached to exceptions but when this is set stack traces are also sent with messages.
+ * Stack traces are only attached for the current thread.
+ *
+ * This feature is disabled by default.
  */
 @property (nonatomic, copy) NSNumber *attachStacktrace;
 

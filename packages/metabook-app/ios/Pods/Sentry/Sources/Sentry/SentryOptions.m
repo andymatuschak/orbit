@@ -19,8 +19,6 @@
     if (self = [super init]) {
         self.enabled = @NO;
 
-        // TODO: Remove this side effect
-        SentrySDK.logLevel = kSentryLogLevelError;
         self.logLevel = kSentryLogLevelError;
 
         self.debug = @NO;
@@ -88,10 +86,8 @@
         // control how chatty the SDK is. Ideally we'd support all the levels
         // here, and perhaps name it `diagnosticLevel` to align more.
         if ([@"verbose" isEqual:options[@"logLevel"]]) {
-            SentrySDK.logLevel = kSentryLogLevelVerbose;
             _logLevel = kSentryLogLevelVerbose;
         } else {
-            SentrySDK.logLevel = kSentryLogLevelDebug;
             _logLevel = kSentryLogLevelDebug;
         }
     }

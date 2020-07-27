@@ -172,9 +172,7 @@ SentryFileManager ()
 - (NSString *)storeEnvelope:(SentryEnvelope *)envelope
 {
     @synchronized(self) {
-        NSString *result = [self storeData:[SentrySerialization dataWithEnvelope:envelope
-                                                                         options:0
-                                                                           error:nil]
+        NSString *result = [self storeData:[SentrySerialization dataWithEnvelope:envelope error:nil]
                                     toPath:self.envelopesPath];
         [self handleFileManagerLimit:self.envelopesPath maxCount:self.maxEnvelopes];
         return result;
@@ -183,7 +181,7 @@ SentryFileManager ()
 
 - (void)storeCurrentSession:(SentrySession *)session
 {
-    NSData *sessionData = [SentrySerialization dataWithSession:session options:0 error:nil];
+    NSData *sessionData = [SentrySerialization dataWithSession:session error:nil];
     [SentryLog logWithMessage:[NSString stringWithFormat:@"Writing to current session: %@",
                                         self.currentSessionFilePath]
                      andLevel:kSentryLogLevelDebug];
@@ -285,7 +283,7 @@ SentryFileManager ()
 
 - (NSString *)storeDictionary:(NSDictionary *)dictionary toPath:(NSString *)path
 {
-    NSData *saveData = [SentrySerialization dataWithJSONObject:dictionary options:0 error:nil];
+    NSData *saveData = [SentrySerialization dataWithJSONObject:dictionary error:nil];
     return nil != saveData ? [self storeData:saveData toPath:path]
                            : path; // TODO: Should we return null instead? Whoever is using this
                                    // return value is being tricked.

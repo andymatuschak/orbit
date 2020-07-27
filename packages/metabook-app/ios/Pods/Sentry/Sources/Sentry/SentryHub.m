@@ -1,7 +1,8 @@
 #import "SentryHub.h"
 #import "SentryBreadcrumbTracker.h"
 #import "SentryClient.h"
-#import "SentryCrash.h"
+#import "SentryCrashAdapter.h"
+#import "SentryCurrentDate.h"
 #import "SentryFileManager.h"
 #import "SentryIntegrationProtocol.h"
 #import "SentryLog.h"
@@ -12,6 +13,7 @@ SentryHub ()
 
 @property (nonatomic, strong) SentryClient *_Nullable client;
 @property (nonatomic, strong) SentryScope *_Nullable scope;
+@property (nonatomic, strong) SentryCrashAdapter *sentryCrashWrapper;
 
 @end
 
@@ -29,7 +31,19 @@ SentryHub ()
         self.scope = scope;
         _sessionLock = [[NSObject alloc] init];
         _installedIntegrations = [[NSMutableArray alloc] init];
+        self.sentryCrashWrapper = [[SentryCrashAdapter alloc] init];
     }
+    return self;
+}
+
+/** Internal constructor for testing */
+- (instancetype)initWithClient:(SentryClient *_Nullable)client
+                      andScope:(SentryScope *_Nullable)scope
+         andSentryCrashWrapper:(SentryCrashAdapter *)sentryCrashWrapper
+{
+    self = [self initWithClient:client andScope:scope];
+    self.sentryCrashWrapper = sentryCrashWrapper;
+
     return self;
 }
 
@@ -56,7 +70,7 @@ SentryHub ()
         // TODO: Capture outside the lock. Not the reference in the scope.
         [self captureSession:_session];
     }
-    [lastSession endSessionExitedWithTimestamp:[NSDate date]];
+    [lastSession endSessionExitedWithTimestamp:[SentryCurrentDate date]];
     [self captureSession:lastSession];
 }
 
@@ -106,9 +120,9 @@ SentryHub ()
         return;
     }
 
-    if (SentryCrash.sharedInstance.crashedLastLaunch) {
-        NSDate *timeSinceLastCrash = [[NSDate date]
-            dateByAddingTimeInterval:-SentryCrash.sharedInstance.activeDurationSinceLastCrash];
+    if (self.sentryCrashWrapper.crashedLastLaunch) {
+        NSDate *timeSinceLastCrash = [[SentryCurrentDate date]
+            dateByAddingTimeInterval:-self.sentryCrashWrapper.activeDurationSinceLastCrash];
 
         [SentryLog logWithMessage:@"Closing cached session as crashed."
                          andLevel:kSentryLogLevelDebug];

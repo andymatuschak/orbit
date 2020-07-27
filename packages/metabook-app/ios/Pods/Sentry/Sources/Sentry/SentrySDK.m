@@ -73,6 +73,7 @@ static SentryHub *currentHub;
 
 + (void)startWithOptionsObject:(SentryOptions *)options
 {
+    [self setLogLevel:options.logLevel];
     SentryClient *newClient = [[SentryClient alloc] initWithOptions:options];
     // The Hub needs to be initialized with a client so that closing a session
     // can happen.

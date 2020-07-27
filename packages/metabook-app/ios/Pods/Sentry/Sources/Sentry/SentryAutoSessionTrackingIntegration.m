@@ -30,6 +30,13 @@ SentryAutoSessionTrackingIntegration ()
     }
 }
 
+- (void)stop
+{
+    if (nil != self.tracker) {
+        [self.tracker stop];
+    }
+}
+
 @end
 
 NS_ASSUME_NONNULL_END

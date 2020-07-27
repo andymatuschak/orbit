@@ -1,21 +1,23 @@
 #import "SentrySerialization.h"
 #import "SentryDefines.h"
+#import "SentryEnvelope.h"
 #import "SentryEnvelopeItemType.h"
 #import "SentryError.h"
 #import "SentryLog.h"
+#import "SentrySdkInfo.h"
+#import "SentrySession.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @implementation SentrySerialization
 
 + (NSData *_Nullable)dataWithJSONObject:(NSDictionary *)dictionary
-                                options:(NSJSONWritingOptions)opt
                                   error:(NSError *_Nullable *_Nullable)error
 {
 
     NSData *data = nil;
     if ([NSJSONSerialization isValidJSONObject:dictionary] != NO) {
-        data = [NSJSONSerialization dataWithJSONObject:dictionary options:opt error:error];
+        data = [NSJSONSerialization dataWithJSONObject:dictionary options:0 error:error];
     } else {
         [SentryLog logWithMessage:[NSString stringWithFormat:@"Invalid JSON."]
                          andLevel:kSentryLogLevelError];
@@ -28,21 +30,22 @@ NS_ASSUME_NONNULL_BEGIN
     return data;
 }
 
-// TODO: I think we shouldn't allow to pass options here. Setting pretty print
-// on the json could destory the envelope
 + (NSData *_Nullable)dataWithEnvelope:(SentryEnvelope *)envelope
-                              options:(NSJSONWritingOptions)opt
                                 error:(NSError *_Nullable *_Nullable)error
 {
 
     NSMutableData *envelopeData = [[NSMutableData alloc] init];
     NSMutableDictionary *serializedData = [NSMutableDictionary new];
     if (nil != envelope.header.eventId) {
-        [serializedData setValue:envelope.header.eventId forKey:@"eventId"];
+        [serializedData setValue:envelope.header.eventId forKey:@"event_id"];
     }
-    NSData *header = [SentrySerialization dataWithJSONObject:serializedData
-                                                     options:opt
-                                                       error:error];
+
+    SentrySdkInfo *sdkInfo = envelope.header.sdkInfo;
+    if (nil != sdkInfo) {
+        [serializedData addEntriesFromDictionary:[sdkInfo serialize]];
+    }
+
+    NSData *header = [SentrySerialization dataWithJSONObject:serializedData error:error];
     if (nil == header) {
         [SentryLog logWithMessage:[NSString stringWithFormat:@"Envelope header cannot "
                                                              @"be converted to JSON."]
@@ -66,9 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
                 setValue:[NSNumber numberWithUnsignedInteger:envelope.items[i].header.length]
                   forKey:@"length"];
         }
-        NSData *itemHeader = [SentrySerialization dataWithJSONObject:serializedData
-                                                             options:opt
-                                                               error:error];
+        NSData *itemHeader = [SentrySerialization dataWithJSONObject:serializedData error:error];
         if (nil == itemHeader) {
             [SentryLog logWithMessage:[NSString stringWithFormat:@"Envelope item header cannot "
                                                                  @"be converted to JSON."]
@@ -113,8 +114,14 @@ NS_ASSUME_NONNULL_BEGIN
                                                     error]
                                  andLevel:kSentryLogLevelError];
             } else {
-                NSString *_Nullable eventId = [headerDictionary valueForKey:@"eventId"];
-                envelopeHeader = [[SentryEnvelopeHeader alloc] initWithId:eventId];
+                NSString *_Nullable eventId = headerDictionary[@"event_id"];
+
+                SentrySdkInfo *sdkInfo = nil;
+                if (nil != headerDictionary[@"sdk"]) {
+                    sdkInfo = [[SentrySdkInfo alloc] initWithDict:headerDictionary];
+                }
+                envelopeHeader = [[SentryEnvelopeHeader alloc] initWithId:eventId
+                                                               andSdkInfo:sdkInfo];
             }
             break;
         }
@@ -129,11 +136,13 @@ NS_ASSUME_NONNULL_BEGIN
     NSInteger itemHeaderStart = envelopeHeaderIndex + 1;
 
     NSMutableArray<SentryEnvelopeItem *> *items = [NSMutableArray new];
-    unsigned long endOfEnvelope = data.length - envelopeHeaderIndex;
+    NSUInteger endOfEnvelope = data.length - 1;
     for (NSInteger i = itemHeaderStart; i <= endOfEnvelope; ++i) {
         if (bytes[i] == '\n' || i == endOfEnvelope) {
-            if (endOfEnvelope == i)
+            if (endOfEnvelope == i) {
                 i++; // 0 byte attachment
+            }
+
             NSData *itemHeaderData =
                 [data subdataWithRange:NSMakeRange(itemHeaderStart, i - itemHeaderStart)];
 #ifdef DEBUG
@@ -203,10 +212,9 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 + (NSData *_Nullable)dataWithSession:(SentrySession *)session
-                             options:(NSJSONWritingOptions)opt
                                error:(NSError *_Nullable *_Nullable)error
 {
-    return [self dataWithJSONObject:[session serialize] options:opt error:error];
+    return [self dataWithJSONObject:[session serialize] error:error];
 }
 
 + (SentrySession *_Nullable)sessionWithData:(NSData *)sessionData
