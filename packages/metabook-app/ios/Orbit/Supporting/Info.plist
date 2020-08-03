@@ -64,5 +64,32 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>dr-bold-TRIAL.otf</string>
+		<string>dr-bolditalic-TRIAL.otf</string>
+		<string>dr-extrabold-TRIAL.otf</string>
+		<string>dr-extrabolditalic-TRIAL.otf</string>
+		<string>dr-extralight-TRIAL.otf</string>
+		<string>dr-extralightitalic-TRIAL.otf</string>
+		<string>dr-italic-TRIAL.otf</string>
+		<string>dr-light-TRIAL.otf</string>
+		<string>dr-lightitalic-TRIAL.otf</string>
+		<string>dr-medium-TRIAL.otf</string>
+		<string>dr-mediumitalic-TRIAL.otf</string>
+		<string>dr-regular-TRIAL.otf</string>
+		<string>drweb-bold-TRIAL.woff</string>
+		<string>drweb-bolditalic-TRIAL.woff</string>
+		<string>drweb-extrabold-TRIAL.woff</string>
+		<string>drweb-extrabolditalic-TRIAL.woff</string>
+		<string>drweb-extralight-TRIAL.woff</string>
+		<string>drweb-extralightitalic-TRIAL.woff</string>
+		<string>drweb-italic-TRIAL.woff</string>
+		<string>drweb-light-TRIAL.woff</string>
+		<string>drweb-lightitalic-TRIAL.woff</string>
+		<string>drweb-medium-TRIAL.woff</string>
+		<string>drweb-mediumitalic-TRIAL.woff</string>
+		<string>drweb-regular-TRIAL.woff</string>
+	</array>
 </dict>
 </plist>

@@ -5,23 +5,35 @@ import {
   imageAttachmentType,
   PromptField,
 } from "metabook-core";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useLayoutEffect,
+} from "react";
 import {
   ColorValue,
   Image,
   LayoutChangeEvent,
+  Platform,
+  StyleProp,
   StyleSheet,
   Text,
   TextStyle,
   View,
+  ViewProps,
+  ViewStyle,
 } from "react-native";
 import Markdown, * as MarkdownDisplay from "react-native-markdown-display";
 import { AttachmentResolutionMap } from "../reviewItem";
 
 import { type, colors } from "../styles";
 import { getVariantStyles } from "../styles/type";
+import usePrevious from "./hooks/usePrevious";
 import useWeakRef from "./hooks/useWeakRef";
 import NamedStyles = StyleSheet.NamedStyles;
+import isEqual from "lodash.isequal";
 
 function clozeParsePlugin(md: MarkdownIt) {
   const startDelimiterCode = "{".charCodeAt(0);
@@ -113,28 +125,26 @@ const markdownItInstance = MarkdownDisplay.MarkdownIt({
 }).use(clozeParsePlugin);
 
 const sizeVariantCount = 5;
-const defaultSmallestSizeVariant = 4;
+const defaultSmallestSizeVariant = 3;
 
-function getMarkdownStyles(sizeVariant: number, accentColor: ColorValue) {
-  let paragraphStyle: TextStyle;
-  switch (sizeVariant) {
-    case 0:
-      paragraphStyle = type.display.layoutStyle;
-      break;
-    case 1:
-      paragraphStyle = type.headline.layoutStyle;
-      break;
-    case 2:
-      paragraphStyle = type.body.layoutStyle;
-      break;
-    case 3:
-      paragraphStyle = type.bodySmall.layoutStyle;
-      break;
-    case 4:
-      paragraphStyle = type.caption.layoutStyle;
-      break;
-    default:
-      throw new Error("Unknown shrink factor");
+interface SizeVariant {
+  style: TextStyle;
+  maximumLineCount?: number;
+}
+
+const sizeVariants: SizeVariant[] = [
+  { style: type.displayLarge.layoutStyle, maximumLineCount: 1 },
+  { style: type.display.layoutStyle, maximumLineCount: 2 },
+  { style: type.headline.layoutStyle },
+  { style: type.body.layoutStyle },
+  { style: type.bodySmall.layoutStyle },
+  { style: type.caption.layoutStyle },
+];
+
+function getMarkdownStyles(sizeVariant: SizeVariant, accentColor: ColorValue) {
+  const paragraphStyle = sizeVariant.style;
+  if (!paragraphStyle) {
+    throw new Error("Unknown shrink factor");
   }
   return {
     textgroup: paragraphStyle,
@@ -144,12 +154,56 @@ function getMarkdownStyles(sizeVariant: number, accentColor: ColorValue) {
       ...getVariantStyles(paragraphStyle.fontFamily!, true, false),
       color: accentColor,
     },
+    clozeUnderlineContainer: {
+      height: paragraphStyle.lineHeight,
+      width: paragraphStyle.fontSize! * 3,
+      ...(Platform.OS === "web" && { display: "inline-block" }),
+    },
+    clozeUnderline:
+      Platform.OS === "web"
+        ? {
+            display: "inline-block",
+            width: "100%",
+            height: 3,
+            backgroundColor: accentColor,
+          }
+        : {
+            // HACK: rough positioning...
+            top:
+              paragraphStyle.lineHeight! + (paragraphStyle.top! as number) * 2,
+            height: 3,
+            backgroundColor: accentColor,
+          },
   };
 }
 
+function WebClozeUnderline(props: {
+  containerStyle: StyleProp<ViewStyle>;
+  underlineStyle: StyleProp<ViewStyle>;
+}) {
+  return (
+    <Text style={props.containerStyle}>
+      <Text style={props.underlineStyle} />
+    </Text>
+  );
+}
+
+function NativeClozeUnderline(props: {
+  containerStyle: StyleProp<ViewStyle>;
+  underlineStyle: StyleProp<ViewStyle>;
+}) {
+  return (
+    <View style={props.containerStyle}>
+      <View style={props.underlineStyle} />
+    </View>
+  );
+}
+
+const ClozeUnderline =
+  Platform.OS === "web" ? WebClozeUnderline : NativeClozeUnderline;
+
 function getMarkdownRenderRules(
   setMarkdownHeight: (value: number) => void,
-  accentColor: ColorValue,
 ): MarkdownDisplay.RenderRules {
   return {
     body: function MarkdownRootRenderer(node, children, parent, styles) {
@@ -215,18 +269,11 @@ function getMarkdownRenderRules(
 
         content = content.slice(clozeTokenIndex);
         parsedChildren.push(
-          <Text
+          <ClozeUnderline
             key={clozeTokenIndex}
-            style={{
-              color: "transparent",
-              borderBottomWidth: 2,
-              borderBottomColor: accentColor,
-              marginLeft: 1,
-              marginRight: 1, // TODO update for new styling
-            }}
-          >
-            {"_______"}
-          </Text>,
+            containerStyle={styles.clozeUnderlineContainer}
+            underlineStyle={styles.clozeUnderline}
+          />,
         );
         content = content.slice(clozeBlankSentinel.length);
       }
@@ -261,16 +308,16 @@ export default React.memo(function CardField(props: {
   accentColor?: ColorValue;
 
   onLayout?: (sizeVariant: number) => void;
-  largestSizeVariant?: number;
-  smallestSizeVariant?: number; // TODO: use better types.
+  largestSizeVariantIndex?: number;
+  smallestSizeVariantIndex?: number; // TODO: use better types.
 }) {
   const {
     promptField,
     attachmentResolutionMap,
     onLayout,
     accentColor,
-    largestSizeVariant,
-    smallestSizeVariant,
+    largestSizeVariantIndex,
+    smallestSizeVariantIndex,
   } = props;
   let imageURL: string | null = null;
   if (promptField.attachments.length > 0 && attachmentResolutionMap) {
@@ -285,36 +332,52 @@ export default React.memo(function CardField(props: {
     }
   }
 
-  const [sizeVariant, setSizeVariant] = useState(largestSizeVariant ?? 0);
+  const [sizeVariantIndex, setSizeVariantIndex] = useState(
+    largestSizeVariantIndex ?? 0,
+  );
   const [isLayoutReady, setLayoutReady] = useState(false);
+  const previousPromptField = usePrevious(promptField);
   // Reset shrink factor when prompt field changes.
-  useEffect(() => {
-    setSizeVariant(Math.min(largestSizeVariant ?? 0, sizeVariantCount));
-  }, [promptField, largestSizeVariant]);
+  if (previousPromptField && !isEqual(promptField, previousPromptField)) {
+    setSizeVariantIndex((sizeVariantIndex) => {
+      const newIndex = Math.min(largestSizeVariantIndex ?? 0, sizeVariantCount);
+      if (sizeVariantIndex !== newIndex) {
+        setLayoutReady(false);
+      }
+      return newIndex;
+    });
+  }
+  useLayoutEffect(() => {
+    setSizeVariantIndex((sizeVariantIndex) =>
+      Math.max(largestSizeVariantIndex ?? 0, sizeVariantIndex),
+    );
+  }, [largestSizeVariantIndex]);
 
   const [markdownHeight, setMarkdownHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number | null>(null);
-  useEffect(() => {
-    if (markdownHeight && containerHeight) {
-      if (markdownHeight > containerHeight) {
-        setSizeVariant((sizeVariant) => {
-          if (
-            sizeVariant < (smallestSizeVariant ?? defaultSmallestSizeVariant)
-          ) {
-            setLayoutReady(false);
-            return sizeVariant + 1;
-          } else {
-            setLayoutReady(true);
-            return sizeVariant;
-          }
-        });
-      } else {
-        setLayoutReady(true);
-      }
+  useLayoutEffect(() => {
+    if (markdownHeight !== null && containerHeight !== null) {
+      setSizeVariantIndex((sizeVariantIndex) => {
+        const sizeVariant = sizeVariants[sizeVariantIndex]!;
+        if (
+          (markdownHeight > containerHeight ||
+            (sizeVariant.maximumLineCount &&
+              markdownHeight / sizeVariant.style.lineHeight! >
+                sizeVariant.maximumLineCount)) &&
+          sizeVariantIndex <
+            (smallestSizeVariantIndex ?? defaultSmallestSizeVariant)
+        ) {
+          setLayoutReady(false);
+          return sizeVariantIndex + 1;
+        } else {
+          setLayoutReady(true);
+          return sizeVariantIndex;
+        }
+      });
     }
-  }, [markdownHeight, containerHeight, smallestSizeVariant]);
+  }, [markdownHeight, containerHeight, smallestSizeVariantIndex]);
 
-  const sizeVariantRef = useWeakRef(sizeVariant);
+  const sizeVariantRef = useWeakRef(sizeVariantIndex);
   useEffect(() => {
     onLayout?.(sizeVariantRef.current);
   }, [isLayoutReady, onLayout, sizeVariantRef]);
@@ -327,13 +390,14 @@ export default React.memo(function CardField(props: {
 
   const effectiveAccentColor = accentColor ?? colors.ink;
   const renderRules = useMemo<MarkdownDisplay.RenderRules>(
-    () => getMarkdownRenderRules(setMarkdownHeight, effectiveAccentColor),
-    [effectiveAccentColor],
+    () => getMarkdownRenderRules(setMarkdownHeight),
+    [],
   );
 
   const markdownStyles = useMemo(
-    () => getMarkdownStyles(sizeVariant, effectiveAccentColor),
-    [effectiveAccentColor, sizeVariant],
+    () =>
+      getMarkdownStyles(sizeVariants[sizeVariantIndex], effectiveAccentColor),
+    [effectiveAccentColor, sizeVariantIndex],
   );
 
   return (
@@ -341,14 +405,16 @@ export default React.memo(function CardField(props: {
       style={{ flex: 1, opacity: isLayoutReady ? 1 : 0 }}
       onLayout={onContainerLayout}
     >
-      <Markdown
-        rules={renderRules}
-        style={markdownStyles as NamedStyles<unknown>}
-        mergeStyle={false}
-        markdownit={markdownItInstance}
-      >
-        {promptField.contents}
-      </Markdown>
+      <View style={{ height: 10000 }}>
+        <Markdown
+          rules={renderRules}
+          style={markdownStyles as NamedStyles<unknown>}
+          mergeStyle={false}
+          markdownit={markdownItInstance}
+        >
+          {promptField.contents}
+        </Markdown>
+      </View>
       {imageURL && (
         <Image
           source={{ uri: imageURL }}

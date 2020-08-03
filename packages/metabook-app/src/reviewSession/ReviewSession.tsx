@@ -17,6 +17,7 @@ import {
   styles,
   Headline,
 } from "metabook-ui";
+import DebugGrid from "metabook-ui/dist/components/DebugGrid";
 import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -194,7 +195,7 @@ export default function ReviewSession() {
 
   const outerViewComponent =
     Platform.OS === "ios" && Platform.isPad
-      ? Animated.View
+      ? AnimatedSafeAreaView
       : AnimatedSafeAreaView; // TODO: Catalyst hack
   return React.createElement(
     outerViewComponent,
@@ -208,6 +209,7 @@ export default function ReviewSession() {
     remainingItems ? (
       remainingItems.length > 0 ? (
         <View style={{ flex: 1 }}>
+          <DebugGrid />
           <ReviewArea
             items={remainingItems}
             onMark={onMarkCallback}

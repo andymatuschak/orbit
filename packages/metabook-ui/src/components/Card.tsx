@@ -30,14 +30,10 @@ import {
 import { Caption, Label } from "./Text";
 import WithAnimatedValue = Animated.WithAnimatedValue;
 
-export const cardWidth = 343; // TODO remove
-export const baseCardHeight = 439; // TODO REMOVE
-
 export interface CardProps {
   reviewItem: PromptReviewItem;
   backIsRevealed: boolean;
 
-  contextColor?: ColorValue;
   accentColor?: ColorValue;
   onToggleExplanation?: (isExplanationExpanded: boolean) => unknown;
 }
@@ -171,13 +167,13 @@ type QAPromptRendererType = CardProps & {
 };
 function QAPromptRenderer({
   backIsRevealed,
-  contextColor,
+  accentColor,
   reviewItem,
 }: QAPromptRendererType) {
   const animatingStyles = useAnimatingStyles(backIsRevealed);
   const spec = getQAPrompt(reviewItem);
 
-  const [frontSizeVariant, setFrontSizeVariant] = React.useState<
+  const [frontSizeVariantIndex, setFrontSizeVariantIndex] = React.useState<
     number | undefined
   >(undefined);
 
@@ -190,7 +186,7 @@ function QAPromptRenderer({
         style={animatingStyles.topAreaStyle}
       >
         <Caption
-          color={contextColor ?? colors.ink}
+          color={accentColor ?? colors.ink}
           style={styles.topContextLabel}
         >
           Source context TODO
@@ -199,10 +195,12 @@ function QAPromptRenderer({
           <CardField
             promptField={spec.question}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
-            largestSizeVariant={
-              frontSizeVariant === undefined ? undefined : frontSizeVariant + 1
+            largestSizeVariantIndex={
+              frontSizeVariantIndex === undefined
+                ? undefined
+                : frontSizeVariantIndex + 1
             }
-            smallestSizeVariant={4}
+            smallestSizeVariantIndex={5}
           />
         </View>
       </FadeView>
@@ -224,14 +222,14 @@ function QAPromptRenderer({
         >
           <Label
             style={styles.bottomContextLabel}
-            color={contextColor ?? colors.ink}
+            color={accentColor ?? colors.ink}
           >
             Source context TODO
           </Label>
           <CardField
             promptField={spec.question}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
-            onLayout={setFrontSizeVariant}
+            onLayout={setFrontSizeVariantIndex}
           />
         </FadeView>
       </View>
@@ -245,9 +243,8 @@ type ClozePromptRendererProps = CardProps & {
 
 function ClozePromptRenderer({
   backIsRevealed,
-  contextColor,
-  reviewItem,
   accentColor,
+  reviewItem,
 }: ClozePromptRendererProps) {
   const {
     prompt: { body },
@@ -267,7 +264,7 @@ function ClozePromptRenderer({
       <View style={styles.bottomAreaContainer}>
         <Label
           style={styles.bottomContextLabel}
-          color={contextColor ?? colors.ink}
+          color={accentColor ?? colors.ink}
         >
           Source context TODO
         </Label>
@@ -343,7 +340,6 @@ const styles = StyleSheet.create({
 
   topTextContainer: {
     flex: 1,
-    overflow: "hidden",
     width: "66.67%",
   },
 

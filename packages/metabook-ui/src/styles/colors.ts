@@ -111,7 +111,7 @@ interface ColorComposition {
 export const compositions: ColorComposition[] = [
   {
     backgroundColor: bg[0],
-    accentColor: fg[7],
+    accentColor: fg[3],
     secondaryColor: bg[3],
     tertiaryColor: fg[0],
   },

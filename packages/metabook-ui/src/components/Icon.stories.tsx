@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { colors } from "../styles";
 import Icon, { IconName, IconPosition } from "./Icon";
 
 export default {
@@ -9,28 +10,20 @@ export default {
 
 function IconEntry(props: { iconName: IconName }) {
   const iconStyle = { borderWidth: 1, borderColor: "black", margin: 8 };
+
+  const sharedProps = {
+    name: props.iconName,
+    style: iconStyle,
+    tintColor: colors.fg[1],
+    accentColor: colors.bg[6],
+  };
+
   return (
     <View style={{ flexDirection: "row" }}>
-      <Icon
-        name={props.iconName}
-        position={IconPosition.TopLeft}
-        style={iconStyle}
-      />
-      <Icon
-        name={props.iconName}
-        position={IconPosition.TopRight}
-        style={iconStyle}
-      />
-      <Icon
-        name={props.iconName}
-        position={IconPosition.BottomLeft}
-        style={iconStyle}
-      />
-      <Icon
-        name={props.iconName}
-        position={IconPosition.BottomRight}
-        style={iconStyle}
-      />
+      <Icon {...sharedProps} position={IconPosition.TopLeft} />
+      <Icon {...sharedProps} position={IconPosition.TopRight} />
+      <Icon {...sharedProps} position={IconPosition.BottomLeft} />
+      <Icon {...sharedProps} position={IconPosition.BottomRight} />
     </View>
   );
 }
@@ -39,6 +32,8 @@ export function Index() {
   return (
     <View>
       <IconEntry iconName={IconName.Check} />
+      <IconEntry iconName={IconName.Cross} />
+      <IconEntry iconName={IconName.Reveal} />
     </View>
   );
 }

@@ -8,7 +8,7 @@ import {
   StyleProp,
   StyleSheet,
 } from "react-native";
-import { layout, colors } from "../styles";
+import { colors } from "../styles";
 import usePrevious from "./hooks/usePrevious";
 import Hoverable from "./Hoverable";
 import Icon, { IconName, IconPosition } from "./Icon";
@@ -69,7 +69,9 @@ const ButtonImpl = React.memo(function ButtonImpl({
         <Icon
           name={iconName}
           position={IconPosition.TopLeft}
-          tintColor={(disabled ? color : accentColor) || defaultButtonColor}
+          // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's color becomes the icon's accent color. It's intentional, though, to produce an inversion.
+          tintColor={(disabled ? color : accentColor) ?? defaultButtonColor}
+          accentColor={color ?? defaultButtonColor}
         />
       )}
       <Label

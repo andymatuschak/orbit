@@ -63,7 +63,7 @@ const PromptContainer = React.memo(function PromptContainer({
   onDidDisappear,
   reviewItem,
   onToggleExplanation,
-  contextColor,
+  accentColor,
   backIsRevealed,
 }: {
   size: Size;
@@ -123,7 +123,7 @@ const PromptContainer = React.memo(function PromptContainer({
         <Card
           reviewItem={reviewItem}
           onToggleExplanation={onToggleExplanation}
-          contextColor={contextColor}
+          accentColor={accentColor}
           backIsRevealed={backIsRevealed}
         />
       )}
@@ -208,26 +208,20 @@ export default function ReviewArea(props: ReviewAreaProps) {
     [width],
   );
 
-  const promptContainerStyles = useMemo(
-    () => [
-      styles.promptContainer,
-      columnLayout && {
-        maxWidth: getColumnSpan(
-          Math.min(3, columnLayout.columnCount),
-          columnLayout.columnWidth,
-        ),
-      },
-    ],
-    [columnLayout],
-  );
-
   const renderedItems = departingPromptItems.current
     .concat(items)
     .slice(0, maximumCardsToRender);
 
   return (
     <View
-      style={styles.outerContainer}
+      style={[
+        styles.outerContainer,
+        {
+          paddingLeft: columnLayout?.edgeMargin,
+          paddingRight: columnLayout?.edgeMargin,
+          paddingBottom: columnLayout?.edgeMargin,
+        },
+      ]}
       onLayout={useCallback(
         ({
           nativeEvent: {
@@ -239,7 +233,17 @@ export default function ReviewArea(props: ReviewAreaProps) {
     >
       {size && (
         <>
-          <View style={promptContainerStyles}>
+          <View
+            style={[
+              styles.promptContainer,
+              columnLayout && {
+                maxWidth: getColumnSpan(
+                  Math.min(3, columnLayout.columnCount),
+                  columnLayout.columnWidth,
+                ),
+              },
+            ]}
+          >
             {Array.from(new Array(maximumCardsToRender).keys()).map(
               (renderNodeIndex) => {
                 const renderedItemIndex =
@@ -264,7 +268,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
                     onDidDisappear={onPromptDidDisappear}
                     size={size}
                     onToggleExplanation={onTogglePromptExplanation}
-                    contextColor={accentColor}
+                    accentColor={accentColor}
                     backIsRevealed={
                       (isShowingAnswer && displayState === "displayed") ||
                       displayState === "disappearing"
@@ -304,11 +308,11 @@ const styles = StyleSheet.create({
 
   promptContainer: {
     marginTop: layout.gridUnit * 9, // TODO starburst
+    marginBottom: layout.gridUnit * 2,
     flex: 1,
   },
 
   buttonContainer: {
-    flexWrap: "wrap",
     minHeight: layout.gridUnit * 5,
     alignItems: "flex-end",
     justifyContent: "flex-end",
@@ -410,8 +414,8 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
           {...sharedButtonProps}
           key={2}
           onPress={onReveal}
-          // iconName={IconName.Cross}
-          title={"Reveal answer"}
+          iconName={IconName.Reveal}
+          title={"See answer"}
         />,
       );
     }
@@ -427,6 +431,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
             columnLayout.columnWidth,
           ),
           flexDirection: columnLayout.columnCount > 1 ? "row" : "column",
+          flexWrap: columnLayout.columnCount > 1 ? "nowrap" : "wrap",
         },
       ]}
     >

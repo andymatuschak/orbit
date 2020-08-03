@@ -1,4 +1,4 @@
-import { boolean, number, withKnobs } from "@storybook/addon-knobs";
+import { boolean, number, text, withKnobs } from "@storybook/addon-knobs";
 import {
   AttachmentID,
   AttachmentIDReference,
@@ -50,7 +50,17 @@ export const basic = () => (
   <TestCard
     reviewItem={{
       reviewItemType: "prompt",
-      prompt: testBasicPrompt,
+      prompt: {
+        ...testBasicPrompt,
+        question: {
+          contents: text("Question", testBasicPrompt.question.contents),
+          attachments: [],
+        },
+        answer: {
+          contents: text("Answer", testBasicPrompt.answer.contents),
+          attachments: [],
+        },
+      },
       promptParameters: null,
       promptState: null,
       attachmentResolutionMap: null,
@@ -172,7 +182,6 @@ function TestCard(props: { reviewItem: PromptReviewItem }) {
                 {boolean("Show grid", true) && <DebugGrid />}
                 <Card
                   {...testCardProps}
-                  contextColor={colors.bg[5]}
                   accentColor={colors.fg[0]}
                   reviewItem={reviewItem}
                   backIsRevealed={isRevealed}

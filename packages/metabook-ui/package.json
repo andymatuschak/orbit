@@ -49,8 +49,7 @@
   },
   "peerDependencies": {
     "@types/react": "^16.9.23",
-    "react": "^16.13.0",
-    "react-native": "^0.61.4"
+    "react": "^16.13.0"
   },
   "dependencies": {
     "isemail": "^3.2.0",
@@ -62,7 +61,7 @@
   "scripts": {
     "build": "tsc -b",
     "watch": "tsc -w",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "storybook": "start-storybook -p 6006 -s ./assets",
+    "build-storybook": "build-storybook -s ./assets"
   }
 }

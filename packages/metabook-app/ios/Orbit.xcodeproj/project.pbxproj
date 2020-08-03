@@ -12,9 +12,34 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		6161D45424549FDD0058BA07 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6161D45224549FDD0058BA07 /* GoogleService-Info.plist */; };
 		61AF729C246B596200679E6B /* ORDebugManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 61AF729B246B596200679E6B /* ORDebugManager.m */; };
+		61CD1CDF24CF5B050011D855 /* UINSSceneView+Scaling.m in Sources */ = {isa = PBXBuildFile; fileRef = 61CD1CDE24CF5B050011D855 /* UINSSceneView+Scaling.m */; };
 		61D31C8324AD2FB2009823BC /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 61D31C7F24AD2FB2009823BC /* Expo.plist */; };
 		61D31C8624AD3317009823BC /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 61D31C8524AD3317009823BC /* SplashScreen.storyboard */; };
 		ED08E5CAE8FDEE1A6188475C /* libPods-Orbit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 97AB24DD0C57639CCED1EE76 /* libPods-Orbit.a */; };
+		650391FE0AED4000B5BA85BD /* dr-bold-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = 2D73A240C20B4F3999A31F27 /* dr-bold-TRIAL.otf */; };
+		777522DF9BBF48EE8A3648D1 /* dr-bolditalic-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = 71552ECFC08642FCAA98DF4A /* dr-bolditalic-TRIAL.otf */; };
+		8713EC2DE4514F6388F5BDB7 /* dr-extrabold-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = E2B64BBA94BA4B99A091212D /* dr-extrabold-TRIAL.otf */; };
+		7789E87B5E884E07802A61FA /* dr-extrabolditalic-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = F7539B251CA246B5B0E59E07 /* dr-extrabolditalic-TRIAL.otf */; };
+		944413D0AD51428496DF20D7 /* dr-extralight-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = AAD76E3168DB4BD5B78FF808 /* dr-extralight-TRIAL.otf */; };
+		1993BE01CFAC473392835153 /* dr-extralightitalic-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = 602386F847394E4FB20C7120 /* dr-extralightitalic-TRIAL.otf */; };
+		17B7D2A7838C486380063D44 /* dr-italic-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = FB03257E40FB421690667477 /* dr-italic-TRIAL.otf */; };
+		6EAFC9086A95418B9D29939B /* dr-light-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = 21AA696B1CDA4632848CB65F /* dr-light-TRIAL.otf */; };
+		D429472D6D4F4436B1367B7A /* dr-lightitalic-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = 13E0D4D52C2541BB9E8E4AA0 /* dr-lightitalic-TRIAL.otf */; };
+		0DBEF9B2CFDE4422B3108F1D /* dr-medium-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = E8AEF62DC22147EC8213D9EE /* dr-medium-TRIAL.otf */; };
+		8C62C185F0764E48965AD084 /* dr-mediumitalic-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = C9F726A1756F458B9F2A8C52 /* dr-mediumitalic-TRIAL.otf */; };
+		74E84ACDA431400388697D21 /* dr-regular-TRIAL.otf in Resources */ = {isa = PBXBuildFile; fileRef = 3F692D7D15A343AD8511C81F /* dr-regular-TRIAL.otf */; };
+		2F3CCA0A4ECC40578F0132A9 /* drweb-bold-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 26D2F8A738964C3993CFBCCB /* drweb-bold-TRIAL.woff */; };
+		ADBC05CF5C594A3FBACCE3BF /* drweb-bolditalic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = FAD766FA789F40CDA8489A0B /* drweb-bolditalic-TRIAL.woff */; };
+		329FFE768C01447EB31D5854 /* drweb-extrabold-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = D4F0EA81D3BF4CF99DE4796B /* drweb-extrabold-TRIAL.woff */; };
+		E9E7104EFC244382AAFF3379 /* drweb-extrabolditalic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 39C319D795724B9F91F708C5 /* drweb-extrabolditalic-TRIAL.woff */; };
+		2B30D6A4EFD145BE815E6703 /* drweb-extralight-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = B92104D02E334031B4A6393C /* drweb-extralight-TRIAL.woff */; };
+		DD755D205F614C3FA8FE2753 /* drweb-extralightitalic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 4C1BE255F2944847BEA05FAC /* drweb-extralightitalic-TRIAL.woff */; };
+		E5E872B4CD2E46BA931F2809 /* drweb-italic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = ADFECF42541F480DB7417204 /* drweb-italic-TRIAL.woff */; };
+		7FD27E93179847888C6A7D71 /* drweb-light-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = A22F61C933164F2E8EBA025E /* drweb-light-TRIAL.woff */; };
+		B7CDD7E72BC34EF4A4BD0626 /* drweb-lightitalic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = D24B48DAC1A84E0AA3C85BBF /* drweb-lightitalic-TRIAL.woff */; };
+		41F7A62D2EBC4F40AD4CE8D0 /* drweb-medium-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 7DDE479BC09D4FC5AC9EA2CC /* drweb-medium-TRIAL.woff */; };
+		5F8EA4A9F03F4A7CB50193E5 /* drweb-mediumitalic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 363191AB03FB41B2B9530BB0 /* drweb-mediumitalic-TRIAL.woff */; };
+		50EF73661988447F90B59C45 /* drweb-regular-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 9C1DCC66F8654ECBBAA8D8DF /* drweb-regular-TRIAL.woff */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +54,7 @@
 		6161D45224549FDD0058BA07 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		61AF729B246B596200679E6B /* ORDebugManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ORDebugManager.m; sourceTree = "<group>"; };
 		61AFA20B244D0FB4005E78DA /* Orbit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Orbit.entitlements; sourceTree = "<group>"; };
+		61CD1CDE24CF5B050011D855 /* UINSSceneView+Scaling.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UINSSceneView+Scaling.m"; sourceTree = "<group>"; };
 		61D31C7F24AD2FB2009823BC /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		61D31C8424AD3132009823BC /* ORDebugManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ORDebugManager.h; sourceTree = "<group>"; };
 		61D31C8524AD3317009823BC /* SplashScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -38,6 +64,30 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
 		F15CCC3012C80D0B996C43C2 /* Pods-Orbit-OrbitTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Orbit-OrbitTests.debug.xcconfig"; path = "Target Support Files/Pods-Orbit-OrbitTests/Pods-Orbit-OrbitTests.debug.xcconfig"; sourceTree = "<group>"; };
+		2D73A240C20B4F3999A31F27 /* dr-bold-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-bold-TRIAL.otf"; path = "../assets/fonts/dr-bold-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		71552ECFC08642FCAA98DF4A /* dr-bolditalic-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-bolditalic-TRIAL.otf"; path = "../assets/fonts/dr-bolditalic-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		E2B64BBA94BA4B99A091212D /* dr-extrabold-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-extrabold-TRIAL.otf"; path = "../assets/fonts/dr-extrabold-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		F7539B251CA246B5B0E59E07 /* dr-extrabolditalic-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-extrabolditalic-TRIAL.otf"; path = "../assets/fonts/dr-extrabolditalic-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		AAD76E3168DB4BD5B78FF808 /* dr-extralight-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-extralight-TRIAL.otf"; path = "../assets/fonts/dr-extralight-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		602386F847394E4FB20C7120 /* dr-extralightitalic-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-extralightitalic-TRIAL.otf"; path = "../assets/fonts/dr-extralightitalic-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		FB03257E40FB421690667477 /* dr-italic-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-italic-TRIAL.otf"; path = "../assets/fonts/dr-italic-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		21AA696B1CDA4632848CB65F /* dr-light-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-light-TRIAL.otf"; path = "../assets/fonts/dr-light-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		13E0D4D52C2541BB9E8E4AA0 /* dr-lightitalic-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-lightitalic-TRIAL.otf"; path = "../assets/fonts/dr-lightitalic-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		E8AEF62DC22147EC8213D9EE /* dr-medium-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-medium-TRIAL.otf"; path = "../assets/fonts/dr-medium-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		C9F726A1756F458B9F2A8C52 /* dr-mediumitalic-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-mediumitalic-TRIAL.otf"; path = "../assets/fonts/dr-mediumitalic-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		3F692D7D15A343AD8511C81F /* dr-regular-TRIAL.otf */ = {isa = PBXFileReference; name = "dr-regular-TRIAL.otf"; path = "../assets/fonts/dr-regular-TRIAL.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		26D2F8A738964C3993CFBCCB /* drweb-bold-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-bold-TRIAL.woff"; path = "../assets/fonts/drweb-bold-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		FAD766FA789F40CDA8489A0B /* drweb-bolditalic-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-bolditalic-TRIAL.woff"; path = "../assets/fonts/drweb-bolditalic-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		D4F0EA81D3BF4CF99DE4796B /* drweb-extrabold-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-extrabold-TRIAL.woff"; path = "../assets/fonts/drweb-extrabold-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		39C319D795724B9F91F708C5 /* drweb-extrabolditalic-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-extrabolditalic-TRIAL.woff"; path = "../assets/fonts/drweb-extrabolditalic-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		B92104D02E334031B4A6393C /* drweb-extralight-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-extralight-TRIAL.woff"; path = "../assets/fonts/drweb-extralight-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		4C1BE255F2944847BEA05FAC /* drweb-extralightitalic-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-extralightitalic-TRIAL.woff"; path = "../assets/fonts/drweb-extralightitalic-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		ADFECF42541F480DB7417204 /* drweb-italic-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-italic-TRIAL.woff"; path = "../assets/fonts/drweb-italic-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		A22F61C933164F2E8EBA025E /* drweb-light-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-light-TRIAL.woff"; path = "../assets/fonts/drweb-light-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		D24B48DAC1A84E0AA3C85BBF /* drweb-lightitalic-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-lightitalic-TRIAL.woff"; path = "../assets/fonts/drweb-lightitalic-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		7DDE479BC09D4FC5AC9EA2CC /* drweb-medium-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-medium-TRIAL.woff"; path = "../assets/fonts/drweb-medium-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		363191AB03FB41B2B9530BB0 /* drweb-mediumitalic-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-mediumitalic-TRIAL.woff"; path = "../assets/fonts/drweb-mediumitalic-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		9C1DCC66F8654ECBBAA8D8DF /* drweb-regular-TRIAL.woff */ = {isa = PBXFileReference; name = "drweb-regular-TRIAL.woff"; path = "../assets/fonts/drweb-regular-TRIAL.woff"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +134,7 @@
 				61D31C8424AD3132009823BC /* ORDebugManager.h */,
 				61AF729B246B596200679E6B /* ORDebugManager.m */,
 				61D31C7C24AD2FB2009823BC /* Supporting */,
+				61CD1CDE24CF5B050011D855 /* UINSSceneView+Scaling.m */,
 			);
 			path = Orbit;
 			sourceTree = "<group>";
@@ -107,6 +158,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				25E7989DF4BFBF8C36C2F6EE /* Pods */,
+				2C94735F703C47768A34D593 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -120,6 +172,38 @@
 			);
 			name = Products;
 			sourceTree = "<group>";
+		};
+		2C94735F703C47768A34D593 /* Resources */ = {
+			isa = "PBXGroup";
+			children = (
+				2D73A240C20B4F3999A31F27 /* dr-bold-TRIAL.otf */,
+				71552ECFC08642FCAA98DF4A /* dr-bolditalic-TRIAL.otf */,
+				E2B64BBA94BA4B99A091212D /* dr-extrabold-TRIAL.otf */,
+				F7539B251CA246B5B0E59E07 /* dr-extrabolditalic-TRIAL.otf */,
+				AAD76E3168DB4BD5B78FF808 /* dr-extralight-TRIAL.otf */,
+				602386F847394E4FB20C7120 /* dr-extralightitalic-TRIAL.otf */,
+				FB03257E40FB421690667477 /* dr-italic-TRIAL.otf */,
+				21AA696B1CDA4632848CB65F /* dr-light-TRIAL.otf */,
+				13E0D4D52C2541BB9E8E4AA0 /* dr-lightitalic-TRIAL.otf */,
+				E8AEF62DC22147EC8213D9EE /* dr-medium-TRIAL.otf */,
+				C9F726A1756F458B9F2A8C52 /* dr-mediumitalic-TRIAL.otf */,
+				3F692D7D15A343AD8511C81F /* dr-regular-TRIAL.otf */,
+				26D2F8A738964C3993CFBCCB /* drweb-bold-TRIAL.woff */,
+				FAD766FA789F40CDA8489A0B /* drweb-bolditalic-TRIAL.woff */,
+				D4F0EA81D3BF4CF99DE4796B /* drweb-extrabold-TRIAL.woff */,
+				39C319D795724B9F91F708C5 /* drweb-extrabolditalic-TRIAL.woff */,
+				B92104D02E334031B4A6393C /* drweb-extralight-TRIAL.woff */,
+				4C1BE255F2944847BEA05FAC /* drweb-extralightitalic-TRIAL.woff */,
+				ADFECF42541F480DB7417204 /* drweb-italic-TRIAL.woff */,
+				A22F61C933164F2E8EBA025E /* drweb-light-TRIAL.woff */,
+				D24B48DAC1A84E0AA3C85BBF /* drweb-lightitalic-TRIAL.woff */,
+				7DDE479BC09D4FC5AC9EA2CC /* drweb-medium-TRIAL.woff */,
+				363191AB03FB41B2B9530BB0 /* drweb-mediumitalic-TRIAL.woff */,
+				9C1DCC66F8654ECBBAA8D8DF /* drweb-regular-TRIAL.woff */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+			path = "";
 		};
 /* End PBXGroup section */
 
@@ -188,6 +272,30 @@
 				61D31C8624AD3317009823BC /* SplashScreen.storyboard in Resources */,
 				61D31C8324AD2FB2009823BC /* Expo.plist in Resources */,
 				6161D45424549FDD0058BA07 /* GoogleService-Info.plist in Resources */,
+				650391FE0AED4000B5BA85BD /* dr-bold-TRIAL.otf in Resources */,
+				777522DF9BBF48EE8A3648D1 /* dr-bolditalic-TRIAL.otf in Resources */,
+				8713EC2DE4514F6388F5BDB7 /* dr-extrabold-TRIAL.otf in Resources */,
+				7789E87B5E884E07802A61FA /* dr-extrabolditalic-TRIAL.otf in Resources */,
+				944413D0AD51428496DF20D7 /* dr-extralight-TRIAL.otf in Resources */,
+				1993BE01CFAC473392835153 /* dr-extralightitalic-TRIAL.otf in Resources */,
+				17B7D2A7838C486380063D44 /* dr-italic-TRIAL.otf in Resources */,
+				6EAFC9086A95418B9D29939B /* dr-light-TRIAL.otf in Resources */,
+				D429472D6D4F4436B1367B7A /* dr-lightitalic-TRIAL.otf in Resources */,
+				0DBEF9B2CFDE4422B3108F1D /* dr-medium-TRIAL.otf in Resources */,
+				8C62C185F0764E48965AD084 /* dr-mediumitalic-TRIAL.otf in Resources */,
+				74E84ACDA431400388697D21 /* dr-regular-TRIAL.otf in Resources */,
+				2F3CCA0A4ECC40578F0132A9 /* drweb-bold-TRIAL.woff in Resources */,
+				ADBC05CF5C594A3FBACCE3BF /* drweb-bolditalic-TRIAL.woff in Resources */,
+				329FFE768C01447EB31D5854 /* drweb-extrabold-TRIAL.woff in Resources */,
+				E9E7104EFC244382AAFF3379 /* drweb-extrabolditalic-TRIAL.woff in Resources */,
+				2B30D6A4EFD145BE815E6703 /* drweb-extralight-TRIAL.woff in Resources */,
+				DD755D205F614C3FA8FE2753 /* drweb-extralightitalic-TRIAL.woff in Resources */,
+				E5E872B4CD2E46BA931F2809 /* drweb-italic-TRIAL.woff in Resources */,
+				7FD27E93179847888C6A7D71 /* drweb-light-TRIAL.woff in Resources */,
+				B7CDD7E72BC34EF4A4BD0626 /* drweb-lightitalic-TRIAL.woff in Resources */,
+				41F7A62D2EBC4F40AD4CE8D0 /* drweb-medium-TRIAL.woff in Resources */,
+				5F8EA4A9F03F4A7CB50193E5 /* drweb-mediumitalic-TRIAL.woff in Resources */,
+				50EF73661988447F90B59C45 /* drweb-regular-TRIAL.woff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -302,6 +410,7 @@
 			files = (
 				61AF729C246B596200679E6B /* ORDebugManager.m in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */,
+				61CD1CDF24CF5B050011D855 /* UINSSceneView+Scaling.m in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

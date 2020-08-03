@@ -6,24 +6,6 @@ const type = {
     fontSize: 16,
     lineHeight: 1.25 * 14,
   },
-
-  cardBodyText: {
-    fontSize: 16,
-    lineHeight: 1.4 * 16,
-    color: colors.textColor,
-  },
-
-  smallCardBodyText: {
-    fontSize: 15,
-    lineHeight: 1.45 * 15,
-    color: colors.textColor,
-  },
-
-  smallestCardBodyText: {
-    fontSize: 13,
-    lineHeight: 1.35 * 13,
-    color: colors.textColor,
-  },
 } as const;
 export default type;
 
@@ -63,9 +45,6 @@ export function getVariantStyles(
     // When we can't bold any further, use a darker ink.
     // TODO: consider using an accent color instead
     ...(baseFontName.includes("Bold") && isBold && { color: "black" }),
-    // We're (ab)using the font family to specify a specific font, rather than a family (RN uses fontFamily to find a specific PostScript name), so we must un-set the special styles.
-    fontWeight: "normal",
-    fontStyle: "normal",
   };
 }
 
@@ -82,18 +61,23 @@ const commonTypeStyles =
 
 function makeTypeSpec(
   typeStyle: TextStyle,
-  topShift: number,
+  topShiftNative: number,
+  topShiftWeb: number,
   bottomShift: number,
 ): TypeSpec {
   const typeWithCommonStyles = {
     ...commonTypeStyles,
     ...typeStyle,
   };
+
+  const topShift = Platform.OS === "web" ? topShiftWeb : topShiftNative;
+
   return {
     typeStyle: typeWithCommonStyles,
     layoutStyle: {
       ...typeWithCommonStyles,
       position: "relative",
+      // Unfortunately, React Native Web and React Native lay out text differently! See https://github.com/facebook/react-native/issues/29507.
       top: topShift,
       marginBottom: bottomShift,
     },
@@ -107,6 +91,7 @@ export const displayLarge = makeTypeSpec(
     lineHeight: 84,
     letterSpacing: 96 * -0.05,
   },
+  -3,
   -17,
   -20,
 );
@@ -118,6 +103,7 @@ export const display = makeTypeSpec(
     lineHeight: 56,
     letterSpacing: 60 * -0.035,
   },
+  -6,
   -12,
   -16,
 );
@@ -129,6 +115,7 @@ export const title = makeTypeSpec(
     lineHeight: 40,
     letterSpacing: 48 * -0.015,
   },
+  0,
   -7,
   -8,
 );
@@ -140,6 +127,7 @@ export const headline = makeTypeSpec(
     lineHeight: 32,
     // letterSpacing: 36 * 0,
   },
+  -2,
   -7,
   -8,
 );
@@ -151,6 +139,7 @@ export const body = makeTypeSpec(
     lineHeight: 24,
     letterSpacing: 24 * 0.01,
   },
+  -4,
   -6,
   -8,
 );
@@ -162,6 +151,7 @@ export const bodySmall = makeTypeSpec(
     lineHeight: 16,
     letterSpacing: 16 * 0.04,
   },
+  -3,
   -4,
   -4,
 );
@@ -171,8 +161,9 @@ export const label = makeTypeSpec(
     fontSize: 24,
     fontFamily: "Dr-ExtraBold",
     lineHeight: 24,
-    // letterSpacing: 24 * 0.0,
+    letterSpacing: 24 * 0.01,
   },
+  -4,
   -6,
   -8,
 );
@@ -184,6 +175,7 @@ export const caption = makeTypeSpec(
     lineHeight: 12,
     letterSpacing: 13 * 0.06,
   },
+  -2,
   -3,
   -4,
 );

@@ -26,14 +26,22 @@ export function getColumnSpan(columnCount: number, columnWidth: number) {
 export interface ColumnLayout {
   columnCount: number;
   columnWidth: number;
+  edgeMargin: number;
 }
 
 export function getColumnLayout(width: number): ColumnLayout {
+  const edgeMargin =
+    width >= baseColumnWidth * 2 + columnMargin + gridUnit * 4
+      ? gridUnit * 2
+      : gridUnit;
+  const interiorWidth = width - edgeMargin * 2;
   const columnCount = Math.floor(
-    (width + columnMargin) / (baseColumnWidth + columnMargin),
+    (interiorWidth + columnMargin) / (baseColumnWidth + columnMargin),
   );
   return {
     columnCount,
-    columnWidth: (width - columnMargin * (columnCount - 1)) / columnCount,
+    columnWidth:
+      (interiorWidth - columnMargin * (columnCount - 1)) / columnCount,
+    edgeMargin,
   };
 }

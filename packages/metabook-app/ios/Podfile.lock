@@ -629,6 +629,8 @@ PODS:
   - RNSentry (1.5.0):
     - React
     - Sentry (~> 5.1.4)
+  - RNSVG (12.1.0):
+    - React
   - Sentry (5.1.10):
     - Sentry/Core (= 5.1.10)
   - Sentry/Core (5.1.10)
@@ -700,6 +702,7 @@ DEPENDENCIES:
   - "RNFBFunctions (from `../../../node_modules/@react-native-firebase/functions`)"
   - "RNFBStorage (from `../../../node_modules/@react-native-firebase/storage`)"
   - "RNSentry (from `../../../node_modules/@sentry/react-native`)"
+  - RNSVG (from `../../../node_modules/react-native-svg`)
   - UMAppLoader (from `../../../node_modules/unimodules-app-loader/ios`)
   - UMBarCodeScannerInterface (from `../../../node_modules/unimodules-barcode-scanner-interface/ios`)
   - UMCameraInterface (from `../../../node_modules/unimodules-camera-interface/ios`)
@@ -832,6 +835,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/@react-native-firebase/storage"
   RNSentry:
     :path: "../../../node_modules/@sentry/react-native"
+  RNSVG:
+    :path: "../../../node_modules/react-native-svg"
   UMAppLoader:
     :path: "../../../node_modules/unimodules-app-loader/ios"
   UMBarCodeScannerInterface:
@@ -928,6 +933,7 @@ SPEC CHECKSUMS:
   RNFBFunctions: 970ccefbd22689692cf8b8cd0e2167d1928c0092
   RNFBStorage: 5780441e5362a5a30426a7f5ff9ae6684f464951
   RNSentry: edba19169f665609fb092ba5eaf4be3c0776f50a
+  RNSVG: ce9d996113475209013317e48b05c21ee988d42e
   Sentry: 8715e88b813bde9ad37aead365d5b04ac7302153
   UMAppLoader: 61049c8d55590b74e9ae1d5429bf68d96b4a2528
   UMBarCodeScannerInterface: e5e4c87797d3d01214e25cd1618866caf5d4f17f
