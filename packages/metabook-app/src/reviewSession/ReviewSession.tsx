@@ -209,7 +209,7 @@ export default function ReviewSession() {
     remainingItems ? (
       remainingItems.length > 0 ? (
         <View style={{ flex: 1 }}>
-          <DebugGrid />
+          {/*<DebugGrid />*/}
           <ReviewArea
             items={remainingItems}
             onMark={onMarkCallback}

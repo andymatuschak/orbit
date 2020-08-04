@@ -13,7 +13,7 @@ export const spacing = {
   spacing09: gridUnit * 3,
 };
 
-const baseColumnWidth = 174;
+const baseColumnWidth = 166;
 export const columnMargin = gridUnit;
 
 export function getColumnSpan(columnCount: number, columnWidth: number) {
@@ -31,9 +31,8 @@ export interface ColumnLayout {
 
 export function getColumnLayout(width: number): ColumnLayout {
   const edgeMargin =
-    width >= baseColumnWidth * 2 + columnMargin + gridUnit * 4
-      ? gridUnit * 2
-      : gridUnit;
+    // width >= baseColumnWidth * 2 + columnMargin + gridUnit * 4
+    width >= baseColumnWidth + gridUnit * 4 ? gridUnit * 2 : gridUnit;
   const interiorWidth = width - edgeMargin * 2;
   const columnCount = Math.floor(
     (interiorWidth + columnMargin) / (baseColumnWidth + columnMargin),

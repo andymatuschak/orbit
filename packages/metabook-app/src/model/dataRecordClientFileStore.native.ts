@@ -46,30 +46,31 @@ async function storeFileFromURL(
     contentType && getFileExtensionForAttachmentMimeType(contentType);
   const responseIsOK = result.status >= 200 && result.status < 300;
   if (responseIsOK && attachmentExtension) {
+    const cachedAttachmentURLWithExtension = `${cachedAttachmentURL}.${attachmentExtension}`;
     await FileSystem.moveAsync({
       from: cachedAttachmentURL,
-      to: `${cachedAttachmentURL}.${attachmentExtension}`,
+      to: cachedAttachmentURLWithExtension,
     });
+
+    console.log(`Wrote file to cache: ${cachedAttachmentURLWithExtension}`);
+    return {
+      url: cachedAttachmentURLWithExtension,
+      type: getAttachmentTypeForAttachmentMimeType(
+        contentType as AttachmentMimeType,
+      ),
+    };
   } else {
     await FileSystem.deleteAsync(cachedAttachmentURL);
-    if (!responseIsOK) {
-      throw new Error(
-        `Request for ${url} returned invalid status ${result.status}`,
-      );
-    } else {
+    if (responseIsOK) {
       throw new Error(
         `Request for ${url} returned unsupported content type ${contentType}`,
       );
+    } else {
+      throw new Error(
+        `Request for ${url} returned invalid status ${result.status}`,
+      );
     }
   }
-
-  console.log(`Wrote file to cache: ${cachedAttachmentURL}`);
-  return {
-    url: cachedAttachmentURL,
-    type: getAttachmentTypeForAttachmentMimeType(
-      contentType as AttachmentMimeType,
-    ),
-  };
 }
 
 async function storedURLExists(url: string): Promise<boolean> {

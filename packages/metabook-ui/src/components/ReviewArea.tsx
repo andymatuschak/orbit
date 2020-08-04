@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
 
   promptContainer: {
     marginTop: layout.gridUnit * 9, // TODO starburst
-    marginBottom: layout.gridUnit * 2,
+    marginBottom: layout.gridUnit * 3,
     flex: 1,
   },
 
@@ -339,9 +339,9 @@ function getButtonTitle(
         case basicPromptType:
         case clozePromptType:
         case null:
-          return "Didn’t remember";
+          return "Forgotten";
         case applicationPromptType:
-          return "Couldn’t answer";
+          return "Missed";
       }
   }
 }
@@ -381,9 +381,18 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
     children.push(button);
   }
 
+  const buttonStyle = {
+    width: columnLayout.columnWidth,
+    ...(columnLayout.columnCount === 1 && {
+      marginBottom: layout.gridUnit * 2,
+    }),
+  };
+  const lastButtonStyle = {
+    width: columnLayout.columnWidth,
+  };
+
   const sharedButtonProps = {
     disabled,
-    style: { width: columnLayout.columnWidth },
     color: buttonColor,
     accentColor,
   } as const;
@@ -393,6 +402,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
       addButton(
         <Button
           {...sharedButtonProps}
+          style={buttonStyle}
           key={1}
           onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
           iconName={IconName.Cross}
@@ -402,6 +412,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
       addButton(
         <Button
           {...sharedButtonProps}
+          style={lastButtonStyle}
           key={2}
           onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
           iconName={IconName.Check}
@@ -412,6 +423,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
       addButton(
         <Button
           {...sharedButtonProps}
+          style={lastButtonStyle}
           key={2}
           onPress={onReveal}
           iconName={IconName.Reveal}

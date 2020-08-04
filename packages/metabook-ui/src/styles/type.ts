@@ -123,9 +123,9 @@ export const title = makeTypeSpec(
 export const headline = makeTypeSpec(
   {
     fontSize: 36,
-    fontFamily: "Dr-Bold",
+    fontFamily: "Dr-Medium",
     lineHeight: 32,
-    // letterSpacing: 36 * 0,
+    letterSpacing: 36 * 0.01,
   },
   -2,
   -7,
@@ -135,7 +135,7 @@ export const headline = makeTypeSpec(
 export const body = makeTypeSpec(
   {
     fontSize: 24,
-    fontFamily: "Dr-ExtraBold",
+    fontFamily: "Dr-Bold",
     lineHeight: 24,
     letterSpacing: 24 * 0.01,
   },

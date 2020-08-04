@@ -151,7 +151,6 @@ function getMarkdownStyles(sizeVariant: SizeVariant, accentColor: ColorValue) {
     paragraph: {},
     paragraphSpacing: { marginTop: paragraphStyle.lineHeight! },
     clozeHighlight: {
-      ...getVariantStyles(paragraphStyle.fontFamily!, true, false),
       color: accentColor,
     },
     clozeUnderlineContainer: {
@@ -169,8 +168,7 @@ function getMarkdownStyles(sizeVariant: SizeVariant, accentColor: ColorValue) {
           }
         : {
             // HACK: rough positioning...
-            top:
-              paragraphStyle.lineHeight! + (paragraphStyle.top! as number) * 2,
+            top: paragraphStyle.lineHeight! + (paragraphStyle.top! as number),
             height: 3,
             backgroundColor: accentColor,
           },
