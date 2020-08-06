@@ -63,7 +63,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-native": "0.63.2",
-    "react-native-leveldown": "^0.0.6",
+    "react-native-leveldown": "^0.0.7",
     "react-native-svg": "^12.1.0",
     "react-native-unimodules": "~0.10.1",
     "react-native-web": "~0.13.4",

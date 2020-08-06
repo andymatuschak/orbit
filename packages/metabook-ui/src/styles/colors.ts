@@ -112,7 +112,7 @@ export const compositions: ColorComposition[] = [
   {
     backgroundColor: bg[0],
     accentColor: fg[3],
-    secondaryColor: bg[3],
+    secondaryColor: bg[11],
     tertiaryColor: fg[0],
   },
   {

@@ -92,6 +92,7 @@ function CompositionTest({
 }) {
   const width = 375;
 
+  const numberComplete = number("number complete", 5);
   return (
     <View
       style={{
@@ -113,16 +114,15 @@ function CompositionTest({
       >
         <Starburst
           size={width * 2}
-          entries={starburstLengths.map((length, i) => ({
-            color:
-              i === 0
-                ? accentColor
-                : i < number("fraction complete", 0.3) * starburstLengths.length
-                ? secondaryColor
-                : tertiaryColor,
-            length,
-          }))}
+          entries={starburstLengths.map((length, i) => {
+            return {
+              color: i < numberComplete ? secondaryColor : tertiaryColor,
+              length,
+            };
+          })}
           thickness={3}
+          entryAtHorizontal={numberComplete}
+          accentOverlayColor={accentColor}
         />
       </View>
       <Caption

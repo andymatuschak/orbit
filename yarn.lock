@@ -5558,6 +5558,11 @@
     "@types/glob" "*"
     "@types/node" "*"
 
+"@types/seedrandom@^2.4.28":
+  version "2.4.28"
+  resolved "https://registry.yarnpkg.com/@types/seedrandom/-/seedrandom-2.4.28.tgz#9ce8fa048c1e8c85cb71d7fe4d704e000226036f"
+  integrity sha512-SMA+fUwULwK7sd/ZJicUztiPs8F1yCPwF3O23Z9uQ32ME5Ha0NmDK9+QTsYE4O2tHXChzXomSWWeIhCnoN1LqA==
+
 "@types/serve-static@*":
   version "1.13.4"
   resolved "https://registry.yarnpkg.com/@types/serve-static/-/serve-static-1.13.4.tgz#6662a93583e5a6cabca1b23592eb91e12fa80e7c"
@@ -21833,10 +21838,10 @@ react-native-fit-image@^1.5.5:
   dependencies:
     prop-types "^15.5.10"
 
-react-native-leveldown@^0.0.6:
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/react-native-leveldown/-/react-native-leveldown-0.0.6.tgz#fc43243ca916abb8abc508dd91aa297bfdea051b"
-  integrity sha512-Wt368fXe7v+e9H5pf76NH8G+4LYTdY15zBwtoAq6YTWzho0GLYid1NmDoU1FUbuwqu56ZWUxpNjLXZkGM9tgLQ==
+react-native-leveldown@^0.0.7:
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/react-native-leveldown/-/react-native-leveldown-0.0.7.tgz#22a130d834823fb7d771b11ddda18163c485205a"
+  integrity sha512-tfwrT78qBbYb5kQ/yS6+ANzkEnE1NTEdeBilWKDd8aLq4WRUpze9o2KWt5WKwO/feMUoiCOQR0SPLda+4+LNUQ==
   dependencies:
     abstract-leveldown "^6.3.0"
     buffer "^5.6.0"
@@ -23120,6 +23125,11 @@ schema-utils@^2.0.0, schema-utils@^2.0.1, schema-utils@^2.5.0, schema-utils@^2.6
     ajv "^6.12.2"
     ajv-keywords "^3.4.1"
 
+seedrandom@^3.0.5:
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/seedrandom/-/seedrandom-3.0.5.tgz#54edc85c95222525b0c7a6f6b3543d8e0b3aa0a7"
+  integrity sha512-8OwmbklUNzwezjGInmZ+2clQmExQPvomqjL7LFqOYqtmuxRgQYqOD3mHaU+MvZn5FLUeVxVfQjwLZW/n/JFuqg==
+
 select-hose@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/select-hose/-/select-hose-2.0.0.tgz#625d8658f865af43ec962bfc376a37359a4994ca"
@@ -23734,7 +23744,7 @@ space-separated-tokens@^1.0.0:
     citation-js "^0.4.8"
     exiftool-vendored "~8"
     file-metadata "^1.0.0"
-    incremental-thinking "file:../../../Library/Caches/Yarn/v6/npm-spaced-everything-0.0.1-96e09ba4-fb11-4043-9b1c-902cccda8460-1595873741003/node_modules/vendor/incremental-thinking"
+    incremental-thinking "file:../../../Library/Caches/Yarn/v6/npm-spaced-everything-0.0.1-d9cc589c-ff0f-4e22-b16b-027cb9e047d1-1596640405059/node_modules/vendor/incremental-thinking"
     lodash.isequal "^4.5.0"
     moment "^2.24.0"
     node-getpocket vicchi/node-getpocket
