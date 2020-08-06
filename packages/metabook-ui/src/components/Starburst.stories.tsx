@@ -49,7 +49,6 @@ function StarburstGrid(props: { size: number }) {
 export function Sandbox() {
   const strokeCount = number("Line count", 25);
   const seed = text("Random seed", "seed");
-  const rng = useMemo(() => seedrandom(seed), [seed]);
 
   const minLength = number("Line min", 0);
   const maxLength = number("Line max", 1);
@@ -132,7 +131,7 @@ export function Sandbox() {
       "fg",
     );
     const completedStrokeColorIndex = number(
-      "Completeds stroke color index",
+      "Completed stroke color index",
       1,
       colorRange,
     );
@@ -143,7 +142,22 @@ export function Sandbox() {
       white: colors.white,
     }[completedStrokeColorSource];
 
-    accentColor = colors.fg[0]; // TODO
+    const accentStrokeColorSource = select(
+      "Accent stroke color source",
+      ["bg", "fg", "ink", "white"],
+      "fg",
+    );
+    const accentStrokeColorIndex = number(
+      "Accent stroke color index",
+      1,
+      colorRange,
+    );
+    accentColor = {
+      bg: colors.bg[accentStrokeColorIndex],
+      fg: colors.fg[accentStrokeColorIndex],
+      ink: colors.ink,
+      white: colors.white,
+    }[accentStrokeColorSource];
 
     backgroundColor = colors.bg[number("BG color index", 0, colorRange)];
   }
@@ -152,33 +166,36 @@ export function Sandbox() {
   // const currentEntry = number("Current entry number", 0);
 
   const [lengths, setLengths] = useState<number[]>([]);
-  useEffect(
-    () =>
-      setLengths(
-        Array.from(new Array(strokeCount).keys()).map(() =>
-          lerp(rng(), 0, 1, minLength, maxLength),
-        ),
+  useEffect(() => {
+    const rng = seedrandom(seed);
+    setLengths(
+      Array.from(new Array(strokeCount).keys()).map(() =>
+        lerp(rng(), 0, 1, minLength, maxLength),
       ),
-    [maxLength, minLength, rng, strokeCount],
-  );
+    );
+  }, [maxLength, minLength, seed, strokeCount]);
 
   button("Change length", () => {
     setLengths((lengths) => {
       lengths[currentEntry] = Math.max(
         0,
-        Math.min(1, lengths[currentEntry] + Math.random() - 0.5),
+        Math.min(1, lengths[currentEntry] + (Math.random() - 0.2) * 0.5),
       );
       return lengths;
     });
+    const delay =
+      currentEntry === 0 ? 500 : Math.max(0, 500 - currentEntry * 100);
     setTimeout(() => {
       setCurrentEntry((currentEntry) => currentEntry + 1);
-    }, Math.random() * 300);
+    }, delay);
   });
 
   const entries = lengths.map((length, index) => ({
     length,
     color: index < currentEntry ? completedStrokeColor : strokeColor,
   }));
+
+  const rotationDegrees = number("Extra rotation degrees", 0);
 
   return (
     <View
@@ -189,14 +206,29 @@ export function Sandbox() {
         backgroundColor: "#eee",
       }}
     >
-      <View style={{ backgroundColor: backgroundColor }}>
-        <Starburst
-          size={size}
-          entries={entries}
-          thickness={number("Thickness", 4)}
-          accentOverlayColor={accentColor}
-          entryAtHorizontal={currentEntry}
-        />
+      <View
+        style={{
+          backgroundColor: backgroundColor,
+        }}
+      >
+        <View
+          style={{
+            transform: [
+              { rotateZ: `${rotationDegrees}deg` },
+              { scale: number("Scale", 1) },
+              { translateX: number("Translate X", 0, { min: -100, max: 100 }) },
+              { translateY: number("Translate Y", 0, { min: -100, max: 100 }) },
+            ],
+          }}
+        >
+          <Starburst
+            size={size}
+            entries={entries}
+            thickness={number("Thickness", 4)}
+            accentOverlayColor={accentColor}
+            entryAtHorizontal={currentEntry}
+          />
+        </View>
       </View>
     </View>
   );
