@@ -335,7 +335,7 @@ function ClozePromptRenderer({
         </View>
         <FadeView
           isVisible={backIsRevealed}
-          durationMillis={100}
+          durationMillis={70}
           style={StyleSheet.absoluteFill}
         >
           <CardField
@@ -346,7 +346,7 @@ function ClozePromptRenderer({
         </FadeView>
         <FadeView
           isVisible={!backIsRevealed}
-          durationMillis={70}
+          durationMillis={100}
           style={StyleSheet.absoluteFill}
         >
           <CardField
