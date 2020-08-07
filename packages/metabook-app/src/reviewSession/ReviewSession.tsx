@@ -155,12 +155,7 @@ export default function ReviewSession() {
     };
   }, [databaseManager]);
 
-  const remainingItems = useMemo(() => items?.slice(currentQueueIndex), [
-    items,
-    currentQueueIndex,
-  ]);
-
-  const topItem = remainingItems?.[0];
+  const topItem = items?.[currentQueueIndex];
   const colorCompositionAnimatedIndex = useTransitioningValue({
     value:
       (topItem?.promptState?.dueTimestampMillis ?? 0) %
@@ -206,12 +201,13 @@ export default function ReviewSession() {
         backgroundColor,
       },
     },
-    remainingItems ? (
-      remainingItems.length > 0 ? (
+    items ? (
+      currentQueueIndex < items.length ? (
         <View style={{ flex: 1 }}>
           {/*<DebugGrid />*/}
           <ReviewArea
-            items={remainingItems}
+            items={items}
+            currentItemIndex={currentQueueIndex}
             onMark={onMarkCallback}
             schedule="aggressiveStart"
             {...colorComposition}

@@ -152,7 +152,6 @@ function PromptContextLabel({
 
   const color = accentColor ?? colors.ink;
   const numberOfLines = size === "regular" ? 3 : 1;
-  console.log(promptContext?.url);
   return (
     promptContext && (
       <View style={style}>

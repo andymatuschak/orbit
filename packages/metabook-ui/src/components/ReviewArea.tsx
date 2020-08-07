@@ -29,6 +29,7 @@ export type ReviewAreaMarkingRecord = {
 
 export interface ReviewAreaProps {
   items: ReviewItem[];
+  currentItemIndex: number;
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
   schedule: MetabookSpacedRepetitionSchedule;
 
@@ -133,7 +134,13 @@ const PromptContainer = React.memo(function PromptContainer({
 });
 
 export default function ReviewArea(props: ReviewAreaProps) {
-  const { items, onMark, forceShowAnswer, accentColor } = props;
+  const {
+    items,
+    onMark,
+    forceShowAnswer,
+    accentColor,
+    currentItemIndex,
+  } = props;
 
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
   const lastCommittedReviewMarkingRef = useRef<ReviewAreaMarkingRecord | null>(
@@ -146,7 +153,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
   ] = useState<PendingMarkingInteractionState | null>(null);
   const [phase, setPhase] = useState(0);
 
-  const currentItem = items[0] || null;
+  const currentItem = items[currentItemIndex] || null;
   const onMarkingButton = useCallback(
     (outcome: PromptRepetitionOutcome) => {
       if (currentItem && currentItem.reviewItemType === "prompt") {
@@ -187,17 +194,22 @@ export default function ReviewArea(props: ReviewAreaProps) {
   }, []);
 
   const previousItems = usePrevious(items);
-  if (previousItems !== items && previousItems) {
+  const previousItemIndex = usePrevious(currentItemIndex);
+  if (
+    previousItems === items &&
+    previousItems &&
+    previousItemIndex !== undefined &&
+    previousItemIndex !== currentItemIndex
+  ) {
+    const previousItem = previousItems[previousItemIndex];
     if (
-      isEqual(previousItems[1], items[0]) &&
-      previousItems[0] &&
-      (departingPromptItems.current.length === 0 ||
-        !isEqual(departingPromptItems.current[0], previousItems[0]))
+      departingPromptItems.current.length === 0 ||
+      !isEqual(departingPromptItems.current[0], previousItem)
     ) {
-      departingPromptItems.current.push(previousItems[0]);
+      departingPromptItems.current.push(previousItem);
       lastCommittedReviewMarkingRef.current = null;
     }
-    if (!isEqual(items[0], previousItems[0]) && isShowingAnswer) {
+    if (currentItem !== previousItem && isShowingAnswer) {
       setShowingAnswer(false);
     }
   }
@@ -210,7 +222,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
   );
 
   const renderedItems = departingPromptItems.current
-    .concat(items)
+    .concat(items.slice(currentItemIndex))
     .slice(0, maximumCardsToRender);
 
   return (
@@ -286,7 +298,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
             onPendingMarkingInteractionStateDidChange={
               setPendingMarkingInteractionState
             }
-            disabled={items.length === 0}
+            disabled={currentItemIndex >= items.length}
             promptType={
               currentItem?.reviewItemType === "prompt"
                 ? currentItem.prompt.promptType

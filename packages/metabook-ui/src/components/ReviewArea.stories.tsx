@@ -1,5 +1,5 @@
 import { testBasicPrompt } from "metabook-sample-data";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useMemo } from "react";
 import { Easing, View, Animated } from "react-native";
 import { ReviewItem } from "../reviewItem";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
@@ -35,18 +35,22 @@ export function Basic() {
     range: true,
   });
 
-  const initialReviewItems: ReviewItem[] = Array.from(
-    new Array(5).keys(),
-  ).map((i) => generateReviewItem(`Question ${i + 1}`));
+  const items: ReviewItem[] = useMemo(
+    () =>
+      Array.from(new Array(5).keys()).map((i) =>
+        generateReviewItem(`Question ${i + 1}`),
+      ),
+    [],
+  );
 
-  const [items, setItems] = useState(initialReviewItems);
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [colorCompositionIndex] = React.useState(
     () => new Animated.Value(items.length),
   );
   React.useEffect(
     () =>
       colorCompositionIndex.setValue(
-        (items.length + colorKnobOffset) % colors.compositions.length,
+        (currentItemIndex + colorKnobOffset) % colors.compositions.length,
       ),
     [colorKnobOffset],
   );
@@ -56,21 +60,21 @@ export function Basic() {
   });
 
   const onMark = useCallback(() => {
-    setItems((tasks) => {
+    setCurrentItemIndex((currentItemIndex) => {
       Animated.timing(colorCompositionIndex, {
         toValue:
-          (tasks.length - 1 + colorKnobOffset) % colors.compositions.length,
+          (currentItemIndex + 1 + colorKnobOffset) % colors.compositions.length,
         duration: 80,
         easing: Easing.linear,
         useNativeDriver: true,
       }).start();
-      return tasks.slice(1);
+      return currentItemIndex + 1;
     });
   }, [colorCompositionIndex, colorKnobOffset]);
 
   const colorComposition =
     colors.compositions[
-      (items.length + colorKnobOffset) % colors.compositions.length
+      (currentItemIndex + colorKnobOffset) % colors.compositions.length
     ];
 
   return (
@@ -87,6 +91,7 @@ export function Basic() {
           items={items}
           onMark={onMark}
           schedule="aggressiveStart"
+          currentItemIndex={currentItemIndex}
           {...colorComposition}
         />
       </View>
