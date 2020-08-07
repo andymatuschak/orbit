@@ -1,12 +1,15 @@
-import React from "react";
-import { ColorValue, FlexStyle, Text, TextStyle, View } from "react-native";
+import React, { PropsWithChildren } from "react";
+import { ColorValue, Text, TextProps, TextStyle, View } from "react-native";
 import * as type from "../styles/type";
 
 interface TextElementProps {
-  children: React.ReactNode;
   style?: TextStyle;
   color?: ColorValue;
   selectable?: boolean;
+  numberOfLines?: number;
+  ellipsizeMode?: TextProps["ellipsizeMode"];
+  accessibilityRole?: TextProps["accessibilityRole"];
+  href?: string;
 }
 
 function makeTextComponent(
@@ -18,11 +21,13 @@ function makeTextComponent(
     color,
     selectable,
     style,
-  }: TextElementProps) => (
+    ...rest
+  }: PropsWithChildren<TextElementProps>) => (
     <View style={style}>
       <Text
         style={[layoutStyle, !!color && { color: color }]}
         selectable={selectable ?? true}
+        {...rest}
       >
         {children}
       </Text>

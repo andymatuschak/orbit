@@ -5,6 +5,7 @@ import {
   getIntervalSequenceForSchedule,
   imageAttachmentType,
   MetabookSpacedRepetitionSchedule,
+  PromptProvenanceType,
   PromptState,
   PromptTaskParameters,
 } from "metabook-core";
@@ -46,6 +47,17 @@ const testAttachmentResolutionMap: AttachmentResolutionMap = new Map([
   ],
 ]);
 
+const promptStateWithProvenance = {
+  taskMetadata: {
+    provenance: {
+      provenanceType: PromptProvenanceType.Note,
+      title:
+        "Example note with extremely long title which will get truncated eventually like perhaps in the middle of this line",
+      url: "http://note.example",
+    },
+  },
+} as PromptState;
+
 export const basic = () => (
   <TestCard
     reviewItem={{
@@ -62,7 +74,7 @@ export const basic = () => (
         },
       },
       promptParameters: null,
-      promptState: null,
+      promptState: promptStateWithProvenance,
       attachmentResolutionMap: null,
     }}
   />
@@ -113,7 +125,7 @@ export const clozePrompt = () => (
         reviewItemType: "prompt",
         prompt: testClozePrompt,
         promptParameters: { clozeIndex: 1 },
-        promptState: null,
+        promptState: promptStateWithProvenance,
         attachmentResolutionMap: null,
       }}
     />

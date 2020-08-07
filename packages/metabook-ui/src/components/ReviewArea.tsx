@@ -118,6 +118,7 @@ const PromptContainer = React.memo(function PromptContainer({
       durationMillis={displayState === "displayed" ? 40 : 100}
       delayMillis={displayState === "displayed" ? 60 : 0}
       style={style}
+      removeFromLayoutWhenHidden
     >
       {reviewItem && (
         <Card

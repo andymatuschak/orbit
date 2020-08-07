@@ -4,12 +4,15 @@ import {
   basicPromptType,
   clozePromptType,
   getNextTaskParameters,
+  PromptProvenance,
+  PromptProvenanceType,
   QAPrompt,
 } from "metabook-core";
 import React from "react";
 import {
   Animated,
   ColorValue,
+  FlexStyle,
   StyleSheet,
   View,
   ViewStyle,
@@ -21,6 +24,7 @@ import {
   PromptReviewItem,
 } from "../reviewItem";
 import { colors, layout } from "../styles";
+import Button from "./Button";
 import CardField, { clozeBlankSentinel } from "./CardField";
 import FadeView from "./FadeView";
 import {
@@ -29,14 +33,6 @@ import {
 } from "./hooks/useTransitioningValue";
 import { Caption, Label } from "./Text";
 import WithAnimatedValue = Animated.WithAnimatedValue;
-
-export interface CardProps {
-  reviewItem: PromptReviewItem;
-  backIsRevealed: boolean;
-
-  accentColor?: ColorValue;
-  onToggleExplanation?: (isExplanationExpanded: boolean) => unknown;
-}
 
 function getQAPrompt(
   reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem,
@@ -126,6 +122,65 @@ function useAnimatingStyles(
   }, [bottomAreaTranslateAnimation, topAreaTranslateAnimation]);
 }
 
+interface PromptContext {
+  title: string;
+  url: string | null;
+}
+
+function getPromptContext(provenance: PromptProvenance): PromptContext | null {
+  switch (provenance.provenanceType) {
+    case PromptProvenanceType.Anki:
+      return null;
+    case PromptProvenanceType.Note:
+      return { title: provenance.title, url: provenance.url };
+  }
+}
+
+function PromptContextLabel({
+  reviewItem,
+  size,
+  style,
+  accentColor,
+}: {
+  reviewItem: PromptReviewItem;
+  size: "regular" | "small";
+  style?: FlexStyle;
+  accentColor?: ColorValue;
+}) {
+  const provenance = reviewItem.promptState?.taskMetadata.provenance;
+  const promptContext = provenance ? getPromptContext(provenance) : null;
+
+  const color = accentColor ?? colors.ink;
+  const numberOfLines = size === "regular" ? 3 : 1;
+  console.log(promptContext?.url);
+  return (
+    promptContext && (
+      <View style={style}>
+        {promptContext.url ? (
+          <Button
+            size={size}
+            href={promptContext.url}
+            title={promptContext.title}
+            color={color}
+            numberOfLines={numberOfLines}
+            ellipsizeMode="tail"
+          />
+        ) : (
+          React.createElement(
+            size === "regular" ? Label : Caption,
+            {
+              color,
+              numberOfLines,
+              ellipsizeMode: "tail",
+            },
+            promptContext.title,
+          )
+        )}
+      </View>
+    )
+  );
+}
+
 function formatClozePromptContents(
   clozeContents: string,
   isRevealed: boolean,
@@ -162,6 +217,14 @@ function formatClozePromptContents(
   }
 }
 
+export interface CardProps {
+  reviewItem: PromptReviewItem;
+  backIsRevealed: boolean;
+
+  accentColor?: ColorValue;
+  onToggleExplanation?: (isExplanationExpanded: boolean) => unknown;
+}
+
 type QAPromptRendererType = CardProps & {
   reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem;
 };
@@ -185,12 +248,12 @@ function QAPromptRenderer({
         delayMillis={60}
         style={animatingStyles.topAreaStyle}
       >
-        <Caption
-          color={accentColor ?? colors.ink}
+        <PromptContextLabel
+          reviewItem={reviewItem}
+          size="small"
           style={styles.topContextLabel}
-        >
-          Source context TODO
-        </Caption>
+          accentColor={accentColor}
+        />
         <View style={styles.topTextContainer}>
           <CardField
             promptField={spec.question}
@@ -220,12 +283,13 @@ function QAPromptRenderer({
           durationMillis={70}
           style={animatingStyles.bottomFrontStyle}
         >
-          <Label
-            style={styles.bottomContextLabel}
-            color={accentColor ?? colors.ink}
-          >
-            Source context TODO
-          </Label>
+          <View style={styles.bottomContextLabelContainer}>
+            <PromptContextLabel
+              reviewItem={reviewItem}
+              size="regular"
+              accentColor={accentColor}
+            />
+          </View>
           <CardField
             promptField={spec.question}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
@@ -262,12 +326,13 @@ function ClozePromptRenderer({
     <View style={styles.cardContainer}>
       <View style={styles.topAreaContainer} />
       <View style={styles.bottomAreaContainer}>
-        <Label
-          style={styles.bottomContextLabel}
-          color={accentColor ?? colors.ink}
-        >
-          Source context TODO
-        </Label>
+        <View style={styles.bottomContextLabelContainer}>
+          <PromptContextLabel
+            reviewItem={reviewItem}
+            size="regular"
+            accentColor={accentColor}
+          />
+        </View>
         <FadeView
           isVisible={backIsRevealed}
           durationMillis={100}
@@ -336,6 +401,7 @@ const styles = StyleSheet.create({
   topContextLabel: {
     marginTop: -layout.gridUnit * 2,
     marginBottom: layout.gridUnit,
+    width: "100%",
   },
 
   topTextContainer: {
@@ -347,8 +413,11 @@ const styles = StyleSheet.create({
     flex: 3,
   },
 
-  bottomContextLabel: {
+  bottomContextLabelContainer: {
     position: "absolute",
-    top: layout.gridUnit * -3,
+    top: -(200 + layout.gridUnit),
+    width: "100%",
+    height: 200,
+    justifyContent: "flex-end",
   },
 });

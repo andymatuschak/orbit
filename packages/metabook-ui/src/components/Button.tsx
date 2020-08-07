@@ -1,44 +1,60 @@
 import React from "react";
 import {
+  Alert,
   Animated,
   ColorValue,
   Easing,
   FlexStyle,
+  Linking,
   Pressable,
   StyleProp,
   StyleSheet,
+  TextProps,
 } from "react-native";
 import { colors } from "../styles";
 import usePrevious from "./hooks/usePrevious";
 import Hoverable from "./Hoverable";
 import Icon, { IconName, IconPosition } from "./Icon";
-import { Label } from "./Text";
+import { Caption, Label } from "./Text";
 
-export interface ButtonProps {
+export type ButtonProps = {
   title: string;
-  onPress: () => void;
-  color?: string;
+  color?: ColorValue;
   disabled?: boolean;
+  size?: "regular" | "small";
 
   iconName?: IconName;
   accentColor?: ColorValue;
 
   style?: StyleProp<FlexStyle>;
-}
+
+  numberOfLines?: number;
+  ellipsizeMode?: TextProps["ellipsizeMode"];
+} & (
+  | {
+      onPress: () => void;
+    }
+  | { href: string }
+);
 
 const pressedButtonOpacity = 0.2;
 const defaultButtonColor = colors.ink;
 
-const ButtonImpl = React.memo(function ButtonImpl({
-  title,
-  color,
-  disabled,
-  iconName,
-  accentColor,
-  isHovered,
-  isPressed,
-  style,
-}: ButtonProps & { isHovered: boolean; isPressed: boolean }) {
+const ButtonImpl = React.memo(function ButtonImpl(
+  props: ButtonProps & { isHovered: boolean; isPressed: boolean },
+) {
+  const {
+    title,
+    color,
+    disabled,
+    size,
+    iconName,
+    accentColor,
+    isHovered,
+    isPressed,
+    style,
+    ...rest
+  } = props;
   const opacity = React.useRef(new Animated.Value(1)).current;
   const wasPressed = usePrevious(isPressed);
   if (wasPressed && !isPressed) {
@@ -74,16 +90,18 @@ const ButtonImpl = React.memo(function ButtonImpl({
           accentColor={color ?? defaultButtonColor}
         />
       )}
-      <Label
-        selectable={false}
-        color={
-          ((isHovered || isPressed) && accentColor && !disabled
-            ? accentColor
-            : color) || defaultButtonColor
-        }
-      >
-        {title}
-      </Label>
+      {React.createElement(
+        (size ?? "regular") === "regular" ? Label : Caption,
+        {
+          ...rest,
+          selectable: false,
+          color:
+            ((isHovered || isPressed) && accentColor && !disabled
+              ? accentColor
+              : color) || defaultButtonColor,
+        },
+        title,
+      )}
     </Animated.View>
   );
 });
@@ -95,15 +113,34 @@ const styles = StyleSheet.create({
 });
 
 export default function Button(props: ButtonProps) {
+  const href = "href" in props ? props.href : null;
+  const onPress = "onPress" in props ? props.onPress : null;
+  const effectiveOnPress = React.useMemo(
+    () =>
+      onPress ??
+      (() => {
+        console.log("Opening url");
+        Linking.openURL(href!).catch((error) => {
+          // console.error("Couldn't open", href, error);
+          Alert.alert(
+            "Couldn't open link",
+            `You may need to install an app to open this URL: ${href}`,
+          );
+        });
+      }),
+    [href, onPress],
+  );
   return (
     <Hoverable>
       {(isHovered) => (
         <Pressable
           accessible={true}
-          accessibilityRole="button"
+          accessibilityRole={href ? "link" : "button"}
           accessibilityLabel={props.title}
-          onPress={props.onPress}
+          onPress={effectiveOnPress}
           disabled={props.disabled}
+          // @ts-ignore react-native-web adds this prop.
+          href={href}
         >
           {({ pressed }) => (
             <ButtonImpl {...props} isHovered={isHovered} isPressed={pressed} />

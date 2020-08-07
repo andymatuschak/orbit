@@ -7,6 +7,7 @@ export interface FadeViewProps {
   isVisible: boolean;
 
   children: React.ReactNode;
+  removeFromLayoutWhenHidden?: boolean; // default: no
   durationMillis?: number;
   delayMillis?: number;
   style?: WithAnimatedValue<StyleProp<ViewStyle>>;
@@ -22,8 +23,13 @@ export default function FadeView(props: FadeViewProps) {
     durationMillis,
     onTransitionEnd,
     delayMillis,
+    removeFromLayoutWhenHidden,
     style,
   } = props;
+
+  const [lastCompletedVisibility, setLastCompletedVisibility] = React.useState<
+    boolean
+  >(props.isVisible);
 
   const opacity = useTransitioningValue({
     value: isVisible ? 1 : 0,
@@ -34,7 +40,10 @@ export default function FadeView(props: FadeViewProps) {
       delay: delayMillis || 0,
       useNativeDriver: true,
     },
-    onEndCallback: ({ finished }) => onTransitionEnd?.(isVisible, finished),
+    onEndCallback: ({ finished }) => {
+      setLastCompletedVisibility(isVisible);
+      return onTransitionEnd?.(isVisible, finished);
+    },
   });
 
   return (
@@ -44,6 +53,9 @@ export default function FadeView(props: FadeViewProps) {
         {
           opacity,
           ...(!isVisible && { pointerEvents: "none" }),
+          ...(!lastCompletedVisibility &&
+            !isVisible &&
+            removeFromLayoutWhenHidden && { display: "none" }),
         },
       ]}
     >

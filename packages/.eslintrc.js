@@ -11,6 +11,7 @@ module.exports = {
     "@typescript-eslint/no-use-before-define": ["error", { variables: false }],
     "@typescript-eslint/no-this-alias": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/ban-ts-ignore": "off",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
   },

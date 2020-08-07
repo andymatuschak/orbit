@@ -55,3 +55,17 @@ export function IconButton() {
     </View>
   );
 }
+
+export function LinkButton() {
+  return (
+    <View>
+      <View>
+        <Button
+          title="Link button"
+          href="https://google.com"
+          accentColor={colors.fg[1]}
+        />
+      </View>
+    </View>
+  );
+}
