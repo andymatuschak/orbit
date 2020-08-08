@@ -17,17 +17,15 @@ import {
   styles,
   Headline,
 } from "metabook-ui";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+
 import DebugGrid from "metabook-ui/dist/components/DebugGrid";
 import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Animated,
-  Platform,
-  SafeAreaView,
-  Text,
-  View,
-  Easing,
-} from "react-native";
+import { Animated, Platform, View, Easing } from "react-native";
 import DatabaseManager from "../model/databaseManager";
 import {
   useAuthenticationClient,
@@ -188,41 +186,40 @@ export default function ReviewSession() {
 
   console.log("[Performance] Render", Date.now() / 1000.0);
 
-  const outerViewComponent =
-    Platform.OS === "ios" && Platform.isPad
-      ? AnimatedSafeAreaView
-      : AnimatedSafeAreaView; // TODO: Catalyst hack
-  return React.createElement(
-    outerViewComponent,
-    {
-      style: {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <Animated.View
+      style={{
         flex: 1,
         justifyContent: "center",
         backgroundColor,
-      },
-    },
-    items ? (
-      currentQueueIndex < items.length ? (
-        <View style={{ flex: 1 }}>
-          {/*<DebugGrid />*/}
-          <ReviewArea
-            items={items}
-            currentItemIndex={currentQueueIndex}
-            onMark={onMarkCallback}
-            schedule="aggressiveStart"
-            {...colorComposition}
-          />
-        </View>
-      ) : (
-        <Headline
-          style={{
-            textAlign: "center",
-            color: styles.colors.white,
-            marginLeft: styles.layout.gridUnit,
-            marginRight: styles.layout.gridUnit,
-          }}
-        >{`All caught up!\nNothing's due for review.`}</Headline>
-      )
-    ) : null,
+      }}
+    >
+      {items ? (
+        currentQueueIndex < items.length ? (
+          <View style={{ flex: 1 }}>
+            {/*<DebugGrid />*/}
+            <ReviewArea
+              items={items}
+              currentItemIndex={currentQueueIndex}
+              onMark={onMarkCallback}
+              schedule="aggressiveStart"
+              safeInsets={insets}
+              {...colorComposition}
+            />
+          </View>
+        ) : (
+          <Headline
+            style={{
+              textAlign: "center",
+              color: styles.colors.white,
+              marginLeft: styles.layout.gridUnit,
+              marginRight: styles.layout.gridUnit,
+            }}
+          >{`All caught up!\nNothing's due for review.`}</Headline>
+        )
+      ) : null}
+    </Animated.View>
   );
 }

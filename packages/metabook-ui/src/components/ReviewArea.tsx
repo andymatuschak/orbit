@@ -39,6 +39,8 @@ export interface ReviewAreaProps {
   secondaryColor: string;
   tertiaryColor: string;
 
+  safeInsets?: { top: number; bottom: number };
+
   // Debug flags
   forceShowAnswer?: boolean;
 }
@@ -141,6 +143,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
     currentItemIndex,
     onMark,
     forceShowAnswer,
+    safeInsets,
     accentColor,
     secondaryColor,
     tertiaryColor,
@@ -275,9 +278,11 @@ export default function ReviewArea(props: ReviewAreaProps) {
       style={[
         styles.outerContainer,
         {
+          paddingTop: safeInsets?.top,
           paddingLeft: columnLayout?.edgeMargin,
           paddingRight: columnLayout?.edgeMargin,
-          paddingBottom: columnLayout?.edgeMargin,
+          paddingBottom:
+            (columnLayout?.edgeMargin ?? 0) + (safeInsets?.bottom ?? 0),
         },
       ]}
       onLayout={useCallback(
@@ -296,7 +301,10 @@ export default function ReviewArea(props: ReviewAreaProps) {
               size={starburstWidth!}
               entries={starburstEntries}
               thickness={3}
-              origin={[columnLayout!.edgeMargin, layout.gridUnit * 4]}
+              origin={[
+                columnLayout!.edgeMargin,
+                layout.gridUnit * 6 + (safeInsets?.top ?? 0),
+              ]}
               entryAtHorizontal={currentItemIndex}
               accentOverlayColor={accentColor}
             />
@@ -375,7 +383,7 @@ const styles = StyleSheet.create({
   },
 
   promptContainer: {
-    marginTop: layout.gridUnit * 9, // TODO starburst
+    marginTop: layout.gridUnit * 10, // margin for starburst
     marginBottom: layout.gridUnit * 3,
     flex: 1,
   },

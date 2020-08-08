@@ -7,6 +7,7 @@ import {
   useCurrentUserRecord,
 } from "./util/authContext";
 import { getFirebaseAuth } from "./util/firebase";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 enum RootScreen {
   Loading = "Loading",
@@ -68,7 +69,9 @@ export default function Root() {
   );
   return (
     <AuthenticationClientContext.Provider value={authenticationClient}>
-      <React.Suspense fallback={null}>{screen}</React.Suspense>
+      <SafeAreaProvider>
+        <React.Suspense fallback={null}>{screen}</React.Suspense>
+      </SafeAreaProvider>
     </AuthenticationClientContext.Provider>
   );
 }
