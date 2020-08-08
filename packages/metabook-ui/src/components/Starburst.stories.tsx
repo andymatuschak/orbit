@@ -197,6 +197,11 @@ export function Sandbox() {
 
   const rotationDegrees = number("Extra rotation degrees", 0);
 
+  const useOrigin = boolean("Use origin", false);
+  const originX = number("Origin X", 0);
+  const originY = number("Origin Y", 0);
+  const origin = useOrigin ? ([originX, originY] as const) : undefined;
+
   return (
     <View
       style={{
@@ -227,6 +232,7 @@ export function Sandbox() {
             thickness={number("Thickness", 4)}
             accentOverlayColor={accentColor}
             entryAtHorizontal={currentEntry}
+            origin={origin}
           />
         </View>
       </View>

@@ -153,15 +153,12 @@ function EmbeddedScreen() {
     [authenticationState],
   );
 
-  const currentQueue = React.useMemo(() => items?.slice(queueOffset), [
-    queueOffset,
-    items,
-  ]);
-  if (currentQueue) {
+  if (items) {
     return (
       <View style={{ position: "relative" }}>
         <ReviewArea
-          items={currentQueue}
+          items={items}
+          currentItemIndex={queueOffset}
           onMark={onMark}
           schedule="default"
           // TODO colors

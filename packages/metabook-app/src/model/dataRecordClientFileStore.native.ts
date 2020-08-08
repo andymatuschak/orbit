@@ -74,8 +74,12 @@ async function storeFileFromURL(
 }
 
 async function storedURLExists(url: string): Promise<boolean> {
-  const info = await FileSystem.getInfoAsync(url);
-  return info.exists;
+  try {
+    const info = await FileSystem.getInfoAsync(url);
+    return info.exists;
+  } catch {
+    return false;
+  }
 }
 
 const dataRecordClientFileStore: DataRecordClientFileStore = {

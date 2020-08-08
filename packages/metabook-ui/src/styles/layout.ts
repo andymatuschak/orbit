@@ -20,7 +20,9 @@ export function getColumnSpan(columnCount: number, columnWidth: number) {
   if (columnCount < 1) {
     throw new Error(`Can't get column span for column count of ${columnCount}`);
   }
-  return columnCount * columnWidth + (columnCount - 1) * columnMargin;
+  return Math.round(
+    columnCount * columnWidth + (columnCount - 1) * columnMargin,
+  );
 }
 
 export interface ColumnLayout {

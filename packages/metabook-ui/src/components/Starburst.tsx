@@ -6,25 +6,10 @@ import usePrevious from "./hooks/usePrevious";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import WithAnimatedValue = Animated.WithAnimatedValue;
 
-export interface StarburstProps {
-  size: number;
-  entries: StarburstEntry[];
-  thickness: number;
-  accentOverlayColor?: string;
-  entryAtHorizontal?: number;
-}
-
-export interface StarburstEntry {
-  length: number; // [0,1]
-  color: string;
-}
-
 const AnimatedG = Animated.createAnimatedComponent(G);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-const quillPathLength = 1.75;
-
-function getQuillPath(
+function getRayPath(
   innerRadius: number,
   outerRadius: number,
   strokeRadius: number,
@@ -41,7 +26,9 @@ function getQuillPath(
   const yThickness = 0.5 * thickness * unitX;
 
   const localQuillLength = outerRadius - innerRadius;
+  // The coordinates for the tapered quill at the end of the starburst rays were extracted from an SVG. This function transforms a point in that template SVG's coordinate space to the space of the ray.
   function quillPoint(x: number, y: number) {
+    const quillPathLength = 1.75; // The quill is 1pt high in the template SVG.
     // Translate the center of the quill tip to the origin.
     x -= 0.5 * quillPathLength;
     y -= 0.5;
@@ -91,12 +78,27 @@ const animationTiming: Omit<Animated.SpringAnimationConfig, "toValue"> = {
   useNativeDriver: false,
 };
 
-export default function Starburst({
+export interface StarburstProps {
+  size: number;
+  entries: StarburstEntry[];
+  thickness: number;
+  accentOverlayColor?: string;
+  entryAtHorizontal?: number;
+  origin?: readonly [number, number]; // positions the center of the starburst at this position, in pixels, expressed from the top-left of the starburst element
+}
+
+export interface StarburstEntry {
+  length: number; // [0,1]
+  color: string;
+}
+
+export default React.memo(function Starburst({
   entries,
   size,
   thickness,
   accentOverlayColor,
   entryAtHorizontal,
+  origin,
 }: StarburstProps) {
   const previousEntries = usePrevious(entries);
   const canAnimateEntries =
@@ -125,7 +127,7 @@ export default function Starburst({
   entries.forEach(({ length, color }, index) => {
     const theta = (-index / entries.length) * 2 * Math.PI;
     const strokeRadius = getRadiusForEntryLength(length);
-    const path = getQuillPath(
+    const path = getRayPath(
       innerRadius,
       outerRadius,
       strokeRadius,
@@ -150,7 +152,6 @@ export default function Starburst({
         fromLength,
         value: animatedLength,
       };
-      console.log("Starting animation", animationState.current, color);
       Animated.spring(animatedLength, {
         toValue: 1,
         ...animationTiming,
@@ -162,7 +163,7 @@ export default function Starburst({
       animatingColorEntry = {
         color,
         index: pathsByColor[color].length - 1,
-        fromPath: getQuillPath(
+        fromPath: getRayPath(
           innerRadius,
           outerRadius,
           getRadiusForEntryLength(animationState.current.fromLength),
@@ -170,11 +171,6 @@ export default function Starburst({
           unitThickness,
         ),
       };
-      console.log(
-        "Rendering with animation",
-        animationState.current,
-        animatingColorEntry,
-      );
     }
   });
 
@@ -184,7 +180,18 @@ export default function Starburst({
         ? -((entryAtHorizontal ?? 0) * 360) / entries.length
         : 0,
     timing: { ...animationTiming, type: "spring" },
-  });
+  }).interpolate({ inputRange: [0, 360], outputRange: ["0deg", "360deg"] });
+  const rotationStyle = {
+    transform: [
+      // Rotate about 0.5, 0.5.
+      { translateX: 0.5 },
+      { translateY: 0.5 },
+      { rotate: outerRotationDegrees },
+      { translateX: -0.5 },
+      { translateY: -0.5 },
+    ],
+  };
+
   function getAnimatedPath(
     paths: string[],
     animatingEntry: { index: number; oldValue: string } | null,
@@ -209,9 +216,27 @@ export default function Starburst({
     return d;
   }
 
+  let viewBox: string;
+  let width: number;
+  let height: number;
+  if (origin) {
+    const x = 0.5 - origin[0] / size;
+    const y = 0.5 - origin[1] / size;
+    viewBox = `${x} ${y} ${1 - x} ${1 - y}`;
+    width = size / 2 + origin[0];
+    height = size / 2 + origin[1];
+  } else {
+    viewBox = "0 0 1 1";
+    width = size;
+    height = size;
+  }
+
   return (
-    <Svg height={size} width={size} viewBox="0 0 1 1">
-      <AnimatedG rotation={outerRotationDegrees} originX="0.5" originY="0.5">
+    <Svg height={height} width={width} viewBox={viewBox}>
+      <AnimatedG
+        // @ts-ignore The type definition is missing this prop, but it's there!
+        style={rotationStyle}
+      >
         {Object.keys(pathsByColor).map((color) => {
           return (
             <AnimatedPath
@@ -234,14 +259,13 @@ export default function Starburst({
         <>
           <ClipPath id="accentPath">
             <Path
-              d={getQuillPath(innerRadius, outerRadius, 0.5, 0, unitThickness)}
+              d={getRayPath(innerRadius, outerRadius, 0.5, 0, unitThickness)}
             />
           </ClipPath>
           <G clipPath="url(#accentPath)">
             <AnimatedG
-              rotation={outerRotationDegrees}
-              originX="0.5"
-              originY="0.5"
+              // @ts-ignore The type definition is missing this prop, but it's there!
+              style={rotationStyle}
             >
               <AnimatedPath
                 d={getAnimatedPath(
@@ -261,4 +285,4 @@ export default function Starburst({
       )}
     </Svg>
   );
-}
+});

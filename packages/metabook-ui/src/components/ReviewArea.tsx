@@ -19,6 +19,8 @@ import FadeView from "./FadeView";
 import usePrevious from "./hooks/usePrevious";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import { IconName } from "./Icon";
+import Starburst from "./Starburst";
+import lerp from "../util/lerp";
 
 type Size = { width: number; height: number };
 
@@ -136,10 +138,12 @@ const PromptContainer = React.memo(function PromptContainer({
 export default function ReviewArea(props: ReviewAreaProps) {
   const {
     items,
+    currentItemIndex,
     onMark,
     forceShowAnswer,
     accentColor,
-    currentItemIndex,
+    secondaryColor,
+    tertiaryColor,
   } = props;
 
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
@@ -196,8 +200,8 @@ export default function ReviewArea(props: ReviewAreaProps) {
   const previousItems = usePrevious(items);
   const previousItemIndex = usePrevious(currentItemIndex);
   if (
-    previousItems === items &&
     previousItems &&
+    previousItems.length === items.length &&
     previousItemIndex !== undefined &&
     previousItemIndex !== currentItemIndex
   ) {
@@ -221,9 +225,50 @@ export default function ReviewArea(props: ReviewAreaProps) {
     [width],
   );
 
+  const starburstEntries = useMemo(
+    () =>
+      items.map((item, index) => {
+        // TODO extract, move to Starburst.tsx.
+        const firstInterval = 1000 * 60 * 60 * 24 * 5; // 5 days;
+        const maxInterval = 1000 * 60 * 60 * 24 * 365; // half a year;
+        let length = 0;
+        // TODO: use true interval
+        if (item.promptState && item.promptState.intervalMillis > 0) {
+          const logInterval = Math.log2(item.promptState?.intervalMillis);
+          length = lerp(
+            logInterval,
+            Math.log2(firstInterval),
+            Math.log2(maxInterval),
+            0.1,
+            1,
+          );
+        }
+        console.log(
+          `${
+            (item.promptState?.intervalMillis ?? 0) / (1000 * 60 * 60 * 24)
+          } days -> ${length}`,
+          Math.log2(item.promptState?.intervalMillis ?? 0),
+          Math.log2(maxInterval),
+        );
+        // TODO: implement more proper "is finished" determination
+        return {
+          length,
+          color: index < currentItemIndex ? secondaryColor : tertiaryColor,
+        };
+      }),
+    [items, currentItemIndex, secondaryColor, tertiaryColor],
+  );
+
   const renderedItems = departingPromptItems.current
     .concat(items.slice(currentItemIndex))
     .slice(0, maximumCardsToRender);
+
+  const starburstWidth = columnLayout
+    ? getColumnSpan(
+        Math.min(2, columnLayout.columnCount),
+        columnLayout.columnWidth,
+      ) * 2
+    : null;
 
   return (
     <View
@@ -246,6 +291,16 @@ export default function ReviewArea(props: ReviewAreaProps) {
     >
       {size && (
         <>
+          <View style={[StyleSheet.absoluteFill]}>
+            <Starburst
+              size={starburstWidth!}
+              entries={starburstEntries}
+              thickness={3}
+              origin={[columnLayout!.edgeMargin, layout.gridUnit * 4]}
+              entryAtHorizontal={currentItemIndex}
+              accentOverlayColor={accentColor}
+            />
+          </View>
           <View
             style={[
               styles.promptContainer,
@@ -329,6 +384,11 @@ const styles = StyleSheet.create({
     minHeight: layout.gridUnit * 5,
     alignItems: "flex-end",
     justifyContent: "flex-end",
+  },
+
+  starburstContainer: {
+    position: "absolute",
+    width: "100%",
   },
 });
 

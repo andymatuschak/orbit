@@ -37,7 +37,7 @@ export function Basic() {
 
   const items: ReviewItem[] = useMemo(
     () =>
-      Array.from(new Array(5).keys()).map((i) =>
+      Array.from(new Array(25).keys()).map((i) =>
         generateReviewItem(`Question ${i + 1}`),
       ),
     [],
@@ -81,7 +81,6 @@ export function Basic() {
     <Animated.View
       style={{
         margin: 16,
-        padding: 16,
         backgroundColor,
         height: 500,
       }}
