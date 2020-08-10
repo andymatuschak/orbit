@@ -1,6 +1,7 @@
 .expo
 web-build
 .firebase
+android/app/src/main/assets/fonts/dr*
 
 # OSX
 #

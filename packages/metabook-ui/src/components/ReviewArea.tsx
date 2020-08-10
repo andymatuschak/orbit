@@ -246,14 +246,14 @@ export default function ReviewArea(props: ReviewAreaProps) {
             1,
           );
         }
-        console.log(
-          `${
-            (item.promptState?.intervalMillis ?? 0) / (1000 * 60 * 60 * 24)
-          } days -> ${length}`,
-          Math.log2(item.promptState?.intervalMillis ?? 0),
-          Math.log2(maxInterval),
-        );
-        // TODO: implement more proper "is finished" determination
+        // console.log(
+        //   `${
+        //     (item.promptState?.intervalMillis ?? 0) / (1000 * 60 * 60 * 24)
+        //   } days -> ${length}`,
+        //   Math.log2(item.promptState?.intervalMillis ?? 0),
+        //   Math.log2(maxInterval),
+        // );
+        // TODO: implement more proper "is finished" color determination
         return {
           length,
           color: index < currentItemIndex ? secondaryColor : tertiaryColor,

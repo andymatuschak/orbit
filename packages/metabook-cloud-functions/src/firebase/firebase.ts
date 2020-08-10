@@ -30,7 +30,7 @@ function getDatabase(): firebase.firestore.Firestore {
 }
 
 export function recordPrompts(prompts: Prompt[]): Promise<PromptID[]> {
-  // TODO probably add something about provenance
+  // TODO probably add something about provenance https://github.com/andymatuschak/metabook/issues/59
   // TODO something about user quotas, billing
   return Promise.all(
     prompts.map(async (promptData) => {

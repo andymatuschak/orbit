@@ -41,4 +41,4 @@ export type PromptReviewItem =
   | ApplicationPromptReviewItem
   | ClozePromptReviewItem;
 
-export type ReviewItem = PromptReviewItem /* | LoginReviewTask TODO */;
+export type ReviewItem = PromptReviewItem;

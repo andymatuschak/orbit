@@ -116,7 +116,7 @@ function onMark(
           promptParameters: marking.reviewItem.promptParameters,
         } as PromptTask),
         outcome: marking.outcome,
-        context: null, // TODO
+        context: null, // TODO https://github.com/andymatuschak/metabook/issues/59
         timestampMillis: Date.now(),
         taskParameters: getNextTaskParameters(
           marking.reviewItem.prompt,
@@ -156,7 +156,7 @@ export default function ReviewSession() {
   const topItem = items?.[currentQueueIndex];
   const colorCompositionAnimatedIndex = useTransitioningValue({
     value:
-      (topItem?.promptState?.dueTimestampMillis ?? 0) %
+      (topItem?.promptState?.lastReviewTimestampMillis ?? 0) %
       styles.colors.compositions.length,
     timing: {
       type: "timing",
@@ -180,7 +180,7 @@ export default function ReviewSession() {
 
   const colorComposition =
     styles.colors.compositions[
-      (topItem?.promptState?.dueTimestampMillis ?? 0) %
+      (topItem?.promptState?.lastReviewTimestampMillis ?? 0) % // TODO draw colors rigorously
         styles.colors.compositions.length
     ];
 

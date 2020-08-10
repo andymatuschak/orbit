@@ -12,7 +12,6 @@ export interface FadeViewProps {
   delayMillis?: number;
   style?: WithAnimatedValue<StyleProp<ViewStyle>>;
   onTransitionEnd?: (toVisible: boolean, didFinish: boolean) => void;
-  // TODO: implement unmountOnExit etc
 }
 
 const defaultDurationMillis = 150;

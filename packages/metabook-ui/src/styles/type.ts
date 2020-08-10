@@ -43,7 +43,6 @@ export function getVariantStyles(
   return {
     fontFamily: workingFontName,
     // When we can't bold any further, use a darker ink.
-    // TODO: consider using an accent color instead
     ...(baseFontName.includes("Bold") && isBold && { color: "black" }),
   };
 }

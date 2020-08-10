@@ -1,6 +1,6 @@
 {
   "name": "react-native-leveldown",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "summary": "React Native native module for LevelJS, compatible with abstract-leveldown",
   "description": "react-native-leveldown",
   "homepage": "https://github.com/github_account/react-native-leveldown",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/github_account/react-native-leveldown.git",
-    "tag": "0.0.6"
+    "tag": "0.0.7"
   },
   "source_files": "ios/**/*.{h,m,mm,swift}",
   "requires_arc": true,

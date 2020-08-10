@@ -32,7 +32,6 @@ export class OrbitReviewAreaElement extends HTMLElement {
   markNeedsRender() {
     if (!this.needsRender) {
       this.needsRender = true;
-      // TODO cancel on disconnect
       requestAnimationFrame(() => {
         this.render();
         this.needsRender = false;
@@ -45,7 +44,6 @@ export class OrbitReviewAreaElement extends HTMLElement {
       return;
     }
 
-    // TODO de-dupe with embedded-app
     const items = extractItems(this);
 
     const itemsParameterString = encodeURIComponent(JSON.stringify(items));

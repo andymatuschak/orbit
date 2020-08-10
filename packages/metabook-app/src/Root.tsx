@@ -45,7 +45,7 @@ const ReviewSessionScreen = React.lazy(() =>
 );
 const EmbedScreen = React.lazy(() => import("./embedded/EmbeddedScreen"));
 const LoadingScreen = () => (
-  // TODO
+  // TODO https://github.com/andymatuschak/metabook/issues/63
   <View style={{ flex: 1, justifyContent: "center" }}>
     <ActivityIndicator size="large" color={styles.colors.fg[0]} />
   </View>

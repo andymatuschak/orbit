@@ -18,7 +18,7 @@ export async function getAuthTokensForIDToken(
   customLoginToken: string;
 }> {
   const auth = getAuth();
-  // TODO: At some point, once we add features which would involve revoking user tokens, we'd want to check here to see if the user's token's been revoked.
+  // At some point, once we add features which would involve revoking user tokens, we'd want to check here to see if the user's token's been revoked.
   const decodedToken = await auth.verifyIdToken(idToken); // will reject on error
 
   const expiresIn = 1000 * 60 * 60 * 24 * 14; // 2 weeks

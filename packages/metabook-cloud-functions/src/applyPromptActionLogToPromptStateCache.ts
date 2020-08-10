@@ -13,7 +13,6 @@ import {
   ServerTimestamp,
 } from "metabook-firebase-support";
 
-// TODO: ensure that the log is actually a prompt log
 export default async function applyActionLogDocumentToPromptStateCache({
   actionLogDocument,
   basePromptStateCache,

@@ -2,7 +2,7 @@ function softLight(topInteger: number, bottomInteger: number) {
   const top = topInteger / 255.0;
   const bottom = bottomInteger / 255.0;
   const unitOutput = (1 - 2 * top) * bottom * bottom + 2 * top * bottom; // Pegtop's soft light blend mode: http://www.pegtop.net/delphi/articles/blendmodes/softlight.htm
-  return unitOutput * 255;
+  return Math.round(unitOutput * 255);
 }
 
 const tertiaryAlpha = 0.8;

@@ -114,9 +114,8 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
               });
               break;
             case "removed":
-              // TODO make more robust against client failures to persist / sync
               throw new Error(
-                `Log entries shouldn't change after their creation. Unsupported change type ${
+                `Log entries shouldn't ever be removed after their creation. Unsupported change type ${
                   change.type
                 } with doc ${change.doc.data()}`,
               );
