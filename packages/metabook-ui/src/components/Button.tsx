@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { colors } from "../styles";
 import usePrevious from "./hooks/usePrevious";
-import Hoverable from "./Hoverable";
+import Hoverable, { isHoverEnabled } from "./Hoverable";
 import Icon, { IconName, IconPosition } from "./Icon";
 import { Caption, Label } from "./Text";
 
@@ -27,6 +27,8 @@ export type ButtonProps = {
   accentColor?: ColorValue;
 
   style?: StyleProp<FlexStyle>;
+
+  onPendingInteractionStateDidChange?: (isPendingActivation: boolean) => void;
 
   numberOfLines?: number;
   ellipsizeMode?: TextProps["ellipsizeMode"];
@@ -113,6 +115,8 @@ const styles = StyleSheet.create({
 });
 
 export default function Button(props: ButtonProps) {
+  const { onPendingInteractionStateDidChange } = props;
+
   const href = "href" in props ? props.href : null;
   const onPress = "onPress" in props ? props.onPress : null;
   const effectiveOnPress = React.useMemo(
@@ -120,7 +124,7 @@ export default function Button(props: ButtonProps) {
       onPress ??
       (() => {
         console.log("Opening url");
-        Linking.openURL(href!).catch((error) => {
+        Linking.openURL(href!).catch(() => {
           Alert.alert(
             "Couldn't open link",
             `You may need to install an app to open this URL: ${href}`,
@@ -129,14 +133,47 @@ export default function Button(props: ButtonProps) {
       }),
     [href, onPress],
   );
+
+  const isPressed = React.useRef(false);
+  const isHovered = React.useRef(false);
+  const lastDispatchedPendingInteractionState = React.useRef(false);
+
+  const dispatchPendingInteractionState = React.useCallback(() => {
+    const activationState = isHoverEnabled()
+      ? isHovered.current || isPressed.current
+      : isPressed.current;
+    if (lastDispatchedPendingInteractionState.current !== activationState) {
+      lastDispatchedPendingInteractionState.current = activationState;
+      onPendingInteractionStateDidChange?.(activationState);
+    }
+  }, [isPressed, isHovered, onPendingInteractionStateDidChange]);
+  const onPressIn = React.useCallback(() => {
+    isPressed.current = true;
+    dispatchPendingInteractionState();
+  }, [isPressed, dispatchPendingInteractionState]);
+  const onPressOut = React.useCallback(() => {
+    isPressed.current = false;
+    dispatchPendingInteractionState();
+  }, [isPressed, dispatchPendingInteractionState]);
+  const onHoverIn = React.useCallback(() => {
+    isHovered.current = true;
+    dispatchPendingInteractionState();
+  }, [isHovered, dispatchPendingInteractionState]);
+  const onHoverOut = React.useCallback(() => {
+    isHovered.current = false;
+    dispatchPendingInteractionState();
+  }, [isHovered, dispatchPendingInteractionState]);
+
   return (
-    <Hoverable>
+    <Hoverable onHoverIn={onHoverIn} onHoverOut={onHoverOut}>
       {(isHovered) => (
         <Pressable
           accessible={true}
           accessibilityRole={href ? "link" : "button"}
           accessibilityLabel={props.title}
           onPress={effectiveOnPress}
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
           disabled={props.disabled}
           // @ts-ignore react-native-web adds this prop.
           href={href}

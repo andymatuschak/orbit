@@ -90,6 +90,7 @@ export interface StarburstLegendProps {
   pastLabelColor: string;
   presentLabelColor: string;
   futureLabelColor: string;
+  futureTickColor: string;
   backgroundColor: string;
 }
 
@@ -111,11 +112,6 @@ export default function StarburstLegend({
   const currentSequenceIndex =
     nextSequenceIndex === -1 ? sequence.length - 1 : nextSequenceIndex - 1;
 
-  const activeIntervalRayLength = getStarburstRayLength(
-    getStarburstRayValueForInterval(activeInterval),
-    starburstQuillOuterRadius,
-    starburstRadius,
-  );
   return (
     <>
       {sequence.map(({ interval, label }, index) => (
@@ -147,5 +143,3 @@ export default function StarburstLegend({
     </>
   );
 }
-
-const styles = StyleSheet.create({});

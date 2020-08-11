@@ -35,7 +35,7 @@ const _aggressiveStartIntervalSequence: IntervalEntry[] = [
   { interval: 31 * days, label: "1mo" },
   { interval: 77 * days, label: "3mo" },
   { interval: 192 * days, label: "6mo" },
-  { interval: 365 * days, label: "1yr" },
+  { interval: 480 * days, label: "1yr+" },
 ];
 
 const schedulesToIntervalSequences: Record<

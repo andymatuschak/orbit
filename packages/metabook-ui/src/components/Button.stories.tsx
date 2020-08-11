@@ -1,10 +1,9 @@
 import { action } from "@storybook/addon-actions";
 import React from "react";
+import { View } from "react-native";
 import { colors } from "../styles";
-import { spacing } from "../styles/layout";
 import Button from "./Button";
 import { IconName } from "./Icon";
-import { View } from "react-native";
 import Spacer from "./Spacer";
 
 export default {
@@ -19,6 +18,9 @@ export function PlainButton() {
         title="Button"
         onPress={action("Button clicked")}
         accentColor={colors.fg[1]}
+        onPendingInteractionStateDidChange={(isPendingActivation) =>
+          action(`Pending activation`)(isPendingActivation)
+        }
       />
       <Spacer units={1} />
       <Button
