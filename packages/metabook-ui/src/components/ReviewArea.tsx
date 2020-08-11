@@ -318,7 +318,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
                 starburstEntries.length,
                 starburstThickness,
               )}
-              pastLabelColor={accentColor}
+              pastLabelColor={colors.white}
               presentLabelColor={colors.white}
               futureLabelColor={colors.ink}
               backgroundColor={backgroundColor}

@@ -47,7 +47,7 @@ function StarburstLegendEntry({
       <View
         style={{
           backgroundColor:
-            status === "future" ? futureLabelColor : backgroundColor,
+            status === "future" ? backgroundColor : backgroundColor,
           position: "absolute",
           left: rayLength - rayTickWidth / 2 - 1, // Not sure why the - 1 is required here.
           height: starburstThickness,
@@ -105,8 +105,22 @@ export default function StarburstLegend({
   const currentSequenceIndex =
     nextSequenceIndex === -1 ? sequence.length - 1 : nextSequenceIndex - 1;
 
+  const activeIntervalRayLength = getStarburstRayLength(
+    getStarburstRayValueForInterval(activeInterval),
+    starburstQuillOuterRadius,
+    starburstRadius,
+  );
   return (
     <>
+      <View
+        style={{
+          backgroundColor: futureLabelColor,
+          height: starburstThickness,
+          position: "absolute",
+          left: activeIntervalRayLength,
+          width: starburstRadius - activeIntervalRayLength,
+        }}
+      />
       {sequence.map(({ interval, label }, index) => (
         <StarburstLegendEntry
           key={index}
