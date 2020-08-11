@@ -227,7 +227,7 @@ PODS:
     - UMCore
   - EXErrorRecovery (1.2.1):
     - UMCore
-  - EXFileSystem (9.0.1):
+  - EXFileSystem (9.1.0):
     - UMCore
     - UMFileSystemInterface
   - EXFont (8.2.1):
@@ -250,12 +250,13 @@ PODS:
     - UMPermissionsInterface
   - EXRandom (8.2.1):
     - UMCore
-  - EXSplashScreen (0.3.1):
+  - EXSplashScreen (0.5.0):
+    - React
     - UMCore
   - EXSQLite (8.2.1):
     - UMCore
     - UMFileSystemInterface
-  - EXUpdates (0.2.11):
+  - EXUpdates (0.2.14):
     - React
     - UMCore
   - FBLazyVector (0.63.2)
@@ -660,7 +661,7 @@ DEPENDENCIES:
   - EXConstants (from `../../../node_modules/expo-constants/ios`)
   - EXDevice (from `../../../node_modules/expo-device/ios`)
   - EXErrorRecovery (from `../../../node_modules/expo-error-recovery/ios`)
-  - EXFileSystem (from `../../../node_modules/expo-file-system/ios`)
+  - EXFileSystem (from `../../../node_modules/metabook-app/node_modules/expo-file-system/ios`)
   - EXFont (from `../../../node_modules/expo-font/ios`)
   - EXImageLoader (from `../../../node_modules/expo-image-loader/ios`)
   - EXKeepAwake (from `../../../node_modules/expo-keep-awake/ios`)
@@ -755,7 +756,7 @@ EXTERNAL SOURCES:
   EXErrorRecovery:
     :path: "../../../node_modules/expo-error-recovery/ios"
   EXFileSystem:
-    :path: "../../../node_modules/expo-file-system/ios"
+    :path: "../../../node_modules/metabook-app/node_modules/expo-file-system/ios"
   EXFont:
     :path: "../../../node_modules/expo-font/ios"
   EXImageLoader:
@@ -879,7 +880,7 @@ SPEC CHECKSUMS:
   EXConstants: f907b3b6ce16e20d1750f22af1e095e924574bcb
   EXDevice: befd3b2619915e615c3753c9f83309808aa0cdf5
   EXErrorRecovery: 500f1d4231c534f415e86caeb3fc677c7f5dd23c
-  EXFileSystem: 76875135b61708b9afa7e6a89b72a60ba0fdfa20
+  EXFileSystem: 14d8859c167fba01e36dc704f548b0b58fc4d92e
   EXFont: d6cabb73989fc29296972c52915a023f46b2c7f5
   EXImageLoader: 02ca02c9cd5cc8a97b423207a73a791e0a86bea5
   EXKeepAwake: 8b0f68242f036b971f9f8976341823cbe6f50812
@@ -887,9 +888,9 @@ SPEC CHECKSUMS:
   EXLocation: e93020e255f52a1cc031e0f45b0a24eb20fc4b55
   EXPermissions: 80ac3acbdb145930079810fe5b08c022b3428aa8
   EXRandom: a375fb6bed8a0919a795766b8d5218b1200538b7
-  EXSplashScreen: c4ed5d39cd5dbc1329f8dec720e280276bafa28b
+  EXSplashScreen: 9423d258b71afa5bf128a83dcb57b636d9900a74
   EXSQLite: 64611c1b369c0f1e9cae4e551d0aa4478a58cadf
-  EXUpdates: 5c9ccb55ea060e24e281d19248a50b7faba5fc59
+  EXUpdates: f3c4943abb6ab28cc55cbeac4ff4612701f82725
   FBLazyVector: 3ef4a7f62e7db01092f9d517d2ebc0d0677c4a37
   FBReactNativeSpec: dc7fa9088f0f2a998503a352b0554d69a4391c5a
   Firebase: 5719b4f965f76643241a1bb8244483ff6117db39

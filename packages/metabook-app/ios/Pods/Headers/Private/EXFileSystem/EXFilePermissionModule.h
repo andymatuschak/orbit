@@ -1,1 +1,1 @@
-../../../../../../../node_modules/expo-file-system/ios/EXFileSystem/EXFilePermissionModule.h
+../../../../../../../node_modules/metabook-app/node_modules/expo-file-system/ios/EXFileSystem/EXFilePermissionModule.h
