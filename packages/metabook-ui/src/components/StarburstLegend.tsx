@@ -40,25 +40,39 @@ function StarburstLegendEntry({
     outputRange: [pastLabelColor, presentLabelColor, futureLabelColor],
   });
 
+  const rayTickWidth = 2;
+
   return (
-    <View
-      style={{
-        position: "absolute",
-        left: rayLength - 25,
-        top: starburstThickness + layout.gridUnit,
-        width: 50,
-      }}
-    >
-      <Animated.Text
-        style={[
-          type.caption.layoutStyle,
-          { color: animatedColor, textAlign: "center" },
-        ]}
-        selectable={false}
+    <>
+      <View
+        style={{
+          backgroundColor:
+            status === "future" ? futureLabelColor : backgroundColor,
+          position: "absolute",
+          left: rayLength - rayTickWidth / 2 - 1, // Not sure why the - 1 is required here.
+          height: starburstThickness,
+          width: rayTickWidth,
+        }}
+      />
+      <View
+        style={{
+          position: "absolute",
+          left: rayLength - 25,
+          top: starburstThickness + layout.gridUnit,
+          width: 50,
+        }}
       >
-        {label}
-      </Animated.Text>
-    </View>
+        <Animated.Text
+          style={[
+            type.caption.layoutStyle,
+            { color: animatedColor, textAlign: "center" },
+          ]}
+          selectable={false}
+        >
+          {label}
+        </Animated.Text>
+      </View>
+    </>
   );
 }
 
