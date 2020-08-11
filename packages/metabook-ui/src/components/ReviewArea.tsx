@@ -321,6 +321,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
               pastLabelColor={colors.white}
               presentLabelColor={colors.white}
               futureLabelColor={colors.ink}
+              futureTickColor={tertiaryColor}
               backgroundColor={backgroundColor}
             />
           </View>

@@ -16,6 +16,7 @@ function StarburstLegendEntry({
   pastLabelColor,
   presentLabelColor,
   futureLabelColor,
+  futureTickColor,
   backgroundColor,
 }: {
   rayLength: number;
@@ -25,6 +26,7 @@ function StarburstLegendEntry({
   pastLabelColor: string;
   presentLabelColor: string;
   futureLabelColor: string;
+  futureTickColor: string;
   backgroundColor: string;
 }) {
   const statusIndex = { past: 0, present: 1, future: 2 }[status];
@@ -40,20 +42,23 @@ function StarburstLegendEntry({
     outputRange: [pastLabelColor, presentLabelColor, futureLabelColor],
   });
 
-  const rayTickWidth = 2;
+  const rayTickWidth = status === "future" ? starburstThickness : 2;
 
   return (
     <>
       <View
         style={{
           backgroundColor:
-            status === "future" ? backgroundColor : backgroundColor,
+            status === "future" ? futureLabelColor : backgroundColor,
           position: "absolute",
+          borderRadius:
+            status === "future" ? starburstThickness / 2 : undefined,
           left: rayLength - rayTickWidth / 2 - 1, // Not sure why the - 1 is required here.
           height: starburstThickness,
           width: rayTickWidth,
         }}
       />
+
       <View
         style={{
           position: "absolute",
@@ -96,6 +101,7 @@ export default function StarburstLegend({
   pastLabelColor,
   presentLabelColor,
   futureLabelColor,
+  futureTickColor,
   backgroundColor,
 }: StarburstLegendProps) {
   const sequence = getIntervalSequenceForSchedule("default").slice(1);
@@ -112,15 +118,6 @@ export default function StarburstLegend({
   );
   return (
     <>
-      <View
-        style={{
-          backgroundColor: futureLabelColor,
-          height: starburstThickness,
-          position: "absolute",
-          left: activeIntervalRayLength,
-          width: starburstRadius - activeIntervalRayLength,
-        }}
-      />
       {sequence.map(({ interval, label }, index) => (
         <StarburstLegendEntry
           key={index}
@@ -143,6 +140,7 @@ export default function StarburstLegend({
           pastLabelColor={pastLabelColor}
           presentLabelColor={presentLabelColor}
           futureLabelColor={futureLabelColor}
+          futureTickColor={futureTickColor}
           backgroundColor={backgroundColor}
         />
       ))}
