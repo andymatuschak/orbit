@@ -19,8 +19,12 @@ import FadeView from "./FadeView";
 import usePrevious from "./hooks/usePrevious";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import { IconName } from "./Icon";
-import Starburst from "./Starburst";
-import lerp from "../util/lerp";
+import Starburst, {
+  getStarburstQuillInnerRadius,
+  getStarburstQuillOuterRadius,
+  getStarburstRayValueForInterval,
+} from "./Starburst";
+import StarburstLegend from "./StarburstLegend";
 
 type Size = { width: number; height: number };
 
@@ -38,6 +42,7 @@ export interface ReviewAreaProps {
   accentColor: string;
   secondaryColor: string;
   tertiaryColor: string;
+  backgroundColor: string;
 
   safeInsets?: { top: number; bottom: number };
 
@@ -137,6 +142,7 @@ const PromptContainer = React.memo(function PromptContainer({
   );
 });
 
+const starburstThickness = 3;
 export default function ReviewArea(props: ReviewAreaProps) {
   const {
     items,
@@ -147,6 +153,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
     accentColor,
     secondaryColor,
     tertiaryColor,
+    backgroundColor,
   } = props;
 
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
@@ -230,35 +237,13 @@ export default function ReviewArea(props: ReviewAreaProps) {
 
   const starburstEntries = useMemo(
     () =>
-      items.map((item, index) => {
-        // TODO extract, move to Starburst.tsx.
-        const firstInterval = 1000 * 60 * 60 * 24 * 5; // 5 days;
-        const maxInterval = 1000 * 60 * 60 * 24 * 365; // half a year;
-        let length = 0;
-        // TODO: use true interval
-        if (item.promptState && item.promptState.intervalMillis > 0) {
-          const logInterval = Math.log2(item.promptState?.intervalMillis);
-          length = lerp(
-            logInterval,
-            Math.log2(firstInterval),
-            Math.log2(maxInterval),
-            0.1,
-            1,
-          );
-        }
-        // console.log(
-        //   `${
-        //     (item.promptState?.intervalMillis ?? 0) / (1000 * 60 * 60 * 24)
-        //   } days -> ${length}`,
-        //   Math.log2(item.promptState?.intervalMillis ?? 0),
-        //   Math.log2(maxInterval),
-        // );
+      items.map((item, index) => ({
+        value: item.promptState
+          ? getStarburstRayValueForInterval(item.promptState.intervalMillis) // TODO use effective interval
+          : 0,
         // TODO: implement more proper "is finished" color determination
-        return {
-          length,
-          color: index < currentItemIndex ? secondaryColor : tertiaryColor,
-        };
-      }),
+        color: index < currentItemIndex ? secondaryColor : tertiaryColor,
+      })),
     [items, currentItemIndex, secondaryColor, tertiaryColor],
   );
 
@@ -266,11 +251,22 @@ export default function ReviewArea(props: ReviewAreaProps) {
     .concat(items.slice(currentItemIndex))
     .slice(0, maximumCardsToRender);
 
-  const starburstWidth = columnLayout
+  const starburstRadius = columnLayout
     ? getColumnSpan(
         Math.min(2, columnLayout.columnCount),
         columnLayout.columnWidth,
-      ) * 2
+      )
+    : null;
+  const starburstOrigin = columnLayout
+    ? ([
+        columnLayout!.edgeMargin -
+          getStarburstQuillInnerRadius(
+            starburstEntries.length,
+            starburstThickness,
+          ),
+        // We position the bottom of the 3:00 ray at the bottom of a grid row, so that we can lay out other elements in even grid unit multiple from there.
+        layout.gridUnit * 6 - starburstThickness / 2 + (safeInsets?.top ?? 0),
+      ] as const)
     : null;
 
   return (
@@ -296,17 +292,36 @@ export default function ReviewArea(props: ReviewAreaProps) {
     >
       {size && (
         <>
-          <View style={[StyleSheet.absoluteFill]}>
+          <View style={StyleSheet.absoluteFill}>
             <Starburst
-              size={starburstWidth!}
+              diameter={starburstRadius! * 2}
               entries={starburstEntries}
-              thickness={3}
-              origin={[
-                columnLayout!.edgeMargin,
-                layout.gridUnit * 6 + (safeInsets?.top ?? 0),
-              ]}
+              thickness={starburstThickness}
+              origin={starburstOrigin!}
               entryAtHorizontal={currentItemIndex}
               accentOverlayColor={accentColor}
+            />
+          </View>
+          <View
+            style={{
+              position: "absolute",
+              left: starburstOrigin![0],
+              top: starburstOrigin![1] - starburstThickness / 2,
+              width: starburstRadius!,
+            }}
+          >
+            <StarburstLegend
+              activeInterval={currentItem?.promptState?.intervalMillis ?? 0} // TODO use effective interval
+              starburstThickness={starburstThickness}
+              starburstRadius={starburstRadius!}
+              starburstQuillOuterRadius={getStarburstQuillOuterRadius(
+                starburstEntries.length,
+                starburstThickness,
+              )}
+              pastLabelColor={colors.ink}
+              presentLabelColor={colors.white}
+              futureLabelColor={colors.ink}
+              backgroundColor={backgroundColor}
             />
           </View>
           <View

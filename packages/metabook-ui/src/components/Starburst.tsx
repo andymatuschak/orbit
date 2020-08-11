@@ -9,6 +9,53 @@ import WithAnimatedValue = Animated.WithAnimatedValue;
 const AnimatedG = Animated.createAnimatedComponent(G);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
+// Returns the distance from the center of the starburst to the point of each ray's tapered quill.
+export function getStarburstQuillInnerRadius(
+  rayCount: number,
+  thickness: number,
+): number {
+  const innerRadiusSpacing = thickness / 3.25; // The number of pixels space between spokes at their tapered points.
+  const segmentAngle = (2 * Math.PI) / rayCount;
+  return (innerRadiusSpacing * 2.0) / Math.sin(segmentAngle);
+}
+
+// Returns the distance from the center of the starburst to the end of each ray's tapered quill (i.e. where the ray becomes a simple stroke).
+export function getStarburstQuillOuterRadius(
+  rayCount: number,
+  thickness: number,
+): number {
+  const outerRadiusSpacing = thickness / 2.75; // The number of pixels space between between spokes at their thickest points.
+  const segmentAngle = (2 * Math.PI) / rayCount;
+  return (thickness + outerRadiusSpacing * 2.0) / Math.sin(segmentAngle);
+}
+
+// Returns the length of a ray, measured from the center of the starburst to its outer tip.
+export function getStarburstRayLength(
+  value: number,
+  quillOuterRadius: number,
+  starburstRadius: number,
+): number {
+  return lerp(value, 0, 1, quillOuterRadius * 2.0, starburstRadius);
+}
+
+export function getStarburstRayValueForInterval(intervalMillis: number) {
+  if (intervalMillis <= 0) {
+    return 0;
+  }
+
+  // TODO: these constants will need to move somewhere to avoid coupling with StarburstLegend.
+  const firstInterval = 1000 * 60 * 60 * 24 * 5; // 5 days;
+  const maxInterval = 1000 * 60 * 60 * 24 * 365; // a year;
+
+  return lerp(
+    Math.log2(intervalMillis),
+    Math.log2(firstInterval),
+    Math.log2(maxInterval),
+    0.1,
+    1,
+  );
+}
+
 function getRayPath(
   innerRadius: number,
   outerRadius: number,
@@ -18,29 +65,29 @@ function getRayPath(
 ): string {
   const unitX = Math.cos(theta);
   const unitY = -1 * Math.sin(theta);
-  const x1 = 0.5 + outerRadius * unitX;
-  const x2 = 0.5 + strokeRadius * unitX;
-  const y1 = 0.5 + outerRadius * unitY;
-  const y2 = 0.5 + strokeRadius * unitY;
+  const x1 = outerRadius * unitX;
+  const x2 = strokeRadius * unitX;
+  const y1 = outerRadius * unitY;
+  const y2 = strokeRadius * unitY;
   const xThickness = 0.5 * thickness * -unitY;
   const yThickness = 0.5 * thickness * unitX;
 
   const localQuillLength = outerRadius - innerRadius;
   // The coordinates for the tapered quill at the end of the starburst rays were extracted from an SVG. This function transforms a point in that template SVG's coordinate space to the space of the ray.
   function quillPoint(x: number, y: number) {
-    const quillPathLength = 1.75; // The quill is 1pt high in the template SVG.
+    const quillPathLength = 1.75;
     // Translate the center of the quill tip to the origin.
     x -= 0.5 * quillPathLength;
-    y -= 0.5;
+    y -= 0.5; // The quill is 1pt high in the template SVG.
     // Scale it to the appropriate length and thickness.
     x *= localQuillLength / quillPathLength;
     y *= thickness;
     // Translate it so that its tip touches the inner radius.
-    x += 0.5 + innerRadius + 0.5 * localQuillLength;
-    y += 0.5;
+    x += innerRadius + 0.5 * localQuillLength;
+    // We keep y as is, centered about the middle of the quill.
     // Rotate it about the inner radius circle.
-    const finalX = unitX * x - unitY * y + 0.5 * (1 - unitX + unitY);
-    const finalY = unitY * x + unitX * y + 0.5 * (1 - unitY - unitX);
+    const finalX = unitX * x - unitY * y;
+    const finalY = unitY * x + unitX * y;
     return `${finalX} ${finalY}`;
   }
 
@@ -68,7 +115,7 @@ function getRayPath(
 
 interface AnimationState {
   entryIndex: number;
-  fromLength: number;
+  fromValue: number;
   value: Animated.Value;
 }
 
@@ -79,22 +126,22 @@ const animationTiming: Omit<Animated.SpringAnimationConfig, "toValue"> = {
 };
 
 export interface StarburstProps {
-  size: number;
+  diameter: number; // the diameter of the starburst
   entries: StarburstEntry[];
   thickness: number;
   accentOverlayColor?: string;
   entryAtHorizontal?: number;
-  origin?: readonly [number, number]; // positions the center of the starburst at this position, in pixels, expressed from the top-left of the starburst element
+  origin?: readonly [number, number]; // positions the tip of the 3:00 stroke of the starburst at this position, in pixels, expressed from the top-left of the starburst element
 }
 
 export interface StarburstEntry {
-  length: number; // [0,1]
+  value: number; // [0,1], where 0 will display as the shortest starburst ray and 1 the longest
   color: string;
 }
 
 export default React.memo(function Starburst({
   entries,
-  size,
+  diameter,
   thickness,
   accentOverlayColor,
   entryAtHorizontal,
@@ -105,17 +152,16 @@ export default React.memo(function Starburst({
     previousEntries && entries.length === previousEntries.length;
   const animationState = useRef<AnimationState>();
 
-  const segmentSin = Math.sin((2 * Math.PI) / entries.length);
-  const innerRadiusSpacing = thickness / 3.25; // The space between spokes at their tapered points.
-  const outerRadiusSpacing = thickness / 2.75; // The tightest margin between spokes at their thickest points.
-  const innerRadius = (innerRadiusSpacing * 2.0) / size / segmentSin;
-  const outerRadius =
-    (thickness + outerRadiusSpacing * 2.0) / size / segmentSin;
-  const unitThickness = thickness / size;
-
-  function getRadiusForEntryLength(length: number): number {
-    return lerp(length, 0, 1, outerRadius, 0.5);
-  }
+  const radius = diameter / 2;
+  const unitThickness = thickness / radius;
+  const quillInnerRadius = getStarburstQuillInnerRadius(
+    entries.length,
+    unitThickness,
+  );
+  const quillOuterRadius = getStarburstQuillOuterRadius(
+    entries.length,
+    unitThickness,
+  );
 
   const allPaths: string[] = [];
   const pathsByColor: { [key: string]: string[] } = {};
@@ -124,12 +170,12 @@ export default React.memo(function Starburst({
     index: number;
     fromPath: string;
   } | null = null;
-  entries.forEach(({ length, color }, index) => {
+  entries.forEach(({ value, color }, index) => {
     const theta = (-index / entries.length) * 2 * Math.PI;
-    const strokeRadius = getRadiusForEntryLength(length);
+    const strokeRadius = getStarburstRayLength(value, quillOuterRadius, 1);
     const path = getRayPath(
-      innerRadius,
-      outerRadius,
+      quillInnerRadius,
+      quillOuterRadius,
       strokeRadius,
       theta,
       unitThickness,
@@ -141,15 +187,16 @@ export default React.memo(function Starburst({
     pathsByColor[color].push(path);
     allPaths.push(path);
 
-    if (canAnimateEntries && length !== previousEntries![index].length) {
+    // Start an animation if the entry has changed in length.
+    if (canAnimateEntries && value !== previousEntries![index].value) {
       if (animationState.current) {
         animationState.current.value.stopAnimation();
       }
-      const fromLength = previousEntries![index].length;
+      const fromLength = previousEntries![index].value;
       const animatedLength = new Animated.Value(0);
       animationState.current = {
         entryIndex: index,
-        fromLength,
+        fromValue: fromLength,
         value: animatedLength,
       };
       Animated.spring(animatedLength, {
@@ -164,9 +211,13 @@ export default React.memo(function Starburst({
         color,
         index: pathsByColor[color].length - 1,
         fromPath: getRayPath(
-          innerRadius,
-          outerRadius,
-          getRadiusForEntryLength(animationState.current.fromLength),
+          quillInnerRadius,
+          quillOuterRadius,
+          getStarburstRayLength(
+            animationState.current.fromValue,
+            quillOuterRadius,
+            1,
+          ),
           theta,
           unitThickness,
         ),
@@ -181,17 +232,6 @@ export default React.memo(function Starburst({
         : 0,
     timing: { ...animationTiming, type: "spring" },
   }).interpolate({ inputRange: [0, 360], outputRange: ["0deg", "360deg"] });
-  const rotationStyle = {
-    transform: [
-      // Rotate about 0.5, 0.5.
-      { translateX: 0.5 },
-      { translateY: 0.5 },
-      { rotate: outerRotationDegrees },
-      { translateX: -0.5 },
-      { translateY: -0.5 },
-    ],
-  };
-
   function getAnimatedPath(
     paths: string[],
     animatingEntry: { index: number; oldValue: string } | null,
@@ -220,22 +260,24 @@ export default React.memo(function Starburst({
   let width: number;
   let height: number;
   if (origin) {
-    const x = 0.5 - origin[0] / size;
-    const y = 0.5 - origin[1] / size;
+    const x = -origin[0] / radius;
+    const y = -origin[1] / radius;
     viewBox = `${x} ${y} ${1 - x} ${1 - y}`;
-    width = size / 2 + origin[0];
-    height = size / 2 + origin[1];
+    width = radius + origin[0];
+    height = radius + origin[1];
   } else {
-    viewBox = "0 0 1 1";
-    width = size;
-    height = size;
+    viewBox = "-1 -1 2 2";
+    width = diameter;
+    height = diameter;
   }
 
   return (
     <Svg height={height} width={width} viewBox={viewBox}>
       <AnimatedG
         // @ts-ignore The type definition is missing this prop, but it's there!
-        style={rotationStyle}
+        style={{
+          transform: [{ rotate: outerRotationDegrees }],
+        }}
       >
         {Object.keys(pathsByColor).map((color) => {
           return (
@@ -259,13 +301,21 @@ export default React.memo(function Starburst({
         <>
           <ClipPath id="accentPath">
             <Path
-              d={getRayPath(innerRadius, outerRadius, 0.5, 0, unitThickness)}
+              d={getRayPath(
+                quillInnerRadius,
+                quillOuterRadius,
+                1,
+                0,
+                unitThickness,
+              )}
             />
           </ClipPath>
           <G clipPath="url(#accentPath)">
             <AnimatedG
               // @ts-ignore The type definition is missing this prop, but it's there!
-              style={rotationStyle}
+              style={{
+                transform: [{ rotate: outerRotationDegrees }],
+              }}
             >
               <AnimatedPath
                 d={getAnimatedPath(

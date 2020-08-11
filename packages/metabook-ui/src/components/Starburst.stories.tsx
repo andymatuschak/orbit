@@ -1,18 +1,17 @@
 import {
-  withKnobs,
-  number,
-  text,
   boolean,
-  select,
   button,
+  number,
+  select,
+  text,
+  withKnobs,
 } from "@storybook/addon-knobs";
-import React, { useState, useMemo, useEffect } from "react";
-import { View, Text, Animated } from "react-native";
-import { useTransitioningValue } from "./hooks/useTransitioningValue";
-import Starburst from "./Starburst";
+import React, { useEffect, useState } from "react";
+import { Text, View } from "react-native";
 import seedrandom from "seedrandom";
-import lerp from "../util/lerp";
 import { colors } from "../styles";
+import lerp from "../util/lerp";
+import Starburst from "./Starburst";
 
 export default {
   title: "Starburst",
@@ -20,21 +19,21 @@ export default {
   decorators: [withKnobs],
 };
 
-function StarburstGrid(props: { size: number }) {
+function StarburstGrid(props: { diameter: number }) {
   const minCount = number("Min count", 5);
   const children = Array.from(
     new Array(number("Count", number("Max count", 120) - minCount)).keys(),
   ).map((i) => {
     const strokeCount = i + minCount;
     const entries = Array.from(new Array(strokeCount)).map(() => ({
-      length: Math.random(),
+      value: Math.random(),
       color: "black",
     }));
     return (
       <View key={i}>
         <Text>{strokeCount}</Text>
         <Starburst
-          size={props.size}
+          diameter={props.diameter}
           entries={entries}
           thickness={number("Thickness", 4)}
         />
@@ -53,7 +52,7 @@ export function Sandbox() {
   const minLength = number("Line min", 0);
   const maxLength = number("Line max", 1);
 
-  const size = number("Size", 500);
+  const diameter = number("Size", 500);
 
   let colorComposition: typeof colors.compositions[0];
   let backgroundColor: string;
@@ -165,7 +164,7 @@ export function Sandbox() {
   const [currentEntry, setCurrentEntry] = useState(0);
   // const currentEntry = number("Current entry number", 0);
 
-  const [lengths, setLengths] = useState<number[]>([]);
+  const [values, setLengths] = useState<number[]>([]);
   useEffect(() => {
     const rng = seedrandom(seed);
     setLengths(
@@ -190,8 +189,8 @@ export function Sandbox() {
     }, delay);
   });
 
-  const entries = lengths.map((length, index) => ({
-    length,
+  const entries = values.map((value, index) => ({
+    value,
     color: index < currentEntry ? completedStrokeColor : strokeColor,
   }));
 
@@ -227,7 +226,7 @@ export function Sandbox() {
           }}
         >
           <Starburst
-            size={size}
+            diameter={diameter}
             entries={entries}
             thickness={number("Thickness", 4)}
             accentOverlayColor={accentColor}
@@ -241,9 +240,9 @@ export function Sandbox() {
 }
 
 export function MediumSize() {
-  return <StarburstGrid size={number("Size", 300)} />;
+  return <StarburstGrid diameter={number("Diameter", 300)} />;
 }
 
 export function ReviewSize() {
-  return <StarburstGrid size={number("Size", 700)} />;
+  return <StarburstGrid diameter={number("Diameter", 700)} />;
 }

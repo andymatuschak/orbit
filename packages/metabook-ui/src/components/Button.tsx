@@ -121,7 +121,6 @@ export default function Button(props: ButtonProps) {
       (() => {
         console.log("Opening url");
         Linking.openURL(href!).catch((error) => {
-          // console.error("Couldn't open", href, error);
           Alert.alert(
             "Couldn't open link",
             `You may need to install an app to open this URL: ${href}`,

@@ -50,7 +50,7 @@ export function Palette() {
   );
 }
 
-const starburstLengths = [
+const starburstValues = [
   0.2,
   1.0,
   0.3,
@@ -113,11 +113,11 @@ function CompositionTest({
         }}
       >
         <Starburst
-          size={width * 2}
-          entries={starburstLengths.map((length, i) => {
+          diameter={width * 2}
+          entries={starburstValues.map((value, i) => {
             return {
               color: i < numberComplete ? secondaryColor : tertiaryColor,
-              length,
+              value,
             };
           })}
           thickness={3}
@@ -125,28 +125,27 @@ function CompositionTest({
           accentOverlayColor={accentColor}
         />
       </View>
-      <Caption
+      <View
         style={{
           marginBottom: layout.gridUnit,
           marginTop: layout.gridUnit * 7,
         }}
       >
-        5d
-      </Caption>
+        <Caption>5d</Caption>
+      </View>
 
-      <Body
-        color={accentColor}
+      <View
         style={{
           marginBottom: layout.gridUnit,
           marginTop: layout.gridUnit * 18,
         }}
       >
-        Source context
-      </Body>
+        <Body color={accentColor}>Source context</Body>
+      </View>
       <Title>Primary content</Title>
-      <Label color={colors.white} style={{ marginTop: 128 }}>
-        Button
-      </Label>
+      <View style={{ marginTop: 128 }}>
+        <Label color={colors.white}>Button</Label>
+      </View>
     </View>
   );
 }

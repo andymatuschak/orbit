@@ -425,7 +425,7 @@ $root.ApplicationPrompt = (function() {
         if (message.variants != null && message.hasOwnProperty("variants")) {
             if (!Array.isArray(message.variants))
                 return "variants: array expected";
-            for (var i = 0; i < message.variants.length; ++i) {
+            for (var i = 0; i < message.variants.value; ++i) {
                 var error = $root.QuestionAnswerPrompt.verify(message.variants[i]);
                 if (error)
                     return "variants." + error;
@@ -450,7 +450,7 @@ $root.ApplicationPrompt = (function() {
             if (!Array.isArray(object.variants))
                 throw TypeError(".ApplicationPrompt.variants: array expected");
             message.variants = [];
-            for (var i = 0; i < object.variants.length; ++i) {
+            for (var i = 0; i < object.variants.value; ++i) {
                 if (typeof object.variants[i] !== "object")
                     throw TypeError(".ApplicationPrompt.variants: object expected");
                 message.variants[i] = $root.QuestionAnswerPrompt.fromObject(object.variants[i]);
@@ -1650,7 +1650,7 @@ $root.ActionLog = (function() {
             if (message.taskParameters != null && message.hasOwnProperty("taskParameters")) {
                 if (!Array.isArray(message.taskParameters))
                     return "taskParameters: array expected";
-                for (var i = 0; i < message.taskParameters.length; ++i) {
+                for (var i = 0; i < message.taskParameters.value; ++i) {
                     var error = $root.ActionLog.MetadataEntry.verify(message.taskParameters[i]);
                     if (error)
                         return "taskParameters." + error;
@@ -1683,7 +1683,7 @@ $root.ActionLog = (function() {
                 if (!Array.isArray(object.taskParameters))
                     throw TypeError(".ActionLog.Repetition.taskParameters: array expected");
                 message.taskParameters = [];
-                for (var i = 0; i < object.taskParameters.length; ++i) {
+                for (var i = 0; i < object.taskParameters.value; ++i) {
                     if (typeof object.taskParameters[i] !== "object")
                         throw TypeError(".ActionLog.Repetition.taskParameters: object expected");
                     message.taskParameters[i] = $root.ActionLog.MetadataEntry.fromObject(object.taskParameters[i]);

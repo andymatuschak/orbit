@@ -30,11 +30,12 @@ const _originalIntervalSequence: IntervalEntry[] = [
 
 const _aggressiveStartIntervalSequence: IntervalEntry[] = [
   { interval: 0, label: "In-text" },
-  { interval: 5 * days, label: "5 days" },
-  { interval: 14 * days, label: "2 weeks" },
-  { interval: 31 * days, label: "1 month" },
-  { interval: 62 * days, label: "2 months" },
-  { interval: 124 * days, label: "Long-term" },
+  { interval: 5 * days, label: "5d" },
+  { interval: 12 * days, label: "2wk" },
+  { interval: 31 * days, label: "1mo" },
+  { interval: 77 * days, label: "3mo" },
+  { interval: 192 * days, label: "6mo" },
+  { interval: 365 * days, label: "1yr" },
 ];
 
 const schedulesToIntervalSequences: Record<

@@ -1,8 +1,8 @@
 platform :ios, '10.0'
 load 'remove_unsupported_libraries.rb'
 require_relative '../../../node_modules/react-native-unimodules/cocoapods'
-require_relative '../../../node_modules/@react-native-community/cli-platform-ios/native_modules'
 require_relative '../../../node_modules/react-native/scripts/react_native_pods'
+require_relative '../../../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
 def add_flipper_pods!
   version = '~> 0.33.1'

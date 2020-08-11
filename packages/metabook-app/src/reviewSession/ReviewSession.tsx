@@ -10,22 +10,20 @@ import {
   repetitionActionLogType,
 } from "metabook-core";
 import {
+  Headline,
   ReviewArea,
   ReviewAreaProps,
   ReviewItem,
-  useTransitioningValue,
   styles,
-  Headline,
+  useTransitioningValue,
 } from "metabook-ui";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
 
 import DebugGrid from "metabook-ui/dist/components/DebugGrid";
 import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Animated, Platform, View, Easing } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { Animated, Easing, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { UserRecord } from "../authentication";
 import DatabaseManager from "../model/databaseManager";
 import {
   useAuthenticationClient,
@@ -38,7 +36,6 @@ import {
   getFirestore,
   PersistenceStatus,
 } from "../util/firebase";
-import { UserRecord } from "../authentication";
 
 function usePersistenceStatus() {
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(
@@ -132,8 +129,6 @@ function onMark(
     });
 }
 
-const AnimatedSafeAreaView = Animated.createAnimatedComponent(SafeAreaView);
-
 export default function ReviewSession() {
   const userRecord = useCurrentUserRecord(useAuthenticationClient());
   const databaseManager = useDatabaseManager(userRecord);
@@ -199,7 +194,9 @@ export default function ReviewSession() {
       {items ? (
         currentQueueIndex < items.length ? (
           <View style={{ flex: 1 }}>
-            {/*<DebugGrid />*/}
+            {/*<View style={[StyleSheet.absoluteFill, { top: insets.top }]}>*/}
+            {/*  <DebugGrid shouldShowMajorDivisions />*/}
+            {/*</View>*/}
             <ReviewArea
               items={items}
               currentItemIndex={currentQueueIndex}
@@ -210,14 +207,14 @@ export default function ReviewSession() {
             />
           </View>
         ) : (
-          <Headline
+          <View
             style={{
-              textAlign: "center",
-              color: styles.colors.white,
-              marginLeft: styles.layout.gridUnit,
+              marginLeft: styles.layout.gridUnit, // TODO: use grid layout
               marginRight: styles.layout.gridUnit,
             }}
-          >{`All caught up!\nNothing's due for review.`}</Headline>
+          >
+            <Headline>{`All caught up!\nNothing's due for review.`}</Headline>
+          </View>
         )
       ) : null}
     </Animated.View>
