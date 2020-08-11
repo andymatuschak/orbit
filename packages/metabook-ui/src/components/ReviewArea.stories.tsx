@@ -1,11 +1,11 @@
-import { testBasicPrompt } from "metabook-sample-data";
-import React, { useCallback, useState, useMemo } from "react";
-import { Easing, View, Animated } from "react-native";
-import { ReviewItem } from "../reviewItem";
-import { useTransitioningValue } from "./hooks/useTransitioningValue";
-import ReviewArea from "./ReviewArea";
-import { colors } from "../styles";
 import { number, withKnobs } from "@storybook/addon-knobs";
+import { getIntervalSequenceForSchedule } from "metabook-core";
+import { testBasicPrompt } from "metabook-sample-data";
+import React, { useCallback, useMemo, useState } from "react";
+import { Animated, Easing, View } from "react-native";
+import { ReviewItem } from "../reviewItem";
+import { colors } from "../styles";
+import ReviewArea from "./ReviewArea";
 
 // noinspection JSUnusedGlobalSymbols
 export default {
@@ -14,10 +14,23 @@ export default {
   decorators: [withKnobs()],
 };
 
+const intervalSequence = getIntervalSequenceForSchedule("default");
 function generateReviewItem(questionText: string): ReviewItem {
   return {
     reviewItemType: "prompt",
-    promptState: null,
+    promptState: {
+      dueTimestampMillis: 0,
+      headActionLogIDs: [],
+      intervalMillis:
+        intervalSequence[
+          Math.floor(Math.random() * (intervalSequence.length - 1))
+        ].interval,
+      bestIntervalMillis: null,
+      lastReviewTaskParameters: null,
+      lastReviewTimestampMillis: 0,
+      needsRetry: false,
+      taskMetadata: { isDeleted: false, provenance: null },
+    },
     prompt: {
       ...testBasicPrompt,
       question: { contents: questionText, attachments: [] },
