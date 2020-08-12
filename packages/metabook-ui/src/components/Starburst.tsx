@@ -58,6 +58,7 @@ export function getStarburstRayValueForInterval(intervalMillis: number) {
   );
 }
 
+const rayPathCache: { [key: number]: string } = {};
 function getRayPath(
   innerRadius: number,
   outerRadius: number,
@@ -65,6 +66,21 @@ function getRayPath(
   theta: number,
   thickness: number,
 ): string {
+  function getCacheKey(): number {
+    let hash = innerRadius;
+    const prime = 31;
+    hash = hash * prime + outerRadius;
+    hash = hash * prime + strokeRadius;
+    hash = hash * prime + theta;
+    hash = hash * prime + thickness;
+    return hash;
+  }
+
+  const cacheKey = getCacheKey();
+  if (rayPathCache[cacheKey]) {
+    return rayPathCache[cacheKey];
+  }
+
   const unitX = Math.cos(theta);
   const unitY = -1 * Math.sin(theta);
   const x1 = outerRadius * unitX;
@@ -93,7 +109,7 @@ function getRayPath(
     return `${finalX} ${finalY}`;
   }
 
-  return `M${quillPoint(0.875, 0.10825)}C${quillPoint(
+  const pathString = `M${quillPoint(0.875, 0.10825)}C${quillPoint(
     0.5835,
     0.18575,
   )} ${quillPoint(0.29175, 0.293)} ${quillPoint(0, 0.5)}C${quillPoint(
@@ -113,6 +129,8 @@ function getRayPath(
     1.16675,
     0.035,
   )} ${quillPoint(0.875, 0.10825)}`;
+  rayPathCache[cacheKey] = pathString;
+  return pathString;
 }
 
 interface AnimationState {
