@@ -16,6 +16,11 @@ export type AttachmentResolutionMap = Map<AttachmentID, AttachmentURLReference>;
 interface BasePromptReviewItem {
   reviewItemType: typeof promptReviewItemType;
   attachmentResolutionMap: AttachmentResolutionMap | null;
+
+  accentColor: string;
+  secondaryColor: string;
+  tertiaryColor: string;
+  backgroundColor: string;
 }
 
 export interface BasicPromptReviewItem extends BasePromptReviewItem {

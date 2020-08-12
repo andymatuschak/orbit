@@ -27,7 +27,10 @@ export default {
 };
 
 const intervalSequence = getIntervalSequenceForSchedule("default");
-function generateReviewItem(questionText: string): ReviewItem {
+function generateReviewItem(
+  questionText: string,
+  colorComposition: typeof colors.compositions[number],
+): ReviewItem {
   const intervalMillis =
     intervalSequence[Math.floor(Math.random() * (intervalSequence.length - 1))]
       .interval;
@@ -58,6 +61,7 @@ function generateReviewItem(questionText: string): ReviewItem {
     },
     promptParameters: null,
     attachmentResolutionMap: null,
+    ...colorComposition,
   };
 }
 
@@ -71,7 +75,7 @@ export function Basic() {
 
   const [items, setItems] = useState<ReviewItem[]>(() =>
     Array.from(new Array(25).keys()).map((i) =>
-      generateReviewItem(`Question ${i + 1}`),
+      generateReviewItem(`Question ${i + 1}`, colors.compositions[i]),
     ),
   );
 
@@ -91,11 +95,6 @@ export function Basic() {
     outputRange: colors.compositions.map((c) => c.backgroundColor),
   });
 
-  const colorComposition =
-    colors.compositions[
-      (currentItemIndex + colorKnobOffset) % colors.compositions.length
-    ];
-
   return (
     <Animated.View
       style={{
@@ -110,6 +109,35 @@ export function Basic() {
           items={items}
           onMark={useCallback(
             ({ outcome, reviewItem }) => {
+              setItems((items) => {
+                const newItems = [...items];
+                const currentItemIndex = items.indexOf(reviewItem);
+                newItems[currentItemIndex] = {
+                  ...newItems[currentItemIndex],
+                };
+                const log: PromptRepetitionActionLog<PromptTaskParameters> = {
+                  actionLogType: repetitionActionLogType,
+                  context: null,
+                  outcome,
+                  parentActionLogIDs: [],
+                  taskID: getIDForPromptTask({
+                    promptType: basicPromptType,
+                    promptID: "testID" as PromptID,
+                    promptParameters: null,
+                  }),
+                  taskParameters: null,
+                  timestampMillis: Date.now(),
+                };
+                newItems[
+                  currentItemIndex
+                ].promptState = applyActionLogToPromptState({
+                  promptActionLog: log,
+                  schedule: "default",
+                  basePromptState: reviewItem.promptState,
+                }) as PromptState;
+                return newItems;
+              });
+
               setCurrentItemIndex((currentItemIndex) => {
                 Animated.timing(colorCompositionIndex, {
                   toValue:
@@ -120,34 +148,6 @@ export function Basic() {
                   useNativeDriver: true,
                 }).start();
 
-                setItems((items) => {
-                  const newItems = [...items];
-                  newItems[currentItemIndex] = {
-                    ...newItems[currentItemIndex],
-                  };
-                  const log: PromptRepetitionActionLog<PromptTaskParameters> = {
-                    actionLogType: repetitionActionLogType,
-                    context: null,
-                    outcome,
-                    parentActionLogIDs: [],
-                    taskID: getIDForPromptTask({
-                      promptType: basicPromptType,
-                      promptID: "testID" as PromptID,
-                      promptParameters: null,
-                    }),
-                    taskParameters: null,
-                    timestampMillis: Date.now(),
-                  };
-                  newItems[
-                    currentItemIndex
-                  ].promptState = applyActionLogToPromptState({
-                    promptActionLog: log,
-                    schedule: "default",
-                    basePromptState: reviewItem.promptState,
-                  }) as PromptState;
-                  return newItems;
-                });
-
                 return currentItemIndex + 1;
               });
             },
@@ -155,7 +155,6 @@ export function Basic() {
           )}
           schedule="aggressiveStart"
           currentItemIndex={currentItemIndex}
-          {...colorComposition}
         />
       </View>
     </Animated.View>

@@ -1,5 +1,5 @@
 import { getIntervalSequenceForSchedule } from "metabook-core";
-import React from "react";
+import React, { useMemo } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { layout, type } from "../styles";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
@@ -8,7 +8,7 @@ import {
   getStarburstRayValueForInterval,
 } from "./Starburst";
 
-function StarburstLegendEntry({
+const StarburstLegendEntry = React.memo(function StarburstLegendEntry({
   label,
   rayLength,
   starburstThickness,
@@ -68,10 +68,13 @@ function StarburstLegendEntry({
         }}
       >
         <Animated.Text
-          style={[
-            type.caption.layoutStyle,
-            { color: animatedColor, textAlign: "center" },
-          ]}
+          style={useMemo(
+            () => [
+              type.caption.layoutStyle,
+              { color: animatedColor, textAlign: "center" },
+            ],
+            [animatedColor],
+          )}
           selectable={false}
         >
           {label}
@@ -79,7 +82,7 @@ function StarburstLegendEntry({
       </View>
     </>
   );
-}
+});
 
 export interface StarburstLegendProps {
   activeInterval: number; // [0, 1], same as StarburstEntry.length
@@ -94,7 +97,7 @@ export interface StarburstLegendProps {
   backgroundColor: string;
 }
 
-export default function StarburstLegend({
+export default React.memo(function StarburstLegend({
   activeInterval,
   starburstQuillOuterRadius,
   starburstRadius,
@@ -106,7 +109,6 @@ export default function StarburstLegend({
   backgroundColor,
 }: StarburstLegendProps) {
   const sequence = getIntervalSequenceForSchedule("default").slice(1);
-  console.log(activeInterval / (1000 * 60 * 60 * 24));
   const nextSequenceIndex = sequence.findIndex(
     ({ interval }) => interval > activeInterval * 1.1,
   );
@@ -143,4 +145,4 @@ export default function StarburstLegend({
       ))}
     </>
   );
-}
+});

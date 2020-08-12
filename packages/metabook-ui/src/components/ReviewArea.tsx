@@ -40,11 +40,6 @@ export interface ReviewAreaProps {
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
   schedule: MetabookSpacedRepetitionSchedule;
 
-  accentColor: string;
-  secondaryColor: string;
-  tertiaryColor: string;
-  backgroundColor: string;
-
   safeInsets?: { top: number; bottom: number };
 
   // Debug flags
@@ -74,7 +69,6 @@ const PromptContainer = React.memo(function PromptContainer({
   onDidDisappear,
   reviewItem,
   onToggleExplanation,
-  accentColor,
   backIsRevealed,
 }: {
   size: Size;
@@ -136,7 +130,7 @@ const PromptContainer = React.memo(function PromptContainer({
         <Card
           reviewItem={reviewItem}
           onToggleExplanation={onToggleExplanation}
-          accentColor={accentColor}
+          accentColor={reviewItem.accentColor}
           backIsRevealed={backIsRevealed}
         />
       )}
@@ -151,10 +145,6 @@ export default function ReviewArea({
   onMark,
   forceShowAnswer,
   safeInsets,
-  accentColor,
-  secondaryColor,
-  tertiaryColor,
-  backgroundColor,
 }: ReviewAreaProps) {
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
   const lastCommittedReviewMarkingRef = useRef<ReviewAreaMarkingRecord | null>(
@@ -170,7 +160,6 @@ export default function ReviewArea({
   const currentItem = items[currentItemIndex] || null;
   const onMarkingButton = useCallback(
     (outcome: PromptRepetitionOutcome) => {
-      console.log("mark");
       if (currentItem && currentItem.reviewItemType === "prompt") {
         const markingRecord = { reviewItem: currentItem, outcome };
         lastCommittedReviewMarkingRef.current = markingRecord;
@@ -268,16 +257,13 @@ export default function ReviewArea({
               )
             : 0,
           // TODO: implement more proper "is finished" color determination
-          color: index < currentItemIndex ? secondaryColor : tertiaryColor,
+          color:
+            index < currentItemIndex
+              ? items[currentItemIndex].secondaryColor
+              : items[currentItemIndex].tertiaryColor,
         };
       }),
-    [
-      items,
-      currentItemIndex,
-      currentItemEffectiveInterval,
-      secondaryColor,
-      tertiaryColor,
-    ],
+    [items, currentItemIndex, currentItemEffectiveInterval],
   );
 
   const renderedItems = departingPromptItems.current
@@ -290,17 +276,23 @@ export default function ReviewArea({
         columnLayout.columnWidth,
       )
     : null;
-  const starburstOrigin = columnLayout
-    ? ([
-        columnLayout!.edgeMargin -
-          getStarburstQuillInnerRadius(
-            starburstEntries.length,
-            starburstThickness,
-          ),
-        // We position the bottom of the 3:00 ray at the bottom of a grid row, so that we can lay out other elements in even grid unit multiple from there.
-        layout.gridUnit * 6 - starburstThickness / 2 + (safeInsets?.top ?? 0),
-      ] as const)
-    : null;
+  const starburstOrigin = useMemo(
+    () =>
+      columnLayout
+        ? ([
+            columnLayout!.edgeMargin -
+              getStarburstQuillInnerRadius(
+                starburstEntries.length,
+                starburstThickness,
+              ),
+            // We position the bottom of the 3:00 ray at the bottom of a grid row, so that we can lay out other elements in even grid unit multiple from there.
+            layout.gridUnit * 6 -
+              starburstThickness / 2 +
+              (safeInsets?.top ?? 0),
+          ] as const)
+        : null,
+    [columnLayout, safeInsets?.top, starburstEntries.length],
+  );
 
   return (
     <View
@@ -332,7 +324,7 @@ export default function ReviewArea({
               thickness={starburstThickness}
               origin={starburstOrigin!}
               entryAtHorizontal={currentItemIndex}
-              accentOverlayColor={accentColor}
+              accentOverlayColor={currentItem.accentColor}
             />
           </View>
           <View
@@ -355,7 +347,7 @@ export default function ReviewArea({
               presentLabelColor={colors.white}
               futureLabelColor={colors.ink}
               futureTickColor={colors.ink}
-              backgroundColor={backgroundColor}
+              backgroundColor={currentItem.backgroundColor}
             />
           </View>
           <View
@@ -393,7 +385,6 @@ export default function ReviewArea({
                     onDidDisappear={onPromptDidDisappear}
                     size={size}
                     onToggleExplanation={onTogglePromptExplanation}
-                    accentColor={accentColor}
                     backIsRevealed={
                       (isShowingAnswer && displayState === "displayed") ||
                       displayState === "disappearing"
@@ -416,7 +407,7 @@ export default function ReviewArea({
                 ? currentItem.prompt.promptType
                 : null
             }
-            accentColor={accentColor}
+            accentColor={currentItem.accentColor}
             isShowingAnswer={isShowingAnswer}
             columnLayout={columnLayout!}
           />

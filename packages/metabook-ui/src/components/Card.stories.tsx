@@ -76,6 +76,7 @@ export const basic = () => (
       promptParameters: null,
       promptState: promptStateWithProvenance,
       attachmentResolutionMap: null,
+      ...colors.compositions[5],
     }}
   />
 );
@@ -101,6 +102,7 @@ export const longText = () => (
         promptParameters: null,
         promptState: null,
         attachmentResolutionMap: null,
+        ...colors.compositions[5],
       }}
     />
   </View>
@@ -114,6 +116,7 @@ export const applicationPrompt = () => (
       promptParameters: null,
       promptState: null,
       attachmentResolutionMap: null,
+      ...colors.compositions[5],
     }}
   />
 );
@@ -127,6 +130,7 @@ export const clozePrompt = () => (
         promptParameters: { clozeIndex: 1 },
         promptState: promptStateWithProvenance,
         attachmentResolutionMap: null,
+        ...colors.compositions[5],
       }}
     />
     <TestCard
@@ -143,6 +147,7 @@ export const clozePrompt = () => (
         promptParameters: { clozeIndex: 0 },
         promptState: null,
         attachmentResolutionMap: null,
+        ...colors.compositions[5],
       }}
     />
   </View>
@@ -162,6 +167,7 @@ export const image = () => (
       promptParameters: null,
       promptState: null,
       attachmentResolutionMap: testAttachmentResolutionMap,
+      ...colors.compositions[5],
     }}
   />
 );

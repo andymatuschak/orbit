@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Animated, Easing, StyleProp, ViewStyle } from "react-native";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import WithAnimatedValue = Animated.WithAnimatedValue;
@@ -45,18 +45,22 @@ export default function FadeView(props: FadeViewProps) {
     },
   });
 
+  const shouldRemoveFromLayout =
+    !lastCompletedVisibility && !isVisible && removeFromLayoutWhenHidden;
+
   return (
     <Animated.View
-      style={[
-        style,
-        {
-          opacity,
-          ...(!isVisible && { pointerEvents: "none" }),
-          ...(!lastCompletedVisibility &&
-            !isVisible &&
-            removeFromLayoutWhenHidden && { display: "none" }),
-        },
-      ]}
+      style={useMemo(
+        () => [
+          style,
+          {
+            opacity,
+            ...(!isVisible && { pointerEvents: "none" }),
+            ...(shouldRemoveFromLayout && { display: "none" }),
+          },
+        ],
+        [isVisible, opacity, shouldRemoveFromLayout, style],
+      )}
     >
       {props.children}
     </Animated.View>
