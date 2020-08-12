@@ -10,39 +10,24 @@ export type ReviewIntervalMilliseconds = number;
 const minutes: ReviewIntervalMilliseconds = 1000 * 60;
 const days: ReviewIntervalMilliseconds = minutes * 60 * 24;
 
-export type MetabookSpacedRepetitionSchedule =
-  | "original"
-  | "aggressiveStart"
-  | "default";
+export type MetabookSpacedRepetitionSchedule = "default" | "aggressiveStart";
 
 export type IntervalEntry = { interval: number; label: string };
-
-const _originalIntervalSequence: IntervalEntry[] = [
-  { interval: 10 * minutes, label: "Soon" },
-  { interval: 1 * days, label: "1 day" },
-  { interval: 3 * days, label: "3 days" },
-  { interval: 7 * days, label: "1 week" },
-  { interval: 14 * days, label: "2 weeks" },
-  { interval: 31 * days, label: "1 month" },
-  { interval: 62 * days, label: "2 months" },
-  { interval: 124 * days, label: "4 months" },
-];
 
 const _aggressiveStartIntervalSequence: IntervalEntry[] = [
   { interval: 0, label: "In-text" },
   { interval: 5 * days, label: "5d" },
-  { interval: 12 * days, label: "2wk" },
-  { interval: 31 * days, label: "1mo" },
-  { interval: 77 * days, label: "3mo" },
-  { interval: 192 * days, label: "6mo" },
-  { interval: 480 * days, label: "1yr+" },
+  { interval: 11.5 * days, label: "2wk" },
+  { interval: 26.45 * days, label: "1mo" },
+  { interval: 60.835 * days, label: "2mo" },
+  { interval: 139.9205 * days, label: "4mo" },
+  { interval: 321.81715 * days, label: "1yr+" },
 ];
 
 const schedulesToIntervalSequences: Record<
   MetabookSpacedRepetitionSchedule,
   IntervalEntry[]
 > = {
-  original: _originalIntervalSequence,
   default: _aggressiveStartIntervalSequence,
   aggressiveStart: _aggressiveStartIntervalSequence,
 };

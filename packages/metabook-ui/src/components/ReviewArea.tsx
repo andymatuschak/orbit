@@ -3,6 +3,7 @@ import {
   applicationPromptType,
   basicPromptType,
   clozePromptType,
+  getNextRepetitionInterval,
   MetabookSpacedRepetitionSchedule,
   PromptRepetitionOutcome,
   PromptType,
@@ -13,7 +14,7 @@ import { PromptReviewItem, ReviewItem } from "../reviewItem";
 import { colors, layout } from "../styles";
 import { columnMargin, getColumnSpan } from "../styles/layout";
 import unreachableCaseError from "../util/unreachableCaseError";
-import Button from "./Button";
+import Button, { ButtonPendingActivationState } from "./Button";
 import Card, { CardProps } from "./Card";
 import FadeView from "./FadeView";
 import usePrevious from "./hooks/usePrevious";
@@ -52,7 +53,7 @@ export interface ReviewAreaProps {
 
 interface PendingMarkingInteractionState {
   pendingActionOutcome: PromptRepetitionOutcome;
-  status: "hover" | "active";
+  // status: "hover" | "active";
 }
 
 const maximumCardsToRender = 3;
@@ -105,6 +106,7 @@ const PromptContainer = React.memo(function PromptContainer({
       {
         transform: [
           // The translations shift the transform origin to the upper-left corner.
+          // TODO: this origin isn't right if the prompts are narrower than the container.
           { translateX: -size.width / 2.0 },
           { translateY: -size.height / 2.0 },
           {
@@ -143,19 +145,17 @@ const PromptContainer = React.memo(function PromptContainer({
 });
 
 const starburstThickness = 3;
-export default function ReviewArea(props: ReviewAreaProps) {
-  const {
-    items,
-    currentItemIndex,
-    onMark,
-    forceShowAnswer,
-    safeInsets,
-    accentColor,
-    secondaryColor,
-    tertiaryColor,
-    backgroundColor,
-  } = props;
-
+export default function ReviewArea({
+  items,
+  currentItemIndex,
+  onMark,
+  forceShowAnswer,
+  safeInsets,
+  accentColor,
+  secondaryColor,
+  tertiaryColor,
+  backgroundColor,
+}: ReviewAreaProps) {
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
   const lastCommittedReviewMarkingRef = useRef<ReviewAreaMarkingRecord | null>(
     null,
@@ -170,6 +170,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
   const currentItem = items[currentItemIndex] || null;
   const onMarkingButton = useCallback(
     (outcome: PromptRepetitionOutcome) => {
+      console.log("mark");
       if (currentItem && currentItem.reviewItemType === "prompt") {
         const markingRecord = { reviewItem: currentItem, outcome };
         lastCommittedReviewMarkingRef.current = markingRecord;
@@ -225,8 +226,27 @@ export default function ReviewArea(props: ReviewAreaProps) {
     }
     if (currentItem !== previousItem && isShowingAnswer) {
       setShowingAnswer(false);
+      setPendingMarkingInteractionState(null);
     }
   }
+
+  const currentItemEffectiveInterval = useMemo(() => {
+    const { promptState, prompt } = currentItem;
+    if (pendingMarkingInteractionState) {
+      return getNextRepetitionInterval({
+        schedule: "default",
+        currentlyNeedsRetry: promptState?.needsRetry ?? false,
+        outcome: pendingMarkingInteractionState.pendingActionOutcome,
+        reviewIntervalMillis: promptState
+          ? Date.now() - promptState.lastReviewTimestampMillis
+          : 0,
+        scheduledIntervalMillis: promptState?.intervalMillis ?? null,
+        supportsRetry: prompt.promptType !== applicationPromptType, // TODO extract expression, remove duplication with applyActionLogToPromptState
+      });
+    } else {
+      return currentItem.promptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time
+    }
+  }, [currentItem, pendingMarkingInteractionState]);
 
   const [size, setSize] = useState<Size | null>(null);
   const width = size?.width;
@@ -237,14 +257,27 @@ export default function ReviewArea(props: ReviewAreaProps) {
 
   const starburstEntries = useMemo(
     () =>
-      items.map((item, index) => ({
-        value: item.promptState
-          ? getStarburstRayValueForInterval(item.promptState.intervalMillis) // TODO use effective interval
-          : 0,
-        // TODO: implement more proper "is finished" color determination
-        color: index < currentItemIndex ? secondaryColor : tertiaryColor,
-      })),
-    [items, currentItemIndex, secondaryColor, tertiaryColor],
+      items.map((item, index) => {
+        const effectiveInterval = item.promptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time
+        return {
+          value: item.promptState
+            ? getStarburstRayValueForInterval(
+                index === currentItemIndex
+                  ? currentItemEffectiveInterval
+                  : effectiveInterval,
+              )
+            : 0,
+          // TODO: implement more proper "is finished" color determination
+          color: index < currentItemIndex ? secondaryColor : tertiaryColor,
+        };
+      }),
+    [
+      items,
+      currentItemIndex,
+      currentItemEffectiveInterval,
+      secondaryColor,
+      tertiaryColor,
+    ],
   );
 
   const renderedItems = departingPromptItems.current
@@ -311,7 +344,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
             }}
           >
             <StarburstLegend
-              activeInterval={currentItem?.promptState?.intervalMillis ?? 0} // TODO use effective interval
+              activeInterval={currentItemEffectiveInterval}
               starburstThickness={starburstThickness}
               starburstRadius={starburstRadius!}
               starburstQuillOuterRadius={getStarburstQuillOuterRadius(
@@ -321,7 +354,7 @@ export default function ReviewArea(props: ReviewAreaProps) {
               pastLabelColor={colors.white}
               presentLabelColor={colors.white}
               futureLabelColor={colors.ink}
-              futureTickColor={tertiaryColor}
+              futureTickColor={colors.ink}
               backgroundColor={backgroundColor}
             />
           </View>
@@ -399,7 +432,7 @@ const styles = StyleSheet.create({
   },
 
   promptContainer: {
-    marginTop: layout.gridUnit * 10, // margin for starburst
+    marginTop: layout.gridUnit * 9, // margin for starburst
     marginBottom: layout.gridUnit * 3,
     flex: 1,
   },
@@ -443,13 +476,12 @@ function getButtonTitle(
   }
 }
 
-const buttonColor = colors.white;
-
 const ReviewButtonArea = React.memo(function ReviewButtonArea({
   accentColor,
   disabled,
   onMark,
   onReveal,
+  onPendingMarkingInteractionStateDidChange,
   promptType,
   isShowingAnswer,
   columnLayout,
@@ -490,9 +522,41 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
 
   const sharedButtonProps = {
     disabled,
-    color: buttonColor,
+    color: colors.white,
     accentColor,
   } as const;
+
+  const forgottenButtonPendingState = useRef<ButtonPendingActivationState>(
+    null,
+  );
+  const rememberedButtonPendingState = useRef<ButtonPendingActivationState>(
+    null,
+  );
+  const dispatchPendingMarkingInteraction = useCallback(() => {
+    const pendingActionOutcome =
+      forgottenButtonPendingState.current === "pressed"
+        ? PromptRepetitionOutcome.Forgotten
+        : rememberedButtonPendingState.current === "pressed"
+        ? PromptRepetitionOutcome.Remembered
+        : null;
+    onPendingMarkingInteractionStateDidChange(
+      pendingActionOutcome ? { pendingActionOutcome } : null,
+    );
+  }, [onPendingMarkingInteractionStateDidChange]);
+  const onForgottenButtonPendingActivation = useCallback(
+    (pendingActivationState) => {
+      forgottenButtonPendingState.current = pendingActivationState;
+      dispatchPendingMarkingInteraction();
+    },
+    [forgottenButtonPendingState, dispatchPendingMarkingInteraction],
+  );
+  const onRememberedButtonPendingActivation = useCallback(
+    (pendingActivationState) => {
+      rememberedButtonPendingState.current = pendingActivationState;
+      dispatchPendingMarkingInteraction();
+    },
+    [rememberedButtonPendingState, dispatchPendingMarkingInteraction],
+  );
 
   if (!disabled) {
     if (isShowingAnswer) {
@@ -504,6 +568,15 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
           onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
           iconName={IconName.Cross}
           title={getButtonTitle(promptType, PromptRepetitionOutcome.Forgotten)}
+          onPendingInteractionStateDidChange={
+            onForgottenButtonPendingActivation
+          }
+          hitSlop={{
+            top: layout.gridUnit * 4,
+            left: layout.gridUnit * 2,
+            bottom: layout.gridUnit * 4,
+            right: 0,
+          }}
         />,
       );
       addButton(
@@ -514,6 +587,15 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
           onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
           iconName={IconName.Check}
           title={getButtonTitle(promptType, PromptRepetitionOutcome.Remembered)}
+          onPendingInteractionStateDidChange={
+            onRememberedButtonPendingActivation
+          }
+          hitSlop={{
+            top: layout.gridUnit * 4,
+            right: layout.gridUnit * 2,
+            bottom: layout.gridUnit * 4,
+            left: 0,
+          }}
         />,
       );
     } else {
@@ -525,6 +607,12 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
           onPress={onReveal}
           iconName={IconName.Reveal}
           title={"See answer"}
+          hitSlop={{
+            top: layout.gridUnit * 4,
+            right: layout.gridUnit * 2,
+            bottom: layout.gridUnit * 4,
+            left: layout.gridUnit * 4,
+          }}
         />,
       );
     }

@@ -9,26 +9,31 @@ import {
   Pressable,
   StyleProp,
   StyleSheet,
+  Text,
   TextProps,
+  ViewProps,
 } from "react-native";
-import { colors } from "../styles";
+import { colors, type, layout } from "../styles";
 import usePrevious from "./hooks/usePrevious";
-import Hoverable, { isHoverEnabled } from "./Hoverable";
+import Hoverable from "./Hoverable";
 import Icon, { IconName, IconPosition } from "./Icon";
-import { Caption, Label } from "./Text";
 
+export type ButtonPendingActivationState = "hover" | "pressed" | null;
 export type ButtonProps = {
   title: string;
   color?: ColorValue;
   disabled?: boolean;
   size?: "regular" | "small";
+  hitSlop?: ViewProps["hitSlop"];
 
   iconName?: IconName;
   accentColor?: ColorValue;
 
   style?: StyleProp<FlexStyle>;
 
-  onPendingInteractionStateDidChange?: (isPendingActivation: boolean) => void;
+  onPendingInteractionStateDidChange?: (
+    pendingActivationState: ButtonPendingActivationState,
+  ) => void;
 
   numberOfLines?: number;
   ellipsizeMode?: TextProps["ellipsizeMode"];
@@ -82,6 +87,7 @@ const ButtonImpl = React.memo(function ButtonImpl(
         ],
         [disabled, opacity, style],
       )}
+      pointerEvents="box-only"
     >
       {iconName && (
         <Icon
@@ -92,18 +98,25 @@ const ButtonImpl = React.memo(function ButtonImpl(
           accentColor={color ?? defaultButtonColor}
         />
       )}
-      {React.createElement(
-        (size ?? "regular") === "regular" ? Label : Caption,
-        {
-          ...rest,
-          selectable: false,
-          color:
-            ((isHovered || isPressed) && accentColor && !disabled
-              ? accentColor
-              : color) || defaultButtonColor,
-        },
-        title,
-      )}
+      <Text
+        {...rest}
+        style={[
+          (size ?? "regular") === "regular"
+            ? type.label.layoutStyle
+            : type.caption.layoutStyle,
+          ,
+          {
+            color:
+              ((isHovered || isPressed) && accentColor && !disabled
+                ? accentColor
+                : color) || defaultButtonColor,
+          },
+        ]}
+        selectable={false}
+        suppressHighlighting={true}
+      >
+        {title}
+      </Text>
     </Animated.View>
   );
 });
@@ -136,12 +149,16 @@ export default function Button(props: ButtonProps) {
 
   const isPressed = React.useRef(false);
   const isHovered = React.useRef(false);
-  const lastDispatchedPendingInteractionState = React.useRef(false);
+  const lastDispatchedPendingInteractionState = React.useRef<
+    ButtonPendingActivationState
+  >(null);
 
   const dispatchPendingInteractionState = React.useCallback(() => {
-    const activationState = isHoverEnabled()
-      ? isHovered.current || isPressed.current
-      : isPressed.current;
+    const activationState = isPressed.current
+      ? "pressed"
+      : isHovered.current
+      ? "hover"
+      : null;
     if (lastDispatchedPendingInteractionState.current !== activationState) {
       lastDispatchedPendingInteractionState.current = activationState;
       onPendingInteractionStateDidChange?.(activationState);
@@ -177,6 +194,7 @@ export default function Button(props: ButtonProps) {
           disabled={props.disabled}
           // @ts-ignore react-native-web adds this prop.
           href={href}
+          hitSlop={props.hitSlop}
         >
           {({ pressed }) => (
             <ButtonImpl {...props} isHovered={isHovered} isPressed={pressed} />

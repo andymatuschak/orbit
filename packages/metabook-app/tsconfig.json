@@ -8,7 +8,9 @@
     "noEmit": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "composite": false
+    "composite": false,
+    "importHelpers": true,
+    "removeComments": true
   },
   "include": [
     "./src/**/*.tsx",

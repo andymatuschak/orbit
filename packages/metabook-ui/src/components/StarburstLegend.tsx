@@ -49,7 +49,7 @@ function StarburstLegendEntry({
       <View
         style={{
           backgroundColor:
-            status === "future" ? futureLabelColor : backgroundColor,
+            status === "future" ? futureTickColor : backgroundColor,
           position: "absolute",
           borderRadius:
             status === "future" ? starburstThickness / 2 : undefined,
@@ -106,8 +106,9 @@ export default function StarburstLegend({
   backgroundColor,
 }: StarburstLegendProps) {
   const sequence = getIntervalSequenceForSchedule("default").slice(1);
+  console.log(activeInterval / (1000 * 60 * 60 * 24));
   const nextSequenceIndex = sequence.findIndex(
-    ({ interval }) => interval > activeInterval,
+    ({ interval }) => interval > activeInterval * 1.1,
   );
   const currentSequenceIndex =
     nextSequenceIndex === -1 ? sequence.length - 1 : nextSequenceIndex - 1;

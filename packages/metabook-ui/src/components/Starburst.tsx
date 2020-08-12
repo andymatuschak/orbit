@@ -1,3 +1,4 @@
+import { getIntervalSequenceForSchedule } from "metabook-core";
 import React, { useRef } from "react";
 import { Animated } from "react-native";
 import Svg, { ClipPath, G, Path } from "react-native-svg";
@@ -38,14 +39,15 @@ export function getStarburstRayLength(
   return lerp(value, 0, 1, quillOuterRadius * 2.0, starburstRadius);
 }
 
+const sequence = getIntervalSequenceForSchedule("default");
 export function getStarburstRayValueForInterval(intervalMillis: number) {
   if (intervalMillis <= 0) {
     return 0;
   }
 
   // TODO: these constants will need to move somewhere to avoid coupling with StarburstLegend.
-  const firstInterval = 1000 * 60 * 60 * 24 * 5; // 5 days;
-  const maxInterval = 1000 * 60 * 60 * 24 * 365; // a year;
+  const firstInterval = sequence[1].interval;
+  const maxInterval = sequence[sequence.length - 1].interval;
 
   return lerp(
     Math.log2(intervalMillis),

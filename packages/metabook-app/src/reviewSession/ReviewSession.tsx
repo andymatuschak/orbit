@@ -6,8 +6,11 @@ import {
   getIDForPrompt,
   getIDForPromptTask,
   getNextTaskParameters,
+  PromptState,
   PromptTask,
   repetitionActionLogType,
+  PromptActionLog,
+  applyActionLogToPromptState,
 } from "metabook-core";
 import {
   Headline,
@@ -98,35 +101,35 @@ export function useDatabaseManager(
 function onMark(
   databaseManager: DatabaseManager,
   marking: ReviewAreaMarkingRecord,
-) {
+): PromptActionLog {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
+  const promptActionLog = {
+    actionLogType: repetitionActionLogType,
+    parentActionLogIDs: marking.reviewItem.promptState?.headActionLogIDs ?? [],
+    taskID: getIDForPromptTask({
+      promptID: getIDForPrompt(marking.reviewItem.prompt),
+      promptType: marking.reviewItem.prompt.promptType,
+      promptParameters: marking.reviewItem.promptParameters,
+    } as PromptTask),
+    outcome: marking.outcome,
+    context: null, // TODO https://github.com/andymatuschak/metabook/issues/59
+    timestampMillis: Date.now(),
+    taskParameters: getNextTaskParameters(
+      marking.reviewItem.prompt,
+      marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
+    ),
+  } as const;
   databaseManager
-    .recordPromptActionLogs([
-      {
-        actionLogType: repetitionActionLogType,
-        parentActionLogIDs:
-          marking.reviewItem.promptState?.headActionLogIDs ?? [],
-        taskID: getIDForPromptTask({
-          promptID: getIDForPrompt(marking.reviewItem.prompt),
-          promptType: marking.reviewItem.prompt.promptType,
-          promptParameters: marking.reviewItem.promptParameters,
-        } as PromptTask),
-        outcome: marking.outcome,
-        context: null, // TODO https://github.com/andymatuschak/metabook/issues/59
-        timestampMillis: Date.now(),
-        taskParameters: getNextTaskParameters(
-          marking.reviewItem.prompt,
-          marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
-        ),
-      },
-    ])
+    .recordPromptActionLogs([promptActionLog])
     .then(() => {
       console.log("[Performance] Log committed to server", Date.now() / 1000.0);
     })
     .catch((error) => {
       console.error("Couldn't commit", marking.reviewItem.prompt, error);
     });
+
+  return promptActionLog;
 }
 
 export default function ReviewSession() {
@@ -167,7 +170,27 @@ export default function ReviewSession() {
 
   const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>(
     (marking) => {
-      onMark(databaseManager!, marking);
+      const log = onMark(databaseManager!, marking);
+      setItems((items) => {
+        const markedIndex = items!.indexOf(marking.reviewItem);
+        if (markedIndex === -1) {
+          throw new Error("Marked item which is not in items list");
+        }
+        const newItems = [...items!];
+        const newPromptState = applyActionLogToPromptState({
+          promptActionLog: log,
+          basePromptState: marking.reviewItem.promptState,
+          schedule: "default",
+        });
+        if (newPromptState instanceof Error) {
+          throw newPromptState;
+        }
+        newItems[markedIndex] = {
+          ...newItems[markedIndex],
+          promptState: newPromptState,
+        };
+        return newItems;
+      });
       setCurrentQueueIndex((currentQueueIndex) => currentQueueIndex + 1);
     },
     [databaseManager],

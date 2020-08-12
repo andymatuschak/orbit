@@ -27,6 +27,7 @@ function makeTextComponent(
       <Text
         style={[layoutStyle, !!color && { color: color }]}
         selectable={selectable ?? true}
+        suppressHighlighting={!selectable}
         {...rest}
       >
         {children}
