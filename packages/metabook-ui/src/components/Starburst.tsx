@@ -17,7 +17,10 @@ export function getStarburstQuillInnerRadius(
 ): number {
   const innerRadiusSpacing = thickness / 3.25; // The number of pixels space between spokes at their tapered points.
   const segmentAngle = (2 * Math.PI) / rayCount;
-  return (innerRadiusSpacing * 2.0) / Math.sin(segmentAngle);
+  return Math.min(
+    (innerRadiusSpacing * 2.0) / Math.sin(segmentAngle),
+    5 * thickness,
+  );
 }
 
 // Returns the distance from the center of the starburst to the end of each ray's tapered quill (i.e. where the ray becomes a simple stroke).
@@ -27,7 +30,10 @@ export function getStarburstQuillOuterRadius(
 ): number {
   const outerRadiusSpacing = thickness / 2.75; // The number of pixels space between between spokes at their thickest points.
   const segmentAngle = (2 * Math.PI) / rayCount;
-  return (thickness + outerRadiusSpacing * 2.0) / Math.sin(segmentAngle);
+  return Math.min(
+    (thickness + outerRadiusSpacing * 2.0) / Math.sin(segmentAngle),
+    30 * thickness,
+  );
 }
 
 // Returns the length of a ray, measured from the center of the starburst to its outer tip.
@@ -36,7 +42,13 @@ export function getStarburstRayLength(
   quillOuterRadius: number,
   starburstRadius: number,
 ): number {
-  return lerp(value, 0, 1, quillOuterRadius * 2.0, starburstRadius);
+  return lerp(
+    value,
+    0,
+    1,
+    Math.max(quillOuterRadius, Math.min(quillOuterRadius * 2.0, 0.1)),
+    starburstRadius,
+  );
 }
 
 const sequence = getIntervalSequenceForSchedule("default");

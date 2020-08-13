@@ -1,46 +1,156 @@
-import { number, withKnobs } from "@storybook/addon-knobs";
+import { boolean, number, withKnobs } from "@storybook/addon-knobs";
 import React from "react";
 import { View } from "react-native";
-import Svg, { Circle } from "react-native-svg";
-import { colors } from ".";
+import Svg, { Circle, Text } from "react-native-svg";
+import { colors, type } from ".";
+import Button from "../components/Button";
+import { IconName } from "../components/Icon";
 import Starburst from "../components/Starburst";
-import { Body, Caption, Label, Title } from "../components/Text";
+import { Body, Caption, Title } from "../components/Text";
 import * as layout from "./layout";
+
+type RGBA = [number, number, number, number];
+
+function extractRGBA(rgbaString: string): RGBA | null {
+  const match = rgbaString.match(
+    /rgba\((\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)/,
+  );
+  if (match) {
+    return [
+      Number.parseInt(match[1]) / 255.0,
+      Number.parseInt(match[2]) / 255.0,
+      Number.parseInt(match[3]) / 255.0,
+      Number.parseFloat(match[4]),
+    ];
+  } else {
+    return null;
+  }
+}
+
+function getLuminance(rgb: RGBA): number {
+  function getFactor(v: number): number {
+    return v < 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  }
+  return (
+    0.2126 * getFactor(rgb[0]) +
+    0.7152 * getFactor(rgb[1]) +
+    0.0722 * getFactor(rgb[2])
+  );
+}
+
+function getContrastRatio(a: RGBA, b: RGBA): number {
+  if (a[3] !== 1 || b[3] !== 1) {
+    throw new Error(
+      `Can't compute contrast ratio for transparent RGBA: ${a} vs ${b}`,
+    );
+  }
+
+  const aL = getLuminance(a);
+  const bL = getLuminance(b);
+  const lighter = Math.max(aL, bL);
+  const darker = Math.min(aL, bL);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function sourceOver(dest: RGBA, src: RGBA): RGBA {
+  const srcAlpha = src[3];
+  const destAlpha = dest[3];
+  const outAlpha = srcAlpha + destAlpha * (1 - srcAlpha);
+  function mix(
+    dest: number,
+    src: number,
+    destAlpha: number,
+    srcAlpha: number,
+  ): number {
+    return (src * srcAlpha + dest * destAlpha * (1 - srcAlpha)) / outAlpha;
+  }
+  return [
+    mix(dest[0], src[0], destAlpha, srcAlpha),
+    mix(dest[1], src[1], destAlpha, srcAlpha),
+    mix(dest[2], src[2], destAlpha, srcAlpha),
+    outAlpha,
+  ];
+}
 
 export default {
   title: "Style/Colors",
   decorators: [withKnobs],
 };
 
+const swatchRadius = 96;
+const inkRGBA = extractRGBA(colors.ink)!;
+const whiteRGBA = extractRGBA(colors.white)!;
+function ColorSwatch({
+  color,
+  cx,
+  cy,
+}: {
+  color: string;
+  cx: number;
+  cy: number;
+}) {
+  const rgba = extractRGBA(color)!;
+  const compositedInk = sourceOver(rgba, inkRGBA);
+  const inkContrastRatio = getContrastRatio(compositedInk, rgba);
+  const whiteContrastRatio = getContrastRatio(whiteRGBA, rgba);
+  const showContrast = boolean("Show contrast", true);
+  return (
+    <>
+      <Circle cx={cx} cy={cy} r={swatchRadius / 2} fill={color} />
+      {showContrast && (
+        <Text
+          textAnchor="middle"
+          fill={colors.ink}
+          x={cx}
+          y={cy - type.label.typeStyle.lineHeight! / 4}
+          fontFamily={type.label.typeStyle.fontFamily}
+          fontSize={type.label.typeStyle.fontSize}
+        >
+          {inkContrastRatio.toFixed(1)}
+        </Text>
+      )}
+      {showContrast && (
+        <Text
+          textAnchor="middle"
+          fill={colors.white}
+          x={cx}
+          y={cy + type.label.typeStyle.lineHeight!}
+          fontFamily={type.label.typeStyle.fontFamily}
+          fontSize={type.label.typeStyle.fontSize}
+        >
+          {whiteContrastRatio.toFixed(1)}
+        </Text>
+      )}
+    </>
+  );
+}
+
 export function Palette() {
-  const radius = 96;
   const colorCount = colors.bg.length;
   return (
     <View style={{ backgroundColor: "#999" }}>
       <Svg
-        width={radius * 7}
-        height={radius * 7}
-        viewBox={`${-radius * 3.5} ${-radius * 3.5} ${radius * 7} ${
-          radius * 7
-        }`}
+        width={swatchRadius * 7}
+        height={swatchRadius * 7}
+        viewBox={`${-swatchRadius * 3.5} ${-swatchRadius * 3.5} ${
+          swatchRadius * 7
+        } ${swatchRadius * 7}`}
       >
         {Array.from(new Array(colorCount).keys()).map((i) => {
           const theta = (i / colorCount) * 2 * Math.PI - Math.PI / 2;
           return (
             <>
-              <Circle
+              <ColorSwatch
                 key={`${i}-bg`}
-                cx={radius * 2 * Math.cos(theta)}
-                cy={radius * 2 * Math.sin(theta)}
-                r={radius / 2}
-                fill={colors.bg[i]}
+                cx={swatchRadius * 2 * Math.cos(theta)}
+                cy={swatchRadius * 2 * Math.sin(theta)}
+                color={colors.bg[i]}
               />
-              <Circle
+              <ColorSwatch
                 key={`${i}-fg`}
-                cx={radius * 3 * Math.cos(theta)}
-                cy={radius * 3 * Math.sin(theta)}
-                r={radius / 2}
-                fill={colors.fg[i]}
+                cx={swatchRadius * 3 * Math.cos(theta)}
+                cy={swatchRadius * 3 * Math.sin(theta)}
+                color={colors.fg[i]}
               />
             </>
           );
@@ -143,8 +253,16 @@ function CompositionTest({
         <Body color={accentColor}>Source context</Body>
       </View>
       <Title>Primary content</Title>
-      <View style={{ marginTop: 128 }}>
-        <Label color={colors.white}>Button</Label>
+      <View style={{ position: "absolute", bottom: 24 }}>
+        <Button
+          title="See answer"
+          iconName={IconName.Reveal}
+          accentColor={accentColor}
+          color={colors.white}
+          onPress={() => {
+            return;
+          }}
+        />
       </View>
     </View>
   );

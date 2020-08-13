@@ -72,6 +72,7 @@
     "string_decoder": "^0.10.31",
     "subleveldown": "^5.0.1",
     "timers-browserify": "^1.4.2",
+    "tslib": "^2.0.1",
     "tty-browserify": "0.0.0",
     "url": "^0.11.0",
     "util": "^0.10.4",
