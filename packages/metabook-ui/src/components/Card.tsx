@@ -186,7 +186,7 @@ function formatClozePromptContents(
   clozeIndex: number,
 ) {
   let matchIndex = 0;
-  const clozeRegexp = /{([^}]+?)}/g;
+  const clozeRegexp = /{([^{}]+?)}/g;
   let match: RegExpExecArray | null;
 
   let output = "";
