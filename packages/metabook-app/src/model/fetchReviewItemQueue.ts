@@ -10,6 +10,7 @@ import {
   PromptReviewItem,
   promptReviewItemType,
   ReviewItem,
+  styles,
 } from "metabook-ui";
 import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";
 import actionLogStore from "./actionLogStore";
@@ -83,12 +84,21 @@ async function getReviewItemsForPromptStates(
       if (!prompt) {
         return null;
       }
+
+      const promptState = promptStates.get(promptTask) ?? null;
+      // TODO: this doesn't belong here, and this value should be read from provenance.
+      const colorComposition =
+        styles.colors.compositions[
+          (promptState?.lastReviewTimestampMillis ?? 0) %
+            styles.colors.compositions.length
+        ];
       return {
         reviewItemType: promptReviewItemType,
         prompt,
-        promptState: promptStates.get(promptTask)!,
+        promptState,
         promptParameters: promptTask.promptParameters,
         attachmentResolutionMap,
+        ...colorComposition,
       } as PromptReviewItem;
     })
     .filter((item): item is ReviewItem => !!item);

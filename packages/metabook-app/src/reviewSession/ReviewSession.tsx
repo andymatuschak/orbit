@@ -153,9 +153,12 @@ export default function ReviewSession() {
 
   const topItem = items?.[currentQueueIndex];
   const colorCompositionAnimatedIndex = useTransitioningValue({
-    value:
-      (topItem?.promptState?.lastReviewTimestampMillis ?? 0) %
-      styles.colors.compositions.length,
+    // TODO: this is extremely silly; refactor
+    value: topItem
+      ? styles.colors.compositions.findIndex(
+          (c) => c.backgroundColor === topItem.backgroundColor,
+        )
+      : 0,
     timing: {
       type: "timing",
       useNativeDriver: false,
@@ -196,12 +199,6 @@ export default function ReviewSession() {
     [databaseManager],
   );
 
-  const colorComposition =
-    styles.colors.compositions[
-      (topItem?.promptState?.lastReviewTimestampMillis ?? 0) % // TODO draw colors rigorously
-        styles.colors.compositions.length
-    ];
-
   console.log("[Performance] Render", Date.now() / 1000.0);
 
   const insets = useSafeAreaInsets();
@@ -226,7 +223,6 @@ export default function ReviewSession() {
               onMark={onMarkCallback}
               schedule="aggressiveStart"
               safeInsets={insets}
-              {...colorComposition}
             />
           </View>
         ) : (

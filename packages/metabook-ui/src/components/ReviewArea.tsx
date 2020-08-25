@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
 
   promptContainer: {
     marginTop: layout.gridUnit * 9, // margin for starburst
-    marginBottom: layout.gridUnit * 3,
+    marginBottom: layout.gridUnit * 2,
     flex: 1,
   },
 
@@ -554,25 +554,6 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
       addButton(
         <Button
           {...sharedButtonProps}
-          style={buttonStyle}
-          key={1}
-          onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
-          iconName={IconName.Cross}
-          title={getButtonTitle(promptType, PromptRepetitionOutcome.Forgotten)}
-          onPendingInteractionStateDidChange={
-            onForgottenButtonPendingActivation
-          }
-          hitSlop={{
-            top: layout.gridUnit * 4,
-            left: layout.gridUnit * 2,
-            bottom: layout.gridUnit * 4,
-            right: 0,
-          }}
-        />,
-      );
-      addButton(
-        <Button
-          {...sharedButtonProps}
           style={lastButtonStyle}
           key={2}
           onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
@@ -586,6 +567,25 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
             right: layout.gridUnit * 2,
             bottom: layout.gridUnit * 4,
             left: 0,
+          }}
+        />,
+      );
+      addButton(
+        <Button
+          {...sharedButtonProps}
+          style={buttonStyle}
+          key={1}
+          onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
+          iconName={IconName.Cross}
+          title={getButtonTitle(promptType, PromptRepetitionOutcome.Forgotten)}
+          onPendingInteractionStateDidChange={
+            onForgottenButtonPendingActivation
+          }
+          hitSlop={{
+            top: layout.gridUnit * 4,
+            left: layout.gridUnit * 2,
+            bottom: layout.gridUnit * 4,
+            right: 0,
           }}
         />,
       );
