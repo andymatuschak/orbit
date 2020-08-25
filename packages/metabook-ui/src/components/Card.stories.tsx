@@ -18,6 +18,7 @@ import React, { ReactNode, useState } from "react";
 import { Button, View } from "react-native";
 import { AttachmentResolutionMap, PromptReviewItem } from "../reviewItem";
 import { colors, layout } from "../styles";
+import { productKeyColor } from "../styles/colors";
 import testCardProps from "./__fixtures__/testCardProps";
 import Card from "./Card";
 import DebugGrid from "./DebugGrid";
@@ -76,7 +77,7 @@ export const basic = () => (
       promptParameters: null,
       promptState: promptStateWithProvenance,
       attachmentResolutionMap: null,
-      ...colors.compositions[5],
+      ...colors.palettes[5],
     }}
   />
 );
@@ -102,7 +103,7 @@ export const longText = () => (
         promptParameters: null,
         promptState: null,
         attachmentResolutionMap: null,
-        ...colors.compositions[5],
+        ...colors.palettes[5],
       }}
     />
   </View>
@@ -116,7 +117,7 @@ export const applicationPrompt = () => (
       promptParameters: null,
       promptState: null,
       attachmentResolutionMap: null,
-      ...colors.compositions[5],
+      ...colors.palettes[5],
     }}
   />
 );
@@ -130,7 +131,7 @@ export const clozePrompt = () => (
         promptParameters: { clozeIndex: 1 },
         promptState: promptStateWithProvenance,
         attachmentResolutionMap: null,
-        ...colors.compositions[5],
+        ...colors.palettes[5],
       }}
     />
     <TestCard
@@ -147,7 +148,7 @@ export const clozePrompt = () => (
         promptParameters: { clozeIndex: 0 },
         promptState: null,
         attachmentResolutionMap: null,
-        ...colors.compositions[5],
+        ...colors.palettes[5],
       }}
     />
   </View>
@@ -167,7 +168,7 @@ export const image = () => (
       promptParameters: null,
       promptState: null,
       attachmentResolutionMap: testAttachmentResolutionMap,
-      ...colors.compositions[5],
+      ...colors.palettes[5],
     }}
   />
 );
@@ -200,7 +201,7 @@ function TestCard(props: { reviewItem: PromptReviewItem }) {
                 {boolean("Show grid", true) && <DebugGrid />}
                 <Card
                   {...testCardProps}
-                  accentColor={colors.fg[0]}
+                  accentColor={productKeyColor}
                   reviewItem={reviewItem}
                   backIsRevealed={isRevealed}
                 />

@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { colors } from "../styles";
+import { ink, productKeyColor } from "../styles/colors";
 import Icon, { IconName, IconPosition } from "./Icon";
 
 export default {
@@ -14,8 +15,8 @@ function IconEntry(props: { iconName: IconName }) {
   const sharedProps = {
     name: props.iconName,
     style: iconStyle,
-    tintColor: colors.fg[1],
-    accentColor: colors.bg[6],
+    tintColor: productKeyColor,
+    accentColor: ink,
   };
 
   return (

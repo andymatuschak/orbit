@@ -88,9 +88,9 @@ async function getReviewItemsForPromptStates(
       const promptState = promptStates.get(promptTask) ?? null;
       // TODO: this doesn't belong here, and this value should be read from provenance.
       const colorComposition =
-        styles.colors.compositions[
+        styles.colors.palettes[
           (promptState?.lastReviewTimestampMillis ?? 0) %
-            styles.colors.compositions.length
+            styles.colors.palettes.length
         ];
       return {
         reviewItemType: promptReviewItemType,

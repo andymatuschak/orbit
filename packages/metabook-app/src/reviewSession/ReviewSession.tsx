@@ -3,14 +3,13 @@ import {
   MetabookFirebaseUserClient,
 } from "metabook-client";
 import {
+  applyActionLogToPromptState,
   getIDForPrompt,
   getIDForPromptTask,
   getNextTaskParameters,
-  PromptState,
+  PromptActionLog,
   PromptTask,
   repetitionActionLogType,
-  PromptActionLog,
-  applyActionLogToPromptState,
 } from "metabook-core";
 import {
   Headline,
@@ -20,11 +19,9 @@ import {
   styles,
   useTransitioningValue,
 } from "metabook-ui";
-
-import DebugGrid from "metabook-ui/dist/components/DebugGrid";
 import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
 import React, { useCallback, useEffect, useState } from "react";
-import { Animated, Easing, StyleSheet, View } from "react-native";
+import { Animated, Easing, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserRecord } from "../authentication";
 import DatabaseManager from "../model/databaseManager";
@@ -155,7 +152,7 @@ export default function ReviewSession() {
   const colorCompositionAnimatedIndex = useTransitioningValue({
     // TODO: this is extremely silly; refactor
     value: topItem
-      ? styles.colors.compositions.findIndex(
+      ? styles.colors.palettes.findIndex(
           (c) => c.backgroundColor === topItem.backgroundColor,
         )
       : 0,
@@ -167,8 +164,8 @@ export default function ReviewSession() {
     },
   });
   const backgroundColor = colorCompositionAnimatedIndex.interpolate({
-    inputRange: Array.from(new Array(styles.colors.compositions.length).keys()),
-    outputRange: styles.colors.compositions.map((c) => c.backgroundColor),
+    inputRange: Array.from(new Array(styles.colors.palettes.length).keys()),
+    outputRange: styles.colors.palettes.map((c) => c.backgroundColor),
   });
 
   const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>(

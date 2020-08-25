@@ -12,18 +12,28 @@ import * as layout from "./layout";
 type RGBA = [number, number, number, number];
 
 function extractRGBA(rgbaString: string): RGBA | null {
-  const match = rgbaString.match(
-    /rgba\((\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)/,
-  );
-  if (match) {
-    return [
-      Number.parseInt(match[1]) / 255.0,
-      Number.parseInt(match[2]) / 255.0,
-      Number.parseInt(match[3]) / 255.0,
-      Number.parseFloat(match[4]),
-    ];
+  if (rgbaString.startsWith("#")) {
+    const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(rgbaString);
+    return (
+      match && [
+        parseInt(match[1], 16) / 255.0,
+        parseInt(match[2], 16) / 255.0,
+        parseInt(match[3], 16) / 255.0,
+        1,
+      ]
+    );
   } else {
-    return null;
+    const match = /rgba\((\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)/.exec(
+      rgbaString,
+    );
+    return (
+      match && [
+        Number.parseInt(match[1]) / 255.0,
+        Number.parseInt(match[2]) / 255.0,
+        Number.parseInt(match[3]) / 255.0,
+        Number.parseFloat(match[4]),
+      ]
+    );
   }
 }
 
@@ -81,44 +91,49 @@ const swatchRadius = 96;
 const inkRGBA = extractRGBA(colors.ink)!;
 const whiteRGBA = extractRGBA(colors.white)!;
 function ColorSwatch({
-  color,
+  backgroundColor,
+  foregroundColor1,
+  foregroundColor2,
   cx,
   cy,
 }: {
-  color: string;
+  backgroundColor: string;
+  foregroundColor1: string;
+  foregroundColor2: string;
   cx: number;
   cy: number;
 }) {
-  const rgba = extractRGBA(color)!;
-  const compositedInk = sourceOver(rgba, inkRGBA);
-  const inkContrastRatio = getContrastRatio(compositedInk, rgba);
-  const whiteContrastRatio = getContrastRatio(whiteRGBA, rgba);
+  const rgba = extractRGBA(backgroundColor)!;
+  const composited1 = sourceOver(rgba, extractRGBA(foregroundColor1)!);
+  const composited2 = sourceOver(rgba, extractRGBA(foregroundColor2)!);
+  const contrastRatio1 = getContrastRatio(composited1, rgba);
+  const contrastRatio2 = getContrastRatio(composited2, rgba);
   const showContrast = boolean("Show contrast", true);
   return (
     <>
-      <Circle cx={cx} cy={cy} r={swatchRadius / 2} fill={color} />
+      <Circle cx={cx} cy={cy} r={swatchRadius / 2} fill={backgroundColor} />
       {showContrast && (
         <Text
           textAnchor="middle"
-          fill={colors.ink}
+          fill={foregroundColor1}
           x={cx}
           y={cy - type.label.typeStyle.lineHeight! / 4}
           fontFamily={type.label.typeStyle.fontFamily}
           fontSize={type.label.typeStyle.fontSize}
         >
-          {inkContrastRatio.toFixed(1)}
+          {contrastRatio1.toFixed(1)}
         </Text>
       )}
       {showContrast && (
         <Text
           textAnchor="middle"
-          fill={colors.white}
+          fill={foregroundColor2}
           x={cx}
           y={cy + type.label.typeStyle.lineHeight!}
           fontFamily={type.label.typeStyle.fontFamily}
           fontSize={type.label.typeStyle.fontSize}
         >
-          {whiteContrastRatio.toFixed(1)}
+          {contrastRatio2.toFixed(1)}
         </Text>
       )}
     </>
@@ -126,7 +141,7 @@ function ColorSwatch({
 }
 
 export function Palette() {
-  const colorCount = colors.bg.length;
+  const colorCount = colors.palettes.length;
   return (
     <View style={{ backgroundColor: "#999" }}>
       <Svg
@@ -138,19 +153,24 @@ export function Palette() {
       >
         {Array.from(new Array(colorCount).keys()).map((i) => {
           const theta = (i / colorCount) * 2 * Math.PI - Math.PI / 2;
+          const palette = colors.palettes[i];
           return (
             <>
               <ColorSwatch
                 key={`${i}-bg`}
                 cx={swatchRadius * 2 * Math.cos(theta)}
                 cy={swatchRadius * 2 * Math.sin(theta)}
-                color={colors.bg[i]}
+                backgroundColor={palette.backgroundColor}
+                foregroundColor1={colors.ink}
+                foregroundColor2={palette.accentColor}
               />
               <ColorSwatch
-                key={`${i}-fg`}
+                key={`${i}-shade`}
                 cx={swatchRadius * 3 * Math.cos(theta)}
                 cy={swatchRadius * 3 * Math.sin(theta)}
-                color={colors.fg[i]}
+                backgroundColor={palette.tertiaryColor}
+                foregroundColor1={colors.white}
+                foregroundColor2={palette.accentColor}
               />
             </>
           );
@@ -271,7 +291,7 @@ function CompositionTest({
 export function Compositions() {
   return (
     <View style={{ flexWrap: "wrap", flexDirection: "row" }}>
-      {colors.compositions.map((c, i) => (
+      {colors.palettes.map((c, i) => (
         <CompositionTest
           key={i}
           backgroundColor={c.backgroundColor}

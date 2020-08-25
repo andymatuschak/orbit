@@ -29,7 +29,7 @@ export default {
 const intervalSequence = getIntervalSequenceForSchedule("default");
 function generateReviewItem(
   questionText: string,
-  colorComposition: typeof colors.compositions[number],
+  colorComposition: typeof colors.palettes[number],
 ): ReviewItem {
   const intervalMillis =
     intervalSequence[Math.floor(Math.random() * (intervalSequence.length - 1))]
@@ -68,14 +68,14 @@ function generateReviewItem(
 export function Basic() {
   const colorKnobOffset = number("color shift", 0, {
     min: 0,
-    max: colors.compositions.length - 1,
+    max: colors.palettes.length - 1,
     step: 1,
     range: true,
   });
 
   const [items, setItems] = useState<ReviewItem[]>(() =>
     Array.from(new Array(25).keys()).map((i) =>
-      generateReviewItem(`Question ${i + 1}`, colors.compositions[i]),
+      generateReviewItem(`Question ${i + 1}`, colors.palettes[i]),
     ),
   );
 
@@ -86,13 +86,13 @@ export function Basic() {
   React.useEffect(
     () =>
       colorCompositionIndex.setValue(
-        (currentItemIndex + colorKnobOffset) % colors.compositions.length,
+        (currentItemIndex + colorKnobOffset) % colors.palettes.length,
       ),
     [colorKnobOffset],
   );
   const backgroundColor = colorCompositionIndex.interpolate({
-    inputRange: Array.from(new Array(colors.compositions.length).keys()),
-    outputRange: colors.compositions.map((c) => c.backgroundColor),
+    inputRange: Array.from(new Array(colors.palettes.length).keys()),
+    outputRange: colors.palettes.map((c) => c.backgroundColor),
   });
 
   return (
@@ -142,7 +142,7 @@ export function Basic() {
                 Animated.timing(colorCompositionIndex, {
                   toValue:
                     (currentItemIndex + 1 + colorKnobOffset) %
-                    colors.compositions.length,
+                    colors.palettes.length,
                   duration: 80,
                   easing: Easing.linear,
                   useNativeDriver: true,

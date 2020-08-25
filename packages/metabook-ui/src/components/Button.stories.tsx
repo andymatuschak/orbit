@@ -17,7 +17,7 @@ export function PlainButton() {
       <Button
         title="Button"
         onPress={action("Button clicked")}
-        accentColor={colors.fg[1]}
+        accentColor={colors.productKeyColor}
         onPendingInteractionStateDidChange={(isPendingActivation) =>
           action(`Pending activation`)(isPendingActivation)
         }
@@ -26,7 +26,7 @@ export function PlainButton() {
       <Button
         title="Disabled"
         onPress={action("Button clicked")}
-        accentColor={colors.fg[1]}
+        accentColor={colors.productKeyColor}
         disabled
       />
     </View>
@@ -41,7 +41,7 @@ export function IconButton() {
           title="Button"
           onPress={action("Button clicked")}
           iconName={IconName.Check}
-          accentColor={colors.fg[1]}
+          accentColor={colors.productKeyColor}
         />
       </View>
       <Spacer units={1} />
@@ -50,7 +50,7 @@ export function IconButton() {
           title="Disabled"
           onPress={action("Button clicked")}
           iconName={IconName.Check}
-          accentColor={colors.fg[1]}
+          accentColor={colors.productKeyColor}
           disabled
         />
       </View>
@@ -65,7 +65,7 @@ export function LinkButton() {
         <Button
           title="Link button"
           href="https://google.com"
-          accentColor={colors.fg[1]}
+          accentColor={colors.productKeyColor}
         />
       </View>
     </View>

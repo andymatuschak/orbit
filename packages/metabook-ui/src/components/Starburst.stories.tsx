@@ -54,20 +54,20 @@ export function Sandbox() {
 
   const diameter = number("Size", 500);
 
-  let colorComposition: typeof colors.compositions[0];
+  let colorComposition: typeof colors.palettes[0];
   let backgroundColor: string;
   let strokeColor: string;
   let accentColor: string;
   let completedStrokeColor: string;
   const colorRange = {
     min: 0,
-    max: colors.compositions.length - 1,
+    max: colors.palettes.length - 1,
     range: true,
     step: 1,
   };
   if (boolean("Use composition", true)) {
     colorComposition =
-      colors.compositions[number("Color palette index", 0, colorRange)];
+      colors.palettes[number("Color palette index", 0, colorRange)];
     backgroundColor = colorComposition.backgroundColor;
     const strokeSelection = select(
       "Incomplete stroke color",
@@ -113,21 +113,22 @@ export function Sandbox() {
   } else {
     const strokeColorSource = select(
       "Stroke color source",
-      ["bg", "fg", "ink", "white"],
-      "fg",
+      ["bg", "secondary", "shade", "ink", "white"],
+      "shade",
     );
     const strokeColorIndex = number("Secondary color index", 1, colorRange);
     strokeColor = {
-      bg: colors.bg[strokeColorIndex],
-      fg: colors.fg[strokeColorIndex],
+      bg: colors.palettes[strokeColorIndex].backgroundColor,
+      secondary: colors.palettes[strokeColorIndex].secondaryColor,
+      shade: colors.palettes[strokeColorIndex].tertiaryColor,
       ink: colors.ink,
       white: colors.white,
     }[strokeColorSource];
 
     const completedStrokeColorSource = select(
       "Completed stroke color source",
-      ["bg", "fg", "ink", "white"],
-      "fg",
+      ["bg", "secondary", "ink", "white"],
+      "secondary",
     );
     const completedStrokeColorIndex = number(
       "Completed stroke color index",
@@ -135,16 +136,16 @@ export function Sandbox() {
       colorRange,
     );
     completedStrokeColor = {
-      bg: colors.bg[completedStrokeColorIndex],
-      fg: colors.fg[completedStrokeColorIndex],
+      bg: colors.palettes[completedStrokeColorIndex].backgroundColor,
+      secondary: colors.palettes[completedStrokeColorIndex].secondaryColor,
       ink: colors.ink,
       white: colors.white,
     }[completedStrokeColorSource];
 
     const accentStrokeColorSource = select(
       "Accent stroke color source",
-      ["bg", "fg", "ink", "white"],
-      "fg",
+      ["bg", "accent", "ink", "white"],
+      "accent",
     );
     const accentStrokeColorIndex = number(
       "Accent stroke color index",
@@ -152,13 +153,14 @@ export function Sandbox() {
       colorRange,
     );
     accentColor = {
-      bg: colors.bg[accentStrokeColorIndex],
-      fg: colors.fg[accentStrokeColorIndex],
+      bg: colors.palettes[accentStrokeColorIndex].backgroundColor,
+      accent: colors.palettes[accentStrokeColorIndex].accentColor,
       ink: colors.ink,
       white: colors.white,
     }[accentStrokeColorSource];
 
-    backgroundColor = colors.bg[number("BG color index", 0, colorRange)];
+    backgroundColor =
+      colors.palettes[number("BG color index", 0, colorRange)].backgroundColor;
   }
 
   const [currentEntry, setCurrentEntry] = useState(0);
