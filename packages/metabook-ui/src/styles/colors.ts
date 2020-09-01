@@ -12,79 +12,79 @@ interface ColorComposition {
   backgroundColor: string;
   accentColor: string;
   secondaryColor: string;
-  tertiaryColor: string;
+  shadeColor: string;
 }
 export const palettes: ColorComposition[] = [
   {
     backgroundColor: "#FF5252",
     accentColor: "#FFCB2E",
     secondaryColor: "#FF7E05",
-    tertiaryColor: "#F73D3D",
+    shadeColor: "#F73D3D",
   },
   {
     backgroundColor: "#FA853C",
     accentColor: "#FFCB2E",
     secondaryColor: "#FB372D",
-    tertiaryColor: "#F4742F",
+    shadeColor: "#F4742F",
   },
   {
     backgroundColor: "#E0A642",
     accentColor: "#FFDD1C",
     secondaryColor: "#FF7106",
-    tertiaryColor: "#DA972C",
+    shadeColor: "#DA972C",
   },
   {
     backgroundColor: "#FAC800",
     accentColor: "#F97302",
     secondaryColor: "#F64643",
-    tertiaryColor: "#F9BB01",
+    shadeColor: "#F9BB01",
   },
   {
     backgroundColor: "#90D43C",
     accentColor: "#F5F612",
     secondaryColor: "#01C070",
-    tertiaryColor: "#7DCB25",
+    shadeColor: "#7DCB25",
   },
   {
     backgroundColor: "#63D463",
     accentColor: "#F9E406",
     secondaryColor: "#03BCDE",
-    tertiaryColor: "#48CB51",
+    shadeColor: "#48CB51",
   },
   {
     backgroundColor: "#52DADA",
     accentColor: "#EBED08",
     secondaryColor: "#019AFE",
-    tertiaryColor: "#1CCED4",
+    shadeColor: "#1CCED4",
   },
   {
     backgroundColor: "#65C6F6",
     accentColor: "#C7F312",
     secondaryColor: "#4BEFD4",
-    tertiaryColor: "#50BCF1",
+    shadeColor: "#50BCF1",
   },
   {
     backgroundColor: "#72AEF8",
     accentColor: "#FFCB2E",
     secondaryColor: "#15D7CB",
-    tertiaryColor: "#62A2F0",
+    shadeColor: "#62A2F0",
   },
   {
     backgroundColor: "#AD89FB",
     accentColor: "#FFCB2E",
     secondaryColor: "#A930FA",
-    tertiaryColor: "#A47DF7",
+    shadeColor: "#A47DF7",
   },
   {
     backgroundColor: "#D071EF",
     accentColor: "#FFCB2E",
     secondaryColor: "#DE16B7",
-    tertiaryColor: "#CA5EED",
+    shadeColor: "#CA5EED",
   },
   {
     backgroundColor: "#F56CB6",
     accentColor: "#FFCB2E",
     secondaryColor: "#C438E7",
-    tertiaryColor: "#EC7FA8",
+    shadeColor: "#EC5FA8",
   },
 ];

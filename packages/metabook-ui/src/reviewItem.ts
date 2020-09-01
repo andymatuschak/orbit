@@ -19,7 +19,7 @@ interface BasePromptReviewItem {
 
   accentColor: string;
   secondaryColor: string;
-  tertiaryColor: string;
+  shadeColor: string;
   backgroundColor: string;
 }
 

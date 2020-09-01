@@ -260,7 +260,7 @@ export default function ReviewArea({
           color:
             index < currentItemIndex
               ? items[currentItemIndex].secondaryColor
-              : items[currentItemIndex].tertiaryColor,
+              : items[currentItemIndex].shadeColor,
         };
       }),
     [items, currentItemIndex, currentItemEffectiveInterval],
@@ -554,25 +554,6 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
       addButton(
         <Button
           {...sharedButtonProps}
-          style={lastButtonStyle}
-          key={2}
-          onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
-          iconName={IconName.Check}
-          title={getButtonTitle(promptType, PromptRepetitionOutcome.Remembered)}
-          onPendingInteractionStateDidChange={
-            onRememberedButtonPendingActivation
-          }
-          hitSlop={{
-            top: layout.gridUnit * 4,
-            right: layout.gridUnit * 2,
-            bottom: layout.gridUnit * 4,
-            left: 0,
-          }}
-        />,
-      );
-      addButton(
-        <Button
-          {...sharedButtonProps}
           style={buttonStyle}
           key={1}
           onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
@@ -586,6 +567,25 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
             left: layout.gridUnit * 2,
             bottom: layout.gridUnit * 4,
             right: 0,
+          }}
+        />,
+      );
+      addButton(
+        <Button
+          {...sharedButtonProps}
+          style={lastButtonStyle}
+          key={2}
+          onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
+          iconName={IconName.Check}
+          title={getButtonTitle(promptType, PromptRepetitionOutcome.Remembered)}
+          onPendingInteractionStateDidChange={
+            onRememberedButtonPendingActivation
+          }
+          hitSlop={{
+            top: layout.gridUnit * 4,
+            right: layout.gridUnit * 2,
+            bottom: layout.gridUnit * 4,
+            left: 0,
           }}
         />,
       );

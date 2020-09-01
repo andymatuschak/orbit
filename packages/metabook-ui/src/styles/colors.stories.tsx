@@ -168,7 +168,7 @@ export function Palette() {
                 key={`${i}-shade`}
                 cx={swatchRadius * 3 * Math.cos(theta)}
                 cy={swatchRadius * 3 * Math.sin(theta)}
-                backgroundColor={palette.tertiaryColor}
+                backgroundColor={palette.shadeColor}
                 foregroundColor1={colors.white}
                 foregroundColor2={palette.accentColor}
               />
@@ -297,7 +297,7 @@ export function Compositions() {
           backgroundColor={c.backgroundColor}
           accentColor={c.accentColor}
           secondaryColor={c.secondaryColor}
-          tertiaryColor={c.tertiaryColor}
+          tertiaryColor={c.shadeColor}
         />
       ))}
     </View>
