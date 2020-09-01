@@ -90,6 +90,18 @@
 		<string>drweb-medium-TRIAL.woff</string>
 		<string>drweb-mediumitalic-TRIAL.woff</string>
 		<string>drweb-regular-TRIAL.woff</string>
+		<string>dr-bold.otf</string>
+		<string>dr-bolditalic.otf</string>
+		<string>dr-extrabold.otf</string>
+		<string>dr-extraboldItalic.otf</string>
+		<string>dr-extralight.otf</string>
+		<string>dr-extralightitalic.otf</string>
+		<string>dr-italic.otf</string>
+		<string>dr-light.otf</string>
+		<string>dr-lightitalic.otf</string>
+		<string>dr-medium.otf</string>
+		<string>dr-mediumitalic.otf</string>
+		<string>dr-regular.otf</string>
 	</array>
 </dict>
 </plist>
