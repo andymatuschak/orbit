@@ -5,6 +5,7 @@ import {
   Easing,
   FlexStyle,
   Linking,
+  Platform,
   Pressable,
   StyleProp,
   StyleSheet,
@@ -131,7 +132,7 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.3,
-    cursor: "not-allowed",
+    ...(Platform.OS === "web" && { cursor: "not-allowed" }),
   },
 });
 

@@ -112,7 +112,7 @@ export default function SignInScreen() {
     <View
       style={{
         flex: 1,
-        backgroundColor: styles.colors.bg[0], // TODO
+        backgroundColor: styles.colors.palettes[0].backgroundColor, // TODO
         justifyContent: "center",
         alignItems: "center",
       }}

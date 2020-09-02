@@ -122,7 +122,13 @@ static void InitializeFlipper(UIApplication *application) {
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  [FIRApp configure];
+#if DEBUG
+  NSString *filePath = [[NSBundle mainBundle] pathForResource:@"GoogleService-Info-Dev" ofType:@"plist"];
+#else
+  NSString *filePath = [[NSBundle mainBundle] pathForResource:@"GoogleService-Info" ofType:@"plist"];
+#endif
+  FIROptions *options = [[FIROptions alloc] initWithContentsOfFile:filePath];
+  [FIRApp configureWithOptions:options];
 
   RCTSetLogThreshold(RCTLogLevelInfo - 1);
 #if 0

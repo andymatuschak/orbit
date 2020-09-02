@@ -22,6 +22,7 @@
 		50EF73661988447F90B59C45 /* drweb-regular-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 9C1DCC66F8654ECBBAA8D8DF /* drweb-regular-TRIAL.woff */; };
 		5E50EF374B3B4625B9ECA2CC /* dr-bolditalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = F902A8C46D724261A52F509B /* dr-bolditalic.otf */; };
 		5F8EA4A9F03F4A7CB50193E5 /* drweb-mediumitalic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 363191AB03FB41B2B9530BB0 /* drweb-mediumitalic-TRIAL.woff */; };
+		615159EC2500674C00CC4AC6 /* GoogleService-Info-Dev.plist in Resources */ = {isa = PBXBuildFile; fileRef = 615159EB2500674C00CC4AC6 /* GoogleService-Info-Dev.plist */; };
 		6161D45424549FDD0058BA07 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6161D45224549FDD0058BA07 /* GoogleService-Info.plist */; };
 		61AF729C246B596200679E6B /* ORDebugManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 61AF729B246B596200679E6B /* ORDebugManager.m */; };
 		61CD1CDF24CF5B050011D855 /* UINSSceneView+Scaling.m in Sources */ = {isa = PBXBuildFile; fileRef = 61CD1CDE24CF5B050011D855 /* UINSSceneView+Scaling.m */; };
@@ -55,6 +56,7 @@
 		4BC4E2C618F342F087FE9612 /* dr-extraboldItalic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-extraboldItalic.otf"; path = "../assets/fonts/dr-extraboldItalic.otf"; sourceTree = "<group>"; };
 		4C1BE255F2944847BEA05FAC /* drweb-extralightitalic-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-extralightitalic-TRIAL.woff"; path = "../assets/fonts/drweb-extralightitalic-TRIAL.woff"; sourceTree = "<group>"; };
 		51462ABDC1684936987B6556 /* dr-bold.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-bold.otf"; path = "../assets/fonts/dr-bold.otf"; sourceTree = "<group>"; };
+		615159EB2500674C00CC4AC6 /* GoogleService-Info-Dev.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-Dev.plist"; sourceTree = "<group>"; };
 		6161D45224549FDD0058BA07 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		61AF729B246B596200679E6B /* ORDebugManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ORDebugManager.m; sourceTree = "<group>"; };
 		61AFA20B244D0FB4005E78DA /* Orbit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Orbit.entitlements; sourceTree = "<group>"; };
@@ -169,6 +171,7 @@
 			children = (
 				61D31C7F24AD2FB2009823BC /* Expo.plist */,
 				6161D45224549FDD0058BA07 /* GoogleService-Info.plist */,
+				615159EB2500674C00CC4AC6 /* GoogleService-Info-Dev.plist */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				61AFA20B244D0FB4005E78DA /* Orbit.entitlements */,
@@ -271,6 +274,7 @@
 				E9E7104EFC244382AAFF3379 /* drweb-extrabolditalic-TRIAL.woff in Resources */,
 				2B30D6A4EFD145BE815E6703 /* drweb-extralight-TRIAL.woff in Resources */,
 				DD755D205F614C3FA8FE2753 /* drweb-extralightitalic-TRIAL.woff in Resources */,
+				615159EC2500674C00CC4AC6 /* GoogleService-Info-Dev.plist in Resources */,
 				E5E872B4CD2E46BA931F2809 /* drweb-italic-TRIAL.woff in Resources */,
 				7FD27E93179847888C6A7D71 /* drweb-light-TRIAL.woff in Resources */,
 				B7CDD7E72BC34EF4A4BD0626 /* drweb-lightitalic-TRIAL.woff in Resources */,

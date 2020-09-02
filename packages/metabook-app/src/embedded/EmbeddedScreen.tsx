@@ -162,9 +162,6 @@ function EmbeddedScreen() {
           onMark={onMark}
           schedule="default"
           // TODO colors
-          accentColor={styles.colors.fg[1]}
-          secondaryColor={styles.colors.bg[5]}
-          tertiaryColor={styles.colors.ink}
         />
         <AuthenticationStatusIndicator
           authenticationState={authenticationState}

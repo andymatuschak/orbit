@@ -330,6 +330,13 @@ export default function ReviewArea({
     >
       {size && (
         <>
+          <StarburstContainer
+            containerWidth={size.width}
+            items={items}
+            currentItemIndex={currentItemIndex}
+            pendingMarkingInteractionState={pendingMarkingInteractionState}
+            safeInsetTop={safeInsets?.top}
+          />
           <View style={styles.promptContainer}>
             {Array.from(new Array(maximumCardsToRender).keys()).map(
               (renderNodeIndex) => {
