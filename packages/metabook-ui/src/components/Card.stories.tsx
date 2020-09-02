@@ -29,7 +29,6 @@ const testIntervalSequence = getIntervalSequenceForSchedule("default");
 export default {
   title: "Card",
   component: Card,
-  decorators: [withKnobs],
 };
 
 const testAttachmentIDReference: AttachmentIDReference = {

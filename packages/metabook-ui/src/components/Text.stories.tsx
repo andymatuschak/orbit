@@ -17,7 +17,6 @@ import {
 
 export default {
   title: "Style/Type",
-  decorators: [withKnobs],
 };
 
 function TypeSample(props: {

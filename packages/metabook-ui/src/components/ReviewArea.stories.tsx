@@ -23,7 +23,6 @@ import ReviewArea from "./ReviewArea";
 export default {
   title: "ReviewArea",
   component: ReviewArea,
-  decorators: [withKnobs()],
 };
 
 const intervalSequence = getIntervalSequenceForSchedule("default");

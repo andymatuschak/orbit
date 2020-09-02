@@ -1,4 +1,4 @@
-import { boolean, number, withKnobs } from "@storybook/addon-knobs";
+import { boolean, number } from "@storybook/addon-knobs";
 import React from "react";
 import { View } from "react-native";
 import Svg, { Circle, Text } from "react-native-svg";
@@ -84,12 +84,9 @@ function sourceOver(dest: RGBA, src: RGBA): RGBA {
 
 export default {
   title: "Style/Colors",
-  decorators: [withKnobs],
 };
 
 const swatchRadius = 96;
-const inkRGBA = extractRGBA(colors.ink)!;
-const whiteRGBA = extractRGBA(colors.white)!;
 function ColorSwatch({
   backgroundColor,
   foregroundColor1,

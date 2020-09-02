@@ -4,7 +4,6 @@ import { StyleSheet, View } from "react-native";
 import { colors } from "../styles";
 import Button from "./Button";
 import { IconName } from "./Icon";
-import Spacer from "./Spacer";
 
 export default {
   title: "Button",

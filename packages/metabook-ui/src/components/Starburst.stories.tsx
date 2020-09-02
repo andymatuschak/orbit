@@ -16,7 +16,6 @@ import Starburst from "./Starburst";
 export default {
   title: "Starburst",
   component: Starburst,
-  decorators: [withKnobs],
 };
 
 function StarburstGrid(props: { diameter: number }) {
