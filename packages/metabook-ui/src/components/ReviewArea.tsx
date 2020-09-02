@@ -52,38 +52,20 @@ interface PendingMarkingInteractionState {
 }
 
 const maximumCardsToRender = 3;
-const promptRotation = "16deg";
-
-const rotationAnimationTiming = {
-  type: "spring",
-  useNativeDriver: true,
-  bounciness: 0,
-  speed: 25,
-} as const;
 
 type PromptContainerState = "displayed" | "disappearing" | "hidden";
 
-const PromptContainer = React.memo(function PromptContainer({
+const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
   size,
   displayState,
   onDidDisappear,
   reviewItem,
-  onToggleExplanation,
   backIsRevealed,
 }: {
   size: Size;
   displayState: PromptContainerState;
   onDidDisappear: (reviewItem: ReviewItem) => void;
 } & CardProps) {
-  const onTransitionEnd = useCallback(
-    (toVisible: boolean, didFinish: boolean) => {
-      if (!toVisible && didFinish) {
-        onDidDisappear(reviewItem);
-      }
-    },
-    [onDidDisappear, reviewItem],
-  );
-
   const rotationUnit = useTransitioningValue({
     value:
       displayState === "disappearing"
@@ -91,36 +73,41 @@ const PromptContainer = React.memo(function PromptContainer({
         : displayState === "displayed"
         ? 0
         : 1,
-    timing: rotationAnimationTiming,
+    timing: {
+      type: "spring",
+      useNativeDriver: true,
+      bounciness: 0,
+      speed: 25,
+    },
   });
-
-  const style = useMemo(
-    () => [
-      StyleSheet.absoluteFill,
-      {
-        transform: [
-          // The translations shift the transform origin to the upper-left corner.
-          // TODO: this origin isn't right if the prompts are narrower than the container.
-          { translateX: -size.width / 2.0 },
-          { translateY: -size.height / 2.0 },
-          {
-            rotateZ: rotationUnit.interpolate({
-              inputRange: [0, 1],
-              outputRange: ["0deg", promptRotation],
-            }),
-          },
-          { translateX: size.width / 2.0 },
-          { translateY: size.height / 2.0 },
-        ],
-      },
-    ],
-    [size, rotationUnit],
-  );
+  const style = [
+    StyleSheet.absoluteFill,
+    {
+      transform: [
+        // The translations shift the transform origin to the upper-left corner.
+        // TODO: this origin isn't right if the prompts are narrower than the container.
+        { translateX: -size.width / 2.0 },
+        { translateY: -size.height / 2.0 },
+        {
+          rotateZ: rotationUnit.interpolate({
+            inputRange: [0, 1],
+            outputRange: ["0deg", "16deg"],
+          }),
+        },
+        { translateX: size.width / 2.0 },
+        { translateY: size.height / 2.0 },
+      ],
+    },
+  ];
 
   return (
     <FadeView
       isVisible={displayState === "displayed"}
-      onTransitionEnd={onTransitionEnd}
+      onTransitionEnd={(toVisible: boolean, didFinish: boolean) => {
+        if (!toVisible && didFinish) {
+          onDidDisappear(reviewItem);
+        }
+      }}
       durationMillis={displayState === "displayed" ? 40 : 100}
       delayMillis={displayState === "displayed" ? 60 : 0}
       style={style}
@@ -129,7 +116,6 @@ const PromptContainer = React.memo(function PromptContainer({
       {reviewItem && (
         <Card
           reviewItem={reviewItem}
-          onToggleExplanation={onToggleExplanation}
           accentColor={reviewItem.accentColor}
           backIsRevealed={backIsRevealed}
         />
@@ -181,10 +167,6 @@ export default function ReviewArea({
       // TODO: scroll into view if necessary
     }
   }, [isShowingAnswer, currentItem]);
-
-  const onTogglePromptExplanation = useCallback((isExplanationExpanded) => {
-    throw new Error("Unimplemented"); // TODO
-  }, []);
 
   const departingPromptItems = useRef<ReviewItem[]>([]);
 
@@ -305,14 +287,11 @@ export default function ReviewArea({
           paddingBottom: safeInsets?.bottom ?? 0, // button bar has its own internal padding
         },
       ]}
-      onLayout={useCallback(
-        ({
-          nativeEvent: {
-            layout: { width, height },
-          },
-        }) => setSize({ width, height }),
-        [],
-      )}
+      onLayout={({
+        nativeEvent: {
+          layout: { width, height },
+        },
+      }) => setSize({ width, height })}
     >
       {size && (
         <>
@@ -377,13 +356,12 @@ export default function ReviewArea({
                     : "hidden";
 
                 return (
-                  <PromptContainer
+                  <PromptLayoutContainer
                     key={renderNodeIndex}
                     displayState={displayState}
                     reviewItem={renderedItems[renderedItemIndex] || null}
                     onDidDisappear={onPromptDidDisappear}
                     size={size}
-                    onToggleExplanation={onTogglePromptExplanation}
                     backIsRevealed={
                       (isShowingAnswer && displayState === "displayed") ||
                       displayState === "disappearing"
@@ -431,11 +409,6 @@ const styles = StyleSheet.create({
     minHeight: layout.gridUnit * 5,
     alignItems: "flex-end",
     justifyContent: "flex-end",
-  },
-
-  starburstContainer: {
-    position: "absolute",
-    width: "100%",
   },
 });
 
@@ -522,7 +495,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
   const rememberedButtonPendingState = useRef<ButtonPendingActivationState>(
     null,
   );
-  const dispatchPendingMarkingInteraction = useCallback(() => {
+  function dispatchPendingMarkingInteraction() {
     const pendingActionOutcome =
       forgottenButtonPendingState.current === "pressed"
         ? PromptRepetitionOutcome.Forgotten
@@ -532,21 +505,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
     onPendingMarkingInteractionStateDidChange(
       pendingActionOutcome ? { pendingActionOutcome } : null,
     );
-  }, [onPendingMarkingInteractionStateDidChange]);
-  const onForgottenButtonPendingActivation = useCallback(
-    (pendingActivationState) => {
-      forgottenButtonPendingState.current = pendingActivationState;
-      dispatchPendingMarkingInteraction();
-    },
-    [forgottenButtonPendingState, dispatchPendingMarkingInteraction],
-  );
-  const onRememberedButtonPendingActivation = useCallback(
-    (pendingActivationState) => {
-      rememberedButtonPendingState.current = pendingActivationState;
-      dispatchPendingMarkingInteraction();
-    },
-    [rememberedButtonPendingState, dispatchPendingMarkingInteraction],
-  );
+  }
 
   if (!disabled) {
     if (isShowingAnswer) {
@@ -558,9 +517,10 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
           onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
           iconName={IconName.Cross}
           title={getButtonTitle(promptType, PromptRepetitionOutcome.Forgotten)}
-          onPendingInteractionStateDidChange={
-            onForgottenButtonPendingActivation
-          }
+          onPendingInteractionStateDidChange={(pendingActivationState) => {
+            forgottenButtonPendingState.current = pendingActivationState;
+            dispatchPendingMarkingInteraction();
+          }}
           hitSlop={{
             top: layout.gridUnit * 4,
             left: layout.gridUnit * 2,
@@ -577,9 +537,10 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
           onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
           iconName={IconName.Check}
           title={getButtonTitle(promptType, PromptRepetitionOutcome.Remembered)}
-          onPendingInteractionStateDidChange={
-            onRememberedButtonPendingActivation
-          }
+          onPendingInteractionStateDidChange={(pendingActivationState) => {
+            rememberedButtonPendingState.current = pendingActivationState;
+            dispatchPendingMarkingInteraction();
+          }}
           hitSlop={{
             top: layout.gridUnit * 4,
             right: layout.gridUnit * 2,
@@ -596,7 +557,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
           key={2}
           onPress={onReveal}
           iconName={IconName.Reveal}
-          title={"See answer"}
+          title={"Show answer"}
           hitSlop={{
             top: layout.gridUnit * 4,
             right: layout.gridUnit * 2,

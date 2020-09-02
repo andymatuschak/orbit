@@ -214,7 +214,6 @@ export interface CardProps {
   backIsRevealed: boolean;
 
   accentColor?: string;
-  onToggleExplanation?: (isExplanationExpanded: boolean) => unknown;
 }
 
 type QAPromptRendererType = CardProps & {
