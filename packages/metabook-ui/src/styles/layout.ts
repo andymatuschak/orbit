@@ -13,36 +13,22 @@ export const spacing = {
   spacing09: gridUnit * 3,
 };
 
-const baseColumnWidth = 166;
 export const columnMargin = gridUnit;
+export const edgeMargin = gridUnit * 2;
 
-export function getColumnSpan(columnCount: number, columnWidth: number) {
-  if (columnCount < 1) {
+export function getColumnSpan(columnCount: number, layoutWidth: number) {
+  if (columnCount < 1 || columnCount > 2) {
     throw new Error(`Can't get column span for column count of ${columnCount}`);
   }
+
+  // Assumes a two-column layout
+  const columnWidth = (layoutWidth - edgeMargin * 2 - columnMargin) / 2.0;
   return Math.round(
     columnCount * columnWidth + (columnCount - 1) * columnMargin,
   );
 }
 
-export interface ColumnLayout {
-  columnCount: number;
-  columnWidth: number;
-  edgeMargin: number;
-}
-
-export function getColumnLayout(width: number): ColumnLayout {
-  const edgeMargin =
-    // width >= baseColumnWidth * 2 + columnMargin + gridUnit * 4
-    width >= baseColumnWidth + gridUnit * 4 ? gridUnit * 2 : gridUnit;
-  const interiorWidth = width - edgeMargin * 2;
-  const columnCount = Math.floor(
-    (interiorWidth + columnMargin) / (baseColumnWidth + columnMargin),
-  );
-  return {
-    columnCount,
-    columnWidth:
-      (interiorWidth - columnMargin * (columnCount - 1)) / columnCount,
-    edgeMargin,
-  };
+export type SizeClass = "compact" | "regular";
+export function getWidthSizeClass(width: number): SizeClass {
+  return width > 375 ? "regular" : "compact";
 }

@@ -62,7 +62,6 @@ const ButtonInterior = function ButtonImpl(
     iconName,
     isHovered,
     isPressed,
-    style,
     ...rest
   } = props;
   const opacity = React.useRef(new Animated.Value(1)).current;
@@ -81,12 +80,11 @@ const ButtonInterior = function ButtonImpl(
   return (
     <Animated.View
       style={[
-        styles.base,
-        !!backgroundColor && styles.baseWithBackground,
-        style,
         {
           opacity,
         },
+        styles.interiorLayout,
+        !!backgroundColor && styles.interiorLayoutWithBackground,
         !!disabled && styles.disabled,
       ]}
       pointerEvents="box-only"
@@ -123,13 +121,13 @@ const ButtonInterior = function ButtonImpl(
 };
 
 const styles = StyleSheet.create({
-  base: {
-    paddingTop: layout.gridUnit * 2,
-    paddingBottom: layout.gridUnit * 2,
+  interiorLayout: {
+    marginTop: layout.gridUnit * 2,
+    marginBottom: layout.gridUnit * 2,
   },
-  baseWithBackground: {
-    paddingLeft: layout.gridUnit * 2,
-    paddingRight: layout.gridUnit * 2,
+  interiorLayoutWithBackground: {
+    marginLeft: layout.gridUnit * 2,
+    marginRight: layout.gridUnit * 2,
   },
   disabled: {
     opacity: 0.3,
@@ -138,7 +136,7 @@ const styles = StyleSheet.create({
 });
 
 export default React.memo(function Button(props: ButtonProps) {
-  const { onPendingInteractionStateDidChange, backgroundColor } = props;
+  const { onPendingInteractionStateDidChange, backgroundColor, style } = props;
 
   const href = "href" in props ? props.href : null;
   const onPress = "onPress" in props ? props.onPress : null;
@@ -200,7 +198,7 @@ export default React.memo(function Button(props: ButtonProps) {
           // @ts-ignore react-native-web adds this prop.
           href={href}
           hitSlop={props.hitSlop}
-          style={!!backgroundColor && { backgroundColor }}
+          style={[!!backgroundColor && { backgroundColor }, style]}
         >
           {({ pressed }) => (
             <ButtonInterior

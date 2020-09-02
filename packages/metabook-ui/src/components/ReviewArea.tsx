@@ -12,7 +12,7 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { PromptReviewItem, ReviewItem } from "../reviewItem";
 import { colors, layout } from "../styles";
-import { columnMargin, getColumnSpan } from "../styles/layout";
+import { ColorPalette } from "../styles/colors";
 import unreachableCaseError from "../util/unreachableCaseError";
 import Button, { ButtonPendingActivationState } from "./Button";
 import Card, { CardProps } from "./Card";
@@ -26,6 +26,7 @@ import Starburst, {
   getStarburstRayValueForInterval,
 } from "./Starburst";
 import StarburstLegend from "./StarburstLegend";
+import Spacer from "./Spacer";
 
 type Size = { width: number; height: number };
 
@@ -124,7 +125,112 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
   );
 });
 
-const starburstThickness = 3;
+const StarburstContainer = React.memo(function StarburstContainer({
+  containerWidth,
+  items,
+  currentItemIndex,
+  pendingMarkingInteractionState,
+  safeInsetTop,
+}: {
+  containerWidth: number;
+  items: ReviewItem[];
+  currentItemIndex: number;
+  pendingMarkingInteractionState: PendingMarkingInteractionState | null;
+  safeInsetTop?: number;
+}) {
+  const widthSizeClass = layout.getWidthSizeClass(containerWidth);
+  const starburstRadius =
+    widthSizeClass === "regular"
+      ? layout.getColumnSpan(1, containerWidth)
+      : layout.getColumnSpan(2, containerWidth);
+  const currentItem = items[currentItemIndex];
+
+  const currentItemEffectiveInterval = useMemo(() => {
+    const { promptState, prompt } = currentItem;
+    if (pendingMarkingInteractionState) {
+      return getNextRepetitionInterval({
+        schedule: "default",
+        currentlyNeedsRetry: promptState?.needsRetry ?? false,
+        outcome: pendingMarkingInteractionState.pendingActionOutcome,
+        reviewIntervalMillis: promptState
+          ? Date.now() - promptState.lastReviewTimestampMillis
+          : 0,
+        scheduledIntervalMillis: promptState?.intervalMillis ?? null,
+        supportsRetry: prompt.promptType !== applicationPromptType, // TODO extract expression, remove duplication with applyActionLogToPromptState
+      });
+    } else {
+      return currentItem.promptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time
+    }
+  }, [currentItem, pendingMarkingInteractionState]);
+
+  const starburstEntries = useMemo(
+    () =>
+      items.map((item, index) => {
+        const effectiveInterval = item.promptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time
+        return {
+          value: item.promptState
+            ? getStarburstRayValueForInterval(
+                index === currentItemIndex
+                  ? currentItemEffectiveInterval
+                  : effectiveInterval,
+              )
+            : 0,
+          // TODO: implement more proper "is finished" color determination
+          color:
+            index < currentItemIndex
+              ? items[currentItemIndex].secondaryColor
+              : items[currentItemIndex].shadeColor,
+        };
+      }),
+    [items, currentItemIndex, currentItemEffectiveInterval],
+  );
+
+  const starburstOrigin = [
+    layout.edgeMargin -
+      getStarburstQuillInnerRadius(starburstEntries.length, 3),
+    // We position the bottom of the 3:00 ray at the bottom of a grid row, so that we can lay out other elements in even grid unit multiple from there.
+    layout.gridUnit * 6 - 3 / 2 + (safeInsetTop ?? 0),
+  ] as const;
+
+  return (
+    <>
+      <View style={StyleSheet.absoluteFill}>
+        <Starburst
+          diameter={starburstRadius! * 2}
+          entries={starburstEntries}
+          thickness={3}
+          origin={starburstOrigin}
+          entryAtHorizontal={currentItemIndex}
+          accentOverlayColor={currentItem.accentColor}
+        />
+      </View>
+      <View
+        style={{
+          position: "absolute",
+          left: starburstOrigin[0],
+          top: starburstOrigin[1] - 3 / 2,
+          width: starburstRadius!,
+        }}
+      >
+        <StarburstLegend
+          activeInterval={currentItemEffectiveInterval}
+          starburstThickness={3}
+          starburstRadius={starburstRadius!}
+          starburstQuillOuterRadius={getStarburstQuillOuterRadius(
+            starburstEntries.length,
+            3,
+          )}
+          pastLabelColor={colors.white}
+          presentLabelColor={colors.white}
+          futureLabelColor={colors.ink}
+          futureTickColor={colors.ink}
+          backgroundColor={currentItem.backgroundColor}
+        />
+      </View>
+    </>
+  );
+});
+
 export default function ReviewArea({
   items,
   currentItemIndex,
@@ -201,80 +307,11 @@ export default function ReviewArea({
     }
   }
 
-  const currentItemEffectiveInterval = useMemo(() => {
-    const { promptState, prompt } = currentItem;
-    if (pendingMarkingInteractionState) {
-      return getNextRepetitionInterval({
-        schedule: "default",
-        currentlyNeedsRetry: promptState?.needsRetry ?? false,
-        outcome: pendingMarkingInteractionState.pendingActionOutcome,
-        reviewIntervalMillis: promptState
-          ? Date.now() - promptState.lastReviewTimestampMillis
-          : 0,
-        scheduledIntervalMillis: promptState?.intervalMillis ?? null,
-        supportsRetry: prompt.promptType !== applicationPromptType, // TODO extract expression, remove duplication with applyActionLogToPromptState
-      });
-    } else {
-      return currentItem.promptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time
-    }
-  }, [currentItem, pendingMarkingInteractionState]);
-
   const [size, setSize] = useState<Size | null>(null);
-  const width = size?.width;
-  const columnLayout = useMemo(
-    () => (width ? layout.getColumnLayout(width) : null),
-    [width],
-  );
-
-  const starburstEntries = useMemo(
-    () =>
-      items.map((item, index) => {
-        const effectiveInterval = item.promptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time
-        return {
-          value: item.promptState
-            ? getStarburstRayValueForInterval(
-                index === currentItemIndex
-                  ? currentItemEffectiveInterval
-                  : effectiveInterval,
-              )
-            : 0,
-          // TODO: implement more proper "is finished" color determination
-          color:
-            index < currentItemIndex
-              ? items[currentItemIndex].secondaryColor
-              : items[currentItemIndex].shadeColor,
-        };
-      }),
-    [items, currentItemIndex, currentItemEffectiveInterval],
-  );
 
   const renderedItems = departingPromptItems.current
     .concat(items.slice(currentItemIndex))
     .slice(0, maximumCardsToRender);
-
-  const starburstRadius = columnLayout
-    ? getColumnSpan(
-        Math.min(2, columnLayout.columnCount),
-        columnLayout.columnWidth,
-      )
-    : null;
-  const starburstOrigin = useMemo(
-    () =>
-      columnLayout
-        ? ([
-            columnLayout!.edgeMargin -
-              getStarburstQuillInnerRadius(
-                starburstEntries.length,
-                starburstThickness,
-              ),
-            // We position the bottom of the 3:00 ray at the bottom of a grid row, so that we can lay out other elements in even grid unit multiple from there.
-            layout.gridUnit * 6 -
-              starburstThickness / 2 +
-              (safeInsets?.top ?? 0),
-          ] as const)
-        : null,
-    [columnLayout, safeInsets?.top, starburstEntries.length],
-  );
 
   return (
     <View
@@ -282,9 +319,7 @@ export default function ReviewArea({
         styles.outerContainer,
         {
           paddingTop: safeInsets?.top,
-          paddingLeft: columnLayout?.edgeMargin,
-          paddingRight: columnLayout?.edgeMargin,
-          paddingBottom: safeInsets?.bottom ?? 0, // button bar has its own internal padding
+          // button bar has its own internal padding
         },
       ]}
       onLayout={({
@@ -295,50 +330,7 @@ export default function ReviewArea({
     >
       {size && (
         <>
-          <View style={StyleSheet.absoluteFill}>
-            <Starburst
-              diameter={starburstRadius! * 2}
-              entries={starburstEntries}
-              thickness={starburstThickness}
-              origin={starburstOrigin!}
-              entryAtHorizontal={currentItemIndex}
-              accentOverlayColor={currentItem.accentColor}
-            />
-          </View>
-          <View
-            style={{
-              position: "absolute",
-              left: starburstOrigin![0],
-              top: starburstOrigin![1] - starburstThickness / 2,
-              width: starburstRadius!,
-            }}
-          >
-            <StarburstLegend
-              activeInterval={currentItemEffectiveInterval}
-              starburstThickness={starburstThickness}
-              starburstRadius={starburstRadius!}
-              starburstQuillOuterRadius={getStarburstQuillOuterRadius(
-                starburstEntries.length,
-                starburstThickness,
-              )}
-              pastLabelColor={colors.white}
-              presentLabelColor={colors.white}
-              futureLabelColor={colors.ink}
-              futureTickColor={colors.ink}
-              backgroundColor={currentItem.backgroundColor}
-            />
-          </View>
-          <View
-            style={[
-              styles.promptContainer,
-              columnLayout && {
-                maxWidth: getColumnSpan(
-                  Math.min(3, columnLayout.columnCount),
-                  columnLayout.columnWidth,
-                ),
-              },
-            ]}
-          >
+          <View style={styles.promptContainer}>
             {Array.from(new Array(maximumCardsToRender).keys()).map(
               (renderNodeIndex) => {
                 const renderedItemIndex =
@@ -373,6 +365,7 @@ export default function ReviewArea({
           </View>
 
           <ReviewButtonArea
+            colorPalette={currentItem /*todo*/}
             onMark={onMarkingButton}
             onReveal={onReveal}
             onPendingMarkingInteractionStateDidChange={
@@ -386,7 +379,8 @@ export default function ReviewArea({
             }
             accentColor={currentItem.accentColor}
             isShowingAnswer={isShowingAnswer}
-            columnLayout={columnLayout!}
+            containerWidth={size.width}
+            safeInsetsBottom={safeInsets?.bottom}
           />
         </>
       )}
@@ -402,6 +396,8 @@ const styles = StyleSheet.create({
   promptContainer: {
     marginTop: layout.gridUnit * 9, // margin for starburst
     marginBottom: layout.gridUnit * 2,
+    marginLeft: layout.edgeMargin,
+    marginRight: layout.edgeMargin,
     flex: 1,
   },
 
@@ -409,6 +405,11 @@ const styles = StyleSheet.create({
     minHeight: layout.gridUnit * 5,
     alignItems: "flex-end",
     justifyContent: "flex-end",
+  },
+
+  compactButtonContainer: {
+    marginLeft: layout.edgeMargin,
+    marginRight: layout.edgeMargin,
   },
 });
 
@@ -439,16 +440,31 @@ function getButtonTitle(
   }
 }
 
+const firstButtonSlop = {
+  top: layout.gridUnit * 4,
+  left: layout.gridUnit * 2,
+  bottom: layout.gridUnit * 4,
+  right: 0,
+};
+const secondButtonSlop = {
+  top: layout.gridUnit * 4,
+  right: layout.gridUnit * 2,
+  bottom: layout.gridUnit * 4,
+  left: 0,
+};
+
 const ReviewButtonArea = React.memo(function ReviewButtonArea({
-  accentColor,
+  colorPalette,
   disabled,
   onMark,
   onReveal,
   onPendingMarkingInteractionStateDidChange,
   promptType,
   isShowingAnswer,
-  columnLayout,
+  containerWidth,
+  safeInsetsBottom,
 }: {
+  colorPalette: ColorPalette;
   onMark: (outcome: PromptRepetitionOutcome) => void;
   onReveal: () => void;
   onPendingMarkingInteractionStateDidChange: (
@@ -458,35 +474,35 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
   promptType: PromptType | null;
   accentColor: string;
   isShowingAnswer: boolean;
-  columnLayout: layout.ColumnLayout;
+  containerWidth: number;
+  safeInsetsBottom?: number;
 }) {
-  const children: React.ReactNode[] = [];
-  function addButton(button: React.ReactNode) {
-    if (children.length > 0) {
-      children.push(
-        <View
-          key={`spacer-${children.length}`}
-          style={{ width: columnMargin, height: layout.gridUnit }}
-        />,
-      );
-    }
-    children.push(button);
-  }
+  const widthSizeClass = layout.getWidthSizeClass(containerWidth);
+  const isVeryNarrow = containerWidth < 340;
 
   const buttonStyle = {
-    width: columnLayout.columnWidth,
-    ...(columnLayout.columnCount === 1 && {
+    flex: 1,
+    ...(safeInsetsBottom && {
+      paddingBottom:
+        widthSizeClass === "regular"
+          ? // The button already has internal padding when the background is showing. We subtract that off if the safe inset area is larger. This is a bit of a hack, relying on internal knowledge of the button metrics. It might be better to have the button subtract off part of its paddingBottom if necessary.
+            Math.max(0, safeInsetsBottom - layout.gridUnit * 2)
+          : safeInsetsBottom,
+    }),
+    ...(isVeryNarrow && {
       marginBottom: layout.gridUnit * 2,
     }),
   };
   const lastButtonStyle = {
-    width: columnLayout.columnWidth,
+    marginBottom: 0,
   };
 
   const sharedButtonProps = {
     disabled,
     color: colors.white,
-    accentColor,
+    accentColor: colorPalette.accentColor,
+    backgroundColor:
+      widthSizeClass === "regular" ? colorPalette.shadeColor : undefined,
   } as const;
 
   const forgottenButtonPendingState = useRef<ButtonPendingActivationState>(
@@ -507,83 +523,66 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
     );
   }
 
-  if (!disabled) {
-    if (isShowingAnswer) {
-      addButton(
-        <Button
-          {...sharedButtonProps}
-          style={buttonStyle}
-          key={1}
-          onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
-          iconName={IconName.Cross}
-          title={getButtonTitle(promptType, PromptRepetitionOutcome.Forgotten)}
-          onPendingInteractionStateDidChange={(pendingActivationState) => {
-            forgottenButtonPendingState.current = pendingActivationState;
-            dispatchPendingMarkingInteraction();
-          }}
-          hitSlop={{
-            top: layout.gridUnit * 4,
-            left: layout.gridUnit * 2,
-            bottom: layout.gridUnit * 4,
-            right: 0,
-          }}
-        />,
-      );
-      addButton(
-        <Button
-          {...sharedButtonProps}
-          style={lastButtonStyle}
-          key={2}
-          onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
-          iconName={IconName.Check}
-          title={getButtonTitle(promptType, PromptRepetitionOutcome.Remembered)}
-          onPendingInteractionStateDidChange={(pendingActivationState) => {
-            rememberedButtonPendingState.current = pendingActivationState;
-            dispatchPendingMarkingInteraction();
-          }}
-          hitSlop={{
-            top: layout.gridUnit * 4,
-            right: layout.gridUnit * 2,
-            bottom: layout.gridUnit * 4,
-            left: 0,
-          }}
-        />,
-      );
-    } else {
-      addButton(
-        <Button
-          {...sharedButtonProps}
-          style={lastButtonStyle}
-          key={2}
-          onPress={onReveal}
-          iconName={IconName.Reveal}
-          title={"Show answer"}
-          hitSlop={{
-            top: layout.gridUnit * 4,
-            right: layout.gridUnit * 2,
-            bottom: layout.gridUnit * 4,
-            left: layout.gridUnit * 4,
-          }}
-        />,
-      );
-    }
-  }
-
+  const spacer = <Spacer units={widthSizeClass === "regular" ? 0.5 : 1} />;
   return (
     <View
       style={[
         styles.buttonContainer,
+        widthSizeClass === "compact" && styles.compactButtonContainer,
         {
-          maxWidth: getColumnSpan(
-            Math.min(2, columnLayout.columnCount),
-            columnLayout.columnWidth,
-          ),
-          flexDirection: columnLayout.columnCount > 1 ? "row" : "column",
-          flexWrap: columnLayout.columnCount > 1 ? "nowrap" : "wrap",
+          flexDirection: isVeryNarrow ? "column" : "row",
+          flexWrap: isVeryNarrow ? "wrap" : "nowrap",
         },
       ]}
     >
-      {children}
+      {disabled ? null : isShowingAnswer ? (
+        <>
+          <Button
+            {...sharedButtonProps}
+            style={buttonStyle}
+            onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
+            iconName={IconName.Cross}
+            title={getButtonTitle(
+              promptType,
+              PromptRepetitionOutcome.Forgotten,
+            )}
+            onPendingInteractionStateDidChange={(pendingActivationState) => {
+              forgottenButtonPendingState.current = pendingActivationState;
+              dispatchPendingMarkingInteraction();
+            }}
+            hitSlop={firstButtonSlop}
+          />
+          {spacer}
+          <Button
+            {...sharedButtonProps}
+            style={[buttonStyle, lastButtonStyle]}
+            onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
+            iconName={IconName.Check}
+            title={getButtonTitle(
+              promptType,
+              PromptRepetitionOutcome.Remembered,
+            )}
+            onPendingInteractionStateDidChange={(pendingActivationState) => {
+              rememberedButtonPendingState.current = pendingActivationState;
+              dispatchPendingMarkingInteraction();
+            }}
+            hitSlop={secondButtonSlop}
+          />
+        </>
+      ) : (
+        <>
+          <View style={{ flex: 1 }} />
+          {spacer}
+          <Button
+            {...sharedButtonProps}
+            style={[buttonStyle, lastButtonStyle]}
+            onPress={onReveal}
+            iconName={IconName.Reveal}
+            title={"Show answer"}
+            hitSlop={secondButtonSlop}
+          />
+        </>
+      )}
     </View>
   );
 });

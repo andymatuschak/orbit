@@ -107,6 +107,10 @@ export function Basic() {
         {boolean("Show debug grid", false) && <DebugGrid />}
         <ReviewArea
           items={items}
+          safeInsets={{
+            top: number("Top safe inset", 0),
+            bottom: number("Bottom safe inset", 0),
+          }}
           onMark={useCallback(
             ({ outcome, reviewItem }) => {
               setItems((items) => {

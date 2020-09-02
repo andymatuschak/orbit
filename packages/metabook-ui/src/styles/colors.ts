@@ -8,13 +8,13 @@ export const ink = "rgba(0,0,0,0.8)";
 export const white = "rgba(255,255,255,1)";
 export const productKeyColor = "#ED3749";
 
-interface ColorComposition {
+export interface ColorPalette {
   backgroundColor: string;
   accentColor: string;
   secondaryColor: string;
   shadeColor: string;
 }
-export const palettes: ColorComposition[] = [
+export const palettes: ColorPalette[] = [
   {
     backgroundColor: "#FF5252",
     accentColor: "#FFCB2E",
