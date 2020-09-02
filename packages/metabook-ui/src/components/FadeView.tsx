@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { Animated, Easing, StyleProp, ViewStyle } from "react-native";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
-import WithAnimatedValue = Animated.WithAnimatedValue;
 
 export interface FadeViewProps {
   isVisible: boolean;
@@ -10,7 +9,7 @@ export interface FadeViewProps {
   removeFromLayoutWhenHidden?: boolean; // default: no
   durationMillis?: number;
   delayMillis?: number;
-  style?: WithAnimatedValue<StyleProp<ViewStyle>>;
+  style?: Animated.WithAnimatedValue<StyleProp<ViewStyle>>;
   onTransitionEnd?: (toVisible: boolean, didFinish: boolean) => void;
 }
 

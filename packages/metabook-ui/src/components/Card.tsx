@@ -25,7 +25,6 @@ import {
   useTransitioningValue,
 } from "./hooks/useTransitioningValue";
 import { Caption, Label } from "./Text";
-import WithAnimatedValue = Animated.WithAnimatedValue;
 
 function getQAPrompt(
   reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem,
@@ -57,9 +56,9 @@ const topAreaTranslationAnimationSpec: AnimationSpec = {
 function useAnimatingStyles(
   backIsRevealed: boolean,
 ): {
-  topAreaStyle: WithAnimatedValue<ViewStyle>;
-  bottomFrontStyle: WithAnimatedValue<ViewStyle>;
-  bottomBackStyle: WithAnimatedValue<ViewStyle>;
+  topAreaStyle: Animated.WithAnimatedValue<ViewStyle>;
+  bottomFrontStyle: Animated.WithAnimatedValue<ViewStyle>;
+  bottomBackStyle: Animated.WithAnimatedValue<ViewStyle>;
 } {
   const topAreaTranslateAnimation = useTransitioningValue({
     value: backIsRevealed ? 1 : 0,

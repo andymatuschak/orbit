@@ -5,7 +5,6 @@ import Svg, { ClipPath, G, Path } from "react-native-svg";
 import lerp from "../util/lerp";
 import usePrevious from "./hooks/usePrevious";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
-import WithAnimatedValue = Animated.WithAnimatedValue;
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -269,7 +268,7 @@ export default React.memo(function Starburst({
     animatingEntry: { index: number; oldValue: string } | null,
   ) {
     const joinedPaths = paths.join(" ");
-    let d: WithAnimatedValue<string>;
+    let d: Animated.WithAnimatedValue<string>;
     if (animatingEntry === null) {
       d = joinedPaths;
     } else {

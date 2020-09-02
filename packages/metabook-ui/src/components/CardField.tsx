@@ -1,3 +1,4 @@
+import isEqual from "lodash.isequal";
 import MarkdownIt, { Delimiter } from "markdown-it/lib";
 import Token from "markdown-it/lib/token";
 import {
@@ -8,9 +9,9 @@ import {
 import React, {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
-  useLayoutEffect,
 } from "react";
 import {
   ColorValue,
@@ -22,18 +23,15 @@ import {
   Text,
   TextStyle,
   View,
-  ViewProps,
   ViewStyle,
 } from "react-native";
 import Markdown, * as MarkdownDisplay from "react-native-markdown-display";
 import { AttachmentResolutionMap } from "../reviewItem";
 
-import { type, colors } from "../styles";
+import { colors, type } from "../styles";
 import { getVariantStyles } from "../styles/type";
 import usePrevious from "./hooks/usePrevious";
 import useWeakRef from "./hooks/useWeakRef";
-import NamedStyles = StyleSheet.NamedStyles;
-import isEqual from "lodash.isequal";
 
 function clozeParsePlugin(md: MarkdownIt) {
   const startDelimiterCode = "{".charCodeAt(0);
@@ -406,7 +404,7 @@ export default React.memo(function CardField(props: {
       <View style={{ height: 10000 }}>
         <Markdown
           rules={renderRules}
-          style={markdownStyles as NamedStyles<unknown>}
+          style={markdownStyles as StyleSheet.NamedStyles<unknown>}
           mergeStyle={false}
           markdownit={markdownItInstance}
         >
