@@ -9,14 +9,7 @@ import {
   QAPrompt,
 } from "metabook-core";
 import React from "react";
-import {
-  Animated,
-  ColorValue,
-  FlexStyle,
-  StyleSheet,
-  View,
-  ViewStyle,
-} from "react-native";
+import { Animated, FlexStyle, StyleSheet, View, ViewStyle } from "react-native";
 import {
   ApplicationPromptReviewItem,
   BasicPromptReviewItem,
@@ -145,7 +138,7 @@ function PromptContextLabel({
   reviewItem: PromptReviewItem;
   size: "regular" | "small";
   style?: FlexStyle;
-  accentColor?: ColorValue;
+  accentColor?: string;
 }) {
   const provenance = reviewItem.promptState?.taskMetadata.provenance;
   const promptContext = provenance ? getPromptContext(provenance) : null;
@@ -220,7 +213,7 @@ export interface CardProps {
   reviewItem: PromptReviewItem;
   backIsRevealed: boolean;
 
-  accentColor?: ColorValue;
+  accentColor?: string;
   onToggleExplanation?: (isExplanationExpanded: boolean) => unknown;
 }
 

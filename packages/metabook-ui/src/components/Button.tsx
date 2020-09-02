@@ -2,7 +2,6 @@ import React from "react";
 import {
   Alert,
   Animated,
-  ColorValue,
   Easing,
   FlexStyle,
   Linking,
@@ -13,7 +12,7 @@ import {
   TextProps,
   ViewProps,
 } from "react-native";
-import { colors, type, layout } from "../styles";
+import { colors, layout, type } from "../styles";
 import usePrevious from "./hooks/usePrevious";
 import Hoverable from "./Hoverable";
 import Icon, { IconName, IconPosition } from "./Icon";
@@ -21,13 +20,16 @@ import Icon, { IconName, IconPosition } from "./Icon";
 export type ButtonPendingActivationState = "hover" | "pressed" | null;
 export type ButtonProps = {
   title: string;
-  color?: ColorValue;
+
+  color?: string;
+  accentColor?: string; // for the icon; the icon's accent color will be the text color
+  backgroundColor?: string;
+
   disabled?: boolean;
   size?: "regular" | "small";
   hitSlop?: ViewProps["hitSlop"];
 
   iconName?: IconName;
-  accentColor?: ColorValue;
 
   style?: StyleProp<FlexStyle>;
 
@@ -47,16 +49,17 @@ export type ButtonProps = {
 const pressedButtonOpacity = 0.2;
 const defaultButtonColor = colors.ink;
 
-const ButtonImpl = React.memo(function ButtonImpl(
+const ButtonInterior = function ButtonImpl(
   props: ButtonProps & { isHovered: boolean; isPressed: boolean },
 ) {
   const {
     title,
     color,
+    accentColor,
+    backgroundColor,
     disabled,
     size,
     iconName,
-    accentColor,
     isHovered,
     isPressed,
     style,
@@ -77,16 +80,15 @@ const ButtonImpl = React.memo(function ButtonImpl(
 
   return (
     <Animated.View
-      style={React.useMemo(
-        () => [
-          style,
-          {
-            opacity,
-          },
-          !!disabled && styles.disabled,
-        ],
-        [disabled, opacity, style],
-      )}
+      style={[
+        styles.base,
+        !!backgroundColor && styles.baseWithBackground,
+        style,
+        {
+          opacity,
+        },
+        !!disabled && styles.disabled,
+      ]}
       pointerEvents="box-only"
     >
       {iconName && (
@@ -104,7 +106,6 @@ const ButtonImpl = React.memo(function ButtonImpl(
           (size ?? "regular") === "regular"
             ? type.label.layoutStyle
             : type.caption.layoutStyle,
-          ,
           {
             color:
               ((isHovered || isPressed) && accentColor && !disabled
@@ -119,33 +120,28 @@ const ButtonImpl = React.memo(function ButtonImpl(
       </Text>
     </Animated.View>
   );
-});
+};
 
 const styles = StyleSheet.create({
+  base: {
+    paddingTop: layout.gridUnit * 2,
+    paddingBottom: layout.gridUnit * 2,
+  },
+  baseWithBackground: {
+    paddingLeft: layout.gridUnit * 2,
+    paddingRight: layout.gridUnit * 2,
+  },
   disabled: {
     opacity: 0.3,
+    cursor: "not-allowed",
   },
 });
 
-export default function Button(props: ButtonProps) {
-  const { onPendingInteractionStateDidChange } = props;
+export default React.memo(function Button(props: ButtonProps) {
+  const { onPendingInteractionStateDidChange, backgroundColor } = props;
 
   const href = "href" in props ? props.href : null;
   const onPress = "onPress" in props ? props.onPress : null;
-  const effectiveOnPress = React.useMemo(
-    () =>
-      onPress ??
-      (() => {
-        console.log("Opening url");
-        Linking.openURL(href!).catch(() => {
-          Alert.alert(
-            "Couldn't open link",
-            `You may need to install an app to open this URL: ${href}`,
-          );
-        });
-      }),
-    [href, onPress],
-  );
 
   const isPressed = React.useRef(false);
   const isHovered = React.useRef(false);
@@ -153,7 +149,7 @@ export default function Button(props: ButtonProps) {
     ButtonPendingActivationState
   >(null);
 
-  const dispatchPendingInteractionState = React.useCallback(() => {
+  function dispatchPendingInteractionState() {
     const activationState = isPressed.current
       ? "pressed"
       : isHovered.current
@@ -163,44 +159,58 @@ export default function Button(props: ButtonProps) {
       lastDispatchedPendingInteractionState.current = activationState;
       onPendingInteractionStateDidChange?.(activationState);
     }
-  }, [isPressed, isHovered, onPendingInteractionStateDidChange]);
-  const onPressIn = React.useCallback(() => {
-    isPressed.current = true;
-    dispatchPendingInteractionState();
-  }, [isPressed, dispatchPendingInteractionState]);
-  const onPressOut = React.useCallback(() => {
-    isPressed.current = false;
-    dispatchPendingInteractionState();
-  }, [isPressed, dispatchPendingInteractionState]);
-  const onHoverIn = React.useCallback(() => {
-    isHovered.current = true;
-    dispatchPendingInteractionState();
-  }, [isHovered, dispatchPendingInteractionState]);
-  const onHoverOut = React.useCallback(() => {
-    isHovered.current = false;
-    dispatchPendingInteractionState();
-  }, [isHovered, dispatchPendingInteractionState]);
+  }
 
   return (
-    <Hoverable onHoverIn={onHoverIn} onHoverOut={onHoverOut}>
+    <Hoverable
+      onHoverIn={() => {
+        isHovered.current = true;
+        dispatchPendingInteractionState();
+      }}
+      onHoverOut={() => {
+        isHovered.current = false;
+        dispatchPendingInteractionState();
+      }}
+    >
       {(isHovered) => (
         <Pressable
           accessible={true}
           accessibilityRole={href ? "link" : "button"}
           accessibilityLabel={props.title}
-          onPress={effectiveOnPress}
-          onPressIn={onPressIn}
-          onPressOut={onPressOut}
+          onPress={
+            onPress ??
+            (() => {
+              Linking.openURL(href!).catch(() => {
+                Alert.alert(
+                  "Couldn't open link",
+                  `You may need to install an app to open this URL: ${href}`,
+                );
+              });
+            })
+          }
+          onPressIn={() => {
+            isPressed.current = true;
+            dispatchPendingInteractionState();
+          }}
+          onPressOut={() => {
+            isPressed.current = false;
+            dispatchPendingInteractionState();
+          }}
           disabled={props.disabled}
           // @ts-ignore react-native-web adds this prop.
           href={href}
           hitSlop={props.hitSlop}
+          style={!!backgroundColor && { backgroundColor }}
         >
           {({ pressed }) => (
-            <ButtonImpl {...props} isHovered={isHovered} isPressed={pressed} />
+            <ButtonInterior
+              {...props}
+              isHovered={isHovered}
+              isPressed={pressed}
+            />
           )}
         </Pressable>
       )}
     </Hoverable>
   );
-}
+});

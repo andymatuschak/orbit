@@ -9,7 +9,7 @@ import {
   PromptType,
 } from "metabook-core";
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { ColorValue, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { PromptReviewItem, ReviewItem } from "../reviewItem";
 import { colors, layout } from "../styles";
 import { columnMargin, getColumnSpan } from "../styles/layout";
@@ -302,8 +302,7 @@ export default function ReviewArea({
           paddingTop: safeInsets?.top,
           paddingLeft: columnLayout?.edgeMargin,
           paddingRight: columnLayout?.edgeMargin,
-          paddingBottom:
-            (columnLayout?.edgeMargin ?? 0) + (safeInsets?.bottom ?? 0),
+          paddingBottom: safeInsets?.bottom ?? 0, // button bar has its own internal padding
         },
       ]}
       onLayout={useCallback(
@@ -484,7 +483,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
   ) => void;
   disabled: boolean;
   promptType: PromptType | null;
-  accentColor: ColorValue;
+  accentColor: string;
   isShowingAnswer: boolean;
   columnLayout: layout.ColumnLayout;
 }) {

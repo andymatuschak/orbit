@@ -1,12 +1,12 @@
 import React from "react";
 import {
   ColorValue,
-  FlexStyle,
   Image,
   ImageStyle,
   StyleProp,
   StyleSheet,
   View,
+  ViewStyle,
 } from "react-native";
 import unreachableCaseError from "../util/unreachableCaseError";
 
@@ -26,7 +26,7 @@ export enum IconPosition {
 export interface IconProps {
   name: IconName;
   position: IconPosition;
-  style?: StyleProp<FlexStyle>;
+  style?: StyleProp<ViewStyle>;
   tintColor?: ColorValue;
   accentColor?: ColorValue;
 }
