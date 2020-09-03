@@ -47,7 +47,7 @@ const EmbedScreen = React.lazy(() => import("./embedded/EmbeddedScreen"));
 const LoadingScreen = () => (
   // TODO https://github.com/andymatuschak/metabook/issues/63
   <View style={{ flex: 1, justifyContent: "center" }}>
-    <ActivityIndicator size="large" color={styles.colors.fg[0]} />
+    <ActivityIndicator size="large" color={styles.colors.productKeyColor} />
   </View>
 );
 const screens: Record<RootScreen, React.ComponentType<unknown>> = {

@@ -69,6 +69,7 @@
     "react-native-unimodules": "~0.10.1",
     "react-native-web": "~0.13.4",
     "readable-stream": "^1.0.33",
+    "resize-observer-polyfill": "^1.5.1",
     "string_decoder": "^0.10.31",
     "subleveldown": "^5.0.1",
     "timers-browserify": "^1.4.2",

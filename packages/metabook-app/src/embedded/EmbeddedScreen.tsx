@@ -155,7 +155,7 @@ function EmbeddedScreen() {
 
   if (items) {
     return (
-      <View style={{ position: "relative" }}>
+      <View style={{ position: "relative", height: "100vh" }}>
         <ReviewArea
           items={items}
           currentItemIndex={queueOffset}

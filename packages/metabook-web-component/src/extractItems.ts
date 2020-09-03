@@ -1,4 +1,4 @@
-import { EmbeddedItem } from "embedded-app/src/embeddedItem";
+import { EmbeddedItem } from "metabook-app/src/embedded/embeddedItem";
 import { basicPromptType } from "metabook-core";
 import { OrbitPromptElement } from "./OrbitPromptElement";
 

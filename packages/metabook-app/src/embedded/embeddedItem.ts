@@ -8,6 +8,7 @@ import {
   AttachmentResolutionMap,
   promptReviewItemType,
   ReviewItem,
+  styles,
 } from "metabook-ui";
 
 export interface EmbeddedPromptField {
@@ -96,6 +97,7 @@ export function getReviewItemFromEmbeddedItem(
         promptState: null,
         reviewItemType: promptReviewItemType,
         attachmentResolutionMap,
+        ...styles.colors.palettes[0], // TODO
       };
     default:
       return new Error(`Unsupported item type ${embeddedItem.type}`);
