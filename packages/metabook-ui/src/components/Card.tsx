@@ -21,7 +21,7 @@ import Button from "./Button";
 import CardField, { clozeBlankSentinel } from "./CardField";
 import FadeView from "./FadeView";
 import {
-  AnimationSpec,
+  AnimatedTransitionTiming,
   useTransitioningValue,
 } from "./hooks/useTransitioningValue";
 import { Caption, Label } from "./Text";
@@ -41,14 +41,14 @@ function getQAPrompt(
   }
 }
 
-const bottomAreaTranslationAnimationSpec: AnimationSpec = {
+const bottomAreaTranslationAnimationSpec: AnimatedTransitionTiming = {
   type: "spring",
   bounciness: 0,
   speed: 28,
   useNativeDriver: true,
 };
 
-const topAreaTranslationAnimationSpec: AnimationSpec = {
+const topAreaTranslationAnimationSpec: AnimatedTransitionTiming = {
   ...bottomAreaTranslationAnimationSpec,
   delay: 50,
 };
