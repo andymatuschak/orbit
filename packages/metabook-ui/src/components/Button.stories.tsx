@@ -1,117 +1,59 @@
+import { Story } from "@storybook/react";
 import React from "react";
-import { StyleSheet, View } from "react-native";
 import { colors } from "../styles";
-import Button from "./Button";
+import Button, { ButtonProps } from "./Button";
 import { IconName } from "./Icon";
+
+const palette = colors.palettes[0];
 
 export default {
   title: "Button",
   component: Button,
+  argTypes: {
+    onPress: { action: "pressed" },
+    onPendingInteractionStateDidChange: {
+      action: "pending interaction state change",
+    },
+  },
+  parameters: {
+    backgrounds: {
+      values: [{ name: "colorful", value: palette.backgroundColor }],
+    },
+  },
 };
 
-const palette = colors.palettes[0];
+const Template: Story<ButtonProps> = (args) => (
+  <Button style={{ width: 250 }} {...args} />
+);
+Template.args = {
+  title: "Button",
+  accentColor: colors.productKeyColor,
+  href: undefined,
+};
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fafafa",
-    alignItems: "center",
-    maxWidth: 500,
-  },
+export const Basic = Template.bind({});
+Basic.args = Template.args;
 
-  bgContainer: {
-    backgroundColor: palette.backgroundColor,
-  },
+export const Link = Template.bind({});
+Link.args = {
+  ...Template.args,
+  onPress: undefined,
+  href: "https://google.com",
+};
 
-  button: {
-    width: 250,
-  },
-});
+export const Disabled = Template.bind({});
+Disabled.args = { ...Template.args, disabled: true };
 
-export function PlainButton() {
-  return (
-    <View style={styles.container}>
-      <Button
-        title="Button"
-        onPress={action("Button clicked")}
-        accentColor={colors.productKeyColor}
-        onPendingInteractionStateDidChange={(isPendingActivation) =>
-          action(`Pending activation`)(isPendingActivation)
-        }
-      />
-      <Button
-        title="Disabled"
-        onPress={action("Button clicked")}
-        accentColor={colors.productKeyColor}
-        disabled
-      />
-    </View>
-  );
-}
+export const Icon = Template.bind({});
+Icon.args = { ...Template.args, iconName: IconName.Check };
 
-export function IconButton() {
-  return (
-    <View>
-      <View style={styles.container}>
-        <View>
-          <Button
-            title="Button"
-            onPress={action("Button clicked")}
-            iconName={IconName.Check}
-            accentColor={colors.productKeyColor}
-            style={styles.button}
-          />
-        </View>
-        <View>
-          <Button
-            title="Disabled"
-            onPress={action("Button clicked")}
-            iconName={IconName.Check}
-            accentColor={colors.productKeyColor}
-            style={styles.button}
-            disabled
-          />
-        </View>
-      </View>
-
-      <View style={[styles.container, styles.bgContainer]}>
-        <View>
-          <Button
-            title="Button"
-            onPress={action("Button clicked")}
-            iconName={IconName.Check}
-            accentColor={palette.accentColor}
-            backgroundColor={palette.shadeColor}
-            color={colors.white}
-            style={styles.button}
-          />
-        </View>
-        <View>
-          <Button
-            title="Disabled"
-            onPress={action("Button clicked")}
-            iconName={IconName.Check}
-            accentColor={palette.accentColor}
-            backgroundColor={palette.shadeColor}
-            color={colors.white}
-            style={styles.button}
-            disabled
-          />
-        </View>
-      </View>
-    </View>
-  );
-}
-
-export function LinkButton() {
-  return (
-    <View style={styles.container}>
-      <View>
-        <Button
-          title="Link button"
-          href="https://google.com"
-          accentColor={colors.productKeyColor}
-        />
-      </View>
-    </View>
-  );
-}
+export const Background = Template.bind({});
+Background.args = {
+  ...Icon.args,
+  accentColor: palette.accentColor,
+  backgroundColor: palette.shadeColor,
+  color: colors.white,
+};
+Background.parameters = {
+  backgrounds: { default: "colorful" },
+};
