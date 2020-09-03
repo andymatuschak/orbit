@@ -51,6 +51,7 @@
     "react": "^16.13.0"
   },
   "dependencies": {
+    "@storybook/addon-actions": "^6.0.21",
     "isemail": "^3.2.0",
     "lodash.isequal": "^4.5.0",
     "metabook-core": "0.0.1",

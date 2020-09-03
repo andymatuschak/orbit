@@ -141,6 +141,14 @@ static void InitializeFlipper(UIApplication *application) {
   return YES;
 }
 
+- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+  if (window.screen.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact) {
+    return UIInterfaceOrientationMaskPortrait;
+  } else {
+    return UIInterfaceOrientationMaskAllButUpsideDown;
+  }
+}
+
 - (void)initializeBridge {
   if (!self.bridge) {
     self.bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:nil];
