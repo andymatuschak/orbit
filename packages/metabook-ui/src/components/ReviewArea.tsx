@@ -410,8 +410,6 @@ const styles = StyleSheet.create({
 
   buttonContainer: {
     minHeight: layout.gridUnit * 5,
-    alignItems: "flex-end",
-    justifyContent: "flex-end",
   },
 
   compactButtonContainer: {
@@ -497,7 +495,8 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
           : safeInsetsBottom,
     }),
     ...(isVeryNarrow && {
-      marginBottom: layout.gridUnit * 2,
+      // Collapse margins of stacked buttons. As with the padding hack above, this relies on internal knowledge of the button metrics. Not ideal.
+      marginBottom: layout.gridUnit * -2,
     }),
   };
   const lastButtonStyle = {

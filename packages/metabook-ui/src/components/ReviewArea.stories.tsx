@@ -97,9 +97,9 @@ export function Basic() {
   return (
     <Animated.View
       style={{
-        margin: 16,
         backgroundColor,
-        height: 600,
+        height: "100vh",
+        maxHeight: 600,
       }}
     >
       <View style={{ flex: 1 }}>

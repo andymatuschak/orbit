@@ -1,4 +1,4 @@
-import { boolean, withKnobs } from "@storybook/addon-knobs";
+import { boolean } from "@storybook/addon-knobs";
 import React from "react";
 import { Text, TextStyle, View } from "react-native";
 import { layout, type } from "../styles";

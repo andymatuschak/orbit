@@ -2,11 +2,7 @@ const path = require("path");
 
 module.exports = {
   stories: ["../src/**/*.stories.tsx"],
-  addons: [
-    "@storybook/addon-actions/register",
-    "@storybook/addon-links",
-    "@storybook/addon-knobs/register",
-  ],
+  addons: ["@storybook/addon-essentials"],
   webpackFinal: async (config) => {
     // Annoyingly, our Markdown library has JSX (and other fancy features) in its built distribution JS files.
     config.module.rules.push({
@@ -26,21 +22,8 @@ module.exports = {
         },
       },
     });
-    config.module.rules.push({
-      test: /\.(ts|tsx)$/,
-      include: path.resolve(__dirname, "../src"),
-      use: [
-        {
-          loader: require.resolve("ts-loader"),
-          options: {
-            configFile: path.resolve(__dirname, "./tsconfig.json"),
-          },
-        },
-        { loader: require.resolve("react-docgen-typescript-loader") },
-      ],
-    });
     config.resolve.alias["react-native$"] = "react-native-web";
-    config.resolve.extensions.unshift(".web.js", ".ts", ".tsx");
+    config.resolve.extensions.unshift(".web.js");
     return config;
   },
 };
