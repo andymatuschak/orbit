@@ -11,12 +11,13 @@ import {
   ReviewArea,
   ReviewAreaMarkingRecord,
   styles,
+  useTransitioningColorValue,
 } from "metabook-ui";
 
 import BigButton from "metabook-ui/dist/components/BigButton";
 
 import React from "react";
-import { View } from "react-native";
+import { View, Easing, Animated } from "react-native";
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import {
@@ -88,7 +89,7 @@ function AuthenticationStatusIndicator(props: {
 
 function EmbeddedScreen() {
   const items = useReviewItems();
-  const [queueOffset, setQueueOffset] = React.useState(0);
+  const [currentItemIndex, setCurrentItemIndex] = React.useState(0);
 
   const authenticationClient = useAuthenticationClient();
   const authenticationState = useEmbeddedAuthenticationState(
@@ -113,7 +114,7 @@ function EmbeddedScreen() {
       if (authenticationState.status === "storageRestricted") {
         authenticationState.onRequestStorageAccess();
       }
-      setQueueOffset((queueOffset) => queueOffset + 1);
+      setCurrentItemIndex((index) => index + 1);
 
       if (authenticationState.userRecord) {
         // Ingest prompt for user
@@ -153,21 +154,35 @@ function EmbeddedScreen() {
     [authenticationState],
   );
 
+  // TODO: fix duplication with ReviewSession
+  const backgroundColor = useTransitioningColorValue({
+    value: items
+      ? items[currentItemIndex].backgroundColor
+      : styles.colors.white,
+    timing: {
+      type: "timing",
+      duration: 150,
+      easing: Easing.linear,
+      useNativeDriver: false,
+    },
+  });
+
   if (items) {
     return (
-      <View style={{ position: "relative", height: "100vh" }}>
+      <Animated.View
+        style={{ position: "relative", height: "100vh", backgroundColor }}
+      >
         <ReviewArea
           items={items}
-          currentItemIndex={queueOffset}
+          currentItemIndex={currentItemIndex}
           onMark={onMark}
           schedule="default"
-          // TODO colors
         />
         <AuthenticationStatusIndicator
           authenticationState={authenticationState}
           onSignIn={onSignIn}
         />
-      </View>
+      </Animated.View>
     );
   } else {
     return null;
