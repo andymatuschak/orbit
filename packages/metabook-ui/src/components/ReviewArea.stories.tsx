@@ -17,6 +17,7 @@ import { Animated, Easing, View } from "react-native";
 import { ReviewItem } from "../reviewItem";
 import { colors } from "../styles";
 import DebugGrid from "./DebugGrid";
+import { useTransitioningColorValue } from "./hooks/useTransitioningValue";
 import ReviewArea from "./ReviewArea";
 
 // noinspection JSUnusedGlobalSymbols
@@ -79,19 +80,17 @@ export function Basic() {
   );
 
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
-  const [colorCompositionIndex] = React.useState(
-    () => new Animated.Value(items.length),
-  );
-  React.useEffect(
-    () =>
-      colorCompositionIndex.setValue(
-        (currentItemIndex + colorKnobOffset) % colors.palettes.length,
-      ),
-    [colorKnobOffset],
-  );
-  const backgroundColor = colorCompositionIndex.interpolate({
-    inputRange: Array.from(new Array(colors.palettes.length).keys()),
-    outputRange: colors.palettes.map((c) => c.backgroundColor),
+  const backgroundColor = useTransitioningColorValue({
+    value:
+      colors.palettes[
+        (currentItemIndex + colorKnobOffset) % colors.palettes.length
+      ].backgroundColor,
+    timing: {
+      type: "timing",
+      duration: 150,
+      easing: Easing.linear,
+      useNativeDriver: false,
+    },
   });
 
   return (
@@ -110,52 +109,38 @@ export function Basic() {
             top: number("Top safe inset", 0),
             bottom: number("Bottom safe inset", 0),
           }}
-          onMark={useCallback(
-            ({ outcome, reviewItem }) => {
-              setItems((items) => {
-                const newItems = [...items];
-                const currentItemIndex = items.indexOf(reviewItem);
-                newItems[currentItemIndex] = {
-                  ...newItems[currentItemIndex],
-                };
-                const log: PromptRepetitionActionLog<PromptTaskParameters> = {
-                  actionLogType: repetitionActionLogType,
-                  context: null,
-                  outcome,
-                  parentActionLogIDs: [],
-                  taskID: getIDForPromptTask({
-                    promptType: basicPromptType,
-                    promptID: "testID" as PromptID,
-                    promptParameters: null,
-                  }),
-                  taskParameters: null,
-                  timestampMillis: Date.now(),
-                };
-                newItems[
-                  currentItemIndex
-                ].promptState = applyActionLogToPromptState({
-                  promptActionLog: log,
-                  schedule: "default",
-                  basePromptState: reviewItem.promptState,
-                }) as PromptState;
-                return newItems;
-              });
+          onMark={useCallback(({ outcome, reviewItem }) => {
+            setItems((items) => {
+              const newItems = [...items];
+              const currentItemIndex = items.indexOf(reviewItem);
+              newItems[currentItemIndex] = {
+                ...newItems[currentItemIndex],
+              };
+              const log: PromptRepetitionActionLog<PromptTaskParameters> = {
+                actionLogType: repetitionActionLogType,
+                context: null,
+                outcome,
+                parentActionLogIDs: [],
+                taskID: getIDForPromptTask({
+                  promptType: basicPromptType,
+                  promptID: "testID" as PromptID,
+                  promptParameters: null,
+                }),
+                taskParameters: null,
+                timestampMillis: Date.now(),
+              };
+              newItems[
+                currentItemIndex
+              ].promptState = applyActionLogToPromptState({
+                promptActionLog: log,
+                schedule: "default",
+                basePromptState: reviewItem.promptState,
+              }) as PromptState;
+              return newItems;
+            });
 
-              setCurrentItemIndex((currentItemIndex) => {
-                Animated.timing(colorCompositionIndex, {
-                  toValue:
-                    (currentItemIndex + 1 + colorKnobOffset) %
-                    colors.palettes.length,
-                  duration: 80,
-                  easing: Easing.linear,
-                  useNativeDriver: true,
-                }).start();
-
-                return currentItemIndex + 1;
-              });
-            },
-            [colorCompositionIndex, colorKnobOffset],
-          )}
+            setCurrentItemIndex((currentItemIndex) => currentItemIndex + 1);
+          }, [])}
           schedule="aggressiveStart"
           currentItemIndex={currentItemIndex}
         />

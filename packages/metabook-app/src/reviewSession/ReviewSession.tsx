@@ -17,7 +17,7 @@ import {
   ReviewAreaProps,
   ReviewItem,
   styles,
-  useTransitioningValue,
+  useTransitioningColorValue,
 } from "metabook-ui";
 import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
 import React, { useCallback, useEffect, useState } from "react";
@@ -149,23 +149,14 @@ export default function ReviewSession() {
   }, [databaseManager]);
 
   const topItem = items?.[currentQueueIndex];
-  const colorCompositionAnimatedIndex = useTransitioningValue({
-    // TODO: this is extremely silly; refactor
-    value: topItem
-      ? styles.colors.palettes.findIndex(
-          (c) => c.backgroundColor === topItem.backgroundColor,
-        )
-      : 0,
+  const backgroundColor = useTransitioningColorValue({
+    value: topItem?.backgroundColor ?? styles.colors.white,
     timing: {
       type: "timing",
       useNativeDriver: false,
-      duration: 80,
+      duration: 150,
       easing: Easing.linear,
     },
-  });
-  const backgroundColor = colorCompositionAnimatedIndex.interpolate({
-    inputRange: Array.from(new Array(styles.colors.palettes.length).keys()),
-    outputRange: styles.colors.palettes.map((c) => c.backgroundColor),
   });
 
   const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>(

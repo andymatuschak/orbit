@@ -28,21 +28,19 @@ export function useTransitioningValue({
     const timing = timingRef.current;
     const onEndCallback = onEndCallbackRef.current;
     if (oldValue.current !== undefined && oldValue.current !== value) {
-      let animation: Animated.CompositeAnimation;
       if (timing.type === "timing") {
-        animation = Animated.timing(animatedValue.current, {
+        Animated.timing(animatedValue.current, {
           ...timing,
           toValue: value,
-        });
+        }).start(onEndCallback);
       } else if (timing.type === "spring") {
-        animation = Animated.spring(animatedValue.current, {
+        Animated.spring(animatedValue.current, {
           ...timing,
           toValue: value,
-        });
+        }).start(onEndCallback);
       } else {
         throw unreachableCaseError(timing);
       }
-      animation.start(onEndCallback);
     }
     oldValue.current = value;
   }, [onEndCallbackRef, timingRef, value]);
@@ -58,35 +56,33 @@ export function useTransitioningColorValue({
   // This implementation will "jump" in color if interrupted, rather than smoothly redirecting the old animation to the new one. To do that, I think we'd have to use a complex scheme of additive animations.
 
   const animatedValue = useRef(new Animated.Value(0));
-  const previousColor = useRef<string>();
-  const currentColor = useRef<string>();
+  const fromColor = useRef<string>();
+  const targetColor = useRef<string>();
 
-  if (currentColor.current !== undefined && currentColor.current !== value) {
-    let animation: Animated.CompositeAnimation;
+  // It's not great to have side effects on render like this, but unfortunately, I don't see how to implement this with useEffect without creating jumps.
+  if (targetColor.current !== undefined && targetColor.current !== value) {
     animatedValue.current = new Animated.Value(0);
-
     if (timing.type === "timing") {
-      animation = Animated.timing(animatedValue.current, {
+      Animated.timing(animatedValue.current, {
         ...timing,
         toValue: 1,
-      });
+      }).start(onEndCallback);
     } else if (timing.type === "spring") {
-      animation = Animated.spring(animatedValue.current, {
+      Animated.spring(animatedValue.current, {
         ...timing,
         toValue: 1,
-      });
+      }).start(onEndCallback);
     } else {
       throw unreachableCaseError(timing);
     }
-    animation.start(onEndCallback);
-    previousColor.current = currentColor.current;
+    fromColor.current = targetColor.current;
   }
-  currentColor.current = value;
+  targetColor.current = value;
 
-  if (previousColor.current) {
+  if (fromColor.current) {
     return animatedValue.current.interpolate({
       inputRange: [0, 1],
-      outputRange: [previousColor.current, value],
+      outputRange: [fromColor.current, value],
       extrapolate: "clamp",
     });
   } else {

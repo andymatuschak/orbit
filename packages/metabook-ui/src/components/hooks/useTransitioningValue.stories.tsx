@@ -22,9 +22,17 @@ export function ColorTest() {
   });
 
   return (
-    <Animated.View style={{ backgroundColor, height: 300 }}>
+    <Animated.View
+      style={{
+        backgroundColor,
+        height: 300,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <Button
         title="Change color"
+        color={colors.white}
         onPress={() => setPaletteIndex((i) => i + 5)}
       />
     </Animated.View>
