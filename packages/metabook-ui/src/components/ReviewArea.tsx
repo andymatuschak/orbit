@@ -20,13 +20,13 @@ import FadeView from "./FadeView";
 import usePrevious from "./hooks/usePrevious";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import { IconName } from "./Icon";
+import Spacer from "./Spacer";
 import Starburst, {
   getStarburstQuillInnerRadius,
   getStarburstQuillOuterRadius,
   getStarburstRayValueForInterval,
 } from "./Starburst";
 import StarburstLegend from "./StarburstLegend";
-import Spacer from "./Spacer";
 
 type Size = { width: number; height: number };
 
@@ -400,6 +400,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  // Note: coupled with getHeightForReviewAreaOfWidth.
   promptContainer: {
     marginTop: layout.gridUnit * 9, // margin for starburst
     marginBottom: layout.gridUnit * 2,
@@ -592,11 +593,3 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
     </View>
   );
 });
-
-export function heightForReviewAreaOfWidth(width: number) {
-  // The prompt itself is 6:5, max 500px. Then we add 9 units at top and 11 at bottom.
-  // TODO: add more at bottom if buttons stack
-  const promptWidth = Math.min(500, width - layout.edgeMargin * 2);
-  const promptHeight = Math.round((promptWidth * 5) / 6);
-  return promptHeight + (9 + 11) * layout.gridUnit;
-}

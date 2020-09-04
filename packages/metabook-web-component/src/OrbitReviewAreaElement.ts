@@ -1,3 +1,4 @@
+import { getHeightForReviewAreaOfWidth } from "metabook-ui";
 import { extractItems } from "./extractItems";
 
 declare global {
@@ -18,13 +19,16 @@ export class OrbitReviewAreaElement extends HTMLElement {
     this.iframe = document.createElement("iframe");
     this.iframe.style.border = "none";
     this.iframe.style.width = "100%";
-    this.iframe.style.height = "600px";
     this.iframe.style.marginBottom = "1rem";
     this.iframe.setAttribute(
       "sandbox",
       "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups",
     );
     shadowRoot.appendChild(this.iframe);
+    const effectiveWidth = this.iframe.getBoundingClientRect().width;
+    this.iframe.style.height = `${getHeightForReviewAreaOfWidth(
+      effectiveWidth,
+    )}px`;
 
     this.markNeedsRender();
   }

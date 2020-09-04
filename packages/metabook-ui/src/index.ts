@@ -26,3 +26,4 @@ export { default as Starburst } from "./components/Starburst";
 export * from "./components/Text";
 
 export * as styles from "./styles";
+export { getHeightForReviewAreaOfWidth } from "./util/getHeightForReviewAreaOfWidth";
