@@ -9,7 +9,7 @@ import {
   PromptType,
 } from "metabook-core";
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Insets, StyleSheet, View } from "react-native";
 import { PromptReviewItem, ReviewItem } from "../reviewItem";
 import { colors, layout } from "../styles";
 import { ColorPalette } from "../styles/colors";
@@ -132,13 +132,13 @@ const StarburstContainer = React.memo(function StarburstContainer({
   items,
   currentItemIndex,
   pendingMarkingInteractionState,
-  insetTop,
+  insets,
 }: {
   containerSize: Size;
   items: ReviewItem[];
   currentItemIndex: number;
   pendingMarkingInteractionState: PendingMarkingInteractionState | null;
-  insetTop?: number;
+  insets?: Insets;
 }) {
   const starburstTopMargin = layout.gridUnit * 6;
   const starburstThickness = 3;
@@ -193,10 +193,11 @@ const StarburstContainer = React.memo(function StarburstContainer({
   );
 
   const starburstOrigin = [
-    layout.edgeMargin -
+    (insets?.left ?? 0) +
+      layout.edgeMargin -
       getStarburstQuillInnerRadius(starburstEntries.length, 3),
     // We position the bottom of the 3:00 ray at the bottom of a grid row, so that we can lay out other elements in even grid unit multiple from there.
-    starburstTopMargin - starburstThickness / 2 + (insetTop ?? 0),
+    starburstTopMargin - starburstThickness / 2 + (insets?.top ?? 0),
   ] as const;
 
   return (
@@ -320,12 +321,17 @@ export default function ReviewArea({
     .concat(items.slice(currentItemIndex))
     .slice(0, maximumCardsToRender);
 
+  const centeringHorizontalInset = size
+    ? Math.max(0, (size.width - maximumWidth) / 2.0)
+    : 0;
   const centeringVerticalInset = size
     ? Math.max(0, (size.height - maximumHeight) / 2.0)
     : 0;
   const effectiveInsets = {
     top: (safeInsets?.top ?? 0) + centeringVerticalInset,
     bottom: (safeInsets?.bottom ?? 0) + centeringVerticalInset,
+    left: centeringHorizontalInset,
+    right: centeringHorizontalInset,
   };
 
   return (
@@ -337,8 +343,9 @@ export default function ReviewArea({
           paddingBottom:
             !safeInsets || effectiveInsets.bottom > safeInsets?.bottom
               ? effectiveInsets.bottom
-              : 0,
-          // button bar has its own internal padding
+              : 0, // When the provided safe insets are the only insets we're using, the button bar consumes those safe insets in its internal padding.
+          paddingLeft: effectiveInsets.left,
+          paddingRight: effectiveInsets.right,
         },
       ]}
       onLayout={({
@@ -350,11 +357,14 @@ export default function ReviewArea({
       {size && (
         <>
           <StarburstContainer
-            containerSize={size}
+            containerSize={{
+              width: Math.min(size.width, maximumWidth),
+              height: Math.min(size.height, maximumHeight),
+            }}
             items={items}
             currentItemIndex={currentItemIndex}
             pendingMarkingInteractionState={pendingMarkingInteractionState}
-            insetTop={effectiveInsets.top}
+            insets={effectiveInsets}
           />
           <View style={styles.promptContainer}>
             {Array.from(new Array(maximumCardsToRender).keys()).map(
