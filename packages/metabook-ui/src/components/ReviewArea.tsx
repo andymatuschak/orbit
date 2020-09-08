@@ -126,23 +126,28 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
 });
 
 const StarburstContainer = React.memo(function StarburstContainer({
-  containerWidth,
+  containerSize,
   items,
   currentItemIndex,
   pendingMarkingInteractionState,
   safeInsetTop,
 }: {
-  containerWidth: number;
+  containerSize: Size;
   items: ReviewItem[];
   currentItemIndex: number;
   pendingMarkingInteractionState: PendingMarkingInteractionState | null;
   safeInsetTop?: number;
 }) {
-  const widthSizeClass = layout.getWidthSizeClass(containerWidth);
-  const starburstRadius =
+  const starburstTopMargin = layout.gridUnit * 6;
+  const starburstThickness = 3;
+
+  const widthSizeClass = layout.getWidthSizeClass(containerSize.width);
+  const starburstRadius = Math.min(
     widthSizeClass === "regular"
-      ? layout.getColumnSpan(1, containerWidth)
-      : layout.getColumnSpan(2, containerWidth);
+      ? layout.getColumnSpan(1, containerSize.width)
+      : layout.getColumnSpan(2, containerSize.width),
+    containerSize.height - starburstTopMargin,
+  );
   const currentItem = items[currentItemIndex];
 
   const currentItemEffectiveInterval = useMemo(() => {
@@ -189,7 +194,7 @@ const StarburstContainer = React.memo(function StarburstContainer({
     layout.edgeMargin -
       getStarburstQuillInnerRadius(starburstEntries.length, 3),
     // We position the bottom of the 3:00 ray at the bottom of a grid row, so that we can lay out other elements in even grid unit multiple from there.
-    layout.gridUnit * 6 - 3 / 2 + (safeInsetTop ?? 0),
+    starburstTopMargin - starburstThickness / 2 + (safeInsetTop ?? 0),
   ] as const;
 
   return (
@@ -198,7 +203,7 @@ const StarburstContainer = React.memo(function StarburstContainer({
         <Starburst
           diameter={starburstRadius! * 2}
           entries={starburstEntries}
-          thickness={3}
+          thickness={starburstThickness}
           origin={starburstOrigin}
           entryAtHorizontal={currentItemIndex}
           accentOverlayColor={currentItem.accentColor}
@@ -331,7 +336,7 @@ export default function ReviewArea({
       {size && (
         <>
           <StarburstContainer
-            containerWidth={size.width}
+            containerSize={size}
             items={items}
             currentItemIndex={currentItemIndex}
             pendingMarkingInteractionState={pendingMarkingInteractionState}
