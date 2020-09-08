@@ -27,3 +27,5 @@ export * from "./components/Text";
 
 export * as styles from "./styles";
 export { getHeightForReviewAreaOfWidth } from "./util/getHeightForReviewAreaOfWidth";
+
+export { default as Logo } from "./components/Logo";

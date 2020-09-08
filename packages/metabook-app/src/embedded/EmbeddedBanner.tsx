@@ -1,4 +1,4 @@
-import { styles } from "metabook-ui";
+import { Logo, styles } from "metabook-ui";
 import React from "react";
 import { Text, View } from "react-native";
 
@@ -33,17 +33,23 @@ export default function EmbeddedBanner(props: EmbeddedBannerProps) {
   return (
     <View
       style={{
-        paddingTop: styles.layout.gridUnit * 2,
-        paddingBottom: styles.layout.gridUnit * 2,
         paddingLeft: styles.layout.gridUnit * 2,
+        paddingRight: styles.layout.gridUnit,
+        flexDirection: "row",
+        alignItems: "center",
+        height: styles.layout.gridUnit * 6,
         backgroundColor: palette.shadeColor,
       }}
     >
       <Text
-        style={[styles.type.label.layoutStyle, { color: palette.accentColor }]}
+        style={[
+          styles.type.label.layoutStyle,
+          { color: palette.accentColor, flexGrow: 1 },
+        ]}
       >
         {getBannerMessage(props)}
       </Text>
+      <Logo size={16} style={{ tintColor: styles.colors.white }} />
     </View>
   );
 }

@@ -4,16 +4,6 @@ import { Text, TextStyle, View } from "react-native";
 import { layout, type } from "../styles";
 import { getVariantStyles } from "../styles/type";
 import DebugGrid from "./DebugGrid";
-import {
-  Body,
-  BodySmall,
-  Caption,
-  Display,
-  DisplayLarge,
-  Headline,
-  Label,
-  Title,
-} from "./Text";
 
 export default {
   title: "Style/Type",
