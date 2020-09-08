@@ -338,13 +338,17 @@ export default React.memo(function CardField(props: {
     effectiveLargestSizeVariantIndex,
   );
   const [isLayoutReady, setLayoutReady] = useState(false);
+  const [markdownHeight, setMarkdownHeight] = useState<number | null>(null);
+  const [containerHeight, setContainerHeight] = useState<number | null>(null);
   const previousPromptField = usePrevious(promptField);
   // Reset shrink factor when prompt field changes.
   if (previousPromptField && !isEqual(promptField, previousPromptField)) {
     setSizeVariantIndex((sizeVariantIndex) => {
       const newIndex = effectiveLargestSizeVariantIndex;
       if (sizeVariantIndex !== newIndex) {
+        setMarkdownHeight(null);
         setLayoutReady(false);
+        console.log("reset");
       }
       return newIndex;
     });
@@ -355,10 +359,12 @@ export default React.memo(function CardField(props: {
     );
   }, [effectiveLargestSizeVariantIndex]);
 
-  const [markdownHeight, setMarkdownHeight] = useState<number | null>(null);
-  const [containerHeight, setContainerHeight] = useState<number | null>(null);
   useLayoutEffect(() => {
-    if (markdownHeight !== null && containerHeight !== null) {
+    if (
+      markdownHeight !== null &&
+      containerHeight !== null &&
+      containerHeight > 0 // When the node is removed from the display list, its layout is reset to 0.
+    ) {
       setSizeVariantIndex((sizeVariantIndex) => {
         const sizeVariant = sizeVariants[sizeVariantIndex]!;
         if (
@@ -384,11 +390,9 @@ export default React.memo(function CardField(props: {
     onLayout?.(sizeVariantRef.current);
   }, [isLayoutReady, onLayout, sizeVariantRef]);
 
-  const onContainerLayout = useCallback(
-    (event: LayoutChangeEvent) =>
-      setContainerHeight(event.nativeEvent.layout.height),
-    [],
-  );
+  const onContainerLayout = useCallback((event: LayoutChangeEvent) => {
+    setContainerHeight(event.nativeEvent.layout.height);
+  }, []);
 
   const effectiveAccentColor = accentColor ?? colors.ink;
   const renderRules = useMemo<MarkdownDisplay.RenderRules>(
