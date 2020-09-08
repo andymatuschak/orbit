@@ -75,7 +75,10 @@ export function Basic() {
 
   const [items, setItems] = useState<ReviewItem[]>(() =>
     Array.from(new Array(25).keys()).map((i) =>
-      generateReviewItem(`Question ${i + 1}`, colors.palettes[i]),
+      generateReviewItem(
+        `Question ${i + 1}`,
+        colors.palettes[i % colors.palettes.length],
+      ),
     ),
   );
 
