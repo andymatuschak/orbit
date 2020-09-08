@@ -404,7 +404,7 @@ export default React.memo(function CardField(props: {
 
   return (
     <View
-      style={{ flex: 1, opacity: isLayoutReady ? 1 : 0 }}
+      style={{ flex: 1, opacity: isLayoutReady ? 1 : 0, overflow: "hidden" }}
       onLayout={onContainerLayout}
     >
       <View style={{ height: 10000 }}>
