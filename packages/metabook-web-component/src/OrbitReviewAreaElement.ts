@@ -1,4 +1,4 @@
-import { getHeightForReviewAreaOfWidth } from "metabook-ui";
+import { getHeightForReviewAreaOfWidth, styles } from "metabook-ui";
 import { extractItems } from "./extractItems";
 
 declare global {
@@ -26,9 +26,11 @@ export class OrbitReviewAreaElement extends HTMLElement {
     );
     shadowRoot.appendChild(this.iframe);
     const effectiveWidth = this.iframe.getBoundingClientRect().width;
-    this.iframe.style.height = `${getHeightForReviewAreaOfWidth(
-      effectiveWidth,
-    )}px`;
+    // The extra 5 grid units are for the banner.
+    // TODO: encapsulate the banner's height in some API exported by metabook-app.
+    this.iframe.style.height = `${
+      getHeightForReviewAreaOfWidth(effectiveWidth) + styles.layout.gridUnit * 5
+    }px`;
 
     this.markNeedsRender();
   }

@@ -22,7 +22,6 @@ import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import { IconName } from "./Icon";
 import Spacer from "./Spacer";
 import Starburst, {
-  getStarburstQuillInnerRadius,
   getStarburstQuillOuterRadius,
   getStarburstRayValueForInterval,
 } from "./Starburst";
@@ -147,7 +146,8 @@ const StarburstContainer = React.memo(function StarburstContainer({
   const starburstRadius = Math.min(
     widthSizeClass === "regular"
       ? layout.getColumnSpan(1, containerSize.width)
-      : layout.getColumnSpan(2, containerSize.width),
+      : // When the starburst goes all the way across, it's too tight on the right side without some extra padding.
+        layout.getColumnSpan(2, containerSize.width) - layout.gridUnit,
     containerSize.height - starburstTopMargin,
   );
   const currentItem = items[currentItemIndex];

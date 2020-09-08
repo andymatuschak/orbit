@@ -14,10 +14,12 @@ import {
   ReviewArea,
   ReviewAreaMarkingRecord,
   styles,
+  useLayout,
   useTransitioningColorValue,
 } from "metabook-ui";
 
 import BigButton from "metabook-ui/dist/components/BigButton";
+import { getWidthSizeClass } from "metabook-ui/dist/styles/layout";
 
 import React from "react";
 import { Animated, Easing, Text, View } from "react-native";
@@ -96,7 +98,7 @@ function AuthenticationStatusIndicator(props: {
   );
 }
 
-function EmbeddedScreen() {
+export default function EmbeddedScreen() {
   const items = useReviewItems();
   const [localPromptStates, setLocalPromptStates] = React.useState<
     PromptState[]
@@ -206,16 +208,20 @@ function EmbeddedScreen() {
     [items, localPromptStates],
   );
 
+  const { width, onLayout } = useLayout();
+
   if (mergedItems) {
     return (
       <Animated.View
         style={{ position: "relative", height: "100vh", backgroundColor }}
+        onLayout={onLayout}
       >
         <EmbeddedBanner
           palette={mergedItems[currentItemIndex]}
           isSignedIn={authenticationState.status === "signedIn"}
           totalPromptCount={mergedItems.length}
           completePromptCount={currentItemIndex}
+          sizeClass={width ? getWidthSizeClass(width) : "compact"}
         />
         <ReviewArea
           items={mergedItems}
@@ -233,5 +239,3 @@ function EmbeddedScreen() {
     return null;
   }
 }
-
-export default EmbeddedScreen;

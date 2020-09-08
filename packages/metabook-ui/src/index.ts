@@ -22,6 +22,8 @@ export {
   useTransitioningColorValue,
 } from "./components/hooks/useTransitioningValue";
 
+export { default as useLayout } from "./components/hooks/useLayout";
+
 export { default as Starburst } from "./components/Starburst";
 export * from "./components/Text";
 

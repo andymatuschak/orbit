@@ -21,7 +21,7 @@ const _aggressiveStartIntervalSequence: IntervalEntry[] = [
   { interval: 26.45 * days, label: "1mo" },
   { interval: 60.835 * days, label: "2mo" },
   { interval: 139.9205 * days, label: "4mo" },
-  { interval: 321.81715 * days, label: "1yr+" },
+  { interval: 321.81715 * days, label: "1yr" },
 ];
 
 const schedulesToIntervalSequences: Record<
