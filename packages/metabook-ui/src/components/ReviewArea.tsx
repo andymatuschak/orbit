@@ -132,13 +132,13 @@ const StarburstContainer = React.memo(function StarburstContainer({
   items,
   currentItemIndex,
   pendingMarkingInteractionState,
-  safeInsetTop,
+  insetTop,
 }: {
   containerSize: Size;
   items: ReviewItem[];
   currentItemIndex: number;
   pendingMarkingInteractionState: PendingMarkingInteractionState | null;
-  safeInsetTop?: number;
+  insetTop?: number;
 }) {
   const starburstTopMargin = layout.gridUnit * 6;
   const starburstThickness = 3;
@@ -196,7 +196,7 @@ const StarburstContainer = React.memo(function StarburstContainer({
     layout.edgeMargin -
       getStarburstQuillInnerRadius(starburstEntries.length, 3),
     // We position the bottom of the 3:00 ray at the bottom of a grid row, so that we can lay out other elements in even grid unit multiple from there.
-    starburstTopMargin - starburstThickness / 2 + (safeInsetTop ?? 0),
+    starburstTopMargin - starburstThickness / 2 + (insetTop ?? 0),
   ] as const;
 
   return (
@@ -320,12 +320,24 @@ export default function ReviewArea({
     .concat(items.slice(currentItemIndex))
     .slice(0, maximumCardsToRender);
 
+  const centeringVerticalInset = size
+    ? Math.max(0, (size.height - maximumHeight) / 2.0)
+    : 0;
+  const effectiveInsets = {
+    top: (safeInsets?.top ?? 0) + centeringVerticalInset,
+    bottom: (safeInsets?.bottom ?? 0) + centeringVerticalInset,
+  };
+
   return (
     <View
       style={[
         styles.outerContainer,
         {
-          paddingTop: safeInsets?.top,
+          paddingTop: effectiveInsets.top,
+          paddingBottom:
+            !safeInsets || effectiveInsets.bottom > safeInsets?.bottom
+              ? effectiveInsets.bottom
+              : 0,
           // button bar has its own internal padding
         },
       ]}
@@ -342,7 +354,7 @@ export default function ReviewArea({
             items={items}
             currentItemIndex={currentItemIndex}
             pendingMarkingInteractionState={pendingMarkingInteractionState}
-            safeInsetTop={safeInsets?.top}
+            insetTop={effectiveInsets.top}
           />
           <View style={styles.promptContainer}>
             {Array.from(new Array(maximumCardsToRender).keys()).map(
@@ -394,7 +406,11 @@ export default function ReviewArea({
             accentColor={currentItem.accentColor}
             isShowingAnswer={isShowingAnswer}
             containerWidth={size.width}
-            safeInsetsBottom={safeInsets?.bottom}
+            insetBottom={
+              safeInsets && effectiveInsets.bottom === safeInsets.bottom
+                ? safeInsets.bottom
+                : 0
+            }
           />
         </>
       )}
@@ -476,7 +492,7 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
   promptType,
   isShowingAnswer,
   containerWidth,
-  safeInsetsBottom,
+  insetBottom,
 }: {
   colorPalette: ColorPalette;
   onMark: (outcome: PromptRepetitionOutcome) => void;
@@ -489,19 +505,19 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
   accentColor: string;
   isShowingAnswer: boolean;
   containerWidth: number;
-  safeInsetsBottom?: number;
+  insetBottom?: number;
 }) {
   const widthSizeClass = layout.getWidthSizeClass(containerWidth);
   const isVeryNarrow = containerWidth < 340;
 
   const buttonStyle = {
     flex: 1,
-    ...(safeInsetsBottom && {
+    ...(insetBottom && {
       paddingBottom:
         widthSizeClass === "regular"
           ? // The button already has internal padding when the background is showing. We subtract that off if the safe inset area is larger. This is a bit of a hack, relying on internal knowledge of the button metrics. It might be better to have the button subtract off part of its paddingBottom if necessary.
-            Math.max(0, safeInsetsBottom - layout.gridUnit * 2)
-          : safeInsetsBottom,
+            Math.max(0, insetBottom - layout.gridUnit * 2)
+          : insetBottom,
     }),
     ...(widthSizeClass === "compact" && {
       // Collapse margins of stacked buttons. As with the padding hack above, this relies on internal knowledge of the button metrics. Not ideal.
