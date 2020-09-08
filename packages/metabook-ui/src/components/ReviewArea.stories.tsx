@@ -75,7 +75,12 @@ export function Basic() {
 
   const [items, setItems] = useState<ReviewItem[]>(() =>
     Array.from(new Array(25).keys()).map((i) =>
-      generateReviewItem(`Question ${i + 1}`, colors.palettes[i]),
+      generateReviewItem(
+        `Ridiculus et libero scelerisque accumsan porta class, aptent felis aliquam mollis lacus sit tincidunt, integer metus justo fermentum condimentum. Massa convallis justo nibh dapibus ad sociosqu donec tempor erat etiam, egestas mollis taciti mus venenatis cubilia aliquam ornare orci tincidunt hac, volutpat urna dis tristique congue arcu platea imperdiet pharetra. Vestibulum turpis dignissim amet lacus dictumst torquent arcu tempus facilisis sed imperdiet nullam urna at parturient, placerat porta donec scelerisque nostra dapibus fusce ac lacinia phasellus congue ullamcorper primis.${
+          i + 1
+        }`,
+        colors.palettes[i],
+      ),
     ),
   );
 

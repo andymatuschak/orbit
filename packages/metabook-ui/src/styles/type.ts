@@ -88,7 +88,7 @@ export const displayLarge = makeTypeSpec(
     fontSize: 96,
     fontFamily: "Dr-Light",
     lineHeight: 84,
-    letterSpacing: 96 * -0.04,
+    letterSpacing: 96 * -0.025,
   },
   -3,
   -17,
@@ -98,9 +98,9 @@ export const displayLarge = makeTypeSpec(
 export const display = makeTypeSpec(
   {
     fontSize: 60,
-    fontFamily: "Dr-Regular",
+    fontFamily: "Dr-Light",
     lineHeight: 56,
-    letterSpacing: 60 * -0.03,
+    letterSpacing: 60 * -0.015,
   },
   -6,
   -12,
@@ -122,9 +122,9 @@ export const title = makeTypeSpec(
 export const headline = makeTypeSpec(
   {
     fontSize: 36,
-    fontFamily: "Dr-Medium",
+    fontFamily: "Dr-Regular",
     lineHeight: 32,
-    letterSpacing: 36 * 0.01,
+    // letterSpacing: 36 * 0.0,
   },
   -2,
   -7,
@@ -134,7 +134,7 @@ export const headline = makeTypeSpec(
 export const body = makeTypeSpec(
   {
     fontSize: 24,
-    fontFamily: "Dr-Bold",
+    fontFamily: "Dr-Medium",
     lineHeight: 24,
     letterSpacing: 24 * 0.01,
   },
@@ -145,15 +145,27 @@ export const body = makeTypeSpec(
 
 export const bodySmall = makeTypeSpec(
   {
-    fontSize: 16,
-    fontFamily: "Dr-ExtraBold",
+    fontSize: 18,
+    fontFamily: "Dr-Medium",
+    lineHeight: 20,
+    letterSpacing: 16 * 0.01,
+  },
+  -3,
+  -5,
+  -8,
+);
+
+/*export const bodySmall = makeTypeSpec(
+  {
+    fontSize: 17,
+    fontFamily: "Dr-Bold",
     lineHeight: 16,
     letterSpacing: 16 * 0.04,
   },
   -3,
   -4,
   -4,
-);
+);*/
 
 export const label = makeTypeSpec(
   {

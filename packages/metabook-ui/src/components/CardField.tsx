@@ -123,7 +123,7 @@ const markdownItInstance = MarkdownDisplay.MarkdownIt({
 }).use(clozeParsePlugin);
 
 const sizeVariantCount = 5;
-const defaultSmallestSizeVariant = 3;
+const defaultSmallestSizeVariant = 4;
 
 interface SizeVariant {
   style: TextStyle;
@@ -315,6 +315,12 @@ export default React.memo(function CardField(props: {
     largestSizeVariantIndex,
     smallestSizeVariantIndex,
   } = props;
+
+  const effectiveLargestSizeVariantIndex = Math.min(
+    largestSizeVariantIndex ?? 0,
+    sizeVariantCount - 1,
+  );
+
   let imageURL: string | null = null;
   if (promptField.attachments.length > 0 && attachmentResolutionMap) {
     const images = promptField.attachments.filter(
@@ -329,14 +335,14 @@ export default React.memo(function CardField(props: {
   }
 
   const [sizeVariantIndex, setSizeVariantIndex] = useState(
-    largestSizeVariantIndex ?? 0,
+    effectiveLargestSizeVariantIndex,
   );
   const [isLayoutReady, setLayoutReady] = useState(false);
   const previousPromptField = usePrevious(promptField);
   // Reset shrink factor when prompt field changes.
   if (previousPromptField && !isEqual(promptField, previousPromptField)) {
     setSizeVariantIndex((sizeVariantIndex) => {
-      const newIndex = Math.min(largestSizeVariantIndex ?? 0, sizeVariantCount);
+      const newIndex = effectiveLargestSizeVariantIndex;
       if (sizeVariantIndex !== newIndex) {
         setLayoutReady(false);
       }
@@ -345,9 +351,9 @@ export default React.memo(function CardField(props: {
   }
   useLayoutEffect(() => {
     setSizeVariantIndex((sizeVariantIndex) =>
-      Math.max(largestSizeVariantIndex ?? 0, sizeVariantIndex),
+      Math.max(effectiveLargestSizeVariantIndex, sizeVariantIndex),
     );
-  }, [largestSizeVariantIndex]);
+  }, [effectiveLargestSizeVariantIndex]);
 
   const [markdownHeight, setMarkdownHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number | null>(null);
@@ -401,7 +407,7 @@ export default React.memo(function CardField(props: {
       style={{ flex: 1, opacity: isLayoutReady ? 1 : 0 }}
       onLayout={onContainerLayout}
     >
-      <View>
+      <View style={{ height: 10000 }}>
         <Markdown
           rules={renderRules}
           style={markdownStyles as StyleSheet.NamedStyles<unknown>}
