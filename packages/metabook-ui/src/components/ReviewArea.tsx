@@ -193,9 +193,7 @@ const StarburstContainer = React.memo(function StarburstContainer({
   );
 
   const starburstOrigin = [
-    (insets?.left ?? 0) +
-      layout.edgeMargin -
-      getStarburstQuillInnerRadius(starburstEntries.length, 3),
+    (insets?.left ?? 0) + layout.edgeMargin + starburstThickness / 2, // We shift by half the thickness so that vertical starburst strokes will align with vertical type strokes at the left edge.
     // We position the bottom of the 3:00 ray at the bottom of a grid row, so that we can lay out other elements in even grid unit multiple from there.
     starburstTopMargin - starburstThickness / 2 + (insets?.top ?? 0),
   ] as const;
