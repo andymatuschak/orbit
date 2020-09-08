@@ -84,7 +84,6 @@ const ButtonInterior = function ButtonImpl(
         {
           opacity,
         },
-        styles.interiorLayout,
         !!backgroundColor && styles.interiorLayoutWithBackground,
         !!disabled && styles.disabled,
       ]}
@@ -122,11 +121,9 @@ const ButtonInterior = function ButtonImpl(
 };
 
 const styles = StyleSheet.create({
-  interiorLayout: {
+  interiorLayoutWithBackground: {
     marginTop: layout.gridUnit * 2,
     marginBottom: layout.gridUnit * 2,
-  },
-  interiorLayoutWithBackground: {
     marginLeft: layout.gridUnit * 2,
     marginRight: layout.gridUnit * 2,
   },

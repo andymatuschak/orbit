@@ -411,6 +411,7 @@ const styles = StyleSheet.create({
     marginBottom: layout.gridUnit * 2,
     marginLeft: layout.edgeMargin,
     marginRight: layout.edgeMargin,
+    maxWidth: 500,
     flex: 1,
   },
 
@@ -500,19 +501,17 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
             Math.max(0, safeInsetsBottom - layout.gridUnit * 2)
           : safeInsetsBottom,
     }),
-    ...(isVeryNarrow && {
+    ...(widthSizeClass === "compact" && {
       // Collapse margins of stacked buttons. As with the padding hack above, this relies on internal knowledge of the button metrics. Not ideal.
-      marginBottom: layout.gridUnit * -2,
+      marginBottom: layout.gridUnit * 2,
     }),
-  };
-  const lastButtonStyle = {
-    marginBottom: 0,
   };
 
   const sharedButtonProps = {
     disabled,
     color: colors.white,
     accentColor: colorPalette.accentColor,
+    style: buttonStyle,
     backgroundColor:
       widthSizeClass === "regular" ? colorPalette.shadeColor : undefined,
   } as const;
@@ -551,7 +550,6 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
         <>
           <Button
             {...sharedButtonProps}
-            style={buttonStyle}
             onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
             iconName={IconName.Cross}
             title={getButtonTitle(
@@ -567,7 +565,6 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
           {spacer}
           <Button
             {...sharedButtonProps}
-            style={[buttonStyle, lastButtonStyle]}
             onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
             iconName={IconName.Check}
             title={getButtonTitle(
@@ -587,7 +584,6 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
           {spacer}
           <Button
             {...sharedButtonProps}
-            style={[buttonStyle, lastButtonStyle]}
             onPress={onReveal}
             iconName={IconName.Reveal}
             title={"Show answer"}
