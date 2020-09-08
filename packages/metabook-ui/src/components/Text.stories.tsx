@@ -45,28 +45,28 @@ export function Hierarchy() {
     <View style={{ paddingBottom: layout.gridUnit * 6, paddingLeft: 16 }}>
       {shouldShowGrid && <DebugGrid />}
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <DisplayLarge>Display Large</DisplayLarge>
+        <Text style={type.displayLarge.layoutStyle}>Display Large</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Display>Display</Display>
+        <Text style={type.display.layoutStyle}>Display</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Title>Title</Title>
+        <Text style={type.title.layoutStyle}>Title</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Headline>Headline</Headline>
+        <Text style={type.headline.layoutStyle}>Headline</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Body>Body</Body>
+        <Text style={type.body.layoutStyle}>Body</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <BodySmall>Body Small</BodySmall>
+        <Text style={type.bodySmall.layoutStyle}>Body Small</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Label>Label</Label>
+        <Text style={type.label.layoutStyle}>Label</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Caption>Caption</Caption>
+        <Text style={type.caption.layoutStyle}>Caption</Text>
       </TypeSample>
     </View>
   );
@@ -80,30 +80,30 @@ export function MultilineSamples() {
     <View style={{ paddingBottom: layout.gridUnit * 6, paddingLeft: 16 }}>
       {shouldShowGrid && <DebugGrid />}
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <DisplayLarge>
+        <Text style={type.displayLarge.layoutStyle}>
           Display Large: is so large! a shorter sample
-        </DisplayLarge>
+        </Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Display>Display: {sample}</Display>
+        <Text style={type.display.layoutStyle}>Display: {sample}</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Title>Title: {sample}</Title>
+        <Text style={type.title.layoutStyle}>Title: {sample}</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Headline>Headline: {sample}</Headline>
+        <Text style={type.headline.layoutStyle}>Headline: {sample}</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Body>Body: {sample}</Body>
+        <Text style={type.body.layoutStyle}>Body: {sample}</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <BodySmall>Body Small: {sample}</BodySmall>
+        <Text style={type.bodySmall.layoutStyle}>Body Small: {sample}</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Label>Label: {sample}</Label>
+        <Text style={type.label.layoutStyle}>Label: {sample}</Text>
       </TypeSample>
       <TypeSample shouldShowGrid={shouldShowGrid}>
-        <Caption>Caption: {sample}</Caption>
+        <Text style={type.caption.layoutStyle}>Caption: {sample}</Text>
       </TypeSample>
     </View>
   );

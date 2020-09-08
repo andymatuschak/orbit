@@ -37,21 +37,3 @@ function makeTextComponent(
   component.displayName = name;
   return React.memo(component);
 }
-
-export const DisplayLarge = makeTextComponent(
-  type.displayLarge.layoutStyle,
-  "DisplayLarge",
-);
-export const Display = makeTextComponent(type.display.layoutStyle, "Display");
-export const Title = makeTextComponent(type.title.layoutStyle, "Title");
-export const Headline = makeTextComponent(
-  type.headline.layoutStyle,
-  "Headline",
-);
-export const Body = makeTextComponent(type.body.layoutStyle, "Body");
-export const BodySmall = makeTextComponent(
-  type.bodySmall.layoutStyle,
-  "BodySmall",
-);
-export const Label = makeTextComponent(type.label.layoutStyle, "Label");
-export const Caption = makeTextComponent(type.caption.layoutStyle, "Caption");

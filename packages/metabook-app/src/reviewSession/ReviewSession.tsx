@@ -12,7 +12,6 @@ import {
   repetitionActionLogType,
 } from "metabook-core";
 import {
-  Headline,
   ReviewArea,
   ReviewAreaProps,
   ReviewItem,
@@ -21,7 +20,7 @@ import {
 } from "metabook-ui";
 import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
 import React, { useCallback, useEffect, useState } from "react";
-import { Animated, Easing, View } from "react-native";
+import { Animated, Easing, View, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserRecord } from "../authentication";
 import DatabaseManager from "../model/databaseManager";
@@ -220,7 +219,9 @@ export default function ReviewSession() {
               marginRight: styles.layout.gridUnit,
             }}
           >
-            <Headline>{`All caught up!\nNothing's due for review.`}</Headline>
+            <Text
+              style={styles.type.headline.layoutStyle}
+            >{`All caught up!\nNothing's due for review.`}</Text>
           </View>
         )
       ) : null}

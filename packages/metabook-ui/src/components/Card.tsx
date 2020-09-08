@@ -9,14 +9,21 @@ import {
   QAPrompt,
 } from "metabook-core";
 import React from "react";
-import { Animated, FlexStyle, StyleSheet, View, ViewStyle } from "react-native";
+import {
+  Animated,
+  FlexStyle,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from "react-native";
 import {
   ApplicationPromptReviewItem,
   BasicPromptReviewItem,
   ClozePromptReviewItem,
   PromptReviewItem,
 } from "../reviewItem";
-import { colors, layout } from "../styles";
+import { colors, type, layout } from "../styles";
 import Button from "./Button";
 import CardField, { clozeBlankSentinel } from "./CardField";
 import FadeView from "./FadeView";
@@ -24,7 +31,6 @@ import {
   AnimatedTransitionTiming,
   useTransitioningValue,
 } from "./hooks/useTransitioningValue";
-import { Caption, Label } from "./Text";
 
 function getQAPrompt(
   reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem,
@@ -157,15 +163,20 @@ function PromptContextLabel({
             ellipsizeMode="tail"
           />
         ) : (
-          React.createElement(
-            size === "regular" ? Label : Caption,
-            {
-              color,
-              numberOfLines,
-              ellipsizeMode: "tail",
-            },
-            promptContext.title,
-          )
+          <Text
+            style={[
+              size === "regular"
+                ? type.label.layoutStyle
+                : type.caption.layoutStyle,
+              {
+                color,
+              },
+            ]}
+            numberOfLines={numberOfLines}
+            ellipsizeMode="tail"
+          >
+            {promptContext.title}
+          </Text>
         )}
       </View>
     )

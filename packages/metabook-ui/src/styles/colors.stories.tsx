@@ -1,13 +1,13 @@
 import { boolean, number } from "@storybook/addon-knobs";
 import React from "react";
-import { View } from "react-native";
-import Svg, { Circle, Text } from "react-native-svg";
-import { colors, type } from ".";
+import { View, Text } from "react-native";
+import Svg, { Circle, Text as SVGText } from "react-native-svg";
 import Button from "../components/Button";
 import { IconName } from "../components/Icon";
 import Starburst from "../components/Starburst";
-import { Body, Caption, Title } from "../components/Text";
 import * as layout from "./layout";
+import * as type from "./type";
+import * as colors from "./colors";
 
 type RGBA = [number, number, number, number];
 
@@ -110,7 +110,7 @@ function ColorSwatch({
     <>
       <Circle cx={cx} cy={cy} r={swatchRadius / 2} fill={backgroundColor} />
       {showContrast && (
-        <Text
+        <SVGText
           textAnchor="middle"
           fill={foregroundColor1}
           x={cx}
@@ -119,10 +119,10 @@ function ColorSwatch({
           fontSize={type.label.typeStyle.fontSize}
         >
           {contrastRatio1.toFixed(1)}
-        </Text>
+        </SVGText>
       )}
       {showContrast && (
-        <Text
+        <SVGText
           textAnchor="middle"
           fill={foregroundColor2}
           x={cx}
@@ -131,7 +131,7 @@ function ColorSwatch({
           fontSize={type.label.typeStyle.fontSize}
         >
           {contrastRatio2.toFixed(1)}
-        </Text>
+        </SVGText>
       )}
     </>
   );
@@ -258,7 +258,7 @@ function CompositionTest({
           marginTop: layout.gridUnit * 7,
         }}
       >
-        <Caption>5d</Caption>
+        <Text style={type.caption.layoutStyle}>5d</Text>
       </View>
 
       <View
@@ -267,9 +267,11 @@ function CompositionTest({
           marginTop: layout.gridUnit * 18,
         }}
       >
-        <Body color={accentColor}>Source context</Body>
+        <Text style={[type.body.layoutStyle, { color: accentColor }]}>
+          Source context
+        </Text>
       </View>
-      <Title>Primary content</Title>
+      <Text style={type.headline.layoutStyle}>Primary content</Text>
       <View style={{ position: "absolute", bottom: 24 }}>
         <Button
           title="See answer"
