@@ -1,13 +1,16 @@
 import "firebase/functions";
 import {
   ActionLog,
+  applyActionLogToPromptState,
+  getIDForActionLog,
   getIDForPrompt,
   getIDForPromptTask,
+  getPromptActionLogFromActionLog,
+  PromptState,
   PromptTask,
   repetitionActionLogType,
 } from "metabook-core";
 import {
-  Caption,
   ReviewArea,
   ReviewAreaMarkingRecord,
   styles,
@@ -17,9 +20,10 @@ import {
 import BigButton from "metabook-ui/dist/components/BigButton";
 
 import React from "react";
-import { View, Easing, Animated } from "react-native";
+import { Animated, Easing, Text, View } from "react-native";
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
+import EmbeddedBanner from "./EmbeddedBanner";
 import {
   EmbeddedAuthenticationState,
   useEmbeddedAuthenticationState,
@@ -43,9 +47,14 @@ function AuthenticationStatusIndicator(props: {
     case "signedIn":
       const userRecord = props.authenticationState.userRecord;
       interior = (
-        <Caption color={styles.colors.ink}>{`Signed in as ${
+        <Text
+          style={[
+            styles.type.caption.layoutStyle,
+            { color: styles.colors.ink },
+          ]}
+        >{`Signed in as ${
           userRecord.displayName ?? userRecord.emailAddress ?? userRecord.userID
-        }`}</Caption>
+        }`}</Text>
       );
       break;
 
@@ -89,6 +98,10 @@ function AuthenticationStatusIndicator(props: {
 
 function EmbeddedScreen() {
   const items = useReviewItems();
+  const [localPromptStates, setLocalPromptStates] = React.useState<
+    PromptState[]
+  >([]);
+
   const [currentItemIndex, setCurrentItemIndex] = React.useState(0);
 
   const authenticationClient = useAuthenticationClient();
@@ -114,28 +127,44 @@ function EmbeddedScreen() {
       if (authenticationState.status === "storageRestricted") {
         authenticationState.onRequestStorageAccess();
       }
-      setCurrentItemIndex((index) => index + 1);
+
+      // Ingest prompt for user
+      const promptTask = {
+        promptType: marking.reviewItem.prompt.promptType,
+        promptID: getIDForPrompt(marking.reviewItem.prompt),
+        promptParameters: marking.reviewItem.promptParameters,
+      } as PromptTask;
+
+      const logs: ActionLog[] = [
+        {
+          actionLogType: repetitionActionLogType,
+          taskID: getIDForPromptTask(promptTask),
+          parentActionLogIDs: [],
+          taskParameters: null,
+          outcome: marking.outcome,
+          context: null,
+          timestampMillis: Date.now(),
+        },
+      ];
+      setCurrentItemIndex((index) => {
+        const newState = applyActionLogToPromptState({
+          schedule: "default",
+          basePromptState: marking.reviewItem.promptState,
+          promptActionLog: getPromptActionLogFromActionLog(logs[0]),
+          actionLogID: getIDForActionLog(logs[0]),
+        });
+        if (newState instanceof Error) {
+          throw newState;
+        }
+        setLocalPromptStates((localPromptStates) => [
+          ...localPromptStates,
+          newState,
+        ]);
+
+        return index + 1;
+      });
 
       if (authenticationState.userRecord) {
-        // Ingest prompt for user
-        const promptTask = {
-          promptType: marking.reviewItem.prompt.promptType,
-          promptID: getIDForPrompt(marking.reviewItem.prompt),
-          promptParameters: marking.reviewItem.promptParameters,
-        } as PromptTask;
-
-        const logs: ActionLog[] = [
-          {
-            actionLogType: repetitionActionLogType,
-            taskID: getIDForPromptTask(promptTask),
-            parentActionLogIDs: [],
-            taskParameters: null,
-            outcome: marking.outcome,
-            context: null,
-            timestampMillis: Date.now(),
-          },
-        ];
-
         const prompt = marking.reviewItem.prompt;
 
         getFirebaseFunctions()
@@ -167,13 +196,29 @@ function EmbeddedScreen() {
     },
   });
 
-  if (items) {
+  const mergedItems = React.useMemo(
+    () =>
+      items?.map((item, index) =>
+        localPromptStates[index]
+          ? { ...item, promptState: localPromptStates[index] }
+          : item,
+      ),
+    [items, localPromptStates],
+  );
+
+  if (mergedItems) {
     return (
       <Animated.View
         style={{ position: "relative", height: "100vh", backgroundColor }}
       >
+        <EmbeddedBanner
+          palette={mergedItems[currentItemIndex]}
+          isSignedIn={authenticationState.status === "signedIn"}
+          totalPromptCount={mergedItems.length}
+          completePromptCount={currentItemIndex}
+        />
         <ReviewArea
-          items={items}
+          items={mergedItems}
           currentItemIndex={currentItemIndex}
           onMark={onMark}
           schedule="default"
