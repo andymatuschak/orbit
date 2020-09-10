@@ -2,7 +2,7 @@ const path = require("path");
 
 module.exports = {
   stories: ["../src/**/*.stories.tsx"],
-  addons: ["@storybook/addon-essentials"],
+  addons: ["@storybook/addon-essentials", "@storybook/addon-knobs"],
   webpackFinal: async (config) => {
     // Annoyingly, our Markdown library has JSX (and other fancy features) in its built distribution JS files.
     config.module.rules.push({

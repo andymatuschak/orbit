@@ -133,7 +133,7 @@ interface SizeVariant {
 const sizeVariants: SizeVariant[] = [
   { style: type.displayLarge.layoutStyle, maximumLineCount: 1 },
   { style: type.display.layoutStyle, maximumLineCount: 2 },
-  { style: type.headline.layoutStyle },
+  { style: type.headline.layoutStyle, maximumLineCount: 4 },
   { style: type.body.layoutStyle },
   { style: type.bodySmall.layoutStyle },
   { style: type.caption.layoutStyle },

@@ -1,4 +1,4 @@
-import { number, withKnobs, boolean } from "@storybook/addon-knobs";
+import { boolean, number, text, withKnobs } from "@storybook/addon-knobs";
 import {
   applyActionLogToPromptState,
   basicPromptType,
@@ -12,7 +12,7 @@ import {
   repetitionActionLogType,
 } from "metabook-core";
 import { testBasicPrompt } from "metabook-sample-data";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import { ReviewItem } from "../reviewItem";
 import { colors } from "../styles";
@@ -24,11 +24,14 @@ import ReviewArea from "./ReviewArea";
 export default {
   title: "ReviewArea",
   component: ReviewArea,
+  decorators: [withKnobs],
 };
 
 const intervalSequence = getIntervalSequenceForSchedule("default");
 function generateReviewItem(
   questionText: string,
+  answerText: string,
+  contextString: string,
   colorComposition: typeof colors.palettes[number],
 ): ReviewItem {
   const intervalMillis =
@@ -50,7 +53,7 @@ function generateReviewItem(
           provenanceType: PromptProvenanceType.Note,
           externalID: "someID",
           modificationTimestampMillis: 0,
-          title: "Source note title",
+          title: contextString,
           url: null,
         },
       },
@@ -58,6 +61,7 @@ function generateReviewItem(
     prompt: {
       ...testBasicPrompt,
       question: { contents: questionText, attachments: [] },
+      answer: { contents: answerText, attachments: [] },
     },
     promptParameters: null,
     attachmentResolutionMap: null,
@@ -73,14 +77,25 @@ export function Basic() {
     range: true,
   });
 
-  const [items, setItems] = useState<ReviewItem[]>(() =>
-    Array.from(new Array(25).keys()).map((i) =>
-      generateReviewItem(
-        `Question ${i + 1}`,
-        colors.palettes[i % colors.palettes.length],
+  const questionOverrideText = text("Question override text", "");
+  const answerOverrideText = text("Answer override text", "");
+  const sourceContext = text("Source context", "");
+
+  const items = useMemo<ReviewItem[]>(
+    () =>
+      Array.from(new Array(25).keys()).map((i) =>
+        generateReviewItem(
+          questionOverrideText || `Question ${i + 1}`,
+          answerOverrideText || `Answer ${i + 1}`,
+          sourceContext,
+          colors.palettes[(i + colorKnobOffset) % colors.palettes.length],
+        ),
       ),
-    ),
+    [questionOverrideText, answerOverrideText, sourceContext, colorKnobOffset],
   );
+  const [localPromptStates, setLocalPromptStates] = React.useState<
+    PromptState[]
+  >([]);
 
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const backgroundColor = useTransitioningColorValue({
@@ -96,6 +111,16 @@ export function Basic() {
     },
   });
 
+  const mergedItems = React.useMemo(
+    () =>
+      items?.map((item, index) =>
+        localPromptStates[index]
+          ? { ...item, promptState: localPromptStates[index] }
+          : item,
+      ),
+    [items, localPromptStates],
+  );
+
   return (
     <Animated.View
       style={{
@@ -107,18 +132,13 @@ export function Basic() {
       <View style={{ flex: 1 }}>
         {boolean("Show debug grid", false) && <DebugGrid />}
         <ReviewArea
-          items={items}
+          items={mergedItems}
           safeInsets={{
             top: number("Top safe inset", 0),
             bottom: number("Bottom safe inset", 0),
           }}
           onMark={useCallback(({ outcome, reviewItem }) => {
-            setItems((items) => {
-              const newItems = [...items];
-              const currentItemIndex = items.indexOf(reviewItem);
-              newItems[currentItemIndex] = {
-                ...newItems[currentItemIndex],
-              };
+            setLocalPromptStates((states) => {
               const log: PromptRepetitionActionLog<PromptTaskParameters> = {
                 actionLogType: repetitionActionLogType,
                 context: null,
@@ -132,14 +152,14 @@ export function Basic() {
                 taskParameters: null,
                 timestampMillis: Date.now(),
               };
-              newItems[
-                currentItemIndex
-              ].promptState = applyActionLogToPromptState({
-                promptActionLog: log,
-                schedule: "default",
-                basePromptState: reviewItem.promptState,
-              }) as PromptState;
-              return newItems;
+              return [
+                ...states,
+                applyActionLogToPromptState({
+                  promptActionLog: log,
+                  schedule: "default",
+                  basePromptState: reviewItem.promptState,
+                }) as PromptState,
+              ];
             });
 
             setCurrentItemIndex((currentItemIndex) => currentItemIndex + 1);
