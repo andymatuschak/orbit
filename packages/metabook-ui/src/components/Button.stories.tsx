@@ -55,7 +55,7 @@ export const Background = Template.bind({});
 Background.args = {
   ...IconAndTitle.args,
   accentColor: palette.accentColor,
-  backgroundColor: palette.shadeColor,
+  backgroundColor: palette.secondaryBackgroundColor,
   color: colors.white,
 };
 Background.parameters = {
@@ -68,7 +68,7 @@ Icon.args = {
   title: "dummy",
   accentColor: palette.accentColor,
   color: colors.white,
-  backgroundColor: palette.shadeColor,
+  backgroundColor: palette.secondaryBackgroundColor,
   iconName: IconName.ArrowRight,
   style: {},
 };

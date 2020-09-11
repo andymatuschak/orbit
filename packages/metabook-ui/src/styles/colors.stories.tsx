@@ -4,6 +4,7 @@ import { View, Text } from "react-native";
 import Svg, { Circle, Text as SVGText } from "react-native-svg";
 import Button from "../components/Button";
 import { IconName } from "../components/Icon";
+import Spacer from "../components/Spacer";
 import Starburst from "../components/Starburst";
 import * as layout from "./layout";
 import * as type from "./type";
@@ -224,7 +225,7 @@ export function Palette() {
                 key={`${i}-shade`}
                 cx={swatchRadius * 3 * Math.cos(theta)}
                 cy={swatchRadius * 3 * Math.sin(theta)}
-                backgroundColor={palette.shadeColor}
+                backgroundColor={palette.secondaryBackgroundColor}
                 foregroundColor1={colors.white}
                 foregroundColor2={palette.accentColor}
               />
@@ -266,15 +267,15 @@ const starburstValues = [
 ];
 
 function CompositionTest({
-  backgroundColor,
-  accentColor,
-  secondaryAccentColor,
-  tertiaryColor,
+  colorPalette: {
+    backgroundColor,
+    accentColor,
+    secondaryAccentColor,
+    secondaryBackgroundColor,
+    secondaryTextColor,
+  },
 }: {
-  backgroundColor: string;
-  accentColor: string;
-  secondaryAccentColor: string;
-  tertiaryColor: string;
+  colorPalette: colors.ColorPalette;
 }) {
   const width = 375;
 
@@ -302,7 +303,10 @@ function CompositionTest({
           diameter={width * 2}
           entries={starburstValues.map((value, i) => {
             return {
-              color: i < numberComplete ? secondaryAccentColor : tertiaryColor,
+              color:
+                i < numberComplete
+                  ? secondaryAccentColor
+                  : secondaryBackgroundColor,
               value,
             };
           })}
@@ -332,6 +336,10 @@ function CompositionTest({
       </View>
       <Text style={type.headline.layoutStyle}>Primary content</Text>
       <View style={{ position: "absolute", bottom: 24 }}>
+        <Text style={[type.caption.layoutStyle, { color: secondaryTextColor }]}>
+          Secondary text
+        </Text>
+        <Spacer units={2} />
         <Button
           title="See answer"
           iconName={IconName.Reveal}
@@ -350,13 +358,7 @@ export function Compositions() {
   return (
     <View style={{ flexWrap: "wrap", flexDirection: "row" }}>
       {colors.palettes.map((c, i) => (
-        <CompositionTest
-          key={i}
-          backgroundColor={c.backgroundColor}
-          accentColor={c.accentColor}
-          secondaryAccentColor={c.secondaryAccentColor}
-          tertiaryColor={c.shadeColor}
-        />
+        <CompositionTest key={i} colorPalette={c} />
       ))}
     </View>
   );

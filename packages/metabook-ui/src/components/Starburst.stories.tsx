@@ -75,7 +75,7 @@ export function Sandbox() {
     );
     strokeColor = {
       secondary: colorComposition.secondaryAccentColor,
-      tertiary: colorComposition.shadeColor,
+      tertiary: colorComposition.secondaryBackgroundColor,
       accent: colorComposition.accentColor,
       ink: colors.ink,
       black: "black",
@@ -89,7 +89,7 @@ export function Sandbox() {
     );
     completedStrokeColor = {
       secondary: colorComposition.secondaryAccentColor,
-      tertiary: colorComposition.shadeColor,
+      tertiary: colorComposition.secondaryBackgroundColor,
       accent: colorComposition.accentColor,
       ink: colors.ink,
       black: "black",
@@ -103,7 +103,7 @@ export function Sandbox() {
     );
     accentColor = {
       secondary: colorComposition.secondaryAccentColor,
-      tertiary: colorComposition.shadeColor,
+      tertiary: colorComposition.secondaryBackgroundColor,
       accent: colorComposition.accentColor,
       ink: colors.ink,
       black: "black",
@@ -119,7 +119,7 @@ export function Sandbox() {
     strokeColor = {
       bg: colors.palettes[strokeColorIndex].backgroundColor,
       secondary: colors.palettes[strokeColorIndex].secondaryAccentColor,
-      shade: colors.palettes[strokeColorIndex].shadeColor,
+      shade: colors.palettes[strokeColorIndex].secondaryBackgroundColor,
       ink: colors.ink,
       white: colors.white,
     }[strokeColorSource];

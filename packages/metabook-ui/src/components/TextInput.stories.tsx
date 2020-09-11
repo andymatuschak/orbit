@@ -38,7 +38,7 @@ const Template: Story<
     </View>
   );
 };
-Template.args = { placeholder: "Placeholder text", showDebugGrid: true };
+Template.args = { placeholder: "Placeholder text", showDebugGrid: false };
 
 export const Basic = Template.bind({});
 Basic.args = { ...Template.args, colorPaletteIndex: 0 };

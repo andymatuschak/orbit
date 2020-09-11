@@ -61,11 +61,13 @@ export default function TextInput(props: TextInputProps) {
           borderColor: colorPalette?.accentColor ?? colors.productKeyColor,
         },
         // TODO: establish a neutral secondary background color
-        { backgroundColor: colorPalette?.shadeColor ?? colors.white },
+        {
+          backgroundColor:
+            colorPalette?.secondaryBackgroundColor ?? colors.white,
+        },
       ]}
-      // TODO: use secondary text color
       // TODO: establish a neutral secondary text color
-      placeholderTextColor={colorPalette?.accentColor ?? colors.ink}
+      placeholderTextColor={colorPalette?.secondaryTextColor ?? colors.ink}
       selectionColor={colorPalette?.accentColor ?? colors.productKeyColor}
       onFocus={onFocus}
       onBlur={onBlur}

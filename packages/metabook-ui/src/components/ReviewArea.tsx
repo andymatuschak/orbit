@@ -186,7 +186,7 @@ const StarburstContainer = React.memo(function StarburstContainer({
           color:
             index < currentItemIndex
               ? items[currentItemIndex].secondaryAccentColor
-              : items[currentItemIndex].shadeColor,
+              : items[currentItemIndex].secondaryBackgroundColor,
         };
       }),
     [items, currentItemIndex, currentItemEffectiveInterval],
@@ -539,7 +539,9 @@ const ReviewButtonArea = React.memo(function ReviewButtonArea({
     accentColor: colorPalette.accentColor,
     style: buttonStyle,
     backgroundColor:
-      widthSizeClass === "regular" ? colorPalette.shadeColor : undefined,
+      widthSizeClass === "regular"
+        ? colorPalette.secondaryBackgroundColor
+        : undefined,
   } as const;
 
   const forgottenButtonPendingState = useRef<ButtonPendingActivationState>(
