@@ -17,9 +17,12 @@ function getBannerMessage({
   isSignedIn,
   completePromptCount,
   totalPromptCount,
+  sizeClass,
 }: EmbeddedBannerMessageInputs): string {
   if (!isSignedIn && completePromptCount === 0) {
-    return "Quickly review what you just read.";
+    return sizeClass === "regular"
+      ? "Quickly review what you just read"
+      : "Quick review";
   } else {
     if (completePromptCount < totalPromptCount) {
       return `Review: ${totalPromptCount - completePromptCount} prompts left`;
@@ -39,7 +42,7 @@ export default function EmbeddedBanner(props: EmbeddedBannerProps) {
         flexDirection: "row",
         alignItems: "center",
         height: styles.layout.gridUnit * 6,
-        backgroundColor: palette.shadeColor,
+        backgroundColor: palette.secondaryBackgroundColor,
       }}
     >
       <Text

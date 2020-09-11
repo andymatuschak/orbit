@@ -12,7 +12,7 @@ import { ColorPalette } from "../styles/colors";
 
 const textFieldHorizontalPadding = layout.gridUnit;
 
-const style = StyleSheet.create({
+const styles = StyleSheet.create({
   base: {
     paddingLeft: textFieldHorizontalPadding,
     paddingRight: textFieldHorizontalPadding,
@@ -51,21 +51,25 @@ export default function TextInput(props: TextInputProps) {
   const { colorPalette, ...rest } = props;
   const { isFocused, onFocus, onBlur } = useFocusState();
 
+  let style: StyleProp<TextStyle> = [
+    styles.base,
+    isFocused && styles.focused,
+    isFocused && {
+      borderColor: colorPalette?.accentColor ?? colors.productKeyColor,
+    },
+    // TODO: establish a neutral secondary background color
+    {
+      backgroundColor: colorPalette?.secondaryBackgroundColor ?? colors.white,
+    },
+  ];
+  if (props.style) {
+    style = StyleSheet.compose(style, props.style);
+  }
+
   return (
     <RNTextInput
       {...rest}
-      style={[
-        style.base,
-        isFocused && style.focused,
-        isFocused && {
-          borderColor: colorPalette?.accentColor ?? colors.productKeyColor,
-        },
-        // TODO: establish a neutral secondary background color
-        {
-          backgroundColor:
-            colorPalette?.secondaryBackgroundColor ?? colors.white,
-        },
-      ]}
+      style={style}
       // TODO: establish a neutral secondary text color
       placeholderTextColor={colorPalette?.secondaryTextColor ?? colors.ink}
       selectionColor={colorPalette?.accentColor ?? colors.productKeyColor}

@@ -210,6 +210,7 @@ export default function EmbeddedScreen() {
   );
 
   const { width, onLayout } = useLayout();
+  const sizeClass = getWidthSizeClass(width);
 
   if (mergedItems) {
     return (
@@ -222,7 +223,7 @@ export default function EmbeddedScreen() {
           isSignedIn={authenticationState.status === "signedIn"}
           totalPromptCount={mergedItems.length}
           completePromptCount={currentItemIndex}
-          sizeClass={width ? getWidthSizeClass(width) : "compact"}
+          sizeClass={sizeClass}
         />
         <ReviewArea
           items={mergedItems}
@@ -235,7 +236,10 @@ export default function EmbeddedScreen() {
           onSignIn={onSignIn}
         />
         <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
-          <OnboardingModalWeb colorPalette={mergedItems[currentItemIndex]} />
+          <OnboardingModalWeb
+            colorPalette={mergedItems[currentItemIndex]}
+            sizeClass={sizeClass}
+          />
         </View>
       </Animated.View>
     );

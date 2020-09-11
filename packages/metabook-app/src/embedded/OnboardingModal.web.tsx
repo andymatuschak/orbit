@@ -1,32 +1,56 @@
-import DebugGrid from "metabook-ui/dist/components/DebugGrid";
-import Spacer from "metabook-ui/dist/components/Spacer";
+import {
+  Button,
+  styles,
+  TextInput,
+  Spacer,
+  IconName,
+  useLayout,
+} from "metabook-ui";
+import { SizeClass } from "metabook-ui/dist/styles/layout";
 import React from "react";
 import { Text, View } from "react-native";
-import { TextInput, styles } from "metabook-ui";
 
 export interface OnboardingModalProps {
   colorPalette: styles.colors.ColorPalette;
+  sizeClass: SizeClass;
 }
 
 export default function OnboardingModalWeb({
   colorPalette,
+  sizeClass,
 }: OnboardingModalProps) {
-  const proseStyle = styles.type.prose.layoutStyle;
+  const { width, onLayout } = useLayout();
+  const [email, setEmail] = React.useState("");
+
+  const proseStyle =
+    sizeClass === "regular"
+      ? styles.type.prose.layoutStyle
+      : styles.type.proseSmall.layoutStyle;
 
   return (
     <View
       style={{
         backgroundColor: colorPalette.backgroundColor,
-        padding: styles.layout.edgeMargin,
+        paddingTop: styles.layout.edgeMargin,
+        paddingRight: styles.layout.edgeMargin,
+        paddingBottom: styles.layout.gridUnit,
+        paddingLeft: styles.layout.edgeMargin,
         alignItems: "center",
       }}
+      onLayout={onLayout}
     >
       <View
         style={{
-          maxWidth: 600, // TODO should probably be shared with the review area max width
+          maxWidth: 550, // TODO should probably be shared with the review area max width
         }}
       >
-        <Text style={styles.type.headline.layoutStyle}>
+        <Text
+          style={
+            sizeClass === "regular"
+              ? styles.type.headline.layoutStyle
+              : styles.type.body.layoutStyle
+          }
+        >
           Bring these ideas into your&nbsp;Orbit.
         </Text>
         <Spacer units={3} />
@@ -44,25 +68,60 @@ export default function OnboardingModalWeb({
         </Text>
         <Spacer units={3} />
         <Text style={proseStyle}>
-          Set up a free account to get started or learn more.
+          Set up a free account to get started or{" "}
+          <a
+            href="https://withorbit.com"
+            rel="noreferrer"
+            target="_blank"
+            style={{ color: "inherit" }}
+          >
+            learn more
+          </a>
+          .
         </Text>
-        <Spacer units={6} />
+        <Spacer units={5} />
         <Text
           style={[
-            styles.type.bodySmall.layoutStyle,
+            sizeClass === "regular"
+              ? styles.type.body.layoutStyle
+              : styles.type.bodySmall.layoutStyle,
             { color: styles.colors.white },
           ]}
         >
-          Enter your email address to sign up or sign in:
+          Enter your email address to sign in:
         </Text>
         <Spacer units={1} />
         <View
           style={{
             marginLeft: -TextInput.textFieldHorizontalPadding,
             marginRight: -TextInput.textFieldHorizontalPadding,
+            flexDirection: "row",
+            flex: 1,
           }}
         >
-          <TextInput colorPalette={colorPalette} placeholder="you@you.com" />
+          <TextInput
+            colorPalette={colorPalette}
+            placeholder="you@you.com"
+            autoCorrect={false}
+            importantForAutofill="yes"
+            autoCompleteType="email"
+            textContentType="emailAddress"
+            keyboardType="email-address"
+            style={{ flexGrow: 1 }}
+            value={email}
+            onChangeText={setEmail}
+          />
+          <Spacer units={1} />
+          <Button
+            iconName={IconName.ArrowRight}
+            backgroundColor={colorPalette.secondaryBackgroundColor}
+            color={colorPalette.accentColor}
+            accentColor={colorPalette.accentColor}
+            accessibilityLabel="Continue"
+            onPress={() => {
+              return;
+            }}
+          />
         </View>
       </View>
     </View>

@@ -45,7 +45,12 @@ export function Hierarchy() {
     <View>
       {Object.keys(type.typeStyles).map((specName) => (
         <TypeSample key={specName} shouldShowGrid={shouldShowGrid}>
-          <Text style={type.typeStyles[specName].layoutStyle}>
+          <Text
+            style={
+              type.typeStyles[specName as keyof typeof type.typeStyles]
+                .layoutStyle
+            }
+          >
             {specName[0].toUpperCase() + specName.slice(1)}
           </Text>
         </TypeSample>
@@ -62,7 +67,12 @@ export function MultilineSamples() {
     <View>
       {Object.keys(type.typeStyles).map((specName) => (
         <TypeSample key={specName} shouldShowGrid={shouldShowGrid}>
-          <Text style={type.typeStyles[specName].layoutStyle}>
+          <Text
+            style={
+              type.typeStyles[specName as keyof typeof type.typeStyles]
+                .layoutStyle
+            }
+          >
             {specName[0].toUpperCase() + specName.slice(1)}: {sample}
           </Text>
         </TypeSample>

@@ -2,7 +2,11 @@ import React from "react";
 import { View } from "react-native";
 import { gridUnit } from "../styles/layout";
 
-const Spacer = React.memo(function Spacer(props: { units: number }) {
+export interface SpacerProps {
+  units: number;
+}
+
+const Spacer = React.memo(function Spacer(props: SpacerProps) {
   const size = props.units * gridUnit;
   return <View style={{ width: size, height: size }} />;
 });

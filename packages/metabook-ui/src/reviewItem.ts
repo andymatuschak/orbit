@@ -21,6 +21,7 @@ interface BasePromptReviewItem {
   secondaryAccentColor: string;
   backgroundColor: string;
   secondaryBackgroundColor: string;
+  secondaryTextColor: string;
 }
 
 export interface BasicPromptReviewItem extends BasePromptReviewItem {
