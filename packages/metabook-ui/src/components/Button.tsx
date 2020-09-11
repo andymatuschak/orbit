@@ -19,33 +19,35 @@ import Hoverable from "./Hoverable";
 import Icon, { IconName, IconPosition } from "./Icon";
 
 export type ButtonPendingActivationState = "hover" | "pressed" | null;
-export type ButtonProps = {
-  title: string;
 
-  color?: string;
-  accentColor?: string; // for the icon; the icon's accent color will be the text color
-  backgroundColor?: string;
-
-  disabled?: boolean;
-  size?: "regular" | "small";
-  hitSlop?: ViewProps["hitSlop"];
-
-  iconName?: IconName;
-
-  style?: StyleProp<FlexStyle>;
-
-  onPendingInteractionStateDidChange?: (
-    pendingActivationState: ButtonPendingActivationState,
-  ) => void;
-
-  numberOfLines?: number;
-  ellipsizeMode?: TextProps["ellipsizeMode"];
-} & (
+type ButtonContents =
+  | { title: string; iconName?: IconName }
+  | { iconName: IconName; accessibilityLabel: string };
+type ButtonAction =
   | {
       onPress: () => void;
     }
-  | { href: string }
-);
+  | { href: string };
+
+export type ButtonProps = ButtonContents &
+  ButtonAction & {
+    color?: string;
+    accentColor?: string; // for the icon; the icon's accent color will be the text color
+    backgroundColor?: string;
+
+    disabled?: boolean;
+    size?: "regular" | "small";
+    hitSlop?: ViewProps["hitSlop"];
+
+    style?: StyleProp<FlexStyle>;
+
+    onPendingInteractionStateDidChange?: (
+      pendingActivationState: ButtonPendingActivationState,
+    ) => void;
+
+    numberOfLines?: number;
+    ellipsizeMode?: TextProps["ellipsizeMode"];
+  };
 
 const pressedButtonOpacity = 0.2;
 const defaultButtonColor = colors.ink;
@@ -54,7 +56,6 @@ const ButtonInterior = function ButtonImpl(
   props: ButtonProps & { isHovered: boolean; isPressed: boolean },
 ) {
   const {
-    title,
     color,
     accentColor,
     backgroundColor,
@@ -78,13 +79,23 @@ const ButtonInterior = function ButtonImpl(
     opacity.setValue(pressedButtonOpacity);
   }
 
+  const isSoloIcon = !("title" in props);
+  let iconColor;
+  if (disabled) {
+    iconColor = color;
+  } else if (isSoloIcon) {
+    iconColor = color;
+  } else {
+    iconColor = accentColor;
+  }
+
   return (
     <Animated.View
       style={[
         {
           opacity,
         },
-        !!backgroundColor && styles.interiorLayoutWithBackground,
+        !!backgroundColor && !isSoloIcon && styles.interiorLayoutWithBackground,
         !!disabled && styles.disabled,
       ]}
       pointerEvents="box-only"
@@ -92,30 +103,32 @@ const ButtonInterior = function ButtonImpl(
       {iconName && (
         <Icon
           name={iconName}
-          position={IconPosition.TopLeft}
+          position={isSoloIcon ? IconPosition.Center : IconPosition.TopLeft}
           // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's color becomes the icon's accent color. It's intentional, though, to produce an inversion.
-          tintColor={(disabled ? color : accentColor) ?? defaultButtonColor}
+          tintColor={iconColor ?? defaultButtonColor}
           accentColor={color ?? defaultButtonColor}
         />
       )}
-      <Text
-        {...rest}
-        style={[
-          (size ?? "regular") === "regular"
-            ? type.label.layoutStyle
-            : type.caption.layoutStyle,
-          {
-            color:
-              ((isHovered || isPressed) && accentColor && !disabled
-                ? accentColor
-                : color) || defaultButtonColor,
-          },
-        ]}
-        selectable={false}
-        suppressHighlighting={true}
-      >
-        {title}
-      </Text>
+      {"title" in props && (
+        <Text
+          {...rest}
+          style={[
+            (size ?? "regular") === "regular"
+              ? type.label.layoutStyle
+              : type.caption.layoutStyle,
+            {
+              color:
+                ((isHovered || isPressed) && accentColor && !disabled
+                  ? accentColor
+                  : color) || defaultButtonColor,
+            },
+          ]}
+          selectable={false}
+          suppressHighlighting={true}
+        >
+          {props.title}
+        </Text>
+      )}
     </Animated.View>
   );
 };
@@ -130,6 +143,13 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.3,
     ...(Platform.OS === "web" && { cursor: "not-allowed" }),
+  },
+  soloIcon: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 16,
   },
 });
 
@@ -157,6 +177,11 @@ export default React.memo(function Button(props: ButtonProps) {
     }
   }
 
+  const accessibilityLabel =
+    "title" in props ? props.title : props.accessibilityLabel;
+
+  const isSoloIcon = !("title" in props);
+
   return (
     <Hoverable
       onHoverIn={() => {
@@ -172,7 +197,7 @@ export default React.memo(function Button(props: ButtonProps) {
         <Pressable
           accessible={true}
           accessibilityRole={href ? "link" : "button"}
-          accessibilityLabel={props.title}
+          accessibilityLabel={accessibilityLabel}
           onPress={
             onPress ??
             (() => {
@@ -196,7 +221,13 @@ export default React.memo(function Button(props: ButtonProps) {
           // @ts-ignore react-native-web adds this prop.
           href={href}
           hitSlop={props.hitSlop}
-          style={[!!backgroundColor && { backgroundColor }, style]}
+          style={[
+            !!backgroundColor && { backgroundColor },
+            isSoloIcon && styles.soloIcon,
+            isSoloIcon &&
+              isHovered && { borderColor: props.accentColor, borderWidth: 3 },
+            style,
+          ]}
         >
           {({ pressed }) => (
             <ButtonInterior

@@ -21,6 +21,7 @@ export enum IconPosition {
   TopRight = "TR",
   BottomLeft = "BL",
   BottomRight = "BR",
+  Center = "Center",
 }
 
 export interface IconProps {
@@ -58,6 +59,8 @@ function getIconAsset(
           return require("../../assets/icons/check-BL.png");
         case IconPosition.BottomRight:
           return require("../../assets/icons/check-BR.png");
+        case IconPosition.Center:
+          return require("../../assets/icons/check-center.png");
         default:
           throw unreachableCaseError(iconPosition);
       }
@@ -73,6 +76,8 @@ function getIconAsset(
           return require("../../assets/icons/cross-BL.png");
         case IconPosition.BottomRight:
           return require("../../assets/icons/cross-BR.png");
+        case IconPosition.Center:
+          return require("../../assets/icons/cross-center.png");
         default:
           throw unreachableCaseError(iconPosition);
       }
@@ -88,6 +93,8 @@ function getIconAsset(
             return require("../../assets/icons/reveal-accent-bottom.png");
           case IconPosition.BottomRight:
             return require("../../assets/icons/reveal-accent-bottom.png");
+          case IconPosition.Center:
+            return require("../../assets/icons/reveal-accent-center.png");
         }
       } else {
         switch (iconPosition) {
@@ -99,6 +106,8 @@ function getIconAsset(
             return require("../../assets/icons/reveal-bottom.png");
           case IconPosition.BottomRight:
             return require("../../assets/icons/reveal-bottom.png");
+          case IconPosition.Center:
+            return require("../../assets/icons/reveal-center.png");
         }
       }
       throw unreachableCaseError(iconPosition);

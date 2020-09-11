@@ -3,6 +3,7 @@ import React from "react";
 import { colors } from "../styles";
 import Button, { ButtonProps } from "./Button";
 import { IconName } from "./Icon";
+import { View } from "react-native";
 
 const palette = colors.palettes[0];
 
@@ -23,12 +24,15 @@ export default {
 };
 
 const Template: Story<ButtonProps> = (args) => (
-  <Button style={{ width: 250 }} {...args} />
+  <View>
+    <Button {...args} />
+  </View>
 );
 Template.args = {
   title: "Button",
   accentColor: colors.productKeyColor,
   href: undefined,
+  style: { width: 250 },
 };
 
 export const Basic = Template.bind({});
@@ -44,12 +48,12 @@ Link.args = {
 export const Disabled = Template.bind({});
 Disabled.args = { ...Template.args, disabled: true };
 
-export const Icon = Template.bind({});
-Icon.args = { ...Template.args, iconName: IconName.Check };
+export const IconAndTitle = Template.bind({});
+IconAndTitle.args = { ...Template.args, iconName: IconName.Check };
 
 export const Background = Template.bind({});
 Background.args = {
-  ...Icon.args,
+  ...IconAndTitle.args,
   accentColor: palette.accentColor,
   backgroundColor: palette.shadeColor,
   color: colors.white,
@@ -57,3 +61,18 @@ Background.args = {
 Background.parameters = {
   backgrounds: { default: "colorful" },
 };
+
+export const Icon = Template.bind({});
+Icon.args = {
+  ...Template.args,
+  title: "dummy",
+  accentColor: palette.accentColor,
+  color: colors.white,
+  backgroundColor: palette.shadeColor,
+  iconName: IconName.Cross,
+  style: {},
+};
+Icon.parameters = {
+  backgrounds: { default: "colorful" },
+};
+delete Icon.args.title;

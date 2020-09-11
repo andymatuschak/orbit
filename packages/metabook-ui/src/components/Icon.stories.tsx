@@ -25,6 +25,7 @@ function IconEntry(props: { iconName: IconName }) {
       <Icon {...sharedProps} position={IconPosition.TopRight} />
       <Icon {...sharedProps} position={IconPosition.BottomLeft} />
       <Icon {...sharedProps} position={IconPosition.BottomRight} />
+      <Icon {...sharedProps} position={IconPosition.Center} />
     </View>
   );
 }
