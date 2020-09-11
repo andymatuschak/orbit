@@ -12,6 +12,8 @@ export default type;
 interface TypeSpec {
   typeStyle: TextStyle;
   layoutStyle: TextStyle; // includes position shifts to place text on the baseline grid, compensating for the silly baseline-ignoring layout that the web (and hence RN) do. These components position the baselines on a baseline, and they don't add any extra padding below.
+  topShift: number;
+  bottomShift: number;
 }
 
 const boldFontNameTable: { [key: string]: string } = {
@@ -80,6 +82,8 @@ function makeTypeSpec(
       top: topShift,
       marginBottom: bottomShift,
     },
+    topShift,
+    bottomShift,
   };
 }
 
@@ -124,7 +128,7 @@ export const headline = makeTypeSpec(
     fontSize: 36,
     fontFamily: "Dr-Regular",
     lineHeight: 32,
-    // letterSpacing: 36 * 0.0,
+    letterSpacing: 0,
   },
   -2,
   -7,
@@ -139,8 +143,8 @@ export const body = makeTypeSpec(
     letterSpacing: 24 * 0.01,
   },
   -4,
-  -6,
-  -8,
+  -5,
+  -7,
 );
 
 export const bodySmall = makeTypeSpec(
@@ -175,8 +179,8 @@ export const label = makeTypeSpec(
     letterSpacing: 24 * 0.01,
   },
   -4,
-  -6,
-  -8,
+  -5,
+  -7,
 );
 
 export const caption = makeTypeSpec(

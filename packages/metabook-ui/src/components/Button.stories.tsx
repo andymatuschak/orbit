@@ -7,7 +7,7 @@ import { IconName } from "./Icon";
 const palette = colors.palettes[0];
 
 export default {
-  title: "Button",
+  title: "Controls/Button",
   component: Button,
   argTypes: {
     onPress: { action: "pressed" },

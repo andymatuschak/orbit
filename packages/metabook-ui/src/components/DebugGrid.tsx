@@ -44,7 +44,10 @@ export default function DebugGrid({
 
   return (
     <View
-      style={{ ...StyleSheet.absoluteFillObject, zIndex: -1 }}
+      style={{
+        ...StyleSheet.absoluteFillObject,
+        zIndex: -1,
+      }}
       onLayout={useCallback(
         ({
           nativeEvent: {
@@ -55,6 +58,7 @@ export default function DebugGrid({
         },
         [],
       )}
+      pointerEvents="none"
     >
       {size && (
         <Svg width={size[0]} height={size[1]}>
