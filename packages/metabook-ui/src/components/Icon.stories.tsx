@@ -36,6 +36,7 @@ export function Index() {
       <IconEntry iconName={IconName.Check} />
       <IconEntry iconName={IconName.Cross} />
       <IconEntry iconName={IconName.Reveal} />
+      <IconEntry iconName={IconName.ArrowRight} />
     </View>
   );
 }

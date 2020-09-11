@@ -14,6 +14,7 @@ export enum IconName {
   Check = "check",
   Cross = "cross",
   Reveal = "reveal",
+  ArrowRight = "right",
 }
 
 export enum IconPosition {
@@ -78,6 +79,23 @@ function getIconAsset(
           return require("../../assets/icons/cross-BR.png");
         case IconPosition.Center:
           return require("../../assets/icons/cross-center.png");
+        default:
+          throw unreachableCaseError(iconPosition);
+      }
+
+    case IconName.ArrowRight:
+      if (accent) return null;
+      switch (iconPosition) {
+        case IconPosition.TopLeft:
+          return require("../../assets/icons/right-TL.png");
+        case IconPosition.TopRight:
+          return require("../../assets/icons/right-TR.png");
+        case IconPosition.BottomLeft:
+          return require("../../assets/icons/right-BL.png");
+        case IconPosition.BottomRight:
+          return require("../../assets/icons/right-BR.png");
+        case IconPosition.Center:
+          return require("../../assets/icons/right-center.png");
         default:
           throw unreachableCaseError(iconPosition);
       }

@@ -69,7 +69,7 @@ Icon.args = {
   accentColor: palette.accentColor,
   color: colors.white,
   backgroundColor: palette.shadeColor,
-  iconName: IconName.Cross,
+  iconName: IconName.ArrowRight,
   style: {},
 };
 Icon.parameters = {
