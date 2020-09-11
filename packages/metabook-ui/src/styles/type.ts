@@ -143,33 +143,21 @@ export const body = makeTypeSpec(
     letterSpacing: 24 * 0.01,
   },
   -4,
-  -5,
-  -7,
+  -6,
+  -8,
 );
 
 export const bodySmall = makeTypeSpec(
   {
-    fontSize: 18,
-    fontFamily: "Dr-Medium",
-    lineHeight: 20,
-    letterSpacing: 16 * 0.01,
-  },
-  -3,
-  -5,
-  -8,
-);
-
-/*export const bodySmall = makeTypeSpec(
-  {
     fontSize: 17,
     fontFamily: "Dr-Bold",
-    lineHeight: 16,
-    letterSpacing: 16 * 0.04,
+    lineHeight: 20,
+    letterSpacing: 16 * 0.03,
   },
   -3,
-  -4,
-  -4,
-);*/
+  -4.5,
+  -7.5,
+);
 
 export const label = makeTypeSpec(
   {
@@ -179,18 +167,55 @@ export const label = makeTypeSpec(
     letterSpacing: 24 * 0.01,
   },
   -4,
-  -5,
-  -7,
+  -6,
+  -8,
 );
 
 export const caption = makeTypeSpec(
   {
     fontSize: 12,
     fontFamily: "Dr-ExtraBold",
-    lineHeight: 12,
+    lineHeight: 16,
     letterSpacing: 13 * 0.06,
   },
-  -2,
-  -3,
   -4,
+  -5,
+  -8,
 );
+
+export const prose = makeTypeSpec(
+  {
+    fontSize: 17,
+    fontFamily: "RaptorDemo-Regular",
+    lineHeight: 20,
+    letterSpacing: 0,
+  },
+  -3,
+  -4.5,
+  -8,
+);
+
+export const proseSmall = makeTypeSpec(
+  {
+    fontSize: 13,
+    fontFamily: "RaptorDemo-Regular",
+    lineHeight: 16,
+    letterSpacing: 0,
+  },
+  -4,
+  -5,
+  -8,
+);
+
+export const typeStyles = {
+  displayLarge,
+  display,
+  title,
+  headline,
+  body,
+  bodySmall,
+  label,
+  caption,
+  prose,
+  proseSmall,
+};

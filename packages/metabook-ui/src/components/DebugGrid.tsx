@@ -15,7 +15,7 @@ export default function DebugGrid({
       size &&
       Array.from(new Array(Math.ceil(size[1] / layout.gridUnit)).keys()).map(
         (row) => {
-          const y = row * layout.gridUnit - 0.5;
+          const y = row * layout.gridUnit + 0.5; // position on the half pixel. we increment by 0.5 instead of subtracting by 0.5 because otherwise the first line is off-canvas. balanced by negative marginTop below.
           return (
             <React.Fragment key={row}>
               <Line
@@ -46,6 +46,7 @@ export default function DebugGrid({
     <View
       style={{
         ...StyleSheet.absoluteFillObject,
+        marginTop: -1,
         zIndex: -1,
       }}
       onLayout={useCallback(

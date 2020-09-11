@@ -26,6 +26,7 @@ import { Animated, Easing, Text, View } from "react-native";
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
+import OnboardingModalWeb from "./OnboardingModal.web";
 import {
   EmbeddedAuthenticationState,
   useEmbeddedAuthenticationState,
@@ -233,6 +234,9 @@ export default function EmbeddedScreen() {
           authenticationState={authenticationState}
           onSignIn={onSignIn}
         />
+        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
+          <OnboardingModalWeb colorPalette={mergedItems[currentItemIndex]} />
+        </View>
       </Animated.View>
     );
   } else {

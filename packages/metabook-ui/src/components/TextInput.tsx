@@ -10,9 +10,9 @@ import {
 import { colors, layout, type } from "../styles";
 import { ColorPalette } from "../styles/colors";
 
-export const textFieldHorizontalPadding = layout.gridUnit;
+const textFieldHorizontalPadding = layout.gridUnit;
 
-export const style = StyleSheet.create({
+const style = StyleSheet.create({
   base: {
     paddingLeft: textFieldHorizontalPadding,
     paddingRight: textFieldHorizontalPadding,
@@ -47,11 +47,13 @@ function useFocusState() {
   };
 }
 
-export default function TextInput({ colorPalette }: TextInputProps) {
+export default function TextInput(props: TextInputProps) {
+  const { colorPalette, ...rest } = props;
   const { isFocused, onFocus, onBlur } = useFocusState();
 
   return (
     <RNTextInput
+      {...rest}
       style={[
         style.base,
         isFocused && style.focused,
@@ -70,3 +72,4 @@ export default function TextInput({ colorPalette }: TextInputProps) {
     />
   );
 }
+TextInput.textFieldHorizontalPadding = textFieldHorizontalPadding;

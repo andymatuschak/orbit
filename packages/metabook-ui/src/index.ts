@@ -31,3 +31,5 @@ export * as styles from "./styles";
 export { getHeightForReviewAreaOfWidth } from "./util/getHeightForReviewAreaOfWidth";
 
 export { default as Logo } from "./components/Logo";
+
+export { default as TextInput } from "./components/TextInput";
