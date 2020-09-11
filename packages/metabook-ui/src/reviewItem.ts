@@ -18,7 +18,7 @@ interface BasePromptReviewItem {
   attachmentResolutionMap: AttachmentResolutionMap | null;
 
   accentColor: string;
-  secondaryColor: string;
+  secondaryAccentColor: string;
   shadeColor: string;
   backgroundColor: string;
 }

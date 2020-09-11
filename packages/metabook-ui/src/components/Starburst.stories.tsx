@@ -74,7 +74,7 @@ export function Sandbox() {
       "tertiary",
     );
     strokeColor = {
-      secondary: colorComposition.secondaryColor,
+      secondary: colorComposition.secondaryAccentColor,
       tertiary: colorComposition.shadeColor,
       accent: colorComposition.accentColor,
       ink: colors.ink,
@@ -88,7 +88,7 @@ export function Sandbox() {
       "secondary",
     );
     completedStrokeColor = {
-      secondary: colorComposition.secondaryColor,
+      secondary: colorComposition.secondaryAccentColor,
       tertiary: colorComposition.shadeColor,
       accent: colorComposition.accentColor,
       ink: colors.ink,
@@ -102,7 +102,7 @@ export function Sandbox() {
       "accent",
     );
     accentColor = {
-      secondary: colorComposition.secondaryColor,
+      secondary: colorComposition.secondaryAccentColor,
       tertiary: colorComposition.shadeColor,
       accent: colorComposition.accentColor,
       ink: colors.ink,
@@ -118,7 +118,7 @@ export function Sandbox() {
     const strokeColorIndex = number("Secondary color index", 1, colorRange);
     strokeColor = {
       bg: colors.palettes[strokeColorIndex].backgroundColor,
-      secondary: colors.palettes[strokeColorIndex].secondaryColor,
+      secondary: colors.palettes[strokeColorIndex].secondaryAccentColor,
       shade: colors.palettes[strokeColorIndex].shadeColor,
       ink: colors.ink,
       white: colors.white,
@@ -136,7 +136,8 @@ export function Sandbox() {
     );
     completedStrokeColor = {
       bg: colors.palettes[completedStrokeColorIndex].backgroundColor,
-      secondary: colors.palettes[completedStrokeColorIndex].secondaryColor,
+      secondary:
+        colors.palettes[completedStrokeColorIndex].secondaryAccentColor,
       ink: colors.ink,
       white: colors.white,
     }[completedStrokeColorSource];

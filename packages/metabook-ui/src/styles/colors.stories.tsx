@@ -268,12 +268,12 @@ const starburstValues = [
 function CompositionTest({
   backgroundColor,
   accentColor,
-  secondaryColor,
+  secondaryAccentColor,
   tertiaryColor,
 }: {
   backgroundColor: string;
   accentColor: string;
-  secondaryColor: string;
+  secondaryAccentColor: string;
   tertiaryColor: string;
 }) {
   const width = 375;
@@ -302,7 +302,7 @@ function CompositionTest({
           diameter={width * 2}
           entries={starburstValues.map((value, i) => {
             return {
-              color: i < numberComplete ? secondaryColor : tertiaryColor,
+              color: i < numberComplete ? secondaryAccentColor : tertiaryColor,
               value,
             };
           })}
@@ -354,7 +354,7 @@ export function Compositions() {
           key={i}
           backgroundColor={c.backgroundColor}
           accentColor={c.accentColor}
-          secondaryColor={c.secondaryColor}
+          secondaryAccentColor={c.secondaryAccentColor}
           tertiaryColor={c.shadeColor}
         />
       ))}

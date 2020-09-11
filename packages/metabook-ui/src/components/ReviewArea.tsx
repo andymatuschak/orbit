@@ -185,7 +185,7 @@ const StarburstContainer = React.memo(function StarburstContainer({
           // TODO: implement more proper "is finished" color determination
           color:
             index < currentItemIndex
-              ? items[currentItemIndex].secondaryColor
+              ? items[currentItemIndex].secondaryAccentColor
               : items[currentItemIndex].shadeColor,
         };
       }),
