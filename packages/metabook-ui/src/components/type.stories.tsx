@@ -113,16 +113,18 @@ export function Variants() {
     <View style={{ paddingBottom: layout.gridUnit * 6, paddingLeft: 16 }}>
       {shouldShowGrid && <DebugGrid />}
       <WithVariants
-        typeStyle={type.displayLarge.layoutStyle}
+        typeStyle={type.promptXXLarge.layoutStyle}
         text="Display Large"
       />
-      <WithVariants typeStyle={type.display.layoutStyle} text="Display" />
-      <WithVariants typeStyle={type.title.layoutStyle} text="Title" />
-      <WithVariants typeStyle={type.headline.layoutStyle} text="Headline" />
-      <WithVariants typeStyle={type.body.layoutStyle} text="Body" />
-      <WithVariants typeStyle={type.bodySmall.layoutStyle} text="Body Small" />
+      <WithVariants typeStyle={type.promptXLarge.layoutStyle} text="Display" />
+      <WithVariants typeStyle={type.promptLarge.layoutStyle} text="Headline" />
+      <WithVariants typeStyle={type.promptMedium.layoutStyle} text="Body" />
+      <WithVariants
+        typeStyle={type.promptSmall.layoutStyle}
+        text="Body Small"
+      />
       <WithVariants typeStyle={type.label.layoutStyle} text="Label" />
-      <WithVariants typeStyle={type.caption.layoutStyle} text="Caption" />
+      <WithVariants typeStyle={type.labelTiny.layoutStyle} text="Caption" />
     </View>
   );
 }

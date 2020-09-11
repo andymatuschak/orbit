@@ -1,11 +1,4 @@
-import {
-  Button,
-  styles,
-  TextInput,
-  Spacer,
-  IconName,
-  useLayout,
-} from "metabook-ui";
+import { Button, IconName, Spacer, styles, TextInput } from "metabook-ui";
 import { SizeClass } from "metabook-ui/dist/styles/layout";
 import React from "react";
 import { Text, View } from "react-native";
@@ -19,13 +12,12 @@ export default function OnboardingModalWeb({
   colorPalette,
   sizeClass,
 }: OnboardingModalProps) {
-  const { width, onLayout } = useLayout();
   const [email, setEmail] = React.useState("");
 
   const proseStyle =
     sizeClass === "regular"
-      ? styles.type.prose.layoutStyle
-      : styles.type.proseSmall.layoutStyle;
+      ? styles.type.runningText.layoutStyle
+      : styles.type.runningTextSmall.layoutStyle;
 
   return (
     <View
@@ -37,7 +29,6 @@ export default function OnboardingModalWeb({
         paddingLeft: styles.layout.edgeMargin,
         alignItems: "center",
       }}
-      onLayout={onLayout}
     >
       <View
         style={{
@@ -48,7 +39,7 @@ export default function OnboardingModalWeb({
           style={
             sizeClass === "regular"
               ? styles.type.headline.layoutStyle
-              : styles.type.body.layoutStyle
+              : styles.type.label.layoutStyle
           }
         >
           Bring these ideas into your&nbsp;Orbit.
@@ -83,8 +74,8 @@ export default function OnboardingModalWeb({
         <Text
           style={[
             sizeClass === "regular"
-              ? styles.type.body.layoutStyle
-              : styles.type.bodySmall.layoutStyle,
+              ? styles.type.label.layoutStyle
+              : styles.type.labelSmall.layoutStyle,
             { color: styles.colors.white },
           ]}
         >

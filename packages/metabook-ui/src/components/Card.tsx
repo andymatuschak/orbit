@@ -167,7 +167,7 @@ function PromptContextLabel({
             style={[
               size === "regular"
                 ? type.label.layoutStyle
-                : type.caption.layoutStyle,
+                : type.labelTiny.layoutStyle,
               {
                 color,
               },

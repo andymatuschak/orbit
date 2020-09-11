@@ -70,7 +70,7 @@ const StarburstLegendEntry = React.memo(function StarburstLegendEntry({
         <Animated.Text
           style={useMemo(
             () => [
-              type.caption.layoutStyle,
+              type.labelTiny.layoutStyle,
               { color: animatedColor, textAlign: "center" },
             ],
             [animatedColor],

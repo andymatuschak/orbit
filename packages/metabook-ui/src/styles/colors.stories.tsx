@@ -321,7 +321,7 @@ function CompositionTest({
           marginTop: layout.gridUnit * 7,
         }}
       >
-        <Text style={type.caption.layoutStyle}>5d</Text>
+        <Text style={type.labelTiny.layoutStyle}>5d</Text>
       </View>
 
       <View
@@ -330,13 +330,15 @@ function CompositionTest({
           marginTop: layout.gridUnit * 18,
         }}
       >
-        <Text style={[type.body.layoutStyle, { color: accentColor }]}>
+        <Text style={[type.promptMedium.layoutStyle, { color: accentColor }]}>
           Source context
         </Text>
       </View>
-      <Text style={type.headline.layoutStyle}>Primary content</Text>
+      <Text style={type.promptLarge.layoutStyle}>Primary content</Text>
       <View style={{ position: "absolute", bottom: 24 }}>
-        <Text style={[type.caption.layoutStyle, { color: secondaryTextColor }]}>
+        <Text
+          style={[type.labelTiny.layoutStyle, { color: secondaryTextColor }]}
+        >
           Secondary text
         </Text>
         <Spacer units={2} />

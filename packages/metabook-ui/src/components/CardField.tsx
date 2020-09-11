@@ -131,12 +131,12 @@ interface SizeVariant {
 }
 
 const sizeVariants: SizeVariant[] = [
-  { style: type.displayLarge.layoutStyle, maximumLineCount: 1 },
-  { style: type.display.layoutStyle, maximumLineCount: 2 },
-  { style: type.headline.layoutStyle, maximumLineCount: 4 },
-  { style: type.body.layoutStyle },
-  { style: type.bodySmall.layoutStyle },
-  { style: type.caption.layoutStyle },
+  { style: type.promptXXLarge.layoutStyle, maximumLineCount: 1 },
+  { style: type.promptXLarge.layoutStyle, maximumLineCount: 2 },
+  { style: type.promptLarge.layoutStyle, maximumLineCount: 4 },
+  { style: type.promptMedium.layoutStyle },
+  { style: type.promptSmall.layoutStyle },
+  { style: type.labelTiny.layoutStyle },
 ];
 
 function getMarkdownStyles(sizeVariant: SizeVariant, accentColor: ColorValue) {

@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
   base: {
     paddingLeft: textFieldHorizontalPadding,
     paddingRight: textFieldHorizontalPadding,
-    paddingTop: layout.gridUnit + type.body.topShift,
+    paddingTop: layout.gridUnit + type.label.topShift,
     paddingBottom: layout.gridUnit,
     height: layout.gridUnit * 4,
     color: colors.ink,
@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     ...(Platform.OS === "web" && {
       outlineStyle: "none",
     }),
-    ...type.body.typeStyle,
+    ...type.label.typeStyle,
   },
 
   focused: {

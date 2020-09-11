@@ -87,7 +87,7 @@ function makeTypeSpec(
   };
 }
 
-export const displayLarge = makeTypeSpec(
+export const promptXXLarge = makeTypeSpec(
   {
     fontSize: 96,
     fontFamily: "Dr-Light",
@@ -99,7 +99,7 @@ export const displayLarge = makeTypeSpec(
   -20,
 );
 
-export const display = makeTypeSpec(
+export const promptXLarge = makeTypeSpec(
   {
     fontSize: 60,
     fontFamily: "Dr-Light",
@@ -111,19 +111,7 @@ export const display = makeTypeSpec(
   -16,
 );
 
-export const title = makeTypeSpec(
-  {
-    fontSize: 48,
-    fontFamily: "Dr-Medium",
-    lineHeight: 40,
-    letterSpacing: 48 * -0.015,
-  },
-  0,
-  -7,
-  -8,
-);
-
-export const headline = makeTypeSpec(
+export const promptLarge = makeTypeSpec(
   {
     fontSize: 36,
     fontFamily: "Dr-Regular",
@@ -135,7 +123,7 @@ export const headline = makeTypeSpec(
   -8,
 );
 
-export const body = makeTypeSpec(
+export const promptMedium = makeTypeSpec(
   {
     fontSize: 24,
     fontFamily: "Dr-Medium",
@@ -147,31 +135,55 @@ export const body = makeTypeSpec(
   -8,
 );
 
-export const bodySmall = makeTypeSpec(
+export const promptSmall = makeTypeSpec(
   {
-    fontSize: 17,
-    fontFamily: "Dr-Bold",
+    fontSize: 18,
+    fontFamily: "Dr-Medium",
     lineHeight: 20,
-    letterSpacing: 16 * 0.03,
+    letterSpacing: 16 * 0.02,
   },
   -3,
   -4.5,
   -7.5,
 );
 
+export const headline = makeTypeSpec(
+  {
+    fontSize: 36,
+    fontFamily: "Dr-Bold",
+    lineHeight: 32,
+    letterSpacing: 0,
+  },
+  -2,
+  -7,
+  -8,
+);
+
 export const label = makeTypeSpec(
   {
     fontSize: 24,
-    fontFamily: "Dr-ExtraBold",
+    fontFamily: "Dr-Bold",
     lineHeight: 24,
-    letterSpacing: 24 * 0.01,
+    letterSpacing: 24 * 0.02,
   },
   -4,
   -6,
   -8,
 );
 
-export const caption = makeTypeSpec(
+export const labelSmall = makeTypeSpec(
+  {
+    fontSize: 17,
+    fontFamily: "Dr-Bold",
+    lineHeight: 20,
+    letterSpacing: 16 * 0.04,
+  },
+  -3,
+  -4.5,
+  -7.5,
+);
+
+export const labelTiny = makeTypeSpec(
   {
     fontSize: 12,
     fontFamily: "Dr-ExtraBold",
@@ -183,7 +195,7 @@ export const caption = makeTypeSpec(
   -8,
 );
 
-export const prose = makeTypeSpec(
+export const runningText = makeTypeSpec(
   {
     fontSize: 17,
     fontFamily: "RaptorDemo-Regular",
@@ -195,7 +207,7 @@ export const prose = makeTypeSpec(
   -8,
 );
 
-export const proseSmall = makeTypeSpec(
+export const runningTextSmall = makeTypeSpec(
   {
     fontSize: 13,
     fontFamily: "RaptorDemo-Regular",
@@ -208,14 +220,15 @@ export const proseSmall = makeTypeSpec(
 );
 
 export const typeStyles = {
-  displayLarge,
-  display,
-  title,
+  promptXXLarge,
+  promptXLarge,
+  promptLarge,
+  promptMedium,
+  promptSmall,
   headline,
-  body,
-  bodySmall,
   label,
-  caption,
-  prose,
-  proseSmall,
+  labelSmall,
+  labelTiny,
+  runningText,
+  runningTextSmall,
 };

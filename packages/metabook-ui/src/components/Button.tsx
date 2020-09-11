@@ -115,7 +115,7 @@ const ButtonInterior = function ButtonImpl(
           style={[
             (size ?? "regular") === "regular"
               ? type.label.layoutStyle
-              : type.caption.layoutStyle,
+              : type.labelTiny.layoutStyle,
             {
               color:
                 ((isHovered || isPressed) && accentColor && !disabled
