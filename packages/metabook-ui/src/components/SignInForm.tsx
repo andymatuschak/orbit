@@ -75,7 +75,7 @@ export default function SignInForm({
         <>
           <Text
             style={[
-              type.label.layoutStyle,
+              type.label.typeStyle,
               { color: colorPalette.secondaryTextColor },
             ]}
           >
@@ -151,8 +151,9 @@ export default function SignInForm({
         onSubmitEditing={onPressSubmit}
         returnKeyLabel={buttonTitle}
         returnKeyType="done"
+        autoFocus={!!overrideEmailAddress}
       />
-      {flexibleSpacer}
+      <Spacer units={3.5} />
       <View style={{ position: "relative" }}>
         <Button
           color={colors.white}
@@ -184,16 +185,17 @@ export default function SignInForm({
           Orbit’s Terms of Service, and you are at least 16 years of age.
         </Text>
       )}
+      {flexibleSpacer}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    maxWidth: 375,
-    maxHeight: 500,
-    flex: 1,
+    padding: layout.edgeMargin,
     width: "100%",
+    maxWidth: 375,
+    flex: 1,
   },
 
   textInput: {

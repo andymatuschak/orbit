@@ -32,7 +32,7 @@ const Template: Story<{
   return (
     <View
       style={{
-        height: 800,
+        height: "100vh",
         backgroundColor: colorPalette.backgroundColor,
         justifyContent: "center",
         alignItems: "center",

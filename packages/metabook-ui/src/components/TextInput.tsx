@@ -38,8 +38,8 @@ export interface TextInputProps extends RNTextInputProps {
   colorPalette: ColorPalette | null;
 }
 
-function useFocusState() {
-  const [isFocused, setFocused] = React.useState(false);
+function useFocusState(initialState: boolean) {
+  const [isFocused, setFocused] = React.useState(initialState);
   return {
     isFocused,
     onFocus: React.useCallback(() => setFocused(true), []),
@@ -50,7 +50,7 @@ function useFocusState() {
 const TextInput = React.forwardRef<RNTextInput, TextInputProps>(
   function TextInput(props: TextInputProps, ref) {
     const { colorPalette, ...rest } = props;
-    const { isFocused, onFocus, onBlur } = useFocusState();
+    const { isFocused, onFocus, onBlur } = useFocusState(!!props.autoFocus);
 
     let style: StyleProp<TextStyle> = [
       styles.base,
