@@ -54,7 +54,7 @@ export default function SignInForm({
   const [hasResetPassword, setHasResetPassword] = React.useState(false);
   const onResetPasswordButton = React.useCallback(() => {
     setHasResetPassword(true);
-    onResetPassword(email);
+    onResetPassword?.(email);
   }, [onResetPassword, email]);
 
   const buttonTitle = mode === "signIn" ? "Sign in" : "Create account";

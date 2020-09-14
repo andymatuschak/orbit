@@ -55,7 +55,7 @@
     "isemail": "^3.2.0",
     "lodash.isequal": "^4.5.0",
     "metabook-core": "0.0.1",
-    "react-native-markdown-display": "^6.1.4",
+    "react-native-markdown-display": "^6.1.6",
     "react-native-svg": "^12.1.0"
   },
   "scripts": {

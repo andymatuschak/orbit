@@ -22,7 +22,7 @@
     "babel-plugin-react-native-web": "^0.12.2",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "metabook-ui": "0.0.1",
-    "react-native-web": "~0.13.4",
+    "react-native-web": "~0.13.12",
     "ts-loader": "^7.0.2",
     "webpack": "4.42.0"
   },
