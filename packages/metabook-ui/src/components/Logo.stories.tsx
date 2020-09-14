@@ -11,4 +11,4 @@ const Template: Story<LogoProps> = (args) => <Logo {...args} />;
 Template.args = { style: { tintColor: colors.productKeyColor } };
 
 export const Basic = Template.bind({});
-Basic.args = { ...Template.args, size: 16 };
+Basic.args = { ...Template.args, units: 2 };

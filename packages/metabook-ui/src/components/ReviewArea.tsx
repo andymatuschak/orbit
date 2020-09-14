@@ -52,7 +52,7 @@ interface PendingMarkingInteractionState {
 }
 
 const maximumCardsToRender = 3;
-const maximumWidth = 1024;
+const maximumWidth = layout.maximumContentWidth;
 const maximumHeight = 1024;
 
 type PromptContainerState = "displayed" | "disappearing" | "hidden";

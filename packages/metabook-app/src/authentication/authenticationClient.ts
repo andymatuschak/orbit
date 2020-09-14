@@ -17,6 +17,7 @@ export interface AuthenticationClient<LoginToken = any, IDToken = any> {
   ): Promise<unknown>;
 
   userExistsWithEmail(email: string): Promise<boolean>;
+  sendPasswordResetEmail(email: string): Promise<void>;
 
   getCurrentIDToken(): Promise<IDToken>;
 

@@ -25,7 +25,10 @@ export type { SpacerProps } from "./components/Spacer";
 export { default as Starburst } from "./components/Starburst";
 export type { StarburstProps } from "./components/Starburst";
 
-export { default as TextInput } from "./components/TextInput";
+export {
+  default as TextInput,
+  textFieldHorizontalPadding,
+} from "./components/TextInput";
 export type { TextInputProps } from "./components/TextInput";
 
 export { default as ReviewArea } from "./components/ReviewArea";

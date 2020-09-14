@@ -188,7 +188,7 @@ export const labelTiny = makeTypeSpec(
     fontSize: 12,
     fontFamily: "Dr-ExtraBold",
     lineHeight: 16,
-    letterSpacing: 13 * 0.06,
+    letterSpacing: 13 * 0.02,
   },
   -4,
   -5,

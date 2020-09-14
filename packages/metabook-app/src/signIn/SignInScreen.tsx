@@ -1,6 +1,6 @@
 import { SignInForm, SignInFormProps, styles } from "metabook-ui";
 import React from "react";
-import { Alert, Platform, View } from "react-native";
+import { ActivityIndicator, Alert, Platform, View } from "react-native";
 import { AuthenticationClient } from "../authentication";
 import {
   useAuthenticationClient,
@@ -34,21 +34,50 @@ async function sendTokenToOpenerAndClose(
 }
 
 export default function SignInScreen() {
+  const colorPalette: styles.colors.ColorPalette = styles.colors.palettes[0];
+  const overrideEmailAddress: string | null = React.useMemo(() => {
+    if (Platform.OS === "web") {
+      const search = new URLSearchParams(location.search);
+      return search.get("email");
+    } else {
+      return null;
+    }
+  }, []);
+
   const authenticationClient = useAuthenticationClient();
+  const [formMode, setFormMode] = React.useState<
+    SignInFormProps["mode"] | null
+  >(!!overrideEmailAddress ? null : "signIn");
+  const [isPendingServerResponse, setPendingServerResponse] = React.useState(
+    false,
+  );
+
+  // If we have an override email address, figure out whether that account exists.
+  React.useEffect(() => {
+    if (overrideEmailAddress) {
+      authenticationClient
+        .userExistsWithEmail(overrideEmailAddress)
+        .then((userExists) => setFormMode(userExists ? "signIn" : "register"))
+        .catch((error) =>
+          // TODO: reroute to full login sequence
+          console.error("Couldn't determine if user exists", error),
+        );
+    }
+  }, [authenticationClient, overrideEmailAddress]);
 
   const userRecord = useCurrentUserRecord(authenticationClient);
   React.useEffect(() => {
     if (userRecord) {
       if (shouldSendOpenerLoginToken()) {
         sendTokenToOpenerAndClose(authenticationClient);
-      } // TODO: redirect or something outside the embedded case
+      } else {
+        // TODO: redirect or something outside the embedded case
+        if (Platform.OS === "web") {
+          location.pathname = "/";
+        }
+      }
     }
   }, [authenticationClient, userRecord]);
-
-  const [formMode, setFormMode] = React.useState<SignInFormProps["mode"]>(null);
-  const [isPendingServerResponse, setPendingServerResponse] = React.useState(
-    false,
-  );
 
   const isUnmounted = React.useRef(false);
   React.useEffect(() => {
@@ -63,9 +92,6 @@ export default function SignInScreen() {
 
       try {
         switch (formMode) {
-          case null:
-            console.error("Can't login with unknown mode");
-            break;
           case "signIn":
             await authenticationClient.signInWithEmailAndPassword(
               email,
@@ -93,17 +119,12 @@ export default function SignInScreen() {
     [authenticationClient, formMode],
   );
 
-  const onDidChangeEmail = React.useCallback(
-    async (email) => {
-      setFormMode(null);
-      try {
-        const userExists = await authenticationClient.userExistsWithEmail(
-          email,
-        );
-        setFormMode(userExists ? "signIn" : "register");
-      } catch (error) {
-        console.warn("Invalid email", email, error.code, error.message);
-      }
+  const onResetPassword = React.useCallback(
+    (email) => {
+      authenticationClient.sendPasswordResetEmail(email);
+      Alert.alert(
+        "We've sent you an email with instructions on how to reset your password.",
+      );
     },
     [authenticationClient],
   );
@@ -112,28 +133,25 @@ export default function SignInScreen() {
     <View
       style={{
         flex: 1,
-        backgroundColor: styles.colors.palettes[0].backgroundColor, // TODO
+        backgroundColor: colorPalette.backgroundColor,
         justifyContent: "center",
         alignItems: "center",
+        paddingLeft: styles.layout.edgeMargin,
+        paddingRight: styles.layout.edgeMargin,
       }}
     >
-      <View
-        style={{
-          width: "100%",
-          maxWidth: 500,
-          flex: 1,
-          justifyContent: "center",
-          marginLeft: styles.layout.gridUnit,
-          marginRight: styles.layout.gridUnit,
-        }}
-      >
+      {formMode ? (
         <SignInForm
+          overrideEmailAddress={overrideEmailAddress}
           onSubmit={onLogin}
+          onResetPassword={onResetPassword}
           mode={formMode}
-          onChangeEmail={onDidChangeEmail}
           isPendingServerResponse={isPendingServerResponse}
+          colorPalette={colorPalette}
         />
-      </View>
+      ) : (
+        <ActivityIndicator size="large" color={colorPalette.accentColor} />
+      )}
     </View>
   );
 }

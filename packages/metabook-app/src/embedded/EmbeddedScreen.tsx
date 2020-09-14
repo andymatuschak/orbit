@@ -17,20 +17,15 @@ import {
   useLayout,
   useTransitioningColorValue,
 } from "metabook-ui";
-
-import BigButton from "metabook-ui/dist/components/BigButton";
 import { getWidthSizeClass } from "metabook-ui/dist/styles/layout";
 
 import React from "react";
-import { Animated, Easing, Text, View } from "react-native";
+import { Animated, Easing, View } from "react-native";
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
 import OnboardingModalWeb from "./OnboardingModal.web";
-import {
-  EmbeddedAuthenticationState,
-  useEmbeddedAuthenticationState,
-} from "./useEmbeddedAuthenticationState";
+import { useEmbeddedAuthenticationState } from "./useEmbeddedAuthenticationState";
 import useReviewItems from "./useReviewItems";
 import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
 
@@ -39,64 +34,6 @@ declare global {
     requestStorageAccess(): Promise<undefined>;
     hasStorageAccess(): Promise<boolean>;
   }
-}
-
-function AuthenticationStatusIndicator(props: {
-  authenticationState: EmbeddedAuthenticationState;
-  onSignIn: () => void;
-}) {
-  let interior: React.ReactNode;
-  switch (props.authenticationState.status) {
-    case "signedIn":
-      const userRecord = props.authenticationState.userRecord;
-      interior = (
-        <Text
-          style={[
-            styles.type.caption.layoutStyle,
-            { color: styles.colors.ink },
-          ]}
-        >{`Signed in as ${
-          userRecord.displayName ?? userRecord.emailAddress ?? userRecord.userID
-        }`}</Text>
-      );
-      break;
-
-    case "signedOut":
-      interior = (
-        <BigButton
-          title="Sign in"
-          onPress={props.onSignIn}
-          variant="secondary"
-        />
-      );
-      break;
-
-    case "pending":
-      interior = null;
-      break;
-
-    case "storageRestricted":
-      interior = (
-        <BigButton
-          title="Connect"
-          onPress={props.onSignIn}
-          variant="secondary"
-        />
-      );
-      break;
-  }
-
-  return (
-    <View
-      style={{
-        position: "absolute",
-        left: styles.layout.gridUnit,
-        bottom: styles.layout.gridUnit,
-      }}
-    >
-      {interior}
-    </View>
-  );
 }
 
 export default function EmbeddedScreen() {
@@ -230,10 +167,6 @@ export default function EmbeddedScreen() {
           currentItemIndex={currentItemIndex}
           onMark={onMark}
           schedule="default"
-        />
-        <AuthenticationStatusIndicator
-          authenticationState={authenticationState}
-          onSignIn={onSignIn}
         />
         <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
           <OnboardingModalWeb

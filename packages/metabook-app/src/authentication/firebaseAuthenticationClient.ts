@@ -66,6 +66,10 @@ export default class FirebaseAuthenticationClient
     return methods.length > 0;
   }
 
+  sendPasswordResetEmail(email: string): Promise<void> {
+    return this.auth.sendPasswordResetEmail(email);
+  }
+
   async getCurrentIDToken(): Promise<FirebaseOpaqueIDToken> {
     const currentUser = this.auth.currentUser;
     if (currentUser) {

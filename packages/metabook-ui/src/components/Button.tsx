@@ -7,11 +7,11 @@ import {
   Linking,
   Platform,
   Pressable,
+  PressableProps,
   StyleProp,
   StyleSheet,
   Text,
   TextProps,
-  ViewProps,
 } from "react-native";
 import { colors, layout, type } from "../styles";
 import usePrevious from "./hooks/usePrevious";
@@ -37,7 +37,7 @@ export type ButtonProps = ButtonContents &
 
     disabled?: boolean;
     size?: "regular" | "small";
-    hitSlop?: ViewProps["hitSlop"];
+    hitSlop?: PressableProps["hitSlop"];
 
     style?: StyleProp<FlexStyle>;
 

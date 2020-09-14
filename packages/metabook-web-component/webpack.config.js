@@ -13,13 +13,27 @@ module.exports = {
   devtool: "source-map",
   mode: isDevelopment ? "development" : "production",
   module: {
+    noParse: /react-native/,
     rules: [
+      {
+        test: /\.png$/,
+        use: "ignore-loader",
+      },
+      {
+        test: /\.js$/,
+        use: "babel-loader",
+        include: [/node_modules/, /metabook-ui/],
+        exclude: [/node_modules\/react-native/],
+      },
       {
         test: /\.tsx?$/,
         use: "ts-loader",
         exclude: /node_modules/,
       },
     ],
+  },
+  optimization: {
+    usedExports: true,
   },
   output: {
     filename: "orbit-web-component.js",

@@ -1,9 +1,3 @@
-// Deprecated colors.
-// TODO: remove.
-export const key00 = "#FCFAFF";
-export const key50 = "#8B3AFC";
-export const key70 = "#490F99";
-
 export const ink = "rgba(0,0,0,0.8)";
 export const white = "rgba(255,255,255,1)";
 export const productKeyColor = "#ED3749";

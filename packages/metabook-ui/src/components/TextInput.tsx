@@ -10,7 +10,7 @@ import {
 import { colors, layout, type } from "../styles";
 import { ColorPalette } from "../styles/colors";
 
-const textFieldHorizontalPadding = layout.gridUnit;
+export const textFieldHorizontalPadding = layout.gridUnit;
 
 const styles = StyleSheet.create({
   base: {
@@ -47,35 +47,38 @@ function useFocusState() {
   };
 }
 
-export default function TextInput(props: TextInputProps) {
-  const { colorPalette, ...rest } = props;
-  const { isFocused, onFocus, onBlur } = useFocusState();
+const TextInput = React.forwardRef<RNTextInput, TextInputProps>(
+  function TextInput(props: TextInputProps, ref) {
+    const { colorPalette, ...rest } = props;
+    const { isFocused, onFocus, onBlur } = useFocusState();
 
-  let style: StyleProp<TextStyle> = [
-    styles.base,
-    isFocused && styles.focused,
-    isFocused && {
-      borderColor: colorPalette?.accentColor ?? colors.productKeyColor,
-    },
-    // TODO: establish a neutral secondary background color
-    {
-      backgroundColor: colorPalette?.secondaryBackgroundColor ?? colors.white,
-    },
-  ];
-  if (props.style) {
-    style = StyleSheet.compose(style, props.style);
-  }
+    let style: StyleProp<TextStyle> = [
+      styles.base,
+      isFocused && styles.focused,
+      isFocused && {
+        borderColor: colorPalette?.accentColor ?? colors.productKeyColor,
+      },
+      // TODO: establish a neutral secondary background color
+      {
+        backgroundColor: colorPalette?.secondaryBackgroundColor ?? colors.white,
+      },
+    ];
+    if (props.style) {
+      style = StyleSheet.compose(style, props.style);
+    }
 
-  return (
-    <RNTextInput
-      {...rest}
-      style={style}
-      // TODO: establish a neutral secondary text color
-      placeholderTextColor={colorPalette?.secondaryTextColor ?? colors.ink}
-      selectionColor={colorPalette?.accentColor ?? colors.productKeyColor}
-      onFocus={onFocus}
-      onBlur={onBlur}
-    />
-  );
-}
-TextInput.textFieldHorizontalPadding = textFieldHorizontalPadding;
+    return (
+      <RNTextInput
+        {...rest}
+        ref={ref}
+        style={style}
+        // TODO: establish a neutral secondary text color
+        placeholderTextColor={colorPalette?.secondaryTextColor ?? colors.ink}
+        selectionColor={colorPalette?.accentColor ?? colors.productKeyColor}
+        onFocus={onFocus}
+        onBlur={onBlur}
+      />
+    );
+  },
+);
+export default TextInput;

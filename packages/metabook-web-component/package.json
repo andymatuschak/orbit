@@ -9,10 +9,12 @@
   "devDependencies": {
     "@babel/core": "^7.10.3",
     "@babel/preset-env": "^7.10.3",
+    "@babel/preset-react": "^7.10.4",
     "@babel/preset-typescript": "^7.10.1",
     "babel-jest": "^26.1.0",
     "babel-loader": "^8.1.0",
     "firebase-tools": "^8.2.0",
+    "ignore-loader": "^0.1.2",
     "jest": "^26.1.0",
     "metabook-app": "0.0.1",
     "ts-loader": "^7.0.3",

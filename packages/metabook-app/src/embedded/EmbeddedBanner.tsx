@@ -37,8 +37,8 @@ export default function EmbeddedBanner(props: EmbeddedBannerProps) {
   return (
     <View
       style={{
-        paddingLeft: styles.layout.gridUnit * 2,
-        paddingRight: styles.layout.gridUnit, // The logo asset includes 1 grid unit of padding.
+        paddingLeft: styles.layout.edgeMargin,
+        paddingRight: styles.layout.edgeMargin,
         flexDirection: "row",
         alignItems: "center",
         height: styles.layout.gridUnit * 6,
@@ -53,7 +53,7 @@ export default function EmbeddedBanner(props: EmbeddedBannerProps) {
       >
         {getBannerMessage(props)}
       </Text>
-      <Logo size={16} style={{ tintColor: styles.colors.white }} />
+      <Logo units={2} style={{ tintColor: styles.colors.white }} />
     </View>
   );
 }

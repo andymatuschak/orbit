@@ -1,4 +1,11 @@
-import { Button, IconName, Spacer, styles, TextInput } from "metabook-ui";
+import {
+  Button,
+  IconName,
+  Spacer,
+  styles,
+  textFieldHorizontalPadding,
+  TextInput,
+} from "metabook-ui";
 import { SizeClass } from "metabook-ui/dist/styles/layout";
 import React from "react";
 import { Text, View } from "react-native";
@@ -84,8 +91,8 @@ export default function OnboardingModalWeb({
         <Spacer units={1} />
         <View
           style={{
-            marginLeft: -TextInput.textFieldHorizontalPadding,
-            marginRight: -TextInput.textFieldHorizontalPadding,
+            marginLeft: -textFieldHorizontalPadding,
+            marginRight: -textFieldHorizontalPadding,
             flexDirection: "row",
             flex: 1,
           }}
