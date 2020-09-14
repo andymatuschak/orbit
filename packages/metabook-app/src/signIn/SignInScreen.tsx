@@ -136,8 +136,7 @@ export default function SignInScreen() {
         backgroundColor: colorPalette.backgroundColor,
         justifyContent: "center",
         alignItems: "center",
-        paddingLeft: styles.layout.edgeMargin,
-        paddingRight: styles.layout.edgeMargin,
+        padding: styles.layout.edgeMargin,
       }}
     >
       {formMode ? (

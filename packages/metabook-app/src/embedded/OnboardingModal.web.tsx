@@ -15,6 +15,14 @@ export interface OnboardingModalProps {
   sizeClass: SizeClass;
 }
 
+function onSubmit(email: string) {
+  window.open(
+    `/login?shouldSendOpenerLoginToken=true&email=${email}`,
+    "Sign in",
+    "width=375,height=500",
+  );
+}
+
 export default function OnboardingModalWeb({
   colorPalette,
   sizeClass,
@@ -108,6 +116,11 @@ export default function OnboardingModalWeb({
             style={{ flexGrow: 1 }}
             value={email}
             onChangeText={setEmail}
+            onSubmitEditing={() => {
+              onSubmit(email);
+            }}
+            returnKeyLabel="Sign in"
+            returnKeyType="done"
           />
           <Spacer units={1} />
           <Button
@@ -117,7 +130,7 @@ export default function OnboardingModalWeb({
             accentColor={colorPalette.accentColor}
             accessibilityLabel="Continue"
             onPress={() => {
-              return;
+              onSubmit(email);
             }}
           />
         </View>

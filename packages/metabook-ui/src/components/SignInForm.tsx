@@ -149,8 +149,8 @@ export default function SignInForm({
         textContentType={mode === "register" ? "newPassword" : "password"}
         secureTextEntry={true}
         onSubmitEditing={onPressSubmit}
-        returnKeyLabel={mode ? buttonTitle : undefined}
-        returnKeyType={"done"}
+        returnKeyLabel={buttonTitle}
+        returnKeyType="done"
       />
       {flexibleSpacer}
       <View style={{ position: "relative" }}>
@@ -191,10 +191,9 @@ export default function SignInForm({
 const styles = StyleSheet.create({
   container: {
     maxWidth: 375,
-    maxHeight: 450,
+    maxHeight: 500,
     flex: 1,
     width: "100%",
-    paddingBottom: layout.gridUnit * 2,
   },
 
   textInput: {
@@ -211,6 +210,5 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
     bottom: layout.gridUnit * 2,
-    // height: layout.gridUnit * 5,
   },
 });
