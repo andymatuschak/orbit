@@ -7,6 +7,14 @@ import {
   useCurrentUserRecord,
 } from "../util/authContext";
 
+function simpleAlert(text: string) {
+  if (Platform.OS === "web") {
+    alert(text);
+  } else {
+    Alert.alert(text);
+  }
+}
+
 function shouldSendOpenerLoginToken() {
   return (
     Platform.OS === "web" &&
@@ -71,8 +79,8 @@ export default function SignInScreen() {
       if (shouldSendOpenerLoginToken()) {
         sendTokenToOpenerAndClose(authenticationClient);
       } else {
-        // TODO: redirect or something outside the embedded case
         if (Platform.OS === "web") {
+          // TODO: redirect somewhere useful outside the embedded case
           location.pathname = "/";
         }
       }
@@ -110,7 +118,7 @@ export default function SignInScreen() {
           return;
         }
         console.error("Couldn't login", error.code, error.message);
-        Alert.alert("There was a problem signing in", error.message);
+        simpleAlert("There was a problem signing in", error.message);
       }
       if (!isUnmounted.current) {
         setPendingServerResponse(false);
@@ -122,7 +130,7 @@ export default function SignInScreen() {
   const onResetPassword = React.useCallback(
     (email) => {
       authenticationClient.sendPasswordResetEmail(email);
-      Alert.alert(
+      simpleAlert(
         "We've sent you an email with instructions on how to reset your password.",
       );
     },

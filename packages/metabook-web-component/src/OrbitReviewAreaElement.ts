@@ -22,7 +22,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
     this.iframe.style.marginBottom = "1rem";
     this.iframe.setAttribute(
       "sandbox",
-      "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups",
+      "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-modals",
     );
     shadowRoot.appendChild(this.iframe);
     const effectiveWidth = this.iframe.getBoundingClientRect().width;

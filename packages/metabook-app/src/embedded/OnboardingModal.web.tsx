@@ -15,12 +15,19 @@ export interface OnboardingModalProps {
   sizeClass: SizeClass;
 }
 
+// Obviously not exhaustive, but good enough for this purpose.
+const emailRegexp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+
 function onSubmit(email: string) {
-  window.open(
-    `/login?shouldSendOpenerLoginToken=true&email=${email}`,
-    "Sign in",
-    "width=375,height=500",
-  );
+  if (emailRegexp.test(email)) {
+    window.open(
+      `/login?shouldSendOpenerLoginToken=true&email=${email}`,
+      "Sign in",
+      "width=375,height=500",
+    );
+  } else {
+    alert("Please enter a valid email address.");
+  }
 }
 
 export default function OnboardingModalWeb({
