@@ -116,7 +116,8 @@ function PromptStack({
     previousItems !== undefined &&
     previousItemIndex !== undefined &&
     previousItemIndex !== currentItemIndex &&
-    !departingPromptItems.current.includes(previousItems[previousItemIndex])
+    departingPromptItems.current.indexOf(previousItems[previousItemIndex]) ===
+      -1
   ) {
     departingPromptItems.current.push(previousItems[previousItemIndex]);
   }
@@ -140,37 +141,38 @@ function PromptStack({
       }}
       onLayout={onLayout}
     >
-      {Array.from(new Array(maximumCardsToRender).keys()).map(
-        (renderNodeIndex) => {
-          const renderedItemIndex =
-            (((renderNodeIndex - departedCardCount) % maximumCardsToRender) +
-              maximumCardsToRender) %
-            maximumCardsToRender;
-          // The rendered stack index is 0 for the prompt that's currently on top, 1 for the prompt card down, -1 for the prompt that's currently animating out.
-          const renderedStackIndex =
-            renderedItemIndex - departingPromptItems.current.length;
-          const displayState =
-            renderedStackIndex < 0
-              ? "disappearing"
-              : renderedStackIndex === 0
-              ? "displayed"
-              : "hidden";
+      {width > 0 &&
+        Array.from(new Array(maximumCardsToRender).keys()).map(
+          (renderNodeIndex) => {
+            const renderedItemIndex =
+              (((renderNodeIndex - departedCardCount) % maximumCardsToRender) +
+                maximumCardsToRender) %
+              maximumCardsToRender;
+            // The rendered stack index is 0 for the prompt that's currently on top, 1 for the prompt card down, -1 for the prompt that's currently animating out.
+            const renderedStackIndex =
+              renderedItemIndex - departingPromptItems.current.length;
+            const displayState =
+              renderedStackIndex < 0
+                ? "disappearing"
+                : renderedStackIndex === 0
+                ? "displayed"
+                : "hidden";
 
-          return (
-            <PromptLayoutContainer
-              key={renderNodeIndex}
-              displayState={displayState}
-              reviewItem={renderedItems[renderedItemIndex] || null}
-              onDidDisappear={onPromptDidDisappear}
-              size={containerSize}
-              backIsRevealed={
-                (isShowingAnswer && displayState === "displayed") ||
-                displayState === "disappearing"
-              }
-            />
-          );
-        },
-      )}
+            return (
+              <PromptLayoutContainer
+                key={renderNodeIndex}
+                displayState={displayState}
+                reviewItem={renderedItems[renderedItemIndex] || null}
+                onDidDisappear={onPromptDidDisappear}
+                size={containerSize}
+                backIsRevealed={
+                  (isShowingAnswer && displayState === "displayed") ||
+                  displayState === "disappearing"
+                }
+              />
+            );
+          },
+        )}
     </View>
   );
 }

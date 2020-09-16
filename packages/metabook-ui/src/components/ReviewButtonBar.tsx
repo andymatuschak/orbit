@@ -196,7 +196,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
       ]}
       onLayout={onLayout}
     >
-      {children}
+      {width > 0 && children}
     </View>
   );
 });

@@ -4,9 +4,10 @@ import {
   PromptRepetitionOutcome,
 } from "metabook-core";
 import React, { useMemo } from "react";
-import { View } from "react-native";
+import { Animated, Easing, View } from "react-native";
 import { ReviewItem } from "../reviewItem";
 import { colors, layout } from "../styles";
+import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import Starburst, {
   getStarburstQuillOuterRadius,
   getStarburstRayValueForInterval,
@@ -19,12 +20,18 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
   items,
   currentItemIndex,
   pendingOutcome,
+  position,
+  showLegend,
+  colorMode,
 }: {
   containerWidth: number;
   containerHeight: number;
   items: ReviewItem[];
   currentItemIndex: number;
   pendingOutcome: PromptRepetitionOutcome | null;
+  position: "left" | "center";
+  showLegend: boolean;
+  colorMode: "accent" | "bicolor";
 }) {
   const starburstTopMargin = layout.gridUnit * 6;
   const starburstThickness = 3;
@@ -37,7 +44,13 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
         layout.getColumnSpan(2, containerWidth) - layout.gridUnit,
     containerHeight - starburstTopMargin,
   );
-  const currentItem = items[currentItemIndex];
+  const currentItem =
+    currentItemIndex < items.length ? items[currentItemIndex] : null;
+  if (!currentItem) {
+    throw new Error(
+      `Starburst displaying index ${currentItemIndex} when only ${items.length} are available`,
+    );
+  }
 
   const currentItemEffectiveInterval = useMemo(() => {
     const { promptState, prompt } = currentItem;
@@ -72,22 +85,50 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
           // TODO: implement more proper "is finished" color determination
           color:
             index < currentItemIndex
-              ? items[currentItemIndex].secondaryAccentColor
+              ? colorMode === "bicolor"
+                ? items[currentItemIndex].secondaryAccentColor
+                : items[currentItemIndex].accentColor
               : items[currentItemIndex].secondaryBackgroundColor,
         };
       }),
-    [items, currentItemIndex, currentItemEffectiveInterval],
+    [items, currentItemIndex, currentItemEffectiveInterval, colorMode],
   );
 
+  const starburstX = useTransitioningValue({
+    value:
+      position === "left"
+        ? -starburstRadius + layout.edgeMargin + starburstThickness / 2
+        : containerWidth / 2 - starburstRadius,
+    timing: {
+      useNativeDriver: true,
+      type: "spring",
+      bounciness: 0,
+      speed: 6,
+    },
+  });
   const starburstY = starburstTopMargin - starburstThickness / 2;
+  const legendOpacity = useTransitioningValue({
+    value: showLegend ? 1 : 0,
+    timing: {
+      useNativeDriver: true,
+      type: "timing",
+      duration: 50,
+      easing: Easing.linear,
+    },
+  });
 
   return (
-    <View style={{ position: "relative", height: layout.gridUnit * 9 }}>
-      <View
+    <View
+      style={{
+        position: "relative",
+        height: layout.gridUnit * 9,
+      }}
+    >
+      <Animated.View
         style={{
           position: "absolute",
-          left: -starburstRadius + layout.edgeMargin + starburstThickness / 2,
           top: -starburstRadius + starburstY,
+          transform: [{ translateX: starburstX }],
         }}
       >
         <Starburst
@@ -97,12 +138,21 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
           entryAtHorizontal={currentItemIndex}
           accentOverlayColor={currentItem.accentColor}
         />
-      </View>
-      <View
+      </Animated.View>
+      <Animated.View
         style={{
           position: "absolute",
           top: starburstY - starburstThickness / 2,
+          transform: [
+            {
+              translateX: Animated.add(
+                starburstX,
+                new Animated.Value(starburstRadius),
+              ),
+            },
+          ],
           width: starburstRadius,
+          opacity: legendOpacity,
         }}
       >
         <StarburstLegend
@@ -119,7 +169,7 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
           futureTickColor={colors.ink}
           backgroundColor={currentItem.backgroundColor}
         />
-      </View>
+      </Animated.View>
     </View>
   );
 });

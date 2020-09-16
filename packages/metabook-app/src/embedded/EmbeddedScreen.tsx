@@ -9,16 +9,24 @@ import {
   PromptTaskParameters,
   repetitionActionLogType,
 } from "metabook-core";
-import { ReviewArea, ReviewAreaMarkingRecord, styles } from "metabook-ui";
-import ReviewStarburst from "metabook-ui/dist/components/ReviewStarburst";
+import {
+  ReviewArea,
+  ReviewAreaMarkingRecord,
+  ReviewStarburst,
+  styles,
+  useLayout,
+  useTransitioningValue,
+} from "metabook-ui";
+import FadeView from "metabook-ui/dist/components/FadeView";
 import { getWidthSizeClass } from "metabook-ui/dist/styles/layout";
 
-import React, { useState } from "react";
-import { Text, View } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { Animated, Text, View } from "react-native";
 import { ReviewSessionWrapper } from "../ReviewSessionWrapper";
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
+import OnboardingModalWeb from "./OnboardingModal.web";
 import { useEmbeddedAuthenticationState } from "./useEmbeddedAuthenticationState";
 import useReviewItems from "./useReviewItems";
 import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
@@ -38,19 +46,7 @@ export default function EmbeddedScreen() {
     authenticationClient,
   );
 
-  const onSignIn = React.useCallback(() => {
-    window.open(
-      `/login${
-        authenticationClient.supportsCredentialPersistence()
-          ? ""
-          : "?shouldSendOpenerLoginToken=true"
-      }`,
-      "Sign in",
-      "width=985,height=735",
-    );
-  }, [authenticationClient]);
-
-  const onMark = React.useCallback(
+  const onMark = useCallback(
     (marking: ReviewAreaMarkingRecord) => {
       if (authenticationState.status === "storageRestricted") {
         // TODO: only do this on Firefox.
@@ -102,8 +98,41 @@ export default function EmbeddedScreen() {
     setPendingOutcome,
   ] = useState<PromptRepetitionOutcome | null>(null);
 
+  const [isComplete, setComplete] = useState(false);
+  const [shouldShowOnboardingModal, setShouldShowOnboardingModal] = useState(
+    false,
+  );
+  useEffect(() => {
+    if (authenticationState.status === "signedIn") {
+      setShouldShowOnboardingModal(false);
+    }
+  }, [authenticationState]);
+  const { height: interiorHeight, onLayout: onInteriorLayout } = useLayout();
+  const interiorY = useTransitioningValue({
+    value:
+      isComplete && authenticationState.status === "signedIn"
+        ? (window.innerHeight - interiorHeight) / 2 - styles.layout.gridUnit * 4
+        : 0,
+    timing: {
+      type: "spring",
+      speed: 2,
+      bounciness: 0,
+      useNativeDriver: true,
+    },
+  });
+
+  const onboardingOffsetY = useTransitioningValue({
+    value: shouldShowOnboardingModal ? 0 : window.innerHeight,
+    timing: {
+      type: "spring",
+      speed: 3,
+      bounciness: 0,
+      useNativeDriver: true,
+    },
+  });
+
   return (
-    baseItems && (
+    baseItems !== null && (
       <View style={{ height: "100vh" }}>
         <ReviewSessionWrapper baseItems={baseItems} onMark={onMark}>
           {({
@@ -113,23 +142,88 @@ export default function EmbeddedScreen() {
             containerWidth,
             containerHeight,
           }) => {
-            if (currentItemIndex < items.length) {
-              return (
-                <>
-                  <EmbeddedBanner
-                    palette={baseItems[currentItemIndex]}
-                    isSignedIn={authenticationState.status === "signedIn"}
-                    totalPromptCount={baseItems.length}
-                    completePromptCount={currentItemIndex}
-                    sizeClass={getWidthSizeClass(containerWidth)}
-                  />
+            if (currentItemIndex >= items.length && !isComplete) {
+              setTimeout(() => setComplete(true), 350);
+              setTimeout(() => {
+                // There are bugs with RNW's implementation of delay with spring animations, alas.
+                if (authenticationState.status !== "signedIn") {
+                  setShouldShowOnboardingModal(true);
+                }
+              }, 750);
+            }
+            const colorPalette =
+              baseItems[Math.min(currentItemIndex, items.length - 1)];
+            return (
+              <>
+                <EmbeddedBanner
+                  palette={colorPalette}
+                  isSignedIn={authenticationState.status === "signedIn"}
+                  totalPromptCount={baseItems.length}
+                  completePromptCount={currentItemIndex}
+                  sizeClass={getWidthSizeClass(containerWidth)}
+                />
+                <Animated.View
+                  onLayout={onInteriorLayout}
+                  style={{ transform: [{ translateY: interiorY }] }}
+                >
                   <ReviewStarburst
                     containerWidth={containerWidth}
                     containerHeight={containerHeight}
                     items={items}
-                    currentItemIndex={currentItemIndex}
+                    currentItemIndex={Math.min(
+                      currentItemIndex,
+                      items.length - 1,
+                    )}
                     pendingOutcome={pendingOutcome}
+                    position={isComplete ? "center" : "left"}
+                    showLegend={
+                      currentItemIndex <
+                      items.length /* animate out the legend a little early */
+                    }
+                    colorMode={isComplete ? "accent" : "bicolor"}
                   />
+                  <FadeView
+                    isVisible={isComplete}
+                    delayMillis={500}
+                    removeFromLayoutWhenHidden
+                  >
+                    <Text
+                      style={[
+                        styles.type.label.layoutStyle,
+                        {
+                          textAlign: "center",
+                          color: styles.colors.white,
+                          marginBottom: styles.layout.gridUnit * 2,
+                        },
+                      ]}
+                    >
+                      {baseItems.length} prompts collected
+                    </Text>
+                  </FadeView>
+                  <FadeView
+                    isVisible={
+                      /* TODO: show this after saving is actually complete */
+                      isComplete && authenticationState.status === "signedIn"
+                    }
+                    delayMillis={750}
+                    removeFromLayoutWhenHidden
+                  >
+                    <Text
+                      style={[
+                        styles.type.labelSmall.layoutStyle,
+                        {
+                          textAlign: "center",
+                          color: colorPalette.secondaryTextColor,
+                        },
+                      ]}
+                    >
+                      Saved to your account:
+                      <br />
+                      {authenticationState.userRecord?.emailAddress}
+                    </Text>
+                  </FadeView>
+                </Animated.View>
+                {!isComplete && (
                   <ReviewArea
                     items={items}
                     currentItemIndex={currentItemIndex}
@@ -137,22 +231,24 @@ export default function EmbeddedScreen() {
                     onPendingOutcomeChange={setPendingOutcome}
                     insetBottom={0}
                   />
-                </>
-              );
-            } else {
-              return (
-                <View
-                  style={{
-                    marginLeft: styles.layout.gridUnit, // TODO: use grid layout
-                    marginRight: styles.layout.gridUnit,
-                  }}
-                >
-                  <Text
-                    style={styles.type.headline.layoutStyle}
-                  >{`All caught up!\nNothing's due for review.`}</Text>
-                </View>
-              );
-            }
+                )}
+                {isComplete && (
+                  <Animated.View
+                    style={{
+                      flex: 1,
+                      justifyContent: "flex-end",
+                      overflow: "hidden",
+                      transform: [{ translateY: onboardingOffsetY }],
+                    }}
+                  >
+                    <OnboardingModalWeb
+                      colorPalette={colorPalette}
+                      sizeClass={getWidthSizeClass(containerWidth)}
+                    />
+                  </Animated.View>
+                )}
+              </>
+            );
           }}
         </ReviewSessionWrapper>
       </View>

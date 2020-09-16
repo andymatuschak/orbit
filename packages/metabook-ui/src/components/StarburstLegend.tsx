@@ -34,7 +34,7 @@ const StarburstLegendEntry = React.memo(function StarburstLegendEntry({
     value: statusIndex,
     timing: {
       type: "timing",
-      duration: 100,
+      duration: 50,
       useNativeDriver: false,
     },
   }).interpolate({

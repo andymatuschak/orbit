@@ -11,9 +11,13 @@ import {
   PromptTask,
   repetitionActionLogType,
 } from "metabook-core";
-import { ReviewArea, ReviewItem, styles } from "metabook-ui";
-import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
-import ReviewStarburst from "metabook-ui/dist/components/ReviewStarburst";
+import {
+  ReviewArea,
+  ReviewItem,
+  ReviewStarburst,
+  styles,
+  ReviewAreaMarkingRecord,
+} from "metabook-ui";
 import { layout } from "metabook-ui/dist/styles";
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
@@ -157,7 +161,7 @@ export default function ReviewSession() {
   ] = useState<PromptRepetitionOutcome | null>(null);
 
   return (
-    baseItems && (
+    baseItems !== null && (
       <View style={{ marginTop: insets.top, flex: 1 }}>
         <ReviewSessionWrapper
           baseItems={baseItems}
@@ -181,6 +185,9 @@ export default function ReviewSession() {
                     items={items}
                     currentItemIndex={currentItemIndex}
                     pendingOutcome={pendingOutcome}
+                    position="left"
+                    showLegend={true}
+                    colorMode="bicolor"
                   />
                   <ReviewArea
                     items={items}

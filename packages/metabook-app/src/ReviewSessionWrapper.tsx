@@ -65,7 +65,10 @@ export function ReviewSessionWrapper({
   );
 
   const backgroundColor = useTransitioningColorValue({
-    value: items?.[currentItemIndex]?.backgroundColor ?? styles.colors.white,
+    value:
+      currentItemIndex < items.length
+        ? items[currentItemIndex].backgroundColor
+        : items[items.length - 1].backgroundColor ?? styles.colors.white,
     timing: {
       type: "timing",
       useNativeDriver: false,

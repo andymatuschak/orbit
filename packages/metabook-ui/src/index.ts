@@ -19,6 +19,14 @@ export type { IconProps } from "./components/Icon";
 export { default as Logo } from "./components/Logo";
 export type { LogoProps } from "./components/Logo";
 
+export { default as ReviewArea } from "./components/ReviewArea";
+export type {
+  ReviewAreaProps,
+  ReviewAreaMarkingRecord,
+} from "./components/ReviewArea";
+
+export { default as ReviewStarburst } from "./components/ReviewStarburst";
+
 export { default as Spacer } from "./components/Spacer";
 export type { SpacerProps } from "./components/Spacer";
 
@@ -30,12 +38,6 @@ export {
   textFieldHorizontalPadding,
 } from "./components/TextInput";
 export type { TextInputProps } from "./components/TextInput";
-
-export { default as ReviewArea } from "./components/ReviewArea";
-export type {
-  ReviewAreaProps,
-  ReviewAreaMarkingRecord,
-} from "./components/ReviewArea";
 
 export { default as SignInForm } from "./components/SignInForm";
 export type { SignInFormProps } from "./components/SignInForm";
