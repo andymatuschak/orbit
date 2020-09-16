@@ -43,6 +43,7 @@ export default function EmbeddedBanner(props: EmbeddedBannerProps) {
         alignItems: "center",
         height: styles.layout.gridUnit * 6,
         backgroundColor: palette.secondaryBackgroundColor,
+        zIndex: 1,
       }}
     >
       <Text
