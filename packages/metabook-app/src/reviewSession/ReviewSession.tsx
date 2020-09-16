@@ -3,27 +3,24 @@ import {
   MetabookFirebaseUserClient,
 } from "metabook-client";
 import {
-  applyActionLogToPromptState,
   getIDForPrompt,
   getIDForPromptTask,
   getNextTaskParameters,
   PromptActionLog,
+  PromptRepetitionOutcome,
   PromptTask,
   repetitionActionLogType,
 } from "metabook-core";
-import {
-  ReviewArea,
-  ReviewAreaProps,
-  ReviewItem,
-  styles,
-  useTransitioningColorValue,
-} from "metabook-ui";
+import { ReviewArea, ReviewItem, styles } from "metabook-ui";
 import { ReviewAreaMarkingRecord } from "metabook-ui/dist/components/ReviewArea";
-import React, { useCallback, useEffect, useState } from "react";
-import { Animated, Easing, View, Text } from "react-native";
+import ReviewStarburst from "metabook-ui/dist/components/ReviewStarburst";
+import { layout } from "metabook-ui/dist/styles";
+import React, { useEffect, useState } from "react";
+import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserRecord } from "../authentication";
 import DatabaseManager from "../model/databaseManager";
+import { ReviewSessionWrapper } from "../ReviewSessionWrapper";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
@@ -94,7 +91,7 @@ export function useDatabaseManager(
   return databaseManager;
 }
 
-function onMark(
+function updateDatabaseForMarking(
   databaseManager: DatabaseManager,
   marking: ReviewAreaMarkingRecord,
 ): PromptActionLog {
@@ -128,12 +125,10 @@ function onMark(
   return promptActionLog;
 }
 
-export default function ReviewSession() {
-  const userRecord = useCurrentUserRecord(useAuthenticationClient());
-  const databaseManager = useDatabaseManager(userRecord);
-
+function useReviewQueue(
+  databaseManager: DatabaseManager | null,
+): ReviewItem[] | null {
   const [items, setItems] = useState<ReviewItem[] | null>(null);
-  const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
   useEffect(() => {
     if (!databaseManager) return;
 
@@ -147,84 +142,77 @@ export default function ReviewSession() {
     };
   }, [databaseManager]);
 
-  const topItem = items?.[currentQueueIndex];
-  const backgroundColor = useTransitioningColorValue({
-    value: topItem?.backgroundColor ?? styles.colors.white,
-    timing: {
-      type: "timing",
-      useNativeDriver: false,
-      duration: 150,
-      easing: Easing.linear,
-    },
-  });
+  return items;
+}
 
-  const onMarkCallback = useCallback<ReviewAreaProps["onMark"]>(
-    (marking) => {
-      const log = onMark(databaseManager!, marking);
-      setItems((items) => {
-        const markedIndex = items!.indexOf(marking.reviewItem);
-        if (markedIndex === -1) {
-          throw new Error("Marked item which is not in items list");
-        }
-        const newItems = [...items!];
-        const newPromptState = applyActionLogToPromptState({
-          promptActionLog: log,
-          basePromptState: marking.reviewItem.promptState,
-          schedule: "default",
-        });
-        if (newPromptState instanceof Error) {
-          throw newPromptState;
-        }
-        newItems[markedIndex] = {
-          ...newItems[markedIndex],
-          promptState: newPromptState,
-        };
-        return newItems;
-      });
-      setCurrentQueueIndex((currentQueueIndex) => currentQueueIndex + 1);
-    },
-    [databaseManager],
-  );
-
-  console.log("[Performance] Render", Date.now() / 1000.0);
-
+export default function ReviewSession() {
+  const userRecord = useCurrentUserRecord(useAuthenticationClient());
+  const databaseManager = useDatabaseManager(userRecord);
+  const baseItems = useReviewQueue(databaseManager);
   const insets = useSafeAreaInsets();
 
+  const [
+    pendingOutcome,
+    setPendingOutcome,
+  ] = useState<PromptRepetitionOutcome | null>(null);
+
   return (
-    <Animated.View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        backgroundColor,
-      }}
-    >
-      {items ? (
-        currentQueueIndex < items.length ? (
-          <View style={{ flex: 1 }}>
-            {/*<View style={[StyleSheet.absoluteFill, { top: insets.top }]}>*/}
-            {/*  <DebugGrid shouldShowMajorDivisions />*/}
-            {/*</View>*/}
-            <ReviewArea
-              items={items}
-              currentItemIndex={currentQueueIndex}
-              onMark={onMarkCallback}
-              schedule="aggressiveStart"
-              safeInsets={insets}
-            />
-          </View>
-        ) : (
-          <View
-            style={{
-              marginLeft: styles.layout.gridUnit, // TODO: use grid layout
-              marginRight: styles.layout.gridUnit,
-            }}
-          >
-            <Text
-              style={styles.type.headline.layoutStyle}
-            >{`All caught up!\nNothing's due for review.`}</Text>
-          </View>
-        )
-      ) : null}
-    </Animated.View>
+    baseItems && (
+      <View style={{ marginTop: insets.top, flex: 1 }}>
+        <ReviewSessionWrapper
+          baseItems={baseItems}
+          onMark={(markingRecord) =>
+            updateDatabaseForMarking(databaseManager!, markingRecord)
+          }
+        >
+          {({
+            onMark,
+            currentItemIndex,
+            items,
+            containerWidth,
+            containerHeight,
+          }) => {
+            if (currentItemIndex < items.length) {
+              return (
+                <>
+                  <ReviewStarburst
+                    containerWidth={containerWidth}
+                    containerHeight={containerHeight}
+                    items={items}
+                    currentItemIndex={currentItemIndex}
+                    pendingOutcome={pendingOutcome}
+                  />
+                  <ReviewArea
+                    items={items}
+                    currentItemIndex={currentItemIndex}
+                    onMark={onMark}
+                    onPendingOutcomeChange={setPendingOutcome}
+                    insetBottom={
+                      // So long as the container isn't tall enough to be centered, we consume the bottom insets in the button bar's padding, extending the background down through the safe area.
+                      containerHeight === layout.maximumContentHeight
+                        ? 0
+                        : insets.bottom ?? 0
+                    }
+                  />
+                </>
+              );
+            } else {
+              return (
+                <View
+                  style={{
+                    marginLeft: styles.layout.gridUnit, // TODO: use grid layout
+                    marginRight: styles.layout.gridUnit,
+                  }}
+                >
+                  <Text
+                    style={styles.type.headline.layoutStyle}
+                  >{`All caught up!\nNothing's due for review.`}</Text>
+                </View>
+              );
+            }
+          }}
+        </ReviewSessionWrapper>
+      </View>
+    )
   );
 }

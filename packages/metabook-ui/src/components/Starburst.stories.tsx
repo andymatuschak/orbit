@@ -233,7 +233,6 @@ export function Sandbox() {
             thickness={number("Thickness", 4)}
             accentOverlayColor={accentColor}
             entryAtHorizontal={currentEntry}
-            origin={origin}
           />
         </View>
       </View>

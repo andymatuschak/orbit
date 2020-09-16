@@ -25,7 +25,6 @@ function shouldSendOpenerLoginToken() {
 async function sendTokenToOpenerAndClose(
   authenticationClient: AuthenticationClient,
 ) {
-  // TODO error handling
   const idToken = await authenticationClient.getCurrentIDToken();
   const loginToken = await authenticationClient.getLoginTokenUsingIDToken(
     idToken,
@@ -118,7 +117,8 @@ export default function SignInScreen() {
           return;
         }
         console.error("Couldn't login", error.code, error.message);
-        simpleAlert("There was a problem signing in", error.message);
+        // TODO: replace with inline error
+        simpleAlert(error.message);
       }
       if (!isUnmounted.current) {
         setPendingServerResponse(false);

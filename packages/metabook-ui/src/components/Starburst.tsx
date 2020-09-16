@@ -162,7 +162,6 @@ export interface StarburstProps {
   thickness: number;
   accentOverlayColor?: string;
   entryAtHorizontal?: number;
-  origin?: readonly [number, number]; // positions the tip of the 3:00 stroke of the starburst at this position, in pixels, expressed from the top-left of the starburst element
 }
 
 export interface StarburstEntry {
@@ -176,7 +175,6 @@ export default React.memo(function Starburst({
   thickness,
   accentOverlayColor,
   entryAtHorizontal,
-  origin,
 }: StarburstProps) {
   const previousEntries = usePrevious(entries);
   const canAnimateEntries =
@@ -287,23 +285,8 @@ export default React.memo(function Starburst({
     return d;
   }
 
-  let viewBox: string;
-  let width: number;
-  let height: number;
-  if (origin) {
-    const x = -origin[0] / radius;
-    const y = -origin[1] / radius;
-    viewBox = `${x} ${y} ${1 - x} ${1 - y}`;
-    width = radius + origin[0];
-    height = radius + origin[1];
-  } else {
-    viewBox = "-1 -1 2 2";
-    width = diameter;
-    height = diameter;
-  }
-
   return (
-    <Svg height={height} width={width} viewBox={viewBox}>
+    <Svg height={diameter} width={diameter} viewBox={"-1 -1 2 2"}>
       <AnimatedG
         // @ts-ignore The type definition is missing this prop, but it's there!
         style={{

@@ -126,16 +126,15 @@ export function Basic() {
       style={{
         backgroundColor,
         height: "100vh",
-        maxHeight: 600,
       }}
     >
       <View style={{ flex: 1 }}>
         {boolean("Show debug grid", false) && <DebugGrid />}
         <ReviewArea
           items={mergedItems}
-          safeInsets={{
-            top: number("Top safe inset", 0),
-            bottom: number("Bottom safe inset", 0),
+          insetBottom={number("Bottom safe inset", 0)}
+          onPendingOutcomeChange={() => {
+            return;
           }}
           onMark={useCallback(({ outcome, reviewItem }) => {
             setLocalPromptStates((states) => {
@@ -164,7 +163,6 @@ export function Basic() {
 
             setCurrentItemIndex((currentItemIndex) => currentItemIndex + 1);
           }, [])}
-          schedule="aggressiveStart"
           currentItemIndex={currentItemIndex}
         />
       </View>

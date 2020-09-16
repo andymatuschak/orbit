@@ -5,6 +5,7 @@ export const columnMargin = gridUnit;
 export const edgeMargin = gridUnit * 2;
 
 export const maximumContentWidth = 1024;
+export const maximumContentHeight = 1024;
 
 export function getColumnSpan(columnCount: number, layoutWidth: number) {
   if (columnCount < 1 || columnCount > 2) {

@@ -1,30 +1,24 @@
 import "firebase/functions";
 import {
-  ActionLog,
-  applyActionLogToPromptState,
-  getIDForActionLog,
   getIDForPrompt,
   getIDForPromptTask,
-  getPromptActionLogFromActionLog,
-  PromptState,
+  getNextTaskParameters,
+  PromptRepetitionActionLog,
+  PromptRepetitionOutcome,
   PromptTask,
+  PromptTaskParameters,
   repetitionActionLogType,
 } from "metabook-core";
-import {
-  ReviewArea,
-  ReviewAreaMarkingRecord,
-  styles,
-  useLayout,
-  useTransitioningColorValue,
-} from "metabook-ui";
+import { ReviewArea, ReviewAreaMarkingRecord, styles } from "metabook-ui";
+import ReviewStarburst from "metabook-ui/dist/components/ReviewStarburst";
 import { getWidthSizeClass } from "metabook-ui/dist/styles/layout";
 
-import React from "react";
-import { Animated, Easing, View } from "react-native";
+import React, { useState } from "react";
+import { Text, View } from "react-native";
+import { ReviewSessionWrapper } from "../ReviewSessionWrapper";
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
-import OnboardingModalWeb from "./OnboardingModal.web";
 import { useEmbeddedAuthenticationState } from "./useEmbeddedAuthenticationState";
 import useReviewItems from "./useReviewItems";
 import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
@@ -37,12 +31,7 @@ declare global {
 }
 
 export default function EmbeddedScreen() {
-  const items = useReviewItems();
-  const [localPromptStates, setLocalPromptStates] = React.useState<
-    PromptState[]
-  >([]);
-
-  const [currentItemIndex, setCurrentItemIndex] = React.useState(0);
+  const baseItems = useReviewItems();
 
   const authenticationClient = useAuthenticationClient();
   const authenticationState = useEmbeddedAuthenticationState(
@@ -63,53 +52,36 @@ export default function EmbeddedScreen() {
 
   const onMark = React.useCallback(
     (marking: ReviewAreaMarkingRecord) => {
-      console.log("status", authenticationState.status);
       if (authenticationState.status === "storageRestricted") {
+        // TODO: only do this on Firefox.
         authenticationState.onRequestStorageAccess();
       }
 
-      // Ingest prompt for user
-      const promptTask = {
-        promptType: marking.reviewItem.prompt.promptType,
-        promptID: getIDForPrompt(marking.reviewItem.prompt),
-        promptParameters: marking.reviewItem.promptParameters,
-      } as PromptTask;
-
-      const logs: ActionLog[] = [
-        {
-          actionLogType: repetitionActionLogType,
-          taskID: getIDForPromptTask(promptTask),
-          parentActionLogIDs: [],
-          taskParameters: null,
-          outcome: marking.outcome,
-          context: null,
-          timestampMillis: Date.now(),
-        },
-      ];
-      setCurrentItemIndex((index) => {
-        const newState = applyActionLogToPromptState({
-          schedule: "default",
-          basePromptState: marking.reviewItem.promptState,
-          promptActionLog: getPromptActionLogFromActionLog(logs[0]),
-          actionLogID: getIDForActionLog(logs[0]),
-        });
-        if (newState instanceof Error) {
-          throw newState;
-        }
-        setLocalPromptStates((localPromptStates) => [
-          ...localPromptStates,
-          newState,
-        ]);
-
-        return index + 1;
-      });
+      // TODO: remove duplication with ReviewSession.
+      const log: PromptRepetitionActionLog<PromptTaskParameters> = {
+        actionLogType: repetitionActionLogType,
+        taskID: getIDForPromptTask({
+          promptType: marking.reviewItem.prompt.promptType,
+          promptID: getIDForPrompt(marking.reviewItem.prompt),
+          promptParameters: marking.reviewItem.promptParameters,
+        } as PromptTask),
+        parentActionLogIDs:
+          marking.reviewItem.promptState?.headActionLogIDs ?? [],
+        taskParameters: getNextTaskParameters(
+          marking.reviewItem.prompt,
+          marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
+        ),
+        outcome: marking.outcome,
+        context: null, // TODO
+        timestampMillis: Date.now(),
+      };
 
       if (authenticationState.userRecord) {
         const prompt = marking.reviewItem.prompt;
 
         getFirebaseFunctions()
           .httpsCallable("recordEmbeddedActions")({
-            logs,
+            logs: [log],
             promptsByID: { [getIDForPrompt(prompt)]: prompt },
             attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
               marking.reviewItem.prompt,
@@ -119,35 +91,74 @@ export default function EmbeddedScreen() {
           .then(() => console.log("Recorded action"))
           .catch((error) => console.error(error));
       }
+
+      return log;
     },
     [authenticationState],
   );
 
-  // TODO: fix duplication with ReviewSession
-  const backgroundColor = useTransitioningColorValue({
-    value: items
-      ? items[currentItemIndex].backgroundColor
-      : styles.colors.white,
-    timing: {
-      type: "timing",
-      duration: 150,
-      easing: Easing.linear,
-      useNativeDriver: false,
-    },
-  });
+  const [
+    pendingOutcome,
+    setPendingOutcome,
+  ] = useState<PromptRepetitionOutcome | null>(null);
 
-  const mergedItems = React.useMemo(
-    () =>
-      items?.map((item, index) =>
-        localPromptStates[index]
-          ? { ...item, promptState: localPromptStates[index] }
-          : item,
-      ),
-    [items, localPromptStates],
+  return (
+    baseItems && (
+      <View style={{ height: "100vh" }}>
+        <ReviewSessionWrapper baseItems={baseItems} onMark={onMark}>
+          {({
+            onMark,
+            currentItemIndex,
+            items,
+            containerWidth,
+            containerHeight,
+          }) => {
+            if (currentItemIndex < items.length) {
+              return (
+                <>
+                  <EmbeddedBanner
+                    palette={baseItems[currentItemIndex]}
+                    isSignedIn={authenticationState.status === "signedIn"}
+                    totalPromptCount={baseItems.length}
+                    completePromptCount={currentItemIndex}
+                    sizeClass={getWidthSizeClass(containerWidth)}
+                  />
+                  <ReviewStarburst
+                    containerWidth={containerWidth}
+                    containerHeight={containerHeight}
+                    items={items}
+                    currentItemIndex={currentItemIndex}
+                    pendingOutcome={pendingOutcome}
+                  />
+                  <ReviewArea
+                    items={items}
+                    currentItemIndex={currentItemIndex}
+                    onMark={onMark}
+                    onPendingOutcomeChange={setPendingOutcome}
+                    insetBottom={0}
+                  />
+                </>
+              );
+            } else {
+              return (
+                <View
+                  style={{
+                    marginLeft: styles.layout.gridUnit, // TODO: use grid layout
+                    marginRight: styles.layout.gridUnit,
+                  }}
+                >
+                  <Text
+                    style={styles.type.headline.layoutStyle}
+                  >{`All caught up!\nNothing's due for review.`}</Text>
+                </View>
+              );
+            }
+          }}
+        </ReviewSessionWrapper>
+      </View>
+    )
   );
-
-  const { width, onLayout } = useLayout();
-  const sizeClass = getWidthSizeClass(width);
+  /*
 
   if (mergedItems) {
     return (
@@ -155,13 +166,6 @@ export default function EmbeddedScreen() {
         style={{ position: "relative", height: "100vh", backgroundColor }}
         onLayout={onLayout}
       >
-        <EmbeddedBanner
-          palette={mergedItems[currentItemIndex]}
-          isSignedIn={authenticationState.status === "signedIn"}
-          totalPromptCount={mergedItems.length}
-          completePromptCount={currentItemIndex}
-          sizeClass={sizeClass}
-        />
         <ReviewArea
           items={mergedItems}
           currentItemIndex={currentItemIndex}
@@ -178,5 +182,5 @@ export default function EmbeddedScreen() {
     );
   } else {
     return null;
-  }
+  }*/
 }
