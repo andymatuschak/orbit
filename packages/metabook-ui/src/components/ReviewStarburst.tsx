@@ -86,9 +86,9 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
           color:
             index < currentItemIndex
               ? colorMode === "bicolor"
-                ? items[currentItemIndex].secondaryAccentColor
-                : items[currentItemIndex].accentColor
-              : items[currentItemIndex].secondaryBackgroundColor,
+                ? items[currentItemIndex].colorPalette.secondaryAccentColor
+                : items[currentItemIndex].colorPalette.accentColor
+              : items[currentItemIndex].colorPalette.secondaryBackgroundColor,
         };
       }),
     [items, currentItemIndex, currentItemEffectiveInterval, colorMode],
@@ -136,7 +136,7 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
           entries={starburstEntries}
           thickness={starburstThickness}
           entryAtHorizontal={currentItemIndex}
-          accentOverlayColor={currentItem.accentColor}
+          accentOverlayColor={currentItem.colorPalette.accentColor}
         />
       </Animated.View>
       <Animated.View
@@ -167,7 +167,7 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
           presentLabelColor={colors.white}
           futureLabelColor={colors.ink}
           futureTickColor={colors.ink}
-          backgroundColor={currentItem.backgroundColor}
+          backgroundColor={currentItem.colorPalette.backgroundColor}
         />
       </Animated.View>
     </View>

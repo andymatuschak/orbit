@@ -9,7 +9,7 @@ const testCardProps: CardProps = {
     promptParameters: null,
     promptState: null,
     attachmentResolutionMap: null,
-    ...colors.palettes.red,
+    colorPalette: colors.palettes.red,
   },
   backIsRevealed: false,
 };

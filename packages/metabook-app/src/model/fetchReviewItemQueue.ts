@@ -93,14 +93,13 @@ async function getReviewItemsForPromptStates(
         colorNames[
           (promptState?.lastReviewTimestampMillis ?? 0) % colorNames.length
         ];
-      const colorComposition = styles.colors.palettes[colorName];
       return {
         reviewItemType: promptReviewItemType,
         prompt,
         promptState,
         promptParameters: promptTask.promptParameters,
         attachmentResolutionMap,
-        ...colorComposition,
+        colorPalette: styles.colors.palettes[colorName],
       } as PromptReviewItem;
     })
     .filter((item): item is ReviewItem => !!item);

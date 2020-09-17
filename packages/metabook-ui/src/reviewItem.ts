@@ -9,6 +9,7 @@ import {
   ClozePromptParameters,
   PromptState,
 } from "metabook-core";
+import { ColorPalette } from "./styles/colors";
 
 export const promptReviewItemType = "prompt";
 export type AttachmentResolutionMap = Map<AttachmentID, AttachmentURLReference>;
@@ -16,12 +17,7 @@ export type AttachmentResolutionMap = Map<AttachmentID, AttachmentURLReference>;
 interface BasePromptReviewItem {
   reviewItemType: typeof promptReviewItemType;
   attachmentResolutionMap: AttachmentResolutionMap | null;
-
-  accentColor: string;
-  secondaryAccentColor: string;
-  backgroundColor: string;
-  secondaryBackgroundColor: string;
-  secondaryTextColor: string;
+  colorPalette: ColorPalette;
 }
 
 export interface BasicPromptReviewItem extends BasePromptReviewItem {

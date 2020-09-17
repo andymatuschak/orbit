@@ -79,7 +79,7 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
       {reviewItem && (
         <Card
           reviewItem={reviewItem}
-          accentColor={reviewItem.accentColor}
+          accentColor={reviewItem.colorPalette.accentColor}
           backIsRevealed={backIsRevealed}
         />
       )}
@@ -223,7 +223,8 @@ export default function ReviewArea({
 
       <ReviewButtonBar
         colorPalette={
-          currentItem ?? (items.length > 0 ? items[items.length - 1] : null)
+          currentItem?.colorPalette ??
+          (items.length > 0 ? items[items.length - 1].colorPalette : null)
         }
         onMark={useCallback(
           (outcome: PromptRepetitionOutcome) => {

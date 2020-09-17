@@ -151,7 +151,8 @@ export default function EmbeddedScreen() {
             }, 750);
           }
           const colorPalette =
-            baseItems[Math.min(currentItemIndex, items.length - 1)];
+            baseItems[Math.min(currentItemIndex, items.length - 1)]
+              .colorPalette;
           return (
             <>
               <EmbeddedBanner

@@ -33,7 +33,7 @@ function generateReviewItem(
   questionText: string,
   answerText: string,
   contextString: string,
-  colorComposition: typeof colors.palettes[colors.ColorPaletteName],
+  colorPalette: typeof colors.palettes[colors.ColorPaletteName],
 ): ReviewItem {
   const intervalMillis =
     intervalSequence[Math.floor(Math.random() * (intervalSequence.length - 1))]
@@ -66,7 +66,7 @@ function generateReviewItem(
     },
     promptParameters: null,
     attachmentResolutionMap: null,
-    ...colorComposition,
+    colorPalette,
   };
 }
 
