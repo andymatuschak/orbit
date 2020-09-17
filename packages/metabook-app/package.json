@@ -105,6 +105,7 @@
     "metro-react-native-babel-preset": "^0.59.0",
     "react-git-info": "^2.0.0",
     "react-test-renderer": "~16.9.0",
+    "ts-node": "^9.0.0",
     "typescript": "~3.9.5",
     "webpack-bundle-analyzer": "^3.8.0"
   },

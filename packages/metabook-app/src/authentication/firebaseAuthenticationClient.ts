@@ -1,6 +1,7 @@
 import type firebase from "firebase/app";
 import { MetabookUnsubscribe } from "metabook-client/dist/types/unsubscribe";
 import { AuthenticationClient, UserRecord } from "./authenticationClient";
+import isSessionStorageAvailable from "./isSessionStorageAvailable";
 
 const httpsAPIBaseURLString = "https://app.withorbit.com/api";
 
@@ -35,6 +36,7 @@ export default class FirebaseAuthenticationClient
 
   constructor(auth: firebase.auth.Auth) {
     this.auth = auth;
+    this.auth.setPersistence(isSessionStorageAvailable() ? "local" : "none");
   }
 
   subscribeToUserAuthState(

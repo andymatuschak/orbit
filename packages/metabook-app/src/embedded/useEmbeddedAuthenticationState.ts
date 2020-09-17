@@ -43,6 +43,7 @@ const supportsBroadcastChannel = typeof BroadcastChannel === "function";
 function useSignInTokenSubscription(
   authenticationClient: Authentication.AuthenticationClient,
 ) {
+  // We relay login tokens from the popup to our sibling iframes via a broadcast channel if supported.
   const channel = React.useMemo(
     () =>
       supportsBroadcastChannel ? new BroadcastChannel("loginToken") : null,
