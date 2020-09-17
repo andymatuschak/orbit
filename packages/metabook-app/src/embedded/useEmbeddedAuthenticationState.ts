@@ -1,5 +1,6 @@
 import * as Authentication from "../authentication";
 import React from "react";
+import useByrefCallback from "../util/useByrefCallback";
 
 async function attemptLoginWithSessionCookie(
   authenticationClient: Authentication.AuthenticationClient,
@@ -36,27 +37,50 @@ export type EmbeddedAuthenticationState =
     }
   | { status: "signedIn"; userRecord: Authentication.UserRecord };
 
+// Watch for messages from the login popup.
+function useSignInTokenSubscription(
+  authenticationClient: Authentication.AuthenticationClient,
+) {
+  const onMessage = React.useCallback(
+    (event: MessageEvent) => {
+      if (event.origin === window.origin && event.data.loginToken) {
+        const { loginToken } = event.data;
+        console.debug("Received login token from other window", event.data);
+        authenticationClient.signInWithLoginToken(loginToken).catch((error) => {
+          console.error(`Couldn't login with provided token: ${error}`);
+        });
+      }
+    },
+    [authenticationClient],
+  );
+
+  React.useEffect(() => {
+    window.addEventListener("message", onMessage, false);
+    return () => {
+      window.removeEventListener("message", onMessage);
+    };
+  }, [onMessage]);
+}
+
 export function useEmbeddedAuthenticationState(
   authenticationClient: Authentication.AuthenticationClient,
 ): EmbeddedAuthenticationState {
+  useSignInTokenSubscription(authenticationClient);
+
   const [authenticationState, setAuthenticationState] = React.useState<
     EmbeddedAuthenticationState
   >({ status: "pending", userRecord: null });
-  const [
-    readyToSubscribeToUserAuth,
-    setReadyToSubscribeToUserAuth,
-  ] = React.useState(false);
 
   const [hasStorageAccess, setHasStorageAccess] = React.useState<
     boolean | null
   >(null);
 
   // Check to see if we have storage access...
-  const isInvalidated = React.useRef(false);
   React.useEffect(() => {
+    let isInvalidated = false;
     if (typeof document.hasStorageAccess === "function") {
       document.hasStorageAccess().then((hasStorageAccess) => {
-        if (isInvalidated.current) {
+        if (isInvalidated) {
           return;
         }
         setHasStorageAccess(hasStorageAccess);
@@ -65,7 +89,7 @@ export function useEmbeddedAuthenticationState(
       setHasStorageAccess(true);
     }
     return () => {
-      isInvalidated.current = true;
+      isInvalidated = true;
     };
   }, []);
 
@@ -74,7 +98,6 @@ export function useEmbeddedAuthenticationState(
     if (authenticationState.status === "pending" && hasStorageAccess !== null) {
       console.log("Has storage access", hasStorageAccess);
       if (hasStorageAccess) {
-        setReadyToSubscribeToUserAuth(true);
         if (!authenticationClient.supportsCredentialPersistence()) {
           attemptLoginWithSessionCookie(authenticationClient);
         }
@@ -86,10 +109,7 @@ export function useEmbeddedAuthenticationState(
             document
               .requestStorageAccess()
               .then(() => {
-                console.log("RECEIVED STORAGE ACCESS");
-                document.hasStorageAccess().then((hasAccess) => {
-                  console.log("post grant hasStorageAccess", hasAccess);
-                });
+                console.log("Received storage access from user");
                 setHasStorageAccess(true);
                 setAuthenticationState((authenticationState) =>
                   authenticationState.status === "storageRestricted"
@@ -98,7 +118,8 @@ export function useEmbeddedAuthenticationState(
                 );
               })
               .catch(() => {
-                console.error("NO STORAGE ACCESS");
+                // TODO: now what? make sure this still works locally...
+                console.error("Storage access declined");
               });
           },
         });
@@ -106,10 +127,8 @@ export function useEmbeddedAuthenticationState(
     }
   }, [authenticationState, hasStorageAccess, authenticationClient]);
 
-  // Once we're ready to subscribe to user auth...
-  React.useEffect(() => {
-    // TODO wait until ready to subscribe... or not, since Safari seems to be lying about whether we have storage access
-    return authenticationClient.subscribeToUserAuthState(async (userRecord) => {
+  const onAuthStateChange = useByrefCallback(
+    (userRecord: Authentication.UserRecord | null) => {
       if (userRecord) {
         setAuthenticationState({ status: "signedIn", userRecord });
         if (!authenticationClient.supportsCredentialPersistence()) {
@@ -119,29 +138,13 @@ export function useEmbeddedAuthenticationState(
       } else if (!userRecord && hasStorageAccess) {
         setAuthenticationState({ status: "signedOut", userRecord: null });
       }
-    });
-  }, [hasStorageAccess, readyToSubscribeToUserAuth, authenticationClient]);
-
-  // Watch for messages from the login popup.
-  const onMessage = React.useCallback(
-    (event: MessageEvent) => {
-      if (event.origin === window.origin && event.data.loginToken) {
-        const { loginToken } = event.data;
-        console.debug("Received login token from other window", event.data);
-        setReadyToSubscribeToUserAuth(true);
-        authenticationClient.signInWithLoginToken(loginToken).catch((error) => {
-          console.error(`Couldn't login with provided token: ${error}`);
-        });
-      }
     },
-    [authenticationClient],
   );
+
+  // Subscribe to user auth state.
   React.useEffect(() => {
-    window.addEventListener("message", onMessage, false);
-    return () => {
-      window.removeEventListener("message", onMessage);
-    };
-  }, [onMessage]);
+    return authenticationClient.subscribeToUserAuthState(onAuthStateChange);
+  }, [authenticationClient, onAuthStateChange]);
 
   return authenticationState;
 }

@@ -47,5 +47,6 @@ export {
   useTransitioningValue,
   useTransitioningColorValue,
 } from "./components/hooks/useTransitioningValue";
+export { useWeakRef } from "./components/hooks/useWeakRef";
 
 export { getHeightForReviewAreaOfWidth } from "./util/getHeightForReviewAreaOfWidth";
