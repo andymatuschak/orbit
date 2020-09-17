@@ -44,6 +44,10 @@ function StarburstGrid(props: { diameter: number }) {
   );
 }
 
+function getPaletteByIndex(index: number): colors.ColorPalette {
+  return colors.palettes[colors.orderedPaletteNames[index]];
+}
+
 export function Sandbox() {
   const strokeCount = number("Line count", 25);
   const seed = text("Random seed", "seed");
@@ -53,20 +57,21 @@ export function Sandbox() {
 
   const diameter = number("Size", 500);
 
-  let colorComposition: typeof colors.palettes[0];
+  let colorComposition: typeof colors.palettes.red;
   let backgroundColor: string;
   let strokeColor: string;
   let accentColor: string;
   let completedStrokeColor: string;
   const colorRange = {
     min: 0,
-    max: colors.palettes.length - 1,
+    max: colors.orderedPaletteNames.length - 1,
     range: true,
     step: 1,
   };
   if (boolean("Use composition", true)) {
-    colorComposition =
-      colors.palettes[number("Color palette index", 0, colorRange)];
+    colorComposition = getPaletteByIndex(
+      number("Color palette index", 0, colorRange),
+    );
     backgroundColor = colorComposition.backgroundColor;
     const strokeSelection = select(
       "Incomplete stroke color",
@@ -117,9 +122,9 @@ export function Sandbox() {
     );
     const strokeColorIndex = number("Secondary color index", 1, colorRange);
     strokeColor = {
-      bg: colors.palettes[strokeColorIndex].backgroundColor,
-      secondary: colors.palettes[strokeColorIndex].secondaryAccentColor,
-      shade: colors.palettes[strokeColorIndex].secondaryBackgroundColor,
+      bg: getPaletteByIndex(strokeColorIndex).backgroundColor,
+      secondary: getPaletteByIndex(strokeColorIndex).secondaryAccentColor,
+      shade: getPaletteByIndex(strokeColorIndex).secondaryBackgroundColor,
       ink: colors.ink,
       white: colors.white,
     }[strokeColorSource];
@@ -135,9 +140,9 @@ export function Sandbox() {
       colorRange,
     );
     completedStrokeColor = {
-      bg: colors.palettes[completedStrokeColorIndex].backgroundColor,
-      secondary:
-        colors.palettes[completedStrokeColorIndex].secondaryAccentColor,
+      bg: getPaletteByIndex(completedStrokeColorIndex).backgroundColor,
+      secondary: getPaletteByIndex(completedStrokeColorIndex)
+        .secondaryAccentColor,
       ink: colors.ink,
       white: colors.white,
     }[completedStrokeColorSource];
@@ -153,14 +158,14 @@ export function Sandbox() {
       colorRange,
     );
     accentColor = {
-      bg: colors.palettes[accentStrokeColorIndex].backgroundColor,
-      accent: colors.palettes[accentStrokeColorIndex].accentColor,
+      bg: getPaletteByIndex(accentStrokeColorIndex).backgroundColor,
+      accent: getPaletteByIndex(accentStrokeColorIndex).accentColor,
       ink: colors.ink,
       white: colors.white,
     }[accentStrokeColorSource];
 
-    backgroundColor =
-      colors.palettes[number("BG color index", 0, colorRange)].backgroundColor;
+    backgroundColor = getPaletteByIndex(number("BG color index", 0, colorRange))
+      .backgroundColor;
   }
 
   const [currentEntry, setCurrentEntry] = useState(0);
@@ -197,11 +202,6 @@ export function Sandbox() {
   }));
 
   const rotationDegrees = number("Extra rotation degrees", 0);
-
-  const useOrigin = boolean("Use origin", false);
-  const originX = number("Origin X", 0);
-  const originY = number("Origin Y", 0);
-  const origin = useOrigin ? ([originX, originY] as const) : undefined;
 
   return (
     <View

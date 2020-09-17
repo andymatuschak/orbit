@@ -41,7 +41,7 @@ async function sendTokenToOpenerAndClose(
 }
 
 export default function SignInScreen() {
-  const colorPalette: styles.colors.ColorPalette = styles.colors.palettes[0];
+  const colorPalette: styles.colors.ColorPalette = styles.colors.palettes.red; // TODO;
   const overrideEmailAddress: string | null = React.useMemo(() => {
     if (Platform.OS === "web") {
       const search = new URLSearchParams(location.search);

@@ -160,66 +160,64 @@ export default function ReviewSession() {
     setPendingOutcome,
   ] = useState<PromptRepetitionOutcome | null>(null);
 
-  return (
-    baseItems !== null && (
-      <View style={{ marginTop: insets.top, flex: 1 }}>
-        <ReviewSessionWrapper
-          baseItems={baseItems}
-          onMark={(markingRecord) =>
-            updateDatabaseForMarking(databaseManager!, markingRecord)
+  return baseItems !== null ? (
+    <View style={{ marginTop: insets.top, flex: 1 }}>
+      <ReviewSessionWrapper
+        baseItems={baseItems}
+        onMark={(markingRecord) =>
+          updateDatabaseForMarking(databaseManager!, markingRecord)
+        }
+      >
+        {({
+          onMark,
+          currentItemIndex,
+          items,
+          containerWidth,
+          containerHeight,
+        }) => {
+          if (currentItemIndex < items.length) {
+            return (
+              <>
+                <ReviewStarburst
+                  containerWidth={containerWidth}
+                  containerHeight={containerHeight}
+                  items={items}
+                  currentItemIndex={currentItemIndex}
+                  pendingOutcome={pendingOutcome}
+                  position="left"
+                  showLegend={true}
+                  colorMode="bicolor"
+                />
+                <ReviewArea
+                  items={items}
+                  currentItemIndex={currentItemIndex}
+                  onMark={onMark}
+                  onPendingOutcomeChange={setPendingOutcome}
+                  insetBottom={
+                    // So long as the container isn't tall enough to be centered, we consume the bottom insets in the button bar's padding, extending the background down through the safe area.
+                    containerHeight === layout.maximumContentHeight
+                      ? 0
+                      : insets.bottom ?? 0
+                  }
+                />
+              </>
+            );
+          } else {
+            return (
+              <View
+                style={{
+                  marginLeft: styles.layout.gridUnit, // TODO: use grid layout
+                  marginRight: styles.layout.gridUnit,
+                }}
+              >
+                <Text
+                  style={styles.type.headline.layoutStyle}
+                >{`All caught up!\nNothing's due for review.`}</Text>
+              </View>
+            );
           }
-        >
-          {({
-            onMark,
-            currentItemIndex,
-            items,
-            containerWidth,
-            containerHeight,
-          }) => {
-            if (currentItemIndex < items.length) {
-              return (
-                <>
-                  <ReviewStarburst
-                    containerWidth={containerWidth}
-                    containerHeight={containerHeight}
-                    items={items}
-                    currentItemIndex={currentItemIndex}
-                    pendingOutcome={pendingOutcome}
-                    position="left"
-                    showLegend={true}
-                    colorMode="bicolor"
-                  />
-                  <ReviewArea
-                    items={items}
-                    currentItemIndex={currentItemIndex}
-                    onMark={onMark}
-                    onPendingOutcomeChange={setPendingOutcome}
-                    insetBottom={
-                      // So long as the container isn't tall enough to be centered, we consume the bottom insets in the button bar's padding, extending the background down through the safe area.
-                      containerHeight === layout.maximumContentHeight
-                        ? 0
-                        : insets.bottom ?? 0
-                    }
-                  />
-                </>
-              );
-            } else {
-              return (
-                <View
-                  style={{
-                    marginLeft: styles.layout.gridUnit, // TODO: use grid layout
-                    marginRight: styles.layout.gridUnit,
-                  }}
-                >
-                  <Text
-                    style={styles.type.headline.layoutStyle}
-                  >{`All caught up!\nNothing's due for review.`}</Text>
-                </View>
-              );
-            }
-          }}
-        </ReviewSessionWrapper>
-      </View>
-    )
-  );
+        }}
+      </ReviewSessionWrapper>
+    </View>
+  ) : null;
 }

@@ -131,129 +131,127 @@ export default function EmbeddedScreen() {
     },
   });
 
-  return (
-    baseItems !== null && (
-      <View style={{ height: "100vh" }}>
-        <ReviewSessionWrapper baseItems={baseItems} onMark={onMark}>
-          {({
-            onMark,
-            currentItemIndex,
-            items,
-            containerWidth,
-            containerHeight,
-          }) => {
-            if (currentItemIndex >= items.length && !isComplete) {
-              setTimeout(() => setComplete(true), 350);
-              setTimeout(() => {
-                // There are bugs with RNW's implementation of delay with spring animations, alas.
-                if (authenticationState.status !== "signedIn") {
-                  setShouldShowOnboardingModal(true);
-                }
-              }, 750);
-            }
-            const colorPalette =
-              baseItems[Math.min(currentItemIndex, items.length - 1)];
-            return (
-              <>
-                <EmbeddedBanner
-                  palette={colorPalette}
-                  isSignedIn={authenticationState.status === "signedIn"}
-                  totalPromptCount={baseItems.length}
-                  completePromptCount={currentItemIndex}
-                  sizeClass={getWidthSizeClass(containerWidth)}
+  return baseItems !== null ? (
+    <View style={{ height: "100vh" }}>
+      <ReviewSessionWrapper baseItems={baseItems} onMark={onMark}>
+        {({
+          onMark,
+          currentItemIndex,
+          items,
+          containerWidth,
+          containerHeight,
+        }) => {
+          if (currentItemIndex >= items.length && !isComplete) {
+            setTimeout(() => setComplete(true), 350);
+            setTimeout(() => {
+              // There are bugs with RNW's implementation of delay with spring animations, alas.
+              if (authenticationState.status !== "signedIn") {
+                setShouldShowOnboardingModal(true);
+              }
+            }, 750);
+          }
+          const colorPalette =
+            baseItems[Math.min(currentItemIndex, items.length - 1)];
+          return (
+            <>
+              <EmbeddedBanner
+                palette={colorPalette}
+                isSignedIn={authenticationState.status === "signedIn"}
+                totalPromptCount={baseItems.length}
+                completePromptCount={currentItemIndex}
+                sizeClass={getWidthSizeClass(containerWidth)}
+              />
+              <Animated.View
+                onLayout={onInteriorLayout}
+                style={{ transform: [{ translateY: interiorY }] }}
+              >
+                <ReviewStarburst
+                  containerWidth={containerWidth}
+                  containerHeight={containerHeight}
+                  items={items}
+                  currentItemIndex={Math.min(
+                    currentItemIndex,
+                    items.length - 1,
+                  )}
+                  pendingOutcome={pendingOutcome}
+                  position={isComplete ? "center" : "left"}
+                  showLegend={
+                    currentItemIndex <
+                    items.length /* animate out the legend a little early */
+                  }
+                  colorMode={isComplete ? "accent" : "bicolor"}
                 />
-                <Animated.View
-                  onLayout={onInteriorLayout}
-                  style={{ transform: [{ translateY: interiorY }] }}
+                <FadeView
+                  isVisible={isComplete}
+                  delayMillis={500}
+                  removeFromLayoutWhenHidden
                 >
-                  <ReviewStarburst
-                    containerWidth={containerWidth}
-                    containerHeight={containerHeight}
-                    items={items}
-                    currentItemIndex={Math.min(
-                      currentItemIndex,
-                      items.length - 1,
-                    )}
-                    pendingOutcome={pendingOutcome}
-                    position={isComplete ? "center" : "left"}
-                    showLegend={
-                      currentItemIndex <
-                      items.length /* animate out the legend a little early */
-                    }
-                    colorMode={isComplete ? "accent" : "bicolor"}
+                  <Text
+                    style={[
+                      styles.type.label.layoutStyle,
+                      {
+                        textAlign: "center",
+                        color: styles.colors.white,
+                        marginBottom: styles.layout.gridUnit * 2,
+                      },
+                    ]}
+                  >
+                    {baseItems.length} prompts collected
+                  </Text>
+                </FadeView>
+                <FadeView
+                  isVisible={
+                    /* TODO: show this after saving is actually complete */
+                    isComplete && authenticationState.status === "signedIn"
+                  }
+                  delayMillis={750}
+                  removeFromLayoutWhenHidden
+                >
+                  <Text
+                    style={[
+                      styles.type.labelSmall.layoutStyle,
+                      {
+                        textAlign: "center",
+                        color: colorPalette.secondaryTextColor,
+                      },
+                    ]}
+                  >
+                    Saved to your account:
+                    <br />
+                    {authenticationState.userRecord?.emailAddress}
+                  </Text>
+                </FadeView>
+              </Animated.View>
+              {!isComplete && (
+                <ReviewArea
+                  items={items}
+                  currentItemIndex={currentItemIndex}
+                  onMark={onMark}
+                  onPendingOutcomeChange={setPendingOutcome}
+                  insetBottom={0}
+                />
+              )}
+              {isComplete && (
+                <Animated.View
+                  style={{
+                    flex: 1,
+                    justifyContent: "flex-end",
+                    overflow: "hidden",
+                    transform: [{ translateY: onboardingOffsetY }],
+                  }}
+                >
+                  <OnboardingModalWeb
+                    colorPalette={colorPalette}
+                    sizeClass={getWidthSizeClass(containerWidth)}
                   />
-                  <FadeView
-                    isVisible={isComplete}
-                    delayMillis={500}
-                    removeFromLayoutWhenHidden
-                  >
-                    <Text
-                      style={[
-                        styles.type.label.layoutStyle,
-                        {
-                          textAlign: "center",
-                          color: styles.colors.white,
-                          marginBottom: styles.layout.gridUnit * 2,
-                        },
-                      ]}
-                    >
-                      {baseItems.length} prompts collected
-                    </Text>
-                  </FadeView>
-                  <FadeView
-                    isVisible={
-                      /* TODO: show this after saving is actually complete */
-                      isComplete && authenticationState.status === "signedIn"
-                    }
-                    delayMillis={750}
-                    removeFromLayoutWhenHidden
-                  >
-                    <Text
-                      style={[
-                        styles.type.labelSmall.layoutStyle,
-                        {
-                          textAlign: "center",
-                          color: colorPalette.secondaryTextColor,
-                        },
-                      ]}
-                    >
-                      Saved to your account:
-                      <br />
-                      {authenticationState.userRecord?.emailAddress}
-                    </Text>
-                  </FadeView>
                 </Animated.View>
-                {!isComplete && (
-                  <ReviewArea
-                    items={items}
-                    currentItemIndex={currentItemIndex}
-                    onMark={onMark}
-                    onPendingOutcomeChange={setPendingOutcome}
-                    insetBottom={0}
-                  />
-                )}
-                {isComplete && (
-                  <Animated.View
-                    style={{
-                      flex: 1,
-                      justifyContent: "flex-end",
-                      overflow: "hidden",
-                      transform: [{ translateY: onboardingOffsetY }],
-                    }}
-                  >
-                    <OnboardingModalWeb
-                      colorPalette={colorPalette}
-                      sizeClass={getWidthSizeClass(containerWidth)}
-                    />
-                  </Animated.View>
-                )}
-              </>
-            );
-          }}
-        </ReviewSessionWrapper>
-      </View>
-    )
-  );
+              )}
+            </>
+          );
+        }}
+      </ReviewSessionWrapper>
+    </View>
+  ) : null;
   /*
 
   if (mergedItems) {

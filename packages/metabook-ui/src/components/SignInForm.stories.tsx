@@ -27,7 +27,8 @@ const Template: Story<{
     }, 2000);
   }, []);
 
-  const colorPalette = colors.palettes[args.colorPaletteIndex];
+  const colorPalette =
+    colors.palettes[colors.orderedPaletteNames[args.colorPaletteIndex]];
 
   return (
     <View

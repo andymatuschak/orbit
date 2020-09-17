@@ -10,6 +10,7 @@ import {
   PromptState,
   PromptTaskParameters,
   repetitionActionLogType,
+  typedKeys,
 } from "metabook-core";
 import { testBasicPrompt } from "metabook-sample-data";
 import React, { useCallback, useMemo, useState } from "react";
@@ -32,7 +33,7 @@ function generateReviewItem(
   questionText: string,
   answerText: string,
   contextString: string,
-  colorComposition: typeof colors.palettes[number],
+  colorComposition: typeof colors.palettes[colors.ColorPaletteName],
 ): ReviewItem {
   const intervalMillis =
     intervalSequence[Math.floor(Math.random() * (intervalSequence.length - 1))]
@@ -72,7 +73,7 @@ function generateReviewItem(
 export function Basic() {
   const colorKnobOffset = number("color shift", 0, {
     min: 0,
-    max: colors.palettes.length - 1,
+    max: Object.keys(colors.palettes).length - 1,
     step: 1,
     range: true,
   });
@@ -88,7 +89,11 @@ export function Basic() {
           questionOverrideText || `Question ${i + 1}`,
           answerOverrideText || `Answer ${i + 1}`,
           sourceContext,
-          colors.palettes[(i + colorKnobOffset) % colors.palettes.length],
+          colors.palettes[
+            colors.orderedPaletteNames[
+              (i + colorKnobOffset) % colors.orderedPaletteNames.length
+            ]
+          ],
         ),
       ),
     [questionOverrideText, answerOverrideText, sourceContext, colorKnobOffset],
@@ -101,7 +106,10 @@ export function Basic() {
   const backgroundColor = useTransitioningColorValue({
     value:
       colors.palettes[
-        (currentItemIndex + colorKnobOffset) % colors.palettes.length
+        colors.orderedPaletteNames[
+          (currentItemIndex + colorKnobOffset) %
+            colors.orderedPaletteNames.length
+        ]
       ].backgroundColor,
     timing: {
       type: "timing",

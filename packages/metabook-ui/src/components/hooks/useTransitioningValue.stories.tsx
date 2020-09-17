@@ -12,7 +12,11 @@ export function ColorTest() {
   const [paletteIndex, setPaletteIndex] = useState(0);
   const backgroundColor = useTransitioningColorValue({
     value:
-      colors.palettes[paletteIndex % colors.palettes.length].backgroundColor,
+      colors.palettes[
+        colors.orderedPaletteNames[
+          paletteIndex % colors.orderedPaletteNames.length
+        ]
+      ].backgroundColor,
     timing: {
       type: "timing",
       duration: 150,

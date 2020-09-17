@@ -6,6 +6,7 @@ import {
   PromptState,
   PromptTask,
 } from "metabook-core";
+import typedKeys from "metabook-core/dist/util/typedKeys";
 import {
   PromptReviewItem,
   promptReviewItemType,
@@ -13,7 +14,6 @@ import {
   styles,
 } from "metabook-ui";
 import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";
-import actionLogStore from "./actionLogStore";
 import DataRecordManager from "./dataRecordManager";
 import PromptStateStore from "./promptStateStore";
 
@@ -87,11 +87,13 @@ async function getReviewItemsForPromptStates(
 
       const promptState = promptStates.get(promptTask) ?? null;
       // TODO: this doesn't belong here, and this value should be read from provenance.
-      const colorComposition =
-        styles.colors.palettes[
-          (promptState?.lastReviewTimestampMillis ?? 0) %
-            styles.colors.palettes.length
+
+      const colorNames = styles.colors.orderedPaletteNames;
+      const colorName =
+        colorNames[
+          (promptState?.lastReviewTimestampMillis ?? 0) % colorNames.length
         ];
+      const colorComposition = styles.colors.palettes[colorName];
       return {
         reviewItemType: promptReviewItemType,
         prompt,

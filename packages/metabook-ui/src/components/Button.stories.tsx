@@ -5,7 +5,7 @@ import Button, { ButtonProps } from "./Button";
 import { IconName } from "./Icon";
 import { View } from "react-native";
 
-const palette = colors.palettes[0];
+const palette = colors.palettes.red;
 
 export default {
   title: "Controls/Button",

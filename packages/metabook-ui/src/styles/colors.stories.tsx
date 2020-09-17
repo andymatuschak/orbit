@@ -198,7 +198,7 @@ function ColorSwatch({
 }
 
 export function Palette() {
-  const colorCount = colors.palettes.length;
+  const colorCount = colors.orderedPaletteNames.length;
   return (
     <View style={{ backgroundColor: "#999" }}>
       <Svg
@@ -210,7 +210,7 @@ export function Palette() {
       >
         {Array.from(new Array(colorCount).keys()).map((i) => {
           const theta = (i / colorCount) * 2 * Math.PI - Math.PI / 2;
-          const palette = colors.palettes[i];
+          const palette = colors.palettes[colors.orderedPaletteNames[i]];
           return (
             <>
               <ColorSwatch
@@ -359,7 +359,7 @@ function CompositionTest({
 export function Compositions() {
   return (
     <View style={{ flexWrap: "wrap", flexDirection: "row" }}>
-      {colors.palettes.map((c, i) => (
+      {Object.values(colors.palettes).map((c, i) => (
         <CompositionTest key={i} colorPalette={c} />
       ))}
     </View>

@@ -10,9 +10,9 @@ export default {
   parameters: {
     backgrounds: {
       default: "0",
-      values: colors.palettes.map((p, i) => ({
+      values: colors.orderedPaletteNames.map((p, i) => ({
         name: i.toString(),
-        value: p.backgroundColor,
+        value: colors.palettes[p].backgroundColor,
       })),
     },
   },
@@ -29,7 +29,9 @@ const Template: Story<
         colorPalette={
           args.colorPaletteIndex === undefined
             ? null
-            : colors.palettes[args.colorPaletteIndex]
+            : colors.palettes[
+                colors.orderedPaletteNames[args.colorPaletteIndex]
+              ]
         }
         placeholder={args.placeholder}
         value={value}
