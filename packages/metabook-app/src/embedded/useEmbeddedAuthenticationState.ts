@@ -125,10 +125,7 @@ export function useEmbeddedAuthenticationState(
   // Watch for messages from the login popup.
   const onMessage = React.useCallback(
     (event: MessageEvent) => {
-      if (
-        event.origin === "https://app.withorbit.com" &&
-        event.data.loginToken
-      ) {
+      if (event.origin === window.origin && event.data.loginToken) {
         const { loginToken } = event.data;
         console.debug("Received login token from other window", event.data);
         setReadyToSubscribeToUserAuth(true);

@@ -36,7 +36,7 @@ async function sendTokenToOpenerAndClose(
       `shouldSendOpenerLoginToken is set but window.opener is unset`,
     );
   }
-  window.opener.postMessage({ loginToken }, "https://app.withorbit.com");
+  window.opener.postMessage({ loginToken }, window.origin);
   window.close();
 }
 
