@@ -1,6 +1,10 @@
-import { getHeightForReviewAreaOfWidth } from "metabook-ui";
+import {
+  EmbeddedHostMetadata,
+  EmbeddedScreenConfiguration,
+} from "metabook-app/src/embedded/embeddedScreenConfiguration";
+import { getHeightForReviewAreaOfWidth, styles } from "metabook-ui";
 import { extractItems } from "./extractItems";
-import { getSharedMetadataMonitor, PageMetadata } from "./metadataMonitor";
+import { getSharedMetadataMonitor } from "./metadataMonitor";
 
 declare global {
   // supplied by Webpack
@@ -9,14 +13,11 @@ declare global {
 
 export class OrbitReviewAreaElement extends HTMLElement {
   private needsRender = false;
+  private cachedMetadata: EmbeddedHostMetadata | null = null;
   private iframe: HTMLIFrameElement | null = null;
 
-  constructor() {
-    super();
-  }
-
-  onMetadataChange = (metadata: PageMetadata) => {
-    console.log("new metadata", metadata);
+  onMetadataChange = (metadata: EmbeddedHostMetadata) => {
+    this.cachedMetadata = metadata;
   };
 
   connectedCallback() {
@@ -60,10 +61,26 @@ export class OrbitReviewAreaElement extends HTMLElement {
     if (!this.iframe) {
       return;
     }
+    if (!this.cachedMetadata) {
+      throw new Error("Invariant violation: no embedded host metadata");
+    }
 
-    const items = extractItems(this);
+    const embeddedItems = extractItems(this);
+    const colorOverride = this.getAttribute(
+      "color",
+    ) as styles.colors.ColorPaletteName | null;
 
-    const itemsParameterString = encodeURIComponent(JSON.stringify(items));
+    const configuration: EmbeddedScreenConfiguration = {
+      embeddedItems,
+      embeddedHostMetadata: {
+        ...this.cachedMetadata,
+        ...(colorOverride && { colorPaletteName: colorOverride }),
+      },
+    };
+
+    const itemsParameterString = encodeURIComponent(
+      JSON.stringify(configuration),
+    );
     const baseURL = new URL(EMBED_API_BASE_URL);
     baseURL.search = `i=${itemsParameterString}`;
     this.iframe.src = baseURL.href;

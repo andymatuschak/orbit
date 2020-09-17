@@ -20,26 +20,27 @@ import {
 import FadeView from "metabook-ui/dist/components/FadeView";
 import { getWidthSizeClass } from "metabook-ui/dist/styles/layout";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Animated, Text, View } from "react-native";
 import { ReviewSessionWrapper } from "../ReviewSessionWrapper";
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
+import {
+  getEmbeddedColorPalette,
+  getEmbeddedScreenConfigurationFromURL,
+} from "./embeddedScreenConfiguration";
 import OnboardingModalWeb from "./OnboardingModal.web";
+import useDecodedReviewItems from "./useDecodedReviewItems";
 import { useEmbeddedAuthenticationState } from "./useEmbeddedAuthenticationState";
-import useReviewItems from "./useReviewItems";
 import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
 
-declare global {
-  interface Document {
-    requestStorageAccess(): Promise<undefined>;
-    hasStorageAccess(): Promise<boolean>;
-  }
-}
-
 export default function EmbeddedScreen() {
-  const baseItems = useReviewItems();
+  const [configuration] = useState(
+    getEmbeddedScreenConfigurationFromURL(window.location.href),
+  );
+  const baseItems = useDecodedReviewItems(configuration.embeddedItems);
+  const colorPalette = getEmbeddedColorPalette(configuration);
 
   const authenticationClient = useAuthenticationClient();
   const authenticationState = useEmbeddedAuthenticationState(
@@ -49,7 +50,7 @@ export default function EmbeddedScreen() {
   const onMark = useCallback(
     (marking: ReviewAreaMarkingRecord) => {
       if (authenticationState.status === "storageRestricted") {
-        // TODO: only do this on Firefox.
+        // TODO: probably only do this on Firefox--Safari's UI is awful
         authenticationState.onRequestStorageAccess();
       }
 
@@ -131,9 +132,17 @@ export default function EmbeddedScreen() {
     },
   });
 
-  return baseItems !== null ? (
+  if (baseItems === null) {
+    return null;
+  }
+
+  return (
     <View style={{ height: "100vh" }}>
-      <ReviewSessionWrapper baseItems={baseItems} onMark={onMark}>
+      <ReviewSessionWrapper
+        baseItems={baseItems}
+        onMark={onMark}
+        overrideColorPalette={colorPalette}
+      >
         {({
           onMark,
           currentItemIndex,
@@ -150,9 +159,7 @@ export default function EmbeddedScreen() {
               }
             }, 750);
           }
-          const colorPalette =
-            baseItems[Math.min(currentItemIndex, items.length - 1)]
-              .colorPalette;
+
           return (
             <>
               <EmbeddedBanner
@@ -230,6 +237,7 @@ export default function EmbeddedScreen() {
                   onMark={onMark}
                   onPendingOutcomeChange={setPendingOutcome}
                   insetBottom={0}
+                  overrideColorPalette={colorPalette}
                 />
               )}
               {isComplete && (
@@ -252,30 +260,5 @@ export default function EmbeddedScreen() {
         }}
       </ReviewSessionWrapper>
     </View>
-  ) : null;
-  /*
-
-  if (mergedItems) {
-    return (
-      <Animated.View
-        style={{ position: "relative", height: "100vh", backgroundColor }}
-        onLayout={onLayout}
-      >
-        <ReviewArea
-          items={mergedItems}
-          currentItemIndex={currentItemIndex}
-          onMark={onMark}
-          schedule="default"
-        />
-        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
-          <OnboardingModalWeb
-            colorPalette={mergedItems[currentItemIndex]}
-            sizeClass={sizeClass}
-          />
-        </View>
-      </Animated.View>
-    );
-  } else {
-    return null;
-  }*/
+  );
 }

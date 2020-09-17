@@ -1,11 +1,7 @@
-export interface PageMetadata {
-  url: string;
-  title: string | null;
-  siteName: string | null;
-  colorName: string | null;
-}
+import { EmbeddedHostMetadata } from "metabook-app/src/embedded/embeddedScreenConfiguration";
 
-function readMetadata(): PageMetadata {
+let hasWarnedAboutTitle = false;
+function readMetadata(): EmbeddedHostMetadata {
   const head = document.head;
 
   let title: string | null = null;
@@ -35,9 +31,10 @@ function readMetadata(): PageMetadata {
     }
   }
 
-  if (!title) {
+  if (!title && !hasWarnedAboutTitle) {
+    hasWarnedAboutTitle = true;
     console.warn(
-      "Orbit warning: this page has no title. It will not display correctly in Orbit's interface.",
+      "[Orbit] This page has no title. It will not display correctly in Orbit's interface.",
     );
   }
 
@@ -45,14 +42,14 @@ function readMetadata(): PageMetadata {
     url: canonicalURL ?? document.location.toString(),
     title: openGraphTitle ?? title,
     siteName,
-    colorName,
+    colorPaletteName: colorName,
   };
 }
 
-export type MetadataListener = (newMetadata: PageMetadata) => void;
+export type MetadataListener = (newMetadata: EmbeddedHostMetadata) => void;
 class MetadataMonitor {
   private listeners: Set<MetadataListener>;
-  private cachedMetadata: PageMetadata;
+  private cachedMetadata: EmbeddedHostMetadata;
 
   constructor() {
     this.listeners = new Set();
@@ -83,7 +80,7 @@ class MetadataMonitor {
       metadata.url !== oldMetadata.url ||
       metadata.title !== oldMetadata.title ||
       metadata.siteName !== oldMetadata.siteName ||
-      metadata.colorName !== oldMetadata.colorName
+      metadata.colorPaletteName !== oldMetadata.colorPaletteName
     ) {
       for (const listener of this.listeners) {
         listener(metadata);

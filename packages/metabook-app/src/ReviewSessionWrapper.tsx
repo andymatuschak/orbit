@@ -11,17 +11,20 @@ import {
   useLayout,
   useTransitioningColorValue,
 } from "metabook-ui";
-import { layout } from "metabook-ui/dist/styles";
+import { getColorPaletteForReviewItem } from "metabook-ui/dist/reviewItem";
+import { colors, layout } from "metabook-ui/dist/styles";
 import React, { useCallback, useMemo, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 
 export function ReviewSessionWrapper({
   baseItems,
   onMark,
+  overrideColorPalette,
   children,
 }: {
   baseItems: ReviewItem[];
   onMark: (markingRecord: ReviewAreaMarkingRecord) => PromptActionLog;
+  overrideColorPalette?: styles.colors.ColorPalette;
   children: (args: {
     onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
     items: ReviewItem[];
@@ -64,12 +67,14 @@ export function ReviewSessionWrapper({
     [localStates, baseItems],
   );
 
+  const currentColorPalette =
+    overrideColorPalette ??
+    (items[currentItemIndex]
+      ? getColorPaletteForReviewItem(items[currentItemIndex])
+      : getColorPaletteForReviewItem(items[items.length - 1])) ??
+    colors.palettes.red;
   const backgroundColor = useTransitioningColorValue({
-    value:
-      currentItemIndex < items.length
-        ? items[currentItemIndex].colorPalette.backgroundColor
-        : items[items.length - 1].colorPalette.backgroundColor ??
-          styles.colors.white,
+    value: currentColorPalette.backgroundColor,
     timing: {
       type: "timing",
       useNativeDriver: false,

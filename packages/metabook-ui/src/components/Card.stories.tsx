@@ -76,7 +76,6 @@ export const basic = () => (
       promptParameters: null,
       promptState: promptStateWithProvenance,
       attachmentResolutionMap: null,
-      colorPalette: colors.palettes.cyan,
     }}
   />
 );
@@ -102,7 +101,6 @@ export const longText = () => (
         promptParameters: null,
         promptState: null,
         attachmentResolutionMap: null,
-        colorPalette: colors.palettes.cyan,
       }}
     />
   </View>
@@ -116,7 +114,6 @@ export const applicationPrompt = () => (
       promptParameters: null,
       promptState: null,
       attachmentResolutionMap: null,
-      colorPalette: colors.palettes.cyan,
     }}
   />
 );
@@ -130,7 +127,6 @@ export const clozePrompt = () => (
         promptParameters: { clozeIndex: 1 },
         promptState: promptStateWithProvenance,
         attachmentResolutionMap: null,
-        colorPalette: colors.palettes.cyan,
       }}
     />
     <TestCard
@@ -147,7 +143,6 @@ export const clozePrompt = () => (
         promptParameters: { clozeIndex: 0 },
         promptState: null,
         attachmentResolutionMap: null,
-        colorPalette: colors.palettes.cyan,
       }}
     />
   </View>
@@ -167,7 +162,6 @@ export const image = () => (
       promptParameters: null,
       promptState: null,
       attachmentResolutionMap: testAttachmentResolutionMap,
-      colorPalette: colors.palettes.cyan,
     }}
   />
 );

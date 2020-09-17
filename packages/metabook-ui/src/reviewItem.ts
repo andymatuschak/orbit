@@ -1,15 +1,15 @@
 import {
-  ApplicationPromptParameters,
   ApplicationPrompt,
+  ApplicationPromptParameters,
   AttachmentID,
   AttachmentURLReference,
-  BasicPromptParameters,
   BasicPrompt,
+  BasicPromptParameters,
   ClozePrompt,
   ClozePromptParameters,
   PromptState,
 } from "metabook-core";
-import { ColorPalette } from "./styles/colors";
+import { colors } from "./styles";
 
 export const promptReviewItemType = "prompt";
 export type AttachmentResolutionMap = Map<AttachmentID, AttachmentURLReference>;
@@ -17,7 +17,6 @@ export type AttachmentResolutionMap = Map<AttachmentID, AttachmentURLReference>;
 interface BasePromptReviewItem {
   reviewItemType: typeof promptReviewItemType;
   attachmentResolutionMap: AttachmentResolutionMap | null;
-  colorPalette: ColorPalette;
 }
 
 export interface BasicPromptReviewItem extends BasePromptReviewItem {
@@ -44,3 +43,15 @@ export type PromptReviewItem =
   | ClozePromptReviewItem;
 
 export type ReviewItem = PromptReviewItem;
+
+export function getColorPaletteForReviewItem(
+  reviewItem: ReviewItem,
+): colors.ColorPalette {
+  const colorNames = colors.orderedPaletteNames;
+  const colorName =
+    colorNames[
+      (reviewItem.promptState?.lastReviewTimestampMillis ?? 0) %
+        colorNames.length
+    ];
+  return colors.palettes[colorName];
+}

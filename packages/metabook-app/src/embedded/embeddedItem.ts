@@ -97,7 +97,6 @@ export function getReviewItemFromEmbeddedItem(
         promptState: null,
         reviewItemType: promptReviewItemType,
         attachmentResolutionMap,
-        colorPalette: styles.colors.palettes.red, // TODO
       };
     default:
       return new Error(`Unsupported item type ${embeddedItem.type}`);

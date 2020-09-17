@@ -6,7 +6,6 @@ import {
   PromptState,
   PromptTask,
 } from "metabook-core";
-import typedKeys from "metabook-core/dist/util/typedKeys";
 import {
   PromptReviewItem,
   promptReviewItemType,
@@ -86,20 +85,12 @@ async function getReviewItemsForPromptStates(
       }
 
       const promptState = promptStates.get(promptTask) ?? null;
-      // TODO: this doesn't belong here, and this value should be read from provenance.
-
-      const colorNames = styles.colors.orderedPaletteNames;
-      const colorName =
-        colorNames[
-          (promptState?.lastReviewTimestampMillis ?? 0) % colorNames.length
-        ];
       return {
         reviewItemType: promptReviewItemType,
         prompt,
         promptState,
         promptParameters: promptTask.promptParameters,
         attachmentResolutionMap,
-        colorPalette: styles.colors.palettes[colorName],
       } as PromptReviewItem;
     })
     .filter((item): item is ReviewItem => !!item);

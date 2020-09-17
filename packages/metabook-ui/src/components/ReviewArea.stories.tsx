@@ -66,7 +66,6 @@ function generateReviewItem(
     },
     promptParameters: null,
     attachmentResolutionMap: null,
-    colorPalette,
   };
 }
 

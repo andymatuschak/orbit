@@ -1,8 +1,12 @@
 import { PromptRepetitionOutcome } from "metabook-core";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { PromptReviewItem, ReviewItem } from "../reviewItem";
-import { layout } from "../styles";
+import {
+  getColorPaletteForReviewItem,
+  PromptReviewItem,
+  ReviewItem,
+} from "../reviewItem";
+import { colors, layout } from "../styles";
 import { Size } from "../util/Size";
 import Card, { CardProps } from "./Card";
 import FadeView from "./FadeView";
@@ -24,10 +28,12 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
   onDidDisappear,
   reviewItem,
   backIsRevealed,
+  overrideColorPalette,
 }: {
   size: Size;
   displayState: PromptContainerState;
   onDidDisappear: (reviewItem: ReviewItem) => void;
+  overrideColorPalette?: colors.ColorPalette;
 } & CardProps) {
   const rotationUnit = useTransitioningValue({
     value:
@@ -79,7 +85,10 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
       {reviewItem && (
         <Card
           reviewItem={reviewItem}
-          accentColor={reviewItem.colorPalette.accentColor}
+          accentColor={
+            (overrideColorPalette ?? getColorPaletteForReviewItem(reviewItem))
+              .accentColor
+          }
           backIsRevealed={backIsRevealed}
         />
       )}
@@ -91,12 +100,14 @@ interface PromptStackProps {
   items: ReviewItem[];
   currentItemIndex: number;
   isShowingAnswer: boolean;
+  overrideColorPalette?: colors.ColorPalette;
 }
 
 function PromptStack({
   items,
   currentItemIndex,
   isShowingAnswer,
+  overrideColorPalette,
 }: PromptStackProps) {
   const [departedCardCount, setDepartedCardCount] = useState(0);
   const departingPromptItems = useRef<ReviewItem[]>([]);
@@ -169,6 +180,7 @@ function PromptStack({
                   (isShowingAnswer && displayState === "displayed") ||
                   displayState === "disappearing"
                 }
+                overrideColorPalette={overrideColorPalette}
               />
             );
           },
@@ -186,6 +198,7 @@ export interface ReviewAreaProps {
   ) => void;
 
   insetBottom?: number;
+  overrideColorPalette?: colors.ColorPalette;
 
   // Debug flags
   forceShowAnswer?: boolean;
@@ -197,6 +210,7 @@ export default function ReviewArea({
   onMark,
   forceShowAnswer,
   onPendingOutcomeChange,
+  overrideColorPalette,
   insetBottom = 0,
 }: ReviewAreaProps) {
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
@@ -213,19 +227,24 @@ export default function ReviewArea({
   const currentItem =
     currentItemIndex < items.length ? items[currentItemIndex] : null;
 
+  const currentColorPalette =
+    overrideColorPalette ??
+    (currentItem
+      ? getColorPaletteForReviewItem(currentItem)
+      : getColorPaletteForReviewItem(items[items.length - 1])) ??
+    colors.palettes.red;
+
   return (
     <View style={{ flex: 1 }}>
       <PromptStack
         currentItemIndex={currentItemIndex}
         isShowingAnswer={isShowingAnswer}
         items={items}
+        overrideColorPalette={overrideColorPalette}
       />
 
       <ReviewButtonBar
-        colorPalette={
-          currentItem?.colorPalette ??
-          (items.length > 0 ? items[items.length - 1].colorPalette : null)
-        }
+        colorPalette={currentColorPalette}
         onMark={useCallback(
           (outcome: PromptRepetitionOutcome) => {
             if (!currentItem) {

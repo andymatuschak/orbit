@@ -2,6 +2,13 @@ import * as Authentication from "../authentication";
 import React from "react";
 import useByrefCallback from "../util/useByrefCallback";
 
+declare global {
+  interface Document {
+    requestStorageAccess(): Promise<undefined>;
+    hasStorageAccess(): Promise<boolean>;
+  }
+}
+
 async function attemptLoginWithSessionCookie(
   authenticationClient: Authentication.AuthenticationClient,
 ) {
@@ -51,13 +58,13 @@ function useSignInTokenSubscription(
   );
   const onLoginToken = React.useCallback(
     (event: MessageEvent) => {
-      console.debug(
-        "Received login token from login window",
-        event.data,
-        event.target,
-        event.origin,
-      );
       if (event.origin === window.origin && event.data.loginToken) {
+        console.debug(
+          "Received login token from login window",
+          event.data,
+          event.target,
+          event.origin,
+        );
         const { loginToken } = event.data;
 
         if (channel && !(event.target instanceof BroadcastChannel)) {
