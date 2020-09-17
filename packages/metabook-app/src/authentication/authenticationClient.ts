@@ -1,6 +1,5 @@
 export interface UserRecord {
   userID: string; // an opaque unique identifier
-  displayName: string | null;
   emailAddress: string | null;
 }
 

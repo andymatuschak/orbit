@@ -44,7 +44,6 @@ export default class FirebaseAuthenticationClient
       const newUserRecord = newUser
         ? {
             userID: newUser.uid,
-            displayName: newUser.displayName,
             emailAddress: newUser.email,
           }
         : null;
