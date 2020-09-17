@@ -37,29 +37,55 @@ export type EmbeddedAuthenticationState =
     }
   | { status: "signedIn"; userRecord: Authentication.UserRecord };
 
+const supportsBroadcastChannel = typeof BroadcastChannel === "function";
+
 // Watch for messages from the login popup.
 function useSignInTokenSubscription(
   authenticationClient: Authentication.AuthenticationClient,
 ) {
-  const onMessage = React.useCallback(
+  const channel = React.useMemo(
+    () =>
+      supportsBroadcastChannel ? new BroadcastChannel("loginToken") : null,
+    [],
+  );
+  const onLoginToken = React.useCallback(
     (event: MessageEvent) => {
+      console.debug(
+        "Received login token from login window",
+        event.data,
+        event.target,
+        event.origin,
+      );
       if (event.origin === window.origin && event.data.loginToken) {
         const { loginToken } = event.data;
-        console.debug("Received login token from other window", event.data);
+
+        if (channel && !(event.target instanceof BroadcastChannel)) {
+          channel.postMessage(event.data);
+        }
+
         authenticationClient.signInWithLoginToken(loginToken).catch((error) => {
           console.error(`Couldn't login with provided token: ${error}`);
         });
       }
     },
-    [authenticationClient],
+    [authenticationClient, channel],
   );
+  if (channel) {
+    channel.onmessage = onLoginToken;
+  }
 
   React.useEffect(() => {
-    window.addEventListener("message", onMessage, false);
+    window.addEventListener("message", onLoginToken, false);
     return () => {
-      window.removeEventListener("message", onMessage);
+      window.removeEventListener("message", onLoginToken);
     };
-  }, [onMessage]);
+  }, [onLoginToken]);
+
+  React.useEffect(() => {
+    return () => {
+      channel?.close();
+    };
+  }, [channel]);
 }
 
 export function useEmbeddedAuthenticationState(
