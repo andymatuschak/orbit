@@ -1,5 +1,6 @@
 import { getHeightForReviewAreaOfWidth } from "metabook-ui";
 import { extractItems } from "./extractItems";
+import { getSharedMetadataMonitor, PageMetadata } from "./metadataMonitor";
 
 declare global {
   // supplied by Webpack
@@ -14,7 +15,13 @@ export class OrbitReviewAreaElement extends HTMLElement {
     super();
   }
 
+  onMetadataChange = (metadata: PageMetadata) => {
+    console.log("new metadata", metadata);
+  };
+
   connectedCallback() {
+    getSharedMetadataMonitor().addEventListener(this.onMetadataChange);
+
     const shadowRoot = this.attachShadow({ mode: "closed" });
     this.iframe = document.createElement("iframe");
     this.iframe.style.border = "none";
@@ -33,6 +40,10 @@ export class OrbitReviewAreaElement extends HTMLElement {
     }px`;
 
     this.markNeedsRender();
+  }
+
+  disconnectedCallback() {
+    getSharedMetadataMonitor().removeEventListener(this.onMetadataChange);
   }
 
   markNeedsRender() {
