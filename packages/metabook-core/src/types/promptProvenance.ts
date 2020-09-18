@@ -27,6 +27,7 @@ export interface WebPromptProvenance extends TaskProvenance {
   modificationTimestampMillis: null;
   siteName: string | null;
   colorPaletteName: ColorPaletteName | null;
+  url: string;
 }
 
 export type PromptProvenance =

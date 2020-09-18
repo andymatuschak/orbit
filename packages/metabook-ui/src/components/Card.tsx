@@ -23,7 +23,7 @@ import {
   ClozePromptReviewItem,
   PromptReviewItem,
 } from "../reviewItem";
-import { colors, type, layout } from "../styles";
+import { colors, layout, type } from "../styles";
 import Button from "./Button";
 import CardField, { clozeBlankSentinel } from "./CardField";
 import FadeView from "./FadeView";
@@ -131,6 +131,11 @@ function getPromptContext(provenance: PromptProvenance): PromptContext | null {
       return null;
     case PromptProvenanceType.Note:
       return { title: provenance.title, url: provenance.url };
+    case PromptProvenanceType.Web:
+      return {
+        title: provenance.title ?? provenance.siteName ?? provenance.url,
+        url: provenance.url,
+      };
   }
 }
 
