@@ -17,6 +17,7 @@
     "@types/sha.js": "^2.4.0",
     "babel-jest": "^24.9.0",
     "jest": "^24.9.0",
+    "jest-environment-uint8array": "^1.0.0",
     "typescript": "^3.8.3"
   },
   "dependencies": {
