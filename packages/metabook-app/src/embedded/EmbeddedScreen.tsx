@@ -1,12 +1,14 @@
 import "firebase/functions";
 import {
+  getIDForActionLog,
   getIDForPrompt,
   getIDForPromptTask,
   getNextTaskParameters,
-  PromptRepetitionActionLog,
+  ingestActionLogType,
+  PromptActionLog,
+  PromptProvenanceType,
   PromptRepetitionOutcome,
   PromptTask,
-  PromptTaskParameters,
   repetitionActionLogType,
 } from "metabook-core";
 import {
@@ -54,16 +56,37 @@ export default function EmbeddedScreen() {
         authenticationState.onRequestStorageAccess();
       }
 
-      // TODO: remove duplication with ReviewSession.
-      const log: PromptRepetitionActionLog<PromptTaskParameters> = {
+      const taskID = getIDForPromptTask({
+        promptType: marking.reviewItem.prompt.promptType,
+        promptID: getIDForPrompt(marking.reviewItem.prompt),
+        promptParameters: marking.reviewItem.promptParameters,
+      } as PromptTask);
+
+      // TODO: if prompt state is missing, add ingestion log, include provenance
+      const logs: PromptActionLog[] = [];
+      if (!marking.reviewItem.promptState) {
+        logs.push({
+          actionLogType: ingestActionLogType,
+          taskID,
+          timestampMillis: Date.now(),
+          provenance: {
+            provenanceType: PromptProvenanceType.Web,
+            title: configuration.embeddedHostMetadata.title,
+            url: configuration.embeddedHostMetadata.url,
+            externalID: configuration.embeddedHostMetadata.url,
+            modificationTimestampMillis: null,
+            colorPaletteName:
+              configuration.embeddedHostMetadata.colorPaletteName,
+            siteName: configuration.embeddedHostMetadata.siteName,
+          },
+        });
+      }
+      logs.push({
         actionLogType: repetitionActionLogType,
-        taskID: getIDForPromptTask({
-          promptType: marking.reviewItem.prompt.promptType,
-          promptID: getIDForPrompt(marking.reviewItem.prompt),
-          promptParameters: marking.reviewItem.promptParameters,
-        } as PromptTask),
-        parentActionLogIDs:
-          marking.reviewItem.promptState?.headActionLogIDs ?? [],
+        taskID,
+        parentActionLogIDs: logs[0]
+          ? [getIDForActionLog(logs[0])]
+          : marking.reviewItem.promptState?.headActionLogIDs ?? [],
         taskParameters: getNextTaskParameters(
           marking.reviewItem.prompt,
           marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
@@ -71,14 +94,14 @@ export default function EmbeddedScreen() {
         outcome: marking.outcome,
         context: null, // TODO
         timestampMillis: Date.now(),
-      };
+      });
 
       if (authenticationState.userRecord) {
         const prompt = marking.reviewItem.prompt;
 
         getFirebaseFunctions()
           .httpsCallable("recordEmbeddedActions")({
-            logs: [log],
+            logs,
             promptsByID: { [getIDForPrompt(prompt)]: prompt },
             attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
               marking.reviewItem.prompt,
@@ -89,9 +112,9 @@ export default function EmbeddedScreen() {
           .catch((error) => console.error(error));
       }
 
-      return log;
+      return logs;
     },
-    [authenticationState],
+    [authenticationState, configuration],
   );
 
   const [

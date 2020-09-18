@@ -29,4 +29,7 @@ export interface WebPromptProvenance extends TaskProvenance {
   colorPaletteName: ColorPaletteName | null;
 }
 
-export type PromptProvenance = AnkiPromptProvenance | NotePromptProvenance;
+export type PromptProvenance =
+  | AnkiPromptProvenance
+  | NotePromptProvenance
+  | WebPromptProvenance;

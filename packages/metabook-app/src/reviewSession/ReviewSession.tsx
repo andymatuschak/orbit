@@ -98,7 +98,7 @@ export function useDatabaseManager(
 function updateDatabaseForMarking(
   databaseManager: DatabaseManager,
   marking: ReviewAreaMarkingRecord,
-): PromptActionLog {
+): PromptActionLog[] {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
   const promptActionLog = {
@@ -126,7 +126,7 @@ function updateDatabaseForMarking(
       console.error("Couldn't commit", marking.reviewItem.prompt, error);
     });
 
-  return promptActionLog;
+  return [promptActionLog];
 }
 
 function useReviewQueue(
