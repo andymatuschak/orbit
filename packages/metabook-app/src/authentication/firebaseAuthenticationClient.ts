@@ -1,5 +1,6 @@
 import type firebase from "firebase/app";
 import { MetabookUnsubscribe } from "metabook-client/dist/types/unsubscribe";
+import { Platform } from "react-native";
 import { AuthenticationClient, UserRecord } from "./authenticationClient";
 import isSessionStorageAvailable from "./isSessionStorageAvailable";
 
@@ -36,7 +37,9 @@ export default class FirebaseAuthenticationClient
 
   constructor(auth: firebase.auth.Auth) {
     this.auth = auth;
-    this.auth.setPersistence(isSessionStorageAvailable() ? "local" : "none");
+    if (Platform.OS === "web") {
+      this.auth.setPersistence(isSessionStorageAvailable() ? "local" : "none");
+    }
   }
 
   subscribeToUserAuthState(

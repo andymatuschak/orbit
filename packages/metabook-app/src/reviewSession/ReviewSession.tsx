@@ -161,12 +161,13 @@ export default function ReviewSession() {
   ] = useState<PromptRepetitionOutcome | null>(null);
 
   return baseItems !== null ? (
-    <View style={{ marginTop: insets.top, flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <ReviewSessionWrapper
         baseItems={baseItems}
         onMark={(markingRecord) =>
           updateDatabaseForMarking(databaseManager!, markingRecord)
         }
+        insets={{ top: insets.top }}
       >
         {({
           onMark,

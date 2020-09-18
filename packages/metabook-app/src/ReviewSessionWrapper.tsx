@@ -14,13 +14,14 @@ import {
 import { getColorPaletteForReviewItem } from "metabook-ui/dist/reviewItem";
 import { colors, layout } from "metabook-ui/dist/styles";
 import React, { useCallback, useMemo, useState } from "react";
-import { Animated, Easing, View } from "react-native";
+import { Animated, Easing, Insets, View } from "react-native";
 
 export function ReviewSessionWrapper({
   baseItems,
   onMark,
   overrideColorPalette,
   children,
+  insets,
 }: {
   baseItems: ReviewItem[];
   onMark: (markingRecord: ReviewAreaMarkingRecord) => PromptActionLog;
@@ -32,6 +33,7 @@ export function ReviewSessionWrapper({
     containerWidth: number;
     containerHeight: number;
   }) => React.ReactNode;
+  insets?: Insets;
 }) {
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [localStates, setLocalStates] = useState<Map<ReviewItem, PromptState>>(
@@ -96,6 +98,10 @@ export function ReviewSessionWrapper({
       style={{
         flex: 1,
         backgroundColor,
+        paddingTop: insets?.top ?? 0,
+        paddingLeft: insets?.left ?? 0,
+        paddingRight: insets?.right ?? 0,
+        paddingBottom: insets?.bottom ?? 0,
       }}
     >
       <View
