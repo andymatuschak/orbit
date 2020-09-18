@@ -1,6 +1,6 @@
 import { styles } from "metabook-ui";
-import { palettes } from "metabook-ui/dist/styles/colors";
 import { EmbeddedItem } from "./embeddedItem";
+import { ColorPaletteName } from "metabook-core";
 
 export interface EmbeddedScreenConfiguration {
   embeddedItems: EmbeddedItem[];
@@ -11,7 +11,7 @@ export interface EmbeddedHostMetadata {
   url: string;
   title: string | null;
   siteName: string | null;
-  colorPaletteName: styles.colors.ColorPaletteName | null;
+  colorPaletteName: ColorPaletteName | null;
 }
 
 // Simple string hash, just for choosing palettes from the URL.
@@ -66,7 +66,7 @@ export function getEmbeddedScreenConfigurationFromURL(
     // TODO: validate
     const colorPaletteName =
       configuration.embeddedHostMetadata.colorPaletteName;
-    if (colorPaletteName && !palettes[colorPaletteName]) {
+    if (colorPaletteName && !styles.colors.palettes[colorPaletteName]) {
       throw new Error(`Unknown color palette name: ${colorPaletteName}`);
     }
     return configuration;

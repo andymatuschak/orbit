@@ -108,3 +108,5 @@ export type {
 export { PromptProvenanceType } from "./types/promptProvenance";
 
 export { default as typedKeys } from "./util/typedKeys";
+
+export type { ColorPaletteName } from "./types/colorPaletteName";

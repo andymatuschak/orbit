@@ -4,7 +4,6 @@ import { getIDForPrompt } from "../promptID";
 import { PromptRepetitionOutcome } from "../spacedRepetition";
 import {
   ingestActionLogType,
-  RepetitionActionLog,
   repetitionActionLogType,
 } from "../types/actionLog";
 import { basicPromptType } from "../types/prompt";
@@ -16,7 +15,6 @@ import {
 import { getIDForPromptTask, PromptTaskID } from "../types/promptTask";
 import { PromptTaskParameters } from "../types/promptTaskParameters";
 import mergeActionLogs from "./mergeActionLogs";
-import { PromptState } from "./promptState";
 
 const testTaskID = getIDForPromptTask({
   promptType: basicPromptType,

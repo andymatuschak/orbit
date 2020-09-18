@@ -1,4 +1,4 @@
-import { typedKeys } from "metabook-core";
+import { typedKeys, ColorPaletteName } from "metabook-core";
 
 export const ink = "rgba(0,0,0,0.8)";
 export const white = "rgba(255,255,255,1)";
@@ -99,8 +99,6 @@ const _palettes = {
     secondaryTextColor: "hsl(321,84%,39%)",
   },
 };
-
-export type ColorPaletteName = keyof typeof _palettes;
 
 export const orderedPaletteNames: ColorPaletteName[] = typedKeys(_palettes);
 export const palettes: Record<ColorPaletteName, ColorPalette> = _palettes;
