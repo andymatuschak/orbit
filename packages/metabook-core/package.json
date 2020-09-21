@@ -25,8 +25,7 @@
     "cids": "^0.8.3",
     "ipld-dag-pb": "^0.18.5",
     "multihashes": "^1.0.1",
-    "protobufjs": "^6.8.9",
-    "sha.js": "^2.4.11"
+    "protobufjs": "^6.8.9"
   },
   "scripts": {
     "prebuild": "node scripts/compileProtobuf.js && mkdir -p dist && cp -R src/generated dist/",

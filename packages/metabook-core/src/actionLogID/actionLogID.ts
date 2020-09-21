@@ -2,7 +2,6 @@ import { Buffer } from "buffer";
 import CID from "cids";
 import DAGPB from "ipld-dag-pb";
 import * as multihashes from "multihashes";
-import { sha256 } from "sha.js";
 import { ActionLog } from "..";
 import Proto from "../generated/proto";
 import {
@@ -13,6 +12,7 @@ import {
   updateMetadataActionLogType,
 } from "../types/actionLog";
 import { TaskProvenance } from "../types/taskMetadata";
+import sha256 from "../util/sha256";
 
 function getProtobufTimestampFromMillis(
   millis: number,
@@ -144,7 +144,7 @@ export async function getIDForActionLog(
   const nodeBuffer = dagNode.serialize();
 
   // 4. Hash the protobuf and encode that as a CID.
-  const hash = new sha256().update(nodeBuffer).digest();
+  const hash = await sha256(nodeBuffer);
   const multihash = multihashes.encode(hash, "sha2-256");
   const cid = new CID(1, "dag-pb", multihash, "base58btc");
 

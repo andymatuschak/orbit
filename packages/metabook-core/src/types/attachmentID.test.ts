@@ -6,6 +6,6 @@ test("attachment ID stability", async () => {
     "Curae porta integer vitae facilisis eros nostra",
   );
   expect(await getIDForAttachment(data)).toMatchInlineSnapshot(
-    `"zSYwdZFd2UHgtQL5at38exe6YJEFdVUH1PXPvup6yYoG7nDnq"`,
+    `"zb2rhXaeJ922fgKU1sHug4EhfEUQdA3oFRUV6CumZuUoZhgf3"`,
   );
 });
