@@ -10,6 +10,7 @@ import {
   PromptRepetitionOutcome,
   PromptTask,
   repetitionActionLogType,
+  ActionLogID,
 } from "metabook-core";
 import {
   ReviewArea,
@@ -63,10 +64,9 @@ export default function EmbeddedScreen() {
         promptParameters: marking.reviewItem.promptParameters,
       } as PromptTask);
 
-      // TODO: if prompt state is missing, add ingestion log, include provenance
-      const logs: PromptActionLog[] = [];
+      const logs: { log: PromptActionLog; id: ActionLogID }[] = [];
       if (!marking.reviewItem.promptState) {
-        logs.push({
+        const ingestLog: PromptActionLog = {
           actionLogType: ingestActionLogType,
           taskID,
           timestampMillis: Date.now(),
@@ -80,13 +80,15 @@ export default function EmbeddedScreen() {
               configuration.embeddedHostMetadata.colorPaletteName,
             siteName: configuration.embeddedHostMetadata.siteName,
           },
-        });
+        };
+        logs.push({ log: ingestLog, id: await getIDForActionLog(ingestLog) });
       }
-      logs.push({
+
+      const repetitionLog: PromptActionLog = {
         actionLogType: repetitionActionLogType,
         taskID,
         parentActionLogIDs: logs[0]
-          ? [getIDForActionLog(logs[0])]
+          ? [logs[0].id]
           : marking.reviewItem.promptState?.headActionLogIDs ?? [],
         taskParameters: getNextTaskParameters(
           marking.reviewItem.prompt,
@@ -95,6 +97,10 @@ export default function EmbeddedScreen() {
         outcome: marking.outcome,
         context: null, // TODO
         timestampMillis: Date.now(),
+      };
+      logs.push({
+        log: repetitionLog,
+        id: await getIDForActionLog(repetitionLog),
       });
 
       if (authenticationState.userRecord) {

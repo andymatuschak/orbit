@@ -16,16 +16,22 @@ export async function storeLogs(
   timestampConstructor: (ms: number, ns: number) => ServerTimestamp,
 ) {
   await batchWriteEntries(
-    logs.map((log) => {
-      const logDocument: ActionLogDocument<ServerTimestamp> = {
-        ...log,
-        serverTimestamp: (serverTimestampFieldValue as unknown) as ServerTimestamp,
-      };
-      return [
-        getReferenceForActionLogID(database, userID, getIDForActionLog(log)),
-        logDocument,
-      ];
-    }),
+    await Promise.all(
+      logs.map(async (log) => {
+        const logDocument: ActionLogDocument<ServerTimestamp> = {
+          ...log,
+          serverTimestamp: (serverTimestampFieldValue as unknown) as ServerTimestamp,
+        };
+        return [
+          getReferenceForActionLogID(
+            database,
+            userID,
+            await getIDForActionLog(log),
+          ),
+          logDocument,
+        ] as const;
+      }),
+    ),
     database,
     timestampConstructor,
   );

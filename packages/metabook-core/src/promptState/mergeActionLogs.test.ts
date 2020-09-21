@@ -35,9 +35,9 @@ beforeAll(async () => {
     provenance: null,
   };
 
-  testIngestLogID = getIDForActionLog(
+  testIngestLogID = (await getIDForActionLog(
     getActionLogFromPromptActionLog(testIngestLog),
-  ) as ActionLogID;
+  )) as ActionLogID;
 
   testRepetitionLog = {
     actionLogType: repetitionActionLogType,
@@ -49,9 +49,9 @@ beforeAll(async () => {
     context: null,
   };
 
-  testRepetitionLogID = getIDForActionLog(
+  testRepetitionLogID = (await getIDForActionLog(
     getActionLogFromPromptActionLog(testRepetitionLog),
-  ) as ActionLogID;
+  )) as ActionLogID;
 });
 
 test("fails if log is missing", () => {
@@ -60,7 +60,7 @@ test("fails if log is missing", () => {
   ).toBeInstanceOf(Error);
 });
 
-test("merges split log", () => {
+test("merges split log", async () => {
   const secondRepetitionLog = { ...testRepetitionLog, timestampMillis: 750 };
   expect(
     mergeActionLogs([
@@ -71,7 +71,7 @@ test("merges split log", () => {
       },
       {
         log: secondRepetitionLog,
-        id: getIDForActionLog(
+        id: await getIDForActionLog(
           getActionLogFromPromptActionLog(secondRepetitionLog),
         ),
       },

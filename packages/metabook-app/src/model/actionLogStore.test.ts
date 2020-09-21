@@ -7,6 +7,7 @@ import {
   PromptTaskID,
   RepetitionActionLog,
   repetitionActionLogType,
+  ActionLogID,
 } from "metabook-core";
 import ActionLogStore from "./actionLogStore";
 
@@ -25,7 +26,6 @@ const testIngestLog: IngestActionLog = {
   actionLogType: ingestActionLogType,
   provenance: null,
 };
-const testIngestLogID = getIDForActionLog(testIngestLog);
 const testRepetitionLog: RepetitionActionLog = {
   timestampMillis: 700,
   taskID: "x",
@@ -35,7 +35,12 @@ const testRepetitionLog: RepetitionActionLog = {
   context: null,
   outcome: PromptRepetitionOutcome.Remembered,
 };
-const testRepetitionLogID = getIDForActionLog(testRepetitionLog);
+let testIngestLogID: ActionLogID;
+let testRepetitionLogID: ActionLogID;
+beforeAll(async () => {
+  testIngestLogID = await getIDForActionLog(testIngestLog);
+  testRepetitionLogID = await getIDForActionLog(testRepetitionLog);
+});
 
 describe("server timestamps", () => {
   beforeEach(async () => {
@@ -99,7 +104,7 @@ describe("taskID index", () => {
     const testLogs = [
       {
         log: variantLog,
-        id: getIDForActionLog(variantLog),
+        id: await getIDForActionLog(variantLog),
         serverTimestamp: null,
       },
     ];
@@ -122,7 +127,7 @@ describe("taskID index", () => {
       },
       {
         log: ingestLogVariant,
-        id: getIDForActionLog(ingestLogVariant),
+        id: await getIDForActionLog(ingestLogVariant),
         serverTimestamp: null,
       },
     ];

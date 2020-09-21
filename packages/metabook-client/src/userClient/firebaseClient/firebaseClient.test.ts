@@ -2,6 +2,7 @@ import firebase from "firebase/app";
 import {
   applyActionLogToPromptState,
   basicPromptType,
+  getIDForActionLog,
   getIDForPrompt,
   getIDForPromptTask,
   ingestActionLogType,
@@ -72,6 +73,7 @@ describe("prompt states", () => {
     };
     const initialPromptState = applyActionLogToPromptState({
       promptActionLog: ingestLog,
+      actionLogID: await getIDForActionLog(ingestLog),
       basePromptState: null,
       schedule: "default",
     }) as PromptState;

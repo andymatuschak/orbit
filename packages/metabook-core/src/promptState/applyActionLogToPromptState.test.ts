@@ -17,6 +17,7 @@ import {
 import { applicationPromptType, basicPromptType } from "../types/prompt";
 import {
   getActionLogFromPromptActionLog,
+  PromptActionLog,
   PromptIngestActionLog,
   PromptRepetitionActionLog,
 } from "../types/promptActionLog";
@@ -99,7 +100,7 @@ beforeAll(async () => {
     taskID: testBasicPromptTaskID,
     provenance: null,
   };
-  testIngestLogID = getIDForActionLog(
+  testIngestLogID = await getIDForActionLog(
     getActionLogFromPromptActionLog(testIngestLog),
   );
 });
@@ -108,6 +109,7 @@ describe("ingesting", () => {
     expect(
       applyActionLogToPromptState({
         promptActionLog: testIngestLog,
+        actionLogID: testIngestLogID,
         basePromptState: null,
         schedule: testSchedule,
       }),
@@ -122,12 +124,12 @@ describe("ingesting", () => {
     } as PromptState);
   });
 
-  test("with a base state", () => {
+  test("with a base state", async () => {
     const basePromptState: PromptState = {
       bestIntervalMillis: null,
       dueTimestampMillis: scheduleSequence[1].interval,
       headActionLogIDs: [
-        getIDForActionLog(
+        await getIDForActionLog(
           getActionLogFromPromptActionLog({
             ...testIngestLog,
             timestampMillis: 500,
@@ -143,6 +145,7 @@ describe("ingesting", () => {
     expect(
       applyActionLogToPromptState({
         promptActionLog: testIngestLog,
+        actionLogID: testIngestLogID,
         basePromptState,
         schedule: testSchedule,
       }),
@@ -154,6 +157,7 @@ describe("ingesting", () => {
 });
 
 let testRepetitionLog: PromptRepetitionActionLog<BasicPromptTaskParameters>;
+let testRepetitionLogID: ActionLogID;
 beforeAll(async () => {
   testRepetitionLog = {
     actionLogType: repetitionActionLogType,
@@ -164,6 +168,7 @@ beforeAll(async () => {
     context: null,
     taskID: testBasicPromptTaskID,
   };
+  testRepetitionLogID = await getIDForActionLog(testRepetitionLog);
 });
 
 describe("repetition", () => {
@@ -172,6 +177,7 @@ describe("repetition", () => {
       expect(
         applyActionLogToPromptState({
           promptActionLog: testRepetitionLog,
+          actionLogID: testRepetitionLogID,
           basePromptState: null,
           schedule: testSchedule,
         }),
@@ -179,9 +185,7 @@ describe("repetition", () => {
         bestIntervalMillis: scheduleSequence[0].interval,
         dueTimestampMillis:
           testRepetitionLog.timestampMillis + scheduleSequence[1].interval,
-        headActionLogIDs: [
-          getIDForActionLog(getActionLogFromPromptActionLog(testRepetitionLog)),
-        ],
+        headActionLogIDs: [testRepetitionLogID],
         intervalMillis: scheduleSequence[1].interval,
         lastReviewTimestampMillis: testRepetitionLog.timestampMillis,
         needsRetry: false,
@@ -189,22 +193,22 @@ describe("repetition", () => {
       } as PromptState);
     });
 
-    test("forgetting", () => {
+    test("forgetting", async () => {
       const log = {
         ...testRepetitionLog,
         outcome: PromptRepetitionOutcome.Forgotten,
       };
+      const logID = await getIDForActionLog(log);
 
       const promptState = applyActionLogToPromptState({
         promptActionLog: log,
+        actionLogID: logID,
         basePromptState: null,
         schedule: testSchedule,
       }) as PromptState;
       expect(promptState).toMatchObject({
         bestIntervalMillis: null,
-        headActionLogIDs: [
-          getIDForActionLog(getActionLogFromPromptActionLog(log)),
-        ],
+        headActionLogIDs: [logID],
         intervalMillis: scheduleSequence[0].interval,
         lastReviewTimestampMillis: testRepetitionLog.timestampMillis,
         needsRetry: true,
@@ -219,22 +223,22 @@ describe("repetition", () => {
     });
   });
 
-  test("with a base state", () => {
+  test("with a base state", async () => {
     const basePromptState = applyActionLogToPromptState({
       promptActionLog: testRepetitionLog,
+      actionLogID: testRepetitionLogID,
       basePromptState: null,
       schedule: testSchedule,
     }) as PromptState;
     const log = {
       ...testRepetitionLog,
-      parentActionLogIDs: [
-        getIDForActionLog(getActionLogFromPromptActionLog(testRepetitionLog)),
-      ],
+      parentActionLogIDs: [testRepetitionLogID],
       timestampMillis:
         testRepetitionLog.timestampMillis + scheduleSequence[3].interval + 50,
     };
     const nextPromptState = applyActionLogToPromptState({
       promptActionLog: log,
+      actionLogID: await getIDForActionLog(log),
       basePromptState,
       schedule: testSchedule,
     }) as PromptState;
@@ -253,16 +257,19 @@ describe("repetition", () => {
   });
 
   test("application prompts don't retry when forgotten", async () => {
+    const log = {
+      ...testRepetitionLog,
+      taskID: getIDForPromptTask({
+        promptID: await getIDForPrompt(testApplicationPrompt),
+        promptType: applicationPromptType,
+        promptParameters: null,
+      }),
+    };
+    const logID = await getIDForActionLog(log);
     expect(
       (applyActionLogToPromptState({
-        promptActionLog: {
-          ...testRepetitionLog,
-          taskID: getIDForPromptTask({
-            promptID: await getIDForPrompt(testApplicationPrompt),
-            promptType: applicationPromptType,
-            promptParameters: null,
-          }),
-        },
+        promptActionLog: log,
+        actionLogID: logID,
         basePromptState: null,
         schedule: testSchedule,
       }) as PromptState).needsRetry,
@@ -274,22 +281,25 @@ let newlyIngestedPromptState: PromptState;
 beforeAll(async () => {
   newlyIngestedPromptState = applyActionLogToPromptState({
     promptActionLog: testIngestLog,
+    actionLogID: testIngestLogID,
     basePromptState: null,
     schedule: "default",
   }) as PromptState;
 });
 
 describe("reschedule", () => {
-  test("reschedules due time", () => {
+  test("reschedules due time", async () => {
+    const log: PromptActionLog = {
+      actionLogType: rescheduleActionLogType,
+      parentActionLogIDs: [testIngestLogID],
+      timestampMillis: testIngestLog.timestampMillis + 100,
+      taskID: testIngestLog.taskID,
+      newTimestampMillis: 10000,
+    };
     expect(
       (applyActionLogToPromptState({
-        promptActionLog: {
-          actionLogType: rescheduleActionLogType,
-          parentActionLogIDs: [testIngestLogID],
-          timestampMillis: testIngestLog.timestampMillis + 100,
-          taskID: testIngestLog.taskID,
-          newTimestampMillis: 10000,
-        },
+        promptActionLog: log,
+        actionLogID: await getIDForActionLog(log),
         basePromptState: newlyIngestedPromptState,
         schedule: "default",
       }) as PromptState).dueTimestampMillis,
@@ -297,18 +307,20 @@ describe("reschedule", () => {
   });
 });
 
-test("update metadata", () => {
+test("update metadata", async () => {
+  const log: PromptActionLog = {
+    actionLogType: updateMetadataActionLogType,
+    parentActionLogIDs: [testIngestLogID],
+    timestampMillis: testIngestLog.timestampMillis + 100,
+    taskID: testIngestLog.taskID,
+    updates: {
+      isDeleted: true,
+    },
+  };
   expect(
     (applyActionLogToPromptState({
-      promptActionLog: {
-        actionLogType: updateMetadataActionLogType,
-        parentActionLogIDs: [testIngestLogID],
-        timestampMillis: testIngestLog.timestampMillis + 100,
-        taskID: testIngestLog.taskID,
-        updates: {
-          isDeleted: true,
-        },
-      },
+      promptActionLog: log,
+      actionLogID: await getIDForActionLog(log),
       basePromptState: newlyIngestedPromptState,
       schedule: "default",
     }) as PromptState).taskMetadata.isDeleted,

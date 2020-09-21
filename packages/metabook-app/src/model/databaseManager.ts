@@ -92,11 +92,13 @@ export default class DatabaseManager {
   async recordPromptActionLogs(
     entries: Iterable<PromptActionLog>,
   ): Promise<void> {
-    const promptLogEntries = [...entries].map((log) => ({
-      log,
-      id: getIDForActionLog(log),
-      serverTimestamp: null,
-    }));
+    const promptLogEntries = await Promise.all(
+      [...entries].map(async (log) => ({
+        log,
+        id: await getIDForActionLog(log),
+        serverTimestamp: null,
+      })),
+    );
 
     await Promise.all([
       this.userClient.recordActionLogs(
@@ -146,6 +148,7 @@ export default class DatabaseManager {
       ) {
         const newPromptState = applyActionLogToPromptState({
           promptActionLog: log,
+          actionLogID: id,
           basePromptState,
           schedule: "default",
         });
@@ -177,9 +180,7 @@ export default class DatabaseManager {
       }
     }
 
-    await this.actionLogStore.saveActionLogs(
-      [...entries].map((e) => ({ ...e, id: getIDForActionLog(e.log) })),
-    );
+    await this.actionLogStore.saveActionLogs(entries);
 
     await this.promptStateStore.savePromptStates(
       updates.map(({ newPromptState, taskID }) => ({

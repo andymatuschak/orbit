@@ -10,6 +10,8 @@ import {
   PromptRepetitionOutcome,
   PromptTask,
   repetitionActionLogType,
+  ActionLogID,
+  getIDForActionLog,
 } from "metabook-core";
 import {
   ReviewArea,
@@ -99,7 +101,7 @@ export function useDatabaseManager(
 async function updateDatabaseForMarking(
   databaseManager: DatabaseManager,
   marking: ReviewAreaMarkingRecord,
-): Promise<PromptActionLog[]> {
+): Promise<{ log: PromptActionLog; id: ActionLogID }[]> {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
   const promptActionLog = {
@@ -128,7 +130,9 @@ async function updateDatabaseForMarking(
       console.error("Couldn't commit", marking.reviewItem.prompt, error);
     });
 
-  return [promptActionLog];
+  return [
+    { log: promptActionLog, id: await getIDForActionLog(promptActionLog) },
+  ];
 }
 
 function useReviewQueue(

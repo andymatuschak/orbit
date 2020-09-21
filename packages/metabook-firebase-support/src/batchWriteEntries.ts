@@ -11,7 +11,7 @@ export default async function batchWriteEntries<
   T extends ServerTimestamp
 >(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  logEntries: [DocumentReference<D>, any][],
+  logEntries: (readonly [DocumentReference<D>, any])[],
   db: D,
   timestampConstructor: (millis: number, nanos: number) => T,
 ) {

@@ -14,13 +14,18 @@ const basicIngestLog: IngestActionLog = {
   taskID: "test",
   provenance: null,
 };
-const basicIngestLogID = getIDForActionLog(basicIngestLog);
-test("ingest logs", () => {
+
+let basicIngestLogID: ActionLogID;
+beforeAll(async () => {
+  basicIngestLogID = await getIDForActionLog(basicIngestLog);
+});
+
+test("ingest logs", async () => {
   expect(basicIngestLogID).toMatchInlineSnapshot(
     `"zdj7WgK8RzKsuDK4THX4ed2RpGDxXmyyFnVbtKw2RJ3YcSESN"`,
   );
 
-  const withMetadataID = getIDForActionLog({
+  const withMetadataID = await getIDForActionLog({
     ...basicIngestLog,
     provenance: {
       provenanceType: "test",
@@ -36,7 +41,7 @@ test("ingest logs", () => {
   expect(basicIngestLogID).not.toEqual(withMetadataID);
 });
 
-test("action logs", () => {
+test("action logs", async () => {
   const testActionLog: RepetitionActionLog = {
     actionLogType: repetitionActionLogType,
     timestampMillis: 0,
@@ -47,8 +52,8 @@ test("action logs", () => {
     outcome: "remembered",
   };
 
-  const noParentActionLogID = getIDForActionLog(testActionLog);
-  const parentActionLogID = getIDForActionLog({
+  const noParentActionLogID = await getIDForActionLog(testActionLog);
+  const parentActionLogID = await getIDForActionLog({
     ...testActionLog,
     parentActionLogIDs: [
       "zdj7WgK8RzKsuDK4THX4ed2RpGDxXmyyFnVbtKw2RJ3YcSESN" as ActionLogID,
@@ -65,7 +70,7 @@ test("action logs", () => {
   expect(noParentActionLogID).not.toEqual(parentActionLogID);
 });
 
-test("update metadata", () => {
+test("update metadata", async () => {
   const testDeletion: UpdateMetadataActionLog = {
     actionLogType: updateMetadataActionLogType,
     taskID: "test",
@@ -73,8 +78,8 @@ test("update metadata", () => {
     timestampMillis: 0,
     updates: { isDeleted: true },
   };
-  const testDeletionID = getIDForActionLog(testDeletion);
-  const testUndeletionID = getIDForActionLog({
+  const testDeletionID = await getIDForActionLog(testDeletion);
+  const testUndeletionID = await getIDForActionLog({
     ...testDeletion,
     updates: { isDeleted: false },
   });

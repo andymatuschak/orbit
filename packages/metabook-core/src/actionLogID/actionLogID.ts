@@ -75,7 +75,6 @@ function getProtobufRepresentationForActionLog(
         },
       };
     case repetitionActionLogType:
-      const taskParameters = actionLog.taskParameters;
       return {
         timestamp,
         repetition: {
@@ -123,7 +122,9 @@ function getDAGLinksForActionLog(actionLog: ActionLog): DAGPB.DAGLink[] {
 
 export type ActionLogID = string & { __actionLogIDOpaqueType: never };
 
-export function getIDForActionLog(actionLog: ActionLog): ActionLogID {
+export async function getIDForActionLog(
+  actionLog: ActionLog,
+): Promise<ActionLogID> {
   // 1. Serialize the action log into a protobuf.
   const actionLogEncoding = Proto.ActionLog.encode(
     getProtobufRepresentationForActionLog(actionLog),

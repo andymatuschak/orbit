@@ -3,9 +3,8 @@ import {
   basicPromptType,
   getIDForPrompt,
   getIDForPromptTask,
-  PromptActionLog,
   PromptRepetitionOutcome,
-  PromptTask,
+  PromptTaskID,
   repetitionActionLogType,
 } from "metabook-core";
 import {
@@ -16,13 +15,14 @@ import {
 import { testBasicPrompt } from "metabook-sample-data";
 import applyPromptActionLogToPromptStateCache from "./applyPromptActionLogToPromptStateCache";
 
-const basicPromptID = getIDForPrompt(testBasicPrompt);
-const promptTask: PromptTask = {
-  promptID: basicPromptID,
-  promptParameters: null,
-  promptType: basicPromptType,
-};
-const promptTaskID = getIDForPromptTask(promptTask);
+let promptTaskID: PromptTaskID;
+beforeAll(async () => {
+  promptTaskID = getIDForPromptTask({
+    promptID: await getIDForPrompt(testBasicPrompt),
+    promptParameters: null,
+    promptType: basicPromptType,
+  });
+});
 
 function createRepetitionLog(
   parentActionLogIDs: ActionLogID[],

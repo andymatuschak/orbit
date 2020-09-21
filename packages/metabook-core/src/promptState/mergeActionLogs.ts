@@ -74,10 +74,11 @@ export default function mergeActionLogs(
     }
   });
   let runningBasePromptState: PromptState | null = null;
-  for (const { log } of logsByTimestamp) {
+  for (const { log, id } of logsByTimestamp) {
     const nextPromptState: PromptState | Error = applyActionLogToPromptState({
       basePromptState: runningBasePromptState,
       promptActionLog: log,
+      actionLogID: id,
       schedule: "default",
     });
     if (nextPromptState instanceof Error) {

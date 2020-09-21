@@ -2,6 +2,7 @@ import {
   applyActionLogToPromptState,
   PromptActionLog,
   PromptState,
+  ActionLogID,
 } from "metabook-core";
 import {
   ReviewAreaMarkingRecord,
@@ -26,7 +27,7 @@ export function ReviewSessionWrapper({
   baseItems: ReviewItem[];
   onMark: (
     markingRecord: ReviewAreaMarkingRecord,
-  ) => Promise<PromptActionLog[]>;
+  ) => Promise<{ log: PromptActionLog; id: ActionLogID }[]>;
   overrideColorPalette?: styles.colors.ColorPalette;
   children: (args: {
     onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
@@ -48,9 +49,10 @@ export function ReviewSessionWrapper({
       setLocalStates((localStates) => {
         let basePromptState: PromptState | null =
           marking.reviewItem.promptState;
-        for (const log of logs) {
+        for (const { log, id } of logs) {
           const newPromptState = applyActionLogToPromptState({
             promptActionLog: log,
+            actionLogID: id,
             basePromptState,
             schedule: "default",
           });

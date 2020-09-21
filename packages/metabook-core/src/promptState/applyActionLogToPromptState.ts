@@ -1,4 +1,4 @@
-import { ActionLogID, getIDForActionLog } from "../actionLogID";
+import { ActionLogID } from "../actionLogID";
 import { getNextRepetitionInterval } from "../spacedRepetition/getNextRepetitionInterval";
 import {
   getInitialIntervalForSchedule,
@@ -13,7 +13,6 @@ import {
 } from "../types/actionLog";
 import { applicationPromptType } from "../types/prompt";
 import {
-  getActionLogFromPromptActionLog,
   PromptActionLog,
   PromptRepetitionActionLog,
 } from "../types/promptActionLog";
@@ -132,19 +131,16 @@ export default function applyActionLogToPromptState<
   P extends PromptTaskParameters
 >({
   promptActionLog,
-  actionLogID: actionLogIDHint,
+  actionLogID,
   basePromptState,
   schedule,
 }: {
   promptActionLog: PromptActionLog<P>;
-  actionLogID?: ActionLogID;
+  actionLogID: ActionLogID;
   basePromptState: PromptState | null;
   schedule: MetabookSpacedRepetitionSchedule;
 }): PromptState | Error {
   const initialInterval = getInitialIntervalForSchedule("default");
-  const actionLogID =
-    actionLogIDHint ??
-    getIDForActionLog(getActionLogFromPromptActionLog(promptActionLog));
   switch (promptActionLog.actionLogType) {
     case ingestActionLogType:
       if (basePromptState) {

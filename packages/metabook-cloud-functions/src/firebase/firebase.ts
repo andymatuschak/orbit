@@ -34,7 +34,7 @@ export function recordPrompts(prompts: Prompt[]): Promise<PromptID[]> {
   // TODO something about user quotas, billing
   return Promise.all(
     prompts.map(async (promptData) => {
-      const promptID = getIDForPrompt(promptData);
+      const promptID = await getIDForPrompt(promptData);
       const dataRef = getReferenceForDataRecordID(getDatabase(), promptID);
       await dataRef
         .create(promptData)

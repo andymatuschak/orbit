@@ -24,7 +24,7 @@ afterEach(async () => {
 });
 
 test("updates prompt state when writing log", async () => {
-  const basicPromptID = getIDForPrompt(testBasicPrompt);
+  const basicPromptID = await getIDForPrompt(testBasicPrompt);
   const promptTask: PromptTask = {
     promptID: basicPromptID,
     promptParameters: null,
