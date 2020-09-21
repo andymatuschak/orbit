@@ -82,13 +82,13 @@ describe("encoding attachments", () => {
     expect(attachmentsPromptID).not.toEqual(multiFieldsPromptID);
 
     expect(oneAttachmentPromptID).toMatchInlineSnapshot(
-      `"zdj7WcVkswQeBJgNoifPjYM3AXwdBLfHYaMFsjDLDFvnng9tj"`,
+      `"zdj7WciLWE9sSi6gnLetDG1n65LSUryEAdQDiDMczcJi1PumR"`,
     );
     expect(attachmentsPromptID).toMatchInlineSnapshot(
-      `"zdj7WYS1e8XL6e7Y44UBDTj44DshcYaCeyta67CbUKbDEtRNq"`,
+      `"zdj7WkDELztN64ex2nXAeYZmEFhoghoTrsq8P5UdpJ3ifvHzX"`,
     );
     expect(multiFieldsPromptID).toMatchInlineSnapshot(
-      `"zdj7WVjZFXE7T5wpXG4pjWbo7ocd8fo4KMwjVy7vrkK16NLnv"`,
+      `"zdj7Wj4jGXoT5wi72uuFa2WS6UnMupL4ESqTwi61e6aMShZ16"`,
     );
   });
 
@@ -135,10 +135,10 @@ describe("encoding attachments", () => {
       expect(testSpecID1).not.toEqual(testSpecID2);
 
       expect(testSpecID1).toMatchInlineSnapshot(
-        `"zdj7WbR6s6G4LLMweN9EoyLfTkxjdTr2paJZkLakKaA2acEzc"`,
+        `"zdj7WWCU9hZJsdRESkqcXrng4tqokjyPieyU4tqezUBMXETag"`,
       );
       expect(testSpecID2).toMatchInlineSnapshot(
-        `"zdj7WjCQ62HfzMSCFoycD3fXBi5njp1TKj3aHDU1ZJi2vmoPu"`,
+        `"zdj7WhgKbgCYj1YzZBUGf7RXhNo8DrfQE8j8zRAnDUu9ZwrQz"`,
       );
     });
   });

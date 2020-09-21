@@ -33,10 +33,5 @@ export function getAttachmentIDForFirebaseKey(
     multihashes.fromB58String(firebaseKey),
     "sha2-256",
   );
-  return new CID(
-    1,
-    "identity",
-    multihash,
-    "base58btc",
-  ).toString() as AttachmentID;
+  return new CID(1, "raw", multihash, "base58btc").toString() as AttachmentID;
 }
