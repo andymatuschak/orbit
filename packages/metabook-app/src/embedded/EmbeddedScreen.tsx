@@ -50,15 +50,16 @@ export default function EmbeddedScreen() {
   );
 
   const onMark = useCallback(
-    (marking: ReviewAreaMarkingRecord) => {
+    async (marking: ReviewAreaMarkingRecord) => {
       if (authenticationState.status === "storageRestricted") {
         // TODO: probably only do this on Firefox--Safari's UI is awful
         authenticationState.onRequestStorageAccess();
       }
 
+      const promptID = await getIDForPrompt(marking.reviewItem.prompt);
       const taskID = getIDForPromptTask({
         promptType: marking.reviewItem.prompt.promptType,
-        promptID: getIDForPrompt(marking.reviewItem.prompt),
+        promptID,
         promptParameters: marking.reviewItem.promptParameters,
       } as PromptTask);
 
@@ -102,7 +103,7 @@ export default function EmbeddedScreen() {
         getFirebaseFunctions()
           .httpsCallable("recordEmbeddedActions")({
             logs,
-            promptsByID: { [getIDForPrompt(prompt)]: prompt },
+            promptsByID: { [promptID]: prompt },
             attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
               marking.reviewItem.prompt,
               marking.reviewItem.attachmentResolutionMap,

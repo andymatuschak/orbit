@@ -16,7 +16,7 @@ import { mapNoteToPrompt } from "./noteMapping";
 const notes: Note[] = [];
 beforeAll(async () => {
   await withTestAnkiCollection(async (handle: AnkiCollectionDBHandle) => {
-    await readNotes(handle, (note) => {
+    await readNotes(handle, async (note) => {
       notes.push(note);
     });
   });

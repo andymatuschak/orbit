@@ -74,23 +74,23 @@ describe("extract prompt task ID for card", () => {
   });
 });
 
-test("create plan for card", () => {
-  const log = createPlanForCard(
+test("create plan for card", async () => {
+  const log = (await createPlanForCard(
     testCard,
     testBasicPrompt,
     null,
-  ) as PromptIngestActionLog;
+  )) as PromptIngestActionLog;
   expect((log.provenance as AnkiPromptProvenance).externalID).toEqual(
     testCard.id.toString(),
   );
 });
 
-test("create plan for log", () => {
-  const ingestLog = createPlanForCard(
+test("create plan for log", async () => {
+  const ingestLog = (await createPlanForCard(
     testCard,
     testBasicPrompt,
     null,
-  ) as PromptIngestActionLog;
+  )) as PromptIngestActionLog;
   const log = createPlanForLog(testLog, ingestLog);
   expect(log.parentActionLogIDs).toEqual([
     getIDForActionLog(getActionLogFromPromptActionLog(ingestLog)),
@@ -99,11 +99,15 @@ test("create plan for log", () => {
 });
 
 describe("reschedule logs", () => {
-  const ingestLog = createPlanForCard(
-    testCard,
-    testBasicPrompt,
-    null,
-  ) as PromptIngestActionLog;
+  let ingestLog: PromptIngestActionLog;
+  beforeAll(async () => {
+    ingestLog = (await createPlanForCard(
+      testCard,
+      testBasicPrompt,
+      null,
+    )) as PromptIngestActionLog;
+  });
+
   test("learning card", () => {
     expect(
       (createRescheduleLogForCard(

@@ -43,8 +43,7 @@ test("recording a review triggers new log", async () => {
   );
 
   const mockCall = promiseForNextCall(mockFunction);
-  const { testPromptActionLog, commit } = recordTestPromptStateUpdate(client);
-  await commit;
+  const { testPromptActionLog } = await recordTestPromptStateUpdate(client);
 
   const newLogs = await mockCall;
   expect(newLogs).toMatchObject([{ log: testPromptActionLog }]);
@@ -53,7 +52,7 @@ test("recording a review triggers new log", async () => {
 
 describe("prompt states", () => {
   test("initial prompt states", async () => {
-    const testPromptID = getIDForPrompt(testBasicPrompt);
+    const testPromptID = await getIDForPrompt(testBasicPrompt);
     const promptTask: PromptTask = {
       promptID: testPromptID,
       promptType: basicPromptType,
@@ -98,7 +97,7 @@ test("no events after unsubscribing", async () => {
   const mockFunction = jest.fn();
   const unsubscribe = client.subscribeToActionLogs({}, mockFunction, jest.fn());
   unsubscribe();
-  await recordTestPromptStateUpdate(client).commit;
+  await recordTestPromptStateUpdate(client);
   expect(mockFunction).not.toHaveBeenCalled();
 });
 
@@ -112,7 +111,7 @@ describe("security rules", () => {
   });
 
   test("can't read cards from another user", async () => {
-    await recordTestPromptStateUpdate(client).commit;
+    await recordTestPromptStateUpdate(client);
     await expect(anotherClient.getPromptStates({})).rejects.toBeInstanceOf(
       Error,
     );
@@ -120,7 +119,7 @@ describe("security rules", () => {
 
   test("can't write cards to another user", async () => {
     await expect(
-      recordTestPromptStateUpdate(anotherClient).commit,
+      recordTestPromptStateUpdate(anotherClient),
     ).rejects.toBeInstanceOf(Error);
   });
 });

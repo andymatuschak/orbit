@@ -50,13 +50,13 @@ test("read collection", async () => {
     const collection = await readCollection(handle);
 
     const noteIDs: Set<number> = new Set();
-    await readNotes(handle, (note: Note) => {
+    await readNotes(handle, async (note: Note) => {
       expect(collection.models[note.mid.toString()]).toBeTruthy();
       expect(typeof note.id).toBe("number");
       noteIDs.add(note.id);
     });
 
-    await readCards(handle, (card: Card) => {
+    await readCards(handle, async (card: Card) => {
       expect(noteIDs.has(card.nid)).toBeTruthy();
       expect(collection.decks[card.did.toString()]).toBeTruthy();
       expect(typeof card.id).toBe("number");

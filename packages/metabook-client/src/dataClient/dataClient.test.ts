@@ -34,7 +34,7 @@ describe("getData", () => {
 
 test("records prompt spec", async () => {
   await dataClient.recordPrompts([testBasicPrompt]);
-  const testPromptTaskID = getIDForPrompt(testBasicPrompt);
+  const testPromptTaskID = await getIDForPrompt(testBasicPrompt);
   const prompts = await dataClient.getPrompts([testPromptTaskID]);
   expect(prompts.get(testPromptTaskID)).toMatchObject(testBasicPrompt);
 });

@@ -6,7 +6,6 @@ import {
 import { ReviewItem } from "metabook-ui";
 import {
   EmbeddedBasicPrompt,
-  EmbeddedItem,
   getAttachmentURLsInEmbeddedItem,
   getReviewItemFromEmbeddedItem,
 } from "./embeddedItem";

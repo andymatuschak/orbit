@@ -11,15 +11,14 @@ import {
 import { testBasicPrompt } from "metabook-sample-data";
 import { MetabookUserClient } from "../../userClient/userClient";
 
-export function recordTestPromptStateUpdate(
+export async function recordTestPromptStateUpdate(
   client: MetabookUserClient,
-): {
+): Promise<{
   testPromptTaskID: PromptTaskID;
   testPromptActionLog: PromptActionLog<PromptTaskParameters>;
-  commit: Promise<unknown>;
-} {
+}> {
   const taskID = getIDForPromptTask({
-    promptID: getIDForPrompt(testBasicPrompt),
+    promptID: await getIDForPrompt(testBasicPrompt),
     promptType: testBasicPrompt.promptType,
     promptParameters: null,
   });
@@ -32,10 +31,10 @@ export function recordTestPromptStateUpdate(
     timestampMillis: 1000,
     parentActionLogIDs: [],
   };
+  await client.recordActionLogs([
+    getActionLogFromPromptActionLog(promptActionLog),
+  ]);
   return {
-    commit: client.recordActionLogs([
-      getActionLogFromPromptActionLog(promptActionLog),
-    ]),
     testPromptActionLog: promptActionLog,
     testPromptTaskID: taskID,
   };

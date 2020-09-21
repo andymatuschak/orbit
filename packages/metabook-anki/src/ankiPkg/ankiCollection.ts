@@ -6,40 +6,42 @@ import sqlite from "sqlite";
 import unzip, { Entry } from "unzip";
 import { Card, Collection, Log, Note } from "./ankiDBTypes";
 
-function readRows<R>(
+async function readRows<R>(
   handle: AnkiCollectionDBHandle,
   tableName: string,
-  processRow: (row: R) => void,
+  processRow: (row: R) => Promise<void>,
 ): Promise<unknown> {
-  return (handle as sqlite.Database).each(
+  const promises: Promise<unknown>[] = [];
+  await (handle as sqlite.Database).each(
     `SELECT * FROM ${tableName}`,
     (error: Error, row: R) => {
       if (error) {
         throw error;
       } else {
-        processRow(row);
+        promises.push(processRow(row));
       }
     },
   );
+  return Promise.all(promises);
 }
 
 export function readNotes(
   handle: AnkiCollectionDBHandle,
-  visitor: (row: Note) => void,
+  visitor: (row: Note) => Promise<void>,
 ): Promise<unknown> {
   return readRows(handle, "notes", visitor);
 }
 
 export function readCards(
   handle: AnkiCollectionDBHandle,
-  visitor: (row: Card) => void,
+  visitor: (row: Card) => Promise<void>,
 ): Promise<unknown> {
   return readRows(handle, "cards", visitor);
 }
 
 export function readLogs(
   handle: AnkiCollectionDBHandle,
-  visitor: (row: Log) => void,
+  visitor: (row: Log) => Promise<void>,
 ): Promise<unknown> {
   return readRows(handle, "revlog", visitor);
 }

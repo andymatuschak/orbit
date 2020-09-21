@@ -79,11 +79,11 @@ export function createPlanForNote(
   });
 }
 
-export function extractPromptTaskIDForCard(
+export async function extractPromptTaskIDForCard(
   card: Anki.Card,
   prompt: Prompt,
-): PromptTaskID {
-  const promptID = getIDForPrompt(prompt);
+): Promise<PromptTaskID> {
+  const promptID = await getIDForPrompt(prompt);
   let promptParameters: PromptParameters;
   switch (prompt.promptType) {
     case basicPromptType:
@@ -101,12 +101,14 @@ export function extractPromptTaskIDForCard(
   } as PromptTask);
 }
 
-export function createPlanForCard(
+export async function createPlanForCard(
   card: Anki.Card,
   prompt: Prompt,
   noteProvenance: PromptProvenance | null,
   overrideTimestampMillis?: number,
-): PromptActionLog<BasicPromptTaskParameters | ClozePromptTaskParameters> {
+): Promise<
+  PromptActionLog<BasicPromptTaskParameters | ClozePromptTaskParameters>
+> {
   // Generate an ingest log.
   return {
     actionLogType: ingestActionLogType,
@@ -117,7 +119,7 @@ export function createPlanForCard(
       url: null,
       title: null,
     },
-    taskID: extractPromptTaskIDForCard(card, prompt),
+    taskID: await extractPromptTaskIDForCard(card, prompt),
     timestampMillis: overrideTimestampMillis ?? card.id,
   };
 }
@@ -255,7 +257,7 @@ export async function createImportPlan(
     );
   }
 
-  await Anki.readNotes(handle, (note) => {
+  await Anki.readNotes(handle, async (note) => {
     const result = createPlanForNote(
       note,
       collection,
@@ -277,7 +279,7 @@ export async function createImportPlan(
 
   const cardIDsToCards: Map<number, Card> = new Map();
   const cardIDsToIngest: Set<number> = new Set();
-  await Anki.readCards(handle, (card) => {
+  await Anki.readCards(handle, async (card) => {
     cardIDsToCards.set(card.id, card);
     cardIDsToIngest.add(card.id);
   });
@@ -288,12 +290,12 @@ export async function createImportPlan(
     PromptActionLog<BasicPromptTaskParameters | ClozePromptTaskParameters>
   > = new Map();
 
-  function addIngestEventForCardID(
+  async function addIngestEventForCardID(
     cardID: number,
     overrideTimestampMillis?: number,
-  ): PromptActionLog<
+  ): Promise<PromptActionLog<
     BasicPromptTaskParameters | ClozePromptTaskParameters
-  > | null {
+  > | null> {
     // Create the ingest log for this card.
     const card = cardIDsToCards.get(cardID);
     if (!card) {
@@ -304,7 +306,7 @@ export async function createImportPlan(
       // Only ingest cards whose notes are included.
       return null;
     }
-    const promptActionLog = createPlanForCard(
+    const promptActionLog = await createPlanForCard(
       card,
       prompt,
       noteIDsToProvenance.get(card.nid) ?? null,
@@ -324,10 +326,10 @@ export async function createImportPlan(
     return promptActionLog;
   }
 
-  await Anki.readLogs(handle, (ankiLog) => {
+  await Anki.readLogs(handle, async (ankiLog) => {
     let cardLastActionLog = cardIDsToLastActionLogs.get(ankiLog.cid);
     if (!cardLastActionLog) {
-      const maybeLog = addIngestEventForCardID(ankiLog.cid, ankiLog.id);
+      const maybeLog = await addIngestEventForCardID(ankiLog.cid, ankiLog.id);
       if (maybeLog) {
         cardLastActionLog = maybeLog;
         cardIDsToIngest.delete(ankiLog.cid);
@@ -350,10 +352,10 @@ export async function createImportPlan(
   });
 
   let reschedulelessCards = 0;
-  await Anki.readCards(handle, (card) => {
+  await Anki.readCards(handle, async (card) => {
     if (cardIDsToIngest.has(card.id)) {
       // These cards have never actually been reviewed.
-      addIngestEventForCardID(card.id);
+      await addIngestEventForCardID(card.id);
     } else {
       const cardLastActionLog = cardIDsToLastActionLogs.get(card.id);
       if (!cardLastActionLog) {

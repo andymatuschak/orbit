@@ -51,9 +51,10 @@ class MockDataClient implements MetabookDataClient {
 }
 
 let dataRecordStore: DataRecordStore;
-const testBasicPromptID = getIDForPrompt(testBasicPrompt);
-beforeEach(() => {
+let testBasicPromptID: PromptID;
+beforeEach(async () => {
   dataRecordStore = new DataRecordStore();
+  testBasicPromptID = await getIDForPrompt(testBasicPrompt);
 });
 
 afterEach(async () => {

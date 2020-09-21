@@ -31,27 +31,29 @@ import {
 import path from "path";
 import { uploadAttachment } from "./adminApp";
 
-function getTasksFromPrompts(prompts: Prompt[]): PromptTaskID[] {
-  const taskLists: PromptTaskID[][] = prompts.map((spec) => {
-    let promptParameters: PromptParameters;
-    switch (spec.promptType) {
-      case "basic":
-      case "applicationPrompt":
-        promptParameters = null;
-        break;
-      case "cloze":
-        // TODO: import all cloze indices
-        promptParameters = { clozeIndex: 0 };
-        break;
-    }
-    return [
-      getIDForPromptTask({
-        promptID: getIDForPrompt(spec),
-        promptType: spec.promptType,
-        promptParameters: promptParameters,
-      } as PromptTask),
-    ];
-  });
+async function getTasksFromPrompts(prompts: Prompt[]): Promise<PromptTaskID[]> {
+  const taskLists: PromptTaskID[][] = await Promise.all(
+    prompts.map(async (spec) => {
+      let promptParameters: PromptParameters;
+      switch (spec.promptType) {
+        case "basic":
+        case "applicationPrompt":
+          promptParameters = null;
+          break;
+        case "cloze":
+          // TODO: import all cloze indices
+          promptParameters = { clozeIndex: 0 };
+          break;
+      }
+      return [
+        getIDForPromptTask({
+          promptID: await getIDForPrompt(spec),
+          promptType: spec.promptType,
+          promptParameters: promptParameters,
+        } as PromptTask),
+      ];
+    }),
+  );
 
   return taskLists.reduce((output, list) => output.concat(list), []);
 }
@@ -112,7 +114,7 @@ class Ingest extends Command {
       app.firestore(),
       flags.userID,
     );
-    const tasks = getTasksFromPrompts(specs);
+    const tasks = await getTasksFromPrompts(specs);
     const now = Date.now();
     const actionLogs: PromptActionLog<PromptTaskParameters>[] = tasks.map(
       (taskID) => ({

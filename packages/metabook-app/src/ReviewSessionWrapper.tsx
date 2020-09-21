@@ -24,7 +24,9 @@ export function ReviewSessionWrapper({
   insets,
 }: {
   baseItems: ReviewItem[];
-  onMark: (markingRecord: ReviewAreaMarkingRecord) => PromptActionLog[];
+  onMark: (
+    markingRecord: ReviewAreaMarkingRecord,
+  ) => Promise<PromptActionLog[]>;
   overrideColorPalette?: styles.colors.ColorPalette;
   children: (args: {
     onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
@@ -41,8 +43,8 @@ export function ReviewSessionWrapper({
   );
 
   const localOnMark = useCallback<ReviewAreaProps["onMark"]>(
-    (marking) => {
-      const logs = onMark(marking);
+    async (marking) => {
+      const logs = await onMark(marking);
       setLocalStates((localStates) => {
         let basePromptState: PromptState | null =
           marking.reviewItem.promptState;

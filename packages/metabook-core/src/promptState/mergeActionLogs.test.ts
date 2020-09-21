@@ -16,35 +16,43 @@ import { getIDForPromptTask, PromptTaskID } from "../types/promptTask";
 import { PromptTaskParameters } from "../types/promptTaskParameters";
 import mergeActionLogs from "./mergeActionLogs";
 
-const testTaskID = getIDForPromptTask({
-  promptType: basicPromptType,
-  promptID: getIDForPrompt(testBasicPrompt),
-  promptParameters: null,
+let testIngestLog: PromptIngestActionLog;
+let testIngestLogID: ActionLogID;
+let testRepetitionLog: PromptRepetitionActionLog<PromptTaskParameters>;
+let testRepetitionLogID: ActionLogID;
+
+beforeAll(async () => {
+  const testTaskID = getIDForPromptTask({
+    promptType: basicPromptType,
+    promptID: await getIDForPrompt(testBasicPrompt),
+    promptParameters: null,
+  });
+
+  testIngestLog = {
+    actionLogType: ingestActionLogType,
+    taskID: "y" as PromptTaskID,
+    timestampMillis: 500,
+    provenance: null,
+  };
+
+  testIngestLogID = getIDForActionLog(
+    getActionLogFromPromptActionLog(testIngestLog),
+  ) as ActionLogID;
+
+  testRepetitionLog = {
+    actionLogType: repetitionActionLogType,
+    taskID: testTaskID,
+    timestampMillis: 500,
+    parentActionLogIDs: [testIngestLogID],
+    taskParameters: null,
+    outcome: PromptRepetitionOutcome.Remembered,
+    context: null,
+  };
+
+  testRepetitionLogID = getIDForActionLog(
+    getActionLogFromPromptActionLog(testRepetitionLog),
+  ) as ActionLogID;
 });
-
-const testIngestLog: PromptIngestActionLog = {
-  actionLogType: ingestActionLogType,
-  taskID: "y" as PromptTaskID,
-  timestampMillis: 500,
-  provenance: null,
-};
-const testIngestLogID = getIDForActionLog(
-  getActionLogFromPromptActionLog(testIngestLog),
-) as ActionLogID;
-
-const testRepetitionLog: PromptRepetitionActionLog<PromptTaskParameters> = {
-  actionLogType: repetitionActionLogType,
-  taskID: testTaskID,
-  timestampMillis: 500,
-  parentActionLogIDs: [testIngestLogID],
-  taskParameters: null,
-  outcome: PromptRepetitionOutcome.Remembered,
-  context: null,
-};
-
-const testRepetitionLogID = getIDForActionLog(
-  getActionLogFromPromptActionLog(testRepetitionLog),
-) as ActionLogID;
 
 test("fails if log is missing", () => {
   expect(

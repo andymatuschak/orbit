@@ -3,7 +3,7 @@ import {
   testBasicPrompt,
 } from "../__tests__/sampleData";
 import { ActionLogID, getIDForActionLog } from "../actionLogID";
-import { getIDForPrompt } from "../promptID";
+import { getIDForPrompt, PromptID } from "../promptID";
 import {
   getIntervalSequenceForSchedule,
   PromptRepetitionOutcome,
@@ -20,7 +20,7 @@ import {
   PromptIngestActionLog,
   PromptRepetitionActionLog,
 } from "../types/promptActionLog";
-import { getIDForPromptTask } from "../types/promptTask";
+import { getIDForPromptTask, PromptTaskID } from "../types/promptTask";
 import { BasicPromptTaskParameters } from "../types/promptTaskParameters";
 import applyActionLogToPromptState, {
   updateBaseHeadActionLogIDs,
@@ -29,11 +29,16 @@ import { PromptState } from "./promptState";
 
 const testSchedule = "default";
 const scheduleSequence = getIntervalSequenceForSchedule(testSchedule);
-const testBasicPromptID = getIDForPrompt(testBasicPrompt);
-const testBasicPromptTaskID = getIDForPromptTask({
-  promptID: testBasicPromptID,
-  promptType: basicPromptType,
-  promptParameters: null,
+let testBasicPromptID: PromptID;
+let testBasicPromptTaskID: PromptTaskID;
+
+beforeAll(async () => {
+  testBasicPromptID = await getIDForPrompt(testBasicPrompt);
+  testBasicPromptTaskID = getIDForPromptTask({
+    promptID: testBasicPromptID,
+    promptType: basicPromptType,
+    promptParameters: null,
+  });
 });
 
 function asID(id: string): ActionLogID {
@@ -84,15 +89,20 @@ describe("updateBaseHeadActionLogIDs", () => {
   });
 });
 
-const testIngestLog: PromptIngestActionLog = {
-  actionLogType: ingestActionLogType,
-  timestampMillis: 1000,
-  taskID: testBasicPromptTaskID,
-  provenance: null,
-};
-const testIngestLogID = getIDForActionLog(
-  getActionLogFromPromptActionLog(testIngestLog),
-);
+let testIngestLog: PromptIngestActionLog;
+let testIngestLogID: ActionLogID;
+
+beforeAll(async () => {
+  testIngestLog = {
+    actionLogType: ingestActionLogType,
+    timestampMillis: 1000,
+    taskID: testBasicPromptTaskID,
+    provenance: null,
+  };
+  testIngestLogID = getIDForActionLog(
+    getActionLogFromPromptActionLog(testIngestLog),
+  );
+});
 describe("ingesting", () => {
   test("without a base state", () => {
     expect(
@@ -143,8 +153,9 @@ describe("ingesting", () => {
   });
 });
 
-describe("repetition", () => {
-  const testRepetitionLog: PromptRepetitionActionLog<BasicPromptTaskParameters> = {
+let testRepetitionLog: PromptRepetitionActionLog<BasicPromptTaskParameters>;
+beforeAll(async () => {
+  testRepetitionLog = {
     actionLogType: repetitionActionLogType,
     timestampMillis: 1000,
     outcome: PromptRepetitionOutcome.Remembered,
@@ -153,7 +164,9 @@ describe("repetition", () => {
     context: null,
     taskID: testBasicPromptTaskID,
   };
+});
 
+describe("repetition", () => {
   describe("without a base state", () => {
     test("remembering", () => {
       expect(
@@ -239,13 +252,13 @@ describe("repetition", () => {
     );
   });
 
-  test("application prompts don't retry when forgotten", () => {
+  test("application prompts don't retry when forgotten", async () => {
     expect(
       (applyActionLogToPromptState({
         promptActionLog: {
           ...testRepetitionLog,
           taskID: getIDForPromptTask({
-            promptID: getIDForPrompt(testApplicationPrompt),
+            promptID: await getIDForPrompt(testApplicationPrompt),
             promptType: applicationPromptType,
             promptParameters: null,
           }),
@@ -257,11 +270,14 @@ describe("repetition", () => {
   });
 });
 
-const newlyIngestedPromptState = applyActionLogToPromptState({
-  promptActionLog: testIngestLog,
-  basePromptState: null,
-  schedule: "default",
-}) as PromptState;
+let newlyIngestedPromptState: PromptState;
+beforeAll(async () => {
+  newlyIngestedPromptState = applyActionLogToPromptState({
+    promptActionLog: testIngestLog,
+    basePromptState: null,
+    schedule: "default",
+  }) as PromptState;
+});
 
 describe("reschedule", () => {
   test("reschedules due time", () => {

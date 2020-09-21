@@ -91,7 +91,7 @@ function getDAGLinksForPrompt(prompt: Prompt): DAGPB.DAGLink[] {
 
 export type PromptID = string & { __promptIDOpaqueType: never };
 
-export function getIDForPrompt(prompt: Prompt): PromptID {
+export async function getIDForPrompt(prompt: Prompt): Promise<PromptID> {
   // 1. Serialize the prompt into a protobuf.
   const promptDataEncoding = Proto.Prompt.encode(
     getProtobufRepresentationForPrompt(prompt),

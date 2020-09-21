@@ -12,18 +12,22 @@ import { AttachmentIDReference } from "../types/attachmentIDReference";
 import { ApplicationPrompt } from "../types/prompt";
 import { getIDForPrompt } from "./promptID";
 
-test("encoding stability", () => {
-  expect(getIDForPrompt(testBasicPrompt).toString()).toMatchInlineSnapshot(
+test("encoding stability", async () => {
+  expect(
+    (await getIDForPrompt(testBasicPrompt)).toString(),
+  ).toMatchInlineSnapshot(
     `"zdj7WXQPmKiV2DXSuGfpnTLrwRE5F2HAMJznC63vxJHCptRcR"`,
   );
 
   expect(
-    getIDForPrompt(testApplicationPrompt).toString(),
+    (await getIDForPrompt(testApplicationPrompt)).toString(),
   ).toMatchInlineSnapshot(
     `"zdj7WeP6nSgw44Dcyxz9ydsfuvVB6SfDWs1wQWTeeHvbkCxst"`,
   );
 
-  expect(getIDForPrompt(testClozePrompt).toString()).toMatchInlineSnapshot(
+  expect(
+    (await getIDForPrompt(testClozePrompt)).toString(),
+  ).toMatchInlineSnapshot(
     `"zdj7WbQaeWpew3hGLirKSimxUv8MgGDRWTH1jhEtC9dy1jwG3"`,
   );
 });
@@ -44,23 +48,25 @@ describe("encoding attachments", () => {
     };
   });
 
-  test("basic prompt attachments", () => {
-    const basicPromptID = getIDForPrompt(testBasicPrompt).toString();
-    const oneAttachmentPromptID = getIDForPrompt({
-      ...testBasicPrompt,
-      question: {
-        ...testBasicPrompt.question,
-        attachments: [testAttachmentReference],
-      },
-    }).toString();
-    const attachmentsPromptID = getIDForPrompt({
+  test("basic prompt attachments", async () => {
+    const basicPromptID = (await getIDForPrompt(testBasicPrompt)).toString();
+    const oneAttachmentPromptID = (
+      await getIDForPrompt({
+        ...testBasicPrompt,
+        question: {
+          ...testBasicPrompt.question,
+          attachments: [testAttachmentReference],
+        },
+      })
+    ).toString();
+    const attachmentsPromptID = await getIDForPrompt({
       ...testBasicPrompt,
       question: {
         ...testBasicPrompt.question,
         attachments: [testAttachmentReference, testAttachmentReference2],
       },
     });
-    const multiFieldsPromptID = getIDForPrompt({
+    const multiFieldsPromptID = await getIDForPrompt({
       ...testBasicPrompt,
       question: {
         ...testBasicPrompt.question,
@@ -87,7 +93,7 @@ describe("encoding attachments", () => {
   });
 
   describe("application prompt attachments", () => {
-    test("variants have different attachments", () => {
+    test("variants have different attachments", async () => {
       const testApplicationPrompt1: ApplicationPrompt = {
         promptType: "applicationPrompt",
         variants: [
@@ -120,8 +126,12 @@ describe("encoding attachments", () => {
           },
         ],
       };
-      const testSpecID1 = getIDForPrompt(testApplicationPrompt1).toString();
-      const testSpecID2 = getIDForPrompt(testApplicationPrompt2).toString();
+      const testSpecID1 = (
+        await getIDForPrompt(testApplicationPrompt1)
+      ).toString();
+      const testSpecID2 = (
+        await getIDForPrompt(testApplicationPrompt2)
+      ).toString();
       expect(testSpecID1).not.toEqual(testSpecID2);
 
       expect(testSpecID1).toMatchInlineSnapshot(
@@ -134,23 +144,23 @@ describe("encoding attachments", () => {
   });
 });
 
-test("encodings are repeatable", () => {
-  const a = getIDForPrompt(testBasicPrompt);
-  const b = getIDForPrompt({ ...testBasicPrompt });
+test("encodings are repeatable", async () => {
+  const a = await getIDForPrompt(testBasicPrompt);
+  const b = await getIDForPrompt({ ...testBasicPrompt });
   expect(a).toEqual(b);
 });
 
-test("application prompts encodings depend on variants", () => {
-  expect(getIDForPrompt(testApplicationPrompt)).not.toEqual(
-    getIDForPrompt({
+test("application prompts encodings depend on variants", async () => {
+  expect(await getIDForPrompt(testApplicationPrompt)).not.toEqual(
+    await getIDForPrompt({
       ...testApplicationPrompt,
       variants: [testQAPrompt],
     }),
   );
 });
 
-test("encoding metadata", () => {
-  const cid = getIDForPrompt(testBasicPrompt);
+test("encoding metadata", async () => {
+  const cid = await getIDForPrompt(testBasicPrompt);
   const testCID = new CID(cid);
   expect(testCID.multibaseName).toEqual("base58btc");
   expect(multihash.decode(testCID.multihash).name).toEqual("sha2-256");

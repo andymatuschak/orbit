@@ -2,9 +2,10 @@ import {
   EmbeddedHostMetadata,
   EmbeddedScreenConfiguration,
 } from "metabook-app/src/embedded/embeddedScreenConfiguration";
-import { getHeightForReviewAreaOfWidth, styles } from "metabook-ui";
+import { getHeightForReviewAreaOfWidth } from "metabook-ui";
 import { extractItems } from "./extractItems";
 import { getSharedMetadataMonitor } from "./metadataMonitor";
+import { ColorPaletteName } from "metabook-core";
 
 declare global {
   // supplied by Webpack
@@ -66,9 +67,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
     }
 
     const embeddedItems = extractItems(this);
-    const colorOverride = this.getAttribute(
-      "color",
-    ) as styles.colors.ColorPaletteName | null;
+    const colorOverride = this.getAttribute("color") as ColorPaletteName | null;
 
     const configuration: EmbeddedScreenConfiguration = {
       embeddedItems,

@@ -1,4 +1,5 @@
 import { EmbeddedHostMetadata } from "metabook-app/src/embedded/embeddedScreenConfiguration";
+import { ColorPaletteName } from "metabook-core";
 
 let hasWarnedAboutTitle = false;
 function readMetadata(): EmbeddedHostMetadata {
@@ -42,7 +43,8 @@ function readMetadata(): EmbeddedHostMetadata {
     url: canonicalURL ?? document.location.toString(),
     title: openGraphTitle ?? title,
     siteName,
-    colorPaletteName: colorName,
+    // Validation of the color palette name will happen in the embedded environment to avoid loading the strings here.
+    colorPaletteName: colorName as ColorPaletteName | null,
   };
 }
 

@@ -95,17 +95,18 @@ export function useDatabaseManager(
   return databaseManager;
 }
 
-function updateDatabaseForMarking(
+// Returned promise resolves when the prompt action log has been generated, not when it has committed to the server.
+async function updateDatabaseForMarking(
   databaseManager: DatabaseManager,
   marking: ReviewAreaMarkingRecord,
-): PromptActionLog[] {
+): Promise<PromptActionLog[]> {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
   const promptActionLog = {
     actionLogType: repetitionActionLogType,
     parentActionLogIDs: marking.reviewItem.promptState?.headActionLogIDs ?? [],
     taskID: getIDForPromptTask({
-      promptID: getIDForPrompt(marking.reviewItem.prompt),
+      promptID: await getIDForPrompt(marking.reviewItem.prompt),
       promptType: marking.reviewItem.prompt.promptType,
       promptParameters: marking.reviewItem.promptParameters,
     } as PromptTask),
@@ -117,6 +118,7 @@ function updateDatabaseForMarking(
       marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
     ),
   } as const;
+
   databaseManager
     .recordPromptActionLogs([promptActionLog])
     .then(() => {
