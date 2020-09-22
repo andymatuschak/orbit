@@ -18,6 +18,8 @@ multihash.add(sha2);
 multibase.add(base58);
 multicodec.add(dagpb);
 
+const standardCIDBaseName = "base58btc";
+
 export async function encodeDAGNodeToCIDString(
   dagNode: DAGPB.DAGNode,
 ): Promise<string> {
@@ -29,7 +31,7 @@ export async function encodeDAGNodeToCIDString(
   const cid = CID.create(1, dagpb.code, hash);
 
   // 3. Express the CID as a base58 string.
-  return cid.toString("base58btc") as PromptID;
+  return cid.toString(standardCIDBaseName) as PromptID;
 }
 
 export async function encodeRawBufferToCIDString(
@@ -37,9 +39,7 @@ export async function encodeRawBufferToCIDString(
 ): Promise<string> {
   const hash = await multihash.hash(buffer, "sha2-256");
   const cid = CID.create(1, raw.code, hash);
-
-  // 3. Express the CID as a base58 string.
-  return cid.toString("base58btc") as PromptID;
+  return cid.toString(standardCIDBaseName) as PromptID;
 }
 
 export { CID, multibase, multihash, dagpb };

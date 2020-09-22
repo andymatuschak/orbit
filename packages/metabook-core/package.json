@@ -22,9 +22,8 @@
   },
   "dependencies": {
     "buffer": "^5.5.0",
-    "cids": "^0.8.3",
     "ipld-dag-pb": "^0.18.5",
-    "multihashes": "^1.0.1",
+    "multiformats": "^3.0.3",
     "protobufjs": "^6.8.9"
   },
   "scripts": {
