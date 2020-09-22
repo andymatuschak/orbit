@@ -36,4 +36,9 @@ declare module "ipld-dag-pb" {
   }
 
   // TODO: util, resolver
+
+  export namespace util {
+    export function serialize(node: DAGNode): Uint8Array;
+    export function deserialize(buffer: Uint8Array): DAGNode;
+  }
 }

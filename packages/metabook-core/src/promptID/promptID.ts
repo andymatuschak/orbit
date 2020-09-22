@@ -1,8 +1,5 @@
-import "buffer";
-import { Buffer } from "buffer";
-import CID from "cids";
 import DAGPB from "ipld-dag-pb";
-import multihashes from "multihashes";
+
 import Proto from "../generated/proto";
 import {
   applicationPromptType,
@@ -12,7 +9,7 @@ import {
   PromptField,
   QAPrompt,
 } from "../types/prompt";
-import sha256 from "../util/sha256";
+import { multicodec, encodeDAGNodeToCIDString } from "../util/cids";
 
 function getProtobufRepresentationForQAPrompt(
   qaPrompt: QAPrompt,
@@ -104,13 +101,6 @@ export async function getIDForPrompt(prompt: Prompt): Promise<PromptID> {
   // 2. Wrap that data in an IPLD MerkleDAG leaf node.
   const dagNode = new DAGPB.DAGNode(promptBuffer, getDAGLinksForPrompt(prompt));
 
-  // 3. Serialize the MerkleDAG node to a protobuf.
-  const nodeBuffer = dagNode.serialize();
-
-  // 4. Hash the protobuf and encode that as a CID
-  const hash = await sha256(nodeBuffer);
-  const multihash = multihashes.encode(hash, "sha2-256");
-  const cid = new CID(1, "dag-pb", multihash, "base58btc");
-
-  return cid.toString() as PromptID;
+  // 3. Encode it to a CID string.
+  return (await encodeDAGNodeToCIDString(dagNode)) as PromptID;
 }

@@ -1,5 +1,3 @@
-import CID from "cids";
-import multihash from "multihashes";
 import createTestAttachmentData from "../__tests__/createTestAttachmentData";
 import {
   testApplicationPrompt,
@@ -10,6 +8,7 @@ import {
 import { getIDForAttachment } from "../types/attachmentID";
 import { AttachmentIDReference } from "../types/attachmentIDReference";
 import { ApplicationPrompt } from "../types/prompt";
+import { CID, dagpb, multibase, multihash } from "../util/cids";
 import { getIDForPrompt } from "./promptID";
 
 test("encoding stability", async () => {
@@ -161,8 +160,8 @@ test("application prompts encodings depend on variants", async () => {
 
 test("encoding metadata", async () => {
   const cid = await getIDForPrompt(testBasicPrompt);
-  const testCID = new CID(cid);
-  expect(testCID.multibaseName).toEqual("base58btc");
+  const testCID = CID.from(cid);
+  expect(multibase.encoding(cid).name).toEqual("base58btc");
+  expect(testCID.code).toEqual(dagpb.code);
   expect(multihash.decode(testCID.multihash).name).toEqual("sha2-256");
-  expect(testCID.codec).toEqual("dag-pb");
 });
