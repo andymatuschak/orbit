@@ -94,7 +94,6 @@ test("mapping note with image", () => {
           ],
           "contents": "Test answer with an image",
         },
-        "explanation": null,
         "promptType": "basic",
         "question": Object {
           "attachments": Array [

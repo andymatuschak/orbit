@@ -9,14 +9,11 @@
   "exports": "./dist/index.js",
   "sideEffects": false,
   "dependencies": {
-    "@firebase/testing": "^0.20.4",
-    "buffer": "^5.6.0",
-    "cids": "^0.8.0",
+    "@ipld/dag-json": "^3.0.17",
     "firebase": "^7.14.2",
-    "firebase-admin": "^8.11.0",
+    "firebase-admin": "^9.2.0",
     "metabook-core": "0.0.1",
-    "multihashes": "^0.4.19",
-    "sha.js": "^2.4.11"
+    "multiformats": "^3.0.3"
   },
   "scripts": {
     "build": "tsc -b",
@@ -27,11 +24,12 @@
     "@babel/core": "^7.9.0",
     "@babel/preset-env": "^7.9.5",
     "@babel/preset-typescript": "^7.9.0",
-    "@types/jest": "^25.2.1",
+    "@firebase/rules-unit-testing": "^1.0.3",
+    "@types/jest": "^26.0.14",
     "@types/sha.js": "^2.4.0",
-    "babel-jest": "^24.9.0",
+    "babel-jest": "^26.3.0",
     "firebase-tools": "^8.4.1",
-    "jest": "^24.9.0",
-    "typescript": "^3.8.3"
+    "jest": "~26",
+    "typescript": "^4.0.3"
   }
 }

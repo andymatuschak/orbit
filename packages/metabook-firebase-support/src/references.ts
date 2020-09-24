@@ -1,7 +1,9 @@
 import { ActionLogID } from "metabook-core";
-import multihashes from "multihashes";
 import shajs from "sha.js";
-import { getFirebaseKeyForCIDString } from "./cdidEncoding";
+import {
+  getFirebaseKeyForCIDString,
+  getFirebaseKeyForTaskID,
+} from "./firebaseKeyEncoding.js";
 import { DataRecord, DataRecordID } from "./dataRecord";
 import {
   CollectionReference,
@@ -48,17 +50,13 @@ export function getTaskStateCacheCollectionReference<D extends Database>(
   ) as CollectionReference<D>;
 }
 
-export function getTaskStateCacheReferenceForTaskID<D extends Database>(
+export async function getTaskStateCacheReferenceForTaskID<D extends Database>(
   database: D,
   userID: string,
   taskID: string,
-): DocumentReference<D> {
-  // The taskID is not sharding-friendly; we hash it to get a Firebase key with a uniformly-distributed prefix.
-  const hashedTaskID = multihashes.toB58String(
-    shajs("sha256").update(taskID).digest(),
-  );
+): Promise<DocumentReference<D>> {
   return getTaskStateCacheCollectionReference(database, userID).doc(
-    hashedTaskID,
+    await getFirebaseKeyForTaskID(taskID),
   ) as DocumentReference<D>;
 }
 

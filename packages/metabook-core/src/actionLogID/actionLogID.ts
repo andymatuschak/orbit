@@ -1,120 +1,139 @@
-import { Buffer } from "buffer";
-import DAGPB from "ipld-dag-pb";
-import { ActionLog } from "..";
-import Proto from "../generated/proto";
 import {
+  ActionLog,
   ActionLogMetadata,
+  BaseActionLog,
   ingestActionLogType,
   repetitionActionLogType,
   rescheduleActionLogType,
   updateMetadataActionLogType,
 } from "../types/actionLog";
-import { TaskProvenance } from "../types/taskMetadata";
-import { encodeDAGNodeToCIDString } from "../util/cids";
+import {
+  WebPromptProvenance,
+  PromptProvenanceType,
+} from "../types/promptProvenance";
+import { TaskMetadata, TaskProvenance } from "../types/taskMetadata";
+import { CID, CIDEncodable, encodeObjectToCIDString } from "../util/cids";
+import { getPromptTaskForID, PromptTaskID } from "../types/promptTask";
+import {
+  basicPromptType,
+  clozePromptType,
+  applicationPromptType,
+} from "../types/prompt";
 
-function getProtobufTimestampFromMillis(
-  millis: number,
-): Proto.google.protobuf.ITimestamp {
-  return {
-    seconds: Math.floor(millis / 1000),
-    nanos: (millis % 1000) * 1e6,
-  };
-}
-
-function getProtobufRepresentationForMetadata(
-  metadata: ActionLogMetadata | null,
-): Proto.ActionLog.IMetadataEntry[] | null {
-  if (metadata === null) {
-    return null;
-  }
-  return Object.keys(metadata)
-    .sort()
-    .map((key) => ({
-      key,
-      number:
-        typeof metadata[key] === "number"
-          ? (metadata[key] as number)
-          : undefined,
-      string:
-        typeof metadata[key] === "string"
-          ? (metadata[key] as string)
-          : undefined,
-    }));
-}
-
-function getProtobufRepresentationForProvenance(
+function canonicalizeProvenance(
   provenance: TaskProvenance,
-): Proto.ActionLog.IProvenance {
-  return {
-    provenanceType: provenance.provenanceType,
-    externalID: provenance.externalID,
-    title: provenance.title,
-    url: provenance.url,
-    modificationTimestamp:
-      provenance.modificationTimestampMillis !== null
-        ? getProtobufTimestampFromMillis(provenance.modificationTimestampMillis)
-        : null,
-  };
+): CIDEncodable<TaskProvenance> {
+  function canonicalizeBaseProvenance(
+    provenance: TaskProvenance,
+  ): CIDEncodable<TaskProvenance> {
+    return {
+      provenanceType: provenance.provenanceType,
+      externalID: provenance.externalID,
+      modificationTimestampMillis: provenance.modificationTimestampMillis,
+      title: provenance.title,
+      url: provenance.url,
+    };
+  }
+
+  switch (provenance.provenanceType) {
+    case PromptProvenanceType.Anki:
+    case PromptProvenanceType.Note:
+      return canonicalizeBaseProvenance(provenance);
+    case PromptProvenanceType.Web:
+      const webProvenance = provenance as WebPromptProvenance;
+      return {
+        ...canonicalizeBaseProvenance(provenance),
+        siteName: webProvenance.siteName,
+        colorPaletteName: webProvenance.colorPaletteName,
+      } as CIDEncodable<TaskProvenance>;
+  }
 }
 
-function getProtobufRepresentationForActionLog(
-  actionLog: ActionLog,
-): Proto.IActionLog {
-  const timestamp = getProtobufTimestampFromMillis(actionLog.timestampMillis);
+function canonicalizeActionLog(actionLog: ActionLog): CIDEncodable<ActionLog> {
+  function canonicalizeBaseActionLog(
+    base: BaseActionLog,
+  ): CIDEncodable<BaseActionLog> {
+    return {
+      timestampMillis: base.timestampMillis,
+      taskID: base.taskID,
+    };
+  }
+
+  function canonicalizeTaskParameters(
+    taskID: string,
+    taskParameters: ActionLogMetadata,
+  ): CIDEncodable<ActionLogMetadata> {
+    const promptTask = getPromptTaskForID(taskID as PromptTaskID);
+    if (promptTask instanceof Error) {
+      throw new Error(`Unexpected action log taskID: ${taskID}: ${promptTask}`);
+    }
+    switch (promptTask.promptType) {
+      case basicPromptType:
+      case clozePromptType:
+        throw new Error(
+          `Prompt type ${promptTask.promptType} should not have task parameters (${taskParameters})`,
+        );
+      case applicationPromptType:
+        return { variantIndex: taskParameters.variantIndex };
+    }
+  }
+
+  function canonicalizeParentActionLogIDs<
+    T extends ActionLog & { parentActionLogIDs: ActionLogID[] }
+  >(actionLog: T): CIDEncodable<ActionLogID[]> {
+    return actionLog.parentActionLogIDs.map((id) => CID.from(id));
+  }
+
+  function canonicalizeMetadata<T extends Partial<TaskMetadata>>(
+    metadata: T,
+    // This return type should really be CIDEncodable<T>, but TypeScript can't figure it out. This isn't safe.
+  ): Partial<CIDEncodable<TaskMetadata>> {
+    return {
+      ...(metadata.isDeleted && { isDeleted: metadata.isDeleted }),
+      ...(metadata.provenance && { provenance: metadata.provenance }),
+    };
+  }
+
   switch (actionLog.actionLogType) {
     case ingestActionLogType:
       return {
-        timestamp,
-        ingest: {
-          taskID: actionLog.taskID,
-          provenance: actionLog.provenance
-            ? getProtobufRepresentationForProvenance(actionLog.provenance)
-            : null,
-        },
+        ...canonicalizeBaseActionLog(actionLog),
+        actionLogType: actionLog.actionLogType,
+        provenance: actionLog.provenance
+          ? canonicalizeProvenance(actionLog.provenance)
+          : null,
       };
+
     case repetitionActionLogType:
       return {
-        timestamp,
-        repetition: {
-          taskID: actionLog.taskID,
-          context: actionLog.context,
-          outcome: actionLog.outcome,
-          taskParameters: getProtobufRepresentationForMetadata(
-            actionLog.taskParameters,
-          ),
-        },
+        ...canonicalizeBaseActionLog(actionLog),
+        actionLogType: actionLog.actionLogType,
+        parentActionLogIDs: canonicalizeParentActionLogIDs(actionLog),
+        taskParameters: actionLog.taskParameters
+          ? canonicalizeTaskParameters(
+              actionLog.taskID,
+              actionLog.taskParameters,
+            )
+          : null,
+        outcome: actionLog.outcome,
+        context: actionLog.context,
       };
+
     case rescheduleActionLogType:
       return {
-        timestamp,
-        reschedule: {
-          newTimestamp: getProtobufTimestampFromMillis(
-            actionLog.newTimestampMillis,
-          ),
-          taskID: actionLog.taskID,
-        },
+        ...canonicalizeBaseActionLog(actionLog),
+        actionLogType: actionLog.actionLogType,
+        parentActionLogIDs: canonicalizeParentActionLogIDs(actionLog),
+        newTimestampMillis: actionLog.newTimestampMillis,
       };
+
     case updateMetadataActionLogType:
       return {
-        timestamp,
-        updateMetadata: {
-          taskID: actionLog.taskID,
-          isDeleted: actionLog.updates.isDeleted,
-        },
+        ...canonicalizeBaseActionLog(actionLog),
+        actionLogType: actionLog.actionLogType,
+        parentActionLogIDs: canonicalizeParentActionLogIDs(actionLog),
+        updates: canonicalizeMetadata(actionLog.updates),
       };
-  }
-}
-
-function getDAGLinksForActionLog(actionLog: ActionLog): DAGPB.DAGLink[] {
-  switch (actionLog.actionLogType) {
-    case "ingest":
-      return [];
-    case "repetition":
-    case "reschedule":
-    case "updateMetadata":
-      return actionLog.parentActionLogIDs.map(
-        (actionLogID) => new DAGPB.DAGLink(undefined, undefined, actionLogID),
-      );
   }
 }
 
@@ -123,21 +142,7 @@ export type ActionLogID = string & { __actionLogIDOpaqueType: never };
 export async function getIDForActionLog(
   actionLog: ActionLog,
 ): Promise<ActionLogID> {
-  // 1. Serialize the action log into a protobuf.
-  const actionLogEncoding = Proto.ActionLog.encode(
-    getProtobufRepresentationForActionLog(actionLog),
-  ).finish();
-  const actionLogBuffer =
-    actionLogEncoding instanceof Buffer
-      ? actionLogEncoding
-      : new Buffer(actionLogEncoding);
-
-  // 2. Wrap that data in an IPLD MerkleDAG leaf node.
-  const dagNode = new DAGPB.DAGNode(
-    actionLogBuffer,
-    getDAGLinksForActionLog(actionLog),
-  );
-
-  // 3. Encode it to a CID string.
-  return (await encodeDAGNodeToCIDString(dagNode)) as ActionLogID;
+  return (await encodeObjectToCIDString(
+    canonicalizeActionLog(actionLog),
+  )) as ActionLogID;
 }

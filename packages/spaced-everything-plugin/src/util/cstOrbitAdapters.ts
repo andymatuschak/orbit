@@ -24,7 +24,6 @@ export function getOrbitPromptForITPrompt(prompt: IT.Prompt): Prompt {
           contents: getMarkdownString(prompt.answer),
           attachments: [],
         },
-        explanation: null,
       };
     case IT.clozePromptType:
       return {

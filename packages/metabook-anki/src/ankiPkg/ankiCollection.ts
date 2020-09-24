@@ -3,7 +3,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import sqlite from "sqlite";
-import unzip, { Entry } from "unzip";
+import unzip, { Entry } from "unzipper";
 import { Card, Collection, Log, Note } from "./ankiDBTypes";
 
 async function readRows<R>(

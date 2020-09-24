@@ -1,10 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "prebuild": "yarn workspace metabook-core prebuild",
     "build": "tsc -b packages/tsconfig.base.json",
     "watch": "tsc -b -w packages/tsconfig.base.json",
-    "test": "npx jest --projects packages/metabook-anki packages/metabook-core packages/metabook-client --runInBand",
+    "test": "(cd packages; npx jest --projects metabook-anki metabook-client metabook-cloud-functions metabook-core metabook-firebase-support metabook-web-component spaced-everything-plugin --runInBand)",
     "test:watch": "yarn run test --watch",
     "prepare": "git submodule update --init --recursive"
   },

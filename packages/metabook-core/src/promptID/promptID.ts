@@ -1,6 +1,3 @@
-import DAGPB from "ipld-dag-pb";
-
-import Proto from "../generated/proto";
 import {
   applicationPromptType,
   basicPromptType,
@@ -9,98 +6,55 @@ import {
   PromptField,
   QAPrompt,
 } from "../types/prompt";
-import { multicodec, encodeDAGNodeToCIDString } from "../util/cids";
+import { CID, CIDEncodable, encodeObjectToCIDString } from "../util/cids";
 
-function getProtobufRepresentationForQAPrompt(
-  qaPrompt: QAPrompt,
-): Proto.IQuestionAnswerPrompt {
+function canonicalizePromptField(
+  promptField: PromptField,
+): CIDEncodable<PromptField> {
   return {
-    question: qaPrompt.question.contents,
-    answer: qaPrompt.answer.contents,
-    explanation: qaPrompt.explanation?.contents ?? null,
+    contents: promptField.contents,
+    attachments: promptField.attachments.map((ref) => ({
+      type: ref.type,
+      id: CID.from(ref.id),
+      byteLength: ref.byteLength,
+    })),
   };
 }
 
-function getProtobufRepresentationForPrompt(prompt: Prompt): Proto.IPrompt {
-  switch (prompt.promptType) {
-    case basicPromptType:
-      return {
-        basicPrompt: getProtobufRepresentationForQAPrompt(prompt),
-      };
-    case applicationPromptType:
-      return {
-        applicationPrompt: {
-          variants: prompt.variants.map(getProtobufRepresentationForQAPrompt),
-        },
-      };
-    case clozePromptType:
-      return {
-        clozePrompt: {
-          body: prompt.body.contents,
-        },
-      };
-  }
+function canonicalizeQAPrompt(prompt: QAPrompt): CIDEncodable<QAPrompt> {
+  return {
+    question: canonicalizePromptField(prompt.question),
+    answer: canonicalizePromptField(prompt.answer),
+    explanation: prompt.explanation
+      ? canonicalizePromptField(prompt.explanation)
+      : undefined,
+  };
 }
 
-function getDAGLinksForPrompt(prompt: Prompt): DAGPB.DAGLink[] {
-  function getDAGLinksForPromptField(
-    promptField: PromptField,
-    prefix: string,
-  ): DAGPB.DAGLink[] {
-    return promptField.attachments.map(
-      (attachmentReference, index) =>
-        new DAGPB.DAGLink(
-          `${prefix}/${index}/${attachmentReference.type}`,
-          attachmentReference.byteLength,
-          attachmentReference.id,
-        ),
-    );
-  }
-
-  function getDAGLinksForQAPrompt(
-    qaPrompt: QAPrompt,
-    prefix: string,
-  ): DAGPB.DAGLink[] {
-    return [
-      ...getDAGLinksForPromptField(qaPrompt.question, prefix + "/question"),
-      ...getDAGLinksForPromptField(qaPrompt.answer, prefix + "/answer"),
-      ...(qaPrompt.explanation
-        ? getDAGLinksForPromptField(
-            qaPrompt.explanation,
-            prefix + "/explanation",
-          )
-        : []),
-    ];
-  }
-
+function canonicalizePrompt(prompt: Prompt): CIDEncodable<Prompt> {
   switch (prompt.promptType) {
     case basicPromptType:
-      return getDAGLinksForQAPrompt(prompt, "");
+      return {
+        promptType: prompt.promptType,
+        ...canonicalizeQAPrompt(prompt),
+      };
     case applicationPromptType:
-      const variantLinks = prompt.variants.map((variant, index) =>
-        getDAGLinksForQAPrompt(variant, index.toString()),
-      );
-      return variantLinks.reduce((output, list) => output.concat(list), []);
+      return {
+        promptType: prompt.promptType,
+        variants: prompt.variants.map((v) => canonicalizeQAPrompt(v)),
+      };
     case clozePromptType:
-      return getDAGLinksForPromptField(prompt.body, "");
+      return {
+        promptType: prompt.promptType,
+        body: canonicalizePromptField(prompt.body),
+      };
   }
 }
 
 export type PromptID = string & { __promptIDOpaqueType: never };
 
 export async function getIDForPrompt(prompt: Prompt): Promise<PromptID> {
-  // 1. Serialize the prompt into a protobuf.
-  const promptDataEncoding = Proto.Prompt.encode(
-    getProtobufRepresentationForPrompt(prompt),
-  ).finish();
-  const promptBuffer =
-    promptDataEncoding instanceof Buffer
-      ? promptDataEncoding
-      : new Buffer(promptDataEncoding);
-
-  // 2. Wrap that data in an IPLD MerkleDAG leaf node.
-  const dagNode = new DAGPB.DAGNode(promptBuffer, getDAGLinksForPrompt(prompt));
-
-  // 3. Encode it to a CID string.
-  return (await encodeDAGNodeToCIDString(dagNode)) as PromptID;
+  return (await encodeObjectToCIDString(
+    canonicalizePrompt(prompt),
+  )) as PromptID;
 }

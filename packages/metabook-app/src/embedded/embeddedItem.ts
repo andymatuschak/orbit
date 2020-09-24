@@ -73,7 +73,6 @@ function getPromptFromEmbeddedBasicPrompt(
     promptType: basicPromptType,
     question,
     answer,
-    explanation: null,
   };
 }
 

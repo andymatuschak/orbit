@@ -1,7 +1,7 @@
 import { ActionLogID } from "../actionLogID";
 import { TaskMetadata, TaskProvenance } from "./taskMetadata";
 
-type BaseActionLog = {
+export type BaseActionLog = {
   timestampMillis: number;
   taskID: string;
 };
@@ -18,11 +18,10 @@ export const repetitionActionLogType = "repetition";
 export type RepetitionActionLog = {
   actionLogType: typeof repetitionActionLogType;
   parentActionLogIDs: ActionLogID[];
-
   taskParameters: ActionLogMetadata | null;
 
-  context: string | null;
   outcome: string;
+  context: string | null;
 } & BaseActionLog;
 
 export const rescheduleActionLogType = "reschedule";

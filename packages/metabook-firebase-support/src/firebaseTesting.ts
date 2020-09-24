@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import * as firebaseTesting from "@firebase/testing";
+import * as firebaseTesting from "@firebase/rules-unit-testing";
 import childProcess, { ChildProcess } from "child_process";
 import events from "events";
 import firebase from "firebase";
@@ -50,6 +50,7 @@ export async function stopFirebaseTestingEmulator() {
   }
 }
 
+let sharedFunctionsInstance: firebase.functions.Functions | null = null;
 export function createTestFirebaseApp(
   uid = "testUserID",
   email = "test@test.com",
@@ -61,21 +62,22 @@ export function createTestFirebaseApp(
     projectId: projectID,
     auth: { uid, email },
   });
-  const testFunctions = testApp.functions();
-  testFunctions.useFunctionsEmulator(functionsEmulatorURL);
-  return { firestore: testApp.firestore(), functions: testFunctions };
+
+  if (!sharedFunctionsInstance) {
+    const app = firebase.initializeApp({ projectId: projectID });
+    sharedFunctionsInstance = app.functions();
+    sharedFunctionsInstance.useFunctionsEmulator(functionsEmulatorURL);
+  }
+  return { firestore: testApp.firestore(), functions: sharedFunctionsInstance };
 }
 
 export function createTestAdminFirebaseApp(): {
   firestore: firebase.firestore.Firestore;
-  functions: firebase.functions.Functions;
 } {
   const testApp = firebaseTesting.initializeAdminApp({
     projectId: projectID,
   });
-  const testFunctions = testApp.functions();
-  testFunctions.useFunctionsEmulator(functionsEmulatorURL);
-  return { firestore: testApp.firestore(), functions: testFunctions };
+  return { firestore: testApp.firestore() };
 }
 
 export async function resetTestFirestore(

@@ -16,7 +16,6 @@ export const testQAPrompt: QAPrompt = {
     contents: "Test answer",
     attachments: [],
   },
-  explanation: null,
 };
 export const testBasicPrompt: BasicPrompt = {
   ...testQAPrompt,

@@ -1,5 +1,5 @@
 import { AttachmentID } from "metabook-core";
-import { getFirebaseKeyForCIDString } from "./cdidEncoding";
+import { getFirebaseKeyForCIDString } from "./firebaseKeyEncoding.js";
 
 export const storageBucketName = "metabook-system.appspot.com";
 export const storageAttachmentsPathComponent = "attachments";

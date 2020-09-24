@@ -4,7 +4,7 @@ const testClozePrompt: ClozePrompt = {
   promptType: "cloze",
   body: {
     contents:
-      "The _Big Five_ personality traits: {extraversion}, {openness to experience}, {neuroticism}, {conscientiousness}, {agreeableness}.",
+      "The *Big Five* personality traits: {extraversion}, {openness to experience}, {neuroticism}, {conscientiousness}, {agreeableness}.",
     attachments: [],
   },
 };

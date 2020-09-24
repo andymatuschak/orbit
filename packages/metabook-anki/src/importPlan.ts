@@ -124,12 +124,12 @@ export async function createPlanForCard(
   };
 }
 
-export function createPlanForLog<
+export async function createPlanForLog<
   P extends BasicPromptTaskParameters | ClozePromptTaskParameters
 >(
   ankiLog: Anki.Log,
   cardLastActionLog: PromptActionLog<P>,
-): PromptRepetitionActionLog<P> {
+): Promise<PromptRepetitionActionLog<P>> {
   let outcome: PromptRepetitionOutcome;
   switch (ankiLog.type) {
     case Anki.ReviewLogType.Learn:
@@ -154,7 +154,9 @@ export function createPlanForLog<
     taskID: cardLastActionLog.taskID,
     outcome,
     parentActionLogIDs: [
-      getIDForActionLog(getActionLogFromPromptActionLog(cardLastActionLog)),
+      await getIDForActionLog(
+        getActionLogFromPromptActionLog(cardLastActionLog),
+      ),
     ],
     taskParameters: null,
     actionLogType: repetitionActionLogType,
@@ -174,13 +176,13 @@ async function readAttachmentAtPath(
   }
 }
 
-export function createRescheduleLogForCard(
+export async function createRescheduleLogForCard(
   card: Card,
   collection: Collection,
   lastActionLog: PromptActionLog<
     BasicPromptTaskParameters | ClozePromptTaskParameters
   >,
-): ActionLog | null {
+): Promise<ActionLog | null> {
   let newTimestampMillis: number | null;
   switch (card.queue) {
     case CardQueue.UserBuried:
@@ -202,7 +204,7 @@ export function createRescheduleLogForCard(
   return {
     actionLogType: rescheduleActionLogType,
     parentActionLogIDs: [
-      getIDForActionLog(getActionLogFromPromptActionLog(lastActionLog)),
+      await getIDForActionLog(getActionLogFromPromptActionLog(lastActionLog)),
     ],
     timestampMillis: Date.now(),
     newTimestampMillis,
@@ -318,6 +320,7 @@ export async function createImportPlan(
       promptActionLog.taskID,
       applyActionLogToPromptState({
         promptActionLog,
+        actionLogID: await getIDForActionLog(promptActionLog),
         schedule: "default",
         basePromptState: null,
       }) as PromptState,
@@ -338,11 +341,12 @@ export async function createImportPlan(
       }
     }
 
-    const promptActionLog = createPlanForLog(ankiLog, cardLastActionLog);
+    const promptActionLog = await createPlanForLog(ankiLog, cardLastActionLog);
     plan.logs.push(promptActionLog);
 
     const newPromptState = applyActionLogToPromptState({
       promptActionLog,
+      actionLogID: await getIDForActionLog(promptActionLog),
       schedule: "default",
       basePromptState: taskIDsToPromptStates.get(promptActionLog.taskID)!,
     }) as PromptState;
@@ -361,7 +365,7 @@ export async function createImportPlan(
       if (!cardLastActionLog) {
         throw new Error(`Inconsistent database. ${card.id} generated no logs`);
       }
-      const rescheduleLog = createRescheduleLogForCard(
+      const rescheduleLog = await createRescheduleLogForCard(
         card,
         collection,
         cardLastActionLog,
@@ -370,6 +374,7 @@ export async function createImportPlan(
         plan.logs.push(rescheduleLog);
         const newPromptState = applyActionLogToPromptState({
           promptActionLog: getPromptActionLogFromActionLog(rescheduleLog),
+          actionLogID: await getIDForActionLog(rescheduleLog),
           schedule: "default",
           basePromptState: taskIDsToPromptStates.get(rescheduleLog.taskID)!,
         }) as PromptState;

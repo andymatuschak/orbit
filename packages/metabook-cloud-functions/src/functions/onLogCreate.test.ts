@@ -44,7 +44,7 @@ test("updates prompt state when writing log", async () => {
   const {
     firestore: testAdminFirestore,
   } = FirebaseTesting.createTestAdminFirebaseApp();
-  const collectionReference = getTaskStateCacheReferenceForTaskID(
+  const collectionReference = await getTaskStateCacheReferenceForTaskID(
     testAdminFirestore,
     testUserID,
     promptTaskID,

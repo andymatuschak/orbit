@@ -12,6 +12,7 @@ import React from "react";
 import {
   Animated,
   FlexStyle,
+  StyleProp,
   StyleSheet,
   Text,
   View,
@@ -62,9 +63,9 @@ const topAreaTranslationAnimationSpec: AnimatedTransitionTiming = {
 function useAnimatingStyles(
   backIsRevealed: boolean,
 ): {
-  topAreaStyle: Animated.WithAnimatedValue<ViewStyle>;
-  bottomFrontStyle: Animated.WithAnimatedValue<ViewStyle>;
-  bottomBackStyle: Animated.WithAnimatedValue<ViewStyle>;
+  topAreaStyle: Animated.WithAnimatedValue<StyleProp<ViewStyle>>;
+  bottomFrontStyle: Animated.WithAnimatedValue<StyleProp<ViewStyle>>;
+  bottomBackStyle: Animated.WithAnimatedValue<StyleProp<ViewStyle>>;
 } {
   const topAreaTranslateAnimation = useTransitioningValue({
     value: backIsRevealed ? 1 : 0,

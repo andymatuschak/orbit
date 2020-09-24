@@ -5,29 +5,29 @@ import {
   testClozePrompt,
   testQAPrompt,
 } from "../__tests__/sampleData";
-import { getIDForAttachment } from "../types/attachmentID";
+import { AttachmentID, getIDForAttachment } from "../types/attachmentID";
 import { AttachmentIDReference } from "../types/attachmentIDReference";
 import { ApplicationPrompt } from "../types/prompt";
-import { CID, dagpb, multibase, multihash } from "../util/cids";
+import { CID, multibase, multihash, multicodec } from "../util/cids";
 import { getIDForPrompt } from "./promptID";
 
 test("encoding stability", async () => {
   expect(
     (await getIDForPrompt(testBasicPrompt)).toString(),
   ).toMatchInlineSnapshot(
-    `"zdj7WXQPmKiV2DXSuGfpnTLrwRE5F2HAMJznC63vxJHCptRcR"`,
+    `"z4EBG9j8Gqw9fBVw4rucCxBULZJgZsAmWFRWHRq2Fx1XShp44kW"`,
   );
 
   expect(
     (await getIDForPrompt(testApplicationPrompt)).toString(),
   ).toMatchInlineSnapshot(
-    `"zdj7WeP6nSgw44Dcyxz9ydsfuvVB6SfDWs1wQWTeeHvbkCxst"`,
+    `"z4EBG9jGungKDywnFkZvNVCMuTcUnkkRuKzqny99xwaiJLnLuUM"`,
   );
 
   expect(
     (await getIDForPrompt(testClozePrompt)).toString(),
   ).toMatchInlineSnapshot(
-    `"zdj7WbQaeWpew3hGLirKSimxUv8MgGDRWTH1jhEtC9dy1jwG3"`,
+    `"z4EBG9j7yAXAJsfnLeE9y3D2BVCjr45bdUM45RDSy55RuTRAZDB"`,
   );
 });
 
@@ -81,14 +81,35 @@ describe("encoding attachments", () => {
     expect(attachmentsPromptID).not.toEqual(multiFieldsPromptID);
 
     expect(oneAttachmentPromptID).toMatchInlineSnapshot(
-      `"zdj7WciLWE9sSi6gnLetDG1n65LSUryEAdQDiDMczcJi1PumR"`,
+      `"z4EBG9j26qVhd37BoCcU4FksgPpVEFj3mjGYoV6dekcjcRDWqJc"`,
     );
     expect(attachmentsPromptID).toMatchInlineSnapshot(
-      `"zdj7WkDELztN64ex2nXAeYZmEFhoghoTrsq8P5UdpJ3ifvHzX"`,
+      `"z4EBG9jDMHbWNgE8ha1DWc3Rg2zC2cZb6c3GwiASFEP8t2LubL5"`,
     );
     expect(multiFieldsPromptID).toMatchInlineSnapshot(
-      `"zdj7Wj4jGXoT5wi72uuFa2WS6UnMupL4ESqTwi61e6aMShZ16"`,
+      `"z4EBG9j1enHPeqRYFwtMes7GXjUHfCnn33dpy2apJBsCaFfRvcV"`,
     );
+
+    // The prompt CID should not depend on the choice of attachment CID encoding.
+    // We'll hackily re-encode the attachment CID to demonstrate that.
+    const variantAttachmentID = CID.from(testAttachmentReference.id).toString(
+      "base32",
+    );
+    const variantAttachmentPromptID = (
+      await getIDForPrompt({
+        ...testBasicPrompt,
+        question: {
+          ...testBasicPrompt.question,
+          attachments: [
+            {
+              ...testAttachmentReference,
+              id: variantAttachmentID as AttachmentID,
+            },
+          ],
+        },
+      })
+    ).toString();
+    expect(variantAttachmentPromptID).toEqual(oneAttachmentPromptID);
   });
 
   describe("application prompt attachments", () => {
@@ -134,10 +155,10 @@ describe("encoding attachments", () => {
       expect(testSpecID1).not.toEqual(testSpecID2);
 
       expect(testSpecID1).toMatchInlineSnapshot(
-        `"zdj7WWCU9hZJsdRESkqcXrng4tqokjyPieyU4tqezUBMXETag"`,
+        `"z4EBG9jEWnYnXcGEhncdQLqBVCh9FU7H4RDGG6XHMKAuaAy8G9F"`,
       );
       expect(testSpecID2).toMatchInlineSnapshot(
-        `"zdj7WhgKbgCYj1YzZBUGf7RXhNo8DrfQE8j8zRAnDUu9ZwrQz"`,
+        `"z4EBG9j5kuJpWCraVw1T3QeTDBvgKf41YWbZ1GDXM7RjQt6ca4F"`,
       );
     });
   });
@@ -162,6 +183,6 @@ test("encoding metadata", async () => {
   const cid = await getIDForPrompt(testBasicPrompt);
   const testCID = CID.from(cid);
   expect(multibase.encoding(cid).name).toEqual("base58btc");
-  expect(testCID.code).toEqual(dagpb.code);
+  expect(testCID.code).toEqual(multicodec.get("dag-json").code);
   expect(multihash.decode(testCID.multihash).name).toEqual("sha2-256");
 });

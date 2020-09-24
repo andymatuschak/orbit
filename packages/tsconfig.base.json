@@ -18,12 +18,13 @@
   },
   "compileOnSave": true,
   "references": [
-    { "path": "./metabook-ui" },
+    { "path": "./metabook-anki" },
     { "path": "./metabook-app" },
     { "path": "./metabook-client" },
     { "path": "./metabook-core" },
     { "path": "./metabook-firebase-support" },
-    { "path": "./metabook-sample-data" }
+    { "path": "./metabook-sample-data" },
+    { "path": "./metabook-ui" }
   ],
   "files": []
 }

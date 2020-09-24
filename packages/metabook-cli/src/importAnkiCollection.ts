@@ -84,18 +84,23 @@ class ImportAnkiCollection extends Command {
 
       getLogCollectionReference(app.firestore(), flags.userID);
       await batchWriteEntries(
-        plan.logs.map((log) => [
-          getReferenceForActionLogID(
-            app.firestore(),
-            flags.userID,
-            getIDForActionLog(log),
+        await Promise.all(
+          plan.logs.map(
+            async (log) =>
+              [
+                getReferenceForActionLogID(
+                  app.firestore(),
+                  flags.userID,
+                  await getIDForActionLog(log),
+                ),
+                {
+                  ...log,
+                  // TODO reenable suppressTaskStateCacheUpdate. Would have to construct prompt state caches with correct timestamps, which is a bit tricky here...
+                  serverTimestamp: firebase.firestore.FieldValue.serverTimestamp() as firebase.firestore.Timestamp,
+                } as ActionLogDocument<firebase.firestore.Timestamp>,
+              ] as const,
           ),
-          {
-            ...log,
-            // TODO reenable suppressTaskStateCacheUpdate. Would have to construct prompt state caches with correct timestamps, which is a bit tricky here...
-            serverTimestamp: firebase.firestore.FieldValue.serverTimestamp() as firebase.firestore.Timestamp,
-          } as ActionLogDocument<firebase.firestore.Timestamp>,
-        ]),
+        ),
         app.firestore(),
         (ms, ns) => new firebase.firestore.Timestamp(ms, ns),
       );

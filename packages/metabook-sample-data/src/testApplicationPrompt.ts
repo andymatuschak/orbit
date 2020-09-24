@@ -26,7 +26,6 @@ const testApplicationPrompt: ApplicationPrompt = {
         contents: "2e^x",
         attachments: [],
       },
-      explanation: null,
     },
   ],
 };

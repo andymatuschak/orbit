@@ -1,4 +1,11 @@
 import {
+  applicationPromptType,
+  basicPromptType,
+  getIDForPromptTask,
+  PromptID,
+  PromptProvenanceType,
+} from "..";
+import {
   IngestActionLog,
   ingestActionLogType,
   RepetitionActionLog,
@@ -11,7 +18,11 @@ import { ActionLogID, getIDForActionLog } from "./actionLogID";
 const basicIngestLog: IngestActionLog = {
   actionLogType: ingestActionLogType,
   timestampMillis: 0,
-  taskID: "test",
+  taskID: getIDForPromptTask({
+    promptType: basicPromptType,
+    promptParameters: null,
+    promptID: "asdkjlf" as PromptID,
+  }),
   provenance: null,
 };
 
@@ -22,13 +33,13 @@ beforeAll(async () => {
 
 test("ingest logs", async () => {
   expect(basicIngestLogID).toMatchInlineSnapshot(
-    `"zdj7WgK8RzKsuDK4THX4ed2RpGDxXmyyFnVbtKw2RJ3YcSESN"`,
+    `"z4EBG9jGA4jCHEZKZVdA1gNyYLbZCEKFRqKCfD1ouB8Yn5v6P5v"`,
   );
 
   const withMetadataID = await getIDForActionLog({
     ...basicIngestLog,
     provenance: {
-      provenanceType: "test",
+      provenanceType: PromptProvenanceType.Anki,
       externalID: "id",
       modificationTimestampMillis: null,
       title: null,
@@ -36,7 +47,7 @@ test("ingest logs", async () => {
     },
   });
   expect(withMetadataID).toMatchInlineSnapshot(
-    `"zdj7WVRyTTqRHfU6P88K6baGCuXqyvTpYGgz79CRu9QFZqTP2"`,
+    `"z4EBG9j7XneMtGRAh7YynQL4hm8RUysfUGFxER3cWTQPcJxmUka"`,
   );
   expect(basicIngestLogID).not.toEqual(withMetadataID);
 });
@@ -45,7 +56,11 @@ test("action logs", async () => {
   const testActionLog: RepetitionActionLog = {
     actionLogType: repetitionActionLogType,
     timestampMillis: 0,
-    taskID: "test",
+    taskID: getIDForPromptTask({
+      promptType: applicationPromptType,
+      promptParameters: null,
+      promptID: "asdkjlf" as PromptID,
+    }),
     taskParameters: { variantIndex: 3 },
     parentActionLogIDs: [],
     context: "testSession",
@@ -61,10 +76,10 @@ test("action logs", async () => {
   });
 
   expect(noParentActionLogID).toMatchInlineSnapshot(
-    `"zdj7WYA8UdWSuZwNJVKGvwTnhhJ84Tmr4ByVUTffvadRuTKP7"`,
+    `"z4EBG9j6r8EuU75f5iYpenqBRyCVRdD9k6FoPqW5izwqe4aB6xP"`,
   );
   expect(parentActionLogID).toMatchInlineSnapshot(
-    `"zdj7WZiZrerunQBk43fp4RTYSdBDEWeU23j2nE9jn91Bd237m"`,
+    `"z4EBG9j1uLize3F3LSa6WMGPYHWBFpA12y5Xd9FrjoSonFZU2CC"`,
   );
 
   expect(noParentActionLogID).not.toEqual(parentActionLogID);
@@ -73,7 +88,7 @@ test("action logs", async () => {
 test("update metadata", async () => {
   const testDeletion: UpdateMetadataActionLog = {
     actionLogType: updateMetadataActionLogType,
-    taskID: "test",
+    taskID: basicIngestLog.taskID,
     parentActionLogIDs: [basicIngestLogID],
     timestampMillis: 0,
     updates: { isDeleted: true },
@@ -84,10 +99,10 @@ test("update metadata", async () => {
     updates: { isDeleted: false },
   });
   expect(testDeletionID).toMatchInlineSnapshot(
-    `"zdj7WYVQKnePYzXDuKqBys764N7fz7dXAvWGEZhKEjNVn45CL"`,
+    `"z4EBG9jGRXbHdCeeWGM6T2DssQDXzMRsZTBr1s8vgUpFW2icdq9"`,
   );
   expect(testUndeletionID).toMatchInlineSnapshot(
-    `"zdj7WZrjyT5iDrL2oofoF1FmGd6Dofio4TJgHueuyXmVWVAek"`,
+    `"z4EBG9jDTgSoA6UWhNfHbe38XMUApRZuoezbftusEp2X1WciLBL"`,
   );
   expect(testDeletionID).not.toEqual(testUndeletionID);
 });

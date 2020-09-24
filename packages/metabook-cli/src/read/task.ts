@@ -28,11 +28,12 @@ class ReadTask extends Command {
     }
 
     const app = getAdminApp();
-    const taskStateCacheSnapshot = await getTaskStateCacheReferenceForTaskID(
+    const taskStateReference = await getTaskStateCacheReferenceForTaskID(
       app.firestore(),
       flags.userID,
       args.taskID,
-    ).get();
+    );
+    const taskStateCacheSnapshot = await taskStateReference.get();
 
     console.log("\nCurrent task state:");
     console.log(taskStateCacheSnapshot.data());

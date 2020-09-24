@@ -60,11 +60,11 @@ describe("prompt states", () => {
       promptParameters: null,
     };
     const taskID = getIDForPromptTask(promptTask);
-    const ref = getTaskStateCacheReferenceForTaskID(
+    const ref = (await getTaskStateCacheReferenceForTaskID(
       testFirestore,
       testUserID,
       taskID,
-    ) as firebase.firestore.DocumentReference<PromptStateCache>;
+    )) as firebase.firestore.DocumentReference<PromptStateCache>;
     const ingestLog: PromptIngestActionLog = {
       taskID,
       actionLogType: ingestActionLogType,

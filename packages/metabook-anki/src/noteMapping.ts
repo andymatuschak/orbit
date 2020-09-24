@@ -89,7 +89,6 @@ export function mapNoteToPrompt(
       const basicPrompt: BasicPrompt = {
         question: transformAnkiField(fields[modelMapping.questionFieldIndex]),
         answer: transformAnkiField(fields[modelMapping.answerFieldIndex]),
-        explanation: null,
         promptType: basicPromptType,
       };
       return {

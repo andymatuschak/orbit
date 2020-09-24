@@ -153,6 +153,7 @@ describe("attachments", () => {
       new MockDataClient({}),
       dataRecordStore,
       {
+        storeFileFromURL: jest.fn(),
         storedURLExists: async (url) => false,
       } as DataRecordClientFileStore,
     );

@@ -112,7 +112,7 @@ export async function updatePromptStateCacheWithLog(
   userID: string,
 ) {
   const db = getDatabase();
-  const promptStateCacheReference = getTaskStateCacheReferenceForTaskID(
+  const promptStateCacheReference = await getTaskStateCacheReferenceForTaskID(
     db,
     userID,
     actionLogDocument.taskID,

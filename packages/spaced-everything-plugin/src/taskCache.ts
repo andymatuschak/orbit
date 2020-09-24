@@ -259,12 +259,12 @@ function createIngestionLog(
   });
 }
 
-function mapTasksInPrompt<R>(
+async function mapTasksInPrompt<R>(
   ITPrompt: IT.Prompt,
   orbitPrompt: Prompt,
   f: (taskID: PromptTaskID) => R,
-): R[] {
-  const orbitPromptID = getIDForPrompt(orbitPrompt);
+): Promise<R[]> {
+  const orbitPromptID = await getIDForPrompt(orbitPrompt);
   switch (ITPrompt.type) {
     case IT.qaPromptType:
       const promptTask: PromptTask = {
@@ -393,8 +393,11 @@ export async function getUpdatesForTaskCacheChange(
           if (provenance) {
             const orbitPrompt = getOrbitPromptForITPrompt(value.prompt);
             return {
-              logs: mapTasksInPrompt(value.prompt, orbitPrompt, (taskID) =>
-                createIngestionLog(taskID, provenance, timestampMillis),
+              logs: await mapTasksInPrompt(
+                value.prompt,
+                orbitPrompt,
+                (taskID) =>
+                  createIngestionLog(taskID, provenance, timestampMillis),
               ),
               prompts: [orbitPrompt],
             };
@@ -411,7 +414,7 @@ export async function getUpdatesForTaskCacheChange(
           existingPromptRecord.ITPrompt,
         );
         return {
-          logs: mapTasksInPrompt(
+          logs: await mapTasksInPrompt(
             existingPromptRecord.ITPrompt,
             orbitPrompt,
             (promptTaskID) => ({
@@ -438,7 +441,7 @@ export async function getUpdatesForTaskCacheChange(
             existingPromptRecord.ITPrompt,
           );
           return {
-            logs: mapTasksInPrompt(
+            logs: await mapTasksInPrompt(
               existingPromptRecord.ITPrompt,
               orbitPrompt,
               (promptTaskID) => ({

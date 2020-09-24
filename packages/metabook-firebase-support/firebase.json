@@ -1,7 +1,7 @@
 {
   "firestore": {
-    "rules": "../metabook-client/firestore.rules",
-    "indexes": "../metabook-client/firestore.indexes.json"
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   },
   "functions": {
     "source": "../metabook-cloud-functions"

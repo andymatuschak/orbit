@@ -1,4 +1,4 @@
-import { URL } from "url";
+import URL from "url";
 import { AttachmentID } from "./attachmentID";
 import { AttachmentType, imageAttachmentType } from "./attachmentType";
 import { Prompt, PromptField, QAPrompt } from "./prompt";
@@ -76,7 +76,7 @@ export function getAttachmentMimeTypeFromResourceMetadata(
   if (attachmentExtension) {
     return contentType as AttachmentMimeType;
   } else if (urlString) {
-    const url = new URL(urlString);
+    const url = new URL.URL(urlString);
     return getAttachmentMimeTypeForFilename(url.pathname);
   } else {
     return null;

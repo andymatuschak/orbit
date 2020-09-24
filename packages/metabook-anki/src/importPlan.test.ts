@@ -91,9 +91,9 @@ test("create plan for log", async () => {
     testBasicPrompt,
     null,
   )) as PromptIngestActionLog;
-  const log = createPlanForLog(testLog, ingestLog);
+  const log = await createPlanForLog(testLog, ingestLog);
   expect(log.parentActionLogIDs).toEqual([
-    getIDForActionLog(getActionLogFromPromptActionLog(ingestLog)),
+    await getIDForActionLog(getActionLogFromPromptActionLog(ingestLog)),
   ]);
   expect(log.outcome).toEqual(PromptRepetitionOutcome.Remembered);
 });
@@ -108,23 +108,23 @@ describe("reschedule logs", () => {
     )) as PromptIngestActionLog;
   });
 
-  test("learning card", () => {
+  test("learning card", async () => {
     expect(
-      (createRescheduleLogForCard(
+      ((await createRescheduleLogForCard(
         { ...testCard, queue: CardQueue.Learning, due: 1e5 },
         testCollection,
         ingestLog,
-      ) as RescheduleActionLog).newTimestampMillis,
+      )) as RescheduleActionLog).newTimestampMillis,
     ).toEqual(1e8);
   });
 
-  test("due card", () => {
+  test("due card", async () => {
     expect(
-      (createRescheduleLogForCard(
+      ((await createRescheduleLogForCard(
         { ...testCard, queue: CardQueue.Due, due: 50 },
         { ...testCollection, crt: 1000 },
         ingestLog,
-      ) as RescheduleActionLog).newTimestampMillis,
+      )) as RescheduleActionLog).newTimestampMillis,
     ).toEqual(1000 * 1000 + 50 * 1000 * 60 * 60 * 24);
   });
 });

@@ -41,13 +41,14 @@ function createRepetitionLog(
 }
 
 describe("timestamps", () => {
-  const firstRepetition = createRepetitionLog([], {
-    seconds: 1000,
-    nanoseconds: 0,
-  });
-
+  let firstRepetition: ActionLogDocument<ServerTimestamp>;
   let initialPromptState: PromptStateCache;
   beforeAll(async () => {
+    firstRepetition = createRepetitionLog([], {
+      seconds: 1000,
+      nanoseconds: 0,
+    });
+
     initialPromptState = (await applyPromptActionLogToPromptStateCache({
       actionLogDocument: firstRepetition,
       basePromptStateCache: null,

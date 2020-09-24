@@ -15,5 +15,5 @@ export {
   getActionLogIDForFirebaseKey,
   getAttachmentIDForFirebaseKey,
   getFirebaseKeyForCIDString,
-} from "./cdidEncoding";
+} from "./firebaseKeyEncoding.js";
 export * from "./storage";

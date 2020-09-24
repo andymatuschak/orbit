@@ -11,5 +11,4 @@ export const simpleOrbitPrompt: Prompt = {
     contents: "This is a test answer.",
     attachments: [],
   },
-  explanation: null,
 };

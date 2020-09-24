@@ -1,8 +1,0 @@
-{
-  "extends": "../tsconfig.base",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "composite": false
-  },
-  "files": ["src/index.ts"]
-}

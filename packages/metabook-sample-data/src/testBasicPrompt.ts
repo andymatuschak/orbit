@@ -11,7 +11,6 @@ const testBasicPrompt: BasicPrompt = {
     contents: "No.",
     attachments: [],
   },
-  explanation: null,
 };
 
 export default testBasicPrompt;
