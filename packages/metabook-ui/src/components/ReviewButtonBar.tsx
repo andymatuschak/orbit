@@ -1,6 +1,6 @@
 import {
   applicationPromptType,
-  basicPromptType,
+  qaPromptType,
   clozePromptType,
   PromptRepetitionOutcome,
   PromptType,
@@ -26,7 +26,7 @@ function getButtonTitle(
   switch (outcome) {
     case PromptRepetitionOutcome.Remembered:
       switch (promptType) {
-        case basicPromptType:
+        case qaPromptType:
         case clozePromptType:
         case null:
           return "Remembered";
@@ -36,7 +36,7 @@ function getButtonTitle(
       throw unreachableCaseError(promptType);
     case PromptRepetitionOutcome.Forgotten:
       switch (promptType) {
-        case basicPromptType:
+        case qaPromptType:
         case clozePromptType:
         case null:
           return "Forgotten";

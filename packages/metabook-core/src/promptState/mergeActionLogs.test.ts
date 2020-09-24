@@ -1,4 +1,4 @@
-import { testBasicPrompt } from "../__tests__/sampleData";
+import { testQAPrompt } from "../__tests__/sampleData";
 import { ActionLogID, getIDForActionLog } from "../actionLogID";
 import { getIDForPrompt } from "../promptID";
 import { PromptRepetitionOutcome } from "../spacedRepetition";
@@ -6,7 +6,7 @@ import {
   ingestActionLogType,
   repetitionActionLogType,
 } from "../types/actionLog";
-import { basicPromptType } from "../types/prompt";
+import { qaPromptType } from "../types/prompt";
 import {
   getActionLogFromPromptActionLog,
   PromptIngestActionLog,
@@ -23,8 +23,8 @@ let testRepetitionLogID: ActionLogID;
 
 beforeAll(async () => {
   const testTaskID = getIDForPromptTask({
-    promptType: basicPromptType,
-    promptID: await getIDForPrompt(testBasicPrompt),
+    promptType: qaPromptType,
+    promptID: await getIDForPrompt(testQAPrompt),
     promptParameters: null,
   });
 

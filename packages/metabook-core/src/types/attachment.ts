@@ -1,7 +1,14 @@
 import URL from "url";
 import { AttachmentID } from "./attachmentID";
 import { AttachmentType, imageAttachmentType } from "./attachmentType";
-import { Prompt, PromptField, QAPrompt } from "./prompt";
+import {
+  applicationPromptType,
+  clozePromptType,
+  Prompt,
+  PromptField,
+  QAPromptContents,
+  qaPromptType,
+} from "./prompt";
 
 export interface Attachment {
   type: AttachmentType;
@@ -86,7 +93,7 @@ export function getAttachmentMimeTypeFromResourceMetadata(
 export function getAttachmentIDsInPrompt(spec: Prompt): Set<AttachmentID> {
   const output = new Set<AttachmentID>();
 
-  function visitQAPrompt(qaPrompt: QAPrompt) {
+  function visitQAPrompt(qaPrompt: QAPromptContents) {
     function visitPromptField(promptField: PromptField) {
       promptField.attachments.forEach((attachmentIDReference) =>
         output.add(attachmentIDReference.id),
@@ -101,13 +108,13 @@ export function getAttachmentIDsInPrompt(spec: Prompt): Set<AttachmentID> {
   }
 
   switch (spec.promptType) {
-    case "basic":
+    case qaPromptType:
       visitQAPrompt(spec);
       break;
-    case "applicationPrompt":
+    case applicationPromptType:
       spec.variants.forEach(visitQAPrompt);
       break;
-    case "cloze":
+    case clozePromptType:
       break;
   }
   return output;

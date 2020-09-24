@@ -1,7 +1,7 @@
 import firebase from "firebase/app";
 import {
   applyActionLogToPromptState,
-  basicPromptType,
+  qaPromptType,
   getIDForActionLog,
   getIDForPrompt,
   getIDForPromptTask,
@@ -15,7 +15,7 @@ import {
   PromptStateCache,
 } from "metabook-firebase-support";
 import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
-import { testBasicPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "metabook-sample-data";
 import { promiseForNextCall } from "../../util/tests/promiseForNextCall";
 import { recordTestPromptStateUpdate } from "../../util/tests/recordTestPromptStateUpdate";
 import { MetabookFirebaseUserClient } from "./firebaseClient";
@@ -53,10 +53,10 @@ test("recording a review triggers new log", async () => {
 
 describe("prompt states", () => {
   test("initial prompt states", async () => {
-    const testPromptID = await getIDForPrompt(testBasicPrompt);
+    const testPromptID = await getIDForPrompt(testQAPrompt);
     const promptTask: PromptTask = {
       promptID: testPromptID,
-      promptType: basicPromptType,
+      promptType: qaPromptType,
       promptParameters: null,
     };
     const taskID = getIDForPromptTask(promptTask);

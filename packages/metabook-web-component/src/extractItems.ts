@@ -1,5 +1,5 @@
 import { EmbeddedItem } from "metabook-app/src/embedded/embeddedItem";
-import { basicPromptType } from "metabook-core";
+import { qaPromptType } from "metabook-core";
 import { OrbitPromptElement } from "./OrbitPromptElement";
 
 export function extractItems(parentElement: HTMLElement): EmbeddedItem[] {
@@ -22,7 +22,7 @@ export function extractItems(parentElement: HTMLElement): EmbeddedItem[] {
       const questionAttachments = element.getAttribute("question-attachments");
       const answerAttachments = element.getAttribute("answer-attachments");
       items.push({
-        type: basicPromptType,
+        type: qaPromptType,
         question: {
           contents: question,
           ...(questionAttachments && {

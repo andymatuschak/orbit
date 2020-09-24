@@ -1,6 +1,6 @@
 import {
   applicationPromptType,
-  basicPromptType,
+  qaPromptType,
   getIDForPromptTask,
   PromptID,
   PromptProvenanceType,
@@ -19,7 +19,7 @@ const basicIngestLog: IngestActionLog = {
   actionLogType: ingestActionLogType,
   timestampMillis: 0,
   taskID: getIDForPromptTask({
-    promptType: basicPromptType,
+    promptType: qaPromptType,
     promptParameters: null,
     promptID: "asdkjlf" as PromptID,
   }),
@@ -33,7 +33,7 @@ beforeAll(async () => {
 
 test("ingest logs", async () => {
   expect(basicIngestLogID).toMatchInlineSnapshot(
-    `"z4EBG9jGA4jCHEZKZVdA1gNyYLbZCEKFRqKCfD1ouB8Yn5v6P5v"`,
+    `"z4EBG9j73xpQcJ7BgMZgwcdAx1rasEc1daTrH9ivqhwfpEm9bv8"`,
   );
 
   const withMetadataID = await getIDForActionLog({
@@ -47,7 +47,7 @@ test("ingest logs", async () => {
     },
   });
   expect(withMetadataID).toMatchInlineSnapshot(
-    `"z4EBG9j7XneMtGRAh7YynQL4hm8RUysfUGFxER3cWTQPcJxmUka"`,
+    `"z4EBG9jBBs3qeJH5MkYEsajaf4LoLjpkfByotGmn2gge9SV4HVc"`,
   );
   expect(basicIngestLogID).not.toEqual(withMetadataID);
 });
@@ -99,10 +99,10 @@ test("update metadata", async () => {
     updates: { isDeleted: false },
   });
   expect(testDeletionID).toMatchInlineSnapshot(
-    `"z4EBG9jGRXbHdCeeWGM6T2DssQDXzMRsZTBr1s8vgUpFW2icdq9"`,
+    `"z4EBG9jCCSwj2S1FDM8PhqcAPU8ds6odCx3HcpkQ7FCw2HgMhog"`,
   );
   expect(testUndeletionID).toMatchInlineSnapshot(
-    `"z4EBG9jDTgSoA6UWhNfHbe38XMUApRZuoezbftusEp2X1WciLBL"`,
+    `"z4EBG9j8cceH7RQn72vzYvZVJRDnRrLgwsgbVYJk1QQeLZfpdpW"`,
   );
   expect(testDeletionID).not.toEqual(testUndeletionID);
 });

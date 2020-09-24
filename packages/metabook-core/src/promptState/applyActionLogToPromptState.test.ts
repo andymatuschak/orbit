@@ -1,7 +1,4 @@
-import {
-  testApplicationPrompt,
-  testBasicPrompt,
-} from "../__tests__/sampleData";
+import { testApplicationPrompt, testQAPrompt } from "../__tests__/sampleData";
 import { ActionLogID, getIDForActionLog } from "../actionLogID";
 import { getIDForPrompt, PromptID } from "../promptID";
 import {
@@ -14,7 +11,7 @@ import {
   rescheduleActionLogType,
   updateMetadataActionLogType,
 } from "../types/actionLog";
-import { applicationPromptType, basicPromptType } from "../types/prompt";
+import { applicationPromptType, qaPromptType } from "../types/prompt";
 import {
   getActionLogFromPromptActionLog,
   PromptActionLog,
@@ -22,7 +19,7 @@ import {
   PromptRepetitionActionLog,
 } from "../types/promptActionLog";
 import { getIDForPromptTask, PromptTaskID } from "../types/promptTask";
-import { BasicPromptTaskParameters } from "../types/promptTaskParameters";
+import { QAPromptTaskParameters } from "../types/promptTaskParameters";
 import applyActionLogToPromptState, {
   updateBaseHeadActionLogIDs,
 } from "./applyActionLogToPromptState";
@@ -30,14 +27,14 @@ import { PromptState } from "./promptState";
 
 const testSchedule = "default";
 const scheduleSequence = getIntervalSequenceForSchedule(testSchedule);
-let testBasicPromptID: PromptID;
-let testBasicPromptTaskID: PromptTaskID;
+let testQAPromptID: PromptID;
+let testQAPromptTaskID: PromptTaskID;
 
 beforeAll(async () => {
-  testBasicPromptID = await getIDForPrompt(testBasicPrompt);
-  testBasicPromptTaskID = getIDForPromptTask({
-    promptID: testBasicPromptID,
-    promptType: basicPromptType,
+  testQAPromptID = await getIDForPrompt(testQAPrompt);
+  testQAPromptTaskID = getIDForPromptTask({
+    promptID: testQAPromptID,
+    promptType: qaPromptType,
     promptParameters: null,
   });
 });
@@ -97,7 +94,7 @@ beforeAll(async () => {
   testIngestLog = {
     actionLogType: ingestActionLogType,
     timestampMillis: 1000,
-    taskID: testBasicPromptTaskID,
+    taskID: testQAPromptTaskID,
     provenance: null,
   };
   testIngestLogID = await getIDForActionLog(
@@ -156,7 +153,7 @@ describe("ingesting", () => {
   });
 });
 
-let testRepetitionLog: PromptRepetitionActionLog<BasicPromptTaskParameters>;
+let testRepetitionLog: PromptRepetitionActionLog<QAPromptTaskParameters>;
 let testRepetitionLogID: ActionLogID;
 beforeAll(async () => {
   testRepetitionLog = {
@@ -166,7 +163,7 @@ beforeAll(async () => {
     parentActionLogIDs: [],
     taskParameters: null,
     context: null,
-    taskID: testBasicPromptTaskID,
+    taskID: testQAPromptTaskID,
   };
   testRepetitionLogID = await getIDForActionLog(testRepetitionLog);
 });

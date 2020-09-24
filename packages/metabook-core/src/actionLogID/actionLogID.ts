@@ -15,7 +15,7 @@ import { TaskMetadata, TaskProvenance } from "../types/taskMetadata";
 import { CID, CIDEncodable, encodeObjectToCIDString } from "../util/cids";
 import { getPromptTaskForID, PromptTaskID } from "../types/promptTask";
 import {
-  basicPromptType,
+  qaPromptType,
   clozePromptType,
   applicationPromptType,
 } from "../types/prompt";
@@ -68,7 +68,7 @@ function canonicalizeActionLog(actionLog: ActionLog): CIDEncodable<ActionLog> {
       throw new Error(`Unexpected action log taskID: ${taskID}: ${promptTask}`);
     }
     switch (promptTask.promptType) {
-      case basicPromptType:
+      case qaPromptType:
       case clozePromptType:
         throw new Error(
           `Prompt type ${promptTask.promptType} should not have task parameters (${taskParameters})`,

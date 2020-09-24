@@ -6,7 +6,7 @@ import {
 } from "./cstOrbitAdapters";
 
 describe("getITPromptForOrbitPrompt", () => {
-  test("basic prompt", () => {
+  test("qa prompt", () => {
     expect(getITPromptForOrbitPrompt(simpleOrbitPrompt)).toBeTruthy();
   });
 

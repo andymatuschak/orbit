@@ -3,42 +3,43 @@
 import { PromptID } from "../promptID";
 import {
   applicationPromptType,
-  basicPromptType,
+  qaPromptType,
   clozePromptType,
+  PromptType,
 } from "./prompt";
 import { PromptProvenance } from "./promptProvenance";
 import { TaskMetadata } from "./taskMetadata";
 
-export interface BasicPromptTask {
+interface PromptTaskBase<T extends PromptType, P extends PromptParameters> {
   promptID: PromptID;
-  promptType: typeof basicPromptType;
-  promptParameters: BasicPromptParameters;
+  promptType: T;
+  promptParameters: P;
 }
 
-export interface ApplicationPromptTask {
-  promptID: PromptID;
-  promptType: typeof applicationPromptType;
-  promptParameters: ApplicationPromptParameters;
-}
+export type QAPromptTask = PromptTaskBase<
+  typeof qaPromptType,
+  QAPromptParameters
+>;
 
-export interface ClozePromptTask {
-  promptID: PromptID;
-  promptType: typeof clozePromptType;
-  promptParameters: ClozePromptParameters;
-}
+export type ApplicationPromptTask = PromptTaskBase<
+  typeof applicationPromptType,
+  ApplicationPromptParameters
+>;
 
-export type PromptTask =
-  | BasicPromptTask
-  | ApplicationPromptTask
-  | ClozePromptTask;
+export type ClozePromptTask = PromptTaskBase<
+  typeof clozePromptType,
+  ClozePromptParameters
+>;
 
-export type BasicPromptParameters = null;
+export type PromptTask = QAPromptTask | ApplicationPromptTask | ClozePromptTask;
+
+export type QAPromptParameters = null;
 export type ApplicationPromptParameters = null;
 export interface ClozePromptParameters {
   clozeIndex: number;
 }
 export type PromptParameters =
-  | BasicPromptParameters
+  | QAPromptParameters
   | ApplicationPromptParameters
   | ClozePromptParameters;
 
@@ -57,11 +58,11 @@ export function getPromptTaskForID(
   }
   const promptID = components[0] as PromptID;
   switch (components[1]) {
-    case basicPromptType:
+    case qaPromptType:
       if (components.length === 2) {
         return {
           promptID,
-          promptType: basicPromptType,
+          promptType: qaPromptType,
           promptParameters: null,
         };
       } else {
@@ -95,7 +96,7 @@ export function getPromptTaskForID(
 export function getIDForPromptTask(promptTask: PromptTask): PromptTaskID {
   const base = `${promptTask.promptID}/${promptTask.promptType}`;
   switch (promptTask.promptType) {
-    case basicPromptType:
+    case qaPromptType:
     case applicationPromptType:
       return base as PromptTaskID;
     case clozePromptType:

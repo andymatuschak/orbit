@@ -7,21 +7,21 @@ export interface PromptField {
   attachments: AttachmentIDReference[];
 }
 
-export interface QAPrompt {
+export interface QAPromptContents {
   question: PromptField;
   answer: PromptField;
   explanation?: PromptField;
 }
 
-export const basicPromptType = "basic";
-export interface BasicPrompt extends QAPrompt {
-  promptType: typeof basicPromptType;
+export const qaPromptType = "qaPrompt";
+export interface QAPrompt extends QAPromptContents {
+  promptType: typeof qaPromptType;
 }
 
 export const applicationPromptType = "applicationPrompt";
 export interface ApplicationPrompt {
   promptType: typeof applicationPromptType;
-  variants: QAPrompt[];
+  variants: QAPromptContents[];
 }
 
 export const clozePromptType = "cloze";
@@ -30,5 +30,5 @@ export interface ClozePrompt {
   body: PromptField;
 }
 
-export type Prompt = BasicPrompt | ApplicationPrompt | ClozePrompt;
+export type Prompt = QAPrompt | ApplicationPrompt | ClozePrompt;
 export type PromptType = Prompt["promptType"];

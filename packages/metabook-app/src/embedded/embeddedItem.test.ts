@@ -1,32 +1,28 @@
-import {
-  AttachmentIDReference,
-  BasicPrompt,
-  basicPromptType,
-} from "metabook-core";
+import { AttachmentIDReference, QAPrompt, qaPromptType } from "metabook-core";
 import { ReviewItem } from "metabook-ui";
 import {
-  EmbeddedBasicPrompt,
+  EmbeddedQAPrompt,
   getAttachmentURLsInEmbeddedItem,
   getReviewItemFromEmbeddedItem,
 } from "./embeddedItem";
 
-const testEmbeddedBasicPrompt: EmbeddedBasicPrompt = {
-  type: basicPromptType,
+const testEmbeddedQAPrompt: EmbeddedQAPrompt = {
+  type: qaPromptType,
   question: { contents: "question" },
   answer: { contents: "answer" },
 };
 
-const testBasicEmbeddedPromptsWithAttachments: EmbeddedBasicPrompt = {
-  type: basicPromptType,
+const testBasicEmbeddedPromptsWithAttachments: EmbeddedQAPrompt = {
+  type: qaPromptType,
   question: { contents: "q", attachmentURLs: ["test-a"] },
   answer: { contents: "a", attachmentURLs: ["test-b"] },
 };
 
 describe("getReviewItemFromEmbeddedItem", () => {
-  test("basic prompt", () => {
+  test("qa prompt", () => {
     const attachmentResolutionMap = new Map();
     const reviewItem = getReviewItemFromEmbeddedItem(
-      testEmbeddedBasicPrompt,
+      testEmbeddedQAPrompt,
       new Map(),
       attachmentResolutionMap,
     ) as ReviewItem;
@@ -34,12 +30,10 @@ describe("getReviewItemFromEmbeddedItem", () => {
     expect(reviewItem.promptState).toBeNull();
     expect(reviewItem.promptParameters).toBeNull();
     expect(reviewItem.attachmentResolutionMap).toBe(attachmentResolutionMap);
-    expect((reviewItem.prompt as BasicPrompt).question.contents).toEqual(
+    expect((reviewItem.prompt as QAPrompt).question.contents).toEqual(
       "question",
     );
-    expect((reviewItem.prompt as BasicPrompt).answer.contents).toEqual(
-      "answer",
-    );
+    expect((reviewItem.prompt as QAPrompt).answer.contents).toEqual("answer");
   });
 
   test("basic attachments", () => {
@@ -52,20 +46,20 @@ describe("getReviewItemFromEmbeddedItem", () => {
       new Map(),
     ) as ReviewItem;
     expect(reviewItem).not.toBeInstanceOf(Error);
-    expect(
-      (reviewItem.prompt as BasicPrompt).question.attachments,
-    ).toMatchObject(["id-a"]);
-    expect(
-      (reviewItem.prompt as BasicPrompt).answer.attachments,
-    ).toMatchObject(["id-b"]);
+    expect((reviewItem.prompt as QAPrompt).question.attachments).toMatchObject([
+      "id-a",
+    ]);
+    expect((reviewItem.prompt as QAPrompt).answer.attachments).toMatchObject([
+      "id-b",
+    ]);
   });
 });
 
 describe("getAttachmentURLsInEmbeddedItem", () => {
   test("no attachments", () => {
-    expect(
-      getAttachmentURLsInEmbeddedItem(testEmbeddedBasicPrompt),
-    ).toMatchObject([]);
+    expect(getAttachmentURLsInEmbeddedItem(testEmbeddedQAPrompt)).toMatchObject(
+      [],
+    );
   });
 
   test("attachments", () => {

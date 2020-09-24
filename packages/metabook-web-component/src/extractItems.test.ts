@@ -9,8 +9,8 @@ ${reviewAreaInnerHTML}
   return document.getElementById("test")!;
 }
 
-describe("basic prompts", () => {
-  test("extracts basic prompt", () => {
+describe("qa prompts", () => {
+  test("extracts qa prompt", () => {
     const element = getTestElement(`<orbit-prompt question="q" answer="a" />`);
     const items = extractItems(element);
     expect(items).toHaveLength(1);

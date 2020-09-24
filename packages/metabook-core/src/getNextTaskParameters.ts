@@ -1,6 +1,11 @@
 // Prompt and PromptTaskParameters need to be the same subtypes, but I don't have a good way to express that in the type system.
 
-import { Prompt } from "./types/prompt";
+import {
+  applicationPromptType,
+  clozePromptType,
+  Prompt,
+  qaPromptType,
+} from "./types/prompt";
 import {
   ApplicationPromptTaskParameters,
   PromptTaskParameters,
@@ -11,10 +16,10 @@ export default function getNextTaskParameters(
   promptTaskParameters: PromptTaskParameters | null,
 ): PromptTaskParameters {
   switch (prompt.promptType) {
-    case "basic":
-    case "cloze":
+    case qaPromptType:
+    case clozePromptType:
       return null;
-    case "applicationPrompt":
+    case applicationPromptType:
       if (promptTaskParameters === null) {
         return {
           variantIndex: 0,

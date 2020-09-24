@@ -1,5 +1,5 @@
 import { Prompt } from "metabook-core";
-import { testBasicPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "metabook-sample-data";
 import { storePromptsIfNecessary } from "./firebase";
 
 describe("storePromptsIfNecessary", () => {
@@ -25,12 +25,12 @@ describe("storePromptsIfNecessary", () => {
     const storePrompts = jest.fn().mockResolvedValue(["b"]);
     await expect(
       storePromptsIfNecessary(
-        { a: {} as Prompt, b: testBasicPrompt },
+        { a: {} as Prompt, b: testQAPrompt },
         jest.fn().mockResolvedValue(["a"]),
         storePrompts,
       ),
     ).resolves.toBeUndefined();
-    expect(storePrompts).toBeCalledWith([testBasicPrompt]);
+    expect(storePrompts).toBeCalledWith([testQAPrompt]);
   });
 
   test("mismatched ID", async () => {

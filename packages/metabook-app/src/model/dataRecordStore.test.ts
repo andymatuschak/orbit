@@ -1,5 +1,5 @@
 import { PromptID } from "metabook-core";
-import { testBasicPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "metabook-sample-data";
 import DataRecordStore from "./dataRecordStore";
 
 let cache: DataRecordStore;
@@ -13,10 +13,10 @@ afterEach(async () => {
 });
 
 test("round trips data", async () => {
-  const saveResult = await cache.savePrompt("x" as PromptID, testBasicPrompt);
+  const saveResult = await cache.savePrompt("x" as PromptID, testQAPrompt);
   expect(saveResult).not.toBeInstanceOf(Error);
   const record = await cache.getPrompt("x" as PromptID);
-  expect(record).toMatchObject(testBasicPrompt);
+  expect(record).toMatchObject(testQAPrompt);
 });
 
 test("returns null for missing keys", async () => {

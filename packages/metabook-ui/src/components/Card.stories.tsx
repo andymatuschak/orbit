@@ -11,7 +11,7 @@ import {
 } from "metabook-core";
 import {
   testApplicationPrompt,
-  testBasicPrompt,
+  testQAPrompt,
   testClozePrompt,
 } from "metabook-sample-data";
 import React, { ReactNode, useState } from "react";
@@ -63,13 +63,13 @@ export const basic = () => (
     reviewItem={{
       reviewItemType: "prompt",
       prompt: {
-        ...testBasicPrompt,
+        ...testQAPrompt,
         question: {
-          contents: text("Question", testBasicPrompt.question.contents),
+          contents: text("Question", testQAPrompt.question.contents),
           attachments: [],
         },
         answer: {
-          contents: text("Answer", testBasicPrompt.answer.contents),
+          contents: text("Answer", testQAPrompt.answer.contents),
           attachments: [],
         },
       },
@@ -86,7 +86,7 @@ export const longText = () => (
       reviewItem={{
         reviewItemType: "prompt",
         prompt: {
-          ...testBasicPrompt,
+          ...testQAPrompt,
           question: {
             attachments: [],
             contents:
@@ -153,9 +153,9 @@ export const image = () => (
     reviewItem={{
       reviewItemType: "prompt",
       prompt: {
-        ...testBasicPrompt,
+        ...testQAPrompt,
         question: {
-          ...testBasicPrompt.question,
+          ...testQAPrompt.question,
           attachments: [testAttachmentIDReference],
         },
       },

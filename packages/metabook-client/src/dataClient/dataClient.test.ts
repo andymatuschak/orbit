@@ -8,7 +8,7 @@ import {
   imageAttachmentType,
 } from "metabook-core";
 import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
-import { testBasicPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "metabook-sample-data";
 import { MetabookFirebaseDataClient } from "./dataClient";
 
 let testFirestore: firebase.firestore.Firestore;
@@ -33,10 +33,10 @@ describe("getData", () => {
 });
 
 test("records prompt spec", async () => {
-  await dataClient.recordPrompts([testBasicPrompt]);
-  const testPromptTaskID = await getIDForPrompt(testBasicPrompt);
+  await dataClient.recordPrompts([testQAPrompt]);
+  const testPromptTaskID = await getIDForPrompt(testQAPrompt);
   const prompts = await dataClient.getPrompts([testPromptTaskID]);
-  expect(prompts.get(testPromptTaskID)).toMatchObject(testBasicPrompt);
+  expect(prompts.get(testPromptTaskID)).toMatchObject(testQAPrompt);
 });
 
 test("records attachments", async () => {

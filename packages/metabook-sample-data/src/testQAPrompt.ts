@@ -1,7 +1,7 @@
-import { BasicPrompt } from "metabook-core";
+import { QAPrompt, qaPromptType } from "metabook-core";
 
-const testBasicPrompt: BasicPrompt = {
-  promptType: "basic",
+const testQAPrompt: QAPrompt = {
+  promptType: qaPromptType,
   question: {
     contents:
       "Is it possible to use _quantum teleportation_ to transmit information faster than light?\n\nThis is a **second paragraph** with _**bold italic**_.",
@@ -13,4 +13,4 @@ const testBasicPrompt: BasicPrompt = {
   },
 };
 
-export default testBasicPrompt;
+export default testQAPrompt;

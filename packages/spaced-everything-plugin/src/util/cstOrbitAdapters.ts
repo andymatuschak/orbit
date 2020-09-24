@@ -3,7 +3,7 @@ import mdast from "mdast";
 import unist from "unist";
 import {
   applicationPromptType,
-  basicPromptType,
+  qaPromptType,
   clozePromptType,
   Prompt,
 } from "metabook-core";
@@ -15,7 +15,7 @@ export function getOrbitPromptForITPrompt(prompt: IT.Prompt): Prompt {
   switch (prompt.type) {
     case IT.qaPromptType:
       return {
-        promptType: basicPromptType,
+        promptType: qaPromptType,
         question: {
           contents: getMarkdownString(prompt.question),
           attachments: [],
@@ -56,7 +56,7 @@ export function getITPromptForOrbitPrompt(prompt: Prompt): IT.Prompt | null {
   }
 
   switch (prompt.promptType) {
-    case basicPromptType:
+    case qaPromptType:
       const question = getRootChild(prompt.question.contents);
       const answer = getRootChild(prompt.answer.contents);
       if (question && answer) {

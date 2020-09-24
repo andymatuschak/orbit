@@ -9,7 +9,7 @@ import {
   Prompt,
   PromptID,
 } from "metabook-core";
-import { testApplicationPrompt, testBasicPrompt } from "metabook-sample-data";
+import { testApplicationPrompt, testQAPrompt } from "metabook-sample-data";
 import DataRecordManager, {
   DataRecordClientFileStore,
 } from "./dataRecordManager";
@@ -51,10 +51,10 @@ class MockDataClient implements MetabookDataClient {
 }
 
 let dataRecordStore: DataRecordStore;
-let testBasicPromptID: PromptID;
+let testQAPromptID: PromptID;
 beforeEach(async () => {
   dataRecordStore = new DataRecordStore();
-  testBasicPromptID = await getIDForPrompt(testBasicPrompt);
+  testQAPromptID = await getIDForPrompt(testQAPrompt);
 });
 
 afterEach(async () => {
@@ -69,11 +69,9 @@ describe("prompts", () => {
       dataRecordStore,
       {} as DataRecordClientFileStore,
     );
-    await dataRecordStore.savePrompt(testBasicPromptID, testBasicPrompt);
-    const prompts = await client.getPrompts(new Set([testBasicPromptID]));
-    expect(prompts).toMatchObject(
-      new Map([[testBasicPromptID, testBasicPrompt]]),
-    );
+    await dataRecordStore.savePrompt(testQAPromptID, testQAPrompt);
+    const prompts = await client.getPrompts(new Set([testQAPromptID]));
+    expect(prompts).toMatchObject(new Map([[testQAPromptID, testQAPrompt]]));
   });
 
   test("leaves unknown prompts undefined", async () => {
@@ -82,39 +80,37 @@ describe("prompts", () => {
       dataRecordStore,
       {} as DataRecordClientFileStore,
     );
-    const prompts = await client.getPrompts(new Set([testBasicPromptID]));
+    const prompts = await client.getPrompts(new Set([testQAPromptID]));
     expect(prompts).toMatchObject(new Map());
   });
 
   test("fetches source prompts when necessary", async () => {
     const client = new DataRecordManager(
-      new MockDataClient({ [testBasicPromptID]: testBasicPrompt }),
+      new MockDataClient({ [testQAPromptID]: testQAPrompt }),
       dataRecordStore,
       {} as DataRecordClientFileStore,
     );
-    const prompts = await client.getPrompts(new Set([testBasicPromptID]));
-    expect(prompts).toMatchObject(
-      new Map([[testBasicPromptID, testBasicPrompt]]),
-    );
+    const prompts = await client.getPrompts(new Set([testQAPromptID]));
+    expect(prompts).toMatchObject(new Map([[testQAPromptID, testQAPrompt]]));
 
-    expect(await dataRecordStore.getPrompt(testBasicPromptID)).toMatchObject(
-      testBasicPrompt,
+    expect(await dataRecordStore.getPrompt(testQAPromptID)).toMatchObject(
+      testQAPrompt,
     );
   });
 
   test("mixes local and remote data", async () => {
     const client = new DataRecordManager(
-      new MockDataClient({ [testBasicPromptID]: testBasicPrompt }),
+      new MockDataClient({ [testQAPromptID]: testQAPrompt }),
       dataRecordStore,
       {} as DataRecordClientFileStore,
     );
     await dataRecordStore.savePrompt("x" as PromptID, testApplicationPrompt);
     const prompts = await client.getPrompts(
-      new Set([testBasicPromptID, "x" as PromptID]),
+      new Set([testQAPromptID, "x" as PromptID]),
     );
     expect(prompts).toMatchObject(
       new Map<PromptID, Prompt>([
-        [testBasicPromptID, testBasicPrompt],
+        [testQAPromptID, testQAPrompt],
         ["x" as PromptID, testApplicationPrompt],
       ]),
     );

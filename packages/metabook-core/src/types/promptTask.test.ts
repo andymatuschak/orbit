@@ -1,9 +1,5 @@
 import { PromptID } from "../promptID";
-import {
-  applicationPromptType,
-  basicPromptType,
-  clozePromptType,
-} from "./prompt";
+import { applicationPromptType, qaPromptType, clozePromptType } from "./prompt";
 import {
   getIDForPromptTask,
   getPromptTaskForID,
@@ -11,12 +7,12 @@ import {
 } from "./promptTask";
 
 describe("decoding prompt task IDs", () => {
-  test("decoding basic prompt task IDs", () => {
+  test("decoding qa prompt task IDs", () => {
     expect(
-      getPromptTaskForID(`foo/${basicPromptType}` as PromptTaskID),
+      getPromptTaskForID(`foo/${qaPromptType}` as PromptTaskID),
     ).toMatchObject({
       promptID: "foo",
-      promptType: basicPromptType,
+      promptType: qaPromptType,
     });
   });
 
@@ -46,10 +42,10 @@ describe("encoding prompt task IDs", () => {
     expect(
       getIDForPromptTask({
         promptID: "foo" as PromptID,
-        promptType: basicPromptType,
+        promptType: qaPromptType,
         promptParameters: null,
       }),
-    ).toEqual(`foo/${basicPromptType}`);
+    ).toEqual(`foo/${qaPromptType}`);
   });
 
   test("encoding cloze prompt task IDs", () => {

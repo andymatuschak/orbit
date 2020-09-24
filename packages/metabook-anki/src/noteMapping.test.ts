@@ -1,4 +1,4 @@
-import { basicPromptType, clozePromptType } from "metabook-core";
+import { qaPromptType, clozePromptType } from "metabook-core";
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
 import {
   AnkiCollectionDBHandle,
@@ -50,7 +50,7 @@ test("mapping basic note", () => {
   ).toMatchObject({
     issues: [],
     prompt: {
-      promptType: basicPromptType,
+      promptType: qaPromptType,
       question: {
         contents: "Test Q",
         attachments: [],
@@ -94,7 +94,7 @@ test("mapping note with image", () => {
           ],
           "contents": "Test answer with an image",
         },
-        "promptType": "basic",
+        "promptType": "qaPrompt",
         "question": Object {
           "attachments": Array [
             "image-paste-5146b5478bc75de1c703057f0a51a93a70ca922d.jpg",

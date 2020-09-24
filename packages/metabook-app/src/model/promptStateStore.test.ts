@@ -1,5 +1,5 @@
 import {
-  basicPromptType,
+  qaPromptType,
   getIDForPromptTask,
   PromptID,
   PromptState,
@@ -47,7 +47,7 @@ test("returns null for missing keys", async () => {
 describe("access by due timestamp", () => {
   const testTask: PromptTask = {
     promptID: "x" as PromptID,
-    promptType: basicPromptType,
+    promptType: qaPromptType,
     promptParameters: null,
   };
   const testTaskID = getIDForPromptTask(testTask);

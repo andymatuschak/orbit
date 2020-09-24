@@ -1,6 +1,6 @@
 import {
   ActionLogID,
-  basicPromptType,
+  qaPromptType,
   getIDForPrompt,
   getIDForPromptTask,
   PromptRepetitionOutcome,
@@ -12,15 +12,15 @@ import {
   PromptStateCache,
   ServerTimestamp,
 } from "metabook-firebase-support";
-import { testBasicPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "metabook-sample-data";
 import applyPromptActionLogToPromptStateCache from "./applyPromptActionLogToPromptStateCache";
 
 let promptTaskID: PromptTaskID;
 beforeAll(async () => {
   promptTaskID = getIDForPromptTask({
-    promptID: await getIDForPrompt(testBasicPrompt),
+    promptID: await getIDForPrompt(testQAPrompt),
     promptParameters: null,
-    promptType: basicPromptType,
+    promptType: qaPromptType,
   });
 });
 

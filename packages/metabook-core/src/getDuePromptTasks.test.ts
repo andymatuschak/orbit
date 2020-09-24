@@ -1,7 +1,7 @@
 import getDuePromptTasks from "./getDuePromptTasks";
 import { PromptID } from "./promptID";
 import { PromptState } from "./promptState/promptState";
-import { basicPromptType } from "./types/prompt";
+import { qaPromptType } from "./types/prompt";
 import { PromptTask } from "./types/promptTask";
 
 function generateCardStates(count: number, dueCount: number) {
@@ -10,7 +10,7 @@ function generateCardStates(count: number, dueCount: number) {
     cardStates.set(
       {
         promptID: i.toString() as PromptID,
-        promptType: basicPromptType,
+        promptType: qaPromptType,
         promptParameters: null,
       },
       {

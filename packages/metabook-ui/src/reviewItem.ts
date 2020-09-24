@@ -3,8 +3,8 @@ import {
   ApplicationPromptParameters,
   AttachmentID,
   AttachmentURLReference,
-  BasicPrompt,
-  BasicPromptParameters,
+  QAPrompt,
+  QAPromptParameters,
   ClozePrompt,
   ClozePromptParameters,
   PromptState,
@@ -19,9 +19,9 @@ interface BasePromptReviewItem {
   attachmentResolutionMap: AttachmentResolutionMap | null;
 }
 
-export interface BasicPromptReviewItem extends BasePromptReviewItem {
-  prompt: BasicPrompt;
-  promptParameters: BasicPromptParameters;
+export interface QAPromptReviewItem extends BasePromptReviewItem {
+  prompt: QAPrompt;
+  promptParameters: QAPromptParameters;
   promptState: PromptState | null;
 }
 
@@ -38,7 +38,7 @@ export interface ClozePromptReviewItem extends BasePromptReviewItem {
 }
 
 export type PromptReviewItem =
-  | BasicPromptReviewItem
+  | QAPromptReviewItem
   | ApplicationPromptReviewItem
   | ClozePromptReviewItem;
 

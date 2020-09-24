@@ -58,6 +58,7 @@ export function createTestFirebaseApp(
   firestore: firebase.firestore.Firestore;
   functions: firebase.functions.Functions;
 } {
+  process.env["FIRESTORE_EMULATOR_HOST"] = "localhost:8080";
   const testApp = firebaseTesting.initializeTestApp({
     projectId: projectID,
     auth: { uid, email },

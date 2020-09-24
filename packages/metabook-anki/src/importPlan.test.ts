@@ -1,13 +1,13 @@
 import {
   AnkiPromptProvenance,
-  basicPromptType,
+  qaPromptType,
   getActionLogFromPromptActionLog,
   getIDForActionLog,
   PromptIngestActionLog,
   PromptRepetitionOutcome,
   RescheduleActionLog,
 } from "metabook-core";
-import { testBasicPrompt, testClozePrompt } from "metabook-sample-data";
+import { testQAPrompt, testClozePrompt } from "metabook-sample-data";
 import {
   testCard,
   testCollection,
@@ -34,7 +34,7 @@ describe("createPlanForNote", () => {
   }
   const { prompt } = result;
   test("uncached model", () => {
-    expect(prompt.promptType).toEqual(basicPromptType);
+    expect(prompt.promptType).toEqual(qaPromptType);
     expect(cache[testNote.mid]).toBeTruthy();
   });
   test("cached model", () => {
@@ -65,7 +65,7 @@ describe("createPlanForNote", () => {
 describe("extract prompt task ID for card", () => {
   test("cloze prompts include their IDs", () => {
     const basicTaskID = expect(
-      extractPromptTaskIDForCard(testCard, testBasicPrompt),
+      extractPromptTaskIDForCard(testCard, testQAPrompt),
     );
     const clozeTaskID = expect(
       extractPromptTaskIDForCard({ ...testCard, ord: 5 }, testClozePrompt),
@@ -77,7 +77,7 @@ describe("extract prompt task ID for card", () => {
 test("create plan for card", async () => {
   const log = (await createPlanForCard(
     testCard,
-    testBasicPrompt,
+    testQAPrompt,
     null,
   )) as PromptIngestActionLog;
   expect((log.provenance as AnkiPromptProvenance).externalID).toEqual(
@@ -88,7 +88,7 @@ test("create plan for card", async () => {
 test("create plan for log", async () => {
   const ingestLog = (await createPlanForCard(
     testCard,
-    testBasicPrompt,
+    testQAPrompt,
     null,
   )) as PromptIngestActionLog;
   const log = await createPlanForLog(testLog, ingestLog);
@@ -103,7 +103,7 @@ describe("reschedule logs", () => {
   beforeAll(async () => {
     ingestLog = (await createPlanForCard(
       testCard,
-      testBasicPrompt,
+      testQAPrompt,
       null,
     )) as PromptIngestActionLog;
   });

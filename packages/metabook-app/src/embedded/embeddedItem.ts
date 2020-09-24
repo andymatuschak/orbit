@@ -1,7 +1,7 @@
 import {
   AttachmentIDReference,
-  BasicPrompt,
-  basicPromptType,
+  QAPrompt,
+  qaPromptType,
   PromptField,
 } from "metabook-core";
 import {
@@ -16,13 +16,13 @@ export interface EmbeddedPromptField {
   attachmentURLs?: string[];
 }
 
-export interface EmbeddedBasicPrompt {
-  type: typeof basicPromptType;
+export interface EmbeddedQAPrompt {
+  type: typeof qaPromptType;
   question: EmbeddedPromptField;
   answer: EmbeddedPromptField;
 }
 
-export type EmbeddedItem = EmbeddedBasicPrompt;
+export type EmbeddedItem = EmbeddedQAPrompt;
 
 function getPromptFieldFromEmbeddedPromptField(
   embeddedPromptField: EmbeddedPromptField,
@@ -50,19 +50,19 @@ function getPromptFieldFromEmbeddedPromptField(
   }
 }
 
-function getPromptFromEmbeddedBasicPrompt(
-  embeddedBasicPrompt: EmbeddedBasicPrompt,
+function getPromptFromEmbeddedQAPrompt(
+  embeddedQAPrompt: EmbeddedQAPrompt,
   attachmentURLsToIDReferences: Map<string, AttachmentIDReference>,
-): BasicPrompt | Error {
+): QAPrompt | Error {
   const question = getPromptFieldFromEmbeddedPromptField(
-    embeddedBasicPrompt.question,
+    embeddedQAPrompt.question,
     attachmentURLsToIDReferences,
   );
   if (question instanceof Error) {
     return question;
   }
   const answer = getPromptFieldFromEmbeddedPromptField(
-    embeddedBasicPrompt.answer,
+    embeddedQAPrompt.answer,
     attachmentURLsToIDReferences,
   );
   if (answer instanceof Error) {
@@ -70,7 +70,7 @@ function getPromptFromEmbeddedBasicPrompt(
   }
 
   return {
-    promptType: basicPromptType,
+    promptType: qaPromptType,
     question,
     answer,
   };
@@ -82,8 +82,8 @@ export function getReviewItemFromEmbeddedItem(
   attachmentResolutionMap: AttachmentResolutionMap,
 ): ReviewItem | Error {
   switch (embeddedItem.type) {
-    case basicPromptType:
-      const prompt = getPromptFromEmbeddedBasicPrompt(
+    case qaPromptType:
+      const prompt = getPromptFromEmbeddedQAPrompt(
         embeddedItem,
         attachmentURLsToIDReferences,
       );
@@ -106,7 +106,7 @@ export function getAttachmentURLsInEmbeddedItem(
   embeddedItem: EmbeddedItem,
 ): string[] {
   switch (embeddedItem.type) {
-    case basicPromptType:
+    case qaPromptType:
       return [
         ...(embeddedItem.question.attachmentURLs ?? []),
         ...(embeddedItem.answer.attachmentURLs ?? []),

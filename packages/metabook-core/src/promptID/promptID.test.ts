@@ -1,7 +1,6 @@
 import createTestAttachmentData from "../__tests__/createTestAttachmentData";
 import {
   testApplicationPrompt,
-  testBasicPrompt,
   testClozePrompt,
   testQAPrompt,
 } from "../__tests__/sampleData";
@@ -12,10 +11,8 @@ import { CID, multibase, multihash, multicodec } from "../util/cids";
 import { getIDForPrompt } from "./promptID";
 
 test("encoding stability", async () => {
-  expect(
-    (await getIDForPrompt(testBasicPrompt)).toString(),
-  ).toMatchInlineSnapshot(
-    `"z4EBG9j8Gqw9fBVw4rucCxBULZJgZsAmWFRWHRq2Fx1XShp44kW"`,
+  expect((await getIDForPrompt(testQAPrompt)).toString()).toMatchInlineSnapshot(
+    `"z4EBG9j3P5ZMTbuTD8PzuJ5bSLGRNnb62m7LCSo3j356cbY11uW"`,
   );
 
   expect(
@@ -48,46 +45,46 @@ describe("encoding attachments", () => {
   });
 
   test("basic prompt attachments", async () => {
-    const basicPromptID = (await getIDForPrompt(testBasicPrompt)).toString();
+    const qaPromptID = (await getIDForPrompt(testQAPrompt)).toString();
     const oneAttachmentPromptID = (
       await getIDForPrompt({
-        ...testBasicPrompt,
+        ...testQAPrompt,
         question: {
-          ...testBasicPrompt.question,
+          ...testQAPrompt.question,
           attachments: [testAttachmentReference],
         },
       })
     ).toString();
     const attachmentsPromptID = await getIDForPrompt({
-      ...testBasicPrompt,
+      ...testQAPrompt,
       question: {
-        ...testBasicPrompt.question,
+        ...testQAPrompt.question,
         attachments: [testAttachmentReference, testAttachmentReference2],
       },
     });
     const multiFieldsPromptID = await getIDForPrompt({
-      ...testBasicPrompt,
+      ...testQAPrompt,
       question: {
-        ...testBasicPrompt.question,
+        ...testQAPrompt.question,
         attachments: [testAttachmentReference],
       },
       answer: {
-        ...testBasicPrompt.answer,
+        ...testQAPrompt.answer,
         attachments: [testAttachmentReference2],
       },
     });
-    expect(basicPromptID).not.toEqual(oneAttachmentPromptID);
+    expect(qaPromptID).not.toEqual(oneAttachmentPromptID);
     expect(oneAttachmentPromptID).not.toEqual(attachmentsPromptID);
     expect(attachmentsPromptID).not.toEqual(multiFieldsPromptID);
 
     expect(oneAttachmentPromptID).toMatchInlineSnapshot(
-      `"z4EBG9j26qVhd37BoCcU4FksgPpVEFj3mjGYoV6dekcjcRDWqJc"`,
+      `"z4EBG9jCpnUvEJqDhvL6AVwVjUvgN8Zm3nHmJsvsmtDrBY5aQvP"`,
     );
     expect(attachmentsPromptID).toMatchInlineSnapshot(
-      `"z4EBG9jDMHbWNgE8ha1DWc3Rg2zC2cZb6c3GwiASFEP8t2LubL5"`,
+      `"z4EBG9jAQmoKMSF5Tv4ideXqVrhTuv527R7Hm7324ik9QWgYy7o"`,
     );
     expect(multiFieldsPromptID).toMatchInlineSnapshot(
-      `"z4EBG9j1enHPeqRYFwtMes7GXjUHfCnn33dpy2apJBsCaFfRvcV"`,
+      `"z4EBG9j8GJeXoxQJG7VLkCBCxa7EQHfT3gPWtn8XWxHBsxw7Jvc"`,
     );
 
     // The prompt CID should not depend on the choice of attachment CID encoding.
@@ -97,9 +94,9 @@ describe("encoding attachments", () => {
     );
     const variantAttachmentPromptID = (
       await getIDForPrompt({
-        ...testBasicPrompt,
+        ...testQAPrompt,
         question: {
-          ...testBasicPrompt.question,
+          ...testQAPrompt.question,
           attachments: [
             {
               ...testAttachmentReference,
@@ -118,29 +115,29 @@ describe("encoding attachments", () => {
         promptType: "applicationPrompt",
         variants: [
           {
-            ...testBasicPrompt,
+            ...testQAPrompt,
             question: {
-              ...testBasicPrompt.question,
+              ...testQAPrompt.question,
               attachments: [testAttachmentReference, testAttachmentReference2],
             },
           },
-          testBasicPrompt,
+          testQAPrompt,
         ],
       };
       const testApplicationPrompt2: ApplicationPrompt = {
         promptType: "applicationPrompt",
         variants: [
           {
-            ...testBasicPrompt,
+            ...testQAPrompt,
             question: {
-              ...testBasicPrompt.question,
+              ...testQAPrompt.question,
               attachments: [testAttachmentReference],
             },
           },
           {
-            ...testBasicPrompt,
+            ...testQAPrompt,
             question: {
-              ...testBasicPrompt.question,
+              ...testQAPrompt.question,
               attachments: [testAttachmentReference2],
             },
           },
@@ -165,8 +162,8 @@ describe("encoding attachments", () => {
 });
 
 test("encodings are repeatable", async () => {
-  const a = await getIDForPrompt(testBasicPrompt);
-  const b = await getIDForPrompt({ ...testBasicPrompt });
+  const a = await getIDForPrompt(testQAPrompt);
+  const b = await getIDForPrompt({ ...testQAPrompt });
   expect(a).toEqual(b);
 });
 
@@ -180,7 +177,7 @@ test("application prompts encodings depend on variants", async () => {
 });
 
 test("encoding metadata", async () => {
-  const cid = await getIDForPrompt(testBasicPrompt);
+  const cid = await getIDForPrompt(testQAPrompt);
   const testCID = CID.from(cid);
   expect(multibase.encoding(cid).name).toEqual("base58btc");
   expect(testCID.code).toEqual(multicodec.get("dag-json").code);

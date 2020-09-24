@@ -1,12 +1,12 @@
 import {
   testApplicationPrompt,
-  testBasicPrompt,
+  testQAPrompt,
   testClozePrompt,
 } from "./__tests__/sampleData";
 import getNextTaskParameters from "./getNextTaskParameters";
 
 test("basic prompt task parameters", () => {
-  expect(getNextTaskParameters(testBasicPrompt, null)).toBeNull();
+  expect(getNextTaskParameters(testQAPrompt, null)).toBeNull();
 });
 
 test("application prompt task parameters", () => {

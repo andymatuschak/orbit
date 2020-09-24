@@ -1,7 +1,7 @@
 import { boolean, number, text, withKnobs } from "@storybook/addon-knobs";
 import {
   applyActionLogToPromptState,
-  basicPromptType,
+  qaPromptType,
   getIDForPromptTask,
   getIntervalSequenceForSchedule,
   PromptID,
@@ -12,7 +12,7 @@ import {
   repetitionActionLogType,
   typedKeys,
 } from "metabook-core";
-import { testBasicPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "metabook-sample-data";
 import React, { useCallback, useMemo, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import { ReviewItem } from "../reviewItem";
@@ -60,7 +60,7 @@ function generateReviewItem(
       },
     },
     prompt: {
-      ...testBasicPrompt,
+      ...testQAPrompt,
       question: { contents: questionText, attachments: [] },
       answer: { contents: answerText, attachments: [] },
     },
@@ -151,7 +151,7 @@ export function Basic() {
                 outcome,
                 parentActionLogIDs: [],
                 taskID: getIDForPromptTask({
-                  promptType: basicPromptType,
+                  promptType: qaPromptType,
                   promptID: "testID" as PromptID,
                   promptParameters: null,
                 }),

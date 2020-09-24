@@ -1,4 +1,4 @@
-import { PromptState, PromptTask, PromptTaskID } from "metabook-core";
+import { PromptState, PromptTask } from "metabook-core";
 import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";
 import { createTask, Task } from "../util/task";
 import DataRecordManager from "./dataRecordManager";

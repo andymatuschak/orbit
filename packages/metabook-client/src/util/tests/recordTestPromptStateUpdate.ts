@@ -8,7 +8,7 @@ import {
   PromptRepetitionOutcome,
   getActionLogFromPromptActionLog,
 } from "metabook-core";
-import { testBasicPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "metabook-sample-data";
 import { MetabookUserClient } from "../../userClient/userClient";
 
 export async function recordTestPromptStateUpdate(
@@ -18,8 +18,8 @@ export async function recordTestPromptStateUpdate(
   testPromptActionLog: PromptActionLog<PromptTaskParameters>;
 }> {
   const taskID = getIDForPromptTask({
-    promptID: await getIDForPrompt(testBasicPrompt),
-    promptType: testBasicPrompt.promptType,
+    promptID: await getIDForPrompt(testQAPrompt),
+    promptType: testQAPrompt.promptType,
     promptParameters: null,
   });
   const promptActionLog: PromptActionLog<PromptTaskParameters> = {

@@ -1,7 +1,7 @@
 import {
   AttachmentIDReference,
-  BasicPrompt,
-  basicPromptType,
+  QAPrompt,
+  qaPromptType,
   ClozePrompt,
   clozePromptType,
   NotePromptProvenance,
@@ -86,14 +86,14 @@ export function mapNoteToPrompt(
         modelMapping.answerFieldIndex,
       ]);
 
-      const basicPrompt: BasicPrompt = {
+      const qaPrompt: QAPrompt = {
         question: transformAnkiField(fields[modelMapping.questionFieldIndex]),
         answer: transformAnkiField(fields[modelMapping.answerFieldIndex]),
-        promptType: basicPromptType,
+        promptType: qaPromptType,
       };
       return {
         issues,
-        prompt: basicPrompt,
+        prompt: qaPrompt,
         provenance: null,
       };
 

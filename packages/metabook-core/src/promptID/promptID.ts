@@ -1,10 +1,10 @@
 import {
   applicationPromptType,
-  basicPromptType,
+  qaPromptType,
   clozePromptType,
   Prompt,
   PromptField,
-  QAPrompt,
+  QAPromptContents,
 } from "../types/prompt";
 import { CID, CIDEncodable, encodeObjectToCIDString } from "../util/cids";
 
@@ -21,7 +21,9 @@ function canonicalizePromptField(
   };
 }
 
-function canonicalizeQAPrompt(prompt: QAPrompt): CIDEncodable<QAPrompt> {
+function canonicalizeQAPrompt(
+  prompt: QAPromptContents,
+): CIDEncodable<QAPromptContents> {
   return {
     question: canonicalizePromptField(prompt.question),
     answer: canonicalizePromptField(prompt.answer),
@@ -33,7 +35,7 @@ function canonicalizeQAPrompt(prompt: QAPrompt): CIDEncodable<QAPrompt> {
 
 function canonicalizePrompt(prompt: Prompt): CIDEncodable<Prompt> {
   switch (prompt.promptType) {
-    case basicPromptType:
+    case qaPromptType:
       return {
         promptType: prompt.promptType,
         ...canonicalizeQAPrompt(prompt),

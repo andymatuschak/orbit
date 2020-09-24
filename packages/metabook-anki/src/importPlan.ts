@@ -5,8 +5,8 @@ import {
   applyActionLogToPromptState,
   Attachment,
   AttachmentIDReference,
-  BasicPromptTaskParameters,
-  basicPromptType,
+  QAPromptTaskParameters,
+  qaPromptType,
   ClozePromptTaskParameters,
   clozePromptType,
   getActionLogFromPromptActionLog,
@@ -86,7 +86,7 @@ export async function extractPromptTaskIDForCard(
   const promptID = await getIDForPrompt(prompt);
   let promptParameters: PromptParameters;
   switch (prompt.promptType) {
-    case basicPromptType:
+    case qaPromptType:
     case applicationPromptType:
       promptParameters = null;
       break;
@@ -107,7 +107,7 @@ export async function createPlanForCard(
   noteProvenance: PromptProvenance | null,
   overrideTimestampMillis?: number,
 ): Promise<
-  PromptActionLog<BasicPromptTaskParameters | ClozePromptTaskParameters>
+  PromptActionLog<QAPromptTaskParameters | ClozePromptTaskParameters>
 > {
   // Generate an ingest log.
   return {
@@ -125,7 +125,7 @@ export async function createPlanForCard(
 }
 
 export async function createPlanForLog<
-  P extends BasicPromptTaskParameters | ClozePromptTaskParameters
+  P extends QAPromptTaskParameters | ClozePromptTaskParameters
 >(
   ankiLog: Anki.Log,
   cardLastActionLog: PromptActionLog<P>,
@@ -180,7 +180,7 @@ export async function createRescheduleLogForCard(
   card: Card,
   collection: Collection,
   lastActionLog: PromptActionLog<
-    BasicPromptTaskParameters | ClozePromptTaskParameters
+    QAPromptTaskParameters | ClozePromptTaskParameters
   >,
 ): Promise<ActionLog | null> {
   let newTimestampMillis: number | null;
@@ -289,14 +289,14 @@ export async function createImportPlan(
   const taskIDsToPromptStates: Map<string, PromptState> = new Map();
   const cardIDsToLastActionLogs: Map<
     number,
-    PromptActionLog<BasicPromptTaskParameters | ClozePromptTaskParameters>
+    PromptActionLog<QAPromptTaskParameters | ClozePromptTaskParameters>
   > = new Map();
 
   async function addIngestEventForCardID(
     cardID: number,
     overrideTimestampMillis?: number,
   ): Promise<PromptActionLog<
-    BasicPromptTaskParameters | ClozePromptTaskParameters
+    QAPromptTaskParameters | ClozePromptTaskParameters
   > | null> {
     // Create the ingest log for this card.
     const card = cardIDsToCards.get(cardID);

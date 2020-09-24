@@ -1,13 +1,13 @@
 import {
   AttachmentID,
   AttachmentIDReference,
-  basicPromptType,
+  qaPromptType,
   Prompt,
   PromptID,
   PromptState,
   PromptTask,
 } from "metabook-core";
-import { testBasicPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "metabook-sample-data";
 import DataRecordManager from "./dataRecordManager";
 import promptDataInitialImportOperation from "./promptDataInitialImportOperation";
 import PromptStateStore from "./promptStateStore";
@@ -31,7 +31,7 @@ test("basic run", async () => {
           {
             promptID: "x" as PromptID,
             promptParameters: null,
-            promptType: basicPromptType,
+            promptType: qaPromptType,
           },
           {} as PromptState,
         ],
@@ -43,9 +43,9 @@ test("basic run", async () => {
       [
         "x" as PromptID,
         {
-          ...testBasicPrompt,
+          ...testQAPrompt,
           question: {
-            ...testBasicPrompt.question,
+            ...testQAPrompt.question,
             attachments: [
               {
                 id: "test-attachment" as AttachmentID,

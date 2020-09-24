@@ -1,12 +1,12 @@
 import {
   ApplicationPromptTaskParameters,
   applicationPromptType,
-  basicPromptType,
   clozePromptType,
   getNextTaskParameters,
   PromptProvenance,
   PromptProvenanceType,
-  QAPrompt,
+  QAPromptContents,
+  qaPromptType,
 } from "metabook-core";
 import React from "react";
 import {
@@ -20,7 +20,7 @@ import {
 } from "react-native";
 import {
   ApplicationPromptReviewItem,
-  BasicPromptReviewItem,
+  QAPromptReviewItem,
   ClozePromptReviewItem,
   PromptReviewItem,
 } from "../reviewItem";
@@ -33,11 +33,11 @@ import {
   useTransitioningValue,
 } from "./hooks/useTransitioningValue";
 
-function getQAPrompt(
-  reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem,
-): QAPrompt {
+function getQAPromptContents(
+  reviewItem: QAPromptReviewItem | ApplicationPromptReviewItem,
+): QAPromptContents {
   switch (reviewItem.prompt.promptType) {
-    case basicPromptType:
+    case qaPromptType:
       return reviewItem.prompt;
     case applicationPromptType:
       const taskParameters = getNextTaskParameters(
@@ -233,7 +233,7 @@ export interface CardProps {
 }
 
 type QAPromptRendererType = CardProps & {
-  reviewItem: BasicPromptReviewItem | ApplicationPromptReviewItem;
+  reviewItem: QAPromptReviewItem | ApplicationPromptReviewItem;
 };
 function QAPromptRenderer({
   backIsRevealed,
@@ -241,7 +241,7 @@ function QAPromptRenderer({
   reviewItem,
 }: QAPromptRendererType) {
   const animatingStyles = useAnimatingStyles(backIsRevealed);
-  const spec = getQAPrompt(reviewItem);
+  const spec = getQAPromptContents(reviewItem);
 
   const [frontSizeVariantIndex, setFrontSizeVariantIndex] = React.useState<
     number | undefined
@@ -372,15 +372,13 @@ export default React.memo(function Card(props: CardProps) {
     reviewItem: { prompt },
   } = props;
   switch (prompt.promptType) {
-    case basicPromptType:
+    case qaPromptType:
     case applicationPromptType:
       return (
         <QAPromptRenderer
           {...props}
           reviewItem={
-            props.reviewItem as
-              | BasicPromptReviewItem
-              | ApplicationPromptReviewItem
+            props.reviewItem as QAPromptReviewItem | ApplicationPromptReviewItem
           }
         />
       );

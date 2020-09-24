@@ -1,6 +1,6 @@
 import { MetabookFirebaseUserClient } from "metabook-client";
 import {
-  basicPromptType,
+  qaPromptType,
   getIDForPrompt,
   getIDForPromptTask,
   ingestActionLogType,
@@ -9,7 +9,7 @@ import {
 } from "metabook-core";
 import { getTaskStateCacheReferenceForTaskID } from "metabook-firebase-support";
 import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
-import { testBasicPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "metabook-sample-data";
 
 let testFirestore: firebase.firestore.Firestore;
 
@@ -24,11 +24,11 @@ afterEach(async () => {
 });
 
 test("updates prompt state when writing log", async () => {
-  const basicPromptID = await getIDForPrompt(testBasicPrompt);
+  const qaPromptID = await getIDForPrompt(testQAPrompt);
   const promptTask: PromptTask = {
-    promptID: basicPromptID,
+    promptID: qaPromptID,
     promptParameters: null,
-    promptType: basicPromptType,
+    promptType: qaPromptType,
   };
   const promptTaskID = getIDForPromptTask(promptTask);
 

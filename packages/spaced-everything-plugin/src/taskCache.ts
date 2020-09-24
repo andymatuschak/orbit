@@ -2,7 +2,7 @@ import * as IT from "incremental-thinking";
 import { MetabookDataClient, MetabookUserClient } from "metabook-client";
 import {
   ActionLog,
-  basicPromptType,
+  qaPromptType,
   clozePromptType,
   getActionLogFromPromptActionLog,
   getIDForPrompt,
@@ -268,7 +268,7 @@ async function mapTasksInPrompt<R>(
   switch (ITPrompt.type) {
     case IT.qaPromptType:
       const promptTask: PromptTask = {
-        promptType: basicPromptType,
+        promptType: qaPromptType,
         promptParameters: null,
         promptID: orbitPromptID,
       };

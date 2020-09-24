@@ -15,7 +15,7 @@ const clozeITPrompt = getITPromptForOrbitPrompt(
 ) as IT.ClozePrompt;
 
 describe("getUpdatesForTaskCacheChange", () => {
-  test("insert basic prompt", async () => {
+  test("insert qa prompt", async () => {
     const mock = {} as SpacedEverythingImportCache;
     mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue(null);
     const { prompts, logs } = await getUpdatesForTaskCacheChange(

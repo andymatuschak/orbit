@@ -8,9 +8,11 @@ import {
   MetabookFirebaseUserClient,
 } from "metabook-client";
 import {
+  applicationPromptType,
   Attachment,
   AttachmentIDReference,
   AttachmentMimeType,
+  clozePromptType,
   getActionLogFromPromptActionLog,
   getIDForAttachment,
   getIDForPrompt,
@@ -22,10 +24,11 @@ import {
   PromptTask,
   PromptTaskID,
   PromptTaskParameters,
+  qaPromptType,
 } from "metabook-core";
 import {
   testApplicationPrompt,
-  testBasicPrompt,
+  testQAPrompt,
   testClozePrompt,
 } from "metabook-sample-data";
 import path from "path";
@@ -36,11 +39,11 @@ async function getTasksFromPrompts(prompts: Prompt[]): Promise<PromptTaskID[]> {
     prompts.map(async (spec) => {
       let promptParameters: PromptParameters;
       switch (spec.promptType) {
-        case "basic":
-        case "applicationPrompt":
+        case qaPromptType:
+        case applicationPromptType:
           promptParameters = null;
           break;
-        case "cloze":
+        case clozePromptType:
           // TODO: import all cloze indices
           promptParameters = { clozeIndex: 0 };
           break;
@@ -90,16 +93,16 @@ class Ingest extends Command {
     };
 
     const testImagePrompt: Prompt = {
-      ...testBasicPrompt,
+      ...testQAPrompt,
       question: {
-        ...testBasicPrompt.question,
+        ...testQAPrompt.question,
         attachments: [imageAttachmentIDReference],
       },
     };
 
     const specs = [
       testImagePrompt,
-      testBasicPrompt,
+      testQAPrompt,
       testApplicationPrompt,
       testClozePrompt,
     ];

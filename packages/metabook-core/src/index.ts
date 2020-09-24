@@ -3,7 +3,7 @@ export type { PromptState } from "./promptState";
 export * from "./promptState";
 
 export {
-  basicPromptType,
+  qaPromptType,
   applicationPromptType,
   clozePromptType,
 } from "./types/prompt";
@@ -11,10 +11,10 @@ export {
 export type {
   Prompt,
   PromptType,
-  BasicPrompt,
+  QAPrompt,
   ApplicationPrompt,
   ClozePrompt,
-  QAPrompt,
+  QAPromptContents,
   PromptField,
 } from "./types/prompt";
 
@@ -22,7 +22,7 @@ export type {
   PromptTaskParameters,
   ApplicationPromptTaskParameters,
   ClozePromptTaskParameters,
-  BasicPromptTaskParameters,
+  QAPromptTaskParameters,
 } from "./types/promptTaskParameters";
 
 export { PromptRepetitionOutcome } from "./spacedRepetition";
@@ -42,12 +42,12 @@ export { default as getDuePromptTasks } from "./getDuePromptTasks";
 export { getIDForPromptTask, getPromptTaskForID } from "./types/promptTask";
 export type {
   PromptTask,
-  BasicPromptTask,
+  QAPromptTask,
   ApplicationPromptTask,
   ClozePromptTask,
   PromptTaskID,
   PromptParameters,
-  BasicPromptParameters,
+  QAPromptParameters,
   ApplicationPromptParameters,
   ClozePromptParameters,
 } from "./types/promptTask";

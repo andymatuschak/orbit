@@ -1,17 +1,17 @@
 import { AttachmentID, imageAttachmentType, Prompt } from "metabook-core";
-import { testBasicPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "metabook-sample-data";
 import getAttachmentURLsByIDInReviewItem from "./getAttachmentURLsByIDInReviewItem";
 
 test("no attachments", () => {
   expect(
-    getAttachmentURLsByIDInReviewItem(testBasicPrompt, new Map()),
+    getAttachmentURLsByIDInReviewItem(testQAPrompt, new Map()),
   ).toMatchObject({});
 });
 
 const attachmentPrompt: Prompt = {
-  ...testBasicPrompt,
+  ...testQAPrompt,
   question: {
-    ...testBasicPrompt.question,
+    ...testQAPrompt.question,
     attachments: [
       { id: "x" as AttachmentID, byteLength: 0, type: imageAttachmentType },
     ],
