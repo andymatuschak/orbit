@@ -11,23 +11,23 @@ import {
 import { PromptProvenance } from "./promptProvenance";
 import { TaskMetadata } from "./taskMetadata";
 
-interface PromptTaskBase<T extends PromptType, P extends PromptParameters> {
+interface AbstractPromptTask<T extends PromptType, P extends PromptParameters> {
   promptID: PromptID;
   promptType: T;
   promptParameters: P;
 }
 
-export type QAPromptTask = PromptTaskBase<
+export type QAPromptTask = AbstractPromptTask<
   typeof qaPromptType,
   QAPromptParameters
 >;
 
-export type ApplicationPromptTask = PromptTaskBase<
+export type ApplicationPromptTask = AbstractPromptTask<
   typeof applicationPromptType,
   ApplicationPromptParameters
 >;
 
-export type ClozePromptTask = PromptTaskBase<
+export type ClozePromptTask = AbstractPromptTask<
   typeof clozePromptType,
   ClozePromptParameters
 >;
@@ -57,8 +57,8 @@ export function getPromptTaskForID(
   if (components.length < 2) {
     return new Error("Prompt task IDs must have at least 2 components");
   }
-  const promptID = components[0] as PromptID;
-  switch (components[1]) {
+  const promptID = components[1] as PromptID;
+  switch (components[0]) {
     case qaPromptType:
       if (components.length === 2) {
         return {
@@ -95,7 +95,7 @@ export function getPromptTaskForID(
 }
 
 export function getIDForPromptTask(promptTask: PromptTask): PromptTaskID {
-  const base = `${promptTask.promptID}/${promptTask.promptType}`;
+  const base = `${promptTask.promptType}/${promptTask.promptID}`;
   switch (promptTask.promptType) {
     case qaPromptType:
     case applicationPromptType:

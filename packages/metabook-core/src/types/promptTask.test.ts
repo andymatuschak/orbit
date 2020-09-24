@@ -9,7 +9,7 @@ import {
 describe("decoding prompt task IDs", () => {
   test("decoding qa prompt task IDs", () => {
     expect(
-      getPromptTaskForID(`foo/${qaPromptType}` as PromptTaskID),
+      getPromptTaskForID(`${qaPromptType}/foo` as PromptTaskID),
     ).toMatchObject({
       promptID: "foo",
       promptType: qaPromptType,
@@ -18,7 +18,7 @@ describe("decoding prompt task IDs", () => {
 
   test("decoding cloze prompt task IDs", () => {
     expect(
-      getPromptTaskForID(`foo/${clozePromptType}/3` as PromptTaskID),
+      getPromptTaskForID(`${clozePromptType}/foo/3` as PromptTaskID),
     ).toMatchObject({
       promptID: "foo",
       promptType: clozePromptType,
@@ -45,7 +45,7 @@ describe("encoding prompt task IDs", () => {
         promptType: qaPromptType,
         promptParameters: null,
       }),
-    ).toEqual(`foo/${qaPromptType}`);
+    ).toEqual(`${qaPromptType}/foo`);
   });
 
   test("encoding cloze prompt task IDs", () => {
@@ -55,6 +55,6 @@ describe("encoding prompt task IDs", () => {
         promptType: clozePromptType,
         promptParameters: { clozeIndex: 3 },
       }),
-    ).toEqual(`foo/${clozePromptType}/3`);
+    ).toEqual(`${clozePromptType}/foo/3`);
   });
 });
