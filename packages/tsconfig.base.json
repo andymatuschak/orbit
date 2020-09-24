@@ -9,6 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "lib": ["es6"],
+    "module": "es6",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "sourceMap": true,

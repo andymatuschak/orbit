@@ -33,7 +33,7 @@ beforeAll(async () => {
 
 test("ingest logs", async () => {
   expect(basicIngestLogID).toMatchInlineSnapshot(
-    `"z4EBG9j73xpQcJ7BgMZgwcdAx1rasEc1daTrH9ivqhwfpEm9bv8"`,
+    `"z4EBG9j8tvxbLajdBNWT7C5k38LxcKdF8gX9tY33y6485Tdxu2e"`,
   );
 
   const withMetadataID = await getIDForActionLog({
@@ -47,7 +47,7 @@ test("ingest logs", async () => {
     },
   });
   expect(withMetadataID).toMatchInlineSnapshot(
-    `"z4EBG9jBBs3qeJH5MkYEsajaf4LoLjpkfByotGmn2gge9SV4HVc"`,
+    `"z4EBG9j7GuxQ8TBpugpjqgfvbVh3p9dJELJQs3zyyjgryAUaoB2"`,
   );
   expect(basicIngestLogID).not.toEqual(withMetadataID);
 });
@@ -76,10 +76,10 @@ test("action logs", async () => {
   });
 
   expect(noParentActionLogID).toMatchInlineSnapshot(
-    `"z4EBG9j6r8EuU75f5iYpenqBRyCVRdD9k6FoPqW5izwqe4aB6xP"`,
+    `"z4EBG9jGAdPaPJaRoqTTcRLnQGTRC6prz5xnra3GEUBtrD8YPgk"`,
   );
   expect(parentActionLogID).toMatchInlineSnapshot(
-    `"z4EBG9j1uLize3F3LSa6WMGPYHWBFpA12y5Xd9FrjoSonFZU2CC"`,
+    `"z4EBG9jHAMErbLR14FRfPfDdisUhGNapTTfbgS1ZVEVLuMT89bA"`,
   );
 
   expect(noParentActionLogID).not.toEqual(parentActionLogID);
@@ -99,10 +99,10 @@ test("update metadata", async () => {
     updates: { isDeleted: false },
   });
   expect(testDeletionID).toMatchInlineSnapshot(
-    `"z4EBG9jCCSwj2S1FDM8PhqcAPU8ds6odCx3HcpkQ7FCw2HgMhog"`,
+    `"z4EBG9jAiiMwim3Y1qWXHZBQftbrzVr4xxWJY6a44b72AATwhkg"`,
   );
   expect(testUndeletionID).toMatchInlineSnapshot(
-    `"z4EBG9j8cceH7RQn72vzYvZVJRDnRrLgwsgbVYJk1QQeLZfpdpW"`,
+    `"z4EBG9jCrrFb5Xs85H5wxZN4iJP9pd3wU2zyfvySBC5HZXniE17"`,
   );
   expect(testDeletionID).not.toEqual(testUndeletionID);
 });

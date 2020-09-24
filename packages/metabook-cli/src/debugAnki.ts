@@ -11,7 +11,7 @@ import {
   getReferenceForActionLogID,
 } from "metabook-firebase-support";
 import { getAdminApp } from "./adminApp";
-import plan from "./importPlan.json";
+// import plan from "./importPlan.json";
 
 function formatMillis(millis: number): string {
   let working = millis;
