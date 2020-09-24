@@ -24,7 +24,7 @@ export interface ApplicationPrompt {
   variants: QAPromptContents[];
 }
 
-export const clozePromptType = "cloze";
+export const clozePromptType = "clozePrompt";
 export interface ClozePrompt {
   promptType: typeof clozePromptType;
   body: PromptField;

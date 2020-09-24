@@ -1,9 +1,11 @@
 import {
   ApplicationPrompt,
-  QAPrompt,
-  qaPromptType,
+  applicationPromptType,
   ClozePrompt,
+  clozePromptType,
+  QAPrompt,
   QAPromptContents,
+  qaPromptType,
 } from "..";
 
 // Unfortunately duplicates metabook-sample-data because there's a cyclical module dependency. I'd need to extract metabook-core's types to metabook-types to resolve it.
@@ -22,11 +24,11 @@ export const testQAPrompt: QAPrompt = {
   promptType: qaPromptType,
 };
 export const testApplicationPrompt: ApplicationPrompt = {
-  promptType: "applicationPrompt",
+  promptType: applicationPromptType,
   variants: [testQAPrompt, testQAPrompt],
 };
 export const testClozePrompt: ClozePrompt = {
-  promptType: "cloze",
+  promptType: clozePromptType,
   body: {
     contents: "Test {cloze}",
     attachments: [],

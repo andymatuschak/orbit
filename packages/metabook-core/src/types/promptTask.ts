@@ -1,4 +1,5 @@
 // A *task* is the atomic unit whose state is tracked in the system. A prompt task is a task about a prompt. Applications prompts comprise multiple variants, but those variants are not different tasks because all those variants share the same state. A cloze task is drawn from a cloze prompt: each individual deletion range is a task, since its state is tracked distinctly.
+// A task ID is a string representation of a task, e.g. `clozePrompt/SOME_CID_HERE/3`.
 
 import { PromptID } from "../promptID";
 import {

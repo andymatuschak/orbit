@@ -1,7 +1,7 @@
-import { ClozePrompt } from "metabook-core";
+import { ClozePrompt, clozePromptType } from "metabook-core";
 
 const testClozePrompt: ClozePrompt = {
-  promptType: "cloze",
+  promptType: clozePromptType,
   body: {
     contents:
       "The *Big Five* personality traits: {extraversion}, {openness to experience}, {neuroticism}, {conscientiousness}, {agreeableness}.",
