@@ -1,4 +1,3 @@
-import isEmail from "isemail";
 import React from "react";
 import {
   ActivityIndicator,
@@ -34,13 +33,6 @@ export default function SignInForm({
 }: SignInFormProps) {
   const [email, setEmail] = React.useState(overrideEmailAddress ?? "");
   const [password, setPassword] = React.useState("");
-
-  const hasValidFormEntries = React.useMemo(() => {
-    if (!email || !password) {
-      return false;
-    }
-    return isEmail.validate(email);
-  }, [email, password]);
 
   const onPressSubmit = React.useCallback(() => {
     onSubmit(email, password);
@@ -165,7 +157,8 @@ export default function SignInForm({
         <View style={styles.indicatorContainer}>
           <ActivityIndicator
             animating={
-              isPendingServerResponse || (hasValidFormEntries && mode === null)
+              isPendingServerResponse ||
+              (!!email && !!password && mode === null)
             }
             color={colorPalette.accentColor}
           />
