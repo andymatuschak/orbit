@@ -174,6 +174,9 @@ export default function ReviewSession() {
           updateDatabaseForMarking(databaseManager!, markingRecord)
         }
         insets={{ top: insets.top }}
+        overrideColorPalette={
+          baseItems.length > 0 ? undefined : styles.colors.palettes.red
+        }
       >
         {({
           onMark,
