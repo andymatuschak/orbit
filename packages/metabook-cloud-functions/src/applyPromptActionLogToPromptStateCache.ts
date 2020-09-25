@@ -51,6 +51,7 @@ export default async function applyActionLogDocumentToPromptStateCache({
       };
     }
   } else {
+    console.log("Log does not apply cleanly. Doing full merge.");
     const allActionLogDocuments = await fetchAllActionLogDocumentsForTask();
     const mergedPromptState = mergeActionLogs(
       allActionLogDocuments.map(({ id, log }) => ({

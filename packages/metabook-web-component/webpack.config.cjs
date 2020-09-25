@@ -22,7 +22,7 @@ module.exports = {
       {
         test: /\.js$/,
         use: "babel-loader",
-        include: [/node_modules/, /metabook-ui/],
+        include: [/node_modules/, /metabook-ui/, /metabook-core/],
         exclude: [/node_modules\/react-native/],
       },
       {
@@ -32,13 +32,10 @@ module.exports = {
       },
     ],
   },
-  optimization: {
-    usedExports: true,
-  },
   output: {
     filename: "orbit-web-component.js",
     path: path.resolve(__dirname, "build"),
-    module: true
+    module: true,
   },
   experiments: {
     outputModule: true,
@@ -54,5 +51,6 @@ module.exports = {
   ],
   resolve: {
     extensions: [".web.ts", ".ts", ".web.js", ".js"],
+    fallback: {crypto: false}
   },
 };

@@ -60,13 +60,20 @@ export async function getDataRecords<R extends DataRecord>(
 }
 
 export async function storeLogs(logs: ActionLog[], userID: string) {
-  await _storeLogs(
+  // These logs will all end up with the same server timestamp, which create a lot of flailing in onLogCreate, since execution order is not guaranteed. We'll go ahead and compute the new prompt states right here.
+  const storedLogs = await _storeLogs(
     logs,
     userID,
     getDatabase(),
-    firebase.firestore.FieldValue.serverTimestamp(),
+    firebase.firestore.Timestamp.now(),
     (ms: number, ns: number) => new firebase.firestore.Timestamp(ms, ns),
+    true,
   );
+
+  // Apply each log sequentially, with a separate transaction for each. This is a bit wasteful.
+  for (const [, log] of storedLogs) {
+    await updatePromptStateCacheWithLog(log, userID);
+  }
 }
 
 export async function storePromptsIfNecessary(
@@ -129,9 +136,12 @@ export async function updatePromptStateCacheWithLog(
       actionLogDocument,
       basePromptStateCache,
       fetchAllActionLogDocumentsForTask: async () => {
-        const logSnapshot = await getLogCollectionReference(db, userID)
-          .where("taskID", "==", actionLogDocument.taskID)
-          .get();
+        const logQuery = await getLogCollectionReference(db, userID).where(
+          "taskID",
+          "==",
+          actionLogDocument.taskID,
+        );
+        const logSnapshot = await transaction.get(logQuery);
         return logSnapshot.docs.map((doc) => {
           const actionLogDocument = doc.data() as ActionLogDocument<
             firebase.firestore.Timestamp

@@ -14,7 +14,8 @@ export default function promptActionLogCanBeAppliedToPromptState(
 ): boolean {
   switch (actionLog.actionLogType) {
     case ingestActionLogType:
-      return true;
+      // NOTE: This is appropriate in the context this function is currently used: i.e. for "fast-forward" type merges. An ingest can't be safely "fast-forwarded" on top of an existing prompt state
+      return promptState === null;
     case repetitionActionLogType:
     case rescheduleActionLogType:
     case updateMetadataActionLogType:

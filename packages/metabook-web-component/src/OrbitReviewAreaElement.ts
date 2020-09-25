@@ -2,7 +2,6 @@ import {
   EmbeddedHostMetadata,
   EmbeddedScreenConfiguration,
 } from "metabook-app/src/embedded/embeddedScreenConfiguration";
-import { getHeightForReviewAreaOfWidth } from "metabook-ui";
 import { extractItems } from "./extractItems";
 import { getSharedMetadataMonitor } from "./metadataMonitor";
 import { ColorPaletteName } from "metabook-core";
@@ -10,6 +9,17 @@ import { ColorPaletteName } from "metabook-core";
 declare global {
   // supplied by Webpack
   const EMBED_API_BASE_URL: string;
+}
+
+// HACK: values coupled / copy-pasta'd with styles in ReviewArea.
+const gridUnit = 8;
+const edgeMargin = 16;
+export function getHeightForReviewAreaOfWidth(width: number) {
+  // The prompt itself is 6:5, max 500px. Then we add 9 units at top (for the starburst container) and 11 at bottom (for the button bar).
+  // TODO: add more at bottom if buttons stack
+  const promptWidth = Math.min(500, width - edgeMargin * 2);
+  const promptHeight = Math.round((promptWidth * 5) / 6);
+  return promptHeight + (9 + 11) * gridUnit;
 }
 
 export class OrbitReviewAreaElement extends HTMLElement {

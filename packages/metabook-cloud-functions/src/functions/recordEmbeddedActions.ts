@@ -25,6 +25,8 @@ export default functions.https.onCall(async function (
   }
 
   try {
+    console.log("Recording embedded actions", args);
+
     // Store attachments as needed
     await Promise.all(
       Object.entries(args.attachmentURLsByID).map(([attachmentID, url]) =>

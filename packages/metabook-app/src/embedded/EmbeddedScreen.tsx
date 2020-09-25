@@ -108,7 +108,7 @@ export default function EmbeddedScreen() {
 
         getFirebaseFunctions()
           .httpsCallable("recordEmbeddedActions")({
-            logs,
+            logs: logs.map(({ log }) => log),
             promptsByID: { [promptID]: prompt },
             attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
               marking.reviewItem.prompt,

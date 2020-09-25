@@ -62,6 +62,7 @@ export default function mergeActionLogs(
   // At least for review logs, we don't have to do any clever tree-based resolution: we can just flatten into a timestamp sequence and run through. This obviously won't work if a computer's clock is way off, but I'm not hugely worried about that.
   // TODO: do a topo-sort
   // TODO: at least do a sanity check that no log has an earlier timestamp than its parent
+  // TODO: here we assume that each log can be applied to the next. a dangerous assumption.
   const logsByTimestamp = [...entries].sort(({ log: a }, { log: b }) => {
     if (a.timestampMillis === b.timestampMillis) {
       if (a.actionLogType === ingestActionLogType) {

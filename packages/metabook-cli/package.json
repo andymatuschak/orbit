@@ -19,7 +19,8 @@
     "node": "12"
   },
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "launch": "node --loader ts-node/esm --experimental-specifier-resolution=node src/index.ts"
   },
   "devDependencies": {
     "@types/yargs": "^15.0.7",
