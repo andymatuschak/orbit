@@ -65,11 +65,12 @@ export default function EmbeddedScreen() {
       } as PromptTask);
 
       const logs: { log: PromptActionLog; id: ActionLogID }[] = [];
+      const markingTimestampMillis = Date.now();
       if (!marking.reviewItem.promptState) {
         const ingestLog: PromptActionLog = {
           actionLogType: ingestActionLogType,
           taskID,
-          timestampMillis: Date.now(),
+          timestampMillis: markingTimestampMillis,
           provenance: {
             provenanceType: PromptProvenanceType.Web,
             title: configuration.embeddedHostMetadata.title,
@@ -96,7 +97,7 @@ export default function EmbeddedScreen() {
         ),
         outcome: marking.outcome,
         context: null, // TODO
-        timestampMillis: Date.now(),
+        timestampMillis: markingTimestampMillis,
       };
       logs.push({
         log: repetitionLog,

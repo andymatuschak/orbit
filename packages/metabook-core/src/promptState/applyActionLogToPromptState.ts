@@ -68,8 +68,11 @@ function applyPromptRepetitionActionLogToPromptState<
   const supportsRetry = promptTask?.promptType !== applicationPromptType;
 
   const currentReviewInterval = basePromptState
-    ? promptActionLog.timestampMillis -
-      basePromptState.lastReviewTimestampMillis
+    ? Math.max(
+        0,
+        promptActionLog.timestampMillis -
+          basePromptState.lastReviewTimestampMillis,
+      )
     : 0;
   const currentBestInterval = basePromptState
     ? basePromptState.bestIntervalMillis
