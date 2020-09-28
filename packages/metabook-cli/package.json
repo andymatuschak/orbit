@@ -20,7 +20,8 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "launch": "node --loader ts-node/esm --experimental-specifier-resolution=node src/index.ts"
+    "invoke": "node --loader ts-node/esm --experimental-specifier-resolution=node",
+    "launch": "yarn invoke src/index.ts"
   },
   "devDependencies": {
     "@types/yargs": "^15.0.7",
