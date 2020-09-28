@@ -348,7 +348,6 @@ export default React.memo(function CardField(props: {
       if (sizeVariantIndex !== newIndex) {
         setMarkdownHeight(null);
         setLayoutReady(false);
-        console.log("reset");
       }
       return newIndex;
     });
