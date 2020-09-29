@@ -79,13 +79,11 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
       items.map((item, index) => {
         const effectiveInterval = item.promptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time
         return {
-          value: item.promptState
-            ? getStarburstRayValueForInterval(
-                index === currentItemIndex
-                  ? currentItemEffectiveInterval
-                  : effectiveInterval,
-              )
-            : 0,
+          value: getStarburstRayValueForInterval(
+            index === currentItemIndex
+              ? currentItemEffectiveInterval
+              : effectiveInterval,
+          ),
           // TODO: implement more proper "is finished" color determination
           color:
             index < currentItemIndex

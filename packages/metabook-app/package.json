@@ -67,7 +67,7 @@
     "react-native-safe-area-context": "^3.1.7",
     "react-native-svg": "^12.1.0",
     "react-native-unimodules": "~0.10.1",
-    "react-native-web": "~0.13.12",
+    "react-native-web": "~0.13.14",
     "readable-stream": "^1.0.33",
     "resize-observer-polyfill": "^1.5.1",
     "string_decoder": "^0.10.31",

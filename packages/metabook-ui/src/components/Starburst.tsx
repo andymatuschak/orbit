@@ -52,6 +52,8 @@ export function getStarburstRayLength(
 
 const sequence = getIntervalSequenceForSchedule("default");
 export function getStarburstRayValueForInterval(intervalMillis: number) {
+  const minimalStarburstValue = 0.05;
+
   if (intervalMillis <= 0) {
     return 0;
   }
@@ -64,7 +66,7 @@ export function getStarburstRayValueForInterval(intervalMillis: number) {
     Math.log2(intervalMillis),
     Math.log2(firstInterval),
     Math.log2(maxInterval),
-    0.1,
+    minimalStarburstValue,
     1,
   );
 }

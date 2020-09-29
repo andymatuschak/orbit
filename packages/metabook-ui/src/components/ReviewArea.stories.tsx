@@ -1,22 +1,19 @@
 import { boolean, number, text, withKnobs } from "@storybook/addon-knobs";
 import {
   applyActionLogToPromptState,
-  qaPromptType,
   getIDForPromptTask,
-  getIntervalSequenceForSchedule,
   PromptID,
-  PromptProvenanceType,
   PromptRepetitionActionLog,
   PromptState,
   PromptTaskParameters,
+  qaPromptType,
   repetitionActionLogType,
-  typedKeys,
 } from "metabook-core";
-import { testQAPrompt } from "metabook-sample-data";
 import React, { useCallback, useMemo, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import { ReviewItem } from "../reviewItem";
 import { colors } from "../styles";
+import { generateReviewItem } from "./__fixtures__/generateReviewItem";
 import DebugGrid from "./DebugGrid";
 import { useTransitioningColorValue } from "./hooks/useTransitioningValue";
 import ReviewArea from "./ReviewArea";
@@ -27,47 +24,6 @@ export default {
   component: ReviewArea,
   decorators: [withKnobs],
 };
-
-const intervalSequence = getIntervalSequenceForSchedule("default");
-function generateReviewItem(
-  questionText: string,
-  answerText: string,
-  contextString: string,
-  colorPalette: typeof colors.palettes[colors.ColorPaletteName],
-): ReviewItem {
-  const intervalMillis =
-    intervalSequence[Math.floor(Math.random() * (intervalSequence.length - 1))]
-      .interval;
-  return {
-    reviewItemType: "prompt",
-    promptState: {
-      dueTimestampMillis: 0,
-      headActionLogIDs: [],
-      intervalMillis,
-      bestIntervalMillis: null,
-      lastReviewTaskParameters: null,
-      lastReviewTimestampMillis: Date.now() - intervalMillis,
-      needsRetry: false,
-      taskMetadata: {
-        isDeleted: false,
-        provenance: {
-          provenanceType: PromptProvenanceType.Note,
-          externalID: "someID",
-          modificationTimestampMillis: 0,
-          title: contextString,
-          url: null,
-        },
-      },
-    },
-    prompt: {
-      ...testQAPrompt,
-      question: { contents: questionText, attachments: [] },
-      answer: { contents: answerText, attachments: [] },
-    },
-    promptParameters: null,
-    attachmentResolutionMap: null,
-  };
-}
 
 export function Basic() {
   const colorKnobOffset = number("color shift", 0, {
@@ -88,10 +44,8 @@ export function Basic() {
           questionOverrideText || `Question ${i + 1}`,
           answerOverrideText || `Answer ${i + 1}`,
           sourceContext,
-          colors.palettes[
-            colors.orderedPaletteNames[
-              (i + colorKnobOffset) % colors.orderedPaletteNames.length
-            ]
+          colors.orderedPaletteNames[
+            (i + colorKnobOffset) % colors.orderedPaletteNames.length
           ],
         ),
       ),
