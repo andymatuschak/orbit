@@ -102,10 +102,11 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
     ],
   );
 
+  const leftMargin = layout.edgeMargin + starburstThickness / 2;
   const starburstX = useTransitioningValue({
     value:
       position === "left"
-        ? -starburstRadius + layout.edgeMargin + starburstThickness / 2
+        ? -starburstRadius + leftMargin
         : containerWidth / 2 - starburstRadius,
     timing: {
       useNativeDriver: true,
@@ -159,7 +160,7 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
               ),
             },
           ],
-          width: starburstRadius,
+          width: containerWidth - leftMargin,
           opacity: legendOpacity,
         }}
       >

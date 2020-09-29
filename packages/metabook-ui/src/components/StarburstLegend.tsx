@@ -116,7 +116,9 @@ export default React.memo(function StarburstLegend({
     nextSequenceIndex === -1 ? sequence.length - 1 : nextSequenceIndex - 1;
 
   return (
-    <>
+    <View
+      style={{ overflow: "hidden", width: "100%", height: layout.gridUnit * 3 }}
+    >
       {sequence.map(({ interval, label }, index) => (
         <StarburstLegendEntry
           key={index}
@@ -143,6 +145,6 @@ export default React.memo(function StarburstLegend({
           backgroundColor={backgroundColor}
         />
       ))}
-    </>
+    </View>
   );
 });
