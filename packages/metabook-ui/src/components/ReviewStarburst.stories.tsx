@@ -5,6 +5,10 @@ import { generateReviewItem } from "./__fixtures__/generateReviewItem";
 import useLayout from "./hooks/useLayout";
 import { colors } from "../styles";
 import ReviewStarburst from "./ReviewStarburst";
+import {
+  getStarburstQuillInnerRadius,
+  getStarburstQuillOuterRadius,
+} from "./Starburst";
 
 export default {
   title: "ReviewStarburst",
@@ -13,14 +17,20 @@ export default {
 
 interface StoryArgs {
   itemCount: number;
+  hasSeenItems: boolean;
 }
 
-export const Basic: Story<StoryArgs> = ({ itemCount }) => {
+const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
   const { width, height, onLayout } = useLayout();
   const reviewItems = Array.from(new Array(itemCount).keys()).map(() => ({
     ...generateReviewItem("Q", "A", "C", "cyan"),
-    promptState: null,
+    ...(!hasSeenItems && { promptState: null }),
   }));
+  console.log(
+    getStarburstQuillInnerRadius(itemCount, 3),
+    getStarburstQuillOuterRadius(itemCount, 3),
+  );
+
   return (
     <View
       onLayout={onLayout}
@@ -47,6 +57,12 @@ export const Basic: Story<StoryArgs> = ({ itemCount }) => {
   );
 };
 
-Basic.args = {
+Template.args = {
   itemCount: 25,
 };
+
+export const NewItems = Template.bind({});
+NewItems.args = { ...Template.args, hasSeenItems: false };
+
+export const OldItems = Template.bind({});
+OldItems.args = { ...Template.args, hasSeenItems: true };

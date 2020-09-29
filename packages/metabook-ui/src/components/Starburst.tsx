@@ -15,6 +15,10 @@ export function getStarburstQuillInnerRadius(
   rayCount: number,
   thickness: number,
 ): number {
+  if (rayCount < 3) {
+    return thickness;
+  }
+
   const innerRadiusSpacing = thickness / 3.25; // The number of pixels space between spokes at their tapered points.
   const segmentAngle = (2 * Math.PI) / rayCount;
   return Math.min(
@@ -28,6 +32,10 @@ export function getStarburstQuillOuterRadius(
   rayCount: number,
   thickness: number,
 ): number {
+  if (rayCount < 3) {
+    return thickness * 2;
+  }
+
   const outerRadiusSpacing = thickness / 2.75; // The number of pixels space between between spokes at their thickest points.
   const segmentAngle = (2 * Math.PI) / rayCount;
   return Math.min(
