@@ -2,6 +2,7 @@ import { getIntervalSequenceForSchedule } from "metabook-core";
 import React, { useRef } from "react";
 import { Animated } from "react-native";
 import Svg, { ClipPath, G, Path } from "react-native-svg";
+import clamp from "../util/clamp";
 import lerp from "../util/lerp";
 import usePrevious from "./hooks/usePrevious";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
@@ -41,19 +42,14 @@ export function getStarburstRayLength(
   quillOuterRadius: number,
   starburstRadius: number,
 ): number {
-  return lerp(
-    value,
-    0,
-    1,
-    Math.max(quillOuterRadius, Math.min(quillOuterRadius * 2.0, 0.1)),
-    starburstRadius,
-  );
+  const minimumRayLength = 0.1 * starburstRadius;
+  return lerp(value, 0, 1, minimumRayLength, starburstRadius);
 }
 
 const sequence = getIntervalSequenceForSchedule("default");
-export function getStarburstRayValueForInterval(intervalMillis: number) {
-  const minimalStarburstValue = 0.05;
-
+export function getStarburstRayValueForInterval(
+  intervalMillis: number,
+): number {
   if (intervalMillis <= 0) {
     return 0;
   }
@@ -62,11 +58,12 @@ export function getStarburstRayValueForInterval(intervalMillis: number) {
   const firstInterval = sequence[1].interval;
   const maxInterval = sequence[sequence.length - 1].interval;
 
+  const firstIntervalRayValue = 0.1;
   return lerp(
     Math.log2(intervalMillis),
     Math.log2(firstInterval),
     Math.log2(maxInterval),
-    minimalStarburstValue,
+    firstIntervalRayValue,
     1,
   );
 }

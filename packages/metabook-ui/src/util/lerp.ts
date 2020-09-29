@@ -1,6 +1,4 @@
-function clip(value: number, min: number, max: number): number {
-  return Math.max(Math.min(value, max), min);
-}
+import clamp from "./clamp";
 
 export default function lerp(
   value: number,
@@ -11,5 +9,5 @@ export default function lerp(
 ) {
   const output =
     ((value - fromMin) / (fromMax - fromMin)) * (toMax - toMin) + toMin;
-  return clip(output, toMin, toMax);
+  return clamp(output, toMin, toMax);
 }

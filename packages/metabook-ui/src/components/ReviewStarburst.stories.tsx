@@ -10,11 +10,17 @@ export default {
   title: "ReviewStarburst",
   component: ReviewStarburst,
 };
-export const Basic: Story<{}> = () => {
+
+interface StoryArgs {
+  itemCount: number;
+}
+
+export const Basic: Story<StoryArgs> = ({ itemCount }) => {
   const { width, height, onLayout } = useLayout();
-  const reviewItems = Array.from(new Array(25).keys()).map(() =>
-    generateReviewItem("Q", "A", "C", "cyan"),
-  );
+  const reviewItems = Array.from(new Array(itemCount).keys()).map(() => ({
+    ...generateReviewItem("Q", "A", "C", "cyan"),
+    promptState: null,
+  }));
   return (
     <View
       onLayout={onLayout}
@@ -34,8 +40,13 @@ export const Basic: Story<{}> = () => {
           position="left"
           showLegend
           colorMode="bicolor"
+          overrideColorPalette={colors.palettes.cyan}
         />
       )}
     </View>
   );
+};
+
+Basic.args = {
+  itemCount: 25,
 };
