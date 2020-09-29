@@ -11,119 +11,163 @@ import {
   PromptTask,
   repetitionActionLogType,
   ActionLogID,
+  PromptID,
 } from "metabook-core";
 import {
   ReviewArea,
   ReviewAreaMarkingRecord,
+  ReviewItem,
   ReviewStarburst,
   styles,
   useLayout,
   useTransitioningValue,
 } from "metabook-ui";
 import FadeView from "metabook-ui/dist/components/FadeView";
+import { ColorPalette } from "metabook-ui/dist/styles/colors";
 import { getWidthSizeClass } from "metabook-ui/dist/styles/layout";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Animated, Text, View } from "react-native";
 import { ReviewSessionWrapper } from "../ReviewSessionWrapper";
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
 import {
+  EmbeddedScreenConfiguration,
+  EmbeddedScreenState,
+  embeddedScreenStateUpdateEventName,
   getEmbeddedColorPalette,
   getEmbeddedScreenConfigurationFromURL,
 } from "./embeddedScreenConfiguration";
 import OnboardingModalWeb from "./OnboardingModal.web";
 import useDecodedReviewItems from "./useDecodedReviewItems";
-import { useEmbeddedAuthenticationState } from "./useEmbeddedAuthenticationState";
+import {
+  EmbeddedAuthenticationState,
+  useEmbeddedAuthenticationState,
+} from "./useEmbeddedAuthenticationState";
 import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
 
-export default function EmbeddedScreen() {
-  const [configuration] = useState(
-    getEmbeddedScreenConfigurationFromURL(window.location.href),
-  );
-  const baseItems = useDecodedReviewItems(configuration.embeddedItems);
-  const colorPalette = getEmbeddedColorPalette(configuration);
+async function recordMarking(
+  authenticationState: EmbeddedAuthenticationState,
+  configuration: EmbeddedScreenConfiguration,
+  marking: ReviewAreaMarkingRecord,
+): Promise<{ log: PromptActionLog; id: ActionLogID }[]> {
+  if (authenticationState.status === "storageRestricted") {
+    // TODO: probably only do this on Firefox--Safari's UI is awful
+    authenticationState.onRequestStorageAccess();
+  }
 
-  const authenticationClient = useAuthenticationClient();
-  const authenticationState = useEmbeddedAuthenticationState(
-    authenticationClient,
-  );
+  const promptID = await getIDForPrompt(marking.reviewItem.prompt);
+  const taskID = getIDForPromptTask({
+    promptType: marking.reviewItem.prompt.promptType,
+    promptID,
+    promptParameters: marking.reviewItem.promptParameters,
+  } as PromptTask);
 
-  const onMark = useCallback(
-    async (marking: ReviewAreaMarkingRecord) => {
-      if (authenticationState.status === "storageRestricted") {
-        // TODO: probably only do this on Firefox--Safari's UI is awful
-        authenticationState.onRequestStorageAccess();
-      }
+  const logs: { log: PromptActionLog; id: ActionLogID }[] = [];
+  const markingTimestampMillis = Date.now();
+  if (!marking.reviewItem.promptState) {
+    const ingestLog: PromptActionLog = {
+      actionLogType: ingestActionLogType,
+      taskID,
+      timestampMillis: markingTimestampMillis,
+      provenance: {
+        provenanceType: PromptProvenanceType.Web,
+        title: configuration.embeddedHostMetadata.title,
+        url: configuration.embeddedHostMetadata.url,
+        externalID: configuration.embeddedHostMetadata.url,
+        modificationTimestampMillis: null,
+        colorPaletteName: configuration.embeddedHostMetadata.colorPaletteName,
+        siteName: configuration.embeddedHostMetadata.siteName,
+      },
+    };
+    logs.push({ log: ingestLog, id: await getIDForActionLog(ingestLog) });
+  }
 
-      const promptID = await getIDForPrompt(marking.reviewItem.prompt);
-      const taskID = getIDForPromptTask({
-        promptType: marking.reviewItem.prompt.promptType,
-        promptID,
-        promptParameters: marking.reviewItem.promptParameters,
-      } as PromptTask);
+  const repetitionLog: PromptActionLog = {
+    actionLogType: repetitionActionLogType,
+    taskID,
+    parentActionLogIDs: logs[0]
+      ? [logs[0].id]
+      : marking.reviewItem.promptState?.headActionLogIDs ?? [],
+    taskParameters: getNextTaskParameters(
+      marking.reviewItem.prompt,
+      marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
+    ),
+    outcome: marking.outcome,
+    context: null, // TODO
+    timestampMillis: markingTimestampMillis,
+  };
+  logs.push({
+    log: repetitionLog,
+    id: await getIDForActionLog(repetitionLog),
+  });
 
-      const logs: { log: PromptActionLog; id: ActionLogID }[] = [];
-      const markingTimestampMillis = Date.now();
-      if (!marking.reviewItem.promptState) {
-        const ingestLog: PromptActionLog = {
-          actionLogType: ingestActionLogType,
-          taskID,
-          timestampMillis: markingTimestampMillis,
-          provenance: {
-            provenanceType: PromptProvenanceType.Web,
-            title: configuration.embeddedHostMetadata.title,
-            url: configuration.embeddedHostMetadata.url,
-            externalID: configuration.embeddedHostMetadata.url,
-            modificationTimestampMillis: null,
-            colorPaletteName:
-              configuration.embeddedHostMetadata.colorPaletteName,
-            siteName: configuration.embeddedHostMetadata.siteName,
-          },
-        };
-        logs.push({ log: ingestLog, id: await getIDForActionLog(ingestLog) });
-      }
+  if (authenticationState.userRecord) {
+    const prompt = marking.reviewItem.prompt;
 
-      const repetitionLog: PromptActionLog = {
-        actionLogType: repetitionActionLogType,
-        taskID,
-        parentActionLogIDs: logs[0]
-          ? [logs[0].id]
-          : marking.reviewItem.promptState?.headActionLogIDs ?? [],
-        taskParameters: getNextTaskParameters(
+    getFirebaseFunctions()
+      .httpsCallable("recordEmbeddedActions")({
+        logs: logs.map(({ log }) => log),
+        promptsByID: { [promptID]: prompt },
+        attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
           marking.reviewItem.prompt,
-          marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
+          marking.reviewItem.attachmentResolutionMap,
         ),
-        outcome: marking.outcome,
-        context: null, // TODO
-        timestampMillis: markingTimestampMillis,
-      };
-      logs.push({
-        log: repetitionLog,
-        id: await getIDForActionLog(repetitionLog),
-      });
+      })
+      .then(() => console.log("Recorded action"))
+      .catch((error) => console.error(error));
+  }
 
-      if (authenticationState.userRecord) {
-        const prompt = marking.reviewItem.prompt;
+  return logs;
+}
 
-        getFirebaseFunctions()
-          .httpsCallable("recordEmbeddedActions")({
-            logs: logs.map(({ log }) => log),
-            promptsByID: { [promptID]: prompt },
-            attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
-              marking.reviewItem.prompt,
-              marking.reviewItem.attachmentResolutionMap,
-            ),
-          })
-          .then(() => console.log("Recorded action"))
-          .catch((error) => console.error(error));
-      }
+function useHostStateNotifier(items: ReviewItem[]) {
+  useEffect(() => {
+    let isInvalidated = false;
 
-      return logs;
-    },
-    [authenticationState, configuration],
-  );
+    Promise.all(items.map((item) => getIDForPrompt(item.prompt))).then(
+      (promptIDs) => {
+        if (isInvalidated) {
+          return;
+        }
+        const state: EmbeddedScreenState = {
+          orderedPromptIDs: promptIDs,
+          orderedPromptStates: items.map(({ promptState }) => promptState),
+        };
+
+        parent.postMessage(
+          { type: embeddedScreenStateUpdateEventName, state },
+          "*",
+        );
+      },
+    );
+
+    return () => {
+      isInvalidated = true;
+    };
+  }, [items]);
+}
+
+interface EmbeddedScreenRendererProps {
+  onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
+  items: ReviewItem[];
+  currentItemIndex: number;
+  containerWidth: number;
+  containerHeight: number;
+  authenticationState: EmbeddedAuthenticationState;
+  colorPalette: ColorPalette;
+}
+function EmbeddedScreenRenderer({
+  onMark,
+  currentItemIndex,
+  items,
+  containerWidth,
+  containerHeight,
+  authenticationState,
+  colorPalette,
+}: EmbeddedScreenRendererProps) {
+  useHostStateNotifier(items);
 
   const [
     pendingOutcome,
@@ -163,6 +207,131 @@ export default function EmbeddedScreen() {
     },
   });
 
+  if (currentItemIndex >= items.length && !isComplete) {
+    setTimeout(() => setComplete(true), 350);
+    setTimeout(() => {
+      // There are bugs with RNW's implementation of delay with spring animations, alas.
+      if (authenticationState.status !== "signedIn") {
+        setShouldShowOnboardingModal(true);
+      }
+    }, 750);
+  }
+
+  return (
+    <>
+      <EmbeddedBanner
+        palette={colorPalette}
+        isSignedIn={authenticationState.status === "signedIn"}
+        totalPromptCount={items.length}
+        completePromptCount={currentItemIndex}
+        sizeClass={getWidthSizeClass(containerWidth)}
+      />
+      <Animated.View
+        onLayout={onInteriorLayout}
+        style={{ transform: [{ translateY: interiorY }] }}
+      >
+        <ReviewStarburst
+          containerWidth={containerWidth}
+          containerHeight={containerHeight}
+          items={items}
+          currentItemIndex={Math.min(currentItemIndex, items.length - 1)}
+          pendingOutcome={pendingOutcome}
+          position={isComplete ? "center" : "left"}
+          showLegend={
+            currentItemIndex <
+            items.length /* animate out the legend a little early */
+          }
+          colorMode={isComplete ? "accent" : "bicolor"}
+        />
+        <FadeView
+          isVisible={isComplete}
+          delayMillis={500}
+          removeFromLayoutWhenHidden
+        >
+          <Text
+            style={[
+              styles.type.label.layoutStyle,
+              {
+                textAlign: "center",
+                color: styles.colors.white,
+                marginBottom: styles.layout.gridUnit * 2,
+              },
+            ]}
+          >
+            {items.length} prompts collected
+          </Text>
+        </FadeView>
+        <FadeView
+          isVisible={
+            /* TODO: show this after saving is actually complete */
+            isComplete && authenticationState.status === "signedIn"
+          }
+          delayMillis={750}
+          removeFromLayoutWhenHidden
+        >
+          <Text
+            style={[
+              styles.type.labelSmall.layoutStyle,
+              {
+                textAlign: "center",
+                color: colorPalette.secondaryTextColor,
+              },
+            ]}
+          >
+            Saved to your account:
+            <br />
+            {authenticationState.userRecord?.emailAddress}
+          </Text>
+        </FadeView>
+      </Animated.View>
+      {!isComplete && (
+        <ReviewArea
+          items={items}
+          currentItemIndex={currentItemIndex}
+          onMark={onMark}
+          onPendingOutcomeChange={setPendingOutcome}
+          insetBottom={0}
+          overrideColorPalette={colorPalette}
+        />
+      )}
+      {isComplete && (
+        <Animated.View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            overflow: "hidden",
+            transform: [{ translateY: onboardingOffsetY }],
+          }}
+        >
+          <OnboardingModalWeb
+            colorPalette={colorPalette}
+            sizeClass={getWidthSizeClass(containerWidth)}
+          />
+        </Animated.View>
+      )}
+    </>
+  );
+}
+
+export default function EmbeddedScreen() {
+  const [configuration] = useState(
+    getEmbeddedScreenConfigurationFromURL(window.location.href),
+  );
+  const colorPalette = getEmbeddedColorPalette(configuration);
+
+  const baseItems = useDecodedReviewItems(configuration.embeddedItems);
+
+  const authenticationClient = useAuthenticationClient();
+  const authenticationState = useEmbeddedAuthenticationState(
+    authenticationClient,
+  );
+
+  const onMark = useCallback(
+    (marking: ReviewAreaMarkingRecord) =>
+      recordMarking(authenticationState, configuration, marking),
+    [authenticationState, configuration],
+  );
+
   if (baseItems === null) {
     return null;
   }
@@ -174,121 +343,13 @@ export default function EmbeddedScreen() {
         onMark={onMark}
         overrideColorPalette={colorPalette}
       >
-        {({
-          onMark,
-          currentItemIndex,
-          items,
-          containerWidth,
-          containerHeight,
-        }) => {
-          if (currentItemIndex >= items.length && !isComplete) {
-            setTimeout(() => setComplete(true), 350);
-            setTimeout(() => {
-              // There are bugs with RNW's implementation of delay with spring animations, alas.
-              if (authenticationState.status !== "signedIn") {
-                setShouldShowOnboardingModal(true);
-              }
-            }, 750);
-          }
-
-          return (
-            <>
-              <EmbeddedBanner
-                palette={colorPalette}
-                isSignedIn={authenticationState.status === "signedIn"}
-                totalPromptCount={baseItems.length}
-                completePromptCount={currentItemIndex}
-                sizeClass={getWidthSizeClass(containerWidth)}
-              />
-              <Animated.View
-                onLayout={onInteriorLayout}
-                style={{ transform: [{ translateY: interiorY }] }}
-              >
-                <ReviewStarburst
-                  containerWidth={containerWidth}
-                  containerHeight={containerHeight}
-                  items={items}
-                  currentItemIndex={Math.min(
-                    currentItemIndex,
-                    items.length - 1,
-                  )}
-                  pendingOutcome={pendingOutcome}
-                  position={isComplete ? "center" : "left"}
-                  showLegend={
-                    currentItemIndex <
-                    items.length /* animate out the legend a little early */
-                  }
-                  colorMode={isComplete ? "accent" : "bicolor"}
-                />
-                <FadeView
-                  isVisible={isComplete}
-                  delayMillis={500}
-                  removeFromLayoutWhenHidden
-                >
-                  <Text
-                    style={[
-                      styles.type.label.layoutStyle,
-                      {
-                        textAlign: "center",
-                        color: styles.colors.white,
-                        marginBottom: styles.layout.gridUnit * 2,
-                      },
-                    ]}
-                  >
-                    {baseItems.length} prompts collected
-                  </Text>
-                </FadeView>
-                <FadeView
-                  isVisible={
-                    /* TODO: show this after saving is actually complete */
-                    isComplete && authenticationState.status === "signedIn"
-                  }
-                  delayMillis={750}
-                  removeFromLayoutWhenHidden
-                >
-                  <Text
-                    style={[
-                      styles.type.labelSmall.layoutStyle,
-                      {
-                        textAlign: "center",
-                        color: colorPalette.secondaryTextColor,
-                      },
-                    ]}
-                  >
-                    Saved to your account:
-                    <br />
-                    {authenticationState.userRecord?.emailAddress}
-                  </Text>
-                </FadeView>
-              </Animated.View>
-              {!isComplete && (
-                <ReviewArea
-                  items={items}
-                  currentItemIndex={currentItemIndex}
-                  onMark={onMark}
-                  onPendingOutcomeChange={setPendingOutcome}
-                  insetBottom={0}
-                  overrideColorPalette={colorPalette}
-                />
-              )}
-              {isComplete && (
-                <Animated.View
-                  style={{
-                    flex: 1,
-                    justifyContent: "flex-end",
-                    overflow: "hidden",
-                    transform: [{ translateY: onboardingOffsetY }],
-                  }}
-                >
-                  <OnboardingModalWeb
-                    colorPalette={colorPalette}
-                    sizeClass={getWidthSizeClass(containerWidth)}
-                  />
-                </Animated.View>
-              )}
-            </>
-          );
-        }}
+        {(args) => (
+          <EmbeddedScreenRenderer
+            {...args}
+            authenticationState={authenticationState}
+            colorPalette={colorPalette}
+          />
+        )}
       </ReviewSessionWrapper>
     </View>
   );

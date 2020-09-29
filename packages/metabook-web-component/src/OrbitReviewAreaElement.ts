@@ -1,10 +1,13 @@
 import {
   EmbeddedHostMetadata,
   EmbeddedScreenConfiguration,
+  embeddedScreenStateUpdateEventName,
+  EmbeddedScreenUpdateEvent,
 } from "metabook-app/src/embedded/embeddedScreenConfiguration";
 import { extractItems } from "./extractItems";
 import { getSharedMetadataMonitor } from "./metadataMonitor";
 import { ColorPaletteName } from "metabook-core";
+import { EmbeddedItem } from "metabook-app/src/embedded/embeddedItem";
 
 declare global {
   // supplied by Webpack
@@ -14,7 +17,7 @@ declare global {
 // HACK: values coupled / copy-pasta'd with styles in ReviewArea.
 const gridUnit = 8;
 const edgeMargin = 16;
-export function getHeightForReviewAreaOfWidth(width: number) {
+function getHeightForReviewAreaOfWidth(width: number) {
   // The prompt itself is 6:5, max 500px. Then we add 9 units at top (for the starburst container) and 11 at bottom (for the button bar).
   // TODO: add more at bottom if buttons stack
   const promptWidth = Math.min(500, width - edgeMargin * 2);
@@ -22,16 +25,84 @@ export function getHeightForReviewAreaOfWidth(width: number) {
   return promptHeight + (9 + 11) * gridUnit;
 }
 
+const _activeReviewAreaElements: Set<OrbitReviewAreaElement> = new Set();
+let _cachedPageManifest: EmbeddedPageManifest | null = null;
+function addReviewAreaElement(element: OrbitReviewAreaElement) {
+  _activeReviewAreaElements.add(element);
+  _cachedPageManifest = null;
+}
+function removeReviewAreaElement(element: OrbitReviewAreaElement) {
+  _activeReviewAreaElements.delete(element);
+  _cachedPageManifest = null;
+}
+
+function getPageManifest() {
+  const orderedReviewAreas = [..._activeReviewAreaElements].sort((a, b) => {
+    const comparison = a.compareDocumentPosition(b);
+    if (
+      (comparison & Node.DOCUMENT_POSITION_PRECEDING) ===
+      Node.DOCUMENT_POSITION_PRECEDING
+    ) {
+      return 1;
+    } else if (
+      (comparison & Node.DOCUMENT_POSITION_FOLLOWING) ===
+      Node.DOCUMENT_POSITION_FOLLOWING
+    ) {
+      return -1;
+    } else {
+      throw new Error(
+        `Unexpected compareDocumentPosition return value ${comparison} for ${a} and ${b}`,
+      );
+    }
+  });
+
+  const items = orderedReviewAreas.map((a) => a.getEmbeddedItems());
+}
+
+let _hasAddedMessageListener = false;
+function addEmbeddedScreenMessageListener() {
+  if (_hasAddedMessageListener) {
+    return;
+  }
+  function onMessage(event: MessageEvent) {
+    if (
+      EMBED_API_BASE_URL.startsWith(event.origin) &&
+      event.data &&
+      event.data.type === embeddedScreenStateUpdateEventName
+    ) {
+      const data = event.data as EmbeddedScreenUpdateEvent;
+      console.log("Got state update", data);
+    }
+  }
+  window.addEventListener("message", onMessage);
+  _hasAddedMessageListener = true;
+}
+
 export class OrbitReviewAreaElement extends HTMLElement {
   private needsRender = false;
   private cachedMetadata: EmbeddedHostMetadata | null = null;
+  private cachedItems: EmbeddedItem[] | null = null;
   private iframe: HTMLIFrameElement | null = null;
 
   onMetadataChange = (metadata: EmbeddedHostMetadata) => {
     this.cachedMetadata = metadata;
+    // TODO: notify child
   };
 
+  onChildPromptChange() {
+    this.cachedItems = null;
+    // TODO: notify child
+  }
+
+  getEmbeddedItems() {
+    if (this.cachedItems === null) {
+      this.cachedItems = extractItems(this);
+    }
+    return this.cachedItems;
+  }
+
   connectedCallback() {
+    addEmbeddedScreenMessageListener();
     getSharedMetadataMonitor().addEventListener(this.onMetadataChange);
 
     const shadowRoot = this.attachShadow({ mode: "closed" });
@@ -44,6 +115,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
       "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-modals",
     );
     shadowRoot.appendChild(this.iframe);
+
     const effectiveWidth = this.iframe.getBoundingClientRect().width;
     // The extra 5 grid units are for the banner.
     // TODO: encapsulate the banner's height in some API exported by metabook-app.
@@ -51,47 +123,38 @@ export class OrbitReviewAreaElement extends HTMLElement {
       getHeightForReviewAreaOfWidth(effectiveWidth) + 8 * 5
     }px`;
 
-    this.markNeedsRender();
+    addReviewAreaElement(this);
+
+    const iframe = this.iframe;
+    requestAnimationFrame(() => {
+      console.log(getPageManifest());
+      if (!this.cachedMetadata) {
+        throw new Error("Invariant violation: no embedded host metadata");
+      }
+
+      const colorOverride = this.getAttribute(
+        "color",
+      ) as ColorPaletteName | null;
+
+      const configuration: EmbeddedScreenConfiguration = {
+        embeddedItems: this.getEmbeddedItems(),
+        embeddedHostMetadata: {
+          ...this.cachedMetadata,
+          ...(colorOverride && { colorPaletteName: colorOverride }),
+        },
+      };
+
+      const itemsParameterString = encodeURIComponent(
+        JSON.stringify(configuration),
+      );
+      const baseURL = new URL(EMBED_API_BASE_URL);
+      baseURL.search = `i=${itemsParameterString}`;
+      iframe.src = baseURL.href;
+    });
   }
 
   disconnectedCallback() {
+    removeReviewAreaElement(this);
     getSharedMetadataMonitor().removeEventListener(this.onMetadataChange);
-  }
-
-  markNeedsRender() {
-    if (!this.needsRender) {
-      this.needsRender = true;
-      requestAnimationFrame(() => {
-        this.render();
-        this.needsRender = false;
-      });
-    }
-  }
-
-  private render() {
-    if (!this.iframe) {
-      return;
-    }
-    if (!this.cachedMetadata) {
-      throw new Error("Invariant violation: no embedded host metadata");
-    }
-
-    const embeddedItems = extractItems(this);
-    const colorOverride = this.getAttribute("color") as ColorPaletteName | null;
-
-    const configuration: EmbeddedScreenConfiguration = {
-      embeddedItems,
-      embeddedHostMetadata: {
-        ...this.cachedMetadata,
-        ...(colorOverride && { colorPaletteName: colorOverride }),
-      },
-    };
-
-    const itemsParameterString = encodeURIComponent(
-      JSON.stringify(configuration),
-    );
-    const baseURL = new URL(EMBED_API_BASE_URL);
-    baseURL.search = `i=${itemsParameterString}`;
-    this.iframe.src = baseURL.href;
   }
 }

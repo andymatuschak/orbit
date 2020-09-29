@@ -8,11 +8,11 @@ export class OrbitPromptElement extends HTMLElement {
     if (!reviewArea) {
       throw new Error("Card without review area: " + this.outerHTML);
     }
-    reviewArea.markNeedsRender();
+    reviewArea.onChildPromptChange();
   }
 
   attributeChangedCallback() {
-    this.getReviewAreaParent()?.markNeedsRender();
+    this.getReviewAreaParent()?.onChildPromptChange();
   }
 
   private getReviewAreaParent(): OrbitReviewAreaElement | null {
