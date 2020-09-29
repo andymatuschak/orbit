@@ -3,11 +3,12 @@ import {
   ApplicationPromptParameters,
   AttachmentID,
   AttachmentURLReference,
-  QAPrompt,
-  QAPromptParameters,
   ClozePrompt,
   ClozePromptParameters,
+  PromptProvenanceType,
   PromptState,
+  QAPrompt,
+  QAPromptParameters,
 } from "metabook-core";
 import { colors } from "./styles";
 
@@ -47,6 +48,18 @@ export type ReviewItem = PromptReviewItem;
 export function getColorPaletteForReviewItem(
   reviewItem: ReviewItem,
 ): colors.ColorPalette {
+  if (reviewItem.promptState) {
+    const provenance = reviewItem.promptState.taskMetadata.provenance;
+    if (
+      provenance &&
+      provenance.provenanceType === PromptProvenanceType.Web &&
+      provenance.colorPaletteName &&
+      colors.palettes[provenance.colorPaletteName]
+    ) {
+      return colors.palettes[provenance.colorPaletteName];
+    }
+  }
+
   const colorNames = colors.orderedPaletteNames;
   const colorName =
     colorNames[
