@@ -13,6 +13,5 @@
       ]
     }
   },
-  "include": ["./src/**/*.ts", "./src/**/*.tsx"],
-  "exclude": ["./src/**/*.stories.tsx"]
+  "include": ["./src/**/*.ts", "./src/**/*.tsx"]
 }

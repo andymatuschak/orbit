@@ -1,6 +1,7 @@
 import { boolean, number, text, withKnobs } from "@storybook/addon-knobs";
 import {
   applyActionLogToPromptState,
+  getIDForActionLog,
   getIDForPromptTask,
   PromptID,
   PromptRepetitionActionLog,
@@ -97,25 +98,27 @@ export function Basic() {
           onPendingOutcomeChange={() => {
             return;
           }}
-          onMark={useCallback(({ outcome, reviewItem }) => {
+          onMark={useCallback(async ({ outcome, reviewItem }) => {
+            const log: PromptRepetitionActionLog<PromptTaskParameters> = {
+              actionLogType: repetitionActionLogType,
+              context: null,
+              outcome,
+              parentActionLogIDs: [],
+              taskID: getIDForPromptTask({
+                promptType: qaPromptType,
+                promptID: "testID" as PromptID,
+                promptParameters: null,
+              }),
+              taskParameters: null,
+              timestampMillis: Date.now(),
+            };
+            const actionLogID = await getIDForActionLog(log);
             setLocalPromptStates((states) => {
-              const log: PromptRepetitionActionLog<PromptTaskParameters> = {
-                actionLogType: repetitionActionLogType,
-                context: null,
-                outcome,
-                parentActionLogIDs: [],
-                taskID: getIDForPromptTask({
-                  promptType: qaPromptType,
-                  promptID: "testID" as PromptID,
-                  promptParameters: null,
-                }),
-                taskParameters: null,
-                timestampMillis: Date.now(),
-              };
               return [
                 ...states,
                 applyActionLogToPromptState({
                   promptActionLog: log,
+                  actionLogID,
                   schedule: "default",
                   basePromptState: reviewItem.promptState,
                 }) as PromptState,

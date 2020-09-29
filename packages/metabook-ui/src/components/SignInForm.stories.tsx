@@ -2,8 +2,13 @@ import { action } from "@storybook/addon-actions";
 import { Story } from "@storybook/react";
 import React from "react";
 import { View } from "react-native";
-import { colors, layout } from "../styles";
+import { colors } from "../styles";
 import SignInForm, { SignInFormProps } from "./SignInForm";
+
+// HACK: Storybook uses reach-router, whose type definitions assume DOM types. We can't include DOM types at a module level because React Native declares conflicting duplicates.
+declare global {
+  type Window = any;
+}
 
 export default {
   title: "SignInForm",
