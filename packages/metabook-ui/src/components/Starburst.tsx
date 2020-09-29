@@ -42,7 +42,7 @@ export function getStarburstRayLength(
   quillOuterRadius: number,
   starburstRadius: number,
 ): number {
-  const minimumRayLength = 0.1 * starburstRadius;
+  const minimumRayLength = 0.075 * starburstRadius;
   return lerp(value, 0, 1, minimumRayLength, starburstRadius);
 }
 
