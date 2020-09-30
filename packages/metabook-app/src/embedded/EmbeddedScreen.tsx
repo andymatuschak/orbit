@@ -1,5 +1,6 @@
 import "firebase/functions";
 import {
+  ActionLogID,
   getIDForActionLog,
   getIDForPrompt,
   getIDForPromptTask,
@@ -8,15 +9,13 @@ import {
   PromptActionLog,
   PromptProvenanceType,
   PromptRepetitionOutcome,
-  PromptTask,
-  repetitionActionLogType,
-  ActionLogID,
-  PromptID,
-  applicationPromptType,
-  promptTypeSupportsRetry,
   PromptState,
+  PromptTask,
+  promptTypeSupportsRetry,
+  repetitionActionLogType,
 } from "metabook-core";
 import {
+  FadeView,
   ReviewArea,
   ReviewAreaMarkingRecord,
   ReviewItem,
@@ -25,10 +24,6 @@ import {
   useLayout,
   useTransitioningValue,
 } from "metabook-ui";
-import FadeView from "metabook-ui/dist/components/FadeView";
-import { getColorPaletteForReviewItem } from "metabook-ui/dist/reviewItem";
-import { ColorPalette } from "metabook-ui/dist/styles/colors";
-import { getWidthSizeClass } from "metabook-ui/dist/styles/layout";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Animated, Text, View } from "react-native";
@@ -212,7 +207,7 @@ interface EmbeddedScreenRendererProps {
   containerWidth: number;
   containerHeight: number;
   authenticationState: EmbeddedAuthenticationState;
-  colorPalette: ColorPalette;
+  colorPalette: styles.colors.ColorPalette;
   hostState: EmbeddedHostState | null;
 }
 function EmbeddedScreenRenderer({
@@ -290,7 +285,7 @@ function EmbeddedScreenRenderer({
         isSignedIn={authenticationState.status === "signedIn"}
         totalPromptCount={items.length}
         completePromptCount={currentItemIndex}
-        sizeClass={getWidthSizeClass(containerWidth)}
+        sizeClass={styles.layout.getWidthSizeClass(containerWidth)}
       />
       <Animated.View
         onLayout={onInteriorLayout}
@@ -375,7 +370,7 @@ function EmbeddedScreenRenderer({
         >
           <OnboardingModalWeb
             colorPalette={colorPalette}
-            sizeClass={getWidthSizeClass(containerWidth)}
+            sizeClass={styles.layout.getWidthSizeClass(containerWidth)}
           />
         </Animated.View>
       )}

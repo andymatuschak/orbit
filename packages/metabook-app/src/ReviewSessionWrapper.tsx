@@ -32,6 +32,7 @@ export function ReviewSessionWrapper({
   children: (args: {
     onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
     items: ReviewItem[];
+    baseItems: ReviewItem[];
     currentItemIndex: number;
     containerWidth: number;
     containerHeight: number;
@@ -133,6 +134,7 @@ export function ReviewSessionWrapper({
               onMark: localOnMark,
               currentItemIndex,
               items,
+              baseItems,
               containerWidth,
               containerHeight,
             })
