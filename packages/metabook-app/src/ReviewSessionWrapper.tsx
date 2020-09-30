@@ -108,8 +108,6 @@ export function ReviewSessionWrapper({
     onLayout,
   } = useLayout();
 
-  console.log("[Performance] Render", Date.now() / 1000.0);
-
   return (
     <Animated.View
       style={{

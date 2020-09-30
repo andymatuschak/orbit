@@ -218,6 +218,7 @@ function getEndOfTaskLabel(
 interface EmbeddedScreenRendererProps {
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
   items: ReviewItem[];
+  baseItems: ReviewItem[];
   currentItemIndex: number;
   containerWidth: number;
   containerHeight: number;
@@ -229,6 +230,7 @@ interface EmbeddedScreenRendererProps {
 function EmbeddedScreenRenderer({
   onMark,
   currentItemIndex,
+  baseItems,
   items,
   containerWidth,
   containerHeight,
@@ -368,7 +370,7 @@ function EmbeddedScreenRenderer({
       </Animated.View>
       {!isComplete && (
         <ReviewArea
-          items={items}
+          items={baseItems}
           currentItemIndex={currentItemIndex}
           onMark={onMark}
           onPendingOutcomeChange={setPendingOutcome}
@@ -420,8 +422,8 @@ function useHostState() {
 
 async function submitPendingActionsRecord(
   actionsRecord: EmbeddedActionsRecord,
-): Promise<void> {
-  getFirebaseFunctions().httpsCallable("recordEmbeddedActions")({
+): Promise<unknown> {
+  return getFirebaseFunctions().httpsCallable("recordEmbeddedActions")({
     logs: actionsRecord.logEntries.map(({ log }) => log),
     promptsByID: actionsRecord.promptsByID,
     attachmentURLsByID: actionsRecord.attachmentURLsByID,

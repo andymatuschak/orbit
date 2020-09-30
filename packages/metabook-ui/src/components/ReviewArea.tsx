@@ -204,7 +204,7 @@ export interface ReviewAreaProps {
   forceShowAnswer?: boolean;
 }
 
-export default function ReviewArea({
+export default React.memo(function ReviewArea({
   items,
   currentItemIndex,
   onMark,
@@ -213,6 +213,8 @@ export default function ReviewArea({
   overrideColorPalette,
   insetBottom = 0,
 }: ReviewAreaProps) {
+  console.log("[Performance - ReviewArea] Render", Date.now() / 1000.0);
+
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
 
   const previousItemIndex = usePrevious(currentItemIndex);
@@ -265,4 +267,4 @@ export default function ReviewArea({
       />
     </View>
   );
-}
+});
