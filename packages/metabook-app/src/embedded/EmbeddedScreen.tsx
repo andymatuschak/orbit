@@ -25,7 +25,13 @@ import {
   useTransitioningValue,
 } from "metabook-ui";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Animated, Text, View } from "react-native";
 import { ReviewSessionWrapper } from "../ReviewSessionWrapper";
 import { useAuthenticationClient } from "../util/authContext";
@@ -52,6 +58,7 @@ async function recordMarking(
   authenticationState: EmbeddedAuthenticationState,
   configuration: EmbeddedScreenConfiguration,
   marking: ReviewAreaMarkingRecord,
+  sessionStartTimestampMillis: number,
 ): Promise<{ log: PromptActionLog; id: ActionLogID }[]> {
   if (authenticationState.status === "storageRestricted") {
     // TODO: probably only do this on Firefox--Safari's UI is awful
@@ -96,7 +103,7 @@ async function recordMarking(
       marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
     ),
     outcome: marking.outcome,
-    context: null, // TODO
+    context: `embedded/${sessionStartTimestampMillis}`,
     timestampMillis: markingTimestampMillis,
   };
   logs.push({
@@ -378,7 +385,7 @@ function EmbeddedScreenRenderer({
   );
 }
 
-function useHostStateListener() {
+function useHostState() {
   const [hostState, setHostState] = useState<EmbeddedHostState | null>(null);
 
   useEffect(() => {
@@ -405,9 +412,8 @@ export default function EmbeddedScreen() {
   const [configuration] = useState(
     getEmbeddedScreenConfigurationFromURL(window.location.href),
   );
-  const hostState = useHostStateListener();
+  const hostState = useHostState();
   const colorPalette = getEmbeddedColorPalette(configuration);
-
   const baseItems = useDecodedReviewItems(configuration.embeddedItems);
 
   const authenticationClient = useAuthenticationClient();
@@ -415,9 +421,15 @@ export default function EmbeddedScreen() {
     authenticationClient,
   );
 
+  const reviewSessionStartTimestampMillis = useRef(Date.now());
   const onMark = useCallback(
     (marking: ReviewAreaMarkingRecord) =>
-      recordMarking(authenticationState, configuration, marking),
+      recordMarking(
+        authenticationState,
+        configuration,
+        marking,
+        reviewSessionStartTimestampMillis.current,
+      ),
     [authenticationState, configuration],
   );
 

@@ -3,27 +3,29 @@ import {
   MetabookFirebaseUserClient,
 } from "metabook-client";
 import {
+  ActionLogID,
+  getIDForActionLog,
   getIDForPrompt,
   getIDForPromptTask,
   getNextTaskParameters,
   PromptActionLog,
   PromptRepetitionOutcome,
   PromptTask,
-  repetitionActionLogType,
-  ActionLogID,
-  getIDForActionLog,
   promptTypeSupportsRetry,
+  repetitionActionLogType,
 } from "metabook-core";
 import {
   ReviewArea,
+  ReviewAreaMarkingRecord,
   ReviewItem,
   ReviewStarburst,
   styles,
-  ReviewAreaMarkingRecord,
 } from "metabook-ui";
 import { getColorPaletteForReviewItem } from "metabook-ui/dist/reviewItem";
 import { layout } from "metabook-ui/dist/styles";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useRef } from "react";
+import { Platform } from "react-native";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserRecord } from "../authentication";
@@ -103,6 +105,7 @@ export function useDatabaseManager(
 async function updateDatabaseForMarking(
   databaseManager: DatabaseManager,
   marking: ReviewAreaMarkingRecord,
+  reviewSessionStartTimestampMillis: number,
 ): Promise<{ log: PromptActionLog; id: ActionLogID }[]> {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
@@ -115,7 +118,7 @@ async function updateDatabaseForMarking(
       promptParameters: marking.reviewItem.promptParameters,
     } as PromptTask),
     outcome: marking.outcome,
-    context: null, // TODO https://github.com/andymatuschak/metabook/issues/59
+    context: `review/${Platform.OS}/${reviewSessionStartTimestampMillis}`,
     timestampMillis: Date.now(),
     taskParameters: getNextTaskParameters(
       marking.reviewItem.prompt,
@@ -162,6 +165,7 @@ export default function ReviewSession() {
   const databaseManager = useDatabaseManager(userRecord);
   const baseItems = useReviewQueue(databaseManager);
   const insets = useSafeAreaInsets();
+  const reviewSessionStartTimestampMillis = useRef(Date.now());
 
   const [
     pendingOutcome,
@@ -173,7 +177,11 @@ export default function ReviewSession() {
       <ReviewSessionWrapper
         baseItems={baseItems}
         onMark={(markingRecord) =>
-          updateDatabaseForMarking(databaseManager!, markingRecord)
+          updateDatabaseForMarking(
+            databaseManager!,
+            markingRecord,
+            reviewSessionStartTimestampMillis.current,
+          )
         }
         insets={{ top: insets.top }}
         overrideColorPalette={
