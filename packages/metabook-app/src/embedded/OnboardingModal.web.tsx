@@ -21,7 +21,9 @@ const emailRegexp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 function onSubmit(email: string) {
   if (emailRegexp.test(email)) {
     window.open(
-      `/login?shouldSendOpenerLoginToken=true&email=${email}`,
+      `/login?shouldSendOpenerLoginToken=true&email=${encodeURIComponent(
+        email,
+      )}`,
       "Sign in",
       "width=375,height=500",
     );

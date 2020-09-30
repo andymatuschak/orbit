@@ -6,6 +6,7 @@ import {
   getIDForPromptTask,
   getNextTaskParameters,
   ingestActionLogType,
+  Prompt,
   PromptActionLog,
   PromptProvenanceType,
   PromptRepetitionOutcome,
@@ -33,7 +34,10 @@ import React, {
   useState,
 } from "react";
 import { Animated, Text, View } from "react-native";
-import { ReviewSessionWrapper } from "../ReviewSessionWrapper";
+import {
+  ReviewSessionWrapper,
+  ReviewSessionWrapperProps,
+} from "../ReviewSessionWrapper";
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
@@ -54,17 +58,19 @@ import {
 } from "./useEmbeddedAuthenticationState";
 import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
 
-async function recordMarking(
-  authenticationState: EmbeddedAuthenticationState,
+type PromptActionLogEntry = { log: PromptActionLog; id: ActionLogID };
+
+interface EmbeddedActionsRecord {
+  logEntries: PromptActionLogEntry[];
+  promptsByID: { [key: string]: Prompt };
+  attachmentURLsByID: { [key: string]: string };
+}
+
+async function getMarkingLogs(
   configuration: EmbeddedScreenConfiguration,
   marking: ReviewAreaMarkingRecord,
   sessionStartTimestampMillis: number,
-): Promise<{ log: PromptActionLog; id: ActionLogID }[]> {
-  if (authenticationState.status === "storageRestricted") {
-    // TODO: probably only do this on Firefox--Safari's UI is awful
-    authenticationState.onRequestStorageAccess();
-  }
-
+): Promise<EmbeddedActionsRecord> {
   const promptID = await getIDForPrompt(marking.reviewItem.prompt);
   const taskID = getIDForPromptTask({
     promptType: marking.reviewItem.prompt.promptType,
@@ -72,7 +78,7 @@ async function recordMarking(
     promptParameters: marking.reviewItem.promptParameters,
   } as PromptTask);
 
-  const logs: { log: PromptActionLog; id: ActionLogID }[] = [];
+  const logEntries: { log: PromptActionLog; id: ActionLogID }[] = [];
   const markingTimestampMillis = Date.now();
   if (!marking.reviewItem.promptState) {
     const ingestLog: PromptActionLog = {
@@ -89,14 +95,14 @@ async function recordMarking(
         siteName: configuration.embeddedHostMetadata.siteName,
       },
     };
-    logs.push({ log: ingestLog, id: await getIDForActionLog(ingestLog) });
+    logEntries.push({ log: ingestLog, id: await getIDForActionLog(ingestLog) });
   }
 
   const repetitionLog: PromptActionLog = {
     actionLogType: repetitionActionLogType,
     taskID,
-    parentActionLogIDs: logs[0]
-      ? [logs[0].id]
+    parentActionLogIDs: logEntries[0]
+      ? [logEntries[0].id]
       : marking.reviewItem.promptState?.headActionLogIDs ?? [],
     taskParameters: getNextTaskParameters(
       marking.reviewItem.prompt,
@@ -106,28 +112,30 @@ async function recordMarking(
     context: `embedded/${sessionStartTimestampMillis}`,
     timestampMillis: markingTimestampMillis,
   };
-  logs.push({
+  logEntries.push({
     log: repetitionLog,
     id: await getIDForActionLog(repetitionLog),
   });
 
-  if (authenticationState.userRecord) {
-    const prompt = marking.reviewItem.prompt;
+  return {
+    logEntries,
+    promptsByID: { [promptID]: marking.reviewItem.prompt },
+    attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
+      marking.reviewItem.prompt,
+      marking.reviewItem.attachmentResolutionMap,
+    ),
+  };
+}
 
-    getFirebaseFunctions()
-      .httpsCallable("recordEmbeddedActions")({
-        logs: logs.map(({ log }) => log),
-        promptsByID: { [promptID]: prompt },
-        attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
-          marking.reviewItem.prompt,
-          marking.reviewItem.attachmentResolutionMap,
-        ),
-      })
-      .then(() => console.log("Recorded action"))
-      .catch((error) => console.error(error));
-  }
-
-  return logs;
+function mergePendingActionsRecords(
+  a: EmbeddedActionsRecord,
+  b: EmbeddedActionsRecord,
+): EmbeddedActionsRecord {
+  return {
+    logEntries: [...a.logEntries, ...b.logEntries],
+    promptsByID: { ...a.promptsByID, ...b.promptsByID },
+    attachmentURLsByID: { ...a.attachmentURLsByID, ...b.attachmentURLsByID },
+  };
 }
 
 // Pass the local prompt states along to the hosting web page when they change (i.e. so that the starbursts in other review areas on this page reflect this one's progress).
@@ -216,6 +224,7 @@ interface EmbeddedScreenRendererProps {
   authenticationState: EmbeddedAuthenticationState;
   colorPalette: styles.colors.ColorPalette;
   hostState: EmbeddedHostState | null;
+  hasUncommittedActions: boolean;
 }
 function EmbeddedScreenRenderer({
   onMark,
@@ -226,6 +235,7 @@ function EmbeddedScreenRenderer({
   authenticationState,
   colorPalette,
   hostState,
+  hasUncommittedActions,
 }: EmbeddedScreenRendererProps) {
   useHostStateNotifier(items);
 
@@ -336,7 +346,7 @@ function EmbeddedScreenRenderer({
         <FadeView
           isVisible={
             /* TODO: show this after saving is actually complete */
-            isComplete && authenticationState.status === "signedIn"
+            isComplete && !hasUncommittedActions
           }
           delayMillis={750}
           removeFromLayoutWhenHidden
@@ -408,6 +418,72 @@ function useHostState() {
   return hostState;
 }
 
+async function submitPendingActionsRecord(
+  actionsRecord: EmbeddedActionsRecord,
+): Promise<void> {
+  getFirebaseFunctions().httpsCallable("recordEmbeddedActions")({
+    logs: actionsRecord.logEntries.map(({ log }) => log),
+    promptsByID: actionsRecord.promptsByID,
+    attachmentURLsByID: actionsRecord.attachmentURLsByID,
+  });
+}
+
+function useMarkingManager(
+  authenticationState: EmbeddedAuthenticationState,
+  configuration: EmbeddedScreenConfiguration,
+): {
+  onMark: ReviewSessionWrapperProps["onMark"];
+  hasUncommittedActions: boolean;
+} {
+  const reviewSessionStartTimestampMillis = useRef(Date.now());
+  const [
+    pendingActionsRecord,
+    setPendingActionsRecord,
+  ] = useState<EmbeddedActionsRecord | null>(null);
+  const onMark: ReviewSessionWrapperProps["onMark"] = useCallback(
+    async (marking) => {
+      const newRecord = await getMarkingLogs(
+        configuration,
+        marking,
+        reviewSessionStartTimestampMillis.current,
+      );
+      setPendingActionsRecord((pendingActionsRecord) =>
+        pendingActionsRecord
+          ? mergePendingActionsRecords(pendingActionsRecord, newRecord)
+          : newRecord,
+      );
+      return newRecord.logEntries;
+    },
+    [configuration],
+  );
+
+  useEffect(() => {
+    if (!pendingActionsRecord) {
+      return;
+    }
+    if (authenticationState.status === "signedIn") {
+      submitPendingActionsRecord(pendingActionsRecord)
+        .then(() => {
+          console.log("Saved actions to server", pendingActionsRecord);
+          setPendingActionsRecord(null);
+        })
+        .catch((error) => {
+          console.error(
+            `Failed to save record: ${error.message}`,
+            pendingActionsRecord,
+          );
+        });
+    } else {
+      console.log(
+        "Queueing actions for after user authenticates",
+        pendingActionsRecord,
+      );
+    }
+  }, [pendingActionsRecord, authenticationState]);
+
+  return { onMark, hasUncommittedActions: !!pendingActionsRecord };
+}
+
 export default function EmbeddedScreen() {
   const [configuration] = useState(
     getEmbeddedScreenConfigurationFromURL(window.location.href),
@@ -421,20 +497,13 @@ export default function EmbeddedScreen() {
     authenticationClient,
   );
 
-  const reviewSessionStartTimestampMillis = useRef(Date.now());
-  const onMark = useCallback(
-    (marking: ReviewAreaMarkingRecord) =>
-      recordMarking(
-        authenticationState,
-        configuration,
-        marking,
-        reviewSessionStartTimestampMillis.current,
-      ),
-    [authenticationState, configuration],
+  const { onMark, hasUncommittedActions } = useMarkingManager(
+    authenticationState,
+    configuration,
   );
 
   if (baseItems === null) {
-    return null;
+    return null; // TODO show loading screen: we may be downloading attachments.
   }
 
   return (
@@ -450,6 +519,7 @@ export default function EmbeddedScreen() {
             authenticationState={authenticationState}
             colorPalette={colorPalette}
             hostState={hostState}
+            hasUncommittedActions={hasUncommittedActions}
           />
         )}
       </ReviewSessionWrapper>
