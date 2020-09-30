@@ -395,7 +395,7 @@ function useHostState() {
         event.data &&
         event.data.type === embeddedHostUpdateEventName
       ) {
-        console.log("Got new host state", event.data.state);
+        // console.log("Got new host state", event.data.state);
         setHostState(event.data.state);
       }
     }

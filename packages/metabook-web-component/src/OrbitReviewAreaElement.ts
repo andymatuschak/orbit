@@ -112,7 +112,7 @@ function addEmbeddedScreenMessageListener() {
         (element) => element.iframe?.contentWindow === event.source,
       );
       if (reviewArea) {
-        console.log("Got state update from embedded screen", reviewArea, data);
+        // console.log("Got state update from embedded screen", reviewArea, data);
         reviewAreaStates.set(reviewArea, data.state);
         markScreenStatesDirty();
       } else {
