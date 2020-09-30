@@ -128,6 +128,7 @@ async function recordMarking(
   return logs;
 }
 
+// Pass the local prompt states along to the hosting web page when they change (i.e. so that the starbursts in other review areas on this page reflect this one's progress).
 function useHostStateNotifier(items: ReviewItem[]) {
   useEffect(() => {
     let isInvalidated = false;
@@ -159,10 +160,10 @@ function flatten<T>(array: T[][]): T[] {
   return array.reduce((current, output) => output.concat(current), []);
 }
 
-function getStarburstMergedPageState(
+function getPageState(
   localItems: ReviewItem[],
   hostState: EmbeddedHostState | null,
-): { itemStates: (PromptState | null)[]; localItemIndexOffset: number } {
+): { pageItemStates: (PromptState | null)[]; localItemIndexOffset: number } {
   if (hostState) {
     const localIndex = hostState.receiverIndex;
     const priorItems = flatten(
@@ -176,7 +177,7 @@ function getStarburstMergedPageState(
         .map((screenState) => screenState?.orderedPromptStates ?? []),
     );
     return {
-      itemStates: [
+      pageItemStates: [
         ...priorItems,
         ...localItems.map((i) => i.promptState),
         ...laterItems,
@@ -185,9 +186,22 @@ function getStarburstMergedPageState(
     };
   } else {
     return {
-      itemStates: localItems.map((i) => i.promptState),
+      pageItemStates: localItems.map((i) => i.promptState),
       localItemIndexOffset: 0,
     };
+  }
+}
+
+function getEndOfTaskLabel(
+  pageItemStates: (PromptState | null)[],
+  hasPeerStates: boolean,
+): string {
+  const promptString = pageItemStates.length > 1 ? "prompts" : "prompt";
+  if (hasPeerStates) {
+    const collectedCount = pageItemStates.filter((state) => !!state).length;
+    return `${collectedCount} of ${pageItemStates.length} prompts on page collected`;
+  } else {
+    return `${pageItemStates.length} ${promptString} collected`;
   }
 }
 
@@ -261,13 +275,13 @@ function EmbeddedScreenRenderer({
     }, 750);
   }
 
-  const starburstMergedPageState = useMemo(
-    () => getStarburstMergedPageState(items, hostState),
-    [items, hostState],
-  );
+  const pageState = useMemo(() => getPageState(items, hostState), [
+    items,
+    hostState,
+  ]);
   const cappedLocalItemIndex = Math.min(currentItemIndex, items.length - 1);
   const starburstItemIndex =
-    cappedLocalItemIndex + starburstMergedPageState.localItemIndexOffset;
+    cappedLocalItemIndex + pageState.localItemIndexOffset;
 
   return (
     <>
@@ -285,7 +299,7 @@ function EmbeddedScreenRenderer({
         <ReviewStarburst
           containerWidth={containerWidth}
           containerHeight={containerHeight}
-          itemStates={starburstMergedPageState.itemStates}
+          itemStates={pageState.pageItemStates}
           currentItemIndex={starburstItemIndex}
           currentItemSupportsRetry={promptTypeSupportsRetry(
             items[cappedLocalItemIndex].prompt.promptType,
@@ -314,7 +328,7 @@ function EmbeddedScreenRenderer({
               },
             ]}
           >
-            {items.length} prompts collected
+            {getEndOfTaskLabel(pageState.pageItemStates, !!hostState)}
           </Text>
         </FadeView>
         <FadeView
