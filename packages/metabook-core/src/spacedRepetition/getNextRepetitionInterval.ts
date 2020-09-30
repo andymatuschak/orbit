@@ -1,4 +1,3 @@
-import { PromptTaskParameters } from "../types/promptTaskParameters";
 import {
   getIntervalSequenceForSchedule,
   getLevelForInterval,
@@ -8,7 +7,7 @@ import {
 
 const growthFactor = 2.3;
 
-export function getNextRepetitionInterval<P extends PromptTaskParameters>({
+export function getNextRepetitionInterval({
   schedule,
   reviewIntervalMillis,
   scheduledIntervalMillis,

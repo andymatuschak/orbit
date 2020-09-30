@@ -1,4 +1,5 @@
 import { ActionLogID } from "../actionLogID";
+import { promptTypeSupportsRetry } from "../spacedRepetition";
 import { getNextRepetitionInterval } from "../spacedRepetition/getNextRepetitionInterval";
 import {
   getInitialIntervalForSchedule,
@@ -65,7 +66,7 @@ function applyPromptRepetitionActionLogToPromptState<
     );
   }
 
-  const supportsRetry = promptTask?.promptType !== applicationPromptType;
+  const supportsRetry = promptTypeSupportsRetry(promptTask.promptType);
 
   const currentReviewInterval = basePromptState
     ? Math.max(

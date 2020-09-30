@@ -1,6 +1,9 @@
 import {
   EmbeddedHostMetadata,
+  EmbeddedHostUpdateEvent,
+  embeddedHostUpdateEventName,
   EmbeddedScreenConfiguration,
+  EmbeddedScreenState,
   embeddedScreenStateUpdateEventName,
   EmbeddedScreenUpdateEvent,
 } from "metabook-app/src/embedded/embeddedScreenConfiguration";
@@ -26,37 +29,71 @@ function getHeightForReviewAreaOfWidth(width: number) {
 }
 
 const _activeReviewAreaElements: Set<OrbitReviewAreaElement> = new Set();
-let _cachedPageManifest: EmbeddedPageManifest | null = null;
+const reviewAreaStates: Map<
+  OrbitReviewAreaElement,
+  EmbeddedScreenState
+> = new Map();
+
+// NOTE: This invalidation strategy won't work if the review area elements are reordered after they're added to the page.
+let _orderedReviewAreaElements: OrbitReviewAreaElement[] | null = [];
+function getOrderedReviewAreaElements() {
+  if (_orderedReviewAreaElements === null) {
+    _orderedReviewAreaElements = [..._activeReviewAreaElements].sort((a, b) => {
+      const comparison = a.compareDocumentPosition(b);
+      if (
+        (comparison & Node.DOCUMENT_POSITION_PRECEDING) ===
+        Node.DOCUMENT_POSITION_PRECEDING
+      ) {
+        return 1;
+      } else if (
+        (comparison & Node.DOCUMENT_POSITION_FOLLOWING) ===
+        Node.DOCUMENT_POSITION_FOLLOWING
+      ) {
+        return -1;
+      } else {
+        throw new Error(
+          `Unexpected compareDocumentPosition return value ${comparison} for ${a} and ${b}`,
+        );
+      }
+    });
+  }
+  return _orderedReviewAreaElements;
+}
+
+let _screenStatesNeedUpdate = false;
+function markScreenStatesDirty() {
+  if (!_screenStatesNeedUpdate) {
+    _screenStatesNeedUpdate = true;
+    requestAnimationFrame(() => {
+      _screenStatesNeedUpdate = false;
+      const orderedReviewAreaElements = getOrderedReviewAreaElements();
+
+      const orderedScreenStates = orderedReviewAreaElements.map(
+        (element) => reviewAreaStates.get(element) ?? null,
+      );
+      orderedReviewAreaElements.forEach((element, index) => {
+        const event: EmbeddedHostUpdateEvent = {
+          type: embeddedHostUpdateEventName,
+          state: {
+            orderedScreenStates,
+            receiverIndex: index,
+          },
+        };
+        element.iframe!.contentWindow!.postMessage(event, "*");
+      });
+    });
+  }
+}
+
 function addReviewAreaElement(element: OrbitReviewAreaElement) {
   _activeReviewAreaElements.add(element);
-  _cachedPageManifest = null;
+  _orderedReviewAreaElements = null;
+  markScreenStatesDirty();
 }
 function removeReviewAreaElement(element: OrbitReviewAreaElement) {
   _activeReviewAreaElements.delete(element);
-  _cachedPageManifest = null;
-}
-
-function getPageManifest() {
-  const orderedReviewAreas = [..._activeReviewAreaElements].sort((a, b) => {
-    const comparison = a.compareDocumentPosition(b);
-    if (
-      (comparison & Node.DOCUMENT_POSITION_PRECEDING) ===
-      Node.DOCUMENT_POSITION_PRECEDING
-    ) {
-      return 1;
-    } else if (
-      (comparison & Node.DOCUMENT_POSITION_FOLLOWING) ===
-      Node.DOCUMENT_POSITION_FOLLOWING
-    ) {
-      return -1;
-    } else {
-      throw new Error(
-        `Unexpected compareDocumentPosition return value ${comparison} for ${a} and ${b}`,
-      );
-    }
-  });
-
-  const items = orderedReviewAreas.map((a) => a.getEmbeddedItems());
+  _orderedReviewAreaElements = null;
+  markScreenStatesDirty();
 }
 
 let _hasAddedMessageListener = false;
@@ -71,7 +108,18 @@ function addEmbeddedScreenMessageListener() {
       event.data.type === embeddedScreenStateUpdateEventName
     ) {
       const data = event.data as EmbeddedScreenUpdateEvent;
-      console.log("Got state update", data);
+      const reviewArea = [..._activeReviewAreaElements].find(
+        (element) => element.iframe?.contentWindow === event.source,
+      );
+      if (reviewArea) {
+        console.log("Got state update from embedded screen", reviewArea, data);
+        reviewAreaStates.set(reviewArea, data.state);
+        markScreenStatesDirty();
+      } else {
+        console.warn(
+          "Ignoring state update from embedded screen with unknown review area",
+        );
+      }
     }
   }
   window.addEventListener("message", onMessage);
@@ -82,7 +130,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
   private needsRender = false;
   private cachedMetadata: EmbeddedHostMetadata | null = null;
   private cachedItems: EmbeddedItem[] | null = null;
-  private iframe: HTMLIFrameElement | null = null;
+  iframe: HTMLIFrameElement | null = null;
 
   onMetadataChange = (metadata: EmbeddedHostMetadata) => {
     this.cachedMetadata = metadata;
@@ -127,7 +175,6 @@ export class OrbitReviewAreaElement extends HTMLElement {
 
     const iframe = this.iframe;
     requestAnimationFrame(() => {
-      console.log(getPageManifest());
       if (!this.cachedMetadata) {
         throw new Error("Invariant violation: no embedded host metadata");
       }

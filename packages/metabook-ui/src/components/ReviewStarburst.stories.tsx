@@ -22,10 +22,9 @@ interface StoryArgs {
 
 const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
   const { width, height, onLayout } = useLayout();
-  const reviewItems = Array.from(new Array(itemCount).keys()).map(() => ({
-    ...generateReviewItem("Q", "A", "C", "cyan"),
-    ...(!hasSeenItems && { promptState: null }),
-  }));
+  const itemStates = Array.from(new Array(itemCount).keys()).map(() =>
+    hasSeenItems ? generateReviewItem("Q", "A", "C", "cyan").promptState : null,
+  );
   console.log(
     getStarburstQuillInnerRadius(itemCount, 3),
     getStarburstQuillOuterRadius(itemCount, 3),
@@ -44,13 +43,14 @@ const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
         <ReviewStarburst
           containerWidth={width}
           containerHeight={height}
-          items={reviewItems}
+          itemStates={itemStates}
           currentItemIndex={0}
+          currentItemSupportsRetry={true}
           pendingOutcome={null}
           position="left"
           showLegend
           colorMode="bicolor"
-          overrideColorPalette={colors.palettes.cyan}
+          colorPalette={colors.palettes.cyan}
         />
       )}
     </View>

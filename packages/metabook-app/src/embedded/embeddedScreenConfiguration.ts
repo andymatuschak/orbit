@@ -25,6 +25,17 @@ export interface EmbeddedScreenState {
   orderedPromptStates: (PromptState | null)[];
 }
 
+export const embeddedHostUpdateEventName = "hostUpdate";
+export interface EmbeddedHostUpdateEvent {
+  type: typeof embeddedHostUpdateEventName;
+  state: EmbeddedHostState;
+}
+
+export interface EmbeddedHostState {
+  orderedScreenStates: (EmbeddedScreenState | null)[];
+  receiverIndex: number;
+}
+
 // Simple string hash, just for choosing palettes from the URL.
 // https://stackoverflow.com/a/52171480
 function hashString(input: string): number {

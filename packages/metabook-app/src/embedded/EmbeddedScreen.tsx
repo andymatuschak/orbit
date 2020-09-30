@@ -12,6 +12,9 @@ import {
   repetitionActionLogType,
   ActionLogID,
   PromptID,
+  applicationPromptType,
+  promptTypeSupportsRetry,
+  PromptState,
 } from "metabook-core";
 import {
   ReviewArea,
@@ -23,6 +26,7 @@ import {
   useTransitioningValue,
 } from "metabook-ui";
 import FadeView from "metabook-ui/dist/components/FadeView";
+import { getColorPaletteForReviewItem } from "metabook-ui/dist/reviewItem";
 import { ColorPalette } from "metabook-ui/dist/styles/colors";
 import { getWidthSizeClass } from "metabook-ui/dist/styles/layout";
 
@@ -33,6 +37,8 @@ import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
 import {
+  EmbeddedHostState,
+  embeddedHostUpdateEventName,
   EmbeddedScreenConfiguration,
   EmbeddedScreenState,
   embeddedScreenStateUpdateEventName,
@@ -149,6 +155,42 @@ function useHostStateNotifier(items: ReviewItem[]) {
   }, [items]);
 }
 
+function flatten<T>(array: T[][]): T[] {
+  return array.reduce((current, output) => output.concat(current), []);
+}
+
+function getStarburstMergedPageState(
+  localItems: ReviewItem[],
+  hostState: EmbeddedHostState | null,
+): { itemStates: (PromptState | null)[]; localItemIndexOffset: number } {
+  if (hostState) {
+    const localIndex = hostState.receiverIndex;
+    const priorItems = flatten(
+      hostState.orderedScreenStates
+        .slice(0, localIndex)
+        .map((screenState) => screenState?.orderedPromptStates ?? []),
+    );
+    const laterItems = flatten(
+      hostState.orderedScreenStates
+        .slice(localIndex + 1)
+        .map((screenState) => screenState?.orderedPromptStates ?? []),
+    );
+    return {
+      itemStates: [
+        ...priorItems,
+        ...localItems.map((i) => i.promptState),
+        ...laterItems,
+      ],
+      localItemIndexOffset: priorItems.length,
+    };
+  } else {
+    return {
+      itemStates: localItems.map((i) => i.promptState),
+      localItemIndexOffset: 0,
+    };
+  }
+}
+
 interface EmbeddedScreenRendererProps {
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
   items: ReviewItem[];
@@ -157,6 +199,7 @@ interface EmbeddedScreenRendererProps {
   containerHeight: number;
   authenticationState: EmbeddedAuthenticationState;
   colorPalette: ColorPalette;
+  hostState: EmbeddedHostState | null;
 }
 function EmbeddedScreenRenderer({
   onMark,
@@ -166,6 +209,7 @@ function EmbeddedScreenRenderer({
   containerHeight,
   authenticationState,
   colorPalette,
+  hostState,
 }: EmbeddedScreenRendererProps) {
   useHostStateNotifier(items);
 
@@ -217,6 +261,14 @@ function EmbeddedScreenRenderer({
     }, 750);
   }
 
+  const starburstMergedPageState = useMemo(
+    () => getStarburstMergedPageState(items, hostState),
+    [items, hostState],
+  );
+  const cappedLocalItemIndex = Math.min(currentItemIndex, items.length - 1);
+  const starburstItemIndex =
+    cappedLocalItemIndex + starburstMergedPageState.localItemIndexOffset;
+
   return (
     <>
       <EmbeddedBanner
@@ -233,8 +285,11 @@ function EmbeddedScreenRenderer({
         <ReviewStarburst
           containerWidth={containerWidth}
           containerHeight={containerHeight}
-          items={items}
-          currentItemIndex={Math.min(currentItemIndex, items.length - 1)}
+          itemStates={starburstMergedPageState.itemStates}
+          currentItemIndex={starburstItemIndex}
+          currentItemSupportsRetry={promptTypeSupportsRetry(
+            items[cappedLocalItemIndex].prompt.promptType,
+          )}
           pendingOutcome={pendingOutcome}
           position={isComplete ? "center" : "left"}
           showLegend={
@@ -242,6 +297,7 @@ function EmbeddedScreenRenderer({
             items.length /* animate out the legend a little early */
           }
           colorMode={isComplete ? "accent" : "bicolor"}
+          colorPalette={colorPalette}
         />
         <FadeView
           isVisible={isComplete}
@@ -313,10 +369,34 @@ function EmbeddedScreenRenderer({
   );
 }
 
+function useHostStateListener() {
+  const [hostState, setHostState] = useState<EmbeddedHostState | null>(null);
+
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (
+        event.source === parent &&
+        event.data &&
+        event.data.type === embeddedHostUpdateEventName
+      ) {
+        console.log("Got new host state", event.data.state);
+        setHostState(event.data.state);
+      }
+    }
+    window.addEventListener("message", onMessage);
+    return () => {
+      window.removeEventListener("message", onMessage);
+    };
+  }, []);
+
+  return hostState;
+}
+
 export default function EmbeddedScreen() {
   const [configuration] = useState(
     getEmbeddedScreenConfigurationFromURL(window.location.href),
   );
+  const hostState = useHostStateListener();
   const colorPalette = getEmbeddedColorPalette(configuration);
 
   const baseItems = useDecodedReviewItems(configuration.embeddedItems);
@@ -348,6 +428,7 @@ export default function EmbeddedScreen() {
             {...args}
             authenticationState={authenticationState}
             colorPalette={colorPalette}
+            hostState={hostState}
           />
         )}
       </ReviewSessionWrapper>

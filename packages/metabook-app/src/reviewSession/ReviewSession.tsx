@@ -12,6 +12,7 @@ import {
   repetitionActionLogType,
   ActionLogID,
   getIDForActionLog,
+  promptTypeSupportsRetry,
 } from "metabook-core";
 import {
   ReviewArea,
@@ -20,8 +21,9 @@ import {
   styles,
   ReviewAreaMarkingRecord,
 } from "metabook-ui";
+import { getColorPaletteForReviewItem } from "metabook-ui/dist/reviewItem";
 import { layout } from "metabook-ui/dist/styles";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserRecord } from "../authentication";
@@ -186,17 +188,22 @@ export default function ReviewSession() {
           containerHeight,
         }) => {
           if (currentItemIndex < items.length) {
+            const currentItem = items[currentItemIndex];
             return (
               <>
                 <ReviewStarburst
                   containerWidth={containerWidth}
                   containerHeight={containerHeight}
-                  items={items}
+                  itemStates={items.map((i) => i.promptState)}
                   currentItemIndex={currentItemIndex}
+                  currentItemSupportsRetry={promptTypeSupportsRetry(
+                    currentItem.prompt.promptType,
+                  )}
                   pendingOutcome={pendingOutcome}
                   position="left"
                   showLegend={true}
                   colorMode="bicolor"
+                  colorPalette={getColorPaletteForReviewItem(currentItem)}
                 />
                 <ReviewArea
                   items={items}

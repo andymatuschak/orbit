@@ -25,13 +25,13 @@ export type {
   QAPromptTaskParameters,
 } from "./types/promptTaskParameters";
 
-export { PromptRepetitionOutcome } from "./spacedRepetition";
 export type { MetabookSpacedRepetitionSchedule } from "./spacedRepetition";
-
 export {
+  PromptRepetitionOutcome,
   getIntervalSequenceForSchedule,
   getInitialIntervalForSchedule,
   getNextRepetitionInterval,
+  promptTypeSupportsRetry,
 } from "./spacedRepetition";
 
 export { getIDForPrompt } from "./promptID";

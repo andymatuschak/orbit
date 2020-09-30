@@ -1,11 +1,10 @@
 import {
-  applicationPromptType,
   getNextRepetitionInterval,
   PromptRepetitionOutcome,
+  PromptState,
 } from "metabook-core";
 import React, { useMemo } from "react";
 import { Animated, Easing, View } from "react-native";
-import { getColorPaletteForReviewItem, ReviewItem } from "../reviewItem";
 import { colors, layout } from "../styles";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import Starburst, {
@@ -17,23 +16,25 @@ import StarburstLegend from "./StarburstLegend";
 const ReviewStarburst = React.memo(function ReviewStarburst({
   containerWidth,
   containerHeight,
-  items,
+  itemStates,
   currentItemIndex,
+  currentItemSupportsRetry,
   pendingOutcome,
   position,
   showLegend,
   colorMode,
-  overrideColorPalette,
+  colorPalette,
 }: {
   containerWidth: number;
   containerHeight: number;
-  items: ReviewItem[];
+  itemStates: (PromptState | null)[];
   currentItemIndex: number;
+  currentItemSupportsRetry: boolean;
   pendingOutcome: PromptRepetitionOutcome | null;
   position: "left" | "center";
   showLegend: boolean;
   colorMode: "accent" | "bicolor";
-  overrideColorPalette?: colors.ColorPalette;
+  colorPalette: colors.ColorPalette;
 }) {
   const starburstTopMargin = layout.gridUnit * 6;
   const starburstThickness = 3;
@@ -46,59 +47,60 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
         layout.getColumnSpan(2, containerWidth) - layout.gridUnit,
     containerHeight - starburstTopMargin,
   );
-  const currentItem =
-    currentItemIndex < items.length ? items[currentItemIndex] : null;
-  if (!currentItem) {
+
+  if (currentItemIndex >= itemStates.length) {
     throw new Error(
-      `Starburst displaying index ${currentItemIndex} when only ${items.length} are available`,
+      `Starburst displaying index ${currentItemIndex} when only ${itemStates.length} are available`,
     );
   }
+  const currentItemState =
+    currentItemIndex < itemStates.length ? itemStates[currentItemIndex] : null;
 
   const currentItemEffectiveInterval = useMemo(() => {
-    const { promptState, prompt } = currentItem;
     if (pendingOutcome) {
       return getNextRepetitionInterval({
         schedule: "default",
-        currentlyNeedsRetry: promptState?.needsRetry ?? false,
+        currentlyNeedsRetry: currentItemState?.needsRetry ?? false,
         outcome: pendingOutcome,
-        reviewIntervalMillis: promptState
-          ? Date.now() - promptState.lastReviewTimestampMillis
+        reviewIntervalMillis: currentItemState
+          ? Date.now() - currentItemState.lastReviewTimestampMillis
           : 0,
-        scheduledIntervalMillis: promptState?.intervalMillis ?? null,
-        supportsRetry: prompt.promptType !== applicationPromptType, // TODO extract expression, remove duplication with applyActionLogToPromptState
+        scheduledIntervalMillis: currentItemState?.intervalMillis ?? null,
+        supportsRetry: currentItemSupportsRetry,
       });
     } else {
-      return currentItem.promptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time
+      return currentItemState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time https://github.com/andymatuschak/metabook/issues/117
     }
-  }, [currentItem, pendingOutcome]);
+  }, [currentItemState, currentItemSupportsRetry, pendingOutcome]);
 
-  const currentColorPalette =
-    overrideColorPalette ?? getColorPaletteForReviewItem(currentItem);
   const starburstEntries = useMemo(
     () =>
-      items.map((item, index) => {
-        const effectiveInterval = item.promptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time
+      itemStates.map((itemState, index) => {
+        const effectiveInterval = itemState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time https://github.com/andymatuschak/metabook/issues/117
+        let color: string;
+        if (itemState) {
+          color =
+            colorMode === "bicolor"
+              ? colorPalette.secondaryAccentColor
+              : colorPalette.accentColor;
+        } else {
+          color = colorPalette.secondaryBackgroundColor;
+        }
         return {
           value: getStarburstRayValueForInterval(
             index === currentItemIndex
               ? currentItemEffectiveInterval
               : effectiveInterval,
           ),
-          // TODO: implement more proper "is finished" color determination
-          color:
-            index < currentItemIndex
-              ? colorMode === "bicolor"
-                ? currentColorPalette.secondaryAccentColor
-                : currentColorPalette.accentColor
-              : currentColorPalette.secondaryBackgroundColor,
+          color,
         };
       }),
     [
-      items,
+      itemStates,
       currentItemIndex,
       currentItemEffectiveInterval,
       colorMode,
-      currentColorPalette,
+      colorPalette,
     ],
   );
 
@@ -145,7 +147,7 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
           entries={starburstEntries}
           thickness={starburstThickness}
           entryAtHorizontal={currentItemIndex}
-          accentOverlayColor={currentColorPalette.accentColor}
+          accentOverlayColor={colorPalette.accentColor}
         />
       </Animated.View>
       <Animated.View
@@ -174,9 +176,9 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
           )}
           pastLabelColor={colors.white}
           presentLabelColor={colors.white}
-          futureLabelColor={colors.ink}
-          futureTickColor={colors.ink}
-          backgroundColor={currentColorPalette.backgroundColor}
+          futureLabelColor={colorPalette.secondaryTextColor}
+          futureTickColor={colorPalette.secondaryTextColor}
+          backgroundColor={colorPalette.backgroundColor}
         />
       </Animated.View>
     </View>
