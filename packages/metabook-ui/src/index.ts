@@ -29,6 +29,10 @@ export type {
 } from "./components/ReviewArea";
 
 export { default as ReviewStarburst } from "./components/ReviewStarburst";
+export type {
+  ReviewStarburstProps,
+  ReviewStarburstItem,
+} from "./components/ReviewStarburst";
 
 export { default as Spacer } from "./components/Spacer";
 export type { SpacerProps } from "./components/Spacer";

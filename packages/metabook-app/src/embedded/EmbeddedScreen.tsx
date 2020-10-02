@@ -10,7 +10,6 @@ import {
   PromptActionLog,
   PromptProvenanceType,
   PromptRepetitionOutcome,
-  PromptState,
   PromptTask,
   promptTypeSupportsRetry,
   repetitionActionLogType,
@@ -21,6 +20,7 @@ import {
   ReviewAreaMarkingRecord,
   ReviewItem,
   ReviewStarburst,
+  ReviewStarburstItem,
   styles,
   useLayout,
   useTransitioningValue,
@@ -170,48 +170,63 @@ function flatten<T>(array: T[][]): T[] {
   return array.reduce((current, output) => output.concat(current), []);
 }
 
+function getStarburstItemsForScreenState(
+  screenState: EmbeddedScreenState,
+): ReviewStarburstItem[] {
+  return screenState.orderedPromptStates.map((promptState) => ({
+    promptState,
+    isPendingForSession: !promptState,
+    supportsRetry: false,
+  }));
+}
+
 function getPageState(
   localItems: ReviewItem[],
   hostState: EmbeddedHostState | null,
-): { pageItemStates: (PromptState | null)[]; localItemIndexOffset: number } {
+): { starburstItems: ReviewStarburstItem[]; localItemIndexOffset: number } {
+  const localStarburstItems: ReviewStarburstItem[] = localItems.map((item) => ({
+    promptState: item.promptState,
+    isPendingForSession: !item.promptState,
+    supportsRetry: promptTypeSupportsRetry(item.prompt.promptType),
+  }));
   if (hostState) {
     const localIndex = hostState.receiverIndex;
     const priorItems = flatten(
       hostState.orderedScreenStates
         .slice(0, localIndex)
-        .map((screenState) => screenState?.orderedPromptStates ?? []),
+        .map((screenState) =>
+          screenState ? getStarburstItemsForScreenState(screenState) : [],
+        ),
     );
     const laterItems = flatten(
       hostState.orderedScreenStates
         .slice(localIndex + 1)
-        .map((screenState) => screenState?.orderedPromptStates ?? []),
+        .map((screenState) =>
+          screenState ? getStarburstItemsForScreenState(screenState) : [],
+        ),
     );
     return {
-      pageItemStates: [
-        ...priorItems,
-        ...localItems.map((i) => i.promptState),
-        ...laterItems,
-      ],
+      starburstItems: [...priorItems, ...localStarburstItems, ...laterItems],
       localItemIndexOffset: priorItems.length,
     };
   } else {
     return {
-      pageItemStates: localItems.map((i) => i.promptState),
+      starburstItems: localStarburstItems,
       localItemIndexOffset: 0,
     };
   }
 }
 
 function getEndOfTaskLabel(
-  pageItemStates: (PromptState | null)[],
+  starburstItems: ReviewStarburstItem[],
   hasPeerStates: boolean,
 ): string {
-  const promptString = pageItemStates.length > 1 ? "prompts" : "prompt";
+  const promptString = starburstItems.length > 1 ? "prompts" : "prompt";
   if (hasPeerStates) {
-    const collectedCount = pageItemStates.filter((state) => !!state).length;
-    return `${collectedCount} of ${pageItemStates.length} prompts on page collected`;
+    const collectedCount = starburstItems.filter((state) => !!state).length;
+    return `${collectedCount} of ${starburstItems.length} prompts on page collected`;
   } else {
-    return `${pageItemStates.length} ${promptString} collected`;
+    return `${starburstItems.length} ${promptString} collected`;
   }
 }
 
@@ -313,7 +328,7 @@ function EmbeddedScreenRenderer({
         <ReviewStarburst
           containerWidth={containerWidth}
           containerHeight={containerHeight}
-          itemStates={pageState.pageItemStates}
+          items={pageState.starburstItems}
           currentItemIndex={starburstItemIndex}
           currentItemSupportsRetry={promptTypeSupportsRetry(
             items[cappedLocalItemIndex].prompt.promptType,
@@ -342,7 +357,7 @@ function EmbeddedScreenRenderer({
               },
             ]}
           >
-            {getEndOfTaskLabel(pageState.pageItemStates, !!hostState)}
+            {getEndOfTaskLabel(pageState.starburstItems, !!hostState)}
           </Text>
         </FadeView>
         <FadeView

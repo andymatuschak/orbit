@@ -4,7 +4,7 @@ import { View } from "react-native";
 import { generateReviewItem } from "./__fixtures__/generateReviewItem";
 import useLayout from "./hooks/useLayout";
 import { colors } from "../styles";
-import ReviewStarburst from "./ReviewStarburst";
+import ReviewStarburst, { ReviewStarburstItem } from "./ReviewStarburst";
 import {
   getStarburstQuillInnerRadius,
   getStarburstQuillOuterRadius,
@@ -25,6 +25,11 @@ const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
   const itemStates = Array.from(new Array(itemCount).keys()).map(() =>
     hasSeenItems ? generateReviewItem("Q", "A", "C", "cyan").promptState : null,
   );
+  const items: ReviewStarburstItem[] = itemStates.map((promptState) => ({
+    promptState,
+    supportsRetry: false,
+    isPendingForSession: true,
+  }));
   console.log(
     getStarburstQuillInnerRadius(itemCount, 3),
     getStarburstQuillOuterRadius(itemCount, 3),
@@ -43,7 +48,7 @@ const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
         <ReviewStarburst
           containerWidth={width}
           containerHeight={height}
-          itemStates={itemStates}
+          items={items}
           currentItemIndex={0}
           currentItemSupportsRetry={true}
           pendingOutcome={null}

@@ -13,21 +13,10 @@ import Starburst, {
 } from "./Starburst";
 import StarburstLegend from "./StarburstLegend";
 
-const ReviewStarburst = React.memo(function ReviewStarburst({
-  containerWidth,
-  containerHeight,
-  itemStates,
-  currentItemIndex,
-  currentItemSupportsRetry,
-  pendingOutcome,
-  position,
-  showLegend,
-  colorMode,
-  colorPalette,
-}: {
+export interface ReviewStarburstProps {
   containerWidth: number;
   containerHeight: number;
-  itemStates: (PromptState | null)[];
+  items: ReviewStarburstItem[];
   currentItemIndex: number;
   currentItemSupportsRetry: boolean;
   pendingOutcome: PromptRepetitionOutcome | null;
@@ -35,7 +24,25 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
   showLegend: boolean;
   colorMode: "accent" | "bicolor";
   colorPalette: colors.ColorPalette;
-}) {
+}
+
+export interface ReviewStarburstItem {
+  promptState: PromptState | null;
+  isPendingForSession: boolean; // true when item is not yet "done" for the current session
+  supportsRetry: boolean;
+}
+
+const ReviewStarburst = React.memo(function ReviewStarburst({
+  containerWidth,
+  containerHeight,
+  items,
+  currentItemIndex,
+  pendingOutcome,
+  position,
+  showLegend,
+  colorMode,
+  colorPalette,
+}: ReviewStarburstProps) {
   const starburstTopMargin = layout.gridUnit * 6;
   const starburstThickness = 3;
 
@@ -48,43 +55,46 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
     containerHeight - starburstTopMargin,
   );
 
-  if (currentItemIndex >= itemStates.length) {
+  if (currentItemIndex >= items.length) {
     throw new Error(
-      `Starburst displaying index ${currentItemIndex} when only ${itemStates.length} are available`,
+      `Starburst displaying index ${currentItemIndex} when only ${items.length} are available`,
     );
   }
-  const currentItemState =
-    currentItemIndex < itemStates.length ? itemStates[currentItemIndex] : null;
+  const currentItem =
+    currentItemIndex < items.length ? items[currentItemIndex] : null;
+  const currentPromptState = currentItem?.promptState;
 
   const currentItemEffectiveInterval = useMemo(() => {
-    if (pendingOutcome) {
+    if (currentItem && pendingOutcome) {
       return getNextRepetitionInterval({
         schedule: "default",
-        currentlyNeedsRetry: currentItemState?.needsRetry ?? false,
+        currentlyNeedsRetry: currentPromptState?.needsRetry ?? false,
         outcome: pendingOutcome,
-        reviewIntervalMillis: currentItemState
-          ? Date.now() - currentItemState.lastReviewTimestampMillis
+        reviewIntervalMillis: currentPromptState
+          ? Date.now() - currentPromptState.lastReviewTimestampMillis
           : 0,
-        scheduledIntervalMillis: currentItemState?.intervalMillis ?? null,
-        supportsRetry: currentItemSupportsRetry,
+        scheduledIntervalMillis: currentPromptState?.intervalMillis ?? null,
+        supportsRetry: currentItem?.supportsRetry,
       });
     } else {
-      return currentItemState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time https://github.com/andymatuschak/metabook/issues/117
+      return currentPromptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time https://github.com/andymatuschak/metabook/issues/117
     }
-  }, [currentItemState, currentItemSupportsRetry, pendingOutcome]);
+  }, [currentItem, currentPromptState, pendingOutcome]);
 
   const starburstEntries = useMemo(
     () =>
-      itemStates.map((itemState, index) => {
-        const effectiveInterval = itemState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time https://github.com/andymatuschak/metabook/issues/117
+      items.map((item, index) => {
+        const effectiveInterval = item.promptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time https://github.com/andymatuschak/metabook/issues/117
         let color: string;
-        if (itemState) {
+        // In the review session: prompts are due or needs retry
+        // In the embedded context: no prompt state or needs retry
+        if (item.isPendingForSession) {
+          color = colorPalette.secondaryBackgroundColor;
+        } else {
           color =
             colorMode === "bicolor"
               ? colorPalette.secondaryAccentColor
               : colorPalette.accentColor;
-        } else {
-          color = colorPalette.secondaryBackgroundColor;
         }
         return {
           value: getStarburstRayValueForInterval(
@@ -96,7 +106,7 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
         };
       }),
     [
-      itemStates,
+      items,
       currentItemIndex,
       currentItemEffectiveInterval,
       colorMode,

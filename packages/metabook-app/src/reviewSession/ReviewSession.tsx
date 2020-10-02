@@ -202,7 +202,13 @@ export default function ReviewSession() {
                 <ReviewStarburst
                   containerWidth={containerWidth}
                   containerHeight={containerHeight}
-                  itemStates={items.map((i) => i.promptState)}
+                  items={items.map((item, index) => ({
+                    promptState: item.promptState,
+                    isPendingForSession: index >= currentItemIndex,
+                    supportsRetry: promptTypeSupportsRetry(
+                      item.prompt.promptType,
+                    ),
+                  }))}
                   currentItemIndex={currentItemIndex}
                   currentItemSupportsRetry={promptTypeSupportsRetry(
                     currentItem.prompt.promptType,
