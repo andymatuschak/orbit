@@ -10,6 +10,7 @@
   "sideEffects": false,
   "dependencies": {
     "@ipld/dag-json": "^3.0.17",
+    "fastestsmallesttextencoderdecoder": "^1.0.22",
     "firebase": "^7.14.2",
     "firebase-admin": "^9.2.0",
     "metabook-core": "0.0.1",

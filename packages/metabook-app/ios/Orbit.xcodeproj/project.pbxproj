@@ -11,17 +11,11 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		25C0C461DC20446FABB97D33 /* dr-mediumitalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 6DFFAB995CDC43D8B36CDBF5 /* dr-mediumitalic.otf */; };
-		2B30D6A4EFD145BE815E6703 /* drweb-extralight-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = B92104D02E334031B4A6393C /* drweb-extralight-TRIAL.woff */; };
-		2F3CCA0A4ECC40578F0132A9 /* drweb-bold-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 26D2F8A738964C3993CFBCCB /* drweb-bold-TRIAL.woff */; };
-		329FFE768C01447EB31D5854 /* drweb-extrabold-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = D4F0EA81D3BF4CF99DE4796B /* drweb-extrabold-TRIAL.woff */; };
 		35BE9CA035D1410B8AA1E0AD /* dr-extraboldItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4BC4E2C618F342F087FE9612 /* dr-extraboldItalic.otf */; };
 		386D04C6D806CF9ADA242E72 /* libPods-Orbit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8202A75DF5E32FE07600EB5E /* libPods-Orbit.a */; };
-		41F7A62D2EBC4F40AD4CE8D0 /* drweb-medium-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 7DDE479BC09D4FC5AC9EA2CC /* drweb-medium-TRIAL.woff */; };
 		426C70ECD189410E94725F26 /* dr-extralight.otf in Resources */ = {isa = PBXBuildFile; fileRef = CB01D7A4F53F4954AC1D8FEE /* dr-extralight.otf */; };
 		4F7417A8E52B492BA9638D33 /* dr-italic.otf in Resources */ = {isa = PBXBuildFile; fileRef = CD82D2AB4B8944AEA650052E /* dr-italic.otf */; };
-		50EF73661988447F90B59C45 /* drweb-regular-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 9C1DCC66F8654ECBBAA8D8DF /* drweb-regular-TRIAL.woff */; };
 		5E50EF374B3B4625B9ECA2CC /* dr-bolditalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = F902A8C46D724261A52F509B /* dr-bolditalic.otf */; };
-		5F8EA4A9F03F4A7CB50193E5 /* drweb-mediumitalic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 363191AB03FB41B2B9530BB0 /* drweb-mediumitalic-TRIAL.woff */; };
 		615159EC2500674C00CC4AC6 /* GoogleService-Info-Dev.plist in Resources */ = {isa = PBXBuildFile; fileRef = 615159EB2500674C00CC4AC6 /* GoogleService-Info-Dev.plist */; };
 		6161D45424549FDD0058BA07 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6161D45224549FDD0058BA07 /* GoogleService-Info.plist */; };
 		61AF729C246B596200679E6B /* ORDebugManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 61AF729B246B596200679E6B /* ORDebugManager.m */; };
@@ -29,17 +23,11 @@
 		61D31C8324AD2FB2009823BC /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 61D31C7F24AD2FB2009823BC /* Expo.plist */; };
 		61D31C8624AD3317009823BC /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 61D31C8524AD3317009823BC /* SplashScreen.storyboard */; };
 		68001EBFAE7946CA83C49D67 /* dr-extrabold.otf in Resources */ = {isa = PBXBuildFile; fileRef = A0AAE2BFEE384DD38CB8CBFF /* dr-extrabold.otf */; };
-		7FD27E93179847888C6A7D71 /* drweb-light-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = A22F61C933164F2E8EBA025E /* drweb-light-TRIAL.woff */; };
 		9F5611B3CCD24F998DFB3F69 /* dr-light.otf in Resources */ = {isa = PBXBuildFile; fileRef = B43D3B05C6064B869C879A0A /* dr-light.otf */; };
 		AD93E75736E0494F95D119ED /* dr-lightitalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = DB62AFBDCFB64E00AB6FF8EB /* dr-lightitalic.otf */; };
-		ADBC05CF5C594A3FBACCE3BF /* drweb-bolditalic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = FAD766FA789F40CDA8489A0B /* drweb-bolditalic-TRIAL.woff */; };
-		B7CDD7E72BC34EF4A4BD0626 /* drweb-lightitalic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = D24B48DAC1A84E0AA3C85BBF /* drweb-lightitalic-TRIAL.woff */; };
 		BAAC840D7B964D4888CCEFC7 /* dr-regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = F6C5BE09A93F4B7286876094 /* dr-regular.otf */; };
 		BF7662E1BD1C40ACAFAEA768 /* dr-extralightitalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 83BFC3A7DC7A44EBA1D06F0F /* dr-extralightitalic.otf */; };
-		DD755D205F614C3FA8FE2753 /* drweb-extralightitalic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 4C1BE255F2944847BEA05FAC /* drweb-extralightitalic-TRIAL.woff */; };
 		E5C8D8EA4BD84E27A37A2044 /* dr-bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 51462ABDC1684936987B6556 /* dr-bold.otf */; };
-		E5E872B4CD2E46BA931F2809 /* drweb-italic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = ADFECF42541F480DB7417204 /* drweb-italic-TRIAL.woff */; };
-		E9E7104EFC244382AAFF3379 /* drweb-extrabolditalic-TRIAL.woff in Resources */ = {isa = PBXBuildFile; fileRef = 39C319D795724B9F91F708C5 /* drweb-extrabolditalic-TRIAL.woff */; };
 		EBC71A529C664772951484F4 /* dr-medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 93BE72CBB46646D69E92DB0D /* dr-medium.otf */; };
 /* End PBXBuildFile section */
 
@@ -50,11 +38,7 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		26D2F8A738964C3993CFBCCB /* drweb-bold-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-bold-TRIAL.woff"; path = "../assets/fonts/drweb-bold-TRIAL.woff"; sourceTree = "<group>"; };
-		363191AB03FB41B2B9530BB0 /* drweb-mediumitalic-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-mediumitalic-TRIAL.woff"; path = "../assets/fonts/drweb-mediumitalic-TRIAL.woff"; sourceTree = "<group>"; };
-		39C319D795724B9F91F708C5 /* drweb-extrabolditalic-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-extrabolditalic-TRIAL.woff"; path = "../assets/fonts/drweb-extrabolditalic-TRIAL.woff"; sourceTree = "<group>"; };
 		4BC4E2C618F342F087FE9612 /* dr-extraboldItalic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-extraboldItalic.otf"; path = "../assets/fonts/dr-extraboldItalic.otf"; sourceTree = "<group>"; };
-		4C1BE255F2944847BEA05FAC /* drweb-extralightitalic-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-extralightitalic-TRIAL.woff"; path = "../assets/fonts/drweb-extralightitalic-TRIAL.woff"; sourceTree = "<group>"; };
 		51462ABDC1684936987B6556 /* dr-bold.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-bold.otf"; path = "../assets/fonts/dr-bold.otf"; sourceTree = "<group>"; };
 		615159EB2500674C00CC4AC6 /* GoogleService-Info-Dev.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info-Dev.plist"; sourceTree = "<group>"; };
 		6161D45224549FDD0058BA07 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -66,27 +50,19 @@
 		61D31C8524AD3317009823BC /* SplashScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = SplashScreen.storyboard; sourceTree = "<group>"; };
 		6B5C785D90219CCEF55D160F /* Pods-Orbit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Orbit.release.xcconfig"; path = "Target Support Files/Pods-Orbit/Pods-Orbit.release.xcconfig"; sourceTree = "<group>"; };
 		6DFFAB995CDC43D8B36CDBF5 /* dr-mediumitalic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-mediumitalic.otf"; path = "../assets/fonts/dr-mediumitalic.otf"; sourceTree = "<group>"; };
-		7DDE479BC09D4FC5AC9EA2CC /* drweb-medium-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-medium-TRIAL.woff"; path = "../assets/fonts/drweb-medium-TRIAL.woff"; sourceTree = "<group>"; };
 		8202A75DF5E32FE07600EB5E /* libPods-Orbit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Orbit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		83BFC3A7DC7A44EBA1D06F0F /* dr-extralightitalic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-extralightitalic.otf"; path = "../assets/fonts/dr-extralightitalic.otf"; sourceTree = "<group>"; };
 		93BE72CBB46646D69E92DB0D /* dr-medium.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-medium.otf"; path = "../assets/fonts/dr-medium.otf"; sourceTree = "<group>"; };
-		9C1DCC66F8654ECBBAA8D8DF /* drweb-regular-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-regular-TRIAL.woff"; path = "../assets/fonts/drweb-regular-TRIAL.woff"; sourceTree = "<group>"; };
 		A0AAE2BFEE384DD38CB8CBFF /* dr-extrabold.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-extrabold.otf"; path = "../assets/fonts/dr-extrabold.otf"; sourceTree = "<group>"; };
-		A22F61C933164F2E8EBA025E /* drweb-light-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-light-TRIAL.woff"; path = "../assets/fonts/drweb-light-TRIAL.woff"; sourceTree = "<group>"; };
-		ADFECF42541F480DB7417204 /* drweb-italic-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-italic-TRIAL.woff"; path = "../assets/fonts/drweb-italic-TRIAL.woff"; sourceTree = "<group>"; };
 		B43D3B05C6064B869C879A0A /* dr-light.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-light.otf"; path = "../assets/fonts/dr-light.otf"; sourceTree = "<group>"; };
-		B92104D02E334031B4A6393C /* drweb-extralight-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-extralight-TRIAL.woff"; path = "../assets/fonts/drweb-extralight-TRIAL.woff"; sourceTree = "<group>"; };
 		C24AE4C418D8B3D2FEDCDD04 /* Pods-Orbit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Orbit.debug.xcconfig"; path = "Target Support Files/Pods-Orbit/Pods-Orbit.debug.xcconfig"; sourceTree = "<group>"; };
 		CB01D7A4F53F4954AC1D8FEE /* dr-extralight.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-extralight.otf"; path = "../assets/fonts/dr-extralight.otf"; sourceTree = "<group>"; };
 		CD82D2AB4B8944AEA650052E /* dr-italic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-italic.otf"; path = "../assets/fonts/dr-italic.otf"; sourceTree = "<group>"; };
-		D24B48DAC1A84E0AA3C85BBF /* drweb-lightitalic-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-lightitalic-TRIAL.woff"; path = "../assets/fonts/drweb-lightitalic-TRIAL.woff"; sourceTree = "<group>"; };
-		D4F0EA81D3BF4CF99DE4796B /* drweb-extrabold-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-extrabold-TRIAL.woff"; path = "../assets/fonts/drweb-extrabold-TRIAL.woff"; sourceTree = "<group>"; };
 		DB62AFBDCFB64E00AB6FF8EB /* dr-lightitalic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-lightitalic.otf"; path = "../assets/fonts/dr-lightitalic.otf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
 		F6C5BE09A93F4B7286876094 /* dr-regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-regular.otf"; path = "../assets/fonts/dr-regular.otf"; sourceTree = "<group>"; };
 		F902A8C46D724261A52F509B /* dr-bolditalic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-bolditalic.otf"; path = "../assets/fonts/dr-bolditalic.otf"; sourceTree = "<group>"; };
-		FAD766FA789F40CDA8489A0B /* drweb-bolditalic-TRIAL.woff */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "drweb-bolditalic-TRIAL.woff"; path = "../assets/fonts/drweb-bolditalic-TRIAL.woff"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,18 +89,6 @@
 		2C94735F703C47768A34D593 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				26D2F8A738964C3993CFBCCB /* drweb-bold-TRIAL.woff */,
-				FAD766FA789F40CDA8489A0B /* drweb-bolditalic-TRIAL.woff */,
-				D4F0EA81D3BF4CF99DE4796B /* drweb-extrabold-TRIAL.woff */,
-				39C319D795724B9F91F708C5 /* drweb-extrabolditalic-TRIAL.woff */,
-				B92104D02E334031B4A6393C /* drweb-extralight-TRIAL.woff */,
-				4C1BE255F2944847BEA05FAC /* drweb-extralightitalic-TRIAL.woff */,
-				ADFECF42541F480DB7417204 /* drweb-italic-TRIAL.woff */,
-				A22F61C933164F2E8EBA025E /* drweb-light-TRIAL.woff */,
-				D24B48DAC1A84E0AA3C85BBF /* drweb-lightitalic-TRIAL.woff */,
-				7DDE479BC09D4FC5AC9EA2CC /* drweb-medium-TRIAL.woff */,
-				363191AB03FB41B2B9530BB0 /* drweb-mediumitalic-TRIAL.woff */,
-				9C1DCC66F8654ECBBAA8D8DF /* drweb-regular-TRIAL.woff */,
 				51462ABDC1684936987B6556 /* dr-bold.otf */,
 				F902A8C46D724261A52F509B /* dr-bolditalic.otf */,
 				A0AAE2BFEE384DD38CB8CBFF /* dr-extrabold.otf */,
@@ -268,19 +232,7 @@
 				61D31C8624AD3317009823BC /* SplashScreen.storyboard in Resources */,
 				61D31C8324AD2FB2009823BC /* Expo.plist in Resources */,
 				6161D45424549FDD0058BA07 /* GoogleService-Info.plist in Resources */,
-				2F3CCA0A4ECC40578F0132A9 /* drweb-bold-TRIAL.woff in Resources */,
-				ADBC05CF5C594A3FBACCE3BF /* drweb-bolditalic-TRIAL.woff in Resources */,
-				329FFE768C01447EB31D5854 /* drweb-extrabold-TRIAL.woff in Resources */,
-				E9E7104EFC244382AAFF3379 /* drweb-extrabolditalic-TRIAL.woff in Resources */,
-				2B30D6A4EFD145BE815E6703 /* drweb-extralight-TRIAL.woff in Resources */,
-				DD755D205F614C3FA8FE2753 /* drweb-extralightitalic-TRIAL.woff in Resources */,
 				615159EC2500674C00CC4AC6 /* GoogleService-Info-Dev.plist in Resources */,
-				E5E872B4CD2E46BA931F2809 /* drweb-italic-TRIAL.woff in Resources */,
-				7FD27E93179847888C6A7D71 /* drweb-light-TRIAL.woff in Resources */,
-				B7CDD7E72BC34EF4A4BD0626 /* drweb-lightitalic-TRIAL.woff in Resources */,
-				41F7A62D2EBC4F40AD4CE8D0 /* drweb-medium-TRIAL.woff in Resources */,
-				5F8EA4A9F03F4A7CB50193E5 /* drweb-mediumitalic-TRIAL.woff in Resources */,
-				50EF73661988447F90B59C45 /* drweb-regular-TRIAL.woff in Resources */,
 				E5C8D8EA4BD84E27A37A2044 /* dr-bold.otf in Resources */,
 				5E50EF374B3B4625B9ECA2CC /* dr-bolditalic.otf in Resources */,
 				68001EBFAE7946CA83C49D67 /* dr-extrabold.otf in Resources */,
