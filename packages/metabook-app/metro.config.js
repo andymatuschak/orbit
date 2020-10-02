@@ -42,6 +42,23 @@ config.resolver.resolveRequest = (
       ),
       type: "sourceFile",
     };
+  } else if (moduleName.startsWith("multiformats")) {
+    const [, ...rest] = moduleName.split("/");
+    return {
+      filePath: path.resolve(
+        __dirname,
+        `../../node_modules/multiformats/cjs/src/${rest.join("/")}.js`,
+      ),
+      type: "sourceFile",
+    };
+  } else if (moduleName === "@ipld/dag-json") {
+    return {
+      filePath: path.resolve(
+        __dirname,
+        "../../node_modules/@ipld/dag-json/cjs/index.js",
+      ),
+      type: "sourceFile",
+    };
   } else {
     return Resolver.resolve(
       { ...context, resolveRequest: undefined },

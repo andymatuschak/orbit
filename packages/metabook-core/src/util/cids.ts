@@ -1,13 +1,14 @@
-import { create, CID as CIDType } from "multiformats";
-import base58 from "multiformats/bases/base58";
-import base32 from "multiformats/bases/base32";
-import sha2 from "multiformats/hashes/sha2";
-import raw from "multiformats/codecs/raw";
+import "./bufferShim";
 import dagJSON from "@ipld/dag-json";
-import { AttachmentID } from "../types/attachmentID";
+import { CID as CIDType, create } from "multiformats";
+import base32 from "multiformats/bases/base32";
+import base58 from "multiformats/bases/base58";
+import raw from "multiformats/codecs/raw";
+import sha2 from "multiformats/hashes/sha2";
 import { ActionLogID } from "../actionLogID";
 import { PromptID } from "../promptID";
 import { ActionLog } from "../types/actionLog";
+import { AttachmentID } from "../types/attachmentID";
 import { Prompt } from "../types/prompt";
 
 const { multihash, multibase, multicodec, CID } = create();
