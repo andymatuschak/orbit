@@ -1,31 +1,43 @@
 import React from "react";
 import { View } from "react-native";
-import { colors } from "../styles";
 import { ink, productKeyColor } from "../styles/colors";
-import Icon, { IconName, IconPosition } from "./Icon";
+import Icon from "./Icon";
+import { IconName, IconPosition, IconProps, iconSize } from "./IconShared";
 
 export default {
   title: "Style/Icons",
   component: Icon,
 };
 
-function IconEntry(props: { iconName: IconName }) {
-  const iconStyle = { borderWidth: 1, borderColor: "black", margin: 8 };
+function IconSwatch(props: IconProps) {
+  return (
+    <View
+      style={{
+        width: iconSize,
+        height: iconSize,
+        backgroundColor: "#f0f0f0",
+        margin: 8,
+      }}
+    >
+      <Icon {...props} />
+    </View>
+  );
+}
 
+function IconEntry(props: { iconName: IconName }) {
   const sharedProps = {
     name: props.iconName,
-    style: iconStyle,
     tintColor: productKeyColor,
     accentColor: ink,
   };
 
   return (
     <View style={{ flexDirection: "row" }}>
-      <Icon {...sharedProps} position={IconPosition.TopLeft} />
-      <Icon {...sharedProps} position={IconPosition.TopRight} />
-      <Icon {...sharedProps} position={IconPosition.BottomLeft} />
-      <Icon {...sharedProps} position={IconPosition.BottomRight} />
-      <Icon {...sharedProps} position={IconPosition.Center} />
+      <IconSwatch {...sharedProps} position={IconPosition.TopLeft} />
+      <IconSwatch {...sharedProps} position={IconPosition.TopRight} />
+      <IconSwatch {...sharedProps} position={IconPosition.BottomLeft} />
+      <IconSwatch {...sharedProps} position={IconPosition.BottomRight} />
+      <IconSwatch {...sharedProps} position={IconPosition.Center} />
     </View>
   );
 }

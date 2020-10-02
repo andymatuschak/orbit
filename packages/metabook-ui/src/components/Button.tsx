@@ -16,7 +16,8 @@ import {
 import { colors, layout, type } from "../styles";
 import usePrevious from "./hooks/usePrevious";
 import Hoverable from "./Hoverable";
-import Icon, { IconName, IconPosition } from "./Icon";
+import Icon from "./Icon";
+import { IconName, IconPosition } from "./IconShared";
 
 export type ButtonPendingActivationState = "hover" | "pressed" | null;
 

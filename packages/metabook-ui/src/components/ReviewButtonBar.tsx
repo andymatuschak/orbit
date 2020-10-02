@@ -12,7 +12,7 @@ import { ColorPalette } from "../styles/colors";
 import unreachableCaseError from "../util/unreachableCaseError";
 import Button, { ButtonPendingActivationState } from "./Button";
 import useLayout from "./hooks/useLayout";
-import { IconName } from "./Icon";
+import { IconName } from "./IconShared";
 import Spacer from "./Spacer";
 
 export interface PendingMarkingInteractionState {

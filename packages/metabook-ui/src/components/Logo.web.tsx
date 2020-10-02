@@ -1,16 +1,16 @@
 import React from "react";
-import { Image } from "react-native";
 import unreachableCaseError from "../util/unreachableCaseError";
 import { getLogoSize, LogoProps } from "./LogoShared";
+import TintedSVG from "./TintedSVG";
 
-function getLogoAsset(units: LogoProps["units"]): number {
+function getLogoAsset(units: LogoProps["units"]): string {
   switch (units) {
     case 2:
-      return require("../../assets/logo/16.png");
+      return require("../../assets/logo/16.svg");
     case 3:
-      return require("../../assets/logo/24.png");
+      return require("../../assets/logo/24.svg");
     case 4:
-      return require("../../assets/logo/32.png");
+      return require("../../assets/logo/32.svg");
     default:
       throw unreachableCaseError(units);
   }
@@ -19,11 +19,12 @@ function getLogoAsset(units: LogoProps["units"]): number {
 export default React.memo(function Logo(props: LogoProps) {
   const { width, height } = getLogoSize(props.units);
   return (
-    <Image
+    <TintedSVG
       source={getLogoAsset(props.units)}
-      style={{ width, height, margin: -8 }}
       width={width}
       height={height}
+      tintColor={props.tintColor}
+      style={{ margin: -8 }}
     />
   );
 });

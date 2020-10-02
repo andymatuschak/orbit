@@ -54,7 +54,7 @@ export default function EmbeddedBanner(props: EmbeddedBannerProps) {
       >
         {getBannerMessage(props)}
       </Text>
-      <Logo units={2} style={{ tintColor: styles.colors.white }} />
+      <Logo units={2} tintColor={styles.colors.white} />
     </View>
   );
 }

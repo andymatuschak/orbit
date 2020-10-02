@@ -16,11 +16,12 @@ export type { CardProps } from "./components/Card";
 export { default as FadeView } from "./components/FadeView";
 export type { FadeViewProps } from "./components/FadeView";
 
-export { default as Icon, IconName, IconPosition } from "./components/Icon";
-export type { IconProps } from "./components/Icon";
+export { default as Icon } from "./components/Icon";
+export { IconName, IconPosition } from "./components/IconShared";
+export type { IconProps } from "./components/IconShared";
 
 export { default as Logo } from "./components/Logo";
-export type { LogoProps } from "./components/Logo";
+export type { LogoProps } from "./components/LogoShared";
 
 export { default as ReviewArea } from "./components/ReviewArea";
 export type {

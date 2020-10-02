@@ -23,7 +23,7 @@ module.exports = {
       },
     });
     config.resolve.alias["react-native$"] = "react-native-web";
-    config.resolve.extensions.unshift(".web.js");
+    config.resolve.extensions.unshift(".web.js", ".web.jsx", ".web.ts", ".web.tsx");
     return config;
   },
 };

@@ -1,37 +1,38 @@
 import React from "react";
-import { Image, ImageStyle, StyleProp, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import unreachableCaseError from "../util/unreachableCaseError";
 import { IconName, IconPosition, IconProps, iconSize } from "./IconShared";
+import TintedSVG from "./TintedSVG";
 
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: false,
-): number;
+): string;
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: true,
-): number | null;
+): string | null;
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: boolean,
-): number | null {
+): string | null {
   switch (name) {
     case IconName.Check:
       if (accent) return null;
       switch (iconPosition) {
         case IconPosition.TopLeft:
-          return require("../../assets/icons/check-TL.png");
+          return require("../../assets/icons/check-TL.svg");
         case IconPosition.TopRight:
-          return require("../../assets/icons/check-TR.png");
+          return require("../../assets/icons/check-TR.svg");
         case IconPosition.BottomLeft:
-          return require("../../assets/icons/check-BL.png");
+          return require("../../assets/icons/check-BL.svg");
         case IconPosition.BottomRight:
-          return require("../../assets/icons/check-BR.png");
+          return require("../../assets/icons/check-BR.svg");
         case IconPosition.Center:
-          return require("../../assets/icons/check-center.png");
+          return require("../../assets/icons/check-center.svg");
         default:
           throw unreachableCaseError(iconPosition);
       }
@@ -40,15 +41,15 @@ function getIconAsset(
       if (accent) return null;
       switch (iconPosition) {
         case IconPosition.TopLeft:
-          return require("../../assets/icons/cross-TL.png");
+          return require("../../assets/icons/cross-TL.svg");
         case IconPosition.TopRight:
-          return require("../../assets/icons/cross-TR.png");
+          return require("../../assets/icons/cross-TR.svg");
         case IconPosition.BottomLeft:
-          return require("../../assets/icons/cross-BL.png");
+          return require("../../assets/icons/cross-BL.svg");
         case IconPosition.BottomRight:
-          return require("../../assets/icons/cross-BR.png");
+          return require("../../assets/icons/cross-BR.svg");
         case IconPosition.Center:
-          return require("../../assets/icons/cross-center.png");
+          return require("../../assets/icons/cross-center.svg");
         default:
           throw unreachableCaseError(iconPosition);
       }
@@ -57,15 +58,15 @@ function getIconAsset(
       if (accent) return null;
       switch (iconPosition) {
         case IconPosition.TopLeft:
-          return require("../../assets/icons/right-TL.png");
+          return require("../../assets/icons/right-TL.svg");
         case IconPosition.TopRight:
-          return require("../../assets/icons/right-TR.png");
+          return require("../../assets/icons/right-TR.svg");
         case IconPosition.BottomLeft:
-          return require("../../assets/icons/right-BL.png");
+          return require("../../assets/icons/right-BL.svg");
         case IconPosition.BottomRight:
-          return require("../../assets/icons/right-BR.png");
+          return require("../../assets/icons/right-BR.svg");
         case IconPosition.Center:
-          return require("../../assets/icons/right-center.png");
+          return require("../../assets/icons/right-center.svg");
         default:
           throw unreachableCaseError(iconPosition);
       }
@@ -74,40 +75,34 @@ function getIconAsset(
       if (accent) {
         switch (iconPosition) {
           case IconPosition.TopLeft:
-            return require("../../assets/icons/reveal-accent-top.png");
+            return require("../../assets/icons/reveal-accent-top.svg");
           case IconPosition.TopRight:
-            return require("../../assets/icons/reveal-accent-top.png");
+            return require("../../assets/icons/reveal-accent-top.svg");
           case IconPosition.BottomLeft:
-            return require("../../assets/icons/reveal-accent-bottom.png");
+            return require("../../assets/icons/reveal-accent-bottom.svg");
           case IconPosition.BottomRight:
-            return require("../../assets/icons/reveal-accent-bottom.png");
+            return require("../../assets/icons/reveal-accent-bottom.svg");
           case IconPosition.Center:
-            return require("../../assets/icons/reveal-accent-center.png");
+            return require("../../assets/icons/reveal-accent-center.svg");
         }
       } else {
         switch (iconPosition) {
           case IconPosition.TopLeft:
-            return require("../../assets/icons/reveal-top.png");
+            return require("../../assets/icons/reveal-top.svg");
           case IconPosition.TopRight:
-            return require("../../assets/icons/reveal-top.png");
+            return require("../../assets/icons/reveal-top.svg");
           case IconPosition.BottomLeft:
-            return require("../../assets/icons/reveal-bottom.png");
+            return require("../../assets/icons/reveal-bottom.svg");
           case IconPosition.BottomRight:
-            return require("../../assets/icons/reveal-bottom.png");
+            return require("../../assets/icons/reveal-bottom.svg");
           case IconPosition.Center:
-            return require("../../assets/icons/reveal-center.png");
+            return require("../../assets/icons/reveal-center.svg");
         }
       }
       throw unreachableCaseError(iconPosition);
   }
 }
 
-export const styles = StyleSheet.create({
-  imageMetrics: {
-    width: iconSize,
-    height: iconSize,
-  },
-});
 export default React.memo(function Icon(props: IconProps) {
   const { tintColor, accentColor, style, position, name } = props;
 
@@ -116,32 +111,39 @@ export default React.memo(function Icon(props: IconProps) {
 
   if (accent !== null) {
     return (
-      <View style={[styles.imageMetrics, style]}>
-        <Image
-          source={getIconAsset(name, position, false)}
-          style={[
-            StyleSheet.absoluteFill,
-            !!tintColor && { tintColor: tintColor },
-          ]}
+      <View
+        style={[
+          {
+            width: iconSize,
+            height: iconSize,
+          },
+          style,
+        ]}
+      >
+        <TintedSVG
+          width={iconSize}
+          height={iconSize}
+          source={baseIcon}
+          tintColor={tintColor}
+          style={StyleSheet.absoluteFill}
         />
-        <Image
+        <TintedSVG
+          width={iconSize}
+          height={iconSize}
           source={accent}
-          style={[
-            StyleSheet.absoluteFill,
-            { tintColor: accentColor ?? tintColor },
-          ]}
+          tintColor={accentColor ?? tintColor}
+          style={StyleSheet.absoluteFill}
         />
       </View>
     );
   } else {
     return (
-      <Image
+      <TintedSVG
+        width={iconSize}
+        height={iconSize}
         source={baseIcon}
-        style={[
-          styles.imageMetrics,
-          !!tintColor && { tintColor: tintColor },
-          style as StyleProp<ImageStyle>,
-        ]}
+        tintColor={tintColor}
+        style={style}
       />
     );
   }

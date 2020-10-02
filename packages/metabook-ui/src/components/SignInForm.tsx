@@ -9,10 +9,10 @@ import {
 } from "react-native";
 import { colors, type, layout } from "../styles";
 import Button from "./Button";
+import { IconName } from "./IconShared";
 import Logo from "./Logo";
 import Spacer from "./Spacer";
 import TextInput, { textFieldHorizontalPadding } from "./TextInput";
-import { IconName } from "./Icon";
 
 export interface SignInFormProps {
   mode: "signIn" | "register";
@@ -55,7 +55,7 @@ export default function SignInForm({
 
   return (
     <View style={styles.container}>
-      <Logo units={3} style={{ tintColor: colorPalette.secondaryTextColor }} />
+      <Logo units={3} tintColor={colorPalette.secondaryTextColor} />
       {flexibleSpacer}
       <Text style={type.headline.layoutStyle}>
         {mode === "signIn" ? "Sign in" : "Sign up to remember what you read."}

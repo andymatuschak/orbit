@@ -3,7 +3,7 @@ import React from "react";
 import { View, Text } from "react-native";
 import Svg, { Circle, Text as SVGText } from "react-native-svg";
 import Button from "../components/Button";
-import { IconName } from "../components/Icon";
+import { IconName } from "../components/IconShared";
 import Spacer from "../components/Spacer";
 import Starburst from "../components/Starburst";
 import * as layout from "./layout";
