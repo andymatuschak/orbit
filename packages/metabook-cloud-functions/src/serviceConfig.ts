@@ -9,6 +9,10 @@ const serviceConfig = {
       name: "Andy Matuschak (Orbit author)",
     },
   },
+  bigQuery: {
+    logDatasetName: "logs",
+    projectId: "metabook-system",
+  },
 };
 
 export default serviceConfig;

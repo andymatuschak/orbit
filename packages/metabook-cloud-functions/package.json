@@ -9,10 +9,12 @@
     "build": "tsc -b && rollup -c rollup.config.js",
     "predeploy": "yarn run build",
     "deploy": "firebase deploy --only functions",
+    "shell": "cross-env SERVICE_ACCOUNT_PATH=../metabook-cli/src/adminKey.json firebase functions:shell",
     "test": "jest --runInBand"
   },
   "license": "UNLICENSED",
   "dependencies": {
+    "@google-cloud/bigquery": "^5.3.0",
     "@ipld/dag-json": "^3.0.17",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",

@@ -1,6 +1,7 @@
 import functions from "firebase-functions";
 import getMailjetService from "../email";
 import { EmailSpec } from "../email/types";
+import { defaultLoggingService } from "../logging";
 
 // TODO: we'll need to send a different welcome email if they sign up outside the context of a reading
 const welcomeEmailSpec: EmailSpec = {
@@ -12,11 +13,16 @@ Most people quickly forget much of what they read. So in a few days, we'll invit
 Incidentally, Orbit itself is a work in progress by Andy Matuschak (hello!). If you have any comments or questions while you experiment with this unusual new system, you can reply to any email from Orbit to reach me. Or contact me directly at contact@withorbit.com.`,
 };
 
-const onUserCreate = functions.auth.user().onCreate(async (user) => {
+const onUserCreate = functions.auth.user().onCreate(async (user, context) => {
   if (!user.email) {
     throw new Error(`New user has no email address: ${user.uid}`);
   }
 
+  await defaultLoggingService.logUserEvent({
+    userID: user.uid,
+    timestamp: Date.parse(context.timestamp),
+    eventName: "registration",
+  });
   await getMailjetService().sendEmail(user.email, welcomeEmailSpec);
 });
 
