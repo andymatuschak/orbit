@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
+    "lib": ["dom", "es6"],
     "types": ["jest", "node"]
   },
   "include": ["src/**/*"]

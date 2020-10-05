@@ -20,7 +20,7 @@
     "metabook-app": "0.0.1",
     "ts-loader": "^8.0.4",
     "typescript": "^4.0.3",
-    "webpack": "^5.0.0-beta.16",
+    "webpack": "^5.0.0-rc.3",
     "webpack-cli": "^4.0.0-beta.8"
   },
   "type": "module",

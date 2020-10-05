@@ -25,7 +25,8 @@ module.exports = {
   mode: "development",
   externals: [
     nodeExternals({
-      whitelist: ["metabook-core", "metabook-firebase-support"],
+      additionalModuleDirs: [path.resolve(__dirname, "../../node_modules")],
+      allowlist: ["metabook-core", "metabook-firebase-support"],
     }),
   ],
   output: {
@@ -63,6 +64,7 @@ module.exports = {
     extensions: [".ts", ".tsx", ".js", ".jsx"],
     alias: {
       "metabook-core": path.resolve(__dirname, "../metabook-core"),
+      "multiformats": path.resolve(__dirname, "../../node_modules/multiformats/esm/index.js"),
     },
   },
 };
