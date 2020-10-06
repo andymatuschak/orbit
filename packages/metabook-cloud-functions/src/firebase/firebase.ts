@@ -49,6 +49,65 @@ export function recordPrompts(prompts: Prompt[]): Promise<PromptID[]> {
   );
 }
 
+export async function updatePromptStateCacheWithLog(
+  actionLogDocument: ActionLogDocument<firebase.firestore.Timestamp>,
+  userID: string,
+): Promise<PromptStateCache> {
+  const db = getDatabase();
+  const promptStateCacheReference = await getTaskStateCacheReferenceForTaskID(
+    db,
+    userID,
+    actionLogDocument.taskID,
+  );
+  return db.runTransaction(async (transaction) => {
+    const promptStateCacheSnapshot = await transaction.get(
+      promptStateCacheReference,
+    );
+
+    const basePromptStateCache =
+      (promptStateCacheSnapshot.data() as PromptStateCache) ?? null;
+
+    const newPromptStateCache = await applyPromptActionLogToPromptStateCache({
+      actionLogDocument,
+      basePromptStateCache,
+      fetchAllActionLogDocumentsForTask: async () => {
+        const logQuery = await getLogCollectionReference(db, userID).where(
+          "taskID",
+          "==",
+          actionLogDocument.taskID,
+        );
+        const logSnapshot = await transaction.get(logQuery);
+        return logSnapshot.docs.map((doc) => {
+          const actionLogDocument = doc.data() as ActionLogDocument<
+            firebase.firestore.Timestamp
+          >;
+          return {
+            id: getActionLogIDForFirebaseKey(doc.id),
+            log: actionLogDocument,
+          };
+        });
+      },
+    });
+
+    if (newPromptStateCache instanceof Error) {
+      throw new Error(
+        `Error applying log to prompt state: ${newPromptStateCache}.\nLog: ${JSON.stringify(
+          actionLogDocument,
+          null,
+          "\t",
+        )}\nBase prompt state: ${JSON.stringify(
+          basePromptStateCache,
+          null,
+          "\t",
+        )}`,
+      );
+    } else {
+      transaction.set(promptStateCacheReference, newPromptStateCache);
+      return newPromptStateCache;
+    }
+  });
+}
+
 export async function getDataRecords<R extends DataRecord>(
   recordIDs: DataRecordID<R>[],
 ): Promise<(R | null)[]> {
@@ -112,62 +171,4 @@ export async function storePromptsIfNecessary(
       );
     }
   }
-}
-
-export async function updatePromptStateCacheWithLog(
-  actionLogDocument: ActionLogDocument<firebase.firestore.Timestamp>,
-  userID: string,
-) {
-  const db = getDatabase();
-  const promptStateCacheReference = await getTaskStateCacheReferenceForTaskID(
-    db,
-    userID,
-    actionLogDocument.taskID,
-  );
-  return db.runTransaction(async (transaction) => {
-    const promptStateCacheSnapshot = await transaction.get(
-      promptStateCacheReference,
-    );
-
-    const basePromptStateCache =
-      (promptStateCacheSnapshot.data() as PromptStateCache) ?? null;
-
-    const newPromptStateCache = await applyPromptActionLogToPromptStateCache({
-      actionLogDocument,
-      basePromptStateCache,
-      fetchAllActionLogDocumentsForTask: async () => {
-        const logQuery = await getLogCollectionReference(db, userID).where(
-          "taskID",
-          "==",
-          actionLogDocument.taskID,
-        );
-        const logSnapshot = await transaction.get(logQuery);
-        return logSnapshot.docs.map((doc) => {
-          const actionLogDocument = doc.data() as ActionLogDocument<
-            firebase.firestore.Timestamp
-          >;
-          return {
-            id: getActionLogIDForFirebaseKey(doc.id),
-            log: actionLogDocument,
-          };
-        });
-      },
-    });
-
-    if (newPromptStateCache instanceof Error) {
-      throw new Error(
-        `Error applying log to prompt state: ${newPromptStateCache}.\nLog: ${JSON.stringify(
-          actionLogDocument,
-          null,
-          "\t",
-        )}\nBase prompt state: ${JSON.stringify(
-          basePromptStateCache,
-          null,
-          "\t",
-        )}`,
-      );
-    } else {
-      transaction.set(promptStateCacheReference, newPromptStateCache);
-    }
-  });
 }

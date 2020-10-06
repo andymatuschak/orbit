@@ -17,3 +17,5 @@ We use Mailjet for email notifications. We store the secrets using Firebase's co
 ```
 firebase functions:config:set mailjet.api_key="THE API KEY" mailjet.secret_key="THE SECRET KEY"
 ```
+
+We store logs in BigQuery. The Cloud Functions execution environment provides the necessary configuration, but you'll need to create a few tables with the appropriate schemas. See `/bigQuerySchemas`.

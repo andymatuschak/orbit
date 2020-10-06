@@ -2,6 +2,7 @@ import firebase from "firebase-admin";
 import * as functions from "firebase-functions";
 import { ActionLogDocument } from "metabook-firebase-support";
 import { updatePromptStateCacheWithLog } from "../firebase/firebase";
+import { defaultLoggingService } from "../logging";
 
 export default functions.firestore
   .document("users/{userID}/logs/{logID}")
@@ -9,8 +10,17 @@ export default functions.firestore
     const actionLog = snapshot.data() as ActionLogDocument<
       firebase.firestore.Timestamp
     >;
-    console.log("New log");
+
+    const userID = context.params["userID"];
     if (!actionLog.suppressTaskStateCacheUpdate) {
-      await updatePromptStateCacheWithLog(actionLog, context.params["userID"]);
+      const newPromptStateCache = await updatePromptStateCacheWithLog(
+        actionLog,
+        userID,
+      );
+      await defaultLoggingService.logActionLog(
+        userID,
+        actionLog,
+        newPromptStateCache,
+      );
     }
   });

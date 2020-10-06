@@ -1,6 +1,8 @@
 export * from "./references";
 export * from "./dataRecord";
 export { default as batchWriteEntries } from "./batchWriteEntries";
+
+export { getPromptStateFromPromptStateCache } from "./promptStateCache";
 export type { PromptStateCache } from "./promptStateCache";
 
 export { storeLogs } from "./actionLogDocument";

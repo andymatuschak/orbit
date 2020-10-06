@@ -9,23 +9,24 @@ import {
 import { getReferenceForActionLogID } from "./references";
 
 export type ActionLogDocument<T extends ServerTimestamp> = ActionLog & {
-  serverTimestamp: ServerTimestamp;
+  serverTimestamp: T;
   suppressTaskStateCacheUpdate?: boolean;
 };
 
-export async function storeLogs<D extends Database>(
+export async function storeLogs<D extends Database, T extends ServerTimestamp>(
   logs: ActionLog[],
   userID: string,
   database: D,
   serverTimestampFieldValue: FieldValue,
-  timestampConstructor: (ms: number, ns: number) => ServerTimestamp,
-  suppressTaskStateCacheUpdate: boolean = false,
-): Promise<[DocumentReference<D>, ActionLogDocument<ServerTimestamp>][]> {
+  timestampConstructor: (ms: number, ns: number) => T,
+  suppressTaskStateCacheUpdate = false,
+): Promise<[DocumentReference<D>, ActionLogDocument<T>][]> {
   const refs = await Promise.all(
     logs.map(async (log) => {
-      const logDocument: ActionLogDocument<ServerTimestamp> = {
+      const logDocument: ActionLogDocument<T> = {
         ...log,
-        serverTimestamp: (serverTimestampFieldValue as unknown) as ServerTimestamp,
+        // The force-cast is necessary because we often use a sentinel value ("update this server-side on write")
+        serverTimestamp: (serverTimestampFieldValue as unknown) as T,
         ...(suppressTaskStateCacheUpdate && {
           suppressTaskStateCacheUpdate: true,
         }),
@@ -39,10 +40,7 @@ export async function storeLogs<D extends Database>(
         ActionLogDocument<ServerTimestamp>
       >;
 
-      return [ref, logDocument] as [
-        DocumentReference<D>,
-        ActionLogDocument<ServerTimestamp>,
-      ];
+      return [ref, logDocument] as [DocumentReference<D>, ActionLogDocument<T>];
     }),
   );
   await batchWriteEntries(refs, database, timestampConstructor);
