@@ -52,7 +52,10 @@ function convertFirestoreTimestamp(timestamp: number): BigQueryTimestamp {
 
 async function logEvent(
   tableName: "userEvents",
-  data: UserEventLog,
+  data: LogBase & {
+    eventName: UserEventName;
+    dataJSON: string;
+  },
 ): Promise<unknown>;
 async function logEvent(
   tableName: "actionLogs",
@@ -97,13 +100,20 @@ async function logEvent<T extends LogBase>(
 }
 
 const bigqueryService: LoggingService = {
-  logUserEvent(log: LogBase & { eventName: UserEventName }): Promise<unknown> {
-    return logEvent("userEvents", log);
+  logUserEvent(log: UserEventLog): Promise<unknown> {
+    const { userID, timestamp, eventName, ...rest } = log;
+    const bqLog = {
+      userID,
+      timestamp,
+      eventName,
+      dataJSON: JSON.stringify(rest),
+    };
+    return logEvent("userEvents", bqLog);
   },
 
   async logActionLog(
     userID: string,
-    log: ActionLogDocument<admin.firestore.Timestamp>,
+    actionLog: ActionLogDocument<admin.firestore.Timestamp>,
     newTaskStateCache: PromptStateCache,
   ): Promise<unknown> {
     const {
@@ -113,7 +123,7 @@ const bigqueryService: LoggingService = {
       suppressTaskStateCacheUpdate,
       taskID,
       ...rest
-    } = log;
+    } = actionLog;
     let parentActionLogIDs: ActionLogID[] = [];
 
     let data: Omit<typeof rest, "parentActionLogIDs">;
@@ -128,7 +138,7 @@ const bigqueryService: LoggingService = {
       timestamp: timestampMillis,
       serverTimestamp: convertFirestoreTimestamp(serverTimestamp.toMillis()),
       actionLogType,
-      actionLogID: await getIDForActionLog(log),
+      actionLogID: await getIDForActionLog(actionLog),
       parentActionLogIDs,
       dataJSON: JSON.stringify(data),
       taskID,

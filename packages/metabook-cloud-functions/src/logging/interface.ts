@@ -7,14 +7,18 @@ export type LogBase = {
   timestamp: number;
 };
 
-export type UserEventLog = LogBase & { eventName: UserEventName };
-export type UserEventName = "registration";
+export type RegistrationLog = LogBase & {
+  eventName: "registration";
+  emailAddress: string;
+};
+export type UserEventLog = RegistrationLog;
+export type UserEventName = UserEventLog["eventName"];
 
 export interface LoggingService {
   logUserEvent(log: UserEventLog): Promise<unknown>;
   logActionLog(
     userID: string,
-    log: ActionLogDocument<admin.firestore.Timestamp>,
+    actionLog: ActionLogDocument<admin.firestore.Timestamp>,
     newTaskState: PromptState,
   ): Promise<unknown>;
 }

@@ -22,6 +22,7 @@ const onUserCreate = functions.auth.user().onCreate(async (user, context) => {
     userID: user.uid,
     timestamp: Date.parse(context.timestamp),
     eventName: "registration",
+    emailAddress: user.email,
   });
   await getMailjetService().sendEmail(user.email, welcomeEmailSpec);
 });
