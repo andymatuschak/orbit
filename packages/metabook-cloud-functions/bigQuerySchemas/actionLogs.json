@@ -1,0 +1,47 @@
+[
+  {
+    "mode": "REQUIRED",
+    "name": "userID",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "timestamp",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "serverTimestamp",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "actionLogType",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "actionLogID",
+    "type": "STRING"
+  },
+  {
+    "mode": "REPEATED",
+    "name": "parentActionLogIDs",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "dataJSON",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "taskID",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "newTaskStateJSON",
+    "type": "STRING"
+  }
+]
