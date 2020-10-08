@@ -140,14 +140,11 @@ function getRayPath(
   )} ${quillPoint(0.5835, 0.81425)} ${quillPoint(0.875, 0.89175)}C${quillPoint(
     1.16675,
     0.965,
-  )} ${quillPoint(1.45825, 0.99925)} ${quillPoint(1.75, 1)}L${quillPoint(
-    1.75,
-    0,
-  )} ${x2 - xThickness} ${y2 - yThickness} ${x2 + xThickness} ${
-    y2 + yThickness
-  } ${x1 + xThickness} ${y1 + yThickness} ${x1 - xThickness} ${
-    y1 - yThickness
-  }C${quillPoint(1.45825, 0.000750005)} ${quillPoint(
+  )} ${quillPoint(1.45825, 0.99925)} ${quillPoint(1.75, 1)}L${
+    x2 + xThickness
+  } ${y2 + yThickness} ${x2 - xThickness} ${y2 - yThickness} ${
+    x1 - xThickness
+  } ${y1 - yThickness} C${quillPoint(1.45825, 0.000750005)} ${quillPoint(
     1.16675,
     0.035,
   )} ${quillPoint(0.875, 0.10825)}`;
