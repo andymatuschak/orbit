@@ -21,5 +21,5 @@ export function getColumnSpan(columnCount: number, layoutWidth: number) {
 
 export type SizeClass = "compact" | "regular";
 export function getWidthSizeClass(width: number): SizeClass {
-  return width > 375 ? "regular" : "compact";
+  return width > 414 ? "regular" : "compact";
 }

@@ -132,7 +132,7 @@ interface SizeVariant {
 
 const sizeVariants: SizeVariant[] = [
   { style: type.promptXXLarge.layoutStyle, maximumLineCount: 1 },
-  { style: type.promptXLarge.layoutStyle, maximumLineCount: 2 },
+  { style: type.promptXLarge.layoutStyle, maximumLineCount: 1 },
   { style: type.promptLarge.layoutStyle, maximumLineCount: 4 },
   { style: type.promptMedium.layoutStyle },
   { style: type.promptSmall.layoutStyle },

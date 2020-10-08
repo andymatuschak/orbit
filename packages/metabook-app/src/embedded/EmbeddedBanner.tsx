@@ -48,7 +48,7 @@ export default function EmbeddedBanner(props: EmbeddedBannerProps) {
       <Text
         style={[
           styles.type.label.layoutStyle,
-          { color: palette.accentColor, flexGrow: 1 },
+          { color: styles.colors.white, flexGrow: 1 },
         ]}
       >
         {getBannerMessage(props)}

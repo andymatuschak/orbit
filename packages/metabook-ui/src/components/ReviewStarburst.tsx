@@ -43,7 +43,7 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
   colorMode,
   colorPalette,
 }: ReviewStarburstProps) {
-  const starburstTopMargin = layout.gridUnit * 6;
+  const starburstTopMargin = layout.gridUnit * 4;
   const starburstThickness = 3;
 
   const widthSizeClass = layout.getWidthSizeClass(containerWidth);
