@@ -80,20 +80,14 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
 }) {
   const { width, onLayout } = useLayout();
   const widthSizeClass = layout.getWidthSizeClass(width);
-  const isVeryNarrow = width < 340;
+  const isVeryNarrow = width < 360;
 
   const buttonStyle = {
     flex: 1,
     ...(insetBottom && {
       paddingBottom:
-        widthSizeClass === "regular"
-          ? // The button already has internal padding when the background is showing. We subtract that off if the safe inset area is larger. This is a bit of a hack, relying on internal knowledge of the button metrics. It might be better to have the button subtract off part of its paddingBottom if necessary.
-            Math.max(0, insetBottom - layout.gridUnit * 2)
-          : insetBottom,
-    }),
-    ...(widthSizeClass === "compact" && {
-      // Collapse margins of stacked buttons. As with the padding hack above, this relies on internal knowledge of the button metrics. Not ideal.
-      marginBottom: layout.gridUnit * 2,
+        // The button already has internal padding when the background is showing. We subtract that off if the safe inset area is larger. This is a bit of a hack, relying on internal knowledge of the button metrics. It might be better to have the button subtract off part of its paddingBottom if necessary.
+        Math.max(0, insetBottom - layout.gridUnit * 2),
     }),
   };
 
@@ -114,7 +108,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
     );
   }
 
-  const spacer = <Spacer units={widthSizeClass === "regular" ? 0.5 : 1} />;
+  const spacer = <Spacer units={0.5} />;
 
   let children: React.ReactNode;
   if (promptType && colorPalette) {
@@ -122,10 +116,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
       color: colors.white,
       accentColor: colorPalette.accentColor,
       style: buttonStyle,
-      backgroundColor:
-        widthSizeClass === "regular"
-          ? colorPalette.secondaryBackgroundColor
-          : undefined,
+      backgroundColor: colorPalette.secondaryBackgroundColor,
     } as const;
 
     if (isShowingAnswer) {
@@ -165,8 +156,6 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
     } else {
       children = (
         <>
-          <View style={{ flex: 1 }} />
-          {spacer}
           <Button
             {...sharedButtonProps}
             onPress={onReveal}
@@ -184,12 +173,8 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   return (
     <View
       style={[
-        { minHeight: layout.gridUnit * 5 },
-        widthSizeClass === "compact" && {
-          marginLeft: layout.edgeMargin,
-          marginRight: layout.edgeMargin,
-        },
         {
+          minHeight: layout.gridUnit * 7,
           flexDirection: isVeryNarrow ? "column" : "row",
           flexWrap: isVeryNarrow ? "wrap" : "nowrap",
         },
