@@ -98,37 +98,6 @@ const ButtonInterior = function ButtonImpl(
     titleColor = color ?? defaultButtonColor;
   }
 
-  const interior = (
-    <>
-      {iconName && (
-        <Icon
-          name={iconName}
-          position={isSoloIcon ? IconPosition.Center : IconPosition.TopLeft}
-          // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's color becomes the icon's accent color. It's intentional, though, to produce an inversion.
-          tintColor={iconColor ?? defaultButtonColor}
-          accentColor={color ?? defaultButtonColor}
-        />
-      )}
-      {"title" in props && (
-        <Text
-          {...rest}
-          style={[
-            (size ?? "regular") === "regular"
-              ? type.label.layoutStyle
-              : type.labelTiny.layoutStyle,
-            {
-              color: titleColor,
-            },
-          ]}
-          selectable={false}
-          suppressHighlighting={true}
-        >
-          {props.title}
-        </Text>
-      )}
-    </>
-  );
-
   let backgroundOpacity: number;
   if (isPressed) {
     backgroundOpacity = 0.35;
@@ -139,14 +108,41 @@ const ButtonInterior = function ButtonImpl(
   }
 
   return (
-    <View style={[!!disabled && styles.disabled, { position: "relative" }]}>
+    <View
+      style={[
+        disabled && {
+          opacity: 0.3,
+          ...(Platform.OS === "web" && { cursor: "not-allowed" }),
+        },
+        isSoloIcon && {
+          alignItems: "center",
+          justifyContent: "center",
+          flex: 1,
+        },
+      ]}
+    >
       {backgroundColor && (
-        <View
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor, opacity: backgroundOpacity },
-          ]}
-        />
+        <>
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              isSoloIcon && styles.soloIcon,
+              { backgroundColor, opacity: backgroundOpacity },
+            ]}
+          />
+          {isSoloIcon && isHovered && (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                styles.soloIcon,
+                {
+                  borderColor: props.accentColor,
+                  borderWidth: 3,
+                },
+              ]}
+            />
+          )}
+        </>
       )}
       <Animated.View
         style={[
@@ -154,29 +150,46 @@ const ButtonInterior = function ButtonImpl(
             opacity,
           },
           !!backgroundColor &&
-            !isSoloIcon &&
-            styles.interiorLayoutWithBackground,
+            !isSoloIcon && {
+              margin: layout.gridUnit * 2,
+            },
         ]}
       >
-        {interior}
+        {iconName && (
+          <Icon
+            name={iconName}
+            position={isSoloIcon ? IconPosition.Center : IconPosition.TopLeft}
+            // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's color becomes the icon's accent color. It's intentional, though, to produce an inversion.
+            tintColor={iconColor ?? defaultButtonColor}
+            accentColor={color ?? defaultButtonColor}
+          />
+        )}
+        {"title" in props && (
+          <Text
+            {...rest}
+            style={[
+              (size ?? "regular") === "regular"
+                ? type.label.layoutStyle
+                : type.labelTiny.layoutStyle,
+              {
+                color: titleColor,
+              },
+            ]}
+            selectable={false}
+            suppressHighlighting={true}
+          >
+            {props.title}
+          </Text>
+        )}
       </Animated.View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  interiorLayoutWithBackground: {
-    margin: layout.gridUnit * 2,
-  },
-  disabled: {
-    opacity: 0.3,
-    ...(Platform.OS === "web" && { cursor: "not-allowed" }),
-  },
   soloIcon: {
     width: 32,
     height: 32,
-    alignItems: "center",
-    justifyContent: "center",
     borderRadius: 16,
   },
 });
@@ -249,12 +262,7 @@ export default React.memo(function Button(props: ButtonProps) {
           // @ts-ignore react-native-web adds this prop.
           href={href}
           hitSlop={props.hitSlop}
-          style={[
-            isSoloIcon && styles.soloIcon,
-            isSoloIcon &&
-              isHovered && { borderColor: props.accentColor, borderWidth: 3 },
-            style,
-          ]}
+          style={[isSoloIcon && styles.soloIcon, style]}
         >
           {({ pressed }) => (
             <ButtonInterior
