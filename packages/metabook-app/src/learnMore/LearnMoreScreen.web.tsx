@@ -332,7 +332,14 @@ const palette = styles.colors.palettes.orange;
 
 export default function LearnMoreScreenWeb() {
   const { width, onLayout } = useLayout();
-  const size = width >= 900 ? "large" : "small";
+  let size: "large" | "small" | null;
+  if (width >= 900) {
+    size = "large";
+  } else if (width > 0) {
+    size = "small";
+  } else {
+    size = null;
+  }
 
   return (
     <View
@@ -344,13 +351,15 @@ export default function LearnMoreScreenWeb() {
       }}
       onLayout={onLayout}
     >
-      <SizeContext.Provider value={size}>
-        {size === "large" ? (
-          <LargeLayout width={width} />
-        ) : (
-          <SmallLayout width={width} />
-        )}
-      </SizeContext.Provider>
+      {size && (
+        <SizeContext.Provider value={size}>
+          {size === "large" ? (
+            <LargeLayout width={width} />
+          ) : (
+            <SmallLayout width={width} />
+          )}
+        </SizeContext.Provider>
+      )}
     </View>
   );
 }
