@@ -22,7 +22,7 @@ function getBannerMessage({
   if (!isSignedIn && completePromptCount === 0) {
     return sizeClass === "regular"
       ? "Quickly review what you just read"
-      : "Quick review";
+      : "Quick review session";
   } else {
     if (completePromptCount < totalPromptCount) {
       return `Review: ${totalPromptCount - completePromptCount} prompts left`;
