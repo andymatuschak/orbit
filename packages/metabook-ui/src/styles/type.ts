@@ -197,25 +197,25 @@ export const labelTiny = makeTypeSpec(
 
 export const runningText = makeTypeSpec(
   {
-    fontSize: 17,
+    fontSize: 19,
     fontFamily: "Raptor Premium Regular",
-    lineHeight: 20,
+    lineHeight: 24,
     letterSpacing: 0,
   },
   -3,
-  -4.5,
+  -3,
   -8,
 );
 
 export const runningTextSmall = makeTypeSpec(
   {
-    fontSize: 13,
+    fontSize: 16,
     fontFamily: "Raptor Premium Regular",
-    lineHeight: 16,
+    lineHeight: 20,
     letterSpacing: 0,
   },
   -4,
-  -5,
+  -4,
   -8,
 );
 

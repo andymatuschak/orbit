@@ -1,6 +1,6 @@
 export SENTRY_AUTH_TOKEN=$(firebase functions:config:get sentry.auth_token | sed -e "s/\"//g")
-export SENTRY_ORG=$(node -p --input-type="module" -e "import serviceConfig from './serviceConfig.mjs'; serviceConfig.sentryOrg")
-export SENTRY_PROJECT=$(node -p --input-type="module" -e "import serviceConfig from './serviceConfig.mjs'; serviceConfig.sentryProject")
+export SENTRY_ORG=$(node -p --input-type="module" -e "import serviceConfig from './serviceConfig.js'; serviceConfig.sentryOrg")
+export SENTRY_PROJECT=$(node -p --input-type="module" -e "import serviceConfig from './serviceConfig.js'; serviceConfig.sentryProject")
 VERSION=$(sentry-cli releases propose-version)
 
 sentry-cli releases -o "$SENTRY_ORG" new -p "$SENTRY_PROJECT" "$VERSION"

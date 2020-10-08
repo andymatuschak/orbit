@@ -14,6 +14,7 @@ enum RootScreen {
   Review = "Review",
   SignIn = "SignIn",
   Embed = "Embed",
+  LearnMore = "LearnMore",
 }
 
 function useNavigationState(
@@ -27,6 +28,8 @@ function useNavigationState(
       return RootScreen.SignIn;
     } else if (pathname.startsWith("/embed")) {
       return RootScreen.Embed;
+    } else if (pathname === "/") {
+      return RootScreen.LearnMore;
     }
   }
 
@@ -40,10 +43,13 @@ function useNavigationState(
 }
 
 const SignInScreen = React.lazy(() => import("./signIn/SignInScreen"));
-const ReviewSessionScreen = React.lazy(() =>
-  import("./reviewSession/ReviewSession"),
+const ReviewSessionScreen = React.lazy(
+  () => import("./reviewSession/ReviewSession"),
 );
 const EmbedScreen = React.lazy(() => import("./embedded/EmbeddedScreen"));
+const LearnMoreScreen = React.lazy(
+  () => import("./learnMore/LearnMoreScreen.web"),
+);
 const LoadingScreen = () => (
   // TODO https://github.com/andymatuschak/metabook/issues/63
   <View style={{ flex: 1, justifyContent: "center" }}>
@@ -55,6 +61,7 @@ const screens: Record<RootScreen, React.ComponentType<unknown>> = {
   [RootScreen.Review]: ReviewSessionScreen,
   [RootScreen.Embed]: EmbedScreen,
   [RootScreen.Loading]: LoadingScreen,
+  [RootScreen.LearnMore]: LearnMoreScreen,
 };
 
 export default function Root() {
