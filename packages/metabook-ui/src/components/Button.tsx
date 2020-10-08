@@ -12,6 +12,7 @@ import {
   StyleSheet,
   Text,
   TextProps,
+  View,
 } from "react-native";
 import { colors, layout, type } from "../styles";
 import usePrevious from "./hooks/usePrevious";
@@ -90,17 +91,15 @@ const ButtonInterior = function ButtonImpl(
     iconColor = accentColor;
   }
 
-  return (
-    <Animated.View
-      style={[
-        {
-          opacity,
-        },
-        !!backgroundColor && !isSoloIcon && styles.interiorLayoutWithBackground,
-        !!disabled && styles.disabled,
-      ]}
-      pointerEvents="box-only"
-    >
+  let titleColor: string;
+  if ((isHovered || isPressed) && !disabled && !backgroundColor) {
+    titleColor = accentColor ?? defaultButtonColor;
+  } else {
+    titleColor = color ?? defaultButtonColor;
+  }
+
+  const interior = (
+    <>
       {iconName && (
         <Icon
           name={iconName}
@@ -118,10 +117,7 @@ const ButtonInterior = function ButtonImpl(
               ? type.label.layoutStyle
               : type.labelTiny.layoutStyle,
             {
-              color:
-                ((isHovered || isPressed) && accentColor && !disabled
-                  ? accentColor
-                  : color) || defaultButtonColor,
+              color: titleColor,
             },
           ]}
           selectable={false}
@@ -130,16 +126,47 @@ const ButtonInterior = function ButtonImpl(
           {props.title}
         </Text>
       )}
-    </Animated.View>
+    </>
+  );
+
+  let backgroundOpacity: number;
+  if (isPressed) {
+    backgroundOpacity = 0.35;
+  } else if (isHovered) {
+    backgroundOpacity = 0.55;
+  } else {
+    backgroundOpacity = 1.0;
+  }
+
+  return (
+    <View style={[!!disabled && styles.disabled, { position: "relative" }]}>
+      {backgroundColor && (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor, opacity: backgroundOpacity },
+          ]}
+        />
+      )}
+      <Animated.View
+        style={[
+          {
+            opacity,
+          },
+          !!backgroundColor &&
+            !isSoloIcon &&
+            styles.interiorLayoutWithBackground,
+        ]}
+      >
+        {interior}
+      </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   interiorLayoutWithBackground: {
-    marginTop: layout.gridUnit * 2,
-    marginBottom: layout.gridUnit * 2,
-    marginLeft: layout.gridUnit * 2,
-    marginRight: layout.gridUnit * 2,
+    margin: layout.gridUnit * 2,
   },
   disabled: {
     opacity: 0.3,
@@ -223,7 +250,6 @@ export default React.memo(function Button(props: ButtonProps) {
           href={href}
           hitSlop={props.hitSlop}
           style={[
-            !!backgroundColor && { backgroundColor },
             isSoloIcon && styles.soloIcon,
             isSoloIcon &&
               isHovered && { borderColor: props.accentColor, borderWidth: 3 },

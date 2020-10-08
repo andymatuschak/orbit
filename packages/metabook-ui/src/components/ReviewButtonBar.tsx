@@ -124,6 +124,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
         <>
           <Button
             {...sharedButtonProps}
+            key={"Forgotten"}
             onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
             iconName={IconName.Cross}
             title={getButtonTitle(
@@ -139,6 +140,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
           {spacer}
           <Button
             {...sharedButtonProps}
+            key={"Remembered"}
             onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
             iconName={IconName.Check}
             title={getButtonTitle(
@@ -161,6 +163,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             onPress={onReveal}
             iconName={IconName.Reveal}
             title={"Show answer"}
+            key={"Show answer"}
             hitSlop={secondButtonSlop}
           />
         </>
