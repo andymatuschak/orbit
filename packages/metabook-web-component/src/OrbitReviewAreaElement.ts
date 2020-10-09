@@ -25,7 +25,7 @@ function getHeightForReviewAreaOfWidth(width: number) {
   // TODO: add more at bottom if buttons stack
   const promptWidth = Math.min(500, width - edgeMargin * 2);
   const promptHeight = Math.round((promptWidth * 5) / 6);
-  return promptHeight + (9 + 11) * gridUnit;
+  return promptHeight + (7 + 11) * gridUnit;
 }
 
 const _activeReviewAreaElements: Set<OrbitReviewAreaElement> = new Set();

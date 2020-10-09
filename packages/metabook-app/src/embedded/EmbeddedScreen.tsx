@@ -223,7 +223,8 @@ function getEndOfTaskLabel(
 ): string {
   const promptString = starburstItems.length > 1 ? "prompts" : "prompt";
   if (hasPeerStates) {
-    const collectedCount = starburstItems.filter((state) => !!state).length;
+    const collectedCount = starburstItems.filter((state) => !!state.promptState)
+      .length;
     return `${collectedCount} of ${starburstItems.length} prompts on page collected`;
   } else {
     return `${starburstItems.length} ${promptString} collected`;

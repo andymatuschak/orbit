@@ -142,7 +142,7 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
     <View
       style={{
         position: "relative",
-        height: layout.gridUnit * 9,
+        height: layout.gridUnit * 7,
       }}
     >
       <Animated.View
