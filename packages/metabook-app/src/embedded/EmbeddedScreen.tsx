@@ -272,11 +272,16 @@ function EmbeddedScreenRenderer({
     }
   }, [authenticationState]);
   const { height: interiorHeight, onLayout: onInteriorLayout } = useLayout();
+  const { height: modalHeight, onLayout: onModalLayout } = useLayout();
+
   const interiorY = useTransitioningValue({
-    value:
-      isComplete && authenticationState.status === "signedIn"
-        ? (window.innerHeight - interiorHeight) / 2 - styles.layout.gridUnit * 4
-        : 0,
+    value: isComplete
+      ? (window.innerHeight -
+          interiorHeight -
+          (authenticationState.status !== "signedIn" ? modalHeight : 0)) /
+          2 -
+        styles.layout.gridUnit * 4
+      : 0,
     timing: {
       type: "spring",
       speed: 2,
@@ -395,19 +400,21 @@ function EmbeddedScreenRenderer({
         />
       )}
       {isComplete && (
-        <Animated.View
-          style={{
-            flex: 1,
-            justifyContent: "flex-end",
-            overflow: "hidden",
-            transform: [{ translateY: onboardingOffsetY }],
-          }}
-        >
-          <OnboardingModalWeb
-            colorPalette={colorPalette}
-            sizeClass={styles.layout.getWidthSizeClass(containerWidth)}
-          />
-        </Animated.View>
+        <>
+          <View style={{ flex: 1 }} />
+          <Animated.View
+            style={{
+              overflow: "hidden",
+              transform: [{ translateY: onboardingOffsetY }],
+            }}
+            onLayout={onModalLayout}
+          >
+            <OnboardingModalWeb
+              colorPalette={colorPalette}
+              sizeClass={styles.layout.getWidthSizeClass(containerWidth)}
+            />
+          </Animated.View>
+        </>
       )}
     </>
   );
