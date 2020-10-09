@@ -56,56 +56,20 @@ export default function OnboardingModalWeb({
     >
       <View
         style={{
-          maxWidth: 550, // TODO should probably be shared with the review area max width
+          maxWidth: 450, // TODO should probably be shared with the review area max width
         }}
       >
-        <Text
-          style={
-            sizeClass === "regular"
-              ? styles.type.headline.layoutStyle
-              : styles.type.label.layoutStyle
-          }
-        >
-          Bring these ideas into your&nbsp;Orbit.
-        </Text>
-        <Spacer units={3} />
-        <Text style={proseStyle}>
-          This page uses Orbit, an experimental system which aims to make it
-          almost effortless to deeply internalize what you read. (Instead of the
-          usual: rapidly forgetting all but the gist.)
-        </Text>
-        <Spacer units={3} />
-        <Text style={proseStyle}>
-          Orbit works by keeping you in contact with ideas over time. In a week,
-          we’ll invite you to try these prompts again. Then you’ll repeat with
-          expanding intervals: two weeks, a month, and so on, building durable
-          understanding in a few minutes per session.
-        </Text>
-        <Spacer units={3} />
-        <Text style={proseStyle}>
-          Set up a free account to get started or{" "}
-          <a
-            href="https://withorbit.com"
-            rel="noreferrer"
-            target="_blank"
-            style={{ color: "inherit" }}
-          >
-            learn more
-          </a>
-          .
-        </Text>
-        <Spacer units={5} />
         <Text
           style={[
             sizeClass === "regular"
               ? styles.type.label.layoutStyle
-              : styles.type.labelSmall.layoutStyle,
+              : styles.type.label.layoutStyle,
             { color: styles.colors.white },
           ]}
         >
-          Enter your email address to sign in:
+          Sign in to bring these ideas into your&nbsp;Orbit
         </Text>
-        <Spacer units={1} />
+        <Spacer units={2} />
         <View
           style={{
             marginLeft: -textFieldHorizontalPadding,
@@ -116,7 +80,11 @@ export default function OnboardingModalWeb({
         >
           <TextInput
             colorPalette={colorPalette}
-            placeholder="you@you.com"
+            placeholder={
+              sizeClass === "regular"
+                ? "Enter your email address to sign in"
+                : "Enter your email address"
+            }
             autoCorrect={false}
             importantForAutofill="yes"
             autoCompleteType="email"
@@ -143,6 +111,25 @@ export default function OnboardingModalWeb({
             }}
           />
         </View>
+        <Spacer units={3} />
+        <Text style={proseStyle}>
+          We read so much but remember so little. Orbit helps you deeply
+          internalize what you read through periodic review.
+        </Text>
+        <Spacer units={3} />
+        <Text style={proseStyle}>
+          Sign in to get started or{" "}
+          <a
+            href="https://withorbit.com"
+            rel="noreferrer"
+            target="_blank"
+            style={{ color: "inherit" }}
+          >
+            click here to learn more
+          </a>
+          .
+        </Text>
+        <Spacer units={2} />
       </View>
     </View>
   );
