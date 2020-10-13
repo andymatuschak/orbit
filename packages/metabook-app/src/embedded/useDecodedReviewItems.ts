@@ -1,6 +1,6 @@
 import { ReviewItem } from "metabook-ui";
 import React from "react";
-import { EmbeddedItem } from "./embeddedItem";
+import { EmbeddedItem } from "../../../embedded-support/src/embeddedScreenInterface";
 import { getReviewItems } from "./getReviewItems";
 
 // Extracts prompts embedded in the URL and resolves attachments as necessary

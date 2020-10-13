@@ -2,15 +2,15 @@ import {
   EmbeddedHostMetadata,
   EmbeddedHostUpdateEvent,
   embeddedHostUpdateEventName,
+  EmbeddedItem,
   EmbeddedScreenConfiguration,
   EmbeddedScreenState,
   embeddedScreenStateUpdateEventName,
   EmbeddedScreenUpdateEvent,
-} from "metabook-app/src/embedded/embeddedScreenConfiguration";
+} from "metabook-embedded-support";
 import { extractItems } from "./extractItems";
 import { getSharedMetadataMonitor } from "./metadataMonitor";
 import { ColorPaletteName } from "metabook-core";
-import { EmbeddedItem } from "metabook-app/src/embedded/embeddedItem";
 
 declare global {
   // supplied by Webpack

@@ -1,28 +1,20 @@
 import {
   AttachmentIDReference,
+  PromptField,
   QAPrompt,
   qaPromptType,
-  PromptField,
 } from "metabook-core";
+import {
+  EmbeddedItem,
+  EmbeddedItem,
+  EmbeddedPromptField,
+  EmbeddedQAPrompt,
+} from "metabook-embedded-support";
 import {
   AttachmentResolutionMap,
   promptReviewItemType,
   ReviewItem,
-  styles,
 } from "metabook-ui";
-
-export interface EmbeddedPromptField {
-  contents: string;
-  attachmentURLs?: string[];
-}
-
-export interface EmbeddedQAPrompt {
-  type: typeof qaPromptType;
-  question: EmbeddedPromptField;
-  answer: EmbeddedPromptField;
-}
-
-export type EmbeddedItem = EmbeddedQAPrompt;
 
 function getPromptFieldFromEmbeddedPromptField(
   embeddedPromptField: EmbeddedPromptField,

@@ -1,8 +1,7 @@
 {
   "hosting": {
-    "target": "orbit-cdn",
+    "target": "orbit-js",
     "public": "build",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "headers": [
       {
         "source": "*",
@@ -10,6 +9,10 @@
           {
             "key": "Access-Control-Allow-Origin",
             "value": "*"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300, s-maxage=31536000"
           }
         ]
       }

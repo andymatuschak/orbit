@@ -53,6 +53,7 @@
     "lodash.isequal": "^4.5.0",
     "metabook-client": "0.0.1",
     "metabook-core": "0.0.1",
+    "metabook-embedded-support": "0.0.1",
     "metabook-sample-data": "0.0.1",
     "metabook-ui": "0.0.1",
     "node-libs-react-native": "^1.0.3",

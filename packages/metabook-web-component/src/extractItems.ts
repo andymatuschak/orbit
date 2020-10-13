@@ -1,5 +1,5 @@
-import { EmbeddedItem } from "metabook-app/src/embedded/embeddedItem";
 import { qaPromptType } from "metabook-core";
+import { EmbeddedItem } from "metabook-embedded-support";
 import { OrbitPromptElement } from "./OrbitPromptElement";
 
 export function extractItems(parentElement: HTMLElement): EmbeddedItem[] {

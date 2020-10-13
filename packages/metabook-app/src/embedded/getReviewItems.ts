@@ -6,10 +6,10 @@ import {
 } from "metabook-core";
 import { AttachmentResolutionMap, ReviewItem } from "metabook-ui";
 import {
-  EmbeddedItem,
   getAttachmentURLsInEmbeddedItem,
   getReviewItemFromEmbeddedItem,
 } from "./embeddedItem";
+import { EmbeddedItem } from "../../../embedded-support/src/embeddedScreenInterface";
 
 async function fetchAttachment(url: string): Promise<AttachmentIDReference> {
   // TODO: move this to a service worker to avoid fetching the resource twice.

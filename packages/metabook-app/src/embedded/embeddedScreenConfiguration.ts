@@ -1,40 +1,5 @@
-import { ColorPaletteName, PromptID, PromptState } from "metabook-core";
 import { styles } from "metabook-ui";
-import { EmbeddedItem } from "./embeddedItem";
-
-export interface EmbeddedScreenConfiguration {
-  embeddedItems: EmbeddedItem[];
-  embeddedHostMetadata: EmbeddedHostMetadata;
-}
-
-export interface EmbeddedHostMetadata {
-  url: string;
-  title: string | null;
-  siteName: string | null;
-  colorPaletteName: ColorPaletteName | null;
-}
-
-export const embeddedScreenStateUpdateEventName = "screenStateUpdate";
-export interface EmbeddedScreenUpdateEvent {
-  type: typeof embeddedScreenStateUpdateEventName;
-  state: EmbeddedScreenState;
-}
-
-export interface EmbeddedScreenState {
-  orderedPromptIDs: PromptID[];
-  orderedPromptStates: (PromptState | null)[];
-}
-
-export const embeddedHostUpdateEventName = "hostUpdate";
-export interface EmbeddedHostUpdateEvent {
-  type: typeof embeddedHostUpdateEventName;
-  state: EmbeddedHostState;
-}
-
-export interface EmbeddedHostState {
-  orderedScreenStates: (EmbeddedScreenState | null)[];
-  receiverIndex: number;
-}
+import { EmbeddedScreenConfiguration } from "metabook-embedded-support";
 
 // Simple string hash, just for choosing palettes from the URL.
 // https://stackoverflow.com/a/52171480

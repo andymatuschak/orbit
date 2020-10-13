@@ -1,5 +1,5 @@
-import { EmbeddedHostMetadata } from "metabook-app/src/embedded/embeddedScreenConfiguration";
 import { ColorPaletteName } from "metabook-core";
+import { EmbeddedHostMetadata } from "metabook-embedded-support";
 
 let hasWarnedAboutTitle = false;
 function readMetadata(): EmbeddedHostMetadata {
@@ -50,7 +50,7 @@ function readMetadata(): EmbeddedHostMetadata {
 
 export type MetadataListener = (newMetadata: EmbeddedHostMetadata) => void;
 class MetadataMonitor {
-  private listeners: Set<MetadataListener>;
+  private readonly listeners: Set<MetadataListener>;
   private cachedMetadata: EmbeddedHostMetadata;
 
   constructor() {

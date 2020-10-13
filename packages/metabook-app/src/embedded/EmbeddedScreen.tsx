@@ -35,6 +35,12 @@ import React, {
 } from "react";
 import { Animated, Text, View } from "react-native";
 import {
+  EmbeddedHostState,
+  embeddedHostUpdateEventName,
+  EmbeddedScreenState,
+  embeddedScreenStateUpdateEventName,
+} from "../../../embedded-support/src/ipc";
+import {
   ReviewSessionWrapper,
   ReviewSessionWrapperProps,
 } from "../ReviewSessionWrapper";
@@ -42,14 +48,10 @@ import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
 import {
-  EmbeddedHostState,
-  embeddedHostUpdateEventName,
-  EmbeddedScreenConfiguration,
-  EmbeddedScreenState,
-  embeddedScreenStateUpdateEventName,
   getEmbeddedColorPalette,
   getEmbeddedScreenConfigurationFromURL,
 } from "./embeddedScreenConfiguration";
+import { EmbeddedScreenConfiguration } from "../../../embedded-support/src/embeddedScreenInterface";
 import OnboardingModalWeb from "./OnboardingModal.web";
 import useDecodedReviewItems from "./useDecodedReviewItems";
 import {

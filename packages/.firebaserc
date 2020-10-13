@@ -5,10 +5,7 @@
   "targets": {
     "metabook-system": {
       "hosting": {
-        "orbit-docs": [
-          "orbit-docs"
-        ],
-        "orbit-cdn": ["orbit-cdn"]
+        "orbit-js": ["orbit-js"]
       }
     }
   }

@@ -16,13 +16,9 @@ module.exports = {
     noParse: /react-native/,
     rules: [
       {
-        test: /\.png$/,
-        use: "ignore-loader",
-      },
-      {
         test: /\.js$/,
         use: "babel-loader",
-        include: [/node_modules/, /metabook-ui/, /metabook-core/],
+        include: [/node_modules/, /embedded-support/, /metabook-core/],
         exclude: [/node_modules\/react-native/],
       },
       {

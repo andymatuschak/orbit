@@ -1,10 +1,10 @@
 import { AttachmentIDReference, QAPrompt, qaPromptType } from "metabook-core";
 import { ReviewItem } from "metabook-ui";
 import {
-  EmbeddedQAPrompt,
   getAttachmentURLsInEmbeddedItem,
   getReviewItemFromEmbeddedItem,
 } from "./embeddedItem";
+import { EmbeddedQAPrompt } from "../../../embedded-support/src/embeddedScreenInterface";
 
 const testEmbeddedQAPrompt: EmbeddedQAPrompt = {
   type: qaPromptType,
