@@ -15,6 +15,7 @@ enum RootScreen {
   SignIn = "SignIn",
   Embed = "Embed",
   LearnMore = "LearnMore",
+  TermsOfService = "TermsOfService",
 }
 
 function useNavigationState(
@@ -28,6 +29,8 @@ function useNavigationState(
       return RootScreen.SignIn;
     } else if (pathname.startsWith("/embed")) {
       return RootScreen.Embed;
+    } else if (pathname.startsWith("/terms")) {
+      return RootScreen.TermsOfService;
     } else if (pathname === "/") {
       return RootScreen.LearnMore;
     }
@@ -47,8 +50,9 @@ const ReviewSessionScreen = React.lazy(
   () => import("./reviewSession/ReviewSession"),
 );
 const EmbedScreen = React.lazy(() => import("./embedded/EmbeddedScreen"));
-const LearnMoreScreen = React.lazy(
-  () => import("./learnMore/LearnMoreScreen.web"),
+const LearnMoreScreen = React.lazy(() => import("./learnMore/LearnMoreScreen"));
+const TermsOfServiceScreen = React.lazy(
+  () => import("./terms/TermsOfServiceScreen"),
 );
 const LoadingScreen = () => (
   // TODO https://github.com/andymatuschak/metabook/issues/63
@@ -62,6 +66,7 @@ const screens: Record<RootScreen, React.ComponentType<unknown>> = {
   [RootScreen.Embed]: EmbedScreen,
   [RootScreen.Loading]: LoadingScreen,
   [RootScreen.LearnMore]: LearnMoreScreen,
+  [RootScreen.TermsOfService]: TermsOfServiceScreen,
 };
 
 export default function Root() {

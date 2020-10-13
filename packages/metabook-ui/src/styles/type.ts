@@ -147,6 +147,18 @@ export const promptSmall = makeTypeSpec(
   -7.5,
 );
 
+export const title = makeTypeSpec(
+  {
+    fontSize: 48,
+    fontFamily: "Dr-Medium",
+    lineHeight: 40,
+    letterSpacing: 48 * -0.03,
+  },
+  -2,
+  -7,
+  -8,
+);
+
 export const headline = makeTypeSpec(
   {
     fontSize: 36,
@@ -225,6 +237,7 @@ export const typeStyles = {
   promptLarge,
   promptMedium,
   promptSmall,
+  title,
   headline,
   label,
   labelSmall,

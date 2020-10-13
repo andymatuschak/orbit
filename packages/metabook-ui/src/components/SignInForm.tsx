@@ -10,6 +10,7 @@ import {
 import { colors, type, layout } from "../styles";
 import Button from "./Button";
 import { IconName } from "./IconShared";
+import Link from "./Link";
 import Logo from "./Logo";
 import Spacer from "./Spacer";
 import TextInput, { textFieldHorizontalPadding } from "./TextInput";
@@ -174,8 +175,9 @@ export default function SignInForm({
             },
           ]}
         >
-          By signing up for Orbit, you confirm that you have read and agree to
-          Orbit’s Terms of Service, and you are at least 16 years of age.
+          By signing up for Orbit, you confirm that you have read and agree to{" "}
+          <Link href="/terms">Orbit’s Terms of Service</Link>, and you are at
+          least 16 years of age.
         </Text>
       )}
       {flexibleSpacer}

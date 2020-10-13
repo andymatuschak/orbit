@@ -1,4 +1,4 @@
-import { Logo, styles, useLayout } from "metabook-ui";
+import { Link, Logo, styles, useLayout } from "metabook-ui";
 import DebugGrid from "metabook-ui/dist/styles/DebugGrid";
 import { edgeMargin } from "metabook-ui/dist/styles/layout";
 import React, { ReactNode } from "react";
@@ -15,10 +15,6 @@ const localStyles = StyleSheet.create({
   },
   paragraph: {
     marginBottom: styles.layout.gridUnit * 2,
-  },
-  link: {
-    color: "inherit",
-    textDecorationLine: "underline",
   },
 });
 
@@ -52,19 +48,6 @@ function Paragraph({ children }: { children: ReactNode }) {
       ]}
     >
       {children}
-    </Text>
-  );
-}
-
-function Link({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <Text
-      accessibilityRole="link"
-      // @ts-ignore RN types lack RNW href.
-      href={href}
-      style={localStyles.link}
-    >
-      <Text>{children}</Text>
     </Text>
   );
 }
