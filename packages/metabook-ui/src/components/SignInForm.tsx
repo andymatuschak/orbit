@@ -56,12 +56,13 @@ export default function SignInForm({
 
   return (
     <View style={styles.container}>
-      <Logo units={3} tintColor={colorPalette.secondaryTextColor} />
       {flexibleSpacer}
+      <Logo units={3} tintColor={colorPalette.secondaryTextColor} />
+      <Spacer units={8} />
       <Text style={type.headline.layoutStyle}>
         {mode === "signIn" ? "Sign in" : "Sign up to remember what you read."}
       </Text>
-      <Spacer units={5} />
+      <Spacer units={4} />
       <Text style={styles.label}>Email address</Text>
       <Spacer units={1} />
       {overrideEmailAddress ? (
