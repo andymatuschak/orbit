@@ -8,6 +8,7 @@ import {
 } from "./util/authContext";
 import { getFirebaseAuth } from "./util/firebase";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import usePageViewTracking from "./util/usePageViewTracking";
 
 enum RootScreen {
   Loading = "Loading",
@@ -70,6 +71,8 @@ const screens: Record<RootScreen, React.ComponentType<unknown>> = {
 };
 
 export default function Root() {
+  usePageViewTracking();
+
   const [authenticationClient] = useState(
     () => new Authentication.FirebaseAuthenticationClient(getFirebaseAuth()),
   );

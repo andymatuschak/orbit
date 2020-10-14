@@ -1,0 +1,52 @@
+[
+  {
+    "mode": "REQUIRED",
+    "name": "timestamp",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "hostname",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "pathname",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "sessionID",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "referrer",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "browser",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "os",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "screen",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "language",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "device",
+    "type": "STRING"
+  }
+]

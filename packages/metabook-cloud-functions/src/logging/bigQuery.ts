@@ -10,10 +10,11 @@ import {
 import path from "path";
 import serviceConfig from "../serviceConfig";
 import {
-  LogBase,
+  UserEventLogBase,
   LoggingService,
   UserEventLog,
   UserEventName,
+  PageViewLog,
 } from "./interface";
 
 let _bigQuery: BigQuery.BigQuery | null = null;
@@ -52,14 +53,18 @@ function convertFirestoreTimestamp(timestamp: number): BigQueryTimestamp {
 
 async function logEvent(
   tableName: "userEvents",
-  data: LogBase & {
+  data: {
+    userID: string;
+    timestamp: BigQueryTimestamp;
     eventName: UserEventName;
     dataJSON: string;
   },
 ): Promise<unknown>;
 async function logEvent(
   tableName: "actionLogs",
-  data: LogBase & {
+  data: {
+    userID: string;
+    timestamp: BigQueryTimestamp;
     serverTimestamp: BigQueryTimestamp;
     actionLogType: ActionLogType;
     actionLogID: ActionLogID;
@@ -69,14 +74,14 @@ async function logEvent(
     newTaskStateJSON: string | null;
   },
 ): Promise<unknown>;
-async function logEvent<T extends LogBase>(
-  tableName: string,
-  data: T,
-): Promise<unknown> {
+async function logEvent(
+  tableName: "pageViews",
+  data: Omit<PageViewLog, "timestamp"> & { timestamp: BigQueryTimestamp },
+): Promise<unknown>;
+async function logEvent<T>(tableName: string, data: T): Promise<unknown> {
   const table = getTable(tableName);
   const logArgs = {
     ...data,
-    timestamp: convertFirestoreTimestamp(data.timestamp),
   };
 
   // Cloud functions aren't guaranteed to execute exactly once, so we try to make them idempotent. BigQuery will attempt to deduplicate logs on a short buffer with the same "insertID"; we use the hash of the log data as the insert ID.
@@ -104,7 +109,7 @@ const bigqueryService: LoggingService = {
     const { userID, timestamp, eventName, ...rest } = log;
     const bqLog = {
       userID,
-      timestamp,
+      timestamp: convertFirestoreTimestamp(timestamp),
       eventName,
       dataJSON: JSON.stringify(rest),
     };
@@ -135,7 +140,7 @@ const bigqueryService: LoggingService = {
 
     const bqLog = {
       userID,
-      timestamp: timestampMillis,
+      timestamp: convertFirestoreTimestamp(timestampMillis),
       serverTimestamp: convertFirestoreTimestamp(serverTimestamp.toMillis()),
       actionLogType,
       actionLogID: await getIDForActionLog(actionLog),
@@ -147,6 +152,13 @@ const bigqueryService: LoggingService = {
       ),
     };
     return logEvent("actionLogs", bqLog);
+  },
+
+  logPageView(log: PageViewLog): Promise<unknown> {
+    return logEvent("pageViews", {
+      ...log,
+      timestamp: convertFirestoreTimestamp(log.timestamp),
+    });
   },
 };
 

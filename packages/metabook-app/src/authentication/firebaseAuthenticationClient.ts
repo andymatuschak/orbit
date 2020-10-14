@@ -1,10 +1,9 @@
 import type firebase from "firebase/app";
 import { MetabookUnsubscribe } from "metabook-client/dist/types/unsubscribe";
 import { Platform } from "react-native";
+import serviceConfig from "../../serviceConfig";
 import { AuthenticationClient, UserRecord } from "./authenticationClient";
 import isSessionStorageAvailable from "./isSessionStorageAvailable";
-
-const httpsAPIBaseURLString = "https://withorbit.com/api";
 
 export class FirebaseOpaqueLoginToken {
   _token: string;
@@ -85,7 +84,9 @@ export default class FirebaseAuthenticationClient
   }
 
   async getLoginTokenUsingSessionCookie(): Promise<FirebaseOpaqueLoginToken> {
-    const fetchResult = await fetch(`${httpsAPIBaseURLString}/getLoginToken`);
+    const fetchResult = await fetch(
+      `${serviceConfig.httpsAPIBaseURLString}/getLoginToken`,
+    );
     if (fetchResult.ok) {
       const loginToken = await fetchResult.text();
       return new FirebaseOpaqueLoginToken(loginToken);
@@ -102,7 +103,7 @@ export default class FirebaseAuthenticationClient
     idToken: FirebaseOpaqueIDToken,
   ): Promise<FirebaseOpaqueLoginToken> {
     const fetchResult = await fetch(
-      `${httpsAPIBaseURLString}/getLoginToken?idToken=${idToken._token}`,
+      `${serviceConfig.httpsAPIBaseURLString}/getLoginToken?idToken=${idToken._token}`,
     );
     if (fetchResult.ok) {
       const loginToken = await fetchResult.text();
@@ -125,7 +126,7 @@ export default class FirebaseAuthenticationClient
 
   async refreshSessionCookie(idToken: FirebaseOpaqueIDToken): Promise<unknown> {
     const fetchResult = await fetch(
-      `${httpsAPIBaseURLString}/refreshSessionCookie?idToken=${idToken._token}`,
+      `${serviceConfig.httpsAPIBaseURLString}/refreshSessionCookie?idToken=${idToken._token}`,
     );
     if (!fetchResult.ok) {
       throw new Error(

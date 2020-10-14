@@ -4,4 +4,6 @@ export default {
   sentryOrg: "andy-matuschak",
   sentryProject: "orbit-app",
   // Store your auth token securely: firebase functions:config:set sentry.auth_token=SENTRY_AUTH_TOKEN
+
+  httpsAPIBaseURLString: "https://withorbit.com/api",
 };
