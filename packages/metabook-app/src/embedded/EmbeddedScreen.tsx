@@ -242,6 +242,7 @@ interface EmbeddedScreenRendererProps {
   colorPalette: styles.colors.ColorPalette;
   hostState: EmbeddedHostState | null;
   hasUncommittedActions: boolean;
+  isDebug?: boolean;
 }
 function EmbeddedScreenRenderer({
   onMark,
@@ -254,6 +255,7 @@ function EmbeddedScreenRenderer({
   colorPalette,
   hostState,
   hasUncommittedActions,
+  isDebug,
 }: EmbeddedScreenRendererProps) {
   useHostStateNotifier(items);
 
@@ -416,6 +418,28 @@ function EmbeddedScreenRenderer({
           </Animated.View>
         </>
       )}
+      {isDebug && (
+        /* HACK HACK HACK */ <View
+          style={[
+            {
+              position: "absolute",
+              left: styles.layout.edgeMargin,
+              right: styles.layout.edgeMargin,
+              bottom: styles.layout.gridUnit * 10,
+              height: "auto",
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.type.labelSmall.layoutStyle,
+              { color: colorPalette.secondaryTextColor },
+            ]}
+          >
+            TEST MODE: Actions will not be saved.
+          </Text>
+        </View>
+      )}
     </>
   );
 }
@@ -482,9 +506,13 @@ function useMarkingManager(
     [configuration],
   );
 
+  const { isDebug } = configuration;
   useEffect(() => {
     if (!pendingActionsRecord) {
       return;
+    }
+    if (isDebug) {
+      console.log("Skipping action because we're in debug mode");
     }
     if (authenticationState.status === "signedIn") {
       submitPendingActionsRecord(pendingActionsRecord)
@@ -545,6 +573,7 @@ export default function EmbeddedScreen() {
             colorPalette={colorPalette}
             hostState={hostState}
             hasUncommittedActions={hasUncommittedActions}
+            isDebug={configuration.isDebug}
           />
         )}
       </ReviewSessionWrapper>

@@ -126,6 +126,10 @@ function addEmbeddedScreenMessageListener() {
   _hasAddedMessageListener = true;
 }
 
+function pageIsDebug() {
+  return location.search.includes("orbitDebug");
+}
+
 export class OrbitReviewAreaElement extends HTMLElement {
   private needsRender = false;
   private cachedMetadata: EmbeddedHostMetadata | null = null;
@@ -189,6 +193,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
           ...this.cachedMetadata,
           ...(colorOverride && { colorPaletteName: colorOverride }),
         },
+        isDebug: pageIsDebug() || this.hasAttribute("debug"),
       };
 
       const itemsParameterString = encodeURIComponent(

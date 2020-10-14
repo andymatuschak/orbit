@@ -16,6 +16,7 @@ export type EmbeddedItem = EmbeddedQAPrompt;
 export interface EmbeddedScreenConfiguration {
   embeddedItems: EmbeddedItem[];
   embeddedHostMetadata: EmbeddedHostMetadata;
+  isDebug?: boolean;
 }
 
 export interface EmbeddedHostMetadata {
