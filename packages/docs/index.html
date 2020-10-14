@@ -93,7 +93,7 @@
 
     <h2>Configuring review areas</h2>
 
-    <h3>Colors</h3>
+    <h3>Review areas have colors</h3>
 
     <p class="colorParagraph">You'll notice that review areas have a <code>color</code> attribute. Each site can choose the color it would like its Orbit prompts to be. Then, when readers are reviewing prompts from multiple sites, they'll see your prompts rendered in the color you chose—providing a little bit of context. The supported color values are: <code class="color" style="background-color: #ff5252">red</code>, <code  class="color" style="background-color: #fa863d">orange</code>, <code  class="color" style="background-color: #e0a642">brown</code>, <code  class="color" style="background-color: #fac800">yellow</code>, <code  class="color" style="background-color: #8fd43a">lime</code>, <code  class="color" style="background-color: #63d463">green</code>, <code  class="color" style="background-color: #52dada">turquoise</code>, <code  class="color" style="background-color: #65c6f6">cyan</code>, <code  class="color" style="background-color: #72aef8">blue</code>, <code  class="color" style="background-color: #ad89fb">violet</code>, <code  class="color" style="background-color: #d071ef">purple</code>, and <code  class="color" style="background-color: #f56bb5">pink</code>.</p>
 
@@ -102,7 +102,7 @@
   &lt;meta property=&quot;orbit:color&quot; content=&quot;violet&quot; /&gt;
 &lt;/head&gt;</pre>
 
-    <h3>Page metadata</h3>
+    <h3>Orbit relies on page metadata</h3>
 
     <p>When readers are reviewing one of your prompts, Orbit provides context by displaying a link to the page containing those prompts. The interface may also display progress grouped by "source" pages. It's important to make sure that metadata is correct. Here's the information Orbit extracts from your page and how to customize it:</p>
     <ul>
@@ -113,10 +113,15 @@
 
     <p>It's common to use several review areas on the same page, interleaving them every few hundred words. Orbit currently assumes that all the review areas which appear on a web page should be considered part of the same single piece of content. This works fine for long-form content but will produce confusing results in e.g. a blog layout which displays many posts' contents on one big page. Orbit will eventually allow finer-grained configuration here; please <a href="mailto:andy@andymatuschak.org">let me know</a> if your site needs this to help me prioritize.</p>
 
-    <h3>Formatting prompts</h3>
+    <h3>Prompts support simple formatting</h3>
 
     <p>The <code>question</code> and <code>answer</code> attributes support a subset of Markdown formatting. In particular, you can use inline styling and multiple paragraphs.</p>
+
     <p>Support for images, videos, and LaTeX is forthcoming. Please <a href="mailto:andy@andymatuschak.org">let me know</a> if these absences are blocking you to help me prioritize.</p>
+
+    <h3>The current prompt type is meant for memory practice</h3>
+
+    <p>The existing prompt interface and scheduler are tuned to questions which help people remember what they read. I believe it's also possible to use Orbit to prompt reflection, self-authorship, text which extends over time, and so on. Please <a href="mailto:andy@andymatuschak.org">let me know</a> if you're interested in exploring these use cases; we can figure out how to extend the interface in a way that suits your text.</p>
 
   <h2>Writing well with Orbit</h2>
 
@@ -124,7 +129,7 @@
 
     <p>This topic ultimately deserves a small <em>Elements of Style</em>-like book. In the meantime, here are a few resources which might be useful:</p>
 
-    <ul><li><a href="https://quantum.country">Quantum Country</a> is the first book written in this medium.</li>
+    <ul><li><a href="https://quantum.country">Quantum Country</a> is the first book written in this medium. Its prompts demonstrate how to capture prose content in question form.</li>
       <li><a href="https://numinous.productions/ttft">How can we develop transformative tools for thought?</a> discusses the medium at length and includes a <a href="https://numinous.productions/ttft/#improving-mnemonic-medium">section</a> on this topic.</li>
       <li>I'm assembling working notes for a future guide on this topic <a href="https://notes.andymatuschak.org/z42J1vxsMjhkdbrqVfoqjiEesSzfaEqurBtoJ">here</a></li>
     </ul>
