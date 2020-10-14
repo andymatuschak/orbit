@@ -11,7 +11,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import usePageViewTracking from "./util/usePageViewTracking";
 
 enum RootScreen {
-  Loading = "Loading",
   Review = "Review",
   SignIn = "SignIn",
   Embed = "Embed",
@@ -19,11 +18,7 @@ enum RootScreen {
   TermsOfService = "TermsOfService",
 }
 
-function useNavigationState(
-  authenticationClient: Authentication.AuthenticationClient,
-): RootScreen {
-  const userRecord = useCurrentUserRecord(authenticationClient);
-
+function useNavigationState(): RootScreen {
   if (Platform.OS === "web") {
     const pathname = window.location.pathname;
     if (pathname.startsWith("/login")) {
@@ -37,13 +32,7 @@ function useNavigationState(
     }
   }
 
-  if (userRecord) {
-    return RootScreen.Review;
-  } else if (userRecord === null) {
-    return RootScreen.SignIn;
-  } else {
-    return RootScreen.Loading;
-  }
+  return RootScreen.Review;
 }
 
 const SignInScreen = React.lazy(() => import("./signIn/SignInScreen"));
@@ -55,17 +44,10 @@ const LearnMoreScreen = React.lazy(() => import("./learnMore/LearnMoreScreen"));
 const TermsOfServiceScreen = React.lazy(
   () => import("./terms/TermsOfServiceScreen"),
 );
-const LoadingScreen = () => (
-  // TODO https://github.com/andymatuschak/metabook/issues/63
-  <View style={{ flex: 1, justifyContent: "center" }}>
-    <ActivityIndicator size="large" color={styles.colors.productKeyColor} />
-  </View>
-);
 const screens: Record<RootScreen, React.ComponentType<unknown>> = {
   [RootScreen.SignIn]: SignInScreen,
   [RootScreen.Review]: ReviewSessionScreen,
   [RootScreen.Embed]: EmbedScreen,
-  [RootScreen.Loading]: LoadingScreen,
   [RootScreen.LearnMore]: LearnMoreScreen,
   [RootScreen.TermsOfService]: TermsOfServiceScreen,
 };
@@ -76,16 +58,14 @@ export default function Root() {
   const [authenticationClient] = useState(
     () => new Authentication.FirebaseAuthenticationClient(getFirebaseAuth()),
   );
+  const navigationState = useNavigationState();
 
-  const navigationState = useNavigationState(authenticationClient);
-  const screen = React.useMemo(
-    () => React.createElement(screens[navigationState]),
-    [navigationState],
-  );
   return (
     <AuthenticationClientContext.Provider value={authenticationClient}>
       <SafeAreaProvider>
-        <React.Suspense fallback={null}>{screen}</React.Suspense>
+        <React.Suspense fallback={null}>
+          {React.createElement(screens[navigationState])}
+        </React.Suspense>
       </SafeAreaProvider>
     </AuthenticationClientContext.Provider>
   );
