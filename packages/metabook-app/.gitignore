@@ -1,5 +1,8 @@
 .expo
 web-build
+web/fonts/*.woff
+web/fonts/*.woff2
+web/fonts/*.eot
 .firebase
 android/app/src/main/assets/fonts/dr*
 
