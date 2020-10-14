@@ -4,7 +4,7 @@ import { Platform } from "react-native";
 import { AuthenticationClient, UserRecord } from "./authenticationClient";
 import isSessionStorageAvailable from "./isSessionStorageAvailable";
 
-const httpsAPIBaseURLString = "https://app.withorbit.com/api";
+const httpsAPIBaseURLString = "https://withorbit.com/api";
 
 export class FirebaseOpaqueLoginToken {
   _token: string;
