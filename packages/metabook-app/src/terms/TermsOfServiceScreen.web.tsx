@@ -20,21 +20,22 @@ export default function TermsOfServiceScreenWeb() {
         </Text>
         <Spacer units={4} />
         <Text style={styles.type.runningText.layoutStyle}>
-          Orbit is an experimental service. If you create an account, we will
-          track your responses to questions and notify you when review sessions
-          are ready. We'll use response data for research purposes, and may
-          sometimes publish that research, with users' identifiying information
-          anonymized. We may allow authors to access anonymized response data
-          for content they've created. We will not share or sell your email
-          address or other personal information.
+          Orbit is an experimental research project. If you create an account,
+          we will track your responses to prompts and notify you when review
+          sessions are ready. We'll use aggregated response data to conduct
+          research about how people read and learn. We may sometimes publish
+          that research, but never in a way which would reveal your identity. We
+          may allow authors to access anonymized response data for content
+          they've created, to help them understand and improve their work.
         </Text>
         <Spacer units={3} />
         <Text style={styles.type.runningText.layoutStyle}>
-          In order to implement the Orbit service, we share your data with some
-          cloud service providers who process this data on our behalf. Those
-          providers include: Google LLC (storage, web hosting, analytics);
-          Functional Software, Inc. (via their error monitoring service Sentry),
-          and Mailjet, Inc. (for email notifications).
+          In order to implement the Orbit service, we use some cloud service
+          providers who process your data on our behalf. Those providers
+          include: Google LLC (storage, web hosting, logs); Functional Software,
+          Inc. (to track errors in the web site), and Mailjet, Inc. (to send you
+          emails). None of these providers will share or store your data except
+          as is required by our requests.
         </Text>
         <Spacer units={3} />
         <Text style={styles.type.runningText.layoutStyle}>
