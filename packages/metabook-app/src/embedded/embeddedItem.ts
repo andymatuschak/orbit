@@ -6,7 +6,6 @@ import {
 } from "metabook-core";
 import {
   EmbeddedItem,
-  EmbeddedItem,
   EmbeddedPromptField,
   EmbeddedQAPrompt,
 } from "metabook-embedded-support";

@@ -34,6 +34,7 @@ import React, {
   useState,
 } from "react";
 import { Animated, Text, View } from "react-native";
+import { EmbeddedScreenConfiguration } from "../../../embedded-support/src/embeddedScreenInterface";
 import {
   EmbeddedHostState,
   embeddedHostUpdateEventName,
@@ -47,11 +48,6 @@ import {
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
-import {
-  getEmbeddedColorPalette,
-  getEmbeddedScreenConfigurationFromURL,
-} from "./embeddedScreenConfiguration";
-import { EmbeddedScreenConfiguration } from "../../../embedded-support/src/embeddedScreenInterface";
 import OnboardingModalWeb from "./OnboardingModal.web";
 import useDecodedReviewItems from "./useDecodedReviewItems";
 import {
@@ -59,6 +55,8 @@ import {
   useEmbeddedAuthenticationState,
 } from "./useEmbeddedAuthenticationState";
 import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
+import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
+import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL";
 
 type PromptActionLogEntry = { log: PromptActionLog; id: ActionLogID };
 

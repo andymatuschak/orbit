@@ -1,5 +1,5 @@
-import { styles } from "metabook-ui";
 import { EmbeddedScreenConfiguration } from "metabook-embedded-support";
+import { styles } from "metabook-ui";
 
 // Simple string hash, just for choosing palettes from the URL.
 // https://stackoverflow.com/a/52171480
@@ -21,7 +21,7 @@ function hashString(input: string): number {
 }
 
 let _hasWarnedAboutMissingColorName = false;
-export function getEmbeddedColorPalette(
+export default function getEmbeddedColorPalette(
   config: EmbeddedScreenConfiguration,
 ): styles.colors.ColorPalette {
   if (config.embeddedHostMetadata.colorPaletteName) {
@@ -39,25 +39,5 @@ export function getEmbeddedColorPalette(
         hashString(hostURL.host) % styles.colors.orderedPaletteNames.length
       ];
     return styles.colors.palettes[colorName];
-  }
-}
-
-export function getEmbeddedScreenConfigurationFromURL(
-  href: string,
-): EmbeddedScreenConfiguration {
-  const url = new URL(href);
-  const params = new URLSearchParams(url.search);
-  const tasksString = params.get("i");
-  if (tasksString) {
-    const configuration: EmbeddedScreenConfiguration = JSON.parse(tasksString);
-    // TODO: validate
-    const colorPaletteName =
-      configuration.embeddedHostMetadata.colorPaletteName;
-    if (colorPaletteName && !styles.colors.palettes[colorPaletteName]) {
-      throw new Error(`Unknown color palette name: ${colorPaletteName}`);
-    }
-    return configuration;
-  } else {
-    throw new Error("No review items supplied");
   }
 }
