@@ -1,71 +1,90 @@
 import { ActionLogID } from "metabook-core";
-import shajs from "sha.js";
+import { ActionLogDocument } from "./actionLogDocument";
+import { DataRecord, DataRecordID } from "./dataRecord";
 import {
   getFirebaseKeyForCIDString,
   getFirebaseKeyForTaskID,
 } from "./firebaseKeyEncoding.js";
-import { DataRecord, DataRecordID } from "./dataRecord";
 import {
   CollectionReference,
   Database,
   DocumentReference,
+  TimestampOf,
 } from "./libraryAbstraction";
+import { PromptStateCache } from "./promptStateCache";
+import { UserMetadata } from "./userMetadata";
 
 function getDataCollectionReference<D extends Database>(
   database: D,
-): CollectionReference<D> {
-  return database.collection("data") as CollectionReference<D>;
+): CollectionReference<D, DataRecord> {
+  return database.collection("data") as CollectionReference<D, DataRecord>;
 }
 
-function getReferenceForCID<D extends Database>(
+function getDataRecordReferenceForCID<D extends Database>(
   database: D,
   cidString: string,
-) {
+): DocumentReference<D, DataRecord> {
   const dataReference = getDataCollectionReference(database);
   return dataReference.doc(
     getFirebaseKeyForCIDString(cidString),
-  ) as DocumentReference<D>;
+  ) as DocumentReference<D, DataRecord>;
 }
 
-export function getReferenceForDataRecordID<
+export function getUserMetadataReference<D extends Database>(
+  database: D,
+  userID: string,
+): DocumentReference<D, UserMetadata<TimestampOf<D>>> {
+  return database.doc(`users/${userID}`) as DocumentReference<
+    D,
+    UserMetadata<TimestampOf<D>>
+  >;
+}
+
+export function getDataRecordReference<
   D extends Database,
   R extends DataRecord
->(database: D, recordID: DataRecordID<R>): DocumentReference<D> {
-  return getReferenceForCID(database, recordID);
+>(database: D, recordID: DataRecordID<R>): DocumentReference<D, R> {
+  return getDataRecordReferenceForCID(database, recordID) as DocumentReference<
+    D,
+    R
+  >;
 }
 
 export function getLogCollectionReference<D extends Database>(
   database: D,
   userID: string,
-): CollectionReference<D> {
-  return database.collection(`users/${userID}/logs`) as CollectionReference<D>;
+): CollectionReference<D, ActionLogDocument<TimestampOf<D>>> {
+  return database.collection(`users/${userID}/logs`) as CollectionReference<
+    D,
+    ActionLogDocument<TimestampOf<D>>
+  >;
 }
 
 export function getTaskStateCacheCollectionReference<D extends Database>(
   database: D,
   userID: string,
-): CollectionReference<D> {
+): CollectionReference<D, PromptStateCache> {
   return database.collection(
     `users/${userID}/taskStates`,
-  ) as CollectionReference<D>;
+  ) as CollectionReference<D, PromptStateCache>;
 }
 
-export async function getTaskStateCacheReferenceForTaskID<D extends Database>(
+export async function getTaskStateCacheReference<D extends Database>(
   database: D,
   userID: string,
   taskID: string,
-): Promise<DocumentReference<D>> {
+): Promise<DocumentReference<D, PromptStateCache>> {
   return getTaskStateCacheCollectionReference(database, userID).doc(
     await getFirebaseKeyForTaskID(taskID),
-  ) as DocumentReference<D>;
+  ) as DocumentReference<D, PromptStateCache>;
 }
 
-export function getReferenceForActionLogID<D extends Database>(
+export function getActionLogIDReference<D extends Database>(
   database: D,
   userID: string,
   actionLogID: ActionLogID,
-): DocumentReference<D> {
+): DocumentReference<D, ActionLogDocument<TimestampOf<D>>> {
   return getLogCollectionReference(database, userID).doc(
     getFirebaseKeyForCIDString(actionLogID),
-  ) as DocumentReference<D>;
+  ) as DocumentReference<D, ActionLogDocument<TimestampOf<D>>>;
 }

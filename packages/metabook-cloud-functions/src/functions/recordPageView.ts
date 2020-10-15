@@ -7,7 +7,7 @@ import { defaultLoggingService } from "../logging";
 import crypto from "crypto";
 import { startOfMonth } from "date-fns";
 
-import corsHandler from "./corsHandler";
+import corsHandler from "./util/corsHandler";
 
 // Adapted from Umami: https://github.com/mikecao/umami
 /* MIT License

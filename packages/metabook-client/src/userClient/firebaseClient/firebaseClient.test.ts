@@ -11,7 +11,7 @@ import {
   PromptTask,
 } from "metabook-core";
 import {
-  getTaskStateCacheReferenceForTaskID,
+  getTaskStateCacheReference,
   PromptStateCache,
 } from "metabook-firebase-support";
 import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
@@ -60,7 +60,7 @@ describe("prompt states", () => {
       promptParameters: null,
     };
     const taskID = getIDForPromptTask(promptTask);
-    const ref = (await getTaskStateCacheReferenceForTaskID(
+    const ref = (await getTaskStateCacheReference(
       testFirestore,
       testUserID,
       taskID,

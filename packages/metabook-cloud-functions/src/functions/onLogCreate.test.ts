@@ -1,13 +1,13 @@
 import { MetabookFirebaseUserClient } from "metabook-client";
 import {
-  qaPromptType,
   getIDForPrompt,
   getIDForPromptTask,
   ingestActionLogType,
   PromptIngestActionLog,
   PromptTask,
+  qaPromptType,
 } from "metabook-core";
-import { getTaskStateCacheReferenceForTaskID } from "metabook-firebase-support";
+import { getTaskStateCacheReference } from "metabook-firebase-support";
 import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
 import { testQAPrompt } from "metabook-sample-data";
 
@@ -44,14 +44,14 @@ test("updates prompt state when writing log", async () => {
   const {
     firestore: testAdminFirestore,
   } = FirebaseTesting.createTestAdminFirebaseApp();
-  const collectionReference = await getTaskStateCacheReferenceForTaskID(
+  const documentReference = await getTaskStateCacheReference(
     testAdminFirestore,
     testUserID,
     promptTaskID,
   );
 
   await new Promise((resolve, reject) => {
-    const unsubscribe = collectionReference.onSnapshot((snapshot) => {
+    const unsubscribe = documentReference.onSnapshot((snapshot) => {
       if (snapshot.exists) {
         unsubscribe();
         resolve();

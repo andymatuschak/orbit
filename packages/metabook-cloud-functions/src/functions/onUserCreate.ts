@@ -1,6 +1,8 @@
+import admin from "firebase-admin";
 import functions from "firebase-functions";
 import getMailjetService from "../email";
 import { EmailSpec } from "../email/types";
+import { updateUserMetadata } from "../firebase/users";
 import { defaultLoggingService } from "../logging";
 
 // TODO: we'll need to send a different welcome email if they sign up outside the context of a reading
@@ -14,13 +16,22 @@ Incidentally, Orbit itself is a work in progress by Andy Matuschak (hello!). If 
 };
 
 const onUserCreate = functions.auth.user().onCreate(async (user, context) => {
+  const userID = user.uid;
   if (!user.email) {
-    throw new Error(`New user has no email address: ${user.uid}`);
+    throw new Error(`New user has no email address: ${userID}`);
   }
 
+  const registrationTimestampMillis = Date.parse(context.timestamp);
+
+  await updateUserMetadata(userID, {
+    registrationTimestamp: admin.firestore.Timestamp.fromMillis(
+      registrationTimestampMillis,
+    ),
+  });
+
   await defaultLoggingService.logUserEvent({
-    userID: user.uid,
-    timestamp: Date.parse(context.timestamp),
+    userID: userID,
+    timestamp: registrationTimestampMillis,
     eventName: "registration",
     emailAddress: user.email,
   });

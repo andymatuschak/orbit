@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import { Prompt } from "metabook-core";
-import { recordPrompts } from "../firebase/firebase";
+import { recordPrompts } from "../firebase";
 
 interface RecordPromptsArguments {
   prompts: Prompt[];

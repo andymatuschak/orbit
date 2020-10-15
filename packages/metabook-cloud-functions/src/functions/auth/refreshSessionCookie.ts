@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
 import { getAuthTokensForIDToken } from "../../firebase";
 
-import corsHandler from "../corsHandler";
+import corsHandler from "../util/corsHandler";
 import { getSessionCookieOptions, sessionCookieName } from "./sessionCookie";
 
 export default functions.https.onRequest((request, response) => {

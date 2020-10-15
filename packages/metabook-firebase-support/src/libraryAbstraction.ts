@@ -3,12 +3,24 @@ import type { firestore as AdminFirestore } from "firebase-admin";
 
 export type Database = ClientFirestore.Firestore | AdminFirestore.Firestore;
 export type FieldValue = ClientFirestore.FieldValue | AdminFirestore.FieldValue;
-export type CollectionReference<D extends Database> = ReturnType<
-  D["collection"]
->;
-export type DocumentReference<D extends Database> = ReturnType<
-  CollectionReference<D>["doc"]
->;
+export type CollectionReference<
+  D extends Database,
+  T
+> = D extends ClientFirestore.Firestore
+  ? ClientFirestore.CollectionReference<T>
+  : AdminFirestore.CollectionReference<T>;
+export type TimestampOf<
+  D extends Database
+> = D extends ClientFirestore.Firestore
+  ? ClientFirestore.Timestamp
+  : AdminFirestore.Timestamp;
+
+export type DocumentReference<
+  D extends Database,
+  T
+> = D extends ClientFirestore.Firestore
+  ? ClientFirestore.DocumentReference<T>
+  : AdminFirestore.DocumentReference<T>;
 
 export interface ServerTimestamp {
   seconds: number;

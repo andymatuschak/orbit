@@ -22,6 +22,7 @@
     { "path": "./metabook-anki" },
     { "path": "./metabook-app" },
     { "path": "./metabook-client" },
+    { "path": "./metabook-cloud-functions" },
     { "path": "./metabook-core" },
     { "path": "./metabook-firebase-support" },
     { "path": "./metabook-sample-data" },

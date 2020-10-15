@@ -4,7 +4,7 @@ import {
   getAuthTokensForIDToken,
   getCustomLoginTokenForSessionCookie,
 } from "../../firebase";
-import corsHandler from "../corsHandler";
+import corsHandler from "../util/corsHandler";
 import { getSessionCookieOptions, sessionCookieName } from "./sessionCookie";
 
 const cookieParserHandler = cookieParser();

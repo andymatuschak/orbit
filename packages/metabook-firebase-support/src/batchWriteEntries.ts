@@ -6,14 +6,10 @@ import {
 
 const batchSize = 250;
 
-export default async function batchWriteEntries<
-  D extends Database,
-  T extends ServerTimestamp
->(
+export default async function batchWriteEntries<D extends Database, Value>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  logEntries: (readonly [DocumentReference<D>, any])[],
+  logEntries: (readonly [DocumentReference<D, Value>, Value])[],
   db: D,
-  timestampConstructor: (millis: number, nanos: number) => T,
 ) {
   for (
     let batchBaseIndex = 0;

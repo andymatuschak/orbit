@@ -1,6 +1,6 @@
 import { Prompt } from "metabook-core";
 import { testQAPrompt } from "metabook-sample-data";
-import { storePromptsIfNecessary } from "./firebase";
+import { storePromptsIfNecessary } from "./prompts";
 
 describe("storePromptsIfNecessary", () => {
   test("no inputs", async () => {
