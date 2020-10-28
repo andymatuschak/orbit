@@ -10,11 +10,11 @@ import {
 import path from "path";
 import serviceConfig from "../serviceConfig";
 import {
-  UserEventLogBase,
   LoggingService,
+  PageViewLog,
+  SessionNotificationLog,
   UserEventLog,
   UserEventName,
-  PageViewLog,
 } from "./interface";
 
 let _bigQuery: BigQuery.BigQuery | null = null;
@@ -45,6 +45,9 @@ function getTable(tableName: string) {
 }
 
 type BigQueryTimestamp = string & { __bigQueryTimestampOpaqueID: never };
+type WithBigQueryTimestamp<T> = Omit<T, "timestamp"> & {
+  timestamp: BigQueryTimestamp;
+};
 
 function convertFirestoreTimestamp(timestamp: number): BigQueryTimestamp {
   return getBigQuery().timestamp(new Date(timestamp))
@@ -76,7 +79,13 @@ async function logEvent(
 ): Promise<unknown>;
 async function logEvent(
   tableName: "pageViews",
-  data: Omit<PageViewLog, "timestamp"> & { timestamp: BigQueryTimestamp },
+  data: WithBigQueryTimestamp<PageViewLog>,
+): Promise<unknown>;
+async function logEvent(
+  tableName: "sessionNotifications",
+  data: Omit<WithBigQueryTimestamp<SessionNotificationLog>, "emailSpec"> & {
+    emailJSON: string;
+  },
 ): Promise<unknown>;
 async function logEvent<T>(tableName: string, data: T): Promise<unknown> {
   const table = getTable(tableName);
@@ -158,6 +167,15 @@ const bigqueryService: LoggingService = {
     return logEvent("pageViews", {
       ...log,
       timestamp: convertFirestoreTimestamp(log.timestamp),
+    });
+  },
+
+  logSessionNotification(log: SessionNotificationLog): Promise<unknown> {
+    const { emailSpec, ...rest } = log;
+    return logEvent("sessionNotifications", {
+      ...rest,
+      timestamp: convertFirestoreTimestamp(log.timestamp),
+      emailJSON: JSON.stringify(emailSpec),
     });
   },
 };

@@ -1,6 +1,7 @@
 import admin from "firebase-admin";
 import { PromptState } from "metabook-core";
 import { ActionLogDocument } from "metabook-firebase-support";
+import { EmailSpec } from "../email/types";
 
 export type UserEventLogBase = {
   userID: string;
@@ -27,6 +28,13 @@ export type PageViewLog = {
   device: string | null;
 };
 
+export type SessionNotificationLog = {
+  timestamp: number;
+  userID: string;
+  sessionNotificationNumber: number;
+  emailSpec: EmailSpec;
+};
+
 export interface LoggingService {
   logUserEvent(log: UserEventLog): Promise<unknown>;
 
@@ -37,4 +45,6 @@ export interface LoggingService {
   ): Promise<unknown>;
 
   logPageView(log: PageViewLog): Promise<unknown>;
+
+  logSessionNotification(log: SessionNotificationLog): Promise<unknown>;
 }
