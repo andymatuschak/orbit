@@ -1,4 +1,1 @@
-{
-  "indexes": [],
-  "fieldOverrides": []
-}
+../metabook-firebase-support/firestore.indexes.json

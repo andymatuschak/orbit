@@ -1,1 +1,33 @@
-../metabook-client/firestore.indexes.json
+{
+  "indexes": [
+    {
+      "collectionGroup": "taskStates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "taskMetadata.isDeleted",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "dueTimestampMillis",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "taskStates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "taskMetadata.provenance.provenanceType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "latestLogServerTimestamp",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

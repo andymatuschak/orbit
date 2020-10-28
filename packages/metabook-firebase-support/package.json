@@ -19,7 +19,9 @@
   "scripts": {
     "build": "tsc -b",
     "test": "jest",
-    "updateCORS": "gsutil cors set firebase-storage-cors.json gs://metabook-system.appspot.com"
+    "deployCORS": "gsutil cors set firebase-storage-cors.json gs://metabook-system.appspot.com",
+    "deployFirestoreConfig": "firebase deploy --only firestore",
+    "fetchFirestoreIndexes": "firebase firestore:indexes > firestore.indexes.json"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
