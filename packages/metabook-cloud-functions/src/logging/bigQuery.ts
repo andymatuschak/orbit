@@ -1,11 +1,14 @@
 import * as BigQuery from "@google-cloud/bigquery";
 import crypto from "crypto";
-import admin from "firebase-admin";
-import { ActionLogID, ActionLogType, getIDForActionLog } from "metabook-core";
+import {
+  ActionLogID,
+  ActionLogType,
+  getIDForActionLog,
+  PromptState,
+} from "metabook-core";
 import {
   ActionLogDocument,
-  getPromptStateFromPromptStateCache,
-  PromptStateCache,
+  serverTimestampToTimestampMillis,
 } from "metabook-firebase-support";
 import path from "path";
 import serviceConfig from "../serviceConfig";
@@ -49,7 +52,7 @@ type WithBigQueryTimestamp<T> = Omit<T, "timestamp"> & {
   timestamp: BigQueryTimestamp;
 };
 
-function convertFirestoreTimestamp(timestamp: number): BigQueryTimestamp {
+function createBigQueryTimestamp(timestamp: number): BigQueryTimestamp {
   return getBigQuery().timestamp(new Date(timestamp))
     .value as BigQueryTimestamp;
 }
@@ -118,7 +121,7 @@ const bigqueryService: LoggingService = {
     const { userID, timestamp, eventName, ...rest } = log;
     const bqLog = {
       userID,
-      timestamp: convertFirestoreTimestamp(timestamp),
+      timestamp: createBigQueryTimestamp(timestamp),
       eventName,
       dataJSON: JSON.stringify(rest),
     };
@@ -127,8 +130,8 @@ const bigqueryService: LoggingService = {
 
   async logActionLog(
     userID: string,
-    actionLog: ActionLogDocument<admin.firestore.Timestamp>,
-    newTaskStateCache: PromptStateCache,
+    actionLog: ActionLogDocument,
+    newTaskState: PromptState,
   ): Promise<unknown> {
     const {
       timestampMillis,
@@ -149,16 +152,16 @@ const bigqueryService: LoggingService = {
 
     const bqLog = {
       userID,
-      timestamp: convertFirestoreTimestamp(timestampMillis),
-      serverTimestamp: convertFirestoreTimestamp(serverTimestamp.toMillis()),
+      timestamp: createBigQueryTimestamp(timestampMillis),
+      serverTimestamp: createBigQueryTimestamp(
+        serverTimestampToTimestampMillis(serverTimestamp),
+      ),
       actionLogType,
       actionLogID: await getIDForActionLog(actionLog),
       parentActionLogIDs,
       dataJSON: JSON.stringify(data),
       taskID,
-      newTaskStateJSON: JSON.stringify(
-        getPromptStateFromPromptStateCache(newTaskStateCache),
-      ),
+      newTaskStateJSON: JSON.stringify(newTaskState),
     };
     return logEvent("actionLogs", bqLog);
   },
@@ -166,7 +169,7 @@ const bigqueryService: LoggingService = {
   logPageView(log: PageViewLog): Promise<unknown> {
     return logEvent("pageViews", {
       ...log,
-      timestamp: convertFirestoreTimestamp(log.timestamp),
+      timestamp: createBigQueryTimestamp(log.timestamp),
     });
   },
 
@@ -174,7 +177,7 @@ const bigqueryService: LoggingService = {
     const { emailSpec, ...rest } = log;
     return logEvent("sessionNotifications", {
       ...rest,
-      timestamp: convertFirestoreTimestamp(log.timestamp),
+      timestamp: createBigQueryTimestamp(log.timestamp),
       emailJSON: JSON.stringify(emailSpec),
     });
   },

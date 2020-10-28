@@ -13,7 +13,7 @@ interface RecordPromptsResult {
 export default functions.https.onCall(
   async (data: RecordPromptsArguments): Promise<RecordPromptsResult> => {
     // TODO require auth
-    const promptIDs = await backend.prompts.recordPrompts(data.prompts);
+    const promptIDs = await backend.prompts.storePrompts(data.prompts);
     console.log("Recorded prompt IDs", promptIDs);
     return { promptTaskIDs: promptIDs };
   },

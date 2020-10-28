@@ -1,6 +1,10 @@
 import firebase from "firebase-admin";
 import * as functions from "firebase-functions";
-import { ActionLogDocument, PromptStateCache } from "metabook-firebase-support";
+import {
+  ActionLogDocument,
+  getPromptStateFromPromptStateCache,
+  PromptStateCache,
+} from "metabook-firebase-support";
 import * as backend from "../backend";
 import { defaultLoggingService } from "../logging";
 
@@ -40,7 +44,7 @@ export default functions.firestore
       await defaultLoggingService.logActionLog(
         userID,
         actionLog,
-        newPromptStateCache,
+        getPromptStateFromPromptStateCache(newPromptStateCache),
       );
     }
   });

@@ -1,4 +1,3 @@
-import admin from "firebase-admin";
 import { PromptState } from "metabook-core";
 import { ActionLogDocument } from "metabook-firebase-support";
 import { EmailSpec } from "../email/types";
@@ -40,7 +39,7 @@ export interface LoggingService {
 
   logActionLog(
     userID: string,
-    actionLog: ActionLogDocument<admin.firestore.Timestamp>,
+    actionLog: ActionLogDocument,
     newTaskState: PromptState,
   ): Promise<unknown>;
 

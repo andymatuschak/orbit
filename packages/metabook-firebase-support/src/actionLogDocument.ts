@@ -9,7 +9,9 @@ import {
 } from "./libraryAbstraction";
 import { getActionLogIDReference } from "./references";
 
-export type ActionLogDocument<T extends ServerTimestamp> = ActionLog & {
+export type ActionLogDocument<
+  T extends ServerTimestamp = ServerTimestamp
+> = ActionLog & {
   serverTimestamp: T;
   suppressTaskStateCacheUpdate?: boolean;
 };
