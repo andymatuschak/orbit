@@ -56,6 +56,7 @@ export default function OnboardingModalWeb({
     >
       <View
         style={{
+          width: "100%",
           maxWidth: 450, // TODO should probably be shared with the review area max width
         }}
       >
@@ -90,7 +91,10 @@ export default function OnboardingModalWeb({
             autoCompleteType="email"
             textContentType="emailAddress"
             keyboardType="email-address"
-            style={{ flexGrow: 1 }}
+            style={{
+              // Text inputs have some odd sizing behavior on web if you don't explicitly specify a width: they fall back to using their `size` attribute, which defaults to 20. react-native-web doesn't give a hook we can use to change the size attribute's value, so here we are.
+              width: "100%",
+            }}
             value={email}
             onChangeText={setEmail}
             onSubmitEditing={() => {
