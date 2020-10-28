@@ -560,7 +560,7 @@ export default function EmbeddedScreen() {
   }
 
   return (
-    <View style={{ height: "100vh" }}>
+    <View style={{ height: "100vh", width: "100vw", overflow: "hidden" }}>
       <ReviewSessionWrapper
         baseItems={baseItems}
         onMark={onMark}
