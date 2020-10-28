@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { getAuthTokensForIDToken } from "../../firebase";
+import * as backend from "../../backend";
 
 import corsHandler from "../util/corsHandler";
 import { getSessionCookieOptions, sessionCookieName } from "./sessionCookie";
@@ -12,7 +12,7 @@ export default functions.https.onRequest((request, response) => {
         const {
           sessionCookie,
           sessionCookieExpirationDate,
-        } = await getAuthTokensForIDToken(idToken);
+        } = await backend.auth.getAuthTokensForIDToken(idToken);
         response
           .cookie(
             sessionCookieName,

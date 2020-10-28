@@ -1,10 +1,10 @@
-import { ServerTimestamp } from "./libraryAbstraction";
-
-export interface UserMetadata<Timestamp extends ServerTimestamp> {
-  registrationTimestamp: Timestamp;
-  notificationState?: UserNotificationState<Timestamp>;
+export interface UserMetadata {
+  registrationTimestampMillis: number;
+  sessionNotificationState?: SessionNotificationState;
 }
 
-export interface UserNotificationState<Timestamp extends ServerTimestamp> {
-  // TODO;
+export interface SessionNotificationState {
+  firstNotificationTimestampMillis: number;
+  lastNotificationTimestampMillis: number;
+  sentNotificationCount: number;
 }

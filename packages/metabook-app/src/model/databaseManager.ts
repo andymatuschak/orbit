@@ -9,10 +9,11 @@ import {
   PromptActionLog,
   promptActionLogCanBeAppliedToPromptState,
   PromptState,
-  PromptTaskID,
+  PromptTaskID
 } from "metabook-core";
 import { maxServerTimestamp, ServerTimestamp } from "metabook-firebase-support";
 import { ReviewItem } from "metabook-ui";
+
 import { Task } from "../util/task";
 import actionLogInitialImportOperation from "./actionLogInitialImportOperation";
 import ActionLogStore from "./actionLogStore";
@@ -30,7 +31,6 @@ export default class DatabaseManager {
   private promptStateStore: PromptStateStore;
 
   private userClient: MetabookUserClient;
-  private dataClient: MetabookDataClient;
 
   private dataRecordManager: DataRecordManager;
 
@@ -42,7 +42,6 @@ export default class DatabaseManager {
 
   constructor(userClient: MetabookUserClient, dataClient: MetabookDataClient) {
     this.userClient = userClient;
-    this.dataClient = dataClient;
     this.actionLogStore = new ActionLogStore();
     this.dataRecordStore = new DataRecordStore();
     this.promptStateStore = new PromptStateStore();
@@ -62,7 +61,7 @@ export default class DatabaseManager {
           dataRecordManager: this.dataRecordManager,
           userClient: this.userClient,
           promptStateStore: this.promptStateStore,
-          dueBeforeTimestampMillis: Date.now(),
+          nowTimestampMillis: Date.now(),
           hasFinishedInitialImport,
         }),
       );

@@ -23,7 +23,8 @@ afterEach(async () => {
   await FirebaseTesting.resetTestFirestore(testFirestore);
 });
 
-test("updates prompt state when writing log", async () => {
+// TODO: re-enable integration tests after fixing andymatuschak/metabook#138 metabook-cloud-functions tests need to mock logging and emailing functions.
+test.skip("updates prompt state when writing log", async () => {
   const qaPromptID = await getIDForPrompt(testQAPrompt);
   const promptTask: PromptTask = {
     promptID: qaPromptID,

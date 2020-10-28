@@ -1,8 +1,8 @@
 import admin from "firebase-admin";
 import functions from "firebase-functions";
-import getMailjetService from "../email";
+import getDefaultEmailService from "../email";
 import { EmailSpec } from "../email/types";
-import { updateUserMetadata } from "../firebase/users";
+import { updateUserMetadata } from "../backend/users";
 import { defaultLoggingService } from "../logging";
 
 // TODO: we'll need to send a different welcome email if they sign up outside the context of a reading
@@ -24,9 +24,7 @@ const onUserCreate = functions.auth.user().onCreate(async (user, context) => {
   const registrationTimestampMillis = Date.parse(context.timestamp);
 
   await updateUserMetadata(userID, {
-    registrationTimestamp: admin.firestore.Timestamp.fromMillis(
-      registrationTimestampMillis,
-    ),
+    registrationTimestampMillis,
   });
 
   await defaultLoggingService.logUserEvent({
@@ -35,7 +33,7 @@ const onUserCreate = functions.auth.user().onCreate(async (user, context) => {
     eventName: "registration",
     emailAddress: user.email,
   });
-  await getMailjetService().sendEmail(user.email, welcomeEmailSpec);
+  await getDefaultEmailService().sendEmail(user.email, welcomeEmailSpec);
 });
 
 export default onUserCreate;

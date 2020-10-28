@@ -1,8 +1,10 @@
 import * as firebase from "firebase-admin";
+import { reviewSession } from "metabook-core";
 import {
   ActionLogDocument,
   getActionLogIDForFirebaseKey,
   getLogCollectionReference,
+  getTaskStateCacheCollectionReference,
   getTaskStateCacheReference,
   PromptStateCache,
 } from "metabook-firebase-support";
@@ -12,7 +14,10 @@ import { getDatabase } from "./firebase";
 export async function updatePromptStateCacheWithLog(
   actionLogDocument: ActionLogDocument<firebase.firestore.Timestamp>,
   userID: string,
-): Promise<PromptStateCache> {
+): Promise<{
+  oldPromptStateCache: PromptStateCache | null;
+  newPromptStateCache: PromptStateCache;
+}> {
   const db = getDatabase();
   const promptStateCacheReference = await getTaskStateCacheReference(
     db,
@@ -24,12 +29,12 @@ export async function updatePromptStateCacheWithLog(
       promptStateCacheReference,
     );
 
-    const basePromptStateCache =
+    const oldPromptStateCache =
       (promptStateCacheSnapshot.data() as PromptStateCache) ?? null;
 
     const newPromptStateCache = await applyPromptActionLogToPromptStateCache({
       actionLogDocument,
-      basePromptStateCache,
+      basePromptStateCache: oldPromptStateCache,
       fetchAllActionLogDocumentsForTask: async () => {
         const logQuery = await getLogCollectionReference(db, userID).where(
           "taskID",
@@ -56,14 +61,26 @@ export async function updatePromptStateCacheWithLog(
           null,
           "\t",
         )}\nBase prompt state: ${JSON.stringify(
-          basePromptStateCache,
+          oldPromptStateCache,
           null,
           "\t",
         )}`,
       );
     } else {
       transaction.set(promptStateCacheReference, newPromptStateCache);
-      return newPromptStateCache;
+      return { oldPromptStateCache, newPromptStateCache };
     }
   });
+}
+
+export async function getDuePromptStates(
+  userID: string,
+  dueBeforeTimestampMillis: number,
+): Promise<PromptStateCache[]> {
+  const ref = getTaskStateCacheCollectionReference(getDatabase(), userID)
+    .where("dueTimestampMillis", "<=", dueBeforeTimestampMillis)
+    .where("taskMetadata.isDeleted", "==", false)
+    .limit(reviewSession.getReviewSessionCardLimit());
+  const snapshot = await ref.get();
+  return snapshot.docs.map((doc) => doc.data());
 }

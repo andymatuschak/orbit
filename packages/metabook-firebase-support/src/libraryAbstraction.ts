@@ -39,6 +39,13 @@ export function compareServerTimestamps(
   }
 }
 
+// Causes loss of precision.
+export function serverTimestampToTimestampMillis<T extends ServerTimestamp>(
+  timestamp: T,
+): number {
+  return timestamp.seconds * 1000;
+}
+
 export function maxServerTimestamp(
   a: ServerTimestamp,
   b: ServerTimestamp | null,

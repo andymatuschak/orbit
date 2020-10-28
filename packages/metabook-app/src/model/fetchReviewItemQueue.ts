@@ -1,17 +1,17 @@
 import { MetabookUserClient } from "metabook-client";
 import {
-  getDuePromptTasks,
   getPromptTaskForID,
   PromptID,
   PromptState,
   PromptTask,
+  reviewSession
 } from "metabook-core";
 import {
   PromptReviewItem,
   promptReviewItemType,
-  ReviewItem,
-  styles,
+  ReviewItem
 } from "metabook-ui";
+
 import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";
 import DataRecordManager from "./dataRecordManager";
 import PromptStateStore from "./promptStateStore";
@@ -100,20 +100,20 @@ export default async function fetchReviewItemQueue({
   promptStateStore,
   dataRecordManager,
   userClient,
-  dueBeforeTimestampMillis,
+  nowTimestampMillis,
   hasFinishedInitialImport,
 }: {
   promptStateStore: PromptStateStore;
   dataRecordManager: DataRecordManager;
   userClient: MetabookUserClient;
-  dueBeforeTimestampMillis: number;
+  nowTimestampMillis: number;
   hasFinishedInitialImport: boolean;
 }) {
   console.log("Review queue: fetching due prompt states");
   const duePromptStates = await getInitialDuePromptStates(
     promptStateStore,
     userClient,
-    dueBeforeTimestampMillis,
+    nowTimestampMillis,
     reviewQueueLengthLimit,
     hasFinishedInitialImport,
   );
@@ -121,11 +121,11 @@ export default async function fetchReviewItemQueue({
     `Review queue: fetched ${duePromptStates.size} due prompt states`,
   );
 
-  const orderedDuePromptTasks = getDuePromptTasks({
+  const orderedDuePromptTasks = reviewSession.getDuePromptTasks({
     promptStates: duePromptStates,
-    reviewSessionIndex: 0, // TODO
-    timestampMillis: dueBeforeTimestampMillis,
-    cardsCompletedInCurrentSession: 0, // TODO
+    thresholdTimestampMillis: reviewSession.getFuzzyDueTimestampThreshold(
+      nowTimestampMillis,
+    ),
   });
 
   return await getReviewItemsForPromptStates(

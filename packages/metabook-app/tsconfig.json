@@ -17,5 +17,22 @@
     "./src/**/*.ts",
     "./App.tsx",
     "../@types/**/*.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../metabook-client"
+    },
+    {
+      "path": "../metabook-core"
+    },
+    {
+      "path": "../embedded-support"
+    },
+    {
+      "path": "../metabook-sample-data"
+    },
+    {
+      "path": "../metabook-ui"
+    }
   ]
 }

@@ -7,3 +7,4 @@ export { default as recordPageView } from "./functions/recordPageView";
 export { default as recordPrompts } from "./functions/recordPrompts";
 
 export * from "./functions/auth";
+export * from "./functions/notifier";

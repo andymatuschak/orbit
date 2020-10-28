@@ -23,7 +23,7 @@ export enum ActionLogMergeErrorType {
   InvalidLog = "invalidLog",
 }
 
-export default function mergeActionLogs(
+export function mergeActionLogs(
   entries: Iterable<{
     log: PromptActionLog;
     id: ActionLogID;

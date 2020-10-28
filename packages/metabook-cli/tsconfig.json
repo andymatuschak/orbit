@@ -2,10 +2,14 @@
   "extends": "../tsconfig.base",
   "compilerOptions": {
     "types": ["node"],
-    "lib": ["dom", "es5"],
+    "lib": ["dom", "es7"],
     "rootDir": "./src",
-    "outDir": "./dist",
-    "downlevelIteration": true
+    "outDir": "./dist"
   },
-  "include": ["src/**/*.ts", "src/**/*.json"]
+  "include": ["src/**/*.ts", "src/**/*.json"],
+  "references": [
+    {
+      "path": "../metabook-firebase-support"
+    }
+  ]
 }

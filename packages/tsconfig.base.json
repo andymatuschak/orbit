@@ -8,7 +8,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-    "lib": ["es6"],
+    "lib": ["es7"],
     "module": "es6",
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -17,16 +17,5 @@
     "target": "es2017",
     "types": []
   },
-  "compileOnSave": true,
-  "references": [
-    { "path": "./metabook-anki" },
-    { "path": "./metabook-app" },
-    { "path": "./metabook-client" },
-    { "path": "./metabook-cloud-functions" },
-    { "path": "./metabook-core" },
-    { "path": "./metabook-firebase-support" },
-    { "path": "./metabook-sample-data" },
-    { "path": "./metabook-ui" }
-  ],
-  "files": []
+  "compileOnSave": true
 }

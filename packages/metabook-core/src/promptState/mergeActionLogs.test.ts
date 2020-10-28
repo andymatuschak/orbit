@@ -4,17 +4,17 @@ import { getIDForPrompt } from "../promptID";
 import { PromptRepetitionOutcome } from "../spacedRepetition";
 import {
   ingestActionLogType,
-  repetitionActionLogType,
+  repetitionActionLogType
 } from "../types/actionLog";
 import { qaPromptType } from "../types/prompt";
 import {
   getActionLogFromPromptActionLog,
   PromptIngestActionLog,
-  PromptRepetitionActionLog,
+  PromptRepetitionActionLog
 } from "../types/promptActionLog";
 import { getIDForPromptTask, PromptTaskID } from "../types/promptTask";
 import { PromptTaskParameters } from "../types/promptTaskParameters";
-import mergeActionLogs from "./mergeActionLogs";
+import { mergeActionLogs } from "./mergeActionLogs";
 
 let testIngestLog: PromptIngestActionLog;
 let testIngestLogID: ActionLogID;

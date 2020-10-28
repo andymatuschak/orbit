@@ -10,7 +10,7 @@
     "predeploy": "yarn run build",
     "deploy": "firebase deploy --only functions",
     "shell": "cross-env SERVICE_ACCOUNT_PATH=../metabook-cli/src/adminKey.json firebase functions:shell",
-    "test": "jest --runInBand"
+    "test": "jest"
   },
   "license": "UNLICENSED",
   "dependencies": {

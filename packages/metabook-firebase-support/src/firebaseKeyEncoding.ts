@@ -4,7 +4,7 @@ import base58 from "multiformats/bases/base58";
 import raw from "multiformats/codecs/raw";
 import sha2 from "multiformats/hashes/sha2";
 import dagJSON from "@ipld/dag-json";
-import { encode } from "fastestsmallesttextencoderdecoder";
+import fastestsmallesttextencoderdecoder from "fastestsmallesttextencoderdecoder";
 
 const { multihash, multibase, multicodec, CID } = create();
 multihash.add(sha2);
@@ -61,7 +61,7 @@ export function getAttachmentIDForFirebaseKey(
 
 export async function getFirebaseKeyForTaskID(taskID: string): Promise<string> {
   // The taskID is not sharding-friendly (since it starts with a CID); we hash it to get a Firebase key with a uniformly-distributed prefix.
-  const taskIDBuffer = encode(taskID);
+  const taskIDBuffer = fastestsmallesttextencoderdecoder.encode(taskID);
   const hashBuffer = await multihash.get("sha2-256").encode(taskIDBuffer);
   const multibaseString = multibase.encode(hashBuffer, outputCIDStringBase);
   return multibaseString.slice(1); // Drop the multibase prefix.

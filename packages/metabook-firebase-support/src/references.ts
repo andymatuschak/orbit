@@ -33,11 +33,8 @@ function getDataRecordReferenceForCID<D extends Database>(
 export function getUserMetadataReference<D extends Database>(
   database: D,
   userID: string,
-): DocumentReference<D, UserMetadata<TimestampOf<D>>> {
-  return database.doc(`users/${userID}`) as DocumentReference<
-    D,
-    UserMetadata<TimestampOf<D>>
-  >;
+): DocumentReference<D, UserMetadata> {
+  return database.doc(`users/${userID}`) as DocumentReference<D, UserMetadata>;
 }
 
 export function getDataRecordReference<

@@ -106,7 +106,7 @@ function getDevice(screen: string | null, os: string | null): string | null {
   }
 }
 
-async function getClientInfo(request: Request, screen: string | null) {
+function getClientInfo(request: Request, screen: string | null) {
   const userAgent = request.headers["user-agent"];
   const ip = getIpAddress(request);
   const browser = userAgent ? browserName(userAgent) : null;
@@ -144,26 +144,31 @@ export default functions.https.onRequest((request, response) => {
       return ok(response);
     }
 
-    const { browser, os, ip, device } = await getClientInfo(request, screen);
+    const { browser, os, ip, device } = getClientInfo(request, screen);
 
     const sessionID = crypto
       .createHash("sha256")
       .update(JSON.stringify({ ip, userAgent, hostname, os, salt: getSalt() }))
       .digest("base64");
 
-    await defaultLoggingService.logPageView({
-      pathname,
-      hostname,
-      referrer: referrer ?? null,
-      screen: screen ?? null,
-      language: language ?? null,
-      browser,
-      os,
-      device,
-      sessionID,
-      timestamp: Date.now(),
-    });
+    try {
+      await defaultLoggingService.logPageView({
+        pathname,
+        hostname,
+        referrer: referrer ?? null,
+        screen: screen ?? null,
+        language: language ?? null,
+        browser,
+        os,
+        device,
+        sessionID,
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      console.error(error);
+      return response.status(500).json({});
+    }
 
-    return response.status(200).json({});
+    return ok(response);
   });
 });

@@ -7,5 +7,13 @@
     "lib": ["es6", "dom"],
     "types": ["jest"]
   },
-  "include": ["./src/**/*.ts"]
+  "include": ["./src/**/*.ts"],
+  "references": [
+    {
+      "path": "../metabook-core"
+    },
+    {
+      "path": "../metabook-firebase-support"
+    }
+  ]
 }

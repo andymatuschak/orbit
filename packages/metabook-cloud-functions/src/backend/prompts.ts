@@ -1,10 +1,6 @@
 import * as firebase from "firebase-admin";
 import { getIDForPrompt, Prompt, PromptID } from "metabook-core";
-import {
-  DataRecord,
-  DataRecordID,
-  getDataRecordReference,
-} from "metabook-firebase-support";
+import { getDataRecordReference } from "metabook-firebase-support";
 import { getDatabase } from "./firebase";
 
 export function recordPrompts(prompts: Prompt[]): Promise<PromptID[]> {
@@ -27,13 +23,13 @@ export function recordPrompts(prompts: Prompt[]): Promise<PromptID[]> {
   );
 }
 
-export async function getDataRecords<R extends DataRecord>(
-  recordIDs: DataRecordID<R>[],
-): Promise<(R | null)[]> {
+export async function getPrompts(
+  promptIDs: PromptID[],
+): Promise<(Prompt | null)[]> {
   const db = getDatabase();
   const snapshots = (await getDatabase().getAll(
-    ...recordIDs.map((recordID) => getDataRecordReference(db, recordID)),
-  )) as firebase.firestore.DocumentSnapshot<R>[];
+    ...promptIDs.map((promptID) => getDataRecordReference(db, promptID)),
+  )) as firebase.firestore.DocumentSnapshot<Prompt>[];
   return snapshots.map((snapshot) => snapshot.data() ?? null);
 }
 
@@ -43,7 +39,7 @@ export async function storePromptsIfNecessary(
   },
   getStoredPrompts: (
     promptIDs: PromptID[],
-  ) => Promise<(Prompt | null)[]> = getDataRecords,
+  ) => Promise<(Prompt | null)[]> = getPrompts,
   storePrompts: (prompts: Prompt[]) => Promise<PromptID[]> = recordPrompts,
 ) {
   const entries = Object.entries(promptsByID) as [PromptID, Prompt][];

@@ -1,1 +1,2 @@
-export { default as notifierSchedulerFunction } from "./notifierSchedulerFunction";
+export { notificationScheduler } from "./notificationScheduler";
+export { processUserNotificationSubscriber } from "./processUserNotificationSubscriber";

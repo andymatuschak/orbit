@@ -1,8 +1,8 @@
-import yargs, { CommandModule } from "yargs";
 import {
   getLogCollectionReference,
   getTaskStateCacheCollectionReference,
 } from "metabook-firebase-support";
+import { CommandModule } from "yargs";
 import { getAdminApp } from "../adminApp";
 import { deleteCollection } from "../deleteCollection";
 

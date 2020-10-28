@@ -37,8 +37,6 @@ export {
 export { getIDForPrompt } from "./promptID";
 export type { PromptID } from "./promptID";
 
-export { default as getDuePromptTasks } from "./getDuePromptTasks";
-
 export { getIDForPromptTask, getPromptTaskForID } from "./types/promptTask";
 export type {
   PromptTask,
@@ -110,3 +108,5 @@ export { PromptProvenanceType } from "./types/promptProvenance";
 export { default as typedKeys } from "./util/typedKeys";
 
 export type { ColorPaletteName } from "./types/colorPaletteName";
+
+export * as reviewSession from "./reviewSession";

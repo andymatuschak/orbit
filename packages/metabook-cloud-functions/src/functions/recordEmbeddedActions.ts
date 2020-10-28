@@ -1,10 +1,6 @@
 import * as functions from "firebase-functions";
 import { ActionLog, AttachmentID, Prompt } from "metabook-core";
-import {
-  storeAttachmentIfNecessary,
-  storeLogs,
-  storePromptsIfNecessary,
-} from "../firebase";
+import * as backend from "../backend";
 
 interface RecordEmbeddedActionsArguments {
   logs: ActionLog[];
@@ -30,15 +26,18 @@ export default functions.https.onCall(async function (
     // Store attachments as needed
     await Promise.all(
       Object.entries(args.attachmentURLsByID).map(([attachmentID, url]) =>
-        storeAttachmentIfNecessary(attachmentID as AttachmentID, url),
+        backend.attachments.storeAttachmentIfNecessary(
+          attachmentID as AttachmentID,
+          url,
+        ),
       ),
     );
 
     // Store prompts as needed
-    await storePromptsIfNecessary(args.promptsByID);
+    await backend.prompts.storePromptsIfNecessary(args.promptsByID);
 
     // Store logs
-    await storeLogs(args.logs, context.auth.uid);
+    await backend.actionLogs.storeLogs(args.logs, context.auth.uid);
   } catch (error) {
     throw new functions.https.HttpsError("invalid-argument", error.message);
   }

@@ -13,6 +13,7 @@ const serviceConfig = {
     logDatasetName: "logs",
     projectId: "metabook-system",
   },
+  webBaseURL: "https://withorbit.com",
 };
 
 export default serviceConfig;

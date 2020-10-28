@@ -8,11 +8,12 @@ export type { PromptStateCache } from "./promptStateCache";
 export { storeLogs } from "./actionLogDocument";
 export type { ActionLogDocument } from "./actionLogDocument";
 
-export type { UserMetadata, UserNotificationState } from "./userMetadata";
+export type { UserMetadata, SessionNotificationState } from "./userMetadata";
 
 export {
   compareServerTimestamps,
   maxServerTimestamp,
+  serverTimestampToTimestampMillis,
 } from "./libraryAbstraction";
 export type { ServerTimestamp } from "./libraryAbstraction";
 export {

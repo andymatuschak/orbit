@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import { storageAttachmentsPathComponent } from "metabook-firebase-support";
-import { validateAndFinalizeAttachmentWithObjectName } from "../firebase/attachments";
+import { validateAndFinalizeAttachmentWithObjectName } from "../backend/attachments";
 
 const onAttachmentUpload = functions.storage
   .object()

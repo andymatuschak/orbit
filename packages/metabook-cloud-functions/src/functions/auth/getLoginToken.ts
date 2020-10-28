@@ -1,9 +1,6 @@
 import cookieParser from "cookie-parser";
 import * as functions from "firebase-functions";
-import {
-  getAuthTokensForIDToken,
-  getCustomLoginTokenForSessionCookie,
-} from "../../firebase";
+import * as backend from "../../backend";
 import corsHandler from "../util/corsHandler";
 import { getSessionCookieOptions, sessionCookieName } from "./sessionCookie";
 
@@ -20,7 +17,7 @@ export default functions.https.onRequest((request, response) => {
             sessionCookie,
             customLoginToken,
             sessionCookieExpirationDate,
-          } = await getAuthTokensForIDToken(idToken);
+          } = await backend.auth.getAuthTokensForIDToken(idToken);
           response
             .cookie(
               sessionCookieName,
@@ -29,7 +26,7 @@ export default functions.https.onRequest((request, response) => {
             )
             .send(customLoginToken);
         } else if (sessionCookie) {
-          const customLoginToken = await getCustomLoginTokenForSessionCookie(
+          const customLoginToken = await backend.auth.getCustomLoginTokenForSessionCookie(
             sessionCookie,
           );
           response.send(customLoginToken);
