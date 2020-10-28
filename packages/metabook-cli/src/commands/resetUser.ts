@@ -1,6 +1,7 @@
 import {
   getLogCollectionReference,
   getTaskStateCacheCollectionReference,
+  getUserMetadataReference,
 } from "metabook-firebase-support";
 import { CommandModule } from "yargs";
 import { getAdminApp } from "../adminApp";
@@ -26,6 +27,14 @@ const command: CommandModule<{}, { userID: string }> = {
       db,
       getTaskStateCacheCollectionReference(db, userID),
     );
+
+    const userMetadataRef = getUserMetadataReference(db, userID);
+    const userMetadata = (await userMetadataRef.get()).data();
+    if (userMetadata) {
+      await userMetadataRef.set({
+        registrationTimestampMillis: userMetadata.registrationTimestampMillis,
+      });
+    }
     console.log("User reset");
   },
 };

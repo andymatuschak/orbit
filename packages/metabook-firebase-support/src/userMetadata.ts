@@ -1,5 +1,6 @@
 export interface UserMetadata {
   registrationTimestampMillis: number;
+  activeTaskCount?: number;
   sessionNotificationState?: SessionNotificationState;
 }
 

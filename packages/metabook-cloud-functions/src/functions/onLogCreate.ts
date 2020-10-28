@@ -25,9 +25,9 @@ export default functions.firestore
       firebase.firestore.Timestamp
     >;
 
-    const userID = context.params["userID"];
     // TODO: I don't like that this flag is suppressing unrelated logic... probably needs to be refactored.
     if (!actionLog.suppressTaskStateCacheUpdate) {
+      const userID = context.params["userID"];
       const {
         oldPromptStateCache,
         newPromptStateCache,

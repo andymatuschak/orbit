@@ -1,15 +1,59 @@
-import * as firebase from "firebase-admin";
-import { reviewSession } from "metabook-core";
+import * as admin from "firebase-admin";
+import { ActionLogID, reviewSession } from "metabook-core";
 import {
   ActionLogDocument,
   getActionLogIDForFirebaseKey,
   getLogCollectionReference,
   getTaskStateCacheCollectionReference,
   getTaskStateCacheReference,
+  getUserMetadataReference,
   PromptStateCache,
 } from "metabook-firebase-support";
 import applyPromptActionLogToPromptStateCache from "../applyPromptActionLogToPromptStateCache";
 import { getDatabase } from "./firebase";
+import { updateUserMetadata } from "./users";
+
+function taskIsActive(promptStateCache: PromptStateCache | null): boolean {
+  return !!promptStateCache && !promptStateCache.taskMetadata.isDeleted;
+}
+
+export function _getActiveTaskCountDelta(
+  oldPromptStateCache: PromptStateCache | null,
+  newPromptStateCache: PromptStateCache,
+) {
+  const promptWasActive = taskIsActive(oldPromptStateCache);
+  const promptIsActive = taskIsActive(newPromptStateCache);
+  if (!promptWasActive && promptIsActive) {
+    return 1;
+  } else if (promptWasActive && !promptIsActive) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
+
+async function fetchAllActionLogDocumentsForTask(
+  database: admin.firestore.Firestore,
+  transaction: admin.firestore.Transaction,
+  userID: string,
+  taskID: string,
+): Promise<{ id: ActionLogID; log: ActionLogDocument }[]> {
+  const logQuery = await getLogCollectionReference(database, userID).where(
+    "taskID",
+    "==",
+    taskID,
+  );
+  const logSnapshot = await transaction.get(logQuery);
+  return logSnapshot.docs.map((doc) => {
+    const actionLogDocument = doc.data() as ActionLogDocument<
+      firebase.firestore.Timestamp
+    >;
+    return {
+      id: getActionLogIDForFirebaseKey(doc.id),
+      log: actionLogDocument,
+    };
+  });
+}
 
 export async function updatePromptStateCacheWithLog(
   actionLogDocument: ActionLogDocument<firebase.firestore.Timestamp>,
@@ -19,12 +63,12 @@ export async function updatePromptStateCacheWithLog(
   newPromptStateCache: PromptStateCache;
 }> {
   const db = getDatabase();
-  const promptStateCacheReference = await getTaskStateCacheReference(
-    db,
-    userID,
-    actionLogDocument.taskID,
-  );
-  return db.runTransaction(async (transaction) => {
+  const result = await db.runTransaction(async (transaction) => {
+    const promptStateCacheReference = await getTaskStateCacheReference(
+      db,
+      userID,
+      actionLogDocument.taskID,
+    );
     const promptStateCacheSnapshot = await transaction.get(
       promptStateCacheReference,
     );
@@ -35,23 +79,13 @@ export async function updatePromptStateCacheWithLog(
     const newPromptStateCache = await applyPromptActionLogToPromptStateCache({
       actionLogDocument,
       basePromptStateCache: oldPromptStateCache,
-      fetchAllActionLogDocumentsForTask: async () => {
-        const logQuery = await getLogCollectionReference(db, userID).where(
-          "taskID",
-          "==",
+      fetchAllActionLogDocumentsForTask: () =>
+        fetchAllActionLogDocumentsForTask(
+          db,
+          transaction,
+          userID,
           actionLogDocument.taskID,
-        );
-        const logSnapshot = await transaction.get(logQuery);
-        return logSnapshot.docs.map((doc) => {
-          const actionLogDocument = doc.data() as ActionLogDocument<
-            firebase.firestore.Timestamp
-          >;
-          return {
-            id: getActionLogIDForFirebaseKey(doc.id),
-            log: actionLogDocument,
-          };
-        });
-      },
+        ),
     });
 
     if (newPromptStateCache instanceof Error) {
@@ -66,11 +100,23 @@ export async function updatePromptStateCacheWithLog(
           "\t",
         )}`,
       );
-    } else {
-      transaction.set(promptStateCacheReference, newPromptStateCache);
-      return { oldPromptStateCache, newPromptStateCache };
     }
+
+    transaction.set(promptStateCacheReference, newPromptStateCache);
+    return { oldPromptStateCache, newPromptStateCache };
   });
+
+  // n.b. this active task count update operation is outside the transaction because the increment operation is itself transactional; we don't need to make the transaction retry if there's contention on the user metadata document.
+  await getUserMetadataReference(db, userID).update({
+    activeTaskCount: admin.firestore.FieldValue.increment(
+      _getActiveTaskCountDelta(
+        result.oldPromptStateCache,
+        result.newPromptStateCache,
+      ),
+    ),
+  });
+
+  return result;
 }
 
 export async function getDuePromptStates(
