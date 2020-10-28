@@ -55,10 +55,10 @@ type ReviewSessionSchedulingDecision =
 export function evaluateReviewSessionSchedule(
   sessionTimestampMillis: number,
   promptStates: PromptState[],
-  activePromptCount: number,
+  activePromptCount: number | null,
 ): ReviewSessionSchedulingDecision {
   const sessionMaxPromptCount = Math.min(
-    activePromptCount,
+    activePromptCount ?? Number.MAX_VALUE,
     reviewSession.getReviewSessionCardLimit(),
   );
   const initiallyDuePromptStates = filterDuePromptStates(

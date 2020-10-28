@@ -112,4 +112,18 @@ describe("shouldScheduleReviewSession", () => {
       reason: "full-session-ready",
     });
   });
+
+  test("review due immediately when user has an unknown prompt count and many are due", () => {
+    expect(
+      evaluateReviewSessionSchedule(
+        baseTimestampMillis,
+
+        generateDuePromptStates(baseTimestampMillis, 200, 0, 5),
+        null,
+      ),
+    ).toMatchObject({
+      shouldScheduleSession: true,
+      reason: "full-session-ready",
+    });
+  });
 });

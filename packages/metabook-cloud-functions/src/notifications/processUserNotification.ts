@@ -75,7 +75,7 @@ export async function _getUserNotificationAction(
     const { shouldScheduleSession, reason } = evaluateReviewSessionSchedule(
       nowTimestampMillis,
       promptStates,
-      100, // TODO: andymatuschak/metabook#142 Use user’s count of active user tasks when deciding whether to send a notification
+      userMetadata.activeTaskCount ?? null,
     );
     console.log(
       `New review session scheduled: ${shouldScheduleSession} (${reason})`,
