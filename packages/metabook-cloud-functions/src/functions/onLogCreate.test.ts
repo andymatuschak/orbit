@@ -11,7 +11,9 @@ import { getTaskStateCacheReference } from "metabook-firebase-support";
 import * as FirebaseTesting from "metabook-firebase-support/dist/firebaseTesting";
 import { testQAPrompt } from "metabook-sample-data";
 
-let testFirestore: firebase.firestore.Firestore;
+let testFirestore: ReturnType<
+  typeof FirebaseTesting.createTestFirebaseApp
+>["firestore"];
 
 const testUserID = "test";
 beforeEach(async () => {

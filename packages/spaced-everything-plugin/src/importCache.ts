@@ -11,7 +11,7 @@ import {
   PromptStateCache,
   ServerTimestamp,
 } from "metabook-firebase-support";
-import { notePrompts } from "spaced-everything";
+import spacedEverything from "spaced-everything";
 import subleveldown from "subleveldown";
 import drainIterator from "./util/drainIterator";
 
@@ -151,7 +151,7 @@ export default class SpacedEverythingImportCache {
         );
 
         const existingNoteMetadata = noteMap.get(provenance.externalID);
-        const CSTID = notePrompts.getIDForPrompt(ITPrompt);
+        const CSTID = spacedEverything.notePrompts.getIDForPrompt(ITPrompt);
         const promptsByNoteIDKey = `${provenance.externalID}!${CSTID}`;
         if (promptStateCache.taskMetadata.isDeleted) {
           promptRecordsByCSTIDBatch.del(CSTID);
@@ -215,6 +215,8 @@ export default class SpacedEverythingImportCache {
       }
     }
     writePromises.push(noteMetadataByNoteIDBatch.write());
+
+    await Promise.all(writePromises);
   }
 
   async getNoteIDs(): Promise<string[]> {

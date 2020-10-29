@@ -18,15 +18,15 @@ import {
   updateMetadataActionLogType,
 } from "metabook-core";
 import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
-import { notePrompts, taskCache, TaskRecord } from "spaced-everything";
+import spacedEverything from "spaced-everything";
 import SpacedEverythingImportCache, { CachedNoteMetadata } from "./importCache";
 import {
   getITPromptForOrbitPrompt,
   getOrbitPromptForITPrompt,
 } from "./util/cstOrbitAdapters";
 
-type NotePromptTask = notePrompts.PromptTask;
-type NotePromptTaskCollection = notePrompts.PromptTaskCollection;
+type NotePromptTask = spacedEverything.notePrompts.PromptTask;
+type NotePromptTaskCollection = spacedEverything.notePrompts.PromptTaskCollection;
 
 function flat<T>(lists: T[][]): T[] {
   return lists.reduce((whole, part) => whole.concat(part), []);
@@ -123,7 +123,7 @@ async function initializeImportCache(
 function approximatePromptTaskNoteData(
   noteID: string,
   cachedNoteMetadata: CachedNoteMetadata,
-): notePrompts.PromptTaskNoteData {
+): spacedEverything.notePrompts.PromptTaskNoteData {
   return {
     modificationTimestamp: cachedNoteMetadata.modificationTimestamp,
     noteTitle: cachedNoteMetadata.title,
@@ -140,9 +140,12 @@ function unreachableCaseError(witness: never): Error {
 }
 
 async function getTaskRecordForPath(
-  path: taskCache.TaskIDPath,
+  path: spacedEverything.taskCache.TaskIDPath,
   importCache: SpacedEverythingImportCache,
-): Promise<TaskRecord<NotePromptTask, NotePromptTaskCollection> | null> {
+): Promise<spacedEverything.TaskRecord<
+  NotePromptTask,
+  NotePromptTaskCollection
+> | null> {
   switch (path.length) {
     case 0:
       // Root.
@@ -198,7 +201,7 @@ async function getTaskRecordForPath(
                   prompt,
                   noteData,
                 },
-                childIDs: notePrompts.getClozeNoteTaskCollectionChildIDsForClozePrompt(
+                childIDs: spacedEverything.notePrompts.getClozeNoteTaskCollectionChildIDsForClozePrompt(
                   prompt,
                 ),
               };
@@ -231,7 +234,7 @@ async function getTaskRecordForPath(
 }
 
 function getProvenanceForNoteData(
-  noteData: notePrompts.PromptTaskNoteData,
+  noteData: spacedEverything.notePrompts.PromptTaskNoteData,
 ): PromptProvenance | null {
   if (!noteData.externalNoteID || !noteData.noteTitle) {
     return null;
@@ -290,7 +293,7 @@ async function mapTasksInPrompt<R>(
 
 async function getChildUpdatesForPromptsInNote(
   noteID: string,
-  change: taskCache.TaskCacheSessionChange<
+  change: spacedEverything.taskCache.TaskCacheSessionChange<
     NotePromptTask,
     NotePromptTaskCollection
   >,
@@ -322,7 +325,7 @@ async function getChildUpdatesForPromptsInNote(
 }
 
 export async function getUpdatesForTaskCacheChange(
-  change: taskCache.TaskCacheSessionChange<
+  change: spacedEverything.taskCache.TaskCacheSessionChange<
     NotePromptTask,
     NotePromptTaskCollection
   >,
@@ -481,7 +484,10 @@ export function createTaskCache(
   userClient: MetabookUserClient,
   dataClient: MetabookDataClient,
   importCache: SpacedEverythingImportCache,
-): taskCache.TaskCache<NotePromptTask, NotePromptTaskCollection> {
+): spacedEverything.taskCache.TaskCache<
+  NotePromptTask,
+  NotePromptTaskCollection
+> {
   return {
     async performOperations(continuation) {
       await initializeImportCache(userClient, importCache, dataClient);
@@ -491,7 +497,10 @@ export function createTaskCache(
         async getTaskNodes(paths) {
           const outputMap = new Map<
             typeof paths[number],
-            TaskRecord<NotePromptTask, NotePromptTaskCollection> | null
+            spacedEverything.TaskRecord<
+              NotePromptTask,
+              NotePromptTaskCollection
+            > | null
           >();
 
           await Promise.all(

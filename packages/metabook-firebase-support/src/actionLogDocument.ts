@@ -46,9 +46,7 @@ export async function storeLogs<D extends Database>(
         database,
         userID,
         await getIDForActionLog(log),
-      ) as firebase.firestore.DocumentReference<
-        ActionLogDocument<ServerTimestamp>
-      >;
+      ) as DocumentReference<D, ActionLogDocument<ServerTimestamp>>;
 
       return [ref, logDocument] as [
         DocumentReference<D, ActionLogDocument<TimestampOf<D>>>,

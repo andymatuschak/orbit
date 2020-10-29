@@ -19,7 +19,7 @@ export default async function applyActionLogDocumentToPromptStateCache({
   basePromptStateCache,
   fetchAllActionLogDocumentsForTask,
 }: {
-  actionLogDocument: ActionLogDocument<ServerTimestamp>;
+  actionLogDocument: ActionLogDocument;
   basePromptStateCache: PromptStateCache | null;
   fetchAllActionLogDocumentsForTask: () => Promise<
     { id: ActionLogID; log: ActionLogDocument<ServerTimestamp> }[]

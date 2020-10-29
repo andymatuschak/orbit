@@ -4,7 +4,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "lib": ["dom"],
-    "types": ["jest"]
+    "types": ["jest", "node"]
   },
   "include": ["./src/**/*.ts", "./@types/**/*.d.ts"]
 }

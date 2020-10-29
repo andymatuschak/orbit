@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import * as firebaseTesting from "@firebase/rules-unit-testing";
 import childProcess, { ChildProcess } from "child_process";
 import events from "events";
@@ -6,7 +5,6 @@ import firebase from "firebase";
 import path from "path";
 
 const projectID = "metabook-system";
-const functionsEmulatorURL = "http://localhost:5001";
 
 let emulatorProcess: ChildProcess | null = null;
 
@@ -67,7 +65,7 @@ export function createTestFirebaseApp(
   if (!sharedFunctionsInstance) {
     const app = firebase.initializeApp({ projectId: projectID });
     sharedFunctionsInstance = app.functions();
-    sharedFunctionsInstance.useFunctionsEmulator(functionsEmulatorURL);
+    sharedFunctionsInstance.useEmulator("localhost", 5001);
   }
   return { firestore: testApp.firestore(), functions: sharedFunctionsInstance };
 }

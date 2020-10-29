@@ -5,10 +5,8 @@
     "lib": ["dom", "esnext"],
     "types": ["jest"],
     "module": "esnext",
-    "noEmit": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "composite": false,
     "importHelpers": true,
     "removeComments": true
   },
@@ -16,6 +14,7 @@
     "./src/**/*.tsx",
     "./src/**/*.ts",
     "./App.tsx",
+    "./serviceConfig.ts",
     "../@types/**/*.d.ts"
   ],
   "references": [

@@ -11,7 +11,6 @@ import {
 } from "metabook-firebase-support";
 import applyPromptActionLogToPromptStateCache from "../applyPromptActionLogToPromptStateCache";
 import { getDatabase } from "./firebase";
-import { updateUserMetadata } from "./users";
 
 function taskIsActive(promptStateCache: PromptStateCache | null): boolean {
   return !!promptStateCache && !promptStateCache.taskMetadata.isDeleted;
@@ -45,18 +44,15 @@ async function fetchAllActionLogDocumentsForTask(
   );
   const logSnapshot = await transaction.get(logQuery);
   return logSnapshot.docs.map((doc) => {
-    const actionLogDocument = doc.data() as ActionLogDocument<
-      firebase.firestore.Timestamp
-    >;
     return {
       id: getActionLogIDForFirebaseKey(doc.id),
-      log: actionLogDocument,
+      log: doc.data(),
     };
   });
 }
 
 export async function updatePromptStateCacheWithLog(
-  actionLogDocument: ActionLogDocument<firebase.firestore.Timestamp>,
+  actionLogDocument: ActionLogDocument,
   userID: string,
 ): Promise<{
   oldPromptStateCache: PromptStateCache | null;
