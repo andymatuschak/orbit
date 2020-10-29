@@ -1,25 +1,29 @@
-import type { firestore as ClientFirestore } from "firebase";
+import type ClientFirestoreNamespace from "firebase";
 import type { firestore as AdminFirestore } from "firebase-admin";
 
-export type Database = ClientFirestore.Firestore | AdminFirestore.Firestore;
-export type FieldValue = ClientFirestore.FieldValue | AdminFirestore.FieldValue;
+export type Database =
+  | ClientFirestoreNamespace.firestore.Firestore
+  | AdminFirestore.Firestore;
+export type FieldValue =
+  | ClientFirestoreNamespace.firestore.FieldValue
+  | AdminFirestore.FieldValue;
 export type CollectionReference<
   D extends Database,
   T
-> = D extends ClientFirestore.Firestore
-  ? ClientFirestore.CollectionReference<T>
+> = D extends ClientFirestoreNamespace.firestore.Firestore
+  ? ClientFirestoreNamespace.firestore.CollectionReference<T>
   : AdminFirestore.CollectionReference<T>;
 export type TimestampOf<
   D extends Database
-> = D extends ClientFirestore.Firestore
-  ? ClientFirestore.Timestamp
+> = D extends ClientFirestoreNamespace.firestore.Firestore
+  ? ClientFirestoreNamespace.firestore.Timestamp
   : AdminFirestore.Timestamp;
 
 export type DocumentReference<
   D extends Database,
   T
-> = D extends ClientFirestore.Firestore
-  ? ClientFirestore.DocumentReference<T>
+> = D extends ClientFirestoreNamespace.firestore.Firestore
+  ? ClientFirestoreNamespace.firestore.DocumentReference<T>
   : AdminFirestore.DocumentReference<T>;
 
 export interface ServerTimestamp {
