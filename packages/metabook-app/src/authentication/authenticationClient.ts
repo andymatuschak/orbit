@@ -7,6 +7,7 @@ export interface AuthenticationClient<LoginToken = any, IDToken = any> {
   subscribeToUserAuthState(
     callback: (userRecord: UserRecord | null) => void,
   ): () => void;
+  getUserAuthState(): UserRecord | null;
 
   signInWithEmailAndPassword(email: string, password: string): Promise<unknown>;
 
@@ -22,6 +23,7 @@ export interface AuthenticationClient<LoginToken = any, IDToken = any> {
 
   getLoginTokenUsingSessionCookie(): Promise<LoginToken>;
   getLoginTokenUsingIDToken(IDToken: IDToken): Promise<LoginToken>;
+  getLoginTokenUsingAccessCode(accessCode: string): Promise<LoginToken>;
   signInWithLoginToken(loginToken: LoginToken): Promise<unknown>;
   refreshSessionCookie(IDToken: IDToken): Promise<unknown>;
 

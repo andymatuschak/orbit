@@ -41,19 +41,31 @@ export default class FirebaseAuthenticationClient
     }
   }
 
+  private static getUserRecordForFirebaseUser(user: firebase.User | null) {
+    return user
+      ? {
+          userID: user.uid,
+          emailAddress: user.email,
+        }
+      : null;
+  }
+
   subscribeToUserAuthState(
     callback: (userRecord: UserRecord | null) => void,
   ): MetabookUnsubscribe {
     return this.auth.onAuthStateChanged((newUser) => {
-      const newUserRecord = newUser
-        ? {
-            userID: newUser.uid,
-            emailAddress: newUser.email,
-          }
-        : null;
+      const newUserRecord = FirebaseAuthenticationClient.getUserRecordForFirebaseUser(
+        newUser,
+      );
       console.log("UID changed:", newUserRecord);
       callback(newUserRecord);
     });
+  }
+
+  getUserAuthState(): UserRecord | null {
+    return FirebaseAuthenticationClient.getUserRecordForFirebaseUser(
+      this.auth.currentUser,
+    );
   }
 
   signInWithEmailAndPassword(email: string, password: string) {
@@ -124,6 +136,22 @@ export default class FirebaseAuthenticationClient
     return;
   }
 
+  async getLoginTokenUsingAccessCode(accessCode: string) {
+    const fetchResult = await fetch(
+      `${serviceConfig.httpsAPIBaseURLString}/internal/auth/consumeAccessCode?accessCode=${accessCode}`,
+    );
+    if (fetchResult.ok) {
+      const loginToken = await fetchResult.text();
+      return new FirebaseOpaqueLoginToken(loginToken);
+    } else {
+      throw new Error(
+        `Couldn't consume access code ${
+          fetchResult.status
+        }: ${await fetchResult.text()}`,
+      );
+    }
+  }
+
   async refreshSessionCookie(idToken: FirebaseOpaqueIDToken): Promise<unknown> {
     const fetchResult = await fetch(
       `${serviceConfig.httpsAPIBaseURLString}/refreshSessionCookie?idToken=${idToken._token}`,
@@ -141,7 +169,7 @@ export default class FirebaseAuthenticationClient
   supportsCredentialPersistence(): boolean {
     try {
       const request = window.indexedDB.open("firebaseLocalStorageDb");
-      request.onsuccess = (event) => {
+      request.onsuccess = () => {
         request.result.close();
       };
       // We don't need to wait for success to return true: when IDB is unsupported, it will fail immediately.

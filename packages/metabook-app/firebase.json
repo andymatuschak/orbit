@@ -9,6 +9,10 @@
         "function": "getLoginToken"
       },
       {
+        "source": "/api/internal/auth/consumeAccessCode",
+        "function": "consumeAccessCode"
+      },
+      {
         "source": "/api/refreshSessionCookie",
         "function": "refreshSessionCookie"
       },
