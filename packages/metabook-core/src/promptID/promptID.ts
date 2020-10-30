@@ -6,7 +6,8 @@ import {
   PromptField,
   QAPromptContents,
 } from "../types/prompt";
-import { CID, CIDEncodable, encodeObjectToCIDString } from "../util/cids";
+import CID from "multiformats/cid";
+import { CIDEncodable, encodeObjectToCIDString } from "../util/cids";
 
 function canonicalizePromptField(
   promptField: PromptField,
@@ -15,7 +16,7 @@ function canonicalizePromptField(
     contents: promptField.contents,
     attachments: promptField.attachments.map((ref) => ({
       type: ref.type,
-      id: CID.from(ref.id),
+      id: CID.parse(ref.id),
       byteLength: ref.byteLength,
     })),
   };

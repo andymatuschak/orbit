@@ -12,7 +12,8 @@ import {
   PromptProvenanceType,
 } from "../types/promptProvenance";
 import { TaskMetadata, TaskProvenance } from "../types/taskMetadata";
-import { CID, CIDEncodable, encodeObjectToCIDString } from "../util/cids";
+import CID from "multiformats/cid";
+import { CIDEncodable, encodeObjectToCIDString } from "../util/cids";
 import { getPromptTaskForID, PromptTaskID } from "../types/promptTask";
 import {
   qaPromptType,
@@ -81,7 +82,7 @@ function canonicalizeActionLog(actionLog: ActionLog): CIDEncodable<ActionLog> {
   function canonicalizeParentActionLogIDs<
     T extends ActionLog & { parentActionLogIDs: ActionLogID[] }
   >(actionLog: T): CIDEncodable<ActionLogID[]> {
-    return actionLog.parentActionLogIDs.map((id) => CID.from(id));
+    return actionLog.parentActionLogIDs.map((id) => CID.parse(id));
   }
 
   function canonicalizeMetadata<T extends Partial<TaskMetadata>>(

@@ -1,8 +1,4 @@
-import {
-  Database,
-  DocumentReference,
-  ServerTimestamp,
-} from "./libraryAbstraction";
+import { Database, DocumentReference } from "./libraryAbstraction";
 
 const batchSize = 250;
 

@@ -3,7 +3,7 @@ import {
   PromptUpdateMetadataActionLog,
   updateMetadataActionLogType,
 } from "metabook-core";
-import spacedEverything from "spaced-everything";
+import * as spacedEverything from "spaced-everything";
 import { testClozePrompt } from "metabook-sample-data";
 import { simpleOrbitPrompt } from "./__fixtures__/testData";
 import SpacedEverythingImportCache from "./importCache";

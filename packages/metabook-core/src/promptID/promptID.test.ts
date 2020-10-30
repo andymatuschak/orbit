@@ -1,3 +1,4 @@
+import { base32 } from "multiformats/bases/base32";
 import createTestAttachmentData from "../__tests__/createTestAttachmentData";
 import {
   testApplicationPrompt,
@@ -7,8 +8,11 @@ import {
 import { AttachmentID, getIDForAttachment } from "../types/attachmentID";
 import { AttachmentIDReference } from "../types/attachmentIDReference";
 import { ApplicationPrompt } from "../types/prompt";
-import { CID, multibase, multihash, multicodec } from "../util/cids";
 import { getIDForPrompt } from "./promptID";
+import CID from "multiformats/cid";
+import { sha256 } from "multiformats/hashes/sha2";
+import { base58btc } from "multiformats/bases/base58";
+import * as dagJSON from "@ipld/dag-json";
 
 test("encoding stability", async () => {
   expect((await getIDForPrompt(testQAPrompt)).toString()).toMatchInlineSnapshot(
@@ -89,8 +93,8 @@ describe("encoding attachments", () => {
 
     // The prompt CID should not depend on the choice of attachment CID encoding.
     // We'll hackily re-encode the attachment CID to demonstrate that.
-    const variantAttachmentID = CID.from(testAttachmentReference.id).toString(
-      "base32",
+    const variantAttachmentID = CID.parse(testAttachmentReference.id).toString(
+      base32,
     );
     const variantAttachmentPromptID = (
       await getIDForPrompt({
@@ -178,8 +182,8 @@ test("application prompts encodings depend on variants", async () => {
 
 test("encoding metadata", async () => {
   const cid = await getIDForPrompt(testQAPrompt);
-  const testCID = CID.from(cid);
-  expect(multibase.encoding(cid).name).toEqual("base58btc");
-  expect(testCID.code).toEqual(multicodec.get("dag-json").code);
-  expect(multihash.decode(testCID.multihash).name).toEqual("sha2-256");
+  const testCID = CID.parse(cid);
+  expect(cid.slice(0, 1)).toEqual(base58btc.prefix);
+  expect(testCID.code).toEqual(dagJSON.code);
+  expect(testCID.multihash.code).toEqual(sha256.code);
 });

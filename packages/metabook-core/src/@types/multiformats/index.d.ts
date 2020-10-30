@@ -23,11 +23,6 @@ declare module "multiformats/hashes/sha2" {
   export const sha256: any;
 }
 
-declare module "multiformats/hashes/digest" {
-  export function create(code: number, buffer: any): any;
-  export type MultihashDigest = any;
-}
-
 declare module "multiformats/codecs/raw" {
   const x: any;
   export default x;

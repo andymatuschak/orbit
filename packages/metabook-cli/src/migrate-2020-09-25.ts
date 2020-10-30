@@ -40,7 +40,7 @@ const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
     const firebaseKey = file.name.split("/")[1];
 
     const newCIDString = getAttachmentIDForFirebaseKey(firebaseKey);
-    const newCID = CID.from(newCIDString);
+    const newCID = CID.parse(newCIDString);
 
     const oldCID = CID.create(1, 0, newCID.multihash);
     const oldCIDString = oldCID.toString("base58btc") as AttachmentID;
@@ -69,7 +69,7 @@ const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
   const promptEntries: [unknown, unknown][] = [];
   for (const promptDoc of prompts.docs) {
     const mismappedCIDString = getPromptIDForFirebaseKey(promptDoc.id);
-    const mismappedCID = CID.from(mismappedCIDString);
+    const mismappedCID = CID.parse(mismappedCIDString);
 
     const oldCID = CID.create(1, 0x70, mismappedCID.multihash);
     const oldCIDString = oldCID.toString("base58btc") as PromptID;
@@ -159,7 +159,7 @@ const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
 
   function getOldCIDFromFirebaseKey(firebaseKey: string): string {
     const mismappedCIDString = getActionLogIDForFirebaseKey(firebaseKey);
-    const mismappedCID = CID.from(mismappedCIDString);
+    const mismappedCID = CID.parse(mismappedCIDString);
 
     const oldCID = CID.create(1, 0x70, mismappedCID.multihash);
     const oldCIDString = oldCID.toString("base58btc") as ActionLogID;
