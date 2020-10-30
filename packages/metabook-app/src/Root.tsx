@@ -1,13 +1,9 @@
-import * as Authentication from "./authentication";
-import { styles } from "metabook-ui";
 import React, { useState } from "react";
-import { ActivityIndicator, Platform, View } from "react-native";
-import {
-  AuthenticationClientContext,
-  useCurrentUserRecord,
-} from "./util/authContext";
-import { getFirebaseAuth } from "./util/firebase";
+import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import * as Authentication from "./authentication";
+import { AuthenticationClientContext } from "./util/authContext";
+import { getFirebaseAuth } from "./util/firebase";
 import usePageViewTracking from "./util/usePageViewTracking";
 
 enum RootScreen {
@@ -37,7 +33,7 @@ function useNavigationState(): RootScreen {
 
 const SignInScreen = React.lazy(() => import("./signIn/SignInScreen"));
 const ReviewSessionScreen = React.lazy(
-  () => import("./reviewSession/ReviewSession"),
+  () => import("./reviewSession/ReviewSessionScreen"),
 );
 const EmbedScreen = React.lazy(() => import("./embedded/EmbeddedScreen"));
 const LearnMoreScreen = React.lazy(() => import("./learnMore/LearnMoreScreen"));
