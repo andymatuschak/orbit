@@ -1,4 +1,4 @@
-import fastestsmallesttextencoderdecoder from "fastestsmallesttextencoderdecoder";
+import * as fastestsmallesttextencoderdecoder from "fastestsmallesttextencoderdecoder";
 import { ActionLogID, AttachmentID, PromptID } from "metabook-core";
 import { base58btc } from "multiformats/bases/base58";
 import CID from "multiformats/cid";
