@@ -13,6 +13,7 @@
     "metabook-app": "0.0.1",
     "metabook-client": "0.0.1",
     "metabook-firebase-support": "0.0.1",
+    "multiformats": "^4.3.1",
     "yargs": "^16.1.0"
   },
   "engines": {

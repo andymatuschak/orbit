@@ -5,7 +5,5 @@
     "rootDir": "./src",
     "types": ["jest", "long", "node"]
   },
-  "include": ["./src/**/*.ts",
-    "../../oldTypes/**/*.d.ts"
-  ]
+  "include": ["./src/**/*.ts"]
 }

@@ -9,30 +9,30 @@ import {
   PromptField,
   PromptID,
 } from "metabook-core";
-import { CID } from "metabook-core/dist/util/cids";
-import admin from "firebase-admin";
 import {
   batchWriteEntries,
   getActionLogIDForFirebaseKey,
+  getActionLogIDReference,
   getAttachmentIDForFirebaseKey,
+  getDataRecordReference,
   getFirebaseKeyForCIDString,
   getLogCollectionReference,
-  getReferenceForActionLogID,
-  getReferenceForDataRecordID,
   getStorageObjectNameForAttachmentID,
   getTaskStateCacheCollectionReference,
   storageBucketName,
 } from "metabook-firebase-support";
+import CID from "multiformats/cid";
+import { base58btc } from "multiformats/bases/base58";
 import { getPromptIDForFirebaseKey } from "../../metabook-firebase-support/dist/firebaseKeyEncoding";
 import { getAdminApp } from "./adminApp";
 import { deleteCollection } from "./deleteCollection";
 
-const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
+const userID = "k2SFGEIg70UEltRbHEAed8yERc32";
 
 (async () => {
   // 1. Attachments.
   // Iterate through all existing attachments, moving them to their new paths.
-  const ref = getAdminApp().storage().bucket(storageBucketName);
+  /*const ref = getAdminApp().storage().bucket(storageBucketName);
   const allFiles = await ref.getFiles();
   const attachmentMapping: { [key: string]: AttachmentID } = {};
   for (const file of allFiles[0].slice(1)) {
@@ -43,7 +43,7 @@ const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
     const newCID = CID.parse(newCIDString);
 
     const oldCID = CID.create(1, 0, newCID.multihash);
-    const oldCIDString = oldCID.toString("base58btc") as AttachmentID;
+    const oldCIDString = oldCID.toString(base58btc) as AttachmentID;
 
     attachmentMapping[oldCIDString] = newCIDString;
   }
@@ -52,7 +52,7 @@ const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
     "attachmentMapping.json",
     JSON.stringify(attachmentMapping),
     { encoding: "utf8" },
-  );
+  );*/
 
   const promptTypeMapping: { [key: string]: string } = {
     basic: "qaPrompt",
@@ -67,12 +67,12 @@ const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
   const prompts = await promptCollection.get();
   const promptMapping: { [key: string]: PromptID } = {};
   const promptEntries: [unknown, unknown][] = [];
-  for (const promptDoc of prompts.docs) {
+  /*for (const promptDoc of prompts.docs) {
     const mismappedCIDString = getPromptIDForFirebaseKey(promptDoc.id);
     const mismappedCID = CID.parse(mismappedCIDString);
 
     const oldCID = CID.create(1, 0x70, mismappedCID.multihash);
-    const oldCIDString = oldCID.toString("base58btc") as PromptID;
+    const oldCIDString = oldCID.toString(base58btc) as PromptID;
 
     function adaptField(promptField: PromptField) {
       if (promptField.attachments === undefined) {
@@ -118,22 +118,19 @@ const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
 
       promptMapping[oldCIDString] = await getIDForPrompt(data as Prompt);
       promptEntries.push([
-        getReferenceForDataRecordID(db, promptMapping[oldCIDString]),
+        getDataRecordReference(db, promptMapping[oldCIDString]),
         data,
       ]);
     } catch (error) {
       console.log(`Skipping ${promptDoc.id} - ${promptDoc.data()}: ${error}`);
     }
-  }
+  }*/
 
-  // TODO: Delete old prompts.
-  // TODO: Write new prompts.
-
-  await fs.promises.writeFile(
+  /*await fs.promises.writeFile(
     "attachmentMapping.json",
     JSON.stringify(attachmentMapping),
     { encoding: "utf8" },
-  );
+  );*/
 
   // 3. Logs.
   const logCollection = getLogCollectionReference(db, userID);
@@ -162,7 +159,7 @@ const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
     const mismappedCID = CID.parse(mismappedCIDString);
 
     const oldCID = CID.create(1, 0x70, mismappedCID.multihash);
-    const oldCIDString = oldCID.toString("base58btc") as ActionLogID;
+    const oldCIDString = oldCID.toString(base58btc) as ActionLogID;
     return oldCIDString;
   }
 
@@ -211,7 +208,7 @@ const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
         data.taskID = adaptTaskID(data.taskID);
         logMapping[oldCIDString] = await getIDForActionLog(data as ActionLog);
         logEntries.push([
-          getReferenceForActionLogID(db, userID, logMapping[oldCIDString]),
+          getActionLogIDReference(db, userID, logMapping[oldCIDString]),
           data,
         ]);
       } catch (error) {
@@ -254,19 +251,18 @@ const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
   //   { encoding: "utf8" },
   // );
   //
-  // await fs.promises.writeFile("logEntries.json", JSON.stringify(logEntries), {
-  //   encoding: "utf8",
-  // });
+  await fs.promises.writeFile("logEntries.json", JSON.stringify(logEntries), {
+    encoding: "utf8",
+  });
 
-  console.log("Deleting prompt collection");
+  /*console.log("Deleting prompt collection");
   await deleteCollection(db, promptCollection);
   console.log("Writing new prompts");
   await batchWriteEntries(
     // @ts-ignore
     promptEntries,
     db,
-    (ms, ns) => new admin.firestore.Timestamp(ms, ns),
-  );
+  );*/
   console.log("Deleting user logs");
   await deleteCollection(db, logCollection);
   console.log("Deleting user states");
@@ -276,6 +272,5 @@ const userID = "x5EWk2UT56URxbfrl7djoxwxiqH2";
     // @ts-ignore
     logEntries,
     db,
-    (ms, ns) => new admin.firestore.Timestamp(ms, ns),
   );
 })().then(() => process.exit(0));
