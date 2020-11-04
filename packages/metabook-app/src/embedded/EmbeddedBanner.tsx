@@ -19,13 +19,25 @@ function getBannerMessage({
   totalPromptCount,
   sizeClass,
 }: EmbeddedBannerMessageInputs): string {
+  function formatPrompts(n: number): string {
+    return n === 1 ? "1 prompt" : `${n} prompts`;
+  }
+
   if (!isSignedIn && completePromptCount === 0) {
     return sizeClass === "regular"
       ? "Quickly review what you just read."
-      : "Quick review session:";
+      : "Quick review:";
   } else {
-    if (completePromptCount < totalPromptCount) {
-      return `Review: ${totalPromptCount - completePromptCount} prompts left`;
+    if (completePromptCount === 0) {
+      return sizeClass === "regular"
+        ? `Review session: ${formatPrompts(totalPromptCount)}`
+        : `Review: ${formatPrompts(totalPromptCount)}`;
+    } else if (completePromptCount < totalPromptCount) {
+      return sizeClass === "regular"
+        ? `Review session: ${formatPrompts(
+            totalPromptCount - completePromptCount,
+          )} left`
+        : `${formatPrompts(totalPromptCount - completePromptCount)} left`;
     } else {
       return `Review complete`;
     }

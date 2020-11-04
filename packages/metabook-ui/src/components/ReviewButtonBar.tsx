@@ -22,6 +22,7 @@ export interface PendingMarkingInteractionState {
 function getButtonTitle(
   promptType: PromptType | null,
   outcome: PromptRepetitionOutcome,
+  isVeryNarrow: boolean,
 ) {
   switch (outcome) {
     case PromptRepetitionOutcome.Remembered:
@@ -39,7 +40,7 @@ function getButtonTitle(
         case qaPromptType:
         case clozePromptType:
         case null:
-          return "Forgotten";
+          return isVeryNarrow ? "Forgot" : "Forgotten";
         case applicationPromptType:
           return "Missed";
       }
@@ -79,8 +80,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   insetBottom?: number;
 }) {
   const { width, onLayout } = useLayout();
-  const widthSizeClass = layout.getWidthSizeClass(width);
-  const isVeryNarrow = width < 360;
+  const isVeryNarrow = width > 0 && width < 320;
 
   const buttonStyle = {
     flex: 1,
@@ -130,6 +130,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             title={getButtonTitle(
               promptType,
               PromptRepetitionOutcome.Forgotten,
+              isVeryNarrow,
             )}
             onPendingInteractionStateDidChange={(pendingActivationState) => {
               forgottenButtonPendingState.current = pendingActivationState;
@@ -140,12 +141,14 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
           {spacer}
           <Button
             {...sharedButtonProps}
+            style={[buttonStyle, { minWidth: 176 }]}
             key={"Remembered"}
             onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
             iconName={IconName.Check}
             title={getButtonTitle(
               promptType,
               PromptRepetitionOutcome.Remembered,
+              isVeryNarrow,
             )}
             onPendingInteractionStateDidChange={(pendingActivationState) => {
               rememberedButtonPendingState.current = pendingActivationState;
@@ -178,8 +181,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
       style={[
         {
           minHeight: layout.gridUnit * 7,
-          flexDirection: isVeryNarrow ? "column" : "row",
-          flexWrap: isVeryNarrow ? "wrap" : "nowrap",
+          flexDirection: "row",
         },
       ]}
       onLayout={onLayout}
