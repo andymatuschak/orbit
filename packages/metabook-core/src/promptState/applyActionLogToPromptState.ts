@@ -12,7 +12,6 @@ import {
   rescheduleActionLogType,
   updateMetadataActionLogType,
 } from "../types/actionLog";
-import { applicationPromptType } from "../types/prompt";
 import {
   PromptActionLog,
   PromptRepetitionActionLog,
@@ -75,12 +74,8 @@ function applyPromptRepetitionActionLogToPromptState<
           basePromptState.lastReviewTimestampMillis,
       )
     : 0;
-  const currentBestInterval = basePromptState
-    ? basePromptState.bestIntervalMillis
-    : null;
-
-  const currentlyNeedsRetry =
-    (basePromptState && basePromptState.needsRetry) || false;
+  const currentBestInterval = basePromptState?.bestIntervalMillis ?? null;
+  const currentlyNeedsRetry = basePromptState?.needsRetry ?? false;
 
   const newInterval = getNextRepetitionInterval({
     schedule: schedule,
@@ -144,7 +139,6 @@ export default function applyActionLogToPromptState<
   basePromptState: PromptState | null;
   schedule: MetabookSpacedRepetitionSchedule;
 }): PromptState | Error {
-  const initialInterval = getInitialIntervalForSchedule("default");
   switch (promptActionLog.actionLogType) {
     case ingestActionLogType:
       if (basePromptState) {
@@ -178,7 +172,7 @@ export default function applyActionLogToPromptState<
           taskMetadata: getInitialPromptTaskMetadata(
             promptActionLog.provenance,
           ),
-          intervalMillis: initialInterval,
+          intervalMillis: 0,
           bestIntervalMillis: null,
         };
       }

@@ -27,7 +27,7 @@ export function getNextRepetitionInterval({
     if (currentlyNeedsRetry) {
       // If the card needs to be retried, and the user remembers, then we just remove the retry indication.
       // If it happens that they waited a long time before attempting a retry, and that time is longer than their scheduled interval, we'll give them credit for that.
-      // Unless they're on the "in-text" level, in which case we still bump them up to 5 days.
+      // Unless they're below the first level, in which case we still bump them up to 5 days.
       return Math.max(
         scheduledIntervalMillis!,
         reviewIntervalMillis / growthFactor,

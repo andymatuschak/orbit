@@ -114,7 +114,7 @@ describe("ingesting", () => {
       bestIntervalMillis: null,
       dueTimestampMillis: testIngestLog.timestampMillis,
       headActionLogIDs: [testIngestLogID],
-      intervalMillis: scheduleSequence[1].interval,
+      intervalMillis: 0,
       lastReviewTimestampMillis: testIngestLog.timestampMillis,
       needsRetry: false,
       lastReviewTaskParameters: null,
@@ -220,37 +220,64 @@ describe("repetition", () => {
     });
   });
 
-  test("with a base state", async () => {
-    const basePromptState = applyActionLogToPromptState({
-      promptActionLog: testRepetitionLog,
-      actionLogID: testRepetitionLogID,
-      basePromptState: null,
-      schedule: testSchedule,
-    }) as PromptState;
-    const log = {
-      ...testRepetitionLog,
-      parentActionLogIDs: [testRepetitionLogID],
-      timestampMillis:
-        testRepetitionLog.timestampMillis + scheduleSequence[3].interval + 50,
-    };
-    const nextPromptState = applyActionLogToPromptState({
-      promptActionLog: log,
-      actionLogID: await getIDForActionLog(log),
-      basePromptState,
-      schedule: testSchedule,
-    }) as PromptState;
-    expect(nextPromptState.dueTimestampMillis).toBeGreaterThan(
-      log.timestampMillis + nextPromptState.intervalMillis,
-    );
-    expect(nextPromptState.dueTimestampMillis).toBeLessThan(
-      log.timestampMillis + nextPromptState.intervalMillis + 1000 * 60 * 10,
-    );
-    expect(nextPromptState.bestIntervalMillis).toEqual(
-      log.timestampMillis - testRepetitionLog.timestampMillis,
-    );
-    expect(nextPromptState.intervalMillis).toBeGreaterThanOrEqual(
-      scheduleSequence[4].interval,
-    );
+  describe("with a base state", () => {
+    let basePromptState: PromptState;
+    beforeAll(() => {
+      basePromptState = applyActionLogToPromptState({
+        promptActionLog: testIngestLog,
+        actionLogID: testIngestLogID,
+        basePromptState: null,
+        schedule: testSchedule,
+      }) as PromptState;
+    });
+
+    test("remembering", async () => {
+      const log = {
+        ...testRepetitionLog,
+        parentActionLogIDs: [testRepetitionLogID],
+        timestampMillis:
+          testRepetitionLog.timestampMillis + scheduleSequence[3].interval + 50,
+      };
+      const nextPromptState = applyActionLogToPromptState({
+        promptActionLog: log,
+        actionLogID: await getIDForActionLog(log),
+        basePromptState,
+        schedule: testSchedule,
+      }) as PromptState;
+      expect(nextPromptState.dueTimestampMillis).toBeGreaterThan(
+        log.timestampMillis + nextPromptState.intervalMillis,
+      );
+      expect(nextPromptState.dueTimestampMillis).toBeLessThan(
+        log.timestampMillis + nextPromptState.intervalMillis + 1000 * 60 * 10,
+      );
+      expect(nextPromptState.bestIntervalMillis).toEqual(
+        log.timestampMillis - testRepetitionLog.timestampMillis,
+      );
+      expect(nextPromptState.intervalMillis).toBeGreaterThanOrEqual(
+        scheduleSequence[4].interval,
+      );
+    });
+
+    test("forgetting", async () => {
+      const log = {
+        ...testRepetitionLog,
+        outcome: PromptRepetitionOutcome.Forgotten,
+        parentActionLogIDs: [testRepetitionLogID],
+        timestampMillis:
+          testRepetitionLog.timestampMillis + scheduleSequence[1].interval,
+      };
+      const nextPromptState = applyActionLogToPromptState({
+        promptActionLog: log,
+        actionLogID: await getIDForActionLog(log),
+        basePromptState,
+        schedule: testSchedule,
+      }) as PromptState;
+      expect(nextPromptState.dueTimestampMillis).toBeLessThan(
+        log.timestampMillis + 1000 * 60 * 60,
+      );
+      expect(nextPromptState.bestIntervalMillis).toBeNull();
+      expect(nextPromptState.intervalMillis).toBe(0);
+    });
   });
 
   test("application prompts don't retry when forgotten", async () => {
