@@ -513,6 +513,7 @@ function useMarkingManager(
     }
     if (isDebug) {
       console.log("Skipping action because we're in debug mode");
+      return;
     }
     if (authenticationState.status === "signedIn") {
       submitPendingActionsRecord(pendingActionsRecord)
