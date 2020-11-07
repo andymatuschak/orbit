@@ -9,14 +9,6 @@
         "function": "api"
       },
       {
-        "source": "/api/refreshSessionCookie",
-        "function": "refreshSessionCookie"
-      },
-      {
-        "source": "/api/recordPageView",
-        "function": "recordPageView"
-      },
-      {
         "source": "**",
         "destination": "/index.html"
       }

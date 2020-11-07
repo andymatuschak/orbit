@@ -10,6 +10,14 @@ export function createAPIApp(): express.Application {
   const app = express();
   app.use(corsHandler);
   app.use(cookieParser());
+  app.use((request, _, next) => {
+    console.log(
+      `${request.method}: ${request.path}`,
+      request.query,
+      request.body,
+    );
+    next();
+  });
 
   app.get("/internal/auth/createLoginToken", createLoginToken);
   app.get("/internal/auth/consumeAccessCode", consumeAccessCode);
