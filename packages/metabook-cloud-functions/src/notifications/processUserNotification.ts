@@ -7,7 +7,7 @@ import {
 import * as backend from "../backend";
 import getDefaultEmailService from "../email";
 import { EmailSpec } from "../email/types";
-import { defaultLoggingService } from "../logging";
+import { sharedLoggingService } from "../logging";
 import {
   getReviewSessionEmailSpec,
   shouldSendReminderEmail,
@@ -123,7 +123,7 @@ export async function processUserNotification(
       await backend.users.updateUserMetadata(userID, {
         sessionNotificationState: action.newNotificationState,
       });
-      await defaultLoggingService.logSessionNotification({
+      await sharedLoggingService.logSessionNotification({
         userID,
         timestamp: nowTimestampMillis,
         emailSpec: action.emailSpec,

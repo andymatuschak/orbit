@@ -5,12 +5,8 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
-        "source": "/api/getLoginToken",
-        "function": "getLoginToken"
-      },
-      {
-        "source": "/api/internal/auth/consumeAccessCode",
-        "function": "consumeAccessCode"
+        "source": "/api/**",
+        "function": "api"
       },
       {
         "source": "/api/refreshSessionCookie",

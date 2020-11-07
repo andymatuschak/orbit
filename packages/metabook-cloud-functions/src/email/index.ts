@@ -1,14 +1,18 @@
-import functions from "firebase-functions";
+import serviceConfig from "../serviceConfig";
+import { isRunningInEmulator } from "../util/isRunningInEmulator";
+import { dummyEmailService } from "./dummy";
 import MailjetEmailService from "./mailjet";
 import { EmailService } from "./types";
 
-let _mailjetService: MailjetEmailService | null = null;
+let _sharedEmailService: EmailService | null = null;
 export default function getDefaultEmailService(): EmailService {
-  if (!_mailjetService) {
-    _mailjetService = new MailjetEmailService(
-      functions.config().mailjet.api_key,
-      functions.config().mailjet.secret_key,
-    );
+  if (!_sharedEmailService) {
+    _sharedEmailService = isRunningInEmulator
+      ? dummyEmailService
+      : new MailjetEmailService(
+          serviceConfig.mailjet.apiKey,
+          serviceConfig.mailjet.secretKey,
+        );
   }
-  return _mailjetService;
+  return _sharedEmailService;
 }

@@ -1,13 +1,11 @@
 import { browserName, detectOS } from "detect-browser";
 import type { Request, Response } from "express";
-import * as functions from "firebase-functions";
 import isBot from "isbot-fast";
 import requestIp from "request-ip";
-import { defaultLoggingService } from "../logging";
+import { sharedLoggingService } from "../../logging";
 import crypto from "crypto";
 import { startOfMonth } from "date-fns";
-
-import corsHandler from "./util/corsHandler";
+import serviceConfig from "../../serviceConfig";
 
 // Adapted from Umami: https://github.com/mikecao/umami
 /* MIT License
@@ -117,7 +115,7 @@ function getClientInfo(request: Request, screen: string | null) {
 }
 
 function getSalt() {
-  const salt = functions.config().logging.session_id_hash_salt;
+  const salt = serviceConfig.sessionIDHashSalt;
   if (!salt) {
     throw new Error(
       "You must set a sessionIDHashSalt: firebase functions:config:set logging.session_id_hash_salt=YOURSALT",
@@ -131,44 +129,42 @@ function ok(response: Response) {
   response.status(200).json({});
 }
 
-export default functions.https.onRequest((request, response) => {
-  corsHandler(request, response, async () => {
-    const userAgent = request.headers["user-agent"];
-    if (userAgent && isBot(userAgent)) {
-      return ok(response);
-    }
-
-    const { pathname, hostname, referrer, screen, language } = request.body;
-    if (hostname === "localhost") {
-      console.info("Ignoring page view from localhost");
-      return ok(response);
-    }
-
-    const { browser, os, ip, device } = getClientInfo(request, screen);
-
-    const sessionID = crypto
-      .createHash("sha256")
-      .update(JSON.stringify({ ip, userAgent, hostname, os, salt: getSalt() }))
-      .digest("base64");
-
-    try {
-      await defaultLoggingService.logPageView({
-        pathname,
-        hostname,
-        referrer: referrer ?? null,
-        screen: screen ?? null,
-        language: language ?? null,
-        browser,
-        os,
-        device,
-        sessionID,
-        timestamp: Date.now(),
-      });
-    } catch (error) {
-      console.error(error);
-      return response.status(500).json({});
-    }
-
+export async function recordPageView(request: Request, response: Response) {
+  const userAgent = request.headers["user-agent"];
+  if (userAgent && isBot(userAgent)) {
     return ok(response);
-  });
-});
+  }
+
+  const { pathname, hostname, referrer, screen, language } = request.body;
+  if (hostname === "localhost") {
+    console.info("Ignoring page view from localhost");
+    return ok(response);
+  }
+
+  const { browser, os, ip, device } = getClientInfo(request, screen);
+
+  const sessionID = crypto
+    .createHash("sha256")
+    .update(JSON.stringify({ ip, userAgent, hostname, os, salt: getSalt() }))
+    .digest("base64");
+
+  try {
+    await sharedLoggingService.logPageView({
+      pathname,
+      hostname,
+      referrer: referrer ?? null,
+      screen: screen ?? null,
+      language: language ?? null,
+      browser,
+      os,
+      device,
+      sessionID,
+      timestamp: Date.now(),
+    });
+  } catch (error) {
+    console.error(error);
+    return response.status(500).json({});
+  }
+
+  return ok(response);
+}

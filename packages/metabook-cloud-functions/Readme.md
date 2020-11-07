@@ -25,3 +25,9 @@ To help preserve user privacy, we track page views ourselves in BigQuery rather 
 ```
 firebase functions:config:set logging.session_id_hash_salt="YOUR SALT"
 ```
+
+Once you've set your configuration parameters, it's convenient to store them locally (in a file not committed to Git) so that the Firebase emulators can access them:
+
+```
+firebase functions:config:get > .runtimeconfig.json
+```

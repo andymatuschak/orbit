@@ -97,7 +97,7 @@ export default class FirebaseAuthenticationClient
 
   async getLoginTokenUsingSessionCookie(): Promise<FirebaseOpaqueLoginToken> {
     const fetchResult = await fetch(
-      `${serviceConfig.httpsAPIBaseURLString}/getLoginToken`,
+      `${serviceConfig.httpsAPIBaseURLString}/internal/auth/createLoginToken`,
     );
     if (fetchResult.ok) {
       const loginToken = await fetchResult.text();
@@ -115,7 +115,7 @@ export default class FirebaseAuthenticationClient
     idToken: FirebaseOpaqueIDToken,
   ): Promise<FirebaseOpaqueLoginToken> {
     const fetchResult = await fetch(
-      `${serviceConfig.httpsAPIBaseURLString}/getLoginToken?idToken=${idToken._token}`,
+      `${serviceConfig.httpsAPIBaseURLString}/internal/auth/createLoginToken?idToken=${idToken._token}`,
     );
     if (fetchResult.ok) {
       const loginToken = await fetchResult.text();
@@ -154,7 +154,7 @@ export default class FirebaseAuthenticationClient
 
   async refreshSessionCookie(idToken: FirebaseOpaqueIDToken): Promise<unknown> {
     const fetchResult = await fetch(
-      `${serviceConfig.httpsAPIBaseURLString}/refreshSessionCookie?idToken=${idToken._token}`,
+      `${serviceConfig.httpsAPIBaseURLString}/internal/auth/refreshSessionCookie?idToken=${idToken._token}`,
     );
     if (!fetchResult.ok) {
       throw new Error(

@@ -116,7 +116,7 @@ async function logEvent<T>(tableName: string, data: T): Promise<unknown> {
     });
 }
 
-const bigqueryService: LoggingService = {
+export const bigQueryLoggingService: LoggingService = {
   logUserEvent(log: UserEventLog): Promise<unknown> {
     const { userID, timestamp, eventName, ...rest } = log;
     const bqLog = {
@@ -182,5 +182,3 @@ const bigqueryService: LoggingService = {
     });
   },
 };
-
-export default bigqueryService;

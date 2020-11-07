@@ -6,7 +6,7 @@ import {
   PromptStateCache,
 } from "metabook-firebase-support";
 import * as backend from "../backend";
-import { defaultLoggingService } from "../logging";
+import { sharedLoggingService } from "../logging";
 
 // We reset the user's review session notification state when they review a prompt, unless they're just collecting it for the first time.
 async function updateSessionNotificationStateIfNecessary(
@@ -41,7 +41,7 @@ export default functions.firestore
         oldPromptStateCache,
       );
 
-      await defaultLoggingService.logActionLog(
+      await sharedLoggingService.logActionLog(
         userID,
         actionLog,
         getPromptStateFromPromptStateCache(newPromptStateCache),

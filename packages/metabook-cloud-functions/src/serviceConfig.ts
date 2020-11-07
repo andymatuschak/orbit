@@ -1,3 +1,5 @@
+import * as functions from "firebase-functions";
+
 const serviceConfig = {
   notificationEmails: {
     sender: {
@@ -14,6 +16,12 @@ const serviceConfig = {
     projectId: "metabook-system",
   },
   webBaseURL: "https://withorbit.com",
+
+  sessionIDHashSalt: functions.config().logging.session_id_hash_salt,
+  mailjet: {
+    apiKey: functions.config().mailjet.api_key,
+    secretKey: functions.config().mailjet.secret_key,
+  },
 };
 
 export default serviceConfig;

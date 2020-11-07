@@ -3,7 +3,7 @@ import functions from "firebase-functions";
 import getDefaultEmailService from "../email";
 import { EmailSpec } from "../email/types";
 import { updateUserMetadata } from "../backend/users";
-import { defaultLoggingService } from "../logging";
+import { sharedLoggingService } from "../logging";
 
 // TODO: we'll need to send a different welcome email if they sign up outside the context of a reading
 const welcomeEmailSpec: EmailSpec = {
@@ -27,7 +27,7 @@ const onUserCreate = functions.auth.user().onCreate(async (user, context) => {
     registrationTimestampMillis,
   });
 
-  await defaultLoggingService.logUserEvent({
+  await sharedLoggingService.logUserEvent({
     userID: userID,
     timestamp: registrationTimestampMillis,
     eventName: "registration",

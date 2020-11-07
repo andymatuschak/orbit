@@ -15,7 +15,7 @@ function trackPageView(pathname: string, referrer: string | null) {
     language,
   };
 
-  fetch(`${serviceConfig.httpsAPIBaseURLString}/recordPageView`, {
+  fetch(`${serviceConfig.httpsAPIBaseURLString}/internal/recordPageView`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

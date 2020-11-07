@@ -2748,16 +2748,16 @@
   resolved "https://registry.yarnpkg.com/@firebase/webchannel-wrapper/-/webchannel-wrapper-0.4.0.tgz#becce788818d3f47f0ac1a74c3c061ac1dcf4f6d"
   integrity sha512-8cUA/mg0S+BxIZ72TdZRsXKBP5n5uRcE3k29TZhZw6oIiHBt9JA7CTb/4pE1uKtE/q5NeTY2tBDcagoZ+1zjXQ==
 
-"@google-cloud/bigquery@^5.3.0":
-  version "5.3.0"
-  resolved "https://registry.yarnpkg.com/@google-cloud/bigquery/-/bigquery-5.3.0.tgz#87db58ed6538d0be5dd146901ffd636d6b9fead0"
-  integrity sha512-IxHd7dWJygQgExdnwS7D8zMswe3VG5akKSLTkdl5ky1Xn6VHiXg30c8zK99jqRafA7kU023W/+L9F9zIQp1qiA==
+"@google-cloud/bigquery@^5.4.0":
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/@google-cloud/bigquery/-/bigquery-5.4.0.tgz#e9b3ddb2d7b5a04a5224a5c0cd95d549bbdde4ff"
+  integrity sha512-efdNr+S0SMJ0ZpYhtKC8tdMqCIUsL0oVImFz+WJM8Coq37WuGvLk6gX7rd5J/L5chDYW0sg7PSIF2izmi0Uplg==
   dependencies:
     "@google-cloud/common" "^3.1.0"
     "@google-cloud/paginator" "^3.0.0"
     "@google-cloud/promisify" "^2.0.0"
     arrify "^2.0.1"
-    big.js "^5.2.2"
+    big.js "^6.0.0"
     duplexify "^4.0.0"
     extend "^3.0.2"
     is "^3.3.0"
@@ -8777,6 +8777,11 @@ big.js@^5.2.2:
   resolved "https://registry.yarnpkg.com/big.js/-/big.js-5.2.2.tgz#65f0af382f578bcdc742bd9c281e9cb2d7768328"
   integrity sha512-vyL2OymJxmarO8gxMr0mhChsO9QGwhynfuu4+MHTAW6czfq9humCB7rKpUjDd9YUiDPU4mzpyupFSvOClAwbmQ==
 
+big.js@^6.0.0:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/big.js/-/big.js-6.0.2.tgz#af54d7678630aa4ce5d62f43ed44d1a3c9faf803"
+  integrity sha512-5PQYFp5ZrznQwD7cNgUHZwpC0gm/Pmh2GiUMSW4KurSXEtjLUVAXnmxYnM2W1X0Dx9JFAcvYJ4IQ+dchanp5VA==
+
 bignumber.js@^4.0.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-4.1.0.tgz#db6f14067c140bd46624815a7916c92d9b6c24b1"
@@ -13047,10 +13052,10 @@ firebase-functions@^3.5.0:
     express "^4.17.1"
     lodash "^4.17.14"
 
-firebase-tools@^8.14.1:
-  version "8.14.1"
-  resolved "https://registry.yarnpkg.com/firebase-tools/-/firebase-tools-8.14.1.tgz#acef0784174c6e2d03133fe477c79fad7abcd247"
-  integrity sha512-okNru+nobU03BfVLXdCkbrdRYoQQKG3m4scoFXUSIkyw8b1ys0JkEz+HzBjpFg9qKYHu3aVI2y6C8mwFEGNOPg==
+firebase-tools@^8.15.1:
+  version "8.15.1"
+  resolved "https://registry.yarnpkg.com/firebase-tools/-/firebase-tools-8.15.1.tgz#1d94d0ecc74f5e592ccb70fc54e92a508bd7f5b2"
+  integrity sha512-u2Kn2w5rWZLybBNmThVppHvZq5/23aZfBcvT0eon26bxX+nK7ApV6KS4DyaDR1tBH4vqL9LVHBVy0lVhAe2EyQ==
   dependencies:
     "@google-cloud/pubsub" "^1.7.0"
     JSONStream "^1.2.1"
@@ -13084,64 +13089,7 @@ firebase-tools@^8.14.1:
     marked-terminal "^3.3.0"
     minimatch "^3.0.4"
     morgan "^1.10.0"
-    open "^6.3.0"
-    ora "^3.4.0"
-    plist "^3.0.1"
-    portfinder "^1.0.23"
-    progress "^2.0.3"
-    request "^2.87.0"
-    rimraf "^3.0.0"
-    semver "^5.7.1"
-    superstatic "^7.0.0"
-    tar "^4.3.0"
-    tcp-port-used "^1.0.1"
-    tmp "0.0.33"
-    triple-beam "^1.3.0"
-    tweetsodium "0.0.5"
-    universal-analytics "^0.4.16"
-    unzipper "^0.10.10"
-    update-notifier "^4.1.0"
-    uuid "^3.0.0"
-    winston "^3.0.0"
-    ws "^7.2.3"
-
-firebase-tools@^8.2.0:
-  version "8.11.0"
-  resolved "https://registry.yarnpkg.com/firebase-tools/-/firebase-tools-8.11.0.tgz#4f33f26b8da66c278b88b820b317b59776380d93"
-  integrity sha512-uz/Oz6idMN5/m1AU0DivCqsNZd8sBnLNb+YJJUdkTi3yeKVlXKtGBbYu9d87t9E5azLC5CaV1wo/57q03lIuJg==
-  dependencies:
-    "@google-cloud/pubsub" "^1.7.0"
-    JSONStream "^1.2.1"
-    archiver "^3.0.0"
-    body-parser "^1.19.0"
-    chokidar "^3.0.2"
-    cjson "^0.3.1"
-    cli-color "^1.2.0"
-    cli-table "^0.3.1"
-    commander "^4.0.1"
-    configstore "^5.0.1"
-    cross-env "^5.1.3"
-    cross-spawn "^7.0.1"
-    csv-streamify "^3.0.4"
-    dotenv "^6.1.0"
-    exegesis-express "^2.0.0"
-    exit-code "^1.0.2"
-    express "^4.16.4"
-    filesize "^3.1.3"
-    fs-extra "^0.23.1"
-    glob "^7.1.2"
-    google-auth-library "^5.5.0"
-    google-gax "~1.12.0"
-    inquirer "~6.3.1"
-    js-yaml "^3.13.1"
-    jsonschema "^1.0.2"
-    jsonwebtoken "^8.2.1"
-    leven "^3.1.0"
-    lodash "^4.17.19"
-    marked "^0.7.0"
-    marked-terminal "^3.3.0"
-    minimatch "^3.0.4"
-    morgan "^1.10.0"
+    node-fetch "^2.6.1"
     open "^6.3.0"
     ora "^3.4.0"
     plist "^3.0.1"
@@ -23580,7 +23528,7 @@ space-separated-tokens@^1.0.0:
     citation-js "^0.4.8"
     exiftool-vendored "~8"
     file-metadata "^1.0.0"
-    incremental-thinking "file:../../../Library/Caches/Yarn/v6/npm-spaced-everything-0.0.1-2a46e13f-c287-45d6-8ffb-f5d87c32ff71-1604085118988/node_modules/vendor/incremental-thinking"
+    incremental-thinking "file:../../../Library/Caches/Yarn/v6/npm-spaced-everything-0.0.1-32672d81-afb6-4ded-aadc-46fab8e255bd-1604705235438/node_modules/vendor/incremental-thinking"
     lodash.isequal "^4.5.0"
     moment "^2.24.0"
     node-getpocket vicchi/node-getpocket

@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
 import { ActionLog, AttachmentID, Prompt } from "metabook-core";
 import * as backend from "../backend";
-import { defaultLoggingService } from "../logging";
+import { sharedLoggingService } from "../logging";
 
 interface RecordEmbeddedActionsArguments {
   logs: ActionLog[];
@@ -45,7 +45,7 @@ async function storeLogs(userID: string, logs: ActionLog[]): Promise<void> {
   const storedResults = await backend.actionLogs.storeLogs(logs, userID);
   await Promise.all(
     storedResults.map(({ logDocument, promptState }) =>
-      defaultLoggingService.logActionLog(userID, logDocument, promptState),
+      sharedLoggingService.logActionLog(userID, logDocument, promptState),
     ),
   );
 }

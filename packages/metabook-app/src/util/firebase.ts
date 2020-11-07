@@ -6,17 +6,39 @@ import {
   firebaseAttachmentUploader,
   getDefaultFirebaseApp,
 } from "metabook-client";
+import serviceConfig from "../../serviceConfig";
 
+let _firestore: firebase.firestore.Firestore | null = null;
 export function getFirestore(): firebase.firestore.Firestore {
-  return getDefaultFirebaseApp().firestore();
+  if (!_firestore) {
+    _firestore = getDefaultFirebaseApp().firestore();
+    if (serviceConfig.shouldUseLocalBackend) {
+      _firestore.useEmulator("localhost", 8080);
+    }
+  }
+  return _firestore;
 }
 
+let _functions: firebase.functions.Functions | null = null;
 export function getFirebaseFunctions(): firebase.functions.Functions {
-  return getDefaultFirebaseApp().functions();
+  if (!_functions) {
+    _functions = getDefaultFirebaseApp().functions();
+    if (serviceConfig.shouldUseLocalBackend) {
+      _functions.useEmulator("localhost", 5001);
+    }
+  }
+  return _functions;
 }
 
+let _auth: firebase.auth.Auth | null = null;
 export function getFirebaseAuth(): firebase.auth.Auth {
-  return getDefaultFirebaseApp().auth();
+  if (!_auth) {
+    _auth = getDefaultFirebaseApp().auth();
+    if (serviceConfig.shouldUseLocalBackend) {
+      _auth.useEmulator("http://localhost:9099/");
+    }
+  }
+  return _auth;
 }
 
 export type PersistenceStatus = "pending" | "enabled" | "unavailable";

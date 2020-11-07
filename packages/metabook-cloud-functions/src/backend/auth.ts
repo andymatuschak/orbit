@@ -11,33 +11,37 @@ function getAuth(): firebase.auth.Auth {
   return _auth;
 }
 
-export async function getAuthTokensForIDToken(
+// Resolves to user ID if valid or throws if invalid.
+export async function validateIDToken(idToken: string): Promise<string> {
+  // At some point, once we add features which would involve revoking user tokens, we'd want to check here to see if the user's token's been revoked.
+  const decodedToken = await getAuth().verifyIdToken(idToken); // will reject on error
+  return decodedToken.uid;
+}
+
+export async function createSessionCookie(
   idToken: string,
 ): Promise<{
   sessionCookie: string;
   sessionCookieExpirationDate: Date;
-  customLoginToken: string;
 }> {
   const auth = getAuth();
-  // At some point, once we add features which would involve revoking user tokens, we'd want to check here to see if the user's token's been revoked.
-  const decodedToken = await auth.verifyIdToken(idToken); // will reject on error
-
   const expiresIn = 1000 * 60 * 60 * 24 * 14; // 2 weeks
   const sessionCookieExpirationDate = new Date(Date.now() + expiresIn);
 
-  const [sessionCookie, customLoginToken] = await Promise.all([
-    auth.createSessionCookie(idToken, { expiresIn }),
-    auth.createCustomToken(decodedToken.uid),
-  ]);
-  return { sessionCookie, customLoginToken, sessionCookieExpirationDate };
+  const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
+  return { sessionCookie, sessionCookieExpirationDate };
 }
 
-export async function getCustomLoginTokenForSessionCookie(
+// Resolves to user ID if valid or throws if invalid.
+export async function validateSessionCookie(
   sessionCookie: string,
 ): Promise<string> {
-  const auth = getAuth();
-  const decodedToken = await auth.verifySessionCookie(sessionCookie); // will reject on error
-  return auth.createCustomToken(decodedToken.uid);
+  const decodedToken = await getAuth().verifySessionCookie(sessionCookie); // will reject on error
+  return decodedToken.uid;
+}
+
+export async function createCustomLoginToken(userID: string): Promise<string> {
+  return await getAuth().createCustomToken(userID);
 }
 
 interface AccessCodeRecord {
@@ -71,7 +75,7 @@ export async function createOneTimeAccessCode(
   return accessCodeDoc.id;
 }
 
-// Consumes an access code. If it's valid, returns a Firebase custom auth token which can be used to login for one hour.
+// Consumes an access code. If it's valid, returns the user ID.
 export async function exchangeAccessCodeForCustomLoginToken(
   accessCode: string,
   nowTimestampMillis = Date.now(),
