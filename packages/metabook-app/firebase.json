@@ -9,6 +9,10 @@
         "function": "api"
       },
       {
+        "source": "/updateNotificationSettings",
+        "function": "updateNotificationSettings"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

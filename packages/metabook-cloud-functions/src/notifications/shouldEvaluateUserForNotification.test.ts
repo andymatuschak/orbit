@@ -10,13 +10,47 @@ test("don't bother with recently registered users", () => {
   ).toBeFalsy();
 });
 
-test("should process aged users", () => {
+const baseMetadata = {
+  registrationTimestampMillis: dateFns.subDays(Date.now(), 1).valueOf(),
+};
+
+test("should process users in the base case", () => {
+  expect(shouldEvaluateUserForNotification(baseMetadata, Date.now())).toBe(
+    true,
+  );
+});
+
+test("should skip unsubscribed users", () => {
   expect(
     shouldEvaluateUserForNotification(
-      {
-        registrationTimestampMillis: dateFns.subDays(Date.now(), 1).valueOf(),
-      },
+      { ...baseMetadata, isUnsubscribedFromSessionNotifications: true },
       Date.now(),
     ),
-  ).toBeTruthy();
+  ).toBe(false);
+});
+
+describe("snoozed", () => {
+  test("should skip snoozed users", () => {
+    expect(
+      shouldEvaluateUserForNotification(
+        {
+          ...baseMetadata,
+          snoozeSessionNotificationsUntilTimestampMillis: Date.now() + 1000,
+        },
+        Date.now(),
+      ),
+    ).toBe(false);
+  });
+
+  test("should email users with expired snoozes", () => {
+    expect(
+      shouldEvaluateUserForNotification(
+        {
+          ...baseMetadata,
+          snoozeSessionNotificationsUntilTimestampMillis: Date.now() - 1000,
+        },
+        Date.now(),
+      ),
+    ).toBe(true);
+  });
 });

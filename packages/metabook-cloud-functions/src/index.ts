@@ -4,6 +4,7 @@ export { default as onLogCreate } from "./functions/onLogCreate";
 export { default as onUserCreate } from "./functions/onUserCreate";
 export { default as recordEmbeddedActions } from "./functions/recordEmbeddedActions";
 export { default as recordPrompts } from "./functions/recordPrompts";
+export { updateNotificationSettings } from "./functions/updateNotificationSettings";
 
 export { api } from "./functions/api";
 

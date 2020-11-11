@@ -75,8 +75,8 @@ export async function createOneTimeAccessCode(
   return accessCodeDoc.id;
 }
 
-// Consumes an access code. If it's valid, returns the user ID.
-export async function exchangeAccessCodeForCustomLoginToken(
+// Validates access code, consuming it if valid. Resolves to user ID if valid; rejects if invalid.
+export async function consumeAccessCode(
   accessCode: string,
   nowTimestampMillis = Date.now(),
 ): Promise<string> {
@@ -87,9 +87,8 @@ export async function exchangeAccessCodeForCustomLoginToken(
     if (snapshot.exists) {
       const record = snapshot.data()!;
       if (record.expirationTimestamp.toMillis() > nowTimestampMillis) {
-        const customToken = await getAuth().createCustomToken(record.userID);
         await transaction.delete(documentRef);
-        return customToken;
+        return record.userID;
       } else {
         throw new Error("Access code has expired");
       }
