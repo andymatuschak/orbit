@@ -12,6 +12,7 @@ enum RootScreen {
   Embed = "Embed",
   LearnMore = "LearnMore",
   TermsOfService = "TermsOfService",
+  Settings = "Settings",
 }
 
 function useNavigationState(): RootScreen {
@@ -23,6 +24,8 @@ function useNavigationState(): RootScreen {
       return RootScreen.Embed;
     } else if (pathname.startsWith("/terms")) {
       return RootScreen.TermsOfService;
+    } else if (pathname.startsWith("/settings")) {
+      return RootScreen.Settings;
     } else if (pathname === "/") {
       return RootScreen.LearnMore;
     }
@@ -36,6 +39,7 @@ const ReviewSessionScreen = React.lazy(
   () => import("./reviewSession/ReviewSessionScreen"),
 );
 const EmbedScreen = React.lazy(() => import("./embedded/EmbeddedScreen"));
+const SettingsScreen = React.lazy(() => import("./settings/SettingsScreen"));
 const LearnMoreScreen = React.lazy(() => import("./learnMore/LearnMoreScreen"));
 const TermsOfServiceScreen = React.lazy(
   () => import("./terms/TermsOfServiceScreen"),
@@ -44,6 +48,7 @@ const screens: Record<RootScreen, React.ComponentType<unknown>> = {
   [RootScreen.SignIn]: SignInScreen,
   [RootScreen.Review]: ReviewSessionScreen,
   [RootScreen.Embed]: EmbedScreen,
+  [RootScreen.Settings]: SettingsScreen,
   [RootScreen.LearnMore]: LearnMoreScreen,
   [RootScreen.TermsOfService]: TermsOfServiceScreen,
 };
