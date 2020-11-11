@@ -11,6 +11,9 @@
       src="https://js.sentry-cdn.com/7a9cba7e96b54da4bae2c6eb9b8d7b18.min.js"
       crossorigin="anonymous"
     ></script>
+    <script>
+      navigator.serviceWorker.getRegistrations().then( function(registrations) { for(let registration of registrations) { registration.unregister(); } });
+    </script>
     <title>%WEB_TITLE%</title>
     <style>
       /**
