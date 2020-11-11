@@ -85,13 +85,12 @@ export async function _getUserNotificationAction(
 
   if (shouldSendNotification) {
     promptStates ||= await fetchUpcomingPromptStates();
-    const accessCode = await createEmailAccessCode();
     return {
-      emailSpec: getReviewSessionEmailSpec(
+      emailSpec: await getReviewSessionEmailSpec(
         nowTimestampMillis,
         userID,
         sessionNotificationState,
-        accessCode,
+        createEmailAccessCode,
       ),
       newNotificationState: _updateSessionNotificationStateForNewNotification(
         nowTimestampMillis,

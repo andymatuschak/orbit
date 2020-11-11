@@ -180,7 +180,6 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
       this.userID,
       this.database,
       firebase.firestore.FieldValue.serverTimestamp(),
-      (ms: number, ns: number) => new firebase.firestore.Timestamp(ms, ns),
     );
   }
 }

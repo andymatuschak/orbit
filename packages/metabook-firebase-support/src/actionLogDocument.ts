@@ -21,7 +21,6 @@ export async function storeLogs<D extends Database>(
   userID: string,
   database: D,
   serverTimestampFieldValue: FieldValue,
-  timestampConstructor: (ms: number, ns: number) => TimestampOf<D>,
   suppressTaskStateCacheUpdate = false,
 ): Promise<
   [

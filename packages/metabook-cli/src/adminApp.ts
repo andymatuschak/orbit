@@ -6,9 +6,15 @@ import {
 } from "metabook-firebase-support";
 import serviceAccount from "./adminKey.json";
 
+const useEmulator = true;
+
 let _adminApp: admin.app.App;
 export function getAdminApp() {
   if (!_adminApp) {
+    if (useEmulator) {
+      process.env["FIREBASE_AUTH_EMULATOR_HOST"] = "localhost:9099";
+      process.env["FIRESTORE_EMULATOR_HOST"] = "localhost:8080";
+    }
     _adminApp = admin.initializeApp({
       // Seems like the cert initializer has the wrong argument type.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -25,7 +25,6 @@ export async function storeLogs(
     userID,
     getDatabase(),
     firebase.firestore.Timestamp.now(),
-    (ms: number, ns: number) => new firebase.firestore.Timestamp(ms, ns),
     true,
   );
 

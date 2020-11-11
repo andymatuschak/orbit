@@ -1,8 +1,7 @@
 import functions from "firebase-functions";
-import { ServerTimestamp, UserMetadata } from "metabook-firebase-support";
+import { UserMetadata } from "metabook-firebase-support";
 import * as backend from "../../backend";
 import * as notifications from "../../notifications";
-import * as express from "express";
 
 export const processUserNotificationTopic = "processUserNotification";
 
