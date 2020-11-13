@@ -87,7 +87,7 @@
       <a href="https://www.webcomponents.org">Web Component</a> which can be
       used in any HTML page. Setup is easy: add one
       <code>&lt;script&gt;</code> tag, then you can use special
-      <code>&lt;orbit-prompt&gt;</code> tags anywhere on the page to insert
+      <code>&lt;orbit-reviewarea&gt;</code> and <code>&lt;orbit-prompt&gt;</code> tags anywhere on the page to insert
       prompts. Here's an example:
     </p>
     <pre>
@@ -140,7 +140,7 @@
     </p>
 
     <p>
-      While you can publish that example as-is, read on to learn more about how
+      While that example can be published as it is, read on to learn more about how
       to configure Orbit for your web site.
     </p>
 
@@ -167,18 +167,6 @@
       <code class="color" style="background-color: #d071ef">purple</code>, and
       <code class="color" style="background-color: #f56bb5">pink</code>.
     </p>
-
-    <p>
-      If you have several <code>orbit-reviewarea</code>s in one page, you can
-      avoid repeating the <code>color</code> attribute on each of them by
-      specifying the color in the page's <code>&lt;head&gt;</code> tag, like
-      this:
-    </p>
-    <pre>
-&lt;head&gt;
-  &lt;meta property=&quot;orbit:color&quot; content=&quot;violet&quot; /&gt;
-&lt;/head&gt;</pre
-    >
 
     <h3>Orbit relies on page metadata</h3>
 
@@ -213,8 +201,10 @@
       </li>
     </ul>
 
+    <h3>You can have multiple review areas</h3>
+
     <p>
-      It's common to use several review areas on the same page, interleaving
+      It's common to use several <code>&lt;orbit-reviewarea&gt;</code> tags on the same page, interleaving
       them every few hundred words. Orbit currently assumes that all the review
       areas which appear on a web page should be considered part of the same
       single piece of content. This works fine for long-form content but will
@@ -224,6 +214,18 @@
       <a href="mailto:andy@andymatuschak.org">let me know</a> if your site needs
       this to help me prioritize.
     </p>
+
+    <p>
+      If you have several <code>orbit-reviewarea</code>s in one page, you can
+      avoid repeating the <code>color</code> attribute on each of them by
+      specifying the color in the page's <code>&lt;head&gt;</code> tag, like
+      this:
+    </p>
+    <pre>
+&lt;head&gt;
+  &lt;meta property=&quot;orbit:color&quot; content=&quot;violet&quot; /&gt;
+&lt;/head&gt;</pre
+    >
 
     <h3>Prompts support simple formatting</h3>
 
@@ -244,8 +246,8 @@
 
     <p>
       The existing prompt interface and scheduler are tuned to questions which
-      help people remember what they read. I believe it's also possible to use
-      Orbit to prompt reflection, self-authorship, text which extends over time,
+      help people remember and internalize what they read. I believe it's also possible to use
+      Orbit to prompt reflection, self-authorship, texts which extend over time,
       and so on. Please
       <a href="mailto:andy@andymatuschak.org">let me know</a> if you're
       interested in exploring these use cases; we can figure out how to extend
