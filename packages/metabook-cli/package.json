@@ -6,8 +6,8 @@
   "type": "module",
   "dependencies": {
     "@oclif/command": "^1.5.19",
-    "@types/node": "^14.14.6",
-    "firebase-admin": "^9.3.0",
+    "@types/node": "^14.14.7",
+    "firebase-admin": "^9.4.0",
     "firebase-functions": "^3.5.0",
     "metabook-anki": "0.0.1",
     "metabook-app": "0.0.1",

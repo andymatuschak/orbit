@@ -6,6 +6,7 @@
     "rootDir": "./src",
     "target": "esnext",
     "module": "esnext",
+    "skipLibCheck": true, // katex's type definitions depend on the DOM, but react-native conflicts with them
     "baseUrl": ".",
     "paths": {
       "react-native-markdown-display": [

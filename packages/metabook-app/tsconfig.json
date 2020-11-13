@@ -4,7 +4,6 @@
     "jsx": "react-native",
     "lib": ["dom", "esnext"],
     "types": ["jest"],
-    "module": "esnext",
     "skipLibCheck": true,
     "outDir": "./dist",
     "importHelpers": true,

@@ -9,6 +9,7 @@ export async function addLatexSupport(
 ): Promise<void> {
   if (!_katex) {
     _katex = await import("katex");
+    // @ts-ignore
     await import("katex/dist/katex.css");
   }
   markdownIt.use(MarkdownItTexMath.use(_katex));
