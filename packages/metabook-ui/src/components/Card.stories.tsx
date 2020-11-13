@@ -80,6 +80,31 @@ export const basic = () => (
   />
 );
 
+export const math = () => (
+  <TestCard
+    reviewItem={{
+      reviewItemType: "prompt",
+      prompt: {
+        ...testQAPrompt,
+        question: {
+          contents: text(
+            "Question",
+            `Question with $\\sqrt{2}$ inline math and display math:\n\n$$x = \\frac{10}{30x}$$\n\nAnd another paragraph`,
+          ),
+          attachments: [],
+        },
+        answer: {
+          contents: text("Answer", testQAPrompt.answer.contents),
+          attachments: [],
+        },
+      },
+      promptParameters: null,
+      promptState: promptStateWithProvenance,
+      attachmentResolutionMap: null,
+    }}
+  />
+);
+
 export const longText = () => (
   <View>
     <TestCard

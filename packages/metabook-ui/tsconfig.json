@@ -5,6 +5,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "target": "esnext",
+    "module": "esnext",
     "baseUrl": ".",
     "paths": {
       "react-native-markdown-display": [

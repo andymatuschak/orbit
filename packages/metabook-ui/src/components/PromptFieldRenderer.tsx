@@ -1,6 +1,4 @@
 import isEqual from "lodash.isequal";
-import MarkdownIt, { Delimiter } from "markdown-it/lib";
-import Token from "markdown-it/lib/token";
 import {
   AttachmentURLReference,
   imageAttachmentType,
@@ -32,95 +30,11 @@ import { colors, type } from "../styles";
 import { getVariantStyles } from "../styles/type";
 import usePrevious from "./hooks/usePrevious";
 import useWeakRef from "./hooks/useWeakRef";
-
-function clozeParsePlugin(md: MarkdownIt) {
-  const startDelimiterCode = "{".charCodeAt(0);
-  const endDelimiterCode = "}".charCodeAt(0);
-  md.inline.ruler.before("emphasis", "clozeHighlight", (state, silent) => {
-    if (silent) {
-      return false;
-    }
-
-    const marker = state.src.charCodeAt(state.pos);
-    if (!(marker === startDelimiterCode || marker === endDelimiterCode)) {
-      return false;
-    }
-
-    const scanned = state.scanDelims(state.pos, true);
-    if (scanned.length !== 1) {
-      return false;
-    }
-
-    const token = state.push("text", "", 0);
-    token.content = String.fromCharCode(marker);
-
-    state.delimiters.push({
-      marker: marker,
-      length: scanned.length,
-      jump: 0,
-      token: state.tokens.length - 1,
-      end: -1,
-      open: scanned.can_open,
-      close: scanned.can_close,
-      level: 0,
-    });
-
-    state.pos += scanned.length;
-    return true;
-  });
-
-  md.inline.ruler2.after("emphasis", "clozeHighlight", (state) => {
-    const clozeHighlightWasActive = state.env.clozeHighlightActive;
-    const allDelimiters = [
-      state.delimiters,
-      ...state.tokens_meta.map(
-        (m: { delimiters: Delimiter[] }) => m?.delimiters ?? [],
-      ),
-    ].reduce<Delimiter[]>((all, current) => all.concat(current), []);
-
-    const startDelimiter = allDelimiters.find(
-      (delimiter) => delimiter.marker === startDelimiterCode,
-    );
-    if (startDelimiter) {
-      state.tokens.splice(
-        startDelimiter.token,
-        1,
-        new Token("clozeHighlight_open", "clozeHighlight", 1),
-      );
-      state.env.clozeHighlightActive = true;
-    }
-
-    const endDelimiter = allDelimiters.find(
-      (delimiter) => delimiter.marker === endDelimiterCode,
-    );
-    if (endDelimiter) {
-      state.tokens.splice(
-        endDelimiter.token,
-        1,
-        new Token("clozeHighlight_close", "clozeHighlight", -1),
-      );
-      state.env.clozeHighlightActive = false;
-    } else if (state.env.clozeHighlightActive) {
-      state.tokens.splice(
-        state.tokens.length,
-        0,
-        new Token("clozeHighlight_close", "clozeHighlight", -1),
-      );
-    }
-
-    if (clozeHighlightWasActive) {
-      state.tokens.splice(
-        0,
-        0,
-        new Token("clozeHighlight_open", "clozeHighlight", 1),
-      );
-    }
-  });
-}
-
-const markdownItInstance = MarkdownDisplay.MarkdownIt({
-  typographer: true,
-}).use(clozeParsePlugin);
+import { useMarkdownItInstance } from "./PromptFieldRenderer/markdown";
+import {
+  renderBlockMath,
+  renderInlineMath,
+} from "./PromptFieldRenderer/markdownLatexSupport";
 
 const sizeVariantCount = 5;
 const defaultSmallestSizeVariant = 4;
@@ -139,13 +53,17 @@ const sizeVariants: SizeVariant[] = [
   { style: type.labelTiny.layoutStyle },
 ];
 
-function getMarkdownStyles(sizeVariant: SizeVariant, accentColor: ColorValue) {
+function getMarkdownStyles(
+  sizeVariant: SizeVariant,
+  accentColor: ColorValue,
+): StyleSheet.NamedStyles<unknown> {
   const paragraphStyle = sizeVariant.style;
   if (!paragraphStyle) {
     throw new Error("Unknown shrink factor");
   }
   return {
     textgroup: paragraphStyle,
+    math_block: paragraphStyle,
     paragraph: {},
     paragraphSpacing: { marginTop: paragraphStyle.lineHeight! },
     clozeHighlight: {
@@ -198,106 +116,91 @@ function NativeClozeUnderline(props: {
 const ClozeUnderline =
   Platform.OS === "web" ? WebClozeUnderline : NativeClozeUnderline;
 
-function getMarkdownRenderRules(
-  setMarkdownHeight: (value: number) => void,
-): MarkdownDisplay.RenderRules {
-  return {
-    body: function MarkdownRootRenderer(node, children, parent, styles) {
-      return (
-        <View
-          key={node.key}
-          style={styles._VIEW_SAFE_body}
-          onLayout={(event) =>
-            setMarkdownHeight(event.nativeEvent.layout.height)
-          }
-        >
-          {children}
-        </View>
-      );
-    },
-    clozeHighlight: function MarkdownClozeRenderer(
-      node,
-      children,
-      parent,
-      styles,
-      inheritedStyles = {},
+const getMarkdownRenderRules = (
+  onLayout: (event: LayoutChangeEvent) => void,
+): MarkdownDisplay.RenderRules => ({
+  body(node, children, parent, styles) {
+    return (
+      <View key={node.key} style={styles._VIEW_SAFE_body} onLayout={onLayout}>
+        {children}
+      </View>
+    );
+  },
+  clozeHighlight(node, children, parent, styles, inheritedStyles = {}) {
+    return (
+      <Text key={node.key} style={[styles.clozeHighlight, inheritedStyles]}>
+        {children}
+      </Text>
+    );
+  },
+
+  paragraph(node, children, parent, styles) {
+    return (
+      <View
+        key={node.key}
+        style={[
+          styles._VIEW_SAFE_paragraph,
+          styles.paragraph,
+          parent[0].children[0] !== node && styles.paragraphSpacing,
+        ]}
+      >
+        {children}
+      </View>
+    );
+  },
+
+  text(node, children, parent, styles, inheritedStyles = {}) {
+    const parsedChildren: React.ReactNode[] = [];
+    let content = node.content as string;
+    for (
+      let clozeTokenIndex = content.indexOf(clozeBlankSentinel);
+      clozeTokenIndex !== -1;
+      clozeTokenIndex = content.indexOf(clozeBlankSentinel)
     ) {
-      return (
-        <Text key={node.key} style={[styles.clozeHighlight, inheritedStyles]}>
-          {children}
-        </Text>
-      );
-    },
-
-    paragraph: function MarkdownTextRenderer(node, children, parent, styles) {
-      return (
-        <View
-          key={node.key}
-          style={[
-            styles._VIEW_SAFE_paragraph,
-            styles.paragraph,
-            parent[0].children[0] !== node && styles.paragraphSpacing,
-          ]}
-        >
-          {children}
-        </View>
-      );
-    },
-
-    text: function MarkdownTextRenderer(
-      node,
-      children,
-      parent,
-      styles,
-      inheritedStyles = {},
-    ) {
-      const parsedChildren: React.ReactNode[] = [];
-      let content = node.content as string;
-      for (
-        let clozeTokenIndex = content.indexOf(clozeBlankSentinel);
-        clozeTokenIndex !== -1;
-        clozeTokenIndex = content.indexOf(clozeBlankSentinel)
-      ) {
-        const prefix = content.slice(0, clozeTokenIndex);
-        if (prefix.length > 0) {
-          parsedChildren.push(prefix);
-        }
-
-        content = content.slice(clozeTokenIndex);
-        parsedChildren.push(
-          <ClozeUnderline
-            key={clozeTokenIndex}
-            containerStyle={styles.clozeUnderlineContainer}
-            underlineStyle={styles.clozeUnderline}
-          />,
-        );
-        content = content.slice(clozeBlankSentinel.length);
-      }
-      if (content.length > 0) {
-        parsedChildren.push(content);
+      const prefix = content.slice(0, clozeTokenIndex);
+      if (prefix.length > 0) {
+        parsedChildren.push(prefix);
       }
 
-      return (
-        <Text
-          key={node.key}
-          style={[
-            styles.text,
-            inheritedStyles,
-            getVariantStyles(
-              inheritedStyles.fontFamily,
-              inheritedStyles.fontWeight === "bold",
-              inheritedStyles.fontStyle === "italic",
-            ),
-          ]}
-        >
-          {parsedChildren}
-        </Text>
+      content = content.slice(clozeTokenIndex);
+      parsedChildren.push(
+        <ClozeUnderline
+          key={clozeTokenIndex}
+          containerStyle={styles.clozeUnderlineContainer}
+          underlineStyle={styles.clozeUnderline}
+        />,
       );
-    },
-  };
-}
+      content = content.slice(clozeBlankSentinel.length);
+    }
+    if (content.length > 0) {
+      parsedChildren.push(content);
+    }
 
-export default React.memo(function CardField(props: {
+    return (
+      <Text
+        key={node.key}
+        style={[
+          styles.text,
+          inheritedStyles,
+          getVariantStyles(
+            inheritedStyles.fontFamily,
+            inheritedStyles.fontWeight === "bold",
+            inheritedStyles.fontStyle === "italic",
+          ),
+        ]}
+      >
+        {parsedChildren}
+      </Text>
+    );
+  },
+
+  math_inline: renderInlineMath,
+  math_inline_double: renderInlineMath,
+
+  math_block: renderBlockMath,
+});
+
+export default React.memo(function PromptFieldRenderer(props: {
   promptField: PromptField;
   attachmentResolutionMap: AttachmentResolutionMap | null;
 
@@ -389,21 +292,8 @@ export default React.memo(function CardField(props: {
     onLayout?.(sizeVariantRef.current);
   }, [isLayoutReady, onLayout, sizeVariantRef]);
 
-  const onContainerLayout = useCallback((event: LayoutChangeEvent) => {
-    setContainerHeight(event.nativeEvent.layout.height);
-  }, []);
-
   const effectiveAccentColor = accentColor ?? colors.ink;
-  const renderRules = useMemo<MarkdownDisplay.RenderRules>(
-    () => getMarkdownRenderRules(setMarkdownHeight),
-    [],
-  );
-
-  const markdownStyles = useMemo(
-    () =>
-      getMarkdownStyles(sizeVariants[sizeVariantIndex], effectiveAccentColor),
-    [effectiveAccentColor, sizeVariantIndex],
-  );
+  const markdownItInstance = useMarkdownItInstance(true);
 
   return (
     <View
@@ -412,12 +302,27 @@ export default React.memo(function CardField(props: {
         opacity: isLayoutReady ? 1 : 0,
         overflow: isLayoutReady ? "visible" : "hidden",
       }}
-      onLayout={onContainerLayout}
+      onLayout={useCallback((event) => {
+        setContainerHeight(event.nativeEvent.layout.height);
+      }, [])}
     >
       <View style={{ height: isLayoutReady ? undefined : 10000 }}>
         <Markdown
-          rules={renderRules}
-          style={markdownStyles as StyleSheet.NamedStyles<unknown>}
+          rules={useMemo(
+            () =>
+              getMarkdownRenderRules((event) =>
+                setMarkdownHeight(event.nativeEvent.layout.height),
+              ),
+            [],
+          )}
+          style={useMemo(
+            () =>
+              getMarkdownStyles(
+                sizeVariants[sizeVariantIndex],
+                effectiveAccentColor,
+              ),
+            [effectiveAccentColor, sizeVariantIndex],
+          )}
           mergeStyle={false}
           markdownit={markdownItInstance}
         >

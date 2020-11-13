@@ -26,7 +26,7 @@ import {
 } from "../reviewItem";
 import { colors, layout, type } from "../styles";
 import Button from "./Button";
-import CardField, { clozeBlankSentinel } from "./CardField";
+import CardField, { clozeBlankSentinel } from "./PromptFieldRenderer";
 import FadeView from "./FadeView";
 import {
   AnimatedTransitionTiming,
