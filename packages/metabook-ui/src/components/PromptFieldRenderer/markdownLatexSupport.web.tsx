@@ -3,14 +3,18 @@ import * as MarkdownItTexMath from "markdown-it-texmath";
 import { StyleSheet } from "react-native";
 import * as MarkdownDisplay from "react-native-markdown-display";
 
-let _katex: typeof import("katex") | null = null;
+// TODO: Make Katex async again once expo/webpack-config supports webpack@5
+import _katex from "katex";
+// @ts-ignore
+import "katex/dist/katex.css";
+// let _katex: typeof import("katex") | null = null;
 export async function addLatexSupport(
   markdownIt: MarkdownDisplay.MarkdownIt,
 ): Promise<void> {
   if (!_katex) {
-    _katex = await import("katex");
+    // _katex = await import("katex");
     // @ts-ignore
-    await import("katex/dist/katex.css");
+    // await import("katex/dist/katex.css");
   }
   markdownIt.use(MarkdownItTexMath.use(_katex));
 }

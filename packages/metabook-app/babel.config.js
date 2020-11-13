@@ -4,7 +4,8 @@ function isBuildingForWeb(caller) {
 
 module.exports = function (api) {
   const isTest = api.env("test");
-  const isWeb = api.caller(isBuildingForWeb);
+  const isWeb =
+    api.caller(isBuildingForWeb) || process.env["ORBIT_PLATFORM"] === "web";
   if (!isTest) {
     api.cache(true);
   }
