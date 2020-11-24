@@ -62,6 +62,7 @@ function getMarkdownStyles(
     throw new Error("Unknown shrink factor");
   }
   return {
+    text: { fontWeight: "normal", fontStyle: "normal" },
     textgroup: paragraphStyle,
     math_block: paragraphStyle,
     paragraph: {},
@@ -180,8 +181,8 @@ const getMarkdownRenderRules = (
       <Text
         key={node.key}
         style={[
-          styles.text,
           inheritedStyles,
+          styles.text,
           getVariantStyles(
             inheritedStyles.fontFamily,
             inheritedStyles.fontWeight === "bold",

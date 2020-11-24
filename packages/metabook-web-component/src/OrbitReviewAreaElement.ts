@@ -157,6 +157,9 @@ export class OrbitReviewAreaElement extends HTMLElement {
     addEmbeddedScreenMessageListener();
     getSharedMetadataMonitor().addEventListener(this.onMetadataChange);
 
+    if (!this.style.display) {
+      this.style.display = "block";
+    }
     const shadowRoot = this.attachShadow({ mode: "closed" });
     this.iframe = document.createElement("iframe");
     this.iframe.style.border = "none";
