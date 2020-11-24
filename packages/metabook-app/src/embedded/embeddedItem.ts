@@ -1,5 +1,7 @@
 import {
   AttachmentIDReference,
+  clozePromptType,
+  Prompt,
   PromptField,
   QAPrompt,
   qaPromptType,
@@ -88,8 +90,22 @@ export function getReviewItemFromEmbeddedItem(
         reviewItemType: promptReviewItemType,
         attachmentResolutionMap,
       };
-    default:
-      return new Error(`Unsupported item type ${embeddedItem.type}`);
+
+    case clozePromptType:
+      const body = getPromptFieldFromEmbeddedPromptField(
+        embeddedItem.body,
+        attachmentURLsToIDReferences,
+      );
+      if (body instanceof Error) {
+        return body;
+      }
+      return {
+        prompt: { promptType: clozePromptType, body },
+        promptParameters: { clozeIndex: 0 },
+        promptState: null,
+        reviewItemType: promptReviewItemType,
+        attachmentResolutionMap,
+      };
   }
 }
 
@@ -102,7 +118,8 @@ export function getAttachmentURLsInEmbeddedItem(
         ...(embeddedItem.question.attachmentURLs ?? []),
         ...(embeddedItem.answer.attachmentURLs ?? []),
       ];
-    default:
-      throw new Error(`Unsupported item type ${embeddedItem.type}`);
+
+    case clozePromptType:
+      return []; // TODO
   }
 }

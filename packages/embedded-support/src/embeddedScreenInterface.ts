@@ -1,4 +1,4 @@
-import { ColorPaletteName, qaPromptType } from "metabook-core";
+import { clozePromptType, ColorPaletteName, qaPromptType } from "metabook-core";
 
 export interface EmbeddedPromptField {
   contents: string;
@@ -11,7 +11,12 @@ export interface EmbeddedQAPrompt {
   answer: EmbeddedPromptField;
 }
 
-export type EmbeddedItem = EmbeddedQAPrompt;
+export interface EmbeddedClozePrompt {
+  type: typeof clozePromptType;
+  body: EmbeddedPromptField;
+}
+
+export type EmbeddedItem = EmbeddedQAPrompt | EmbeddedClozePrompt;
 
 export interface EmbeddedScreenConfiguration {
   embeddedItems: EmbeddedItem[];

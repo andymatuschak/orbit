@@ -239,6 +239,8 @@ export default function ReviewSession() {
                 style={{
                   marginLeft: styles.layout.gridUnit, // TODO: use grid layout
                   marginRight: styles.layout.gridUnit,
+                  flex: 1,
+                  justifyContent: "center",
                 }}
               >
                 <Text
