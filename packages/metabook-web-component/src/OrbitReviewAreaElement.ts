@@ -167,26 +167,27 @@ export class OrbitReviewAreaElement extends HTMLElement {
     this.iframe.style.border = "none";
     this.iframe.style.width = "100%";
     this.iframe.style.marginBottom = "1rem";
+    this.iframe.setAttribute("loading", "eager");
     this.iframe.setAttribute(
       "sandbox",
       "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-modals",
     );
     shadowRoot.appendChild(this.iframe);
-
-    const effectiveWidth = this.iframe.getBoundingClientRect().width;
-    // The extra 5 grid units are for the banner.
-    // TODO: encapsulate the banner's height in some API exported by metabook-app.
-    this.iframe.style.height = `${
-      getHeightForReviewAreaOfWidth(effectiveWidth) + 8 * 5
-    }px`;
-
     addReviewAreaElement(this);
 
+    // We'll wait to actually set the iframe's contents until the next frame, since the child <orbit-prompt> elements may not yet have connected.
     const iframe = this.iframe;
     requestAnimationFrame(() => {
       if (!this.cachedMetadata) {
         throw new Error("Invariant violation: no embedded host metadata");
       }
+
+      const effectiveWidth = this.iframe.getBoundingClientRect().width;
+      // The extra 5 grid units are for the banner.
+      // TODO: encapsulate the banner's height in some API exported by metabook-app.
+      this.iframe.style.height = `${
+        getHeightForReviewAreaOfWidth(effectiveWidth) + 8 * 5
+      }px`;
 
       const colorOverride = this.getAttribute(
         "color",
