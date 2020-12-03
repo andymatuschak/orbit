@@ -167,7 +167,7 @@ function useHostStateNotifier(items: ReviewItem[]) {
 }
 
 function flatten<T>(array: T[][]): T[] {
-  return array.reduce((current, output) => output.concat(current), []);
+  return array.reduce((output, current) => output.concat(current), []);
 }
 
 function getStarburstItemsForScreenState(
