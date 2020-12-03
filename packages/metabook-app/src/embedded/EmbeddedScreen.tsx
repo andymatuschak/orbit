@@ -1,8 +1,9 @@
 import "firebase/functions";
 import {
   ActionLogID,
-  getIDForActionLog,
+  getIDForActionLogSync,
   getIDForPrompt,
+  getIDForPromptSync,
   getIDForPromptTask,
   getNextTaskParameters,
   ingestActionLogType,
@@ -66,12 +67,12 @@ interface EmbeddedActionsRecord {
   attachmentURLsByID: { [key: string]: string };
 }
 
-async function getMarkingLogs(
+function getMarkingLogs(
   configuration: EmbeddedScreenConfiguration,
   marking: ReviewAreaMarkingRecord,
   sessionStartTimestampMillis: number,
-): Promise<EmbeddedActionsRecord> {
-  const promptID = await getIDForPrompt(marking.reviewItem.prompt);
+): EmbeddedActionsRecord {
+  const promptID = getIDForPromptSync(marking.reviewItem.prompt);
   const taskID = getIDForPromptTask({
     promptType: marking.reviewItem.prompt.promptType,
     promptID,
@@ -95,7 +96,7 @@ async function getMarkingLogs(
         siteName: configuration.embeddedHostMetadata.siteName,
       },
     };
-    logEntries.push({ log: ingestLog, id: await getIDForActionLog(ingestLog) });
+    logEntries.push({ log: ingestLog, id: getIDForActionLogSync(ingestLog) });
   }
 
   const repetitionLog: PromptActionLog = {
@@ -114,7 +115,7 @@ async function getMarkingLogs(
   };
   logEntries.push({
     log: repetitionLog,
-    id: await getIDForActionLog(repetitionLog),
+    id: getIDForActionLogSync(repetitionLog),
   });
 
   return {
@@ -398,7 +399,9 @@ function EmbeddedScreenRenderer({
           items={baseItems}
           currentItemIndex={currentItemIndex}
           onMark={onMark}
-          onPendingOutcomeChange={setPendingOutcome}
+          onPendingOutcomeChange={(newPendingOutcome) => {
+            setPendingOutcome(newPendingOutcome);
+          }}
           insetBottom={0}
           overrideColorPalette={colorPalette}
         />
@@ -415,7 +418,7 @@ function EmbeddedScreenRenderer({
           >
             <OnboardingModalWeb
               colorPalette={colorPalette}
-              sizeClass={styles.layout.getWidthSizeClass(containerWidth)}
+              sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
             />
           </Animated.View>
         </>
@@ -492,8 +495,8 @@ function useMarkingManager(
     setPendingActionsRecord,
   ] = useState<EmbeddedActionsRecord | null>(null);
   const onMark: ReviewSessionWrapperProps["onMark"] = useCallback(
-    async (marking) => {
-      const newRecord = await getMarkingLogs(
+    (marking) => {
+      const newRecord = getMarkingLogs(
         configuration,
         marking,
         reviewSessionStartTimestampMillis.current,

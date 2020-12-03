@@ -1,7 +1,6 @@
 import "./bufferShim";
 import * as dagJSON from "@ipld/dag-json";
 import CID from "multiformats/cid";
-import { sha256 } from "multiformats/hashes/sha2";
 import { base58btc } from "multiformats/bases/base58";
 import raw from "multiformats/codecs/raw";
 import { ActionLogID } from "../actionLogID";
@@ -9,28 +8,38 @@ import { PromptID } from "../promptID";
 import { ActionLog } from "../types/actionLog";
 import { AttachmentID } from "../types/attachmentID";
 import { Prompt } from "../types/prompt";
+import { sha256Sync } from "./sha256Sync";
+import { sha256 } from "./sha256";
+import { Digest } from "multiformats/hashes/digest";
 
 type EncodableWhitelist = Prompt | ActionLog;
+
+function createCIDFromHash(hash: Digest, code: number): string {
+  const cid = CID.create(1, code, hash);
+  return cid.toString(base58btc);
+}
+
 export async function encodeObjectToCIDString<T extends EncodableWhitelist>(
   object: CIDEncodable<T>,
 ): Promise<string> {
-  // 1. Encode the object as DAG-JSON.
   const encodedBuffer = dagJSON.encode(object);
+  const hash = await sha256(encodedBuffer);
+  return createCIDFromHash(hash, dagJSON.code);
+}
 
-  // 2. Hash the buffer and encode the hash as a CID
-  const hash = await sha256.digest(encodedBuffer);
-  const cid = CID.create(1, dagJSON.code, hash);
-
-  // 3. Express the CID as a base58 string.
-  return cid.toString(base58btc) as PromptID;
+export function encodeObjectToCIDStringSync<T extends EncodableWhitelist>(
+  object: CIDEncodable<T>,
+): string {
+  const encodedBuffer = dagJSON.encode(object);
+  const hash = sha256Sync(encodedBuffer);
+  return createCIDFromHash(hash, dagJSON.code);
 }
 
 export async function encodeRawBufferToCIDString(
   buffer: Uint8Array,
 ): Promise<string> {
-  const hash = await sha256.digest(buffer);
-  const cid = CID.create(1, raw.code, hash);
-  return cid.toString(base58btc) as PromptID;
+  const hash = await sha256(buffer);
+  return createCIDFromHash(hash, raw.code);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface

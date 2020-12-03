@@ -8,7 +8,7 @@ import {
 import { AttachmentID, getIDForAttachment } from "../types/attachmentID";
 import { AttachmentIDReference } from "../types/attachmentIDReference";
 import { ApplicationPrompt } from "../types/prompt";
-import { getIDForPrompt } from "./promptID";
+import { getIDForPrompt, getIDForPromptSync } from "./promptID";
 import CID from "multiformats/cid";
 import { sha256 } from "multiformats/hashes/sha2";
 import { base58btc } from "multiformats/bases/base58";
@@ -29,6 +29,13 @@ test("encoding stability", async () => {
     (await getIDForPrompt(testClozePrompt)).toString(),
   ).toMatchInlineSnapshot(
     `"z4EBG9j8714FbNZodYEdunWCoq2Um2jGXMw5SduZnJw2ruRXCYq"`,
+  );
+});
+
+// sync uses a JS implementation, rather than the native
+test("sync equals async", async () => {
+  expect(await getIDForPrompt(testQAPrompt)).toEqual(
+    getIDForPromptSync(testQAPrompt),
   );
 });
 

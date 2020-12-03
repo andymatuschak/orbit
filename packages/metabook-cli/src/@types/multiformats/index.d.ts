@@ -23,6 +23,16 @@ declare module "multiformats/hashes/sha2" {
   export const sha256: any;
 }
 
+declare module "multiformats/hashes/digest" {
+  export function create(code: number, digest: Uint8Array): Digest;
+  export class Digest {
+    code: number;
+    size: number;
+    digest: Uint8Array;
+    bytes: Uint8Array;
+  }
+}
+
 declare module "multiformats/codecs/raw" {
   const x: any;
   export default x;

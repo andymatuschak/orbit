@@ -21,7 +21,7 @@ export interface ReviewSessionWrapperProps {
   baseItems: ReviewItem[];
   onMark: (
     markingRecord: ReviewAreaMarkingRecord,
-  ) => Promise<{ log: PromptActionLog; id: ActionLogID }[]>;
+  ) => { log: PromptActionLog; id: ActionLogID }[];
   overrideColorPalette?: styles.colors.ColorPalette;
   children: (args: {
     onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
@@ -46,8 +46,8 @@ export function ReviewSessionWrapper({
   );
 
   const localOnMark = useCallback<ReviewAreaProps["onMark"]>(
-    async (marking) => {
-      const logs = await onMark(marking);
+    (marking) => {
+      const logs = onMark(marking);
       setLocalStates((localStates) => {
         let basePromptState: PromptState | null =
           marking.reviewItem.promptState;
@@ -68,10 +68,11 @@ export function ReviewSessionWrapper({
             "Invariant violation: applying marking logs should produce prompt state",
           );
         }
-
         return new Map([...localStates, [marking.reviewItem, basePromptState]]);
       });
-      setCurrentItemIndex((index) => index + 1);
+      setCurrentItemIndex((index) => {
+        return index + 1;
+      });
     },
     [onMark],
   );

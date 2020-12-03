@@ -5,7 +5,9 @@ import {
 import {
   ActionLogID,
   getIDForActionLog,
+  getIDForActionLogSync,
   getIDForPrompt,
+  getIDForPromptSync,
   getIDForPromptTask,
   getNextTaskParameters,
   PromptActionLog,
@@ -102,18 +104,18 @@ export function useDatabaseManager(
 }
 
 // Returned promise resolves when the prompt action log has been generated, not when it has committed to the server.
-async function updateDatabaseForMarking(
+function updateDatabaseForMarking(
   databaseManager: DatabaseManager,
   marking: ReviewAreaMarkingRecord,
   reviewSessionStartTimestampMillis: number,
-): Promise<{ log: PromptActionLog; id: ActionLogID }[]> {
+): { log: PromptActionLog; id: ActionLogID }[] {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
   const promptActionLog = {
     actionLogType: repetitionActionLogType,
     parentActionLogIDs: marking.reviewItem.promptState?.headActionLogIDs ?? [],
     taskID: getIDForPromptTask({
-      promptID: await getIDForPrompt(marking.reviewItem.prompt),
+      promptID: getIDForPromptSync(marking.reviewItem.prompt),
       promptType: marking.reviewItem.prompt.promptType,
       promptParameters: marking.reviewItem.promptParameters,
     } as PromptTask),
@@ -135,9 +137,7 @@ async function updateDatabaseForMarking(
       console.error("Couldn't commit", marking.reviewItem.prompt, error);
     });
 
-  return [
-    { log: promptActionLog, id: await getIDForActionLog(promptActionLog) },
-  ];
+  return [{ log: promptActionLog, id: getIDForActionLogSync(promptActionLog) }];
 }
 
 function useReviewQueue(

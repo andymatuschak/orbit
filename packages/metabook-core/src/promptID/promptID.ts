@@ -7,7 +7,11 @@ import {
   QAPromptContents,
 } from "../types/prompt";
 import CID from "multiformats/cid";
-import { CIDEncodable, encodeObjectToCIDString } from "../util/cids";
+import {
+  CIDEncodable,
+  encodeObjectToCIDString,
+  encodeObjectToCIDStringSync,
+} from "../util/cids";
 
 function canonicalizePromptField(
   promptField: PromptField,
@@ -60,4 +64,8 @@ export async function getIDForPrompt(prompt: Prompt): Promise<PromptID> {
   return (await encodeObjectToCIDString(
     canonicalizePrompt(prompt),
   )) as PromptID;
+}
+
+export function getIDForPromptSync(prompt: Prompt): PromptID {
+  return encodeObjectToCIDStringSync(canonicalizePrompt(prompt)) as PromptID;
 }

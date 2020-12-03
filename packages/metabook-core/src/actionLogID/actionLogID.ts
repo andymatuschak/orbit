@@ -13,7 +13,11 @@ import {
 } from "../types/promptProvenance";
 import { TaskMetadata, TaskProvenance } from "../types/taskMetadata";
 import CID from "multiformats/cid";
-import { CIDEncodable, encodeObjectToCIDString } from "../util/cids";
+import {
+  CIDEncodable,
+  encodeObjectToCIDString,
+  encodeObjectToCIDStringSync,
+} from "../util/cids";
 import { getPromptTaskForID, PromptTaskID } from "../types/promptTask";
 import {
   qaPromptType,
@@ -146,4 +150,10 @@ export async function getIDForActionLog(
   return (await encodeObjectToCIDString(
     canonicalizeActionLog(actionLog),
   )) as ActionLogID;
+}
+
+export function getIDForActionLogSync(actionLog: ActionLog): ActionLogID {
+  return encodeObjectToCIDStringSync(
+    canonicalizeActionLog(actionLog),
+  ) as ActionLogID;
 }

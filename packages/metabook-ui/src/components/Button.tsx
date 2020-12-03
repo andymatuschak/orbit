@@ -223,6 +223,7 @@ export default React.memo(function Button(props: ButtonProps) {
 
   const isSoloIcon = !("title" in props);
 
+  // @ts-ignore
   return (
     <Hoverable
       onHoverIn={() => {
@@ -240,15 +241,20 @@ export default React.memo(function Button(props: ButtonProps) {
           accessibilityRole={href ? "link" : "button"}
           accessibilityLabel={accessibilityLabel}
           onPress={
-            onPress ??
-            (() => {
-              Linking.openURL(href!).catch(() => {
-                Alert.alert(
-                  "Couldn't open link",
-                  `You may need to install an app to open this URL: ${href}`,
-                );
-              });
-            })
+            onPress
+              ? () => {
+                  isPressed.current = false;
+                  dispatchPendingInteractionState();
+                  onPress();
+                }
+              : () => {
+                  Linking.openURL(href!).catch(() => {
+                    Alert.alert(
+                      "Couldn't open link",
+                      `You may need to install an app to open this URL: ${href}`,
+                    );
+                  });
+                }
           }
           onPressIn={() => {
             isPressed.current = true;
@@ -258,6 +264,8 @@ export default React.memo(function Button(props: ButtonProps) {
             isPressed.current = false;
             dispatchPendingInteractionState();
           }}
+          // @ts-ignore react-native-web adds this prop
+          delayPressOut={1} // HACK: When a press is completed, we handle onPressOut within onPress so that React batches all updates into a single re-render.
           disabled={props.disabled}
           // @ts-ignore react-native-web adds this prop.
           href={href}

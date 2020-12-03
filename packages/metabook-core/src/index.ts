@@ -34,7 +34,7 @@ export {
   promptTypeSupportsRetry,
 } from "./spacedRepetition";
 
-export { getIDForPrompt } from "./promptID";
+export { getIDForPrompt, getIDForPromptSync } from "./promptID";
 export type { PromptID } from "./promptID";
 
 export { getIDForPromptTask, getPromptTaskForID } from "./types/promptTask";
@@ -95,7 +95,7 @@ export {
   getPromptActionLogFromActionLog,
 } from "./types/promptActionLog";
 
-export { getIDForActionLog } from "./actionLogID";
+export { getIDForActionLog, getIDForActionLogSync } from "./actionLogID";
 export type { ActionLogID } from "./actionLogID";
 
 export type {
