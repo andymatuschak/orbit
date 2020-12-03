@@ -130,7 +130,6 @@ export function useEmbeddedAuthenticationState(
   // Once we know if we have storage access...
   React.useEffect(() => {
     if (authenticationState.status === "pending" && hasStorageAccess !== null) {
-      console.log("Has storage access", hasStorageAccess);
       if (hasStorageAccess) {
         if (!authenticationClient.supportsCredentialPersistence()) {
           attemptLoginWithSessionCookie(authenticationClient);

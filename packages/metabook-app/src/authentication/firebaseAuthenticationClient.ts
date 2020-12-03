@@ -57,7 +57,7 @@ export default class FirebaseAuthenticationClient
       const newUserRecord = FirebaseAuthenticationClient.getUserRecordForFirebaseUser(
         newUser,
       );
-      console.log("UID changed:", newUserRecord);
+      console.log("Current Orbit UID:", newUserRecord);
       callback(newUserRecord);
     });
   }

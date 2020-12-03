@@ -213,15 +213,14 @@ export default React.memo(function ReviewArea({
   overrideColorPalette,
   insetBottom = 0,
 }: ReviewAreaProps) {
-  console.log("[Performance - ReviewArea] Render", Date.now() / 1000.0);
+  // console.debug("[Performance - ReviewArea] Render", Date.now() / 1000.0);
 
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
 
   const previousItemIndex = usePrevious(currentItemIndex);
   if (
     previousItemIndex !== undefined &&
-    currentItemIndex !== previousItemIndex &&
-    isShowingAnswer
+    currentItemIndex !== previousItemIndex
   ) {
     setShowingAnswer(false);
   }
