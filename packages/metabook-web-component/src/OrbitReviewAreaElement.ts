@@ -64,7 +64,9 @@ let _screenStatesNeedUpdate = false;
 function markScreenStatesDirty() {
   if (!_screenStatesNeedUpdate) {
     _screenStatesNeedUpdate = true;
-    requestAnimationFrame(() => {
+
+    // Debounce by waiting a moment.
+    setTimeout(() => {
       _screenStatesNeedUpdate = false;
       const orderedReviewAreaElements = getOrderedReviewAreaElements();
 
@@ -81,7 +83,7 @@ function markScreenStatesDirty() {
         };
         element.iframe!.contentWindow!.postMessage(event, "*");
       });
-    });
+    }, 1000);
   }
 }
 
