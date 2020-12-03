@@ -125,20 +125,20 @@ function getSalt() {
   return salt + rotatingSalt;
 }
 
-function ok(response: Response) {
-  response.status(200).json({});
-}
-
 export async function recordPageView(request: Request, response: Response) {
+  // Respond right away; don't occupy a spot in the browser's queue.
+  response.sendStatus(200);
+
   const userAgent = request.headers["user-agent"];
   if (userAgent && isBot(userAgent)) {
-    return ok(response);
+    console.info("Ignoring page view from bot.");
+    return;
   }
 
   const { pathname, hostname, referrer, screen, language } = request.body;
   if (hostname === "localhost") {
-    console.info("Ignoring page view from localhost");
-    return ok(response);
+    console.info("Ignoring page view from localhost.");
+    return;
   }
 
   const { browser, os, ip, device } = getClientInfo(request, screen);
@@ -163,8 +163,5 @@ export async function recordPageView(request: Request, response: Response) {
     });
   } catch (error) {
     console.error(error);
-    return response.status(500).json({});
   }
-
-  return ok(response);
 }
