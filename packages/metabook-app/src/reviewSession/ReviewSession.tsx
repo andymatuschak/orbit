@@ -188,20 +188,18 @@ export default function ReviewSession() {
           baseItems.length > 0 ? undefined : styles.colors.palettes.red
         }
       >
-        {({
-          onMark,
-          currentItemIndex,
-          items,
-          containerWidth,
-          containerHeight,
-        }) => {
+        {({ onMark, currentItemIndex, items, containerSize }) => {
+          if (!containerSize) {
+            return null;
+          }
+
           if (currentItemIndex < items.length) {
             const currentItem = items[currentItemIndex];
             return (
               <>
                 <ReviewStarburst
-                  containerWidth={containerWidth}
-                  containerHeight={containerHeight}
+                  containerWidth={containerSize.width}
+                  containerHeight={containerSize.height}
                   items={items.map((item, index) => ({
                     promptState: item.promptState,
                     isPendingForSession: index >= currentItemIndex,
@@ -226,7 +224,7 @@ export default function ReviewSession() {
                   onPendingOutcomeChange={setPendingOutcome}
                   insetBottom={
                     // So long as the container isn't tall enough to be centered, we consume the bottom insets in the button bar's padding, extending the background down through the safe area.
-                    containerHeight === layout.maximumContentHeight
+                    containerSize.height === layout.maximumContentHeight
                       ? 0
                       : insets.bottom ?? 0
                   }

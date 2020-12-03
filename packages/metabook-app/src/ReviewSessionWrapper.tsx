@@ -28,8 +28,7 @@ export interface ReviewSessionWrapperProps {
     items: ReviewItem[];
     baseItems: ReviewItem[];
     currentItemIndex: number;
-    containerWidth: number;
-    containerHeight: number;
+    containerSize: { width: number; height: number } | null;
   }) => React.ReactNode;
   insets?: Insets;
 }
@@ -129,16 +128,16 @@ export function ReviewSessionWrapper({
         }}
         onLayout={onLayout}
       >
-        {containerWidth > 0
-          ? children({
-              onMark: localOnMark,
-              currentItemIndex,
-              items,
-              baseItems,
-              containerWidth,
-              containerHeight,
-            })
-          : null}
+        {children({
+          onMark: localOnMark,
+          currentItemIndex,
+          items,
+          baseItems,
+          containerSize:
+            containerWidth > 0
+              ? { width: containerWidth, height: containerHeight }
+              : null,
+        })}
       </View>
     </Animated.View>
   );

@@ -236,8 +236,7 @@ interface EmbeddedScreenRendererProps {
   items: ReviewItem[];
   baseItems: ReviewItem[];
   currentItemIndex: number;
-  containerWidth: number;
-  containerHeight: number;
+  containerSize: { width: number; height: number } | null;
   authenticationState: EmbeddedAuthenticationState;
   colorPalette: styles.colors.ColorPalette;
   hostState: EmbeddedHostState | null;
@@ -249,8 +248,7 @@ function EmbeddedScreenRenderer({
   currentItemIndex,
   baseItems,
   items,
-  containerWidth,
-  containerHeight,
+  containerSize,
   authenticationState,
   colorPalette,
   hostState,
@@ -320,6 +318,10 @@ function EmbeddedScreenRenderer({
   const starburstItemIndex =
     cappedLocalItemIndex + pageState.localItemIndexOffset;
 
+  if (!containerSize) {
+    return null;
+  }
+
   return (
     <>
       <EmbeddedBanner
@@ -327,15 +329,15 @@ function EmbeddedScreenRenderer({
         isSignedIn={authenticationState.status === "signedIn"}
         totalPromptCount={items.length}
         completePromptCount={currentItemIndex}
-        sizeClass={styles.layout.getWidthSizeClass(containerWidth)}
+        sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
       />
       <Animated.View
         onLayout={onInteriorLayout}
         style={{ transform: [{ translateY: interiorY }] }}
       >
         <ReviewStarburst
-          containerWidth={containerWidth}
-          containerHeight={containerHeight}
+          containerWidth={containerSize.width}
+          containerHeight={containerSize.height}
           items={pageState.starburstItems}
           currentItemIndex={starburstItemIndex}
           currentItemSupportsRetry={promptTypeSupportsRetry(
