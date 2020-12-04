@@ -50,7 +50,6 @@ const sizeVariants: SizeVariant[] = [
   { style: type.promptLarge.layoutStyle, maximumLineCount: 4 },
   { style: type.promptMedium.layoutStyle },
   { style: type.promptSmall.layoutStyle },
-  { style: type.labelTiny.layoutStyle },
 ];
 
 function getMarkdownStyles(
@@ -61,12 +60,30 @@ function getMarkdownStyles(
   if (!paragraphStyle) {
     throw new Error("Unknown shrink factor");
   }
+  const paragraphSpacingStyle = { marginBottom: paragraphStyle.lineHeight! };
+  const listSpacingStyle = { marginBottom: paragraphStyle.lineHeight! / 2.0 };
+  const listIconStyle = {
+    ...paragraphStyle,
+    marginLeft: paragraphStyle.lineHeight! / 3.0,
+    marginRight: paragraphStyle.lineHeight! / 3.0,
+  };
   return {
     text: { fontWeight: "normal", fontStyle: "normal" },
     textgroup: paragraphStyle,
     math_block: paragraphStyle,
+    bullet_list_icon: listIconStyle,
+    ordered_list_icon: listIconStyle,
+
     paragraph: {},
-    paragraphSpacing: { marginTop: paragraphStyle.lineHeight! },
+    paragraphSpacing: paragraphSpacingStyle,
+    list_item: {
+      ...listSpacingStyle,
+      flexDirection: "row",
+      justifyContent: "flex-start",
+    },
+    bullet_list: listSpacingStyle,
+    ordered_list: listSpacingStyle,
+
     clozeHighlight: {
       color: accentColor,
     },
@@ -142,7 +159,8 @@ const getMarkdownRenderRules = (
         style={[
           styles._VIEW_SAFE_paragraph,
           styles.paragraph,
-          parent[0].children[0] !== node && styles.paragraphSpacing,
+          parent[0].children[parent[0].children.length - 1] !== node &&
+            styles.paragraphSpacing,
         ]}
       >
         {children}

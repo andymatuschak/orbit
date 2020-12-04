@@ -271,7 +271,7 @@ function QAPromptRenderer({
                 ? undefined
                 : frontSizeVariantIndex + 1
             }
-            smallestSizeVariantIndex={5}
+            smallestSizeVariantIndex={4}
           />
         </View>
       </FadeView>

@@ -105,6 +105,66 @@ export const math = () => (
   />
 );
 
+export const unorderedList = () => (
+  <TestCard
+    reviewItem={{
+      reviewItemType: "prompt",
+      prompt: {
+        ...testQAPrompt,
+        question: {
+          contents: text(
+            "Question",
+            `Test with an unordered list this is a long line to start us off
+            
+* First item
+* Second item which is longer to show a second line.
+* Third item
+
+Another paragraph`,
+          ),
+          attachments: [],
+        },
+        answer: {
+          contents: text("Answer", testQAPrompt.answer.contents),
+          attachments: [],
+        },
+      },
+      promptParameters: null,
+      promptState: promptStateWithProvenance,
+      attachmentResolutionMap: null,
+    }}
+  />
+);
+
+export const orderedList = () => (
+  <TestCard
+    reviewItem={{
+      reviewItemType: "prompt",
+      prompt: {
+        ...testQAPrompt,
+        question: {
+          contents: text(
+            "Question",
+            `Test with an ordered list this is a long line to start us off
+            
+1. First item
+1. Second item which is longer to show a second line.
+1. Third item`,
+          ),
+          attachments: [],
+        },
+        answer: {
+          contents: text("Answer", testQAPrompt.answer.contents),
+          attachments: [],
+        },
+      },
+      promptParameters: null,
+      promptState: promptStateWithProvenance,
+      attachmentResolutionMap: null,
+    }}
+  />
+);
+
 export const longText = () => (
   <View>
     <TestCard
