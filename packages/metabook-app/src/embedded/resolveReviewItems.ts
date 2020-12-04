@@ -71,7 +71,7 @@ async function resolveAttachments(
 }
 
 // Resolve attachments (specified by URL) to their immutable IDs.
-export async function getReviewItems(
+export async function resolveReviewItems(
   embeddedItems: EmbeddedItem[],
 ): Promise<ReviewItem[]> {
   const attachmentURLsToAttachmentIDReferences = await resolveAttachments(

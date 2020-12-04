@@ -1,47 +1,32 @@
 import {
-  ApplicationPrompt,
-  ApplicationPromptParameters,
+  AbstractPromptTask,
+  ApplicationPromptTask,
   AttachmentID,
   AttachmentURLReference,
-  ClozePrompt,
-  ClozePromptParameters,
+  ClozePromptTask,
   PromptProvenanceType,
   PromptState,
-  QAPrompt,
-  QAPromptParameters,
+  PromptTask,
+  QAPromptTask,
 } from "metabook-core";
 import { colors } from "./styles";
 
 export const promptReviewItemType = "prompt";
 export type AttachmentResolutionMap = Map<AttachmentID, AttachmentURLReference>;
 
-interface BasePromptReviewItem {
+export interface PromptReviewItem<PT extends PromptTask = PromptTask> {
   reviewItemType: typeof promptReviewItemType;
   attachmentResolutionMap: AttachmentResolutionMap | null;
-}
-
-export interface QAPromptReviewItem extends BasePromptReviewItem {
-  prompt: QAPrompt;
-  promptParameters: QAPromptParameters;
+  prompt: PT extends AbstractPromptTask<infer P, any> ? P : never;
+  promptParameters: PT["promptParameters"];
   promptState: PromptState | null;
 }
 
-export interface ApplicationPromptReviewItem extends BasePromptReviewItem {
-  prompt: ApplicationPrompt;
-  promptParameters: ApplicationPromptParameters;
-  promptState: PromptState | null;
-}
-
-export interface ClozePromptReviewItem extends BasePromptReviewItem {
-  prompt: ClozePrompt;
-  promptParameters: ClozePromptParameters;
-  promptState: PromptState | null;
-}
-
-export type PromptReviewItem =
-  | QAPromptReviewItem
-  | ApplicationPromptReviewItem
-  | ClozePromptReviewItem;
+export type QAPromptReviewItem = PromptReviewItem<QAPromptTask>;
+export type ClozePromptReviewItem = PromptReviewItem<ClozePromptTask>;
+export type ApplicationPromptReviewItem = PromptReviewItem<
+  ApplicationPromptTask
+>;
 
 export type ReviewItem = PromptReviewItem;
 

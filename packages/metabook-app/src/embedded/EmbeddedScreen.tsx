@@ -1,19 +1,8 @@
 import "firebase/functions";
 import {
-  ActionLogID,
-  getIDForActionLogSync,
   getIDForPrompt,
-  getIDForPromptSync,
-  getIDForPromptTask,
-  getNextTaskParameters,
-  ingestActionLogType,
-  Prompt,
-  PromptActionLog,
-  PromptProvenanceType,
   PromptRepetitionOutcome,
-  PromptTask,
   promptTypeSupportsRetry,
-  repetitionActionLogType,
 } from "metabook-core";
 import {
   FadeView,
@@ -49,95 +38,19 @@ import {
 import { useAuthenticationClient } from "../util/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
+import {
+  EmbeddedActionsRecord,
+  getActionsRecordForMarking,
+  mergePendingActionsRecords,
+} from "./markingActions";
 import OnboardingModalWeb from "./OnboardingModal.web";
-import useDecodedReviewItems from "./useDecodedReviewItems";
+import useResolvedReviewItems from "./useResolvedReviewItems";
 import {
   EmbeddedAuthenticationState,
   useEmbeddedAuthenticationState,
 } from "./useEmbeddedAuthenticationState";
-import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
 import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
 import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL";
-
-type PromptActionLogEntry = { log: PromptActionLog; id: ActionLogID };
-
-interface EmbeddedActionsRecord {
-  logEntries: PromptActionLogEntry[];
-  promptsByID: { [key: string]: Prompt };
-  attachmentURLsByID: { [key: string]: string };
-}
-
-function getMarkingLogs(
-  configuration: EmbeddedScreenConfiguration,
-  marking: ReviewAreaMarkingRecord,
-  sessionStartTimestampMillis: number,
-): EmbeddedActionsRecord {
-  const promptID = getIDForPromptSync(marking.reviewItem.prompt);
-  const taskID = getIDForPromptTask({
-    promptType: marking.reviewItem.prompt.promptType,
-    promptID,
-    promptParameters: marking.reviewItem.promptParameters,
-  } as PromptTask);
-
-  const logEntries: { log: PromptActionLog; id: ActionLogID }[] = [];
-  const markingTimestampMillis = Date.now();
-  if (!marking.reviewItem.promptState) {
-    const ingestLog: PromptActionLog = {
-      actionLogType: ingestActionLogType,
-      taskID,
-      timestampMillis: markingTimestampMillis,
-      provenance: {
-        provenanceType: PromptProvenanceType.Web,
-        title: configuration.embeddedHostMetadata.title,
-        url: configuration.embeddedHostMetadata.url,
-        externalID: configuration.embeddedHostMetadata.url,
-        modificationTimestampMillis: null,
-        colorPaletteName: configuration.embeddedHostMetadata.colorPaletteName,
-        siteName: configuration.embeddedHostMetadata.siteName,
-      },
-    };
-    logEntries.push({ log: ingestLog, id: getIDForActionLogSync(ingestLog) });
-  }
-
-  const repetitionLog: PromptActionLog = {
-    actionLogType: repetitionActionLogType,
-    taskID,
-    parentActionLogIDs: logEntries[0]
-      ? [logEntries[0].id]
-      : marking.reviewItem.promptState?.headActionLogIDs ?? [],
-    taskParameters: getNextTaskParameters(
-      marking.reviewItem.prompt,
-      marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
-    ),
-    outcome: marking.outcome,
-    context: `embedded/${sessionStartTimestampMillis}`,
-    timestampMillis: markingTimestampMillis,
-  };
-  logEntries.push({
-    log: repetitionLog,
-    id: getIDForActionLogSync(repetitionLog),
-  });
-
-  return {
-    logEntries,
-    promptsByID: { [promptID]: marking.reviewItem.prompt },
-    attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
-      marking.reviewItem.prompt,
-      marking.reviewItem.attachmentResolutionMap,
-    ),
-  };
-}
-
-function mergePendingActionsRecords(
-  a: EmbeddedActionsRecord,
-  b: EmbeddedActionsRecord,
-): EmbeddedActionsRecord {
-  return {
-    logEntries: [...a.logEntries, ...b.logEntries],
-    promptsByID: { ...a.promptsByID, ...b.promptsByID },
-    attachmentURLsByID: { ...a.attachmentURLsByID, ...b.attachmentURLsByID },
-  };
-}
 
 // Pass the local prompt states along to the hosting web page when they change (i.e. so that the starbursts in other review areas on this page reflect this one's progress).
 function useHostStateNotifier(items: ReviewItem[]) {
@@ -496,8 +409,8 @@ function useMarkingManager(
   ] = useState<EmbeddedActionsRecord | null>(null);
   const onMark: ReviewSessionWrapperProps["onMark"] = useCallback(
     (marking) => {
-      const newRecord = getMarkingLogs(
-        configuration,
+      const newRecord = getActionsRecordForMarking(
+        configuration.embeddedHostMetadata,
         marking,
         reviewSessionStartTimestampMillis.current,
       );
@@ -538,7 +451,7 @@ function useMarkingManager(
         pendingActionsRecord,
       );
     }
-  }, [pendingActionsRecord, authenticationState]);
+  }, [pendingActionsRecord, authenticationState, isDebug]);
 
   return { onMark, hasUncommittedActions: !!pendingActionsRecord };
 }
@@ -549,7 +462,7 @@ export default function EmbeddedScreen() {
   );
   const hostState = useHostState();
   const colorPalette = getEmbeddedColorPalette(configuration);
-  const baseItems = useDecodedReviewItems(configuration.embeddedItems);
+  const baseItems = useResolvedReviewItems(configuration.embeddedItems);
 
   const authenticationClient = useAuthenticationClient();
   const authenticationState = useEmbeddedAuthenticationState(

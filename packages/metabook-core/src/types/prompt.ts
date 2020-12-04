@@ -29,6 +29,19 @@ export interface ClozePrompt {
   promptType: typeof clozePromptType;
   body: PromptField;
 }
+// This is poor API design. Once I understand better what parsing is required, I'd like to design a better interface for this.
+export function createClozeMarkupRegexp() {
+  return new RegExp(/{([^{}]+?)}/g);
+}
+
+export function getClozeDeletionCount(prompt: ClozePrompt) {
+  let count = 0;
+  const regexp = createClozeMarkupRegexp();
+  while (regexp.exec(prompt.body.contents) !== null) {
+    count++;
+  }
+  return count;
+}
 
 export type Prompt = QAPrompt | ApplicationPrompt | ClozePrompt;
 export type PromptType = Prompt["promptType"];

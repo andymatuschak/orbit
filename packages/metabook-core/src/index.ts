@@ -6,6 +6,8 @@ export {
   qaPromptType,
   applicationPromptType,
   clozePromptType,
+  createClozeMarkupRegexp,
+  getClozeDeletionCount,
 } from "./types/prompt";
 
 export type {
@@ -45,9 +47,8 @@ export type {
   ClozePromptTask,
   PromptTaskID,
   PromptParameters,
-  QAPromptParameters,
-  ApplicationPromptParameters,
   ClozePromptParameters,
+  AbstractPromptTask,
 } from "./types/promptTask";
 
 export type { Attachment } from "./types/attachment";
@@ -102,6 +103,7 @@ export type {
   PromptProvenance,
   AnkiPromptProvenance,
   NotePromptProvenance,
+  WebPromptProvenance,
 } from "./types/promptProvenance";
 export { PromptProvenanceType } from "./types/promptProvenance";
 

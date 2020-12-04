@@ -28,7 +28,7 @@ test("encoding stability", async () => {
   expect(
     (await getIDForPrompt(testClozePrompt)).toString(),
   ).toMatchInlineSnapshot(
-    `"z4EBG9j8714FbNZodYEdunWCoq2Um2jGXMw5SduZnJw2ruRXCYq"`,
+    `"z4EBG9jDrySkduEkHTeqNyPFnYKJzF1N7f7vnv9fa9tfyhdoDc1"`,
   );
 });
 

@@ -2,6 +2,7 @@ import {
   ApplicationPromptTaskParameters,
   applicationPromptType,
   clozePromptType,
+  createClozeMarkupRegexp,
   getNextTaskParameters,
   PromptProvenance,
   PromptProvenanceType,
@@ -195,12 +196,12 @@ function formatClozePromptContents(
   clozeIndex: number,
 ) {
   let matchIndex = 0;
-  const clozeRegexp = /{([^{}]+?)}/g;
   let match: RegExpExecArray | null;
 
   let output = "";
   let previousMatchStartIndex = 0;
   let foundSelectedClozeDeletion = false;
+  const clozeRegexp = createClozeMarkupRegexp();
   for (; (match = clozeRegexp.exec(clozeContents)); matchIndex++) {
     output += clozeContents.slice(previousMatchStartIndex, match.index);
     if (matchIndex === clozeIndex) {

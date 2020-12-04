@@ -30,7 +30,7 @@ export const testApplicationPrompt: ApplicationPrompt = {
 export const testClozePrompt: ClozePrompt = {
   promptType: clozePromptType,
   body: {
-    contents: "Test {cloze}",
+    contents: "Test {cloze} deletion {type prompt}.",
     attachments: [],
   },
 };

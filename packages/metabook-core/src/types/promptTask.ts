@@ -3,46 +3,43 @@
 
 import { PromptID } from "../promptID";
 import {
+  ApplicationPrompt,
   applicationPromptType,
-  qaPromptType,
+  ClozePrompt,
   clozePromptType,
-  PromptType,
+  Prompt,
+  QAPrompt,
+  qaPromptType,
 } from "./prompt";
 import { PromptProvenance } from "./promptProvenance";
 import { TaskMetadata } from "./taskMetadata";
 
-interface AbstractPromptTask<T extends PromptType, P extends PromptParameters> {
+export interface AbstractPromptTask<P extends Prompt, PP> {
   promptID: PromptID;
-  promptType: T;
-  promptParameters: P;
+  promptType: P["promptType"];
+  promptParameters: PP;
 }
 
-export type QAPromptTask = AbstractPromptTask<
-  typeof qaPromptType,
-  QAPromptParameters
->;
+export type QAPromptTask = AbstractPromptTask<QAPrompt, null>;
 
-export type ApplicationPromptTask = AbstractPromptTask<
-  typeof applicationPromptType,
-  ApplicationPromptParameters
->;
+export type ApplicationPromptTask = AbstractPromptTask<ApplicationPrompt, null>;
 
 export type ClozePromptTask = AbstractPromptTask<
-  typeof clozePromptType,
+  ClozePrompt,
   ClozePromptParameters
 >;
 
 export type PromptTask = QAPromptTask | ApplicationPromptTask | ClozePromptTask;
 
-export type QAPromptParameters = null;
-export type ApplicationPromptParameters = null;
 export interface ClozePromptParameters {
   clozeIndex: number;
 }
-export type PromptParameters =
-  | QAPromptParameters
-  | ApplicationPromptParameters
-  | ClozePromptParameters;
+export type PromptParameters = PromptTask extends AbstractPromptTask<
+  any,
+  infer PP
+>
+  ? PP
+  : never;
 
 export interface PromptTaskMetadata extends TaskMetadata {
   provenance: PromptProvenance | null;
