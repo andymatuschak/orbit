@@ -1,5 +1,6 @@
 import firebase from "firebase/app";
 import "firebase/auth";
+import "firebase/functions";
 
 let _app: firebase.app.App | null;
 export function getDefaultFirebaseApp(): firebase.app.App {

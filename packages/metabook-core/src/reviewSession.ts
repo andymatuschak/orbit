@@ -3,7 +3,7 @@ import { PromptState } from "./promptState";
 import { PromptTask } from "./types/promptTask";
 
 export function getReviewSessionCardLimit(): number {
-  return 25;
+  return 50;
 }
 
 export function getFuzzyDueTimestampThreshold(nowMillis: number): number {

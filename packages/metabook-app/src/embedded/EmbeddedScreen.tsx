@@ -1,4 +1,3 @@
-import "firebase/functions";
 import {
   getIDForPrompt,
   PromptRepetitionOutcome,
