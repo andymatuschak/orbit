@@ -12,7 +12,13 @@
       crossorigin="anonymous"
     ></script>
     <script>
-      navigator.serviceWorker.getRegistrations().then( function(registrations) { for(let registration of registrations) { registration.unregister(); } });
+      if (typeof navigator.serviceWorker !== "undefined") {
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
     </script>
     <title>%WEB_TITLE%</title>
     <style>
