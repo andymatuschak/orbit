@@ -1,4 +1,4 @@
-const shouldUseLocalBackend = __DEV__;
+const shouldUseLocalBackend = typeof __DEV__ === "undefined" ? false : __DEV__;
 
 export default {
   sentryDSN:

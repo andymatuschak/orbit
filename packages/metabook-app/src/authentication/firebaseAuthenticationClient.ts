@@ -1,7 +1,7 @@
 import type firebase from "firebase/app";
 import { MetabookUnsubscribe } from "metabook-client/dist/types/unsubscribe";
 import { Platform } from "react-native";
-import serviceConfig from "../../serviceConfig";
+import serviceConfig from "../../serviceConfig.mjs";
 import { AuthenticationClient, UserRecord } from "./authenticationClient";
 import isSessionStorageAvailable from "./isSessionStorageAvailable";
 

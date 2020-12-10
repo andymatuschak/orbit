@@ -6,7 +6,7 @@ import {
   firebaseAttachmentUploader,
   getDefaultFirebaseApp,
 } from "metabook-client";
-import serviceConfig from "../../serviceConfig";
+import serviceConfig from "../../serviceConfig.mjs";
 
 let _firestore: firebase.firestore.Firestore | null = null;
 export function getFirestore(): firebase.firestore.Firestore {

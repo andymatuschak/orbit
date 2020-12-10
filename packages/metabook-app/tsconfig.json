@@ -14,7 +14,7 @@
     "./src/**/*.tsx",
     "./src/**/*.ts",
     "./App.tsx",
-    "./serviceConfig.ts",
+    "./serviceConfig.mjs",
     "../@types/**/*.d.ts"
   ],
   "references": [
