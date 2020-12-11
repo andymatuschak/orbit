@@ -3,7 +3,7 @@ import { MetabookUnsubscribe } from "metabook-client/dist/types/unsubscribe";
 import { Platform } from "react-native";
 import serviceConfig from "../../serviceConfig.mjs";
 import { AuthenticationClient, UserRecord } from "./authenticationClient";
-import isSessionStorageAvailable from "./isSessionStorageAvailable";
+import isBrowserStorageAvailable from "./isBrowserStorageAvailable";
 
 export class FirebaseOpaqueLoginToken {
   _token: string;
@@ -32,13 +32,26 @@ export class FirebaseOpaqueIDToken {
 export default class FirebaseAuthenticationClient
   implements
     AuthenticationClient<FirebaseOpaqueLoginToken, FirebaseOpaqueIDToken> {
-  private auth: firebase.auth.Auth;
+  private _auth: firebase.auth.Auth; // access through auth()
+  private authConfigurationPromise: Promise<void>;
 
   constructor(auth: firebase.auth.Auth) {
-    this.auth = auth;
+    this._auth = auth;
+    this.authConfigurationPromise = this.configureAuth();
+  }
+
+  private async configureAuth() {
     if (Platform.OS === "web") {
-      this.auth.setPersistence(isSessionStorageAvailable() ? "local" : "none");
+      const browserStorageAvailable = await isBrowserStorageAvailable();
+      await this._auth.setPersistence(
+        browserStorageAvailable ? "local" : "none",
+      );
     }
+  }
+
+  private async auth(): Promise<firebase.auth.Auth> {
+    await this.authConfigurationPromise;
+    return this._auth;
   }
 
   private static getUserRecordForFirebaseUser(user: firebase.User | null) {
@@ -53,40 +66,52 @@ export default class FirebaseAuthenticationClient
   subscribeToUserAuthState(
     callback: (userRecord: UserRecord | null) => void,
   ): MetabookUnsubscribe {
-    return this.auth.onAuthStateChanged((newUser) => {
-      const newUserRecord = FirebaseAuthenticationClient.getUserRecordForFirebaseUser(
-        newUser,
-      );
-      console.log("Current Orbit UID:", newUserRecord);
-      callback(newUserRecord);
+    let unsubscribe: (() => void) | null = null;
+    this.auth().then((auth) => {
+      unsubscribe = auth.onAuthStateChanged((newUser) => {
+        const newUserRecord = FirebaseAuthenticationClient.getUserRecordForFirebaseUser(
+          newUser,
+        );
+        console.log("Current Orbit UID:", newUserRecord);
+        callback(newUserRecord);
+      });
     });
+    return () => {
+      unsubscribe?.();
+    };
   }
 
-  getUserAuthState(): UserRecord | null {
+  async getUserAuthState(): Promise<UserRecord | null> {
+    const auth = await this.auth();
     return FirebaseAuthenticationClient.getUserRecordForFirebaseUser(
-      this.auth.currentUser,
+      auth.currentUser,
     );
   }
 
-  signInWithEmailAndPassword(email: string, password: string) {
-    return this.auth.signInWithEmailAndPassword(email, password);
+  async signInWithEmailAndPassword(email: string, password: string) {
+    const auth = await this.auth();
+    return auth.signInWithEmailAndPassword(email, password);
   }
 
-  createUserWithEmailAndPassword(email: string, password: string) {
-    return this.auth.createUserWithEmailAndPassword(email, password);
+  async createUserWithEmailAndPassword(email: string, password: string) {
+    const auth = await this.auth();
+    return auth.createUserWithEmailAndPassword(email, password);
   }
 
   async userExistsWithEmail(email: string) {
-    const methods = await this.auth.fetchSignInMethodsForEmail(email);
+    const auth = await this.auth();
+    const methods = await auth.fetchSignInMethodsForEmail(email);
     return methods.length > 0;
   }
 
-  sendPasswordResetEmail(email: string): Promise<void> {
-    return this.auth.sendPasswordResetEmail(email);
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    const auth = await this.auth();
+    return auth.sendPasswordResetEmail(email);
   }
 
   async getCurrentIDToken(): Promise<FirebaseOpaqueIDToken> {
-    const currentUser = this.auth.currentUser;
+    const auth = await this.auth();
+    const currentUser = auth.currentUser;
     if (currentUser) {
       const idToken = await currentUser.getIdToken(true);
       return new FirebaseOpaqueIDToken(idToken);
@@ -132,7 +157,8 @@ export default class FirebaseAuthenticationClient
   async signInWithLoginToken(
     loginToken: FirebaseOpaqueLoginToken,
   ): Promise<unknown> {
-    await this.auth.signInWithCustomToken(loginToken._token);
+    const auth = await this.auth();
+    await auth.signInWithCustomToken(loginToken._token);
     return;
   }
 
@@ -166,16 +192,7 @@ export default class FirebaseAuthenticationClient
     return;
   }
 
-  supportsCredentialPersistence(): boolean {
-    try {
-      const request = window.indexedDB.open("firebaseLocalStorageDb");
-      request.onsuccess = () => {
-        request.result.close();
-      };
-      // We don't need to wait for success to return true: when IDB is unsupported, it will fail immediately.
-      return true;
-    } catch {
-      return false;
-    }
+  supportsCredentialPersistence(): Promise<boolean> {
+    return isBrowserStorageAvailable();
   }
 }

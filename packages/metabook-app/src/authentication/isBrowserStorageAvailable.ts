@@ -1,0 +1,106 @@
+// This is a locus of pain. Browsers can indicate the practical unavailability of IndexedDB in many ways: sometimes by making the API unavailable, sometimes by making open() throw, sometimes by making writes throw.
+
+let browserStorageAvailable: boolean | null = null;
+
+function indexedDBExists() {
+  return "indexedDB" in self && indexedDB != null;
+}
+const testDB = "__orbit_validateIDB";
+const storeName = "testStore";
+
+function attemptTestObjectStoreWrite(db: IDBDatabase): Promise<boolean> {
+  return new Promise((resolve) => {
+    // Create a transaction we'll use to test write.
+    const transaction = db.transaction(storeName, "readwrite");
+
+    // When the transaction's done, clean up.
+    transaction.oncomplete = () => {
+      resolve(true);
+    };
+    transaction.onerror = () => {
+      resolve(false);
+    };
+
+    // Put a test key/value into the database.
+    const store = transaction.objectStore(storeName);
+    try {
+      store.put("test", "testKey");
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
+function performTest(openRequest: IDBOpenDBRequest): Promise<boolean> {
+  const db = openRequest.result;
+
+  // Make an object store to test mutations.
+  const store = db.createObjectStore(storeName, {
+    keyPath: "taskTitle",
+  });
+
+  return new Promise((resolve) => {
+    store.transaction.oncomplete = () => {
+      attemptTestObjectStoreWrite(db).then(resolve);
+    };
+    store.transaction.onerror = () => {
+      resolve(false);
+    };
+  });
+}
+
+function cleanUpTestDB(db: IDBDatabase) {
+  try {
+    db.deleteObjectStore(storeName);
+    db.close();
+    window.indexedDB.deleteDatabase(storeName);
+  } catch {
+    // We don't care about these clean-up errors.
+  }
+}
+
+async function canWriteToIndexedDB(): Promise<boolean> {
+  return new Promise((resolve) => {
+    try {
+      // IDB is so baroque. First we open the database...
+      const openRequest = window.indexedDB.open(testDB);
+
+      let dbAlreadyExisted = false;
+
+      // It shouldn't exist, so we'll need to "upgrade" it.
+      openRequest.onupgradeneeded = () => {
+        dbAlreadyExisted = true;
+        performTest(openRequest).then(resolve);
+      };
+
+      // Once that upgrade's complete, clean up and resolve.
+      openRequest.onsuccess = () => {
+        const db = openRequest.result;
+        if (dbAlreadyExisted) {
+          cleanUpTestDB(db);
+        } else {
+          attemptTestObjectStoreWrite(db).then((result) => {
+            resolve(result);
+            cleanUpTestDB(db);
+          });
+        }
+      };
+      openRequest.onerror = () => {
+        resolve(false);
+      };
+    } catch (error) {
+      resolve(false);
+    }
+  });
+}
+
+export default async function isBrowserStorageAvailable(): Promise<boolean> {
+  if (browserStorageAvailable === null) {
+    browserStorageAvailable =
+      indexedDBExists() && (await canWriteToIndexedDB());
+    if (!browserStorageAvailable) {
+      console.log("[Orbit] Browser storage is not available");
+    }
+  }
+  return browserStorageAvailable;
+}

@@ -38,7 +38,8 @@ async function loginWithAccessCode(
   const loginToken = await authenticationClient
     .getLoginTokenUsingAccessCode(accessCode)
     .catch(() => null);
-  if (!authenticationClient.getUserAuthState()) {
+  const authState = await authenticationClient.getUserAuthState();
+  if (!authState) {
     console.log("Signing in with access code");
     await authenticationClient.signInWithLoginToken(loginToken);
   }

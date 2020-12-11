@@ -131,9 +131,13 @@ export function useEmbeddedAuthenticationState(
   React.useEffect(() => {
     if (authenticationState.status === "pending" && hasStorageAccess !== null) {
       if (hasStorageAccess) {
-        if (!authenticationClient.supportsCredentialPersistence()) {
-          attemptLoginWithSessionCookie(authenticationClient);
-        }
+        authenticationClient
+          .supportsCredentialPersistence()
+          .then((supportsPersistence) => {
+            if (!supportsPersistence) {
+              attemptLoginWithSessionCookie(authenticationClient);
+            }
+          });
       } else {
         setAuthenticationState({
           status: "storageRestricted",
@@ -151,7 +155,6 @@ export function useEmbeddedAuthenticationState(
                 );
               })
               .catch(() => {
-                // TODO: now what? make sure this still works locally...
                 console.error("Storage access declined");
               });
           },
@@ -164,10 +167,14 @@ export function useEmbeddedAuthenticationState(
     (userRecord: Authentication.UserRecord | null) => {
       if (userRecord) {
         setAuthenticationState({ status: "signedIn", userRecord });
-        if (!authenticationClient.supportsCredentialPersistence()) {
-          // TODO: avoid doing this upon receiving loginToken from popup
-          attemptRefreshSessionCookie(authenticationClient);
-        }
+        authenticationClient
+          .supportsCredentialPersistence()
+          .then((supportsPersistence) => {
+            if (!supportsPersistence) {
+              // TODO: avoid doing this upon receiving loginToken from popup
+              attemptRefreshSessionCookie(authenticationClient);
+            }
+          });
       } else if (!userRecord && hasStorageAccess) {
         setAuthenticationState({ status: "signedOut", userRecord: null });
       }

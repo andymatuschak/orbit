@@ -7,7 +7,7 @@ export interface AuthenticationClient<LoginToken = any, IDToken = any> {
   subscribeToUserAuthState(
     callback: (userRecord: UserRecord | null) => void,
   ): () => void;
-  getUserAuthState(): UserRecord | null;
+  getUserAuthState(): Promise<UserRecord | null>;
 
   signInWithEmailAndPassword(email: string, password: string): Promise<unknown>;
 
@@ -27,5 +27,5 @@ export interface AuthenticationClient<LoginToken = any, IDToken = any> {
   signInWithLoginToken(loginToken: LoginToken): Promise<unknown>;
   refreshSessionCookie(IDToken: IDToken): Promise<unknown>;
 
-  supportsCredentialPersistence(): boolean;
+  supportsCredentialPersistence(): Promise<boolean>;
 }
