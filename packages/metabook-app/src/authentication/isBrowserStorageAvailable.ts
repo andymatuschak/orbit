@@ -10,21 +10,21 @@ const storeName = "testStore";
 
 function attemptTestObjectStoreWrite(db: IDBDatabase): Promise<boolean> {
   return new Promise((resolve) => {
-    // Create a transaction we'll use to test write.
-    const transaction = db.transaction(storeName, "readwrite");
-
-    // When the transaction's done, clean up.
-    transaction.oncomplete = () => {
-      resolve(true);
-    };
-    transaction.onerror = () => {
-      console.log("Couldn't commit IDB read/write transaction");
-      resolve(false);
-    };
-
-    // Put a test key/value into the database.
-    const store = transaction.objectStore(storeName);
     try {
+      // Create a transaction we'll use to test write.
+      const transaction = db.transaction(storeName, "readwrite");
+
+      // When the transaction's done, clean up.
+      transaction.oncomplete = () => {
+        resolve(true);
+      };
+      transaction.onerror = () => {
+        console.log("Couldn't commit IDB read/write transaction");
+        resolve(false);
+      };
+
+      // Put a test key/value into the database.
+      const store = transaction.objectStore(storeName);
       store.put("testValue", "testKey");
     } catch (error) {
       console.log("Couldn't put() in IDB object store", error);
@@ -36,17 +36,21 @@ function attemptTestObjectStoreWrite(db: IDBDatabase): Promise<boolean> {
 function performTest(openRequest: IDBOpenDBRequest): Promise<boolean> {
   const db = openRequest.result;
 
-  // Make an object store to test mutations.
-  const store = db.createObjectStore(storeName);
-
   return new Promise((resolve) => {
-    store.transaction.oncomplete = () => {
-      attemptTestObjectStoreWrite(db).then(resolve);
-    };
-    store.transaction.onerror = () => {
-      console.log("Couldn't create IDB object store");
+    try {
+      // Make an object store to test mutations.
+      const store = db.createObjectStore(storeName);
+      store.transaction.oncomplete = () => {
+        attemptTestObjectStoreWrite(db).then(resolve);
+      };
+      store.transaction.onerror = () => {
+        console.log("Couldn't create IDB object store");
+        resolve(false);
+      };
+    } catch (error) {
+      console.log("Couldn't create IDB object store", error);
       resolve(false);
-    };
+    }
   });
 }
 

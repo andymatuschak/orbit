@@ -36,7 +36,7 @@ async function sendTokenToOpenerAndClose(
   if (channel) {
     channel.postMessage({ loginToken });
   } else if (window.opener) {
-    window.opener.postMessage({ loginToken });
+    window.opener.postMessage({ loginToken }, window.origin);
   } else {
     throw new Error(
       "Login token broadcast channel is unavailable and there is no window.opener: no way to pass the auth token",
