@@ -45,33 +45,44 @@ export type EmbeddedAuthenticationState =
     }
   | { status: "signedIn"; userRecord: Authentication.UserRecord };
 
-// Watch for auth tokens broadcasted from the login popup.
+// Watch for auth tokens broadcasted from the login popup or from peer iframes. These may come either via postMessage() to window.opener or via BroadcastChannel in supported browsers (either from the popup window or from a peer iframe).
 function useLoginTokenSubscription(
   authenticationClient: Authentication.AuthenticationClient,
 ) {
-  // We relay login tokens from the popup to our sibling iframes via a broadcast channel if supported.
   const channel = getLoginTokenBroadcastChannel();
   const onLoginToken = React.useCallback(
     (event: MessageEvent) => {
       if (event.origin === window.origin && event.data.loginToken) {
         console.debug(
-          "Received login token from login window",
+          "Received broadcasted login token",
           event.data,
           event.target,
           event.origin,
         );
         const { loginToken } = event.data;
 
+        // If this token arrived via postMessage(), we relay login tokens from the popup to our sibling iframes via a broadcast channel if supported.
+        if (channel && !(event.target instanceof BroadcastChannel)) {
+          channel.postMessage(event.data);
+        }
+
         authenticationClient.signInWithLoginToken(loginToken).catch((error) => {
           console.error(`Couldn't login with provided token: ${error}`);
         });
       }
     },
-    [authenticationClient],
+    [authenticationClient, channel],
   );
   if (channel) {
     channel.onmessage = onLoginToken;
   }
+
+  React.useEffect(() => {
+    window.addEventListener("message", onLoginToken, false);
+    return () => {
+      window.removeEventListener("message", onLoginToken);
+    };
+  }, [onLoginToken]);
 
   React.useEffect(() => {
     return () => {
