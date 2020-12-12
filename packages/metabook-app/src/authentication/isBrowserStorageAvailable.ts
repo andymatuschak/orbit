@@ -2,9 +2,6 @@
 
 let browserStorageAvailable: boolean | null = null;
 
-function indexedDBExists() {
-  return "indexedDB" in self && indexedDB != null;
-}
 const testDB = "__orbit_validateIDB";
 const storeName = "testStore";
 
@@ -34,10 +31,9 @@ function attemptTestObjectStoreWrite(db: IDBDatabase): Promise<boolean> {
 }
 
 function performTest(openRequest: IDBOpenDBRequest): Promise<boolean> {
-  const db = openRequest.result;
-
   return new Promise((resolve) => {
     try {
+      const db = openRequest.result;
       // Make an object store to test mutations.
       const store = db.createObjectStore(storeName);
       store.transaction.oncomplete = () => {
@@ -67,6 +63,11 @@ function cleanUpTestDB(db: IDBDatabase) {
 async function canWriteToIndexedDB(): Promise<boolean> {
   return new Promise((resolve) => {
     try {
+      if (!("indexedDB" in self) || indexedDB === null) {
+        resolve(false);
+        return;
+      }
+
       // IDB is so baroque. First we open the database...
       const openRequest = window.indexedDB.open(testDB);
 
@@ -103,8 +104,7 @@ async function canWriteToIndexedDB(): Promise<boolean> {
 
 export default async function isBrowserStorageAvailable(): Promise<boolean> {
   if (browserStorageAvailable === null) {
-    browserStorageAvailable =
-      indexedDBExists() && (await canWriteToIndexedDB());
+    browserStorageAvailable = await canWriteToIndexedDB();
     if (!browserStorageAvailable) {
       console.log("[Orbit] Browser storage is not available");
     }
