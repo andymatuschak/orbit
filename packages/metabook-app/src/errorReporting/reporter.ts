@@ -13,9 +13,15 @@ declare global {
 const useSentryInDevelopment = false;
 
 export function initializeReporter() {
+  // Bail out automatically if the app isn't deployed
+  const enabled = !__DEV__ || useSentryInDevelopment;
+  if (!enabled) {
+    console.log("[sentry] Disabling Sentry in development");
+  }
+
   Sentry.onLoad(() => {
     Sentry.init({
-      enabled: !__DEV__ || useSentryInDevelopment,
+      enabled,
       release: `${serviceConfig.sentryProject}@${GitInfo().commit.hash}`,
     });
     Sentry.setTags({

@@ -7,9 +7,9 @@ import { initializeReporter } from "./src/errorReporting/reporter";
 import Root from "./src/Root";
 
 export default function App() {
-  /*React.useEffect(() => {
+  React.useEffect(() => {
     initializeReporter();
-  }, []);*/
+  }, []);
 
   return <Root />;
 }
