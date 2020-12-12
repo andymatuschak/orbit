@@ -8,7 +8,12 @@ let _loginTokenBroadcastChannel:
 export function getLoginTokenBroadcastChannel(): BroadcastChannel | null {
   if (_loginTokenBroadcastChannel === undefined) {
     if (Platform.OS === "web" && typeof BroadcastChannel === "function") {
-      _loginTokenBroadcastChannel = new BroadcastChannel("loginToken");
+      try {
+        _loginTokenBroadcastChannel = new BroadcastChannel("loginToken");
+      } catch {
+        // When Firefox is running with paranoid settings, BroadcastChannel is present but throws on construction.
+        _loginTokenBroadcastChannel = null;
+      }
     } else {
       _loginTokenBroadcastChannel = null;
     }
