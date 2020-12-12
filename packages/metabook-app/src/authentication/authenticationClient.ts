@@ -3,7 +3,7 @@ export interface UserRecord {
   emailAddress: string | null;
 }
 
-export interface AuthenticationClient<LoginToken = any, IDToken = any> {
+export interface AuthenticationClient<LoginToken = unknown, IDToken = unknown> {
   subscribeToUserAuthState(
     callback: (userRecord: UserRecord | null) => void,
   ): () => void;
