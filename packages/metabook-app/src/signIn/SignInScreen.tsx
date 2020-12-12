@@ -5,7 +5,8 @@ import { AuthenticationClient } from "../authentication";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
-} from "../util/authContext";
+} from "../authentication/authContext";
+import { getLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";
 
 function simpleAlert(text: string) {
   if (Platform.OS === "web") {
@@ -31,12 +32,14 @@ async function sendTokenToOpenerAndClose(
   );
   console.log("Got login token", loginToken);
 
-  if (!window.opener) {
+  const channel = getLoginTokenBroadcastChannel();
+  if (channel) {
+    channel.postMessage({ loginToken });
+  } else {
     throw new Error(
-      `shouldSendOpenerLoginToken is set but window.opener is unset`,
+      "Login token broadcast channel is unavailable; can't pass auth to opener",
     );
   }
-  window.opener.postMessage({ loginToken }, window.origin);
   window.close();
 }
 

@@ -1,5 +1,6 @@
 import * as Authentication from "../authentication";
 import React from "react";
+import { getLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";
 import useByrefCallback from "../util/useByrefCallback";
 
 declare global {
@@ -44,18 +45,12 @@ export type EmbeddedAuthenticationState =
     }
   | { status: "signedIn"; userRecord: Authentication.UserRecord };
 
-const supportsBroadcastChannel = typeof BroadcastChannel === "function";
-
-// Watch for messages from the login popup.
-function useSignInTokenSubscription(
+// Watch for auth tokens broadcasted from the login popup.
+function useLoginTokenSubscription(
   authenticationClient: Authentication.AuthenticationClient,
 ) {
   // We relay login tokens from the popup to our sibling iframes via a broadcast channel if supported.
-  const channel = React.useMemo(
-    () =>
-      supportsBroadcastChannel ? new BroadcastChannel("loginToken") : null,
-    [],
-  );
+  const channel = getLoginTokenBroadcastChannel();
   const onLoginToken = React.useCallback(
     (event: MessageEvent) => {
       if (event.origin === window.origin && event.data.loginToken) {
@@ -67,27 +62,16 @@ function useSignInTokenSubscription(
         );
         const { loginToken } = event.data;
 
-        if (channel && !(event.target instanceof BroadcastChannel)) {
-          channel.postMessage(event.data);
-        }
-
         authenticationClient.signInWithLoginToken(loginToken).catch((error) => {
           console.error(`Couldn't login with provided token: ${error}`);
         });
       }
     },
-    [authenticationClient, channel],
+    [authenticationClient],
   );
   if (channel) {
     channel.onmessage = onLoginToken;
   }
-
-  React.useEffect(() => {
-    window.addEventListener("message", onLoginToken, false);
-    return () => {
-      window.removeEventListener("message", onLoginToken);
-    };
-  }, [onLoginToken]);
 
   React.useEffect(() => {
     return () => {
@@ -99,7 +83,7 @@ function useSignInTokenSubscription(
 export function useEmbeddedAuthenticationState(
   authenticationClient: Authentication.AuthenticationClient,
 ): EmbeddedAuthenticationState {
-  useSignInTokenSubscription(authenticationClient);
+  useLoginTokenSubscription(authenticationClient);
 
   const [authenticationState, setAuthenticationState] = React.useState<
     EmbeddedAuthenticationState

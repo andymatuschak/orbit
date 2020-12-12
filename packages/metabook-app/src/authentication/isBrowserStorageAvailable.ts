@@ -18,14 +18,16 @@ function attemptTestObjectStoreWrite(db: IDBDatabase): Promise<boolean> {
       resolve(true);
     };
     transaction.onerror = () => {
+      console.log("Couldn't commit IDB read/write transaction");
       resolve(false);
     };
 
     // Put a test key/value into the database.
     const store = transaction.objectStore(storeName);
     try {
-      store.put("test", "testKey");
-    } catch {
+      store.put("testValue", "testKey");
+    } catch (error) {
+      console.log("Couldn't put() in IDB object store", error);
       resolve(false);
     }
   });
@@ -35,15 +37,14 @@ function performTest(openRequest: IDBOpenDBRequest): Promise<boolean> {
   const db = openRequest.result;
 
   // Make an object store to test mutations.
-  const store = db.createObjectStore(storeName, {
-    keyPath: "taskTitle",
-  });
+  const store = db.createObjectStore(storeName);
 
   return new Promise((resolve) => {
     store.transaction.oncomplete = () => {
       attemptTestObjectStoreWrite(db).then(resolve);
     };
     store.transaction.onerror = () => {
+      console.log("Couldn't create IDB object store");
       resolve(false);
     };
   });
@@ -86,9 +87,11 @@ async function canWriteToIndexedDB(): Promise<boolean> {
         }
       };
       openRequest.onerror = () => {
+        console.log("Couldn't open test IDB database");
         resolve(false);
       };
     } catch (error) {
+      console.log("Exception opening test IDB", error);
       resolve(false);
     }
   });

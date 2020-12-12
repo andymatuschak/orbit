@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Authentication from "./authentication";
-import { AuthenticationClientContext } from "./util/authContext";
+import { AuthenticationClientContext } from "./authentication/authContext";
 import { getFirebaseAuth } from "./util/firebase";
 import usePageViewTracking from "./util/usePageViewTracking";
 

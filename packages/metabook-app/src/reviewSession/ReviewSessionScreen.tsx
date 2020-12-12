@@ -6,7 +6,7 @@ import SignInScreen from "../signIn/SignInScreen";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
-} from "../util/authContext";
+} from "../authentication/authContext";
 import ReviewSession from "./ReviewSession";
 
 function LoadingScreen() {

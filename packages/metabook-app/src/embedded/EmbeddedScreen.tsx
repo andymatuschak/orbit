@@ -34,7 +34,7 @@ import {
   ReviewSessionWrapper,
   ReviewSessionWrapperProps,
 } from "../ReviewSessionWrapper";
-import { useAuthenticationClient } from "../util/authContext";
+import { useAuthenticationClient } from "../authentication/authContext";
 import { getFirebaseFunctions } from "../util/firebase";
 import EmbeddedBanner from "./EmbeddedBanner";
 import {

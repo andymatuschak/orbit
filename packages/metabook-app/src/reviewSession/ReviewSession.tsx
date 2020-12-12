@@ -36,7 +36,7 @@ import { ReviewSessionWrapper } from "../ReviewSessionWrapper";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
-} from "../util/authContext";
+} from "../authentication/authContext";
 import {
   enableFirebasePersistence,
   getAttachmentUploader,

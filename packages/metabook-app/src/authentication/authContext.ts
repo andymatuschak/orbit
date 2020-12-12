@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AuthenticationClient, UserRecord } from "../authentication";
+import { AuthenticationClient, UserRecord } from "./index";
 
 export const AuthenticationClientContext = React.createContext<AuthenticationClient | null>(
   null,
