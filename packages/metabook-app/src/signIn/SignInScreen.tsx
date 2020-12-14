@@ -8,7 +8,7 @@ import {
 } from "../authentication/authContext";
 import { createLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";
 
-function simpleAlert(text: string) {
+function showSimpleAlert(text: string) {
   if (Platform.OS === "web") {
     alert(text);
   } else {
@@ -17,7 +17,7 @@ function simpleAlert(text: string) {
 }
 
 type LoginTokenTarget = "opener" | "channel";
-function getLoginTokenTarget(): LoginTokenTarget | null {
+function getCurrentLoginTokenTarget(): LoginTokenTarget | null {
   if (Platform.OS === "web") {
     const searchParams = new URLSearchParams(window.location.search);
     const openerTarget = searchParams.get("tokenTarget");
@@ -97,7 +97,7 @@ export default function SignInScreen() {
   const userRecord = useCurrentUserRecord(authenticationClient);
   React.useEffect(() => {
     if (userRecord) {
-      const tokenTarget = getLoginTokenTarget();
+      const tokenTarget = getCurrentLoginTokenTarget();
       if (tokenTarget) {
         sendTokenToTargetAndClose(authenticationClient, tokenTarget);
       } else {
@@ -108,13 +108,6 @@ export default function SignInScreen() {
       }
     }
   }, [authenticationClient, userRecord]);
-
-  const isUnmounted = React.useRef(false);
-  React.useEffect(() => {
-    return () => {
-      isUnmounted.current = true;
-    };
-  }, []);
 
   const onLogin = React.useCallback(
     async (email, password) => {
@@ -136,16 +129,11 @@ export default function SignInScreen() {
             break;
         }
       } catch (error) {
-        if (isUnmounted.current) {
-          return;
-        }
         console.error("Couldn't login", error.code, error.message);
         // TODO: replace with inline error
-        simpleAlert(error.message);
+        showSimpleAlert(error.message);
       }
-      if (!isUnmounted.current) {
-        setPendingServerResponse(false);
-      }
+      setPendingServerResponse(false);
     },
     [authenticationClient, formMode],
   );
@@ -153,7 +141,7 @@ export default function SignInScreen() {
   const onResetPassword = React.useCallback(
     (email) => {
       authenticationClient.sendPasswordResetEmail(email);
-      simpleAlert(
+      showSimpleAlert(
         "We've sent you an email with instructions on how to reset your password.",
       );
     },
