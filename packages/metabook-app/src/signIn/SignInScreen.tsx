@@ -6,7 +6,7 @@ import {
   useAuthenticationClient,
   useCurrentUserRecord,
 } from "../authentication/authContext";
-import { getLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";
+import { createLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";
 
 function simpleAlert(text: string) {
   if (Platform.OS === "web") {
@@ -16,15 +16,21 @@ function simpleAlert(text: string) {
   }
 }
 
-function shouldSendOpenerLoginToken() {
-  return (
-    Platform.OS === "web" &&
-    window.location.search.includes("shouldSendOpenerLoginToken")
-  );
+type LoginTokenTarget = "opener" | "channel";
+function getLoginTokenTarget(): LoginTokenTarget | null {
+  if (Platform.OS === "web") {
+    const searchParams = new URLSearchParams(window.location.search);
+    const openerTarget = searchParams.get("tokenTarget");
+    if (openerTarget === "opener" || openerTarget === "channel") {
+      return openerTarget;
+    }
+  }
+  return null;
 }
 
-async function sendTokenToOpenerAndClose(
+async function sendTokenToTargetAndClose(
   authenticationClient: AuthenticationClient,
+  loginTokenTarget: LoginTokenTarget,
 ) {
   const idToken = await authenticationClient.getCurrentIDToken();
   const loginToken = await authenticationClient.getLoginTokenUsingIDToken(
@@ -32,16 +38,27 @@ async function sendTokenToOpenerAndClose(
   );
   console.log("Got login token", loginToken);
 
-  const channel = getLoginTokenBroadcastChannel();
-  if (channel) {
-    channel.postMessage({ loginToken });
-  } else if (window.opener) {
-    window.opener.postMessage({ loginToken }, window.origin);
+  if (loginTokenTarget === "opener") {
+    if (window.opener) {
+      window.opener.postMessage({ loginToken }, window.origin);
+    } else {
+      throw new Error(
+        "window.opener is unavailable: no way to pass the auth token",
+      );
+    }
+  } else if (loginTokenTarget === "channel") {
+    const channel = createLoginTokenBroadcastChannel();
+    if (channel) {
+      channel.postMessage({ loginToken });
+    } else {
+      throw new Error(
+        "Login token broadcast channel is unavailable: no way to pass the auth token",
+      );
+    }
   } else {
-    throw new Error(
-      "Login token broadcast channel is unavailable and there is no window.opener: no way to pass the auth token",
-    );
+    throw new Error(`Unknown login token target: ${loginTokenTarget}`);
   }
+
   window.close();
 }
 
@@ -80,8 +97,9 @@ export default function SignInScreen() {
   const userRecord = useCurrentUserRecord(authenticationClient);
   React.useEffect(() => {
     if (userRecord) {
-      if (shouldSendOpenerLoginToken()) {
-        sendTokenToOpenerAndClose(authenticationClient);
+      const tokenTarget = getLoginTokenTarget();
+      if (tokenTarget) {
+        sendTokenToTargetAndClose(authenticationClient, tokenTarget);
       } else {
         if (Platform.OS === "web") {
           // TODO: redirect somewhere useful outside the embedded case

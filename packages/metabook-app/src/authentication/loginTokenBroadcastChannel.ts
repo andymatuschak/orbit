@@ -1,22 +1,27 @@
 import { Platform } from "react-native";
 
-let _loginTokenBroadcastChannel:
-  | BroadcastChannel
-  | null
-  | undefined = undefined;
-
-export function getLoginTokenBroadcastChannel(): BroadcastChannel | null {
-  if (_loginTokenBroadcastChannel === undefined) {
+let _supportsLoginTokenBroadcastChannel: boolean | null = null;
+export function supportsLoginTokenBroadcastChannel(): boolean {
+  if (_supportsLoginTokenBroadcastChannel === null) {
     if (Platform.OS === "web" && typeof BroadcastChannel === "function") {
       try {
-        _loginTokenBroadcastChannel = new BroadcastChannel("loginToken");
+        new BroadcastChannel("loginToken");
+        _supportsLoginTokenBroadcastChannel = true;
       } catch {
         // When Firefox is running with paranoid settings, BroadcastChannel is present but throws on construction.
-        _loginTokenBroadcastChannel = null;
+        _supportsLoginTokenBroadcastChannel = false;
       }
     } else {
-      _loginTokenBroadcastChannel = null;
+      _supportsLoginTokenBroadcastChannel = false;
     }
   }
-  return _loginTokenBroadcastChannel;
+  return _supportsLoginTokenBroadcastChannel;
+}
+
+export function createLoginTokenBroadcastChannel(): BroadcastChannel | null {
+  if (supportsLoginTokenBroadcastChannel()) {
+    return new BroadcastChannel("loginToken");
+  } else {
+    return null;
+  }
 }

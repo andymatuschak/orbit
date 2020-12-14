@@ -9,6 +9,7 @@ import {
 import { SizeClass } from "metabook-ui/dist/styles/layout";
 import React from "react";
 import { Text, View } from "react-native";
+import { supportsLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";
 
 export interface OnboardingModalProps {
   colorPalette: styles.colors.ColorPalette;
@@ -20,10 +21,11 @@ const emailRegexp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
 function onSubmit(email: string) {
   if (emailRegexp.test(email)) {
+    const tokenTarget = supportsLoginTokenBroadcastChannel()
+      ? "channel"
+      : "opener";
     window.open(
-      `/login?shouldSendOpenerLoginToken=true&email=${encodeURIComponent(
-        email,
-      )}`,
+      `/login?tokenTarget=${tokenTarget}&email=${encodeURIComponent(email)}`,
       "Sign in",
       "width=375,height=500",
     );

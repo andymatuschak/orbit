@@ -1,6 +1,6 @@
 import * as Authentication from "../authentication";
 import React from "react";
-import { getLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";
+import { createLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";
 import useByrefCallback from "../util/useByrefCallback";
 
 declare global {
@@ -49,9 +49,11 @@ export type EmbeddedAuthenticationState =
 function useLoginTokenSubscription(
   authenticationClient: Authentication.AuthenticationClient,
 ) {
-  const channel = getLoginTokenBroadcastChannel();
-  const onLoginToken = React.useCallback(
-    (event: MessageEvent) => {
+  const channelRef = React.useRef(createLoginTokenBroadcastChannel());
+
+  React.useEffect(() => {
+    const channel = channelRef.current;
+    function onLoginToken(event: MessageEvent) {
       if (event.origin === window.origin && event.data.loginToken) {
         console.debug(
           "Received broadcasted login token",
@@ -70,25 +72,23 @@ function useLoginTokenSubscription(
           console.error(`Couldn't login with provided token: ${error}`);
         });
       }
-    },
-    [authenticationClient, channel],
-  );
-  if (channel) {
-    channel.onmessage = onLoginToken;
-  }
+    }
 
-  React.useEffect(() => {
+    if (channel) {
+      channel.onmessage = onLoginToken;
+    }
     window.addEventListener("message", onLoginToken, false);
     return () => {
       window.removeEventListener("message", onLoginToken);
     };
-  }, [onLoginToken]);
+  }, [authenticationClient]);
 
   React.useEffect(() => {
+    const channel = channelRef.current;
     return () => {
       channel?.close();
     };
-  }, [channel]);
+  }, []);
 }
 
 export function useEmbeddedAuthenticationState(

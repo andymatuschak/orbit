@@ -28,7 +28,7 @@
     "typescript": "^4.0.5"
   },
   "dependencies": {
-    "firebase": "^8.0.2",
+    "firebase": "^8.2.0",
     "metabook-core": "0.0.1",
     "metabook-firebase-support": "0.0.1"
   },

@@ -1,6 +1,6 @@
-const shouldUseLocalBackend = typeof __DEV__ === "undefined" ? false : __DEV__;
+// const shouldUseLocalBackend = typeof __DEV__ === "undefined" ? false : __DEV__;
 // Uncomment this line (and comment the above) to use the production backend in dev.
-// const shouldUseLocalBackend = false;
+const shouldUseLocalBackend = false;
 
 export default {
   sentryDSN:

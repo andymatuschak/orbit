@@ -11,8 +11,8 @@
   "dependencies": {
     "@ipld/dag-json": "^4.0.0",
     "fastestsmallesttextencoderdecoder": "^1.0.22",
-    "firebase": "^8.0.2",
-    "firebase-admin": "^9.4.0",
+    "firebase": "^8.2.0",
+    "firebase-admin": "^9.4.2",
     "metabook-core": "0.0.1",
     "multiformats": "^4.3.1"
   },
