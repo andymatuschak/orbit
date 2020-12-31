@@ -4,15 +4,16 @@ import {
   getAttachmentTypeForAttachmentMimeType,
   getIDForAttachment,
 } from "metabook-core";
-import { AttachmentResolutionMap, ReviewItem } from "metabook-ui";
+import { AttachmentResolutionMap } from "metabook-ui";
+import { EmbeddedItem } from "../../../embedded-support/src/embeddedScreenInterface";
+import { ReviewItem } from "../model/reviewItem";
 import {
   getAttachmentURLsInEmbeddedItem,
   getReviewItemFromEmbeddedItem,
 } from "./embeddedItem";
-import { EmbeddedItem } from "../../../embedded-support/src/embeddedScreenInterface";
 
 async function fetchAttachment(url: string): Promise<AttachmentIDReference> {
-  // TODO: move this to a service worker to avoid fetching the resource twice.
+  // TODO: move all this to a server call
   const response = await fetch(url);
   const responseIsOK = response.status >= 200 && response.status < 300;
   if (!responseIsOK) {
@@ -89,11 +90,11 @@ export async function resolveReviewItems(
 
   const reviewItems: ReviewItem[] = [];
   for (const item of embeddedItems) {
-    const reviewItem = getReviewItemFromEmbeddedItem(
-      item,
-      attachmentURLsToAttachmentIDReferences,
-      attachmentResolutionMap,
-    );
+    const reviewItem = getReviewItemFromEmbeddedItem({
+      embeddedItem: item,
+      attachmentURLsToIDReferences: attachmentURLsToAttachmentIDReferences,
+      attachmentResolutionMap: attachmentResolutionMap,
+    });
 
     if (reviewItem instanceof Error) {
       console.error(`Skipping review item: error`);

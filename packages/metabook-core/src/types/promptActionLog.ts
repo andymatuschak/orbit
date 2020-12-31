@@ -9,8 +9,13 @@ import {
   updateMetadataActionLogType,
 } from "./actionLog";
 import { PromptProvenance } from "./promptProvenance";
-import { PromptTaskID, PromptTaskMetadata } from "./promptTask";
-import { PromptTaskParameters } from "./promptTaskParameters";
+import {
+  PromptTask,
+  PromptTaskID,
+  PromptTaskMetadata,
+  PromptTaskParameters,
+  PromptTaskParametersOf,
+} from "./promptTask";
 
 // Prompt-specific definitions of ActionLog which include domain-specific narrowings of relevant fields.
 
@@ -24,12 +29,12 @@ export type PromptIngestActionLog = {
   provenance: PromptProvenance | null;
 } & BasePromptActionLog;
 
-export type PromptRepetitionActionLog<P extends PromptTaskParameters> = {
+export type PromptRepetitionActionLog<PT extends PromptTask> = {
   actionLogType: typeof repetitionActionLogType;
   parentActionLogIDs: ActionLogID[];
 
   taskID: PromptTaskID;
-  taskParameters: P;
+  taskParameters: PromptTaskParametersOf<PT>;
 
   context: string | null;
   outcome: PromptRepetitionOutcome;
@@ -48,23 +53,21 @@ export type PromptUpdateMetadataActionLog = UpdateMetadataActionLog & {
   updates: Partial<PromptTaskMetadata>;
 };
 
-export type PromptActionLog<
-  P extends PromptTaskParameters = PromptTaskParameters
-> =
+export type PromptActionLog<PT extends PromptTask = PromptTask> =
   | PromptIngestActionLog
-  | PromptRepetitionActionLog<P>
+  | PromptRepetitionActionLog<PT>
   | PromptRescheduleActionLog
   | PromptUpdateMetadataActionLog;
 
-export function getActionLogFromPromptActionLog<P extends PromptTaskParameters>(
-  promptActionLog: PromptActionLog<P>,
+export function getActionLogFromPromptActionLog(
+  promptActionLog: PromptActionLog,
 ): ActionLog {
   return promptActionLog;
 }
 
 export function getPromptActionLogFromActionLog(
   actionLog: ActionLog,
-): PromptActionLog<PromptTaskParameters> {
+): PromptActionLog {
   const taskID = actionLog.taskID as PromptTaskID;
   switch (actionLog.actionLogType) {
     case ingestActionLogType:

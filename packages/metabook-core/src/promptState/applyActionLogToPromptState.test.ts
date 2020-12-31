@@ -18,8 +18,11 @@ import {
   PromptIngestActionLog,
   PromptRepetitionActionLog,
 } from "../types/promptActionLog";
-import { getIDForPromptTask, PromptTaskID } from "../types/promptTask";
-import { QAPromptTaskParameters } from "../types/promptTaskParameters";
+import {
+  getIDForPromptTask,
+  PromptTaskID,
+  QAPromptTask,
+} from "../types/promptTask";
 import applyActionLogToPromptState, {
   updateBaseHeadActionLogIDs,
 } from "./applyActionLogToPromptState";
@@ -153,7 +156,7 @@ describe("ingesting", () => {
   });
 });
 
-let testRepetitionLog: PromptRepetitionActionLog<QAPromptTaskParameters>;
+let testRepetitionLog: PromptRepetitionActionLog<QAPromptTask>;
 let testRepetitionLogID: ActionLogID;
 beforeAll(async () => {
   testRepetitionLog = {
@@ -165,7 +168,9 @@ beforeAll(async () => {
     context: null,
     taskID: testQAPromptTaskID,
   };
-  testRepetitionLogID = await getIDForActionLog(testRepetitionLog);
+  testRepetitionLogID = await getIDForActionLog(
+    getActionLogFromPromptActionLog(testRepetitionLog),
+  );
 });
 
 describe("repetition", () => {

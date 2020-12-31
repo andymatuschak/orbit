@@ -1,17 +1,18 @@
-// Prompt states describe a user's state relative to a given *prompt* (not a prompt spec, not a task).
+// Prompt states describe a user's state relative to a given *prompt task* (not a prompt).
 
-import { PromptProvenance } from "..";
 import { ActionLogID } from "../actionLogID";
-import { PromptTaskMetadata } from "../types/promptTask";
-import { PromptTaskParameters } from "../types/promptTaskParameters";
-import { TaskMetadata } from "../types/taskMetadata";
+import {
+  PromptTask,
+  PromptTaskMetadata,
+  PromptTaskParametersOf,
+} from "../types/promptTask";
 
-export interface PromptState {
+export interface PromptState<PT extends PromptTask = PromptTask> {
   headActionLogIDs: ActionLogID[];
   taskMetadata: PromptTaskMetadata;
 
   lastReviewTimestampMillis: number;
-  lastReviewTaskParameters: PromptTaskParameters | null;
+  lastReviewTaskParameters: PromptTaskParametersOf<PT> | null;
   dueTimestampMillis: number;
   needsRetry: boolean;
 

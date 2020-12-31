@@ -2,6 +2,7 @@ import { MetabookDataClient, MetabookUserClient } from "metabook-client";
 import {
   ActionLogID,
   applyActionLogToPromptState,
+  AttachmentURLReference,
   getActionLogFromPromptActionLog,
   getIDForActionLog,
   getPromptActionLogFromActionLog,
@@ -9,10 +10,9 @@ import {
   PromptActionLog,
   promptActionLogCanBeAppliedToPromptState,
   PromptState,
-  PromptTaskID
+  PromptTaskID,
 } from "metabook-core";
 import { maxServerTimestamp, ServerTimestamp } from "metabook-firebase-support";
-import { ReviewItem } from "metabook-ui";
 
 import { Task } from "../util/task";
 import actionLogInitialImportOperation from "./actionLogInitialImportOperation";
@@ -24,6 +24,7 @@ import fetchReviewItemQueue from "./fetchReviewItemQueue";
 import promptDataInitialImportOperation from "./promptDataInitialImportOperation";
 import promptStateInitialImportOperation from "./promptStateInitialImportOperation";
 import PromptStateStore from "./promptStateStore";
+import { ReviewItem } from "./reviewItem";
 
 export default class DatabaseManager {
   private actionLogStore: ActionLogStore;
@@ -38,7 +39,7 @@ export default class DatabaseManager {
   private currentTask: Task<unknown> | null;
   private remoteLogSubscription: (() => void) | null;
 
-  private cachedReviewItemQueuePromise: Promise<ReviewItem[]>;
+  private cachedReviewItemQueuePromise: ReturnType<typeof fetchReviewItemQueue>;
 
   constructor(userClient: MetabookUserClient, dataClient: MetabookDataClient) {
     this.userClient = userClient;
@@ -83,7 +84,7 @@ export default class DatabaseManager {
     }
   }
 
-  async fetchReviewQueue(): Promise<ReviewItem[]> {
+  async fetchReviewQueue(): ReturnType<typeof fetchReviewItemQueue> {
     // TODO: invalidate the queue after writing a log...
     return this.cachedReviewItemQueuePromise;
   }

@@ -4,10 +4,11 @@ import { colors } from "../../styles";
 
 const testCardProps: CardProps = {
   reviewItem: {
-    reviewItemType: "prompt",
     prompt: testQAPrompt,
     promptParameters: null,
-    promptState: null,
+    taskParameters: null,
+    colorPalette: colors.palettes.red,
+    provenance: null,
     attachmentResolutionMap: null,
   },
   backIsRevealed: false,

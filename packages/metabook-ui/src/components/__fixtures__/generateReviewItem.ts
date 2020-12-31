@@ -1,45 +1,26 @@
-import {
-  ColorPaletteName,
-  getIntervalSequenceForSchedule,
-  PromptProvenanceType,
-} from "metabook-core";
+import { ColorPaletteName, PromptProvenanceType } from "metabook-core";
 import { testQAPrompt } from "metabook-sample-data";
-import { ReviewItem } from "../../reviewItem";
-
-const intervalSequence = getIntervalSequenceForSchedule("default");
+import { ReviewAreaItem } from "../../reviewAreaItem";
+import * as styles from "../../styles";
 
 export function generateReviewItem(
   questionText: string,
   answerText: string,
   contextString: string,
   colorPaletteName: ColorPaletteName,
-): ReviewItem {
-  const intervalMillis =
-    intervalSequence[Math.floor(Math.random() * (intervalSequence.length - 1))]
-      .interval;
+): ReviewAreaItem {
   return {
-    reviewItemType: "prompt",
-    promptState: {
-      dueTimestampMillis: 0,
-      headActionLogIDs: [],
-      intervalMillis,
-      bestIntervalMillis: null,
-      lastReviewTaskParameters: null,
-      lastReviewTimestampMillis: Date.now() - intervalMillis,
-      needsRetry: false,
-      taskMetadata: {
-        isDeleted: false,
-        provenance: {
-          provenanceType: PromptProvenanceType.Web,
-          externalID: "http://foo.com",
-          modificationTimestampMillis: null,
-          title: contextString,
-          url: "http://foo.com",
-          siteName: null,
-          colorPaletteName,
-        },
-      },
+    provenance: {
+      provenanceType: PromptProvenanceType.Web,
+      externalID: "http://foo.com",
+      modificationTimestampMillis: null,
+      title: contextString,
+      url: "http://foo.com",
+      siteName: null,
+      colorPaletteName,
     },
+    colorPalette: styles.colors.palettes[colorPaletteName],
+    taskParameters: null,
     prompt: {
       ...testQAPrompt,
       question: { contents: questionText, attachments: [] },

@@ -1,8 +1,12 @@
 import {
   AttachmentIDReference,
   clozePromptType,
+  getIDForPromptSync,
+  getIDForPromptTask,
   Prompt,
   PromptField,
+  PromptParameters,
+  PromptTask,
   QAPrompt,
   qaPromptType,
 } from "metabook-core";
@@ -11,11 +15,8 @@ import {
   EmbeddedPromptField,
   EmbeddedQAPrompt,
 } from "metabook-embedded-support";
-import {
-  AttachmentResolutionMap,
-  promptReviewItemType,
-  ReviewItem,
-} from "metabook-ui";
+import { AttachmentResolutionMap } from "metabook-ui";
+import { ReviewItem } from "../model/reviewItem";
 
 function getPromptFieldFromEmbeddedPromptField(
   embeddedPromptField: EmbeddedPromptField,
@@ -69,27 +70,30 @@ function getPromptFromEmbeddedQAPrompt(
   };
 }
 
-export function getReviewItemFromEmbeddedItem(
-  embeddedItem: EmbeddedItem,
-  attachmentURLsToIDReferences: Map<string, AttachmentIDReference>,
-  attachmentResolutionMap: AttachmentResolutionMap,
-): ReviewItem | Error {
+export function getReviewItemFromEmbeddedItem({
+  embeddedItem,
+  attachmentURLsToIDReferences,
+  attachmentResolutionMap,
+}: {
+  embeddedItem: EmbeddedItem;
+  attachmentURLsToIDReferences: Map<string, AttachmentIDReference>;
+  attachmentResolutionMap: AttachmentResolutionMap;
+}): ReviewItem | Error {
+  let prompt: Prompt;
+  let promptParameters: PromptParameters;
+
   switch (embeddedItem.type) {
     case qaPromptType:
-      const prompt = getPromptFromEmbeddedQAPrompt(
+      const result = getPromptFromEmbeddedQAPrompt(
         embeddedItem,
         attachmentURLsToIDReferences,
       );
-      if (prompt instanceof Error) {
-        return prompt;
+      if (result instanceof Error) {
+        return result;
       }
-      return {
-        prompt,
-        promptParameters: null,
-        promptState: null,
-        reviewItemType: promptReviewItemType,
-        attachmentResolutionMap,
-      };
+      prompt = result;
+      promptParameters = null;
+      break;
 
     case clozePromptType:
       const body = getPromptFieldFromEmbeddedPromptField(
@@ -99,14 +103,23 @@ export function getReviewItemFromEmbeddedItem(
       if (body instanceof Error) {
         return body;
       }
-      return {
-        prompt: { promptType: clozePromptType, body },
-        promptParameters: { clozeIndex: 0 },
-        promptState: null,
-        reviewItemType: promptReviewItemType,
-        attachmentResolutionMap,
-      };
+      prompt = { promptType: clozePromptType, body };
+      promptParameters = { clozeIndex: 0 };
+      break;
   }
+
+  return {
+    prompt,
+    promptParameters,
+    promptState: null,
+
+    attachmentResolutionMap,
+    promptTaskID: getIDForPromptTask({
+      promptID: getIDForPromptSync(prompt),
+      promptParameters,
+      promptType: prompt.promptType,
+    } as PromptTask),
+  };
 }
 
 export function getAttachmentURLsInEmbeddedItem(
@@ -120,6 +133,6 @@ export function getAttachmentURLsInEmbeddedItem(
       ];
 
     case clozePromptType:
-      return []; // TODO
+      return embeddedItem.body.attachmentURLs ?? [];
   }
 }

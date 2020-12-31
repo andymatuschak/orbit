@@ -20,13 +20,6 @@ export type {
   PromptField,
 } from "./types/prompt";
 
-export type {
-  PromptTaskParameters,
-  ApplicationPromptTaskParameters,
-  ClozePromptTaskParameters,
-  QAPromptTaskParameters,
-} from "./types/promptTaskParameters";
-
 export type { MetabookSpacedRepetitionSchedule } from "./spacedRepetition";
 export {
   PromptRepetitionOutcome,
@@ -48,7 +41,11 @@ export type {
   PromptTaskID,
   PromptParameters,
   ClozePromptParameters,
-  AbstractPromptTask,
+  PromptTaskParameters,
+  ApplicationPromptTaskParameters,
+  PromptTaskParametersOf,
+  PromptParametersOf,
+  PromptOf,
 } from "./types/promptTask";
 
 export type { Attachment } from "./types/attachment";

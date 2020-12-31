@@ -1,11 +1,7 @@
 import { PromptRepetitionOutcome } from "metabook-core";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import {
-  getColorPaletteForReviewItem,
-  PromptReviewItem,
-  ReviewItem,
-} from "../reviewItem";
+import { ReviewAreaItem } from "../reviewAreaItem";
 import { colors, layout } from "../styles";
 import { Size } from "../util/Size";
 import Card, { CardProps } from "./Card";
@@ -16,7 +12,7 @@ import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import ReviewButtonBar from "./ReviewButtonBar";
 
 export type ReviewAreaMarkingRecord = {
-  reviewItem: PromptReviewItem;
+  reviewAreaItem: ReviewAreaItem;
   outcome: PromptRepetitionOutcome;
 };
 
@@ -28,12 +24,10 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
   onDidDisappear,
   reviewItem,
   backIsRevealed,
-  overrideColorPalette,
 }: {
   size: Size;
   displayState: PromptContainerState;
-  onDidDisappear: (reviewItem: ReviewItem) => void;
-  overrideColorPalette?: colors.ColorPalette;
+  onDidDisappear: (reviewItem: ReviewAreaItem) => void;
 } & CardProps) {
   const rotationUnit = useTransitioningValue({
     value:
@@ -85,10 +79,7 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
       {reviewItem && (
         <Card
           reviewItem={reviewItem}
-          accentColor={
-            (overrideColorPalette ?? getColorPaletteForReviewItem(reviewItem))
-              .accentColor
-          }
+          accentColor={reviewItem.colorPalette.accentColor}
           backIsRevealed={backIsRevealed}
         />
       )}
@@ -97,20 +88,18 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
 });
 
 interface PromptStackProps {
-  items: ReviewItem[];
+  items: ReviewAreaItem[];
   currentItemIndex: number;
   isShowingAnswer: boolean;
-  overrideColorPalette?: colors.ColorPalette;
 }
 
 function PromptStack({
   items,
   currentItemIndex,
   isShowingAnswer,
-  overrideColorPalette,
 }: PromptStackProps) {
   const [departedCardCount, setDepartedCardCount] = useState(0);
-  const departingPromptItems = useRef<ReviewItem[]>([]);
+  const departingPromptItems = useRef<ReviewAreaItem[]>([]);
 
   const onPromptDidDisappear = useCallback((item) => {
     const itemIndex = departingPromptItems.current.indexOf(item);
@@ -180,7 +169,6 @@ function PromptStack({
                   (isShowingAnswer && displayState === "displayed") ||
                   displayState === "disappearing"
                 }
-                overrideColorPalette={overrideColorPalette}
               />
             );
           },
@@ -190,7 +178,7 @@ function PromptStack({
 }
 
 export interface ReviewAreaProps {
-  items: ReviewItem[];
+  items: ReviewAreaItem[];
   currentItemIndex: number;
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
   onPendingOutcomeChange: (
@@ -198,7 +186,6 @@ export interface ReviewAreaProps {
   ) => void;
 
   insetBottom?: number;
-  overrideColorPalette?: colors.ColorPalette;
 
   // Debug flags
   forceShowAnswer?: boolean;
@@ -210,7 +197,6 @@ export default React.memo(function ReviewArea({
   onMark,
   forceShowAnswer,
   onPendingOutcomeChange,
-  overrideColorPalette,
   insetBottom = 0,
 }: ReviewAreaProps) {
   // console.debug("[Performance - ReviewArea] Render", Date.now() / 1000.0);
@@ -229,11 +215,9 @@ export default React.memo(function ReviewArea({
     currentItemIndex < items.length ? items[currentItemIndex] : null;
 
   const currentColorPalette =
-    overrideColorPalette ??
-    (currentItem
-      ? getColorPaletteForReviewItem(currentItem)
-      : getColorPaletteForReviewItem(items[items.length - 1])) ??
-    colors.palettes.red;
+    items.length > 0
+      ? currentItem?.colorPalette ?? items[items.length - 1].colorPalette
+      : colors.palettes.red;
 
   return (
     <View style={{ flex: 1 }}>
@@ -241,7 +225,6 @@ export default React.memo(function ReviewArea({
         currentItemIndex={currentItemIndex}
         isShowingAnswer={isShowingAnswer}
         items={items}
-        overrideColorPalette={overrideColorPalette}
       />
 
       <ReviewButtonBar
@@ -251,8 +234,7 @@ export default React.memo(function ReviewArea({
             if (!currentItem) {
               throw new Error("Marking without a topmost item");
             }
-            const markingRecord = { reviewItem: currentItem, outcome };
-            onMark(markingRecord);
+            onMark({ reviewAreaItem: currentItem, outcome });
           },
           [currentItem, onMark],
         )}

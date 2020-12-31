@@ -1,5 +1,7 @@
-// A *task* is the atomic unit whose state is tracked in the system. A prompt task is a task about a prompt. Applications prompts comprise multiple variants, but those variants are not different tasks because all those variants share the same state. A cloze task is drawn from a cloze prompt: each individual deletion range is a task, since its state is tracked distinctly.
-// A task ID is a string representation of a task, e.g. `clozePrompt/SOME_CID_HERE/3`.
+// A *task* is the atomic unit whose state is tracked in the system. A prompt task is a task about a prompt, possibly parameterized with prompt parameters.
+// A cloze prompt task is drawn from a cloze prompt: each individual deletion range is a task, since its state is tracked distinctly. The tasks are created by parameterizing the cloze prompt with a cloze index via the prompt parameters.
+// In addition to prompt parameters, there may be task parameters, which determine which variation of a given task should be shown. For instance, application prompts comprise multiple variants, but those variants are not different tasks because all those variants share the same state. Instead, the variant index is tracked in the state of the prompt task).
+// A task ID is a string representation of a task, encoding its type, the prompt ID, and the prompt parameters: e.g. `clozePrompt/SOME_CID_HERE/3`.
 
 import { PromptID } from "../promptID";
 import {
@@ -14,19 +16,42 @@ import {
 import { PromptProvenance } from "./promptProvenance";
 import { TaskMetadata } from "./taskMetadata";
 
-export interface AbstractPromptTask<P extends Prompt, PP> {
+export type AbstractPromptTask<
+  P extends Prompt,
+  PromptParametersType,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  PromptTaskParametersType
+> = {
   promptID: PromptID;
   promptType: P["promptType"];
-  promptParameters: PP;
-}
+  promptParameters: PromptParametersType;
+};
+export type PromptOf<PT extends PromptTask> = PT extends AbstractPromptTask<
+  infer P,
+  any,
+  any
+>
+  ? P
+  : never;
+export type PromptParametersOf<
+  PT extends PromptTask
+> = PT extends AbstractPromptTask<any, infer PP, any> ? PP : never;
+export type PromptTaskParametersOf<
+  PT extends PromptTask
+> = PT extends AbstractPromptTask<any, any, infer PTP> ? PTP : never;
 
-export type QAPromptTask = AbstractPromptTask<QAPrompt, null>;
+export type QAPromptTask = AbstractPromptTask<QAPrompt, null, null>;
 
-export type ApplicationPromptTask = AbstractPromptTask<ApplicationPrompt, null>;
+export type ApplicationPromptTask = AbstractPromptTask<
+  ApplicationPrompt,
+  null,
+  ApplicationPromptTaskParameters
+>;
 
 export type ClozePromptTask = AbstractPromptTask<
   ClozePrompt,
-  ClozePromptParameters
+  ClozePromptParameters,
+  null
 >;
 
 export type PromptTask = QAPromptTask | ApplicationPromptTask | ClozePromptTask;
@@ -34,12 +59,7 @@ export type PromptTask = QAPromptTask | ApplicationPromptTask | ClozePromptTask;
 export interface ClozePromptParameters {
   clozeIndex: number;
 }
-export type PromptParameters = PromptTask extends AbstractPromptTask<
-  any,
-  infer PP
->
-  ? PP
-  : never;
+export type PromptParameters = PromptParametersOf<PromptTask>;
 
 export interface PromptTaskMetadata extends TaskMetadata {
   provenance: PromptProvenance | null;
@@ -101,3 +121,9 @@ export function getIDForPromptTask(promptTask: PromptTask): PromptTaskID {
       return `${base}/${promptTask.promptParameters.clozeIndex}` as PromptTaskID;
   }
 }
+
+export type ApplicationPromptTaskParameters = {
+  variantIndex: number;
+};
+
+export type PromptTaskParameters = PromptTaskParametersOf<PromptTask>;

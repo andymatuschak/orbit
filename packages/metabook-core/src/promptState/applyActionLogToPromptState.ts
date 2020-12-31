@@ -2,7 +2,6 @@ import { ActionLogID } from "../actionLogID";
 import { promptTypeSupportsRetry } from "../spacedRepetition";
 import { getNextRepetitionInterval } from "../spacedRepetition/getNextRepetitionInterval";
 import {
-  getInitialIntervalForSchedule,
   MetabookSpacedRepetitionSchedule,
   PromptRepetitionOutcome,
 } from "../spacedRepetition/spacedRepetition";
@@ -17,8 +16,11 @@ import {
   PromptRepetitionActionLog,
 } from "../types/promptActionLog";
 import { PromptProvenance } from "../types/promptProvenance";
-import { getPromptTaskForID, PromptTaskMetadata } from "../types/promptTask";
-import { PromptTaskParameters } from "../types/promptTaskParameters";
+import {
+  getPromptTaskForID,
+  PromptTask,
+  PromptTaskMetadata,
+} from "../types/promptTask";
 import { PromptState } from "./promptState";
 
 function getInitialPromptTaskMetadata(provenance: PromptProvenance | null) {
@@ -50,10 +52,8 @@ export function updateBaseHeadActionLogIDs(
   return output;
 }
 
-function applyPromptRepetitionActionLogToPromptState<
-  P extends PromptTaskParameters
->(
-  promptActionLog: PromptRepetitionActionLog<P>,
+function applyPromptRepetitionActionLogToPromptState<PT extends PromptTask>(
+  promptActionLog: PromptRepetitionActionLog<PT>,
   actionLogID: ActionLogID,
   basePromptState: PromptState | null,
   schedule: MetabookSpacedRepetitionSchedule,
@@ -126,15 +126,13 @@ function applyPromptRepetitionActionLogToPromptState<
   };
 }
 
-export default function applyActionLogToPromptState<
-  P extends PromptTaskParameters
->({
+export default function applyActionLogToPromptState<PT extends PromptTask>({
   promptActionLog,
   actionLogID,
   basePromptState,
   schedule,
 }: {
-  promptActionLog: PromptActionLog<P>;
+  promptActionLog: PromptActionLog<PT>;
   actionLogID: ActionLogID;
   basePromptState: PromptState | null;
   schedule: MetabookSpacedRepetitionSchedule;

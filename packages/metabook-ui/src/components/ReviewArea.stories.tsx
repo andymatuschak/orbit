@@ -6,13 +6,13 @@ import {
   PromptID,
   PromptRepetitionActionLog,
   PromptState,
-  PromptTaskParameters,
+  QAPromptTask,
   qaPromptType,
   repetitionActionLogType,
 } from "metabook-core";
 import React, { useCallback, useMemo, useState } from "react";
 import { Animated, Easing, View } from "react-native";
-import { ReviewItem } from "../reviewItem";
+import { ReviewAreaItem } from "../reviewAreaItem";
 import { colors } from "../styles";
 import { generateReviewItem } from "./__fixtures__/generateReviewItem";
 import DebugGrid from "./DebugGrid";
@@ -38,7 +38,7 @@ export function Basic() {
   const answerOverrideText = text("Answer override text", "");
   const sourceContext = text("Source context", "");
 
-  const items = useMemo<ReviewItem[]>(
+  const items = useMemo<ReviewAreaItem[]>(
     () =>
       Array.from(new Array(25).keys()).map((i) =>
         generateReviewItem(
@@ -98,8 +98,8 @@ export function Basic() {
           onPendingOutcomeChange={() => {
             return;
           }}
-          onMark={useCallback(async ({ outcome, reviewItem }) => {
-            const log: PromptRepetitionActionLog<PromptTaskParameters> = {
+          onMark={useCallback(async ({ outcome }) => {
+            const log: PromptRepetitionActionLog<QAPromptTask> = {
               actionLogType: repetitionActionLogType,
               context: null,
               outcome,
@@ -120,7 +120,7 @@ export function Basic() {
                   promptActionLog: log,
                   actionLogID,
                   schedule: "default",
-                  basePromptState: reviewItem.promptState,
+                  basePromptState: null,
                 }) as PromptState,
               ];
             });

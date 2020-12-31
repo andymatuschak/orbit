@@ -18,7 +18,6 @@ export interface ReviewStarburstProps {
   containerHeight: number;
   items: ReviewStarburstItem[];
   currentItemIndex: number;
-  currentItemSupportsRetry: boolean;
   pendingOutcome: PromptRepetitionOutcome | null;
   position: "left" | "center";
   showLegend: boolean;

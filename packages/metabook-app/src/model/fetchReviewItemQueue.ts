@@ -1,20 +1,21 @@
 import { MetabookUserClient } from "metabook-client";
 import {
+  AttachmentID,
+  AttachmentURLReference,
+  getIDForPromptTask,
   getPromptTaskForID,
+  Prompt,
   PromptID,
   PromptState,
   PromptTask,
-  reviewSession
+  PromptTaskID,
+  reviewSession,
 } from "metabook-core";
-import {
-  PromptReviewItem,
-  promptReviewItemType,
-  ReviewItem
-} from "metabook-ui";
 
 import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";
 import DataRecordManager from "./dataRecordManager";
 import PromptStateStore from "./promptStateStore";
+import { ReviewItem } from "./reviewItem";
 
 const reviewQueueLengthLimit = 100; // TODO: this isn't the right place for this.
 
@@ -34,7 +35,7 @@ async function getInitialDuePromptStates(
   dueBeforeTimestampMillis: number,
   limit: number,
   hasFinishedInitialImport: boolean,
-): Promise<Map<PromptTask, PromptState>> {
+): Promise<Map<PromptTaskID, PromptState>> {
   if (hasFinishedInitialImport) {
     console.log("Review queue: getting prompt data from cache");
     return promptStateStore.getDuePromptStates(dueBeforeTimestampMillis, limit);
@@ -44,54 +45,70 @@ async function getInitialDuePromptStates(
       limit,
       dueBeforeTimestampMillis,
     });
-    const outputMap = new Map<PromptTask, PromptState>();
+    const outputMap = new Map<PromptTaskID, PromptState>();
     for (const cache of promptStateCaches) {
-      const promptTask = getPromptTaskForID(cache.taskID);
-      if (promptTask instanceof Error) {
-        console.error("Unparseable task ID", cache.taskID, promptTask);
-      } else {
-        outputMap.set(promptTask, cache);
-      }
+      outputMap.set(cache.taskID, cache);
     }
     return outputMap;
   }
 }
 
-async function getReviewItemsForPromptStates(
-  orderedDuePromptTasks: PromptTask[],
-  promptStates: Map<PromptTask, PromptState>,
+async function resolveAttachments(
   dataRecordManager: DataRecordManager,
-): Promise<ReviewItem[]> {
-  const promptIDs = getPromptIDsInPromptTasks(orderedDuePromptTasks);
-
-  console.log("Review queue: fetching prompt data");
-  const prompts = await dataRecordManager.getPrompts(promptIDs);
-  console.log("Review queue: fetched prompt data");
-
-  const attachmentIDs = getAttachmentIDsInPrompts(prompts.values());
+  prompts: Iterable<Prompt>,
+): Promise<Map<AttachmentID, AttachmentURLReference>> {
+  const attachmentIDs = getAttachmentIDsInPrompts(prompts);
   console.log("Review queue: fetching attachments");
   const attachmentResolutionMap = await dataRecordManager.getAttachments(
     attachmentIDs,
   );
   // TODO: filter out prompts with missing attachments?
   console.log("Review queue: fetched attachments");
+  return attachmentResolutionMap;
+}
+
+async function resolveReviewItems(
+  orderedDuePromptTaskIDs: PromptTaskID[],
+  promptStates: Map<PromptTaskID, PromptState>,
+  dataRecordManager: DataRecordManager,
+): Promise<ReviewItem[]> {
+  const orderedDuePromptTasks = orderedDuePromptTaskIDs.map((promptTaskID) => {
+    const promptTask = getPromptTaskForID(promptTaskID);
+    if (promptTask instanceof Error) {
+      throw new Error(
+        `Can't parse prompt task ID: ${promptTaskID}: ${promptTask}`,
+      );
+    }
+    return promptTask;
+  });
+
+  const promptIDs = getPromptIDsInPromptTasks(orderedDuePromptTasks);
+
+  console.log("Review queue: fetching prompt data");
+  const prompts = await dataRecordManager.getPrompts(promptIDs);
+  console.log("Review queue: fetched prompt data");
+
+  const attachmentResolutionMap = await resolveAttachments(
+    dataRecordManager,
+    prompts.values(),
+  );
 
   return orderedDuePromptTasks
-    .map((promptTask) => {
+    .map((promptTask): ReviewItem | null => {
       // TODO validate that task spec, task state, and task parameter types all match up... or, better, design the API to ensure that more reasonably
       const prompt = prompts.get(promptTask.promptID);
       if (!prompt) {
         return null;
       }
 
-      const promptState = promptStates.get(promptTask) ?? null;
+      const promptTaskID = getIDForPromptTask(promptTask);
       return {
-        reviewItemType: promptReviewItemType,
         prompt,
-        promptState,
         promptParameters: promptTask.promptParameters,
+        promptState: promptStates.get(promptTaskID) ?? null,
+        promptTaskID,
         attachmentResolutionMap,
-      } as PromptReviewItem;
+      };
     })
     .filter((item): item is ReviewItem => !!item);
 }
@@ -128,7 +145,7 @@ export default async function fetchReviewItemQueue({
     ),
   });
 
-  return await getReviewItemsForPromptStates(
+  return await resolveReviewItems(
     orderedDuePromptTasks,
     duePromptStates,
     dataRecordManager,

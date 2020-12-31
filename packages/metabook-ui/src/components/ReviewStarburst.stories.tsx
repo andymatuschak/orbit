@@ -1,9 +1,9 @@
 import { Story } from "@storybook/react";
+import { getIntervalSequenceForSchedule, PromptState } from "metabook-core";
 import React from "react";
 import { View } from "react-native";
-import { generateReviewItem } from "./__fixtures__/generateReviewItem";
-import useLayout from "./hooks/useLayout";
 import { colors } from "../styles";
+import useLayout from "./hooks/useLayout";
 import ReviewStarburst, { ReviewStarburstItem } from "./ReviewStarburst";
 import {
   getStarburstQuillInnerRadius,
@@ -20,10 +20,31 @@ interface StoryArgs {
   hasSeenItems: boolean;
 }
 
+const intervalSequence = getIntervalSequenceForSchedule("default");
+
+function generatePromptState(): PromptState {
+  const intervalMillis =
+    intervalSequence[Math.floor(Math.random() * (intervalSequence.length - 1))]
+      .interval;
+  return {
+    dueTimestampMillis: 0,
+    headActionLogIDs: [],
+    intervalMillis,
+    bestIntervalMillis: null,
+    lastReviewTaskParameters: null,
+    lastReviewTimestampMillis: Date.now() - intervalMillis,
+    needsRetry: false,
+    taskMetadata: {
+      isDeleted: false,
+      provenance: null,
+    },
+  };
+}
+
 const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
   const { width, height, onLayout } = useLayout();
   const itemStates = Array.from(new Array(itemCount).keys()).map(() =>
-    hasSeenItems ? generateReviewItem("Q", "A", "C", "cyan").promptState : null,
+    hasSeenItems ? generatePromptState() : null,
   );
   const items: ReviewStarburstItem[] = itemStates.map((promptState) => ({
     promptState,
@@ -50,7 +71,6 @@ const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
           containerHeight={height}
           items={items}
           currentItemIndex={0}
-          currentItemSupportsRetry={true}
           pendingOutcome={null}
           position="left"
           showLegend

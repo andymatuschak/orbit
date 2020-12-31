@@ -9,7 +9,7 @@ import {
 import {
   ApplicationPromptTaskParameters,
   PromptTaskParameters,
-} from "./types/promptTaskParameters";
+} from "./types/promptTask";
 
 export default function getNextTaskParameters(
   prompt: Prompt,

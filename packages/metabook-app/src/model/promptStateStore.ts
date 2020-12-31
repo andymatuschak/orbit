@@ -4,7 +4,6 @@ import * as lexi from "lexicographic-integer";
 
 import {
   getIDForPromptTask,
-  getPromptTaskForID,
   PromptState,
   PromptTask,
   PromptTaskID,
@@ -23,9 +22,9 @@ function getDueTimestampIndexKey(
 const hasFinishedInitialImportKey = "hasFinishedInitialImport";
 
 export default class PromptStateStore {
-  private rootDB: levelup.LevelUp;
-  private promptStateDB: levelup.LevelUp;
-  private dueTimestampIndexDB: levelup.LevelUp;
+  private readonly rootDB: levelup.LevelUp;
+  private readonly promptStateDB: levelup.LevelUp;
+  private readonly dueTimestampIndexDB: levelup.LevelUp;
   private opQueue: (() => Promise<unknown>)[];
 
   private isClosed: boolean;
@@ -145,11 +144,11 @@ export default class PromptStateStore {
     options: AbstractIteratorOptions,
     keyMapper: (key: string) => PromptTaskID,
     limit: number | undefined,
-  ): Promise<Map<PromptTask, PromptState>> {
+  ): Promise<Map<PromptTaskID, PromptState>> {
     return this.runOp(
       () =>
         new Promise((resolve, reject) => {
-          const output: Map<PromptTask, PromptState> = new Map();
+          const output: Map<PromptTaskID, PromptState> = new Map();
           const mergedOptions: AbstractIteratorOptions = {
             ...options,
             keys: true,
@@ -172,12 +171,7 @@ export default class PromptStateStore {
             } else {
               const taskID = keyMapper(key);
               const promptState = JSON.parse(value);
-              const promptTask = getPromptTaskForID(taskID);
-              if (promptTask instanceof Error) {
-                console.error("Unparseable task ID", taskID, promptTask);
-              } else {
-                output.set(promptTask, promptState);
-              }
+              output.set(taskID, promptState);
 
               iterator.next(next);
             }
@@ -191,7 +185,7 @@ export default class PromptStateStore {
   async getAllPromptStates(
     afterPromptTask: PromptTask | null,
     limit?: number,
-  ): Promise<Map<PromptTask, PromptState>> {
+  ): Promise<Map<PromptTaskID, PromptState>> {
     const options: AbstractIteratorOptions = {};
     if (afterPromptTask) {
       options.gt = getIDForPromptTask(afterPromptTask);
@@ -207,7 +201,7 @@ export default class PromptStateStore {
   async getDuePromptStates(
     dueThresholdMillis: number,
     limit?: number,
-  ): Promise<Map<PromptTask, PromptState>> {
+  ): Promise<Map<PromptTaskID, PromptState>> {
     return this.getPrompts(
       this.dueTimestampIndexDB,
       {

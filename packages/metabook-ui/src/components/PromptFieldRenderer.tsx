@@ -24,7 +24,7 @@ import {
   ViewStyle,
 } from "react-native";
 import Markdown, * as MarkdownDisplay from "react-native-markdown-display";
-import { AttachmentResolutionMap } from "../reviewItem";
+import { AttachmentResolutionMap } from "../reviewAreaItem";
 
 import { colors, type } from "../styles";
 import { getVariantStyles } from "../styles/type";

@@ -1,12 +1,13 @@
 import {
-  ApplicationPromptTaskParameters,
+  ApplicationPromptTask,
   applicationPromptType,
   clozePromptType,
   createClozeMarkupRegexp,
-  getNextTaskParameters,
   PromptProvenance,
   PromptProvenanceType,
+  QAPrompt,
   QAPromptContents,
+  QAPromptTask,
   qaPromptType,
 } from "metabook-core";
 import React from "react";
@@ -20,32 +21,31 @@ import {
   ViewStyle,
 } from "react-native";
 import {
-  ApplicationPromptReviewItem,
-  QAPromptReviewItem,
-  ClozePromptReviewItem,
-  PromptReviewItem,
-} from "../reviewItem";
+  ApplicationReviewItem,
+  ClozeReviewItem,
+  QAReviewItem,
+} from "../../dist/reviewItem";
+import { ReviewAreaItem } from "../reviewAreaItem";
 import { colors, layout, type } from "../styles";
 import Button from "./Button";
-import CardField, { clozeBlankSentinel } from "./PromptFieldRenderer";
 import FadeView from "./FadeView";
 import {
   AnimatedTransitionTiming,
   useTransitioningValue,
 } from "./hooks/useTransitioningValue";
+import CardField, { clozeBlankSentinel } from "./PromptFieldRenderer";
 
-function getQAPromptContents(
-  reviewItem: QAPromptReviewItem | ApplicationPromptReviewItem,
+function getQAPromptContents<PT extends QAPromptTask | ApplicationPromptTask>(
+  reviewItem: ReviewAreaItem<PT>,
 ): QAPromptContents {
   switch (reviewItem.prompt.promptType) {
     case qaPromptType:
-      return reviewItem.prompt;
+      return reviewItem.prompt as QAPrompt;
     case applicationPromptType:
-      const taskParameters = getNextTaskParameters(
-        reviewItem.prompt,
-        reviewItem.promptState?.lastReviewTaskParameters ?? null,
-      ) as ApplicationPromptTaskParameters;
-      return reviewItem.prompt.variants[taskParameters.variantIndex];
+      const applicationReviewItem = reviewItem as ApplicationReviewItem;
+      return applicationReviewItem.prompt.variants[
+        applicationReviewItem.taskParameters.variantIndex
+      ];
   }
 }
 
@@ -142,17 +142,16 @@ function getPromptContext(provenance: PromptProvenance): PromptContext | null {
 }
 
 function PromptContextLabel({
-  reviewItem,
+  provenance,
   size,
   style,
   accentColor,
 }: {
-  reviewItem: PromptReviewItem;
+  provenance: PromptProvenance | null;
   size: "regular" | "small";
   style?: FlexStyle;
   accentColor?: string;
 }) {
-  const provenance = reviewItem.promptState?.taskMetadata.provenance;
   const promptContext = provenance ? getPromptContext(provenance) : null;
 
   const color = accentColor ?? colors.ink;
@@ -227,14 +226,14 @@ function formatClozePromptContents(
 }
 
 export interface CardProps {
-  reviewItem: PromptReviewItem;
+  reviewItem: ReviewAreaItem;
   backIsRevealed: boolean;
 
   accentColor?: string;
 }
 
 type QAPromptRendererType = CardProps & {
-  reviewItem: QAPromptReviewItem | ApplicationPromptReviewItem;
+  reviewItem: QAReviewItem | ApplicationReviewItem;
 };
 function QAPromptRenderer({
   backIsRevealed,
@@ -257,7 +256,7 @@ function QAPromptRenderer({
         style={animatingStyles.topAreaStyle}
       >
         <PromptContextLabel
-          reviewItem={reviewItem}
+          provenance={reviewItem.provenance}
           size="small"
           style={styles.topContextLabel}
           accentColor={accentColor}
@@ -293,7 +292,7 @@ function QAPromptRenderer({
         >
           <View style={styles.bottomContextLabelContainer}>
             <PromptContextLabel
-              reviewItem={reviewItem}
+              provenance={reviewItem.provenance}
               size="regular"
               accentColor={accentColor}
             />
@@ -310,7 +309,7 @@ function QAPromptRenderer({
 }
 
 type ClozePromptRendererProps = CardProps & {
-  reviewItem: ClozePromptReviewItem;
+  reviewItem: ClozeReviewItem;
 };
 
 function ClozePromptRenderer({
@@ -336,7 +335,7 @@ function ClozePromptRenderer({
       <View style={styles.bottomAreaContainer}>
         <View style={styles.bottomContextLabelContainer}>
           <PromptContextLabel
-            reviewItem={reviewItem}
+            provenance={reviewItem.provenance}
             size="regular"
             accentColor={accentColor}
           />
@@ -378,16 +377,14 @@ export default React.memo(function Card(props: CardProps) {
       return (
         <QAPromptRenderer
           {...props}
-          reviewItem={
-            props.reviewItem as QAPromptReviewItem | ApplicationPromptReviewItem
-          }
+          reviewItem={props.reviewItem as QAReviewItem | ApplicationReviewItem}
         />
       );
     case clozePromptType:
       return (
         <ClozePromptRenderer
           {...props}
-          reviewItem={props.reviewItem as ClozePromptReviewItem}
+          reviewItem={props.reviewItem as ClozeReviewItem}
         />
       );
   }

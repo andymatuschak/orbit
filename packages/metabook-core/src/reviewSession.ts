@@ -1,6 +1,6 @@
 // Given some time might be computing whether a user has a session due, we evaluate whether cards are due using a date slightly shifted into the future, to find the cards that'd be due on that conceptual day.
 import { PromptState } from "./promptState";
-import { PromptTask } from "./types/promptTask";
+import { PromptTask, PromptTaskID } from "./types/promptTask";
 
 export function getReviewSessionCardLimit(): number {
   return 50;
@@ -15,10 +15,10 @@ export function getDuePromptTasks({
   thresholdTimestampMillis,
   maxCardsInSession,
 }: {
-  promptStates: ReadonlyMap<PromptTask, PromptState>;
+  promptStates: ReadonlyMap<PromptTaskID, PromptState>;
   thresholdTimestampMillis: number;
   maxCardsInSession?: number;
-}): PromptTask[] {
+}): PromptTaskID[] {
   const duePromptTaskIDs = [...promptStates.keys()].filter(
     (promptTask) =>
       promptStates.get(promptTask)!.dueTimestampMillis <=

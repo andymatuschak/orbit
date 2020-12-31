@@ -7,8 +7,7 @@ import {
   PromptRepetitionActionLog,
 } from "./promptActionLog";
 import { PromptProvenanceType } from "./promptProvenance";
-import { PromptTaskID } from "./promptTask";
-import { ApplicationPromptTaskParameters } from "./promptTaskParameters";
+import { ApplicationPromptTask, PromptTaskID } from "./promptTask";
 
 describe("ingest", () => {
   const promptActionLog: PromptIngestActionLog = {
@@ -31,7 +30,7 @@ describe("ingest", () => {
 });
 
 describe("repetition", () => {
-  const promptActionLog: PromptRepetitionActionLog<ApplicationPromptTaskParameters> = {
+  const promptActionLog: PromptRepetitionActionLog<ApplicationPromptTask> = {
     timestampMillis: 1000,
     actionLogType: repetitionActionLogType,
     taskParameters: { variantIndex: 1 },
@@ -40,6 +39,9 @@ describe("repetition", () => {
     taskID: "3" as PromptTaskID,
     context: null,
   };
+
+  const p = promptActionLog.taskParameters;
+  p.variantIndex;
 
   const actionLog = getActionLogFromPromptActionLog(promptActionLog);
   test("round trip", () => {

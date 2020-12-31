@@ -1,12 +1,12 @@
 import {
-  getIDForPromptTask,
-  getIDForPrompt,
-  PromptTaskID,
-  PromptActionLog,
-  repetitionActionLogType,
-  PromptTaskParameters,
-  PromptRepetitionOutcome,
   getActionLogFromPromptActionLog,
+  getIDForPrompt,
+  getIDForPromptTask,
+  PromptActionLog,
+  PromptRepetitionOutcome,
+  PromptTaskID,
+  QAPromptTask,
+  repetitionActionLogType,
 } from "metabook-core";
 import { testQAPrompt } from "metabook-sample-data";
 import { MetabookUserClient } from "../../userClient/userClient";
@@ -15,14 +15,14 @@ export async function recordTestPromptStateUpdate(
   client: MetabookUserClient,
 ): Promise<{
   testPromptTaskID: PromptTaskID;
-  testPromptActionLog: PromptActionLog<PromptTaskParameters>;
+  testPromptActionLog: PromptActionLog;
 }> {
   const taskID = getIDForPromptTask({
     promptID: await getIDForPrompt(testQAPrompt),
     promptType: testQAPrompt.promptType,
     promptParameters: null,
   });
-  const promptActionLog: PromptActionLog<PromptTaskParameters> = {
+  const promptActionLog: PromptActionLog<QAPromptTask> = {
     actionLogType: repetitionActionLogType,
     taskID,
     taskParameters: null,

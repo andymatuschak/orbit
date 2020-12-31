@@ -1,28 +1,27 @@
-import { PromptID, PromptState } from "metabook-core";
+import { PromptState, PromptTaskID } from "metabook-core";
+import { ReviewItem } from "metabook-ui";
 
 // Messages from host to embedded:
 export const embeddedHostUpdateEventName = "hostUpdate";
-
 export interface EmbeddedHostUpdateEvent {
   type: typeof embeddedHostUpdateEventName;
   state: EmbeddedHostState;
 }
 
 export interface EmbeddedHostState {
-  orderedScreenStates: (EmbeddedScreenState | null)[];
+  orderedScreenRecords: (EmbeddedScreenRecord | null)[];
   receiverIndex: number;
+}
+
+export interface EmbeddedScreenRecord {
+  reviewItems: ReviewItem[];
 }
 
 // Messages from embedded to host:
 
-export const embeddedScreenStateUpdateEventName = "screenStateUpdate";
-
-export interface EmbeddedScreenUpdateEvent {
-  type: typeof embeddedScreenStateUpdateEventName;
-  state: EmbeddedScreenState;
-}
-
-export interface EmbeddedScreenState {
-  orderedPromptIDs: PromptID[];
-  orderedPromptStates: (PromptState | null)[];
+// This message is sent to the host when the embedded screen resolves all its review items.
+export const embeddedScreenRecordUpdateEventName = "screenRecordUpdate";
+export interface EmbeddedScreenRecordUpdateEvent {
+  type: typeof embeddedScreenRecordUpdateEventName;
+  record: EmbeddedScreenRecord;
 }

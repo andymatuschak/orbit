@@ -4,13 +4,12 @@ import {
 } from "metabook-client";
 import {
   ActionLogID,
-  getIDForActionLog,
   getIDForActionLogSync,
-  getIDForPrompt,
   getIDForPromptSync,
   getIDForPromptTask,
   getNextTaskParameters,
   PromptActionLog,
+  PromptProvenanceType,
   PromptRepetitionOutcome,
   PromptTask,
   promptTypeSupportsRetry,
@@ -18,76 +17,48 @@ import {
 } from "metabook-core";
 import {
   ReviewArea,
-  ReviewAreaMarkingRecord,
-  ReviewItem,
+  ReviewAreaItem,
   ReviewStarburst,
   styles,
+  useWeakRef,
 } from "metabook-ui";
-import { getColorPaletteForReviewItem } from "metabook-ui/dist/reviewItem";
 import { layout } from "metabook-ui/dist/styles";
-import React, { useEffect, useState } from "react";
-import { useRef } from "react";
-import { Platform } from "react-native";
-import { Text, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { UserRecord } from "../authentication";
-import DatabaseManager from "../model/databaseManager";
-import { ReviewSessionWrapper } from "../ReviewSessionWrapper";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
 } from "../authentication/authContext";
+import DatabaseManager from "../model/databaseManager";
+import { ReviewItem } from "../model/reviewItem";
+import { ReviewSessionContainer } from "../ReviewSessionContainer";
+import { useReviewSessionManager } from "../reviewSessionManager";
 import {
-  enableFirebasePersistence,
   getAttachmentUploader,
   getFirebaseFunctions,
   getFirestore,
-  PersistenceStatus,
 } from "../util/firebase";
-
-function usePersistenceStatus() {
-  const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(
-    "pending",
-  );
-
-  useEffect(() => {
-    let hasUnmounted = false;
-
-    function safeSetPersistenceStatus(newStatus: PersistenceStatus) {
-      if (!hasUnmounted) {
-        setPersistenceStatus(newStatus);
-      }
-    }
-
-    enableFirebasePersistence()
-      .then(() => safeSetPersistenceStatus("enabled"))
-      .catch(() => safeSetPersistenceStatus("unavailable"));
-
-    return () => {
-      hasUnmounted = true;
-    };
-  }, []);
-
-  return persistenceStatus;
-}
 
 export function useDatabaseManager(
   userRecord: UserRecord | null | undefined,
 ): DatabaseManager | null {
-  const persistenceStatus = usePersistenceStatus();
-
   const [
     databaseManager,
     setDatabaseManager,
   ] = useState<DatabaseManager | null>(null);
+
+  // Close the database on unmount.
   useEffect(() => {
     return () => {
       databaseManager?.close();
     };
   }, [databaseManager]);
 
+  // Once we're signed in, create the database manager.
   useEffect(() => {
-    if (persistenceStatus === "enabled" && userRecord) {
+    if (userRecord) {
       const userClient = new MetabookFirebaseUserClient(
         getFirestore(),
         userRecord.userID,
@@ -98,33 +69,38 @@ export function useDatabaseManager(
       );
       setDatabaseManager(new DatabaseManager(userClient, dataClient));
     }
-  }, [persistenceStatus, userRecord]);
+  }, [userRecord]);
 
   return databaseManager;
 }
 
-// Returned promise resolves when the prompt action log has been generated, not when it has committed to the server.
-function updateDatabaseForMarking(
-  databaseManager: DatabaseManager,
-  marking: ReviewAreaMarkingRecord,
-  reviewSessionStartTimestampMillis: number,
-): { log: PromptActionLog; id: ActionLogID }[] {
+function persistMarking({
+  databaseManager,
+  reviewItem,
+  outcome,
+  reviewSessionStartTimestampMillis,
+}: {
+  databaseManager: DatabaseManager;
+  reviewItem: ReviewItem;
+  outcome: PromptRepetitionOutcome;
+  reviewSessionStartTimestampMillis: number;
+}): { log: PromptActionLog; id: ActionLogID }[] {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
   const promptActionLog = {
     actionLogType: repetitionActionLogType,
-    parentActionLogIDs: marking.reviewItem.promptState?.headActionLogIDs ?? [],
+    parentActionLogIDs: reviewItem.promptState?.headActionLogIDs ?? [],
     taskID: getIDForPromptTask({
-      promptID: getIDForPromptSync(marking.reviewItem.prompt),
-      promptType: marking.reviewItem.prompt.promptType,
-      promptParameters: marking.reviewItem.promptParameters,
+      promptID: getIDForPromptSync(reviewItem.prompt),
+      promptType: reviewItem.prompt.promptType,
+      promptParameters: reviewItem.promptParameters,
     } as PromptTask),
-    outcome: marking.outcome,
+    outcome: outcome,
     context: `review/${Platform.OS}/${reviewSessionStartTimestampMillis}`,
     timestampMillis: Date.now(),
     taskParameters: getNextTaskParameters(
-      marking.reviewItem.prompt,
-      marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
+      reviewItem.prompt,
+      reviewItem.promptState?.lastReviewTaskParameters ?? null,
     ),
   } as const;
 
@@ -134,36 +110,73 @@ function updateDatabaseForMarking(
       console.log("[Performance] Log committed to server", Date.now() / 1000.0);
     })
     .catch((error) => {
-      console.error("Couldn't commit", marking.reviewItem.prompt, error);
+      console.error("Couldn't commit", reviewItem.prompt, error);
     });
 
   return [{ log: promptActionLog, id: getIDForActionLogSync(promptActionLog) }];
 }
 
-function useReviewQueue(
+function useReviewItemQueue(
   databaseManager: DatabaseManager | null,
 ): ReviewItem[] | null {
-  const [items, setItems] = useState<ReviewItem[] | null>(null);
+  const [queue, setQueue] = useState<ReviewItem[] | null>(null);
   useEffect(() => {
     if (!databaseManager) return;
 
     let isCanceled = false;
-    databaseManager.fetchReviewQueue().then((items) => {
+    databaseManager.fetchReviewQueue().then((queue) => {
       if (isCanceled) return;
-      setItems(items);
+      setQueue(queue);
     });
     return () => {
       isCanceled = true;
     };
   }, [databaseManager]);
 
-  return items;
+  return queue;
+}
+
+export function getColorPaletteForReviewItem(
+  reviewItem: ReviewItem,
+): styles.colors.ColorPalette {
+  if (reviewItem.promptState) {
+    const provenance = reviewItem.promptState.taskMetadata.provenance;
+    if (
+      provenance &&
+      provenance.provenanceType === PromptProvenanceType.Web &&
+      provenance.colorPaletteName &&
+      styles.colors.palettes[provenance.colorPaletteName]
+    ) {
+      return styles.colors.palettes[provenance.colorPaletteName];
+    }
+  }
+
+  const colorNames = styles.colors.orderedPaletteNames;
+  const colorName =
+    colorNames[
+      (reviewItem.promptState?.lastReviewTimestampMillis ?? 0) %
+        colorNames.length
+    ];
+  return styles.colors.palettes[colorName];
+}
+
+function getReviewAreaItemsFromReviewItems(
+  reviewItems: ReviewItem[],
+): ReviewAreaItem[] {
+  return reviewItems.map((item) => ({
+    prompt: item.prompt,
+    promptParameters: item.promptParameters,
+    taskParameters: getNextTaskParameters(
+      item.prompt,
+      item.promptState?.lastReviewTaskParameters ?? null,
+    ),
+    provenance: item.promptState?.taskMetadata.provenance ?? null,
+    attachmentResolutionMap: item.attachmentResolutionMap,
+    colorPalette: getColorPaletteForReviewItem(item),
+  }));
 }
 
 export default function ReviewSession() {
-  const userRecord = useCurrentUserRecord(useAuthenticationClient());
-  const databaseManager = useDatabaseManager(userRecord);
-  const baseItems = useReviewQueue(databaseManager);
   const insets = useSafeAreaInsets();
   const reviewSessionStartTimestampMillis = useRef(Date.now());
 
@@ -172,83 +185,108 @@ export default function ReviewSession() {
     setPendingOutcome,
   ] = useState<PromptRepetitionOutcome | null>(null);
 
-  return baseItems !== null ? (
-    <View style={{ flex: 1 }}>
-      <ReviewSessionWrapper
-        baseItems={baseItems}
-        onMark={(markingRecord) =>
-          updateDatabaseForMarking(
-            databaseManager!,
-            markingRecord,
-            reviewSessionStartTimestampMillis.current,
-          )
-        }
-        insets={{ top: insets.top }}
-        overrideColorPalette={
-          baseItems.length > 0 ? undefined : styles.colors.palettes.red
-        }
-      >
-        {({ onMark, currentItemIndex, items, containerSize }) => {
-          if (!containerSize) {
-            return null;
-          }
+  const {
+    sessionItems,
+    currentSessionItemIndex,
+    reviewAreaQueue,
+    currentReviewAreaQueueIndex,
+    ...reviewSessionManager
+  } = useReviewSessionManager();
 
-          if (currentItemIndex < items.length) {
-            const currentItem = items[currentItemIndex];
-            return (
-              <>
-                <ReviewStarburst
-                  containerWidth={containerSize.width}
-                  containerHeight={containerSize.height}
-                  items={items.map((item, index) => ({
-                    promptState: item.promptState,
-                    isPendingForSession: index >= currentItemIndex,
-                    supportsRetry: promptTypeSupportsRetry(
-                      item.prompt.promptType,
-                    ),
-                  }))}
-                  currentItemIndex={currentItemIndex}
-                  currentItemSupportsRetry={promptTypeSupportsRetry(
-                    currentItem.prompt.promptType,
-                  )}
-                  pendingOutcome={pendingOutcome}
-                  position="left"
-                  showLegend={true}
-                  colorMode="bicolor"
-                  colorPalette={getColorPaletteForReviewItem(currentItem)}
-                />
-                <ReviewArea
-                  items={items}
-                  currentItemIndex={currentItemIndex}
-                  onMark={onMark}
-                  onPendingOutcomeChange={setPendingOutcome}
-                  insetBottom={
-                    // So long as the container isn't tall enough to be centered, we consume the bottom insets in the button bar's padding, extending the background down through the safe area.
-                    containerSize.height === layout.maximumContentHeight
-                      ? 0
-                      : insets.bottom ?? 0
-                  }
-                />
-              </>
-            );
-          } else {
-            return (
-              <View
-                style={{
-                  marginLeft: styles.layout.gridUnit, // TODO: use grid layout
-                  marginRight: styles.layout.gridUnit,
-                  flex: 1,
-                  justifyContent: "center",
+  const userRecord = useCurrentUserRecord(useAuthenticationClient());
+  const databaseManager = useDatabaseManager(userRecord);
+  const initialQueue = useReviewItemQueue(databaseManager);
+
+  // When the initial queue becomes available, add it to the marking manager.
+  const weakReviewSessionManager = useWeakRef(reviewSessionManager);
+  useEffect(() => {
+    if (initialQueue) {
+      weakReviewSessionManager.current.updateSessionItems(() => initialQueue);
+      weakReviewSessionManager.current.pushReviewAreaQueueItems(
+        getReviewAreaItemsFromReviewItems(initialQueue),
+      );
+    }
+  }, [initialQueue, weakReviewSessionManager]);
+
+  if (
+    currentSessionItemIndex === null ||
+    currentReviewAreaQueueIndex === null
+  ) {
+    // TODO: display loading screen...
+    return null;
+  }
+
+  const currentColorPalette = reviewAreaQueue[currentReviewAreaQueueIndex]
+    ? reviewAreaQueue[currentReviewAreaQueueIndex].colorPalette
+    : styles.colors.palettes.red;
+
+  return (
+    <ReviewSessionContainer
+      insets={{ top: insets.top }}
+      colorPalette={currentColorPalette}
+    >
+      {({ containerSize }) => {
+        if (currentReviewAreaQueueIndex < reviewAreaQueue.length) {
+          return (
+            <>
+              <ReviewStarburst
+                containerWidth={containerSize.width}
+                containerHeight={containerSize.height}
+                items={sessionItems.map((item, index) => ({
+                  promptState: item.promptState,
+                  // TODO: update for retry
+                  isPendingForSession: index >= currentReviewAreaQueueIndex,
+                  supportsRetry: promptTypeSupportsRetry(
+                    item.prompt.promptType,
+                  ),
+                }))}
+                currentItemIndex={currentSessionItemIndex}
+                pendingOutcome={pendingOutcome}
+                position="left"
+                showLegend={true}
+                colorMode="bicolor"
+                colorPalette={currentColorPalette}
+              />
+              <ReviewArea
+                items={reviewAreaQueue}
+                currentItemIndex={currentReviewAreaQueueIndex}
+                onMark={(markingRecord) => {
+                  const logs = persistMarking({
+                    databaseManager: databaseManager!,
+                    reviewItem: sessionItems[currentSessionItemIndex],
+                    outcome: markingRecord.outcome,
+                    reviewSessionStartTimestampMillis:
+                      reviewSessionStartTimestampMillis.current,
+                  });
+                  reviewSessionManager.markCurrentItem(logs);
                 }}
-              >
-                <Text
-                  style={styles.type.headline.layoutStyle}
-                >{`All caught up!\nNothing's due for review.`}</Text>
-              </View>
-            );
-          }
-        }}
-      </ReviewSessionWrapper>
-    </View>
-  ) : null;
+                onPendingOutcomeChange={setPendingOutcome}
+                insetBottom={
+                  // So long as the container isn't tall enough to be centered, we consume the bottom insets in the button bar's padding, extending the background down through the safe area.
+                  containerSize.height === layout.maximumContentHeight
+                    ? 0
+                    : insets.bottom ?? 0
+                }
+              />
+            </>
+          );
+        } else {
+          return (
+            <View
+              style={{
+                marginLeft: styles.layout.gridUnit,
+                marginRight: styles.layout.gridUnit,
+                flex: 1,
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                style={styles.type.headline.layoutStyle}
+              >{`All caught up!\nNothing's due for review.`}</Text>
+            </View>
+          );
+        }
+      }}
+    </ReviewSessionContainer>
+  );
 }

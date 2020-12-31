@@ -68,7 +68,7 @@ describe("access by due timestamp", () => {
     ]);
 
     expect(await store.getDuePromptStates(1000)).toMatchObject(
-      new Map([[testTask, { ...testPromptState, dueTimestampMillis: 1000 }]]),
+      new Map([[testTaskID, { ...testPromptState, dueTimestampMillis: 1000 }]]),
     );
   });
 

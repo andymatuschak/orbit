@@ -5,21 +5,21 @@ import {
   clozePromptType,
   getClozeDeletionCount,
   getIDForActionLogSync,
-  getIDForPromptSync,
   getIDForPromptTask,
-  getNextTaskParameters,
+  getPromptTaskForID,
   ingestActionLogType,
   Prompt,
   PromptActionLog,
+  PromptID,
   PromptProvenanceType,
-  PromptTask,
   PromptTaskID,
   qaPromptType,
   repetitionActionLogType,
   WebPromptProvenance,
 } from "metabook-core";
 import { EmbeddedHostMetadata } from "metabook-embedded-support";
-import { ReviewAreaMarkingRecord, ReviewItem } from "metabook-ui";
+import { ReviewAreaMarkingRecord } from "metabook-ui";
+import { ReviewItem } from "../model/reviewItem";
 import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
 
 type PromptActionLogEntry = { log: PromptActionLog; id: ActionLogID };
@@ -61,7 +61,7 @@ function createIngestLogEntry(
 function createIngestLogEntries(
   hostMetadata: EmbeddedHostMetadata,
   reviewItem: ReviewItem,
-  reviewedPromptTask: PromptTask,
+  reviewedPromptID: PromptID,
   timestampMillis: number,
 ): {
   logEntries: PromptActionLogEntry[];
@@ -71,7 +71,7 @@ function createIngestLogEntries(
   const provenance = createProvenance(hostMetadata);
   const reviewItemLogEntry = createIngestLogEntry(
     provenance,
-    getIDForPromptTask(reviewedPromptTask),
+    reviewItem.promptTaskID,
     timestampMillis,
   );
   logEntries.push(reviewItemLogEntry);
@@ -97,7 +97,7 @@ function createIngestLogEntries(
             provenance,
             getIDForPromptTask({
               promptType: clozePromptType,
-              promptID: reviewedPromptTask.promptID,
+              promptID: reviewedPromptID,
               promptParameters: { clozeIndex },
             }),
             timestampMillis,
@@ -112,29 +112,36 @@ function createIngestLogEntries(
   return { logEntries, reviewItemLogEntry };
 }
 
-export function getActionsRecordForMarking(
-  hostMetadata: EmbeddedHostMetadata,
-  marking: ReviewAreaMarkingRecord,
-  sessionStartTimestampMillis: number,
-  markingTimestampMillis: number = Date.now(),
-): EmbeddedActionsRecord {
-  const promptTask = {
-    promptType: marking.reviewItem.prompt.promptType,
-    promptID: getIDForPromptSync(marking.reviewItem.prompt),
-    promptParameters: marking.reviewItem.promptParameters,
-  } as PromptTask;
+export function getActionsRecordForMarking({
+  marking,
+  reviewItem,
+  hostMetadata,
+  sessionStartTimestampMillis,
+  markingTimestampMillis = Date.now(),
+}: {
+  marking: ReviewAreaMarkingRecord;
+  reviewItem: ReviewItem;
+  hostMetadata: EmbeddedHostMetadata;
+  sessionStartTimestampMillis: number;
+  markingTimestampMillis?: number;
+}): EmbeddedActionsRecord {
+  const promptTask = getPromptTaskForID(reviewItem.promptTaskID);
+  if (promptTask instanceof Error) {
+    throw Error;
+  }
+  const promptID = promptTask.promptID;
 
   let repetitionParentActionLogIDs: ActionLogID[];
   let ingestLogEntries: PromptActionLogEntry[];
-  if (marking.reviewItem.promptState) {
+  if (reviewItem.promptState) {
     ingestLogEntries = [];
     repetitionParentActionLogIDs =
-      marking.reviewItem.promptState?.headActionLogIDs ?? [];
+      reviewItem.promptState.headActionLogIDs ?? [];
   } else {
     const { logEntries, reviewItemLogEntry } = createIngestLogEntries(
       hostMetadata,
-      marking.reviewItem,
-      promptTask,
+      reviewItem,
+      promptID,
       markingTimestampMillis,
     );
     ingestLogEntries = logEntries;
@@ -143,12 +150,9 @@ export function getActionsRecordForMarking(
 
   const repetitionLog: PromptActionLog = {
     actionLogType: repetitionActionLogType,
-    taskID: getIDForPromptTask(promptTask),
+    taskID: reviewItem.promptTaskID,
     parentActionLogIDs: repetitionParentActionLogIDs,
-    taskParameters: getNextTaskParameters(
-      marking.reviewItem.prompt,
-      marking.reviewItem.promptState?.lastReviewTaskParameters ?? null,
-    ),
+    taskParameters: marking.reviewAreaItem.taskParameters,
     outcome: marking.outcome,
     context: `embedded/${sessionStartTimestampMillis}`,
     timestampMillis: markingTimestampMillis,
@@ -160,10 +164,10 @@ export function getActionsRecordForMarking(
 
   return {
     logEntries: [...ingestLogEntries, repetitionLogEntry],
-    promptsByID: { [promptTask.promptID]: marking.reviewItem.prompt },
+    promptsByID: { [promptID]: reviewItem.prompt },
     attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
-      marking.reviewItem.prompt,
-      marking.reviewItem.attachmentResolutionMap,
+      marking.reviewAreaItem.prompt,
+      marking.reviewAreaItem.attachmentResolutionMap,
     ),
   };
 }

@@ -9,25 +9,25 @@ import {
 } from "metabook-core";
 import { EmbeddedHostMetadata } from "metabook-embedded-support";
 import { testClozePrompt } from "metabook-sample-data";
-import { promptReviewItemType } from "metabook-ui";
+import { ReviewItemType } from "metabook-ui";
 import { getActionsRecordForMarking } from "./markingActions";
 
 test("clozes ingest all deletions", () => {
-  const actionsRecord = getActionsRecordForMarking(
-    {} as EmbeddedHostMetadata,
-    {
+  const actionsRecord = getActionsRecordForMarking({
+    hostMetadata: {} as EmbeddedHostMetadata,
+    marking: {
       reviewItem: {
         prompt: testClozePrompt,
         promptParameters: { clozeIndex: 0 },
         attachmentResolutionMap: null,
         promptState: null,
-        reviewItemType: promptReviewItemType,
+        reviewItemType: ReviewItemType,
       },
       outcome: PromptRepetitionOutcome.Remembered,
     },
-    0,
-    1000,
-  );
+    sessionStartTimestampMillis: 0,
+    markingTimestampMillis: 1000,
+  });
 
   const ingestLogEntries = actionsRecord.logEntries.filter(
     (entry) => entry.log.actionLogType === ingestActionLogType,

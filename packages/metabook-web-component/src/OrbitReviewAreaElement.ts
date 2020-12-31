@@ -1,16 +1,16 @@
+import { ColorPaletteName, PromptState, PromptTaskID } from "metabook-core";
 import {
   EmbeddedHostMetadata,
   EmbeddedHostUpdateEvent,
   embeddedHostUpdateEventName,
   EmbeddedItem,
   EmbeddedScreenConfiguration,
-  EmbeddedScreenState,
-  embeddedScreenStateUpdateEventName,
-  EmbeddedScreenUpdateEvent,
+  EmbeddedScreenRecord,
+  EmbeddedScreenRecordUpdateEvent,
+  embeddedScreenRecordUpdateEventName,
 } from "metabook-embedded-support";
 import { extractItems } from "./extractItems";
 import { getSharedMetadataMonitor } from "./metadataMonitor";
-import { ColorPaletteName } from "metabook-core";
 
 declare global {
   // supplied by Webpack
@@ -29,9 +29,9 @@ function getHeightForReviewAreaOfWidth(width: number) {
 }
 
 const _activeReviewAreaElements: Set<OrbitReviewAreaElement> = new Set();
-const reviewAreaStates: Map<
+const screenRecordsByReviewArea: Map<
   OrbitReviewAreaElement,
-  EmbeddedScreenState
+  EmbeddedScreenRecord
 > = new Map();
 
 // NOTE: This invalidation strategy won't work if the review area elements are reordered after they're added to the page.
@@ -60,24 +60,24 @@ function getOrderedReviewAreaElements() {
   return _orderedReviewAreaElements;
 }
 
-let _screenStatesNeedUpdate = false;
-function markScreenStatesDirty() {
-  if (!_screenStatesNeedUpdate) {
-    _screenStatesNeedUpdate = true;
+let _embeddedHostStateIsDirty = false;
+function markEmbeddedHostStateDirty() {
+  if (!_embeddedHostStateIsDirty) {
+    _embeddedHostStateIsDirty = true;
 
     // Debounce by waiting a moment.
     setTimeout(() => {
-      _screenStatesNeedUpdate = false;
+      _embeddedHostStateIsDirty = false;
       const orderedReviewAreaElements = getOrderedReviewAreaElements();
 
-      const orderedScreenStates = orderedReviewAreaElements.map(
-        (element) => reviewAreaStates.get(element) ?? null,
+      const orderedScreenRecords = orderedReviewAreaElements.map(
+        (element) => screenRecordsByReviewArea.get(element) ?? null,
       );
       orderedReviewAreaElements.forEach((element, index) => {
         const event: EmbeddedHostUpdateEvent = {
           type: embeddedHostUpdateEventName,
           state: {
-            orderedScreenStates,
+            orderedScreenRecords,
             receiverIndex: index,
           },
         };
@@ -90,39 +90,42 @@ function markScreenStatesDirty() {
 function addReviewAreaElement(element: OrbitReviewAreaElement) {
   _activeReviewAreaElements.add(element);
   _orderedReviewAreaElements = null;
-  markScreenStatesDirty();
+  markEmbeddedHostStateDirty();
 }
 function removeReviewAreaElement(element: OrbitReviewAreaElement) {
   _activeReviewAreaElements.delete(element);
   _orderedReviewAreaElements = null;
-  markScreenStatesDirty();
+  markEmbeddedHostStateDirty();
+}
+
+function onMessage(event: MessageEvent) {
+  if (!EMBED_API_BASE_URL.startsWith(event.origin) || !event.data) {
+    return;
+  }
+
+  switch (event.data.type) {
+    case embeddedScreenRecordUpdateEventName:
+      const recordUpdate = event.data as EmbeddedScreenRecordUpdateEvent;
+      const reviewArea = [..._activeReviewAreaElements].find(
+        (element) => element.iframe?.contentWindow === event.source,
+      );
+      if (reviewArea) {
+        // console.log("Got state update from embedded screen", reviewArea, recordUpdate);
+        screenRecordsByReviewArea.set(reviewArea, recordUpdate.record);
+        markEmbeddedHostStateDirty();
+      } else {
+        console.warn(
+          "Ignoring state update from embedded screen with unknown review area",
+        );
+      }
+      break;
+  }
 }
 
 let _hasAddedMessageListener = false;
 function addEmbeddedScreenMessageListener() {
   if (_hasAddedMessageListener) {
     return;
-  }
-  function onMessage(event: MessageEvent) {
-    if (
-      EMBED_API_BASE_URL.startsWith(event.origin) &&
-      event.data &&
-      event.data.type === embeddedScreenStateUpdateEventName
-    ) {
-      const data = event.data as EmbeddedScreenUpdateEvent;
-      const reviewArea = [..._activeReviewAreaElements].find(
-        (element) => element.iframe?.contentWindow === event.source,
-      );
-      if (reviewArea) {
-        // console.log("Got state update from embedded screen", reviewArea, data);
-        reviewAreaStates.set(reviewArea, data.state);
-        markScreenStatesDirty();
-      } else {
-        console.warn(
-          "Ignoring state update from embedded screen with unknown review area",
-        );
-      }
-    }
   }
   window.addEventListener("message", onMessage);
   _hasAddedMessageListener = true;
@@ -133,7 +136,6 @@ function pageIsDebug() {
 }
 
 export class OrbitReviewAreaElement extends HTMLElement {
-  private needsRender = false;
   private cachedMetadata: EmbeddedHostMetadata | null = null;
   private cachedItems: EmbeddedItem[] | null = null;
   iframe: HTMLIFrameElement | null = null;
@@ -182,10 +184,10 @@ export class OrbitReviewAreaElement extends HTMLElement {
         throw new Error("Invariant violation: no embedded host metadata");
       }
 
-      const effectiveWidth = this.iframe.getBoundingClientRect().width;
+      const effectiveWidth = iframe.getBoundingClientRect().width;
       // The extra 5 grid units are for the banner.
       // TODO: encapsulate the banner's height in some API exported by metabook-app.
-      this.iframe.style.height = `${
+      iframe.style.height = `${
         getHeightForReviewAreaOfWidth(effectiveWidth) + 8 * 5
       }px`;
 

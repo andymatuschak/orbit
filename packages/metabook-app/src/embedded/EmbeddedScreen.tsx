@@ -1,13 +1,12 @@
 import {
-  getIDForPrompt,
   PromptRepetitionOutcome,
   promptTypeSupportsRetry,
 } from "metabook-core";
+import { EmbeddedHostState } from "metabook-embedded-support";
 import {
   FadeView,
   ReviewArea,
   ReviewAreaMarkingRecord,
-  ReviewItem,
   ReviewStarburst,
   ReviewStarburstItem,
   styles,
@@ -15,119 +14,30 @@ import {
   useTransitioningValue,
 } from "metabook-ui";
 
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Text, View } from "react-native";
-import { EmbeddedScreenConfiguration } from "../../../embedded-support/src/embeddedScreenInterface";
-import {
-  EmbeddedHostState,
-  embeddedHostUpdateEventName,
-  EmbeddedScreenState,
-  embeddedScreenStateUpdateEventName,
-} from "../../../embedded-support/src/ipc";
-import {
-  ReviewSessionWrapper,
-  ReviewSessionWrapperProps,
-} from "../ReviewSessionWrapper";
 import { useAuthenticationClient } from "../authentication/authContext";
-import { getFirebaseFunctions } from "../util/firebase";
+import { ReviewItem } from "../model/reviewItem";
+import { ReviewSessionContainer } from "../ReviewSessionContainer";
 import EmbeddedBanner from "./EmbeddedBanner";
-import {
-  EmbeddedActionsRecord,
-  getActionsRecordForMarking,
-  mergePendingActionsRecords,
-} from "./markingActions";
+import { useMarkingManager } from "./markingManager";
 import OnboardingModalWeb from "./OnboardingModal.web";
-import useResolvedReviewItems from "./useResolvedReviewItems";
+import { TestModeBanner } from "./TestModeBanner";
 import {
   EmbeddedAuthenticationState,
   useEmbeddedAuthenticationState,
 } from "./useEmbeddedAuthenticationState";
+import { useEmbeddedHostState } from "./useEmbeddedHostState";
+import useResolvedReviewItems from "./useResolvedReviewItems";
 import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
 import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL";
 
-// Pass the local prompt states along to the hosting web page when they change (i.e. so that the starbursts in other review areas on this page reflect this one's progress).
-function useHostStateNotifier(items: ReviewItem[]) {
-  useEffect(() => {
-    let isInvalidated = false;
-
-    Promise.all(items.map((item) => getIDForPrompt(item.prompt))).then(
-      (promptIDs) => {
-        if (isInvalidated) {
-          return;
-        }
-        const state: EmbeddedScreenState = {
-          orderedPromptIDs: promptIDs,
-          orderedPromptStates: items.map(({ promptState }) => promptState),
-        };
-
-        parent.postMessage(
-          { type: embeddedScreenStateUpdateEventName, state },
-          "*",
-        );
-      },
-    );
-
-    return () => {
-      isInvalidated = true;
-    };
-  }, [items]);
-}
-
-function flatten<T>(array: T[][]): T[] {
-  return array.reduce((output, current) => output.concat(current), []);
-}
-
-function getStarburstItemsForScreenState(
-  screenState: EmbeddedScreenState,
-): ReviewStarburstItem[] {
-  return screenState.orderedPromptStates.map((promptState) => ({
-    promptState,
-    isPendingForSession: !promptState,
-    supportsRetry: false,
-  }));
-}
-
-function getPageState(
-  localItems: ReviewItem[],
-  hostState: EmbeddedHostState | null,
-): { starburstItems: ReviewStarburstItem[]; localItemIndexOffset: number } {
-  const localStarburstItems: ReviewStarburstItem[] = localItems.map((item) => ({
+function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
+  return sessionItems.map((item) => ({
+    isPendingForSession: !item.promptState, // TODO for retry
     promptState: item.promptState,
-    isPendingForSession: !item.promptState,
     supportsRetry: promptTypeSupportsRetry(item.prompt.promptType),
   }));
-  if (hostState) {
-    const localIndex = hostState.receiverIndex;
-    const priorItems = flatten(
-      hostState.orderedScreenStates
-        .slice(0, localIndex)
-        .map((screenState) =>
-          screenState ? getStarburstItemsForScreenState(screenState) : [],
-        ),
-    );
-    const laterItems = flatten(
-      hostState.orderedScreenStates
-        .slice(localIndex + 1)
-        .map((screenState) =>
-          screenState ? getStarburstItemsForScreenState(screenState) : [],
-        ),
-    );
-    return {
-      starburstItems: [...priorItems, ...localStarburstItems, ...laterItems],
-      localItemIndexOffset: priorItems.length,
-    };
-  } else {
-    return {
-      starburstItems: localStarburstItems,
-      localItemIndexOffset: 0,
-    };
-  }
 }
 
 function getEndOfTaskLabel(
@@ -145,11 +55,10 @@ function getEndOfTaskLabel(
 }
 
 interface EmbeddedScreenRendererProps {
+  containerSize: { width: number; height: number };
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
-  items: ReviewItem[];
-  baseItems: ReviewItem[];
+  localReviewItems: ReviewItem[];
   currentItemIndex: number;
-  containerSize: { width: number; height: number } | null;
   authenticationState: EmbeddedAuthenticationState;
   colorPalette: styles.colors.ColorPalette;
   hostState: EmbeddedHostState | null;
@@ -158,9 +67,8 @@ interface EmbeddedScreenRendererProps {
 }
 function EmbeddedScreenRenderer({
   onMark,
+  localReviewItems,
   currentItemIndex,
-  baseItems,
-  items,
   containerSize,
   authenticationState,
   colorPalette,
@@ -168,8 +76,6 @@ function EmbeddedScreenRenderer({
   hasUncommittedActions,
   isDebug,
 }: EmbeddedScreenRendererProps) {
-  useHostStateNotifier(items);
-
   const [
     pendingOutcome,
     setPendingOutcome,
@@ -213,7 +119,7 @@ function EmbeddedScreenRenderer({
     },
   });
 
-  if (currentItemIndex >= items.length && !isComplete) {
+  if (currentItemIndex >= queueItems.length && !isComplete) {
     setTimeout(() => setComplete(true), 350);
     setTimeout(() => {
       // There are bugs with RNW's implementation of delay with spring animations, alas.
@@ -223,24 +129,21 @@ function EmbeddedScreenRenderer({
     }, 750);
   }
 
-  const pageState = useMemo(() => getPageState(items, hostState), [
-    items,
-    hostState,
+  const starburstItems = useMemo(() => getStarburstItems(localReviewItems), [
+    localReviewItems,
   ]);
-  const cappedLocalItemIndex = Math.min(currentItemIndex, items.length - 1);
-  const starburstItemIndex =
-    cappedLocalItemIndex + pageState.localItemIndexOffset;
 
-  if (!containerSize) {
-    return null;
-  }
+  const reviewItems = useMemo(
+    () => queueItems.map(({ reviewItem }) => reviewItem),
+    [queueItems],
+  );
 
   return (
     <>
       <EmbeddedBanner
         palette={colorPalette}
         isSignedIn={authenticationState.status === "signedIn"}
-        totalPromptCount={items.length}
+        totalPromptCount={queueItems.length}
         completePromptCount={currentItemIndex}
         sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
       />
@@ -251,16 +154,16 @@ function EmbeddedScreenRenderer({
         <ReviewStarburst
           containerWidth={containerSize.width}
           containerHeight={containerSize.height}
-          items={pageState.starburstItems}
-          currentItemIndex={starburstItemIndex}
-          currentItemSupportsRetry={promptTypeSupportsRetry(
-            items[cappedLocalItemIndex].prompt.promptType,
-          )}
+          items={starburstItems}
+          currentItemIndex={
+            queueItems[Math.min(currentItemIndex, queueItems.length - 1)]
+              .starburstIndex
+          }
           pendingOutcome={pendingOutcome}
           position={isComplete ? "center" : "left"}
           showLegend={
             currentItemIndex <
-            items.length /* animate out the legend a little early */
+            queueItems.length /* animate out the legend a little early */
           }
           colorMode={isComplete ? "accent" : "bicolor"}
           colorPalette={colorPalette}
@@ -280,14 +183,11 @@ function EmbeddedScreenRenderer({
               },
             ]}
           >
-            {getEndOfTaskLabel(pageState.starburstItems, !!hostState)}
+            {getEndOfTaskLabel(starburstItems, !!hostState)}
           </Text>
         </FadeView>
         <FadeView
-          isVisible={
-            /* TODO: show this after saving is actually complete */
-            isComplete && !hasUncommittedActions
-          }
+          isVisible={isComplete && !hasUncommittedActions}
           delayMillis={750}
           removeFromLayoutWhenHidden
         >
@@ -308,14 +208,13 @@ function EmbeddedScreenRenderer({
       </Animated.View>
       {!isComplete && (
         <ReviewArea
-          items={baseItems}
+          items={reviewItems}
           currentItemIndex={currentItemIndex}
           onMark={onMark}
           onPendingOutcomeChange={(newPendingOutcome) => {
             setPendingOutcome(newPendingOutcome);
           }}
           insetBottom={0}
-          overrideColorPalette={colorPalette}
         />
       )}
       {isComplete && (
@@ -335,158 +234,87 @@ function EmbeddedScreenRenderer({
           </Animated.View>
         </>
       )}
-      {isDebug && (
-        /* HACK HACK HACK */ <View
-          style={[
-            {
-              position: "absolute",
-              left: styles.layout.edgeMargin,
-              right: styles.layout.edgeMargin,
-              bottom: styles.layout.gridUnit * 10,
-              height: "auto",
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.type.labelSmall.layoutStyle,
-              { color: colorPalette.secondaryTextColor },
-            ]}
-          >
-            TEST MODE: Actions will not be saved.
-          </Text>
-        </View>
-      )}
+      {isDebug && <TestModeBanner colorPalette={colorPalette} />}
     </>
   );
 }
 
-function useHostState() {
-  const [hostState, setHostState] = useState<EmbeddedHostState | null>(null);
+function computeLocalQueueItems(
+  localReviewItems: ReviewItem[] | null,
+  hostState: EmbeddedHostState | null,
+): ReviewSessionQueueItem[] | null {
+  if (!localReviewItems) {
+    return null;
+  }
 
-  useEffect(() => {
-    function onMessage(event: MessageEvent) {
-      if (
-        event.source === parent &&
-        event.data &&
-        event.data.type === embeddedHostUpdateEventName
-      ) {
-        // console.log("Got new host state", event.data.state);
-        setHostState(event.data.state);
-      }
-    }
-    window.addEventListener("message", onMessage);
-    return () => {
-      window.removeEventListener("message", onMessage);
-    };
-  }, []);
-
-  return hostState;
-}
-
-async function submitPendingActionsRecord(
-  actionsRecord: EmbeddedActionsRecord,
-): Promise<unknown> {
-  return getFirebaseFunctions().httpsCallable("recordEmbeddedActions")({
-    logs: actionsRecord.logEntries.map(({ log }) => log),
-    promptsByID: actionsRecord.promptsByID,
-    attachmentURLsByID: actionsRecord.attachmentURLsByID,
-  });
-}
-
-function useMarkingManager(
-  authenticationState: EmbeddedAuthenticationState,
-  configuration: EmbeddedScreenConfiguration,
-): {
-  onMark: ReviewSessionWrapperProps["onMark"];
-  hasUncommittedActions: boolean;
-} {
-  const reviewSessionStartTimestampMillis = useRef(Date.now());
-  const [
-    pendingActionsRecord,
-    setPendingActionsRecord,
-  ] = useState<EmbeddedActionsRecord | null>(null);
-  const onMark: ReviewSessionWrapperProps["onMark"] = useCallback(
-    (marking) => {
-      const newRecord = getActionsRecordForMarking(
-        configuration.embeddedHostMetadata,
-        marking,
-        reviewSessionStartTimestampMillis.current,
+  // How far into the page-wide item set is this particular embedded screen?
+  // Sum over the size of the areas prior to this one.
+  let localPageItemOffset: number;
+  if (hostState) {
+    localPageItemOffset = hostState?.orderedScreenRecords
+      .slice(0, hostState?.receiverIndex)
+      .reduce(
+        (sum, screenState) => sum + (screenState?.reviewItems.length ?? 0),
+        0,
       );
-      setPendingActionsRecord((pendingActionsRecord) =>
-        pendingActionsRecord
-          ? mergePendingActionsRecords(pendingActionsRecord, newRecord)
-          : newRecord,
-      );
-      return newRecord.logEntries;
-    },
-    [configuration],
-  );
+  } else {
+    localPageItemOffset = 0;
+  }
 
-  const { isDebug } = configuration;
-  useEffect(() => {
-    if (!pendingActionsRecord) {
-      return;
-    }
-    if (isDebug) {
-      console.log("Skipping action because we're in debug mode");
-      return;
-    }
-    if (authenticationState.status === "signedIn") {
-      submitPendingActionsRecord(pendingActionsRecord)
-        .then(() => {
-          console.log("Saved actions to server", pendingActionsRecord);
-          setPendingActionsRecord(null);
-        })
-        .catch((error) => {
-          console.error(
-            `Failed to save record: ${error.message}`,
-            pendingActionsRecord,
-          );
-        });
-    } else {
-      console.log(
-        "Queueing actions for after user authenticates",
-        pendingActionsRecord,
-      );
-    }
-  }, [pendingActionsRecord, authenticationState, isDebug]);
-
-  return { onMark, hasUncommittedActions: !!pendingActionsRecord };
+  return localReviewItems.map((reviewItem, index) => ({
+    reviewItem,
+    starburstIndex: index + localPageItemOffset,
+  }));
 }
 
 export default function EmbeddedScreen() {
-  const [configuration] = useState(
+  const configuration = useRef(
     getEmbeddedScreenConfigurationFromURL(window.location.href),
+  ).current;
+  const colorPalette = useMemo(() => getEmbeddedColorPalette(configuration), [
+    configuration,
+  ]);
+
+  const hostState = useEmbeddedHostState();
+  const localReviewItems = useResolvedReviewItems(
+    configuration.embeddedItems,
+    colorPalette,
   );
-  const hostState = useHostState();
-  const colorPalette = getEmbeddedColorPalette(configuration);
-  const baseItems = useResolvedReviewItems(configuration.embeddedItems);
+  const localQueueItems = React.useMemo(
+    () => computeLocalQueueItems(localReviewItems, hostState),
+    [localReviewItems, hostState],
+  );
 
   const authenticationClient = useAuthenticationClient();
   const authenticationState = useEmbeddedAuthenticationState(
     authenticationClient,
   );
 
-  const { onMark, hasUncommittedActions } = useMarkingManager(
-    authenticationState,
-    configuration,
-  );
+  const {
+    onMark,
+    hasUncommittedActions,
+    promptStates,
+    currentItemIndex,
+  } = useMarkingManager({
+    authenticationState: authenticationState,
+    configuration: configuration,
+    hostPromptStates: hostState?.promptStates ?? null,
+  });
 
-  if (baseItems === null) {
-    return null; // TODO show loading screen: we may be downloading attachments.
+  if (localQueueItems === null || localReviewItems === null) {
+    return null; // TODO show loading screen: we may be resolving attachments.
   }
 
   return (
     <View style={{ height: "100vh", width: "100vw", overflow: "hidden" }}>
-      <ReviewSessionWrapper
-        baseItems={baseItems}
-        onMark={onMark}
-        overrideColorPalette={colorPalette}
-      >
-        {(args) => (
+      <ReviewSessionContainer colorPalette={colorPalette}>
+        {({ containerSize }) => (
           <EmbeddedScreenRenderer
-            {...args}
+            onMark={onMark}
+            currentItemIndex={currentItemIndex}
+            containerSize={containerSize}
+            queueItems={localQueueItems}
+            localReviewItems={localReviewItems}
             authenticationState={authenticationState}
             colorPalette={colorPalette}
             hostState={hostState}
@@ -494,7 +322,7 @@ export default function EmbeddedScreen() {
             isDebug={configuration.isDebug}
           />
         )}
-      </ReviewSessionWrapper>
+      </ReviewSessionContainer>
     </View>
   );
 }

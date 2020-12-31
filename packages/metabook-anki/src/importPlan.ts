@@ -5,9 +5,7 @@ import {
   applyActionLogToPromptState,
   Attachment,
   AttachmentIDReference,
-  QAPromptTaskParameters,
   qaPromptType,
-  ClozePromptTaskParameters,
   clozePromptType,
   getActionLogFromPromptActionLog,
   getAttachmentMimeTypeForFilename,
@@ -31,6 +29,8 @@ import {
   PromptTaskID,
   repetitionActionLogType,
   rescheduleActionLogType,
+  ClozePromptTask,
+  QAPromptTask,
 } from "metabook-core";
 import * as Anki from "./ankiPkg";
 import { Card, CardQueue, Collection } from "./ankiPkg";
@@ -106,9 +106,7 @@ export async function createPlanForCard(
   prompt: Prompt,
   noteProvenance: PromptProvenance | null,
   overrideTimestampMillis?: number,
-): Promise<
-  PromptActionLog<QAPromptTaskParameters | ClozePromptTaskParameters>
-> {
+): Promise<PromptActionLog<QAPromptTask | ClozePromptTask>> {
   // Generate an ingest log.
   return {
     actionLogType: ingestActionLogType,
@@ -125,11 +123,11 @@ export async function createPlanForCard(
 }
 
 export async function createPlanForLog<
-  P extends QAPromptTaskParameters | ClozePromptTaskParameters
+  PT extends QAPromptTask | ClozePromptTask
 >(
   ankiLog: Anki.Log,
-  cardLastActionLog: PromptActionLog<P>,
-): Promise<PromptRepetitionActionLog<P>> {
+  cardLastActionLog: PromptActionLog<PT>,
+): Promise<PromptRepetitionActionLog<PT>> {
   let outcome: PromptRepetitionOutcome;
   switch (ankiLog.type) {
     case Anki.ReviewLogType.Learn:
@@ -160,7 +158,7 @@ export async function createPlanForLog<
     ],
     taskParameters: null,
     actionLogType: repetitionActionLogType,
-  } as PromptRepetitionActionLog<P>;
+  } as PromptRepetitionActionLog<PT>;
 }
 
 async function readAttachmentAtPath(
@@ -179,9 +177,7 @@ async function readAttachmentAtPath(
 export async function createRescheduleLogForCard(
   card: Card,
   collection: Collection,
-  lastActionLog: PromptActionLog<
-    QAPromptTaskParameters | ClozePromptTaskParameters
-  >,
+  lastActionLog: PromptActionLog<QAPromptTask | ClozePromptTask>,
 ): Promise<ActionLog | null> {
   let newTimestampMillis: number | null;
   switch (card.queue) {
@@ -289,15 +285,13 @@ export async function createImportPlan(
   const taskIDsToPromptStates: Map<string, PromptState> = new Map();
   const cardIDsToLastActionLogs: Map<
     number,
-    PromptActionLog<QAPromptTaskParameters | ClozePromptTaskParameters>
+    PromptActionLog<QAPromptTask | ClozePromptTask>
   > = new Map();
 
   async function addIngestEventForCardID(
     cardID: number,
     overrideTimestampMillis?: number,
-  ): Promise<PromptActionLog<
-    QAPromptTaskParameters | ClozePromptTaskParameters
-  > | null> {
+  ): Promise<PromptActionLog<QAPromptTask | ClozePromptTask> | null> {
     // Create the ingest log for this card.
     const card = cardIDsToCards.get(cardID);
     if (!card) {
