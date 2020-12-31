@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import { ActionLogID, reviewSession } from "metabook-core";
+import { ActionLogID, PromptTaskID, reviewSession } from "metabook-core";
 import {
   ActionLogDocument,
   getActionLogIDForFirebaseKey,
@@ -125,4 +125,23 @@ export async function getDuePromptStates(
     .limit(reviewSession.getReviewSessionCardLimit());
   const snapshot = await ref.get();
   return snapshot.docs.map((doc) => doc.data());
+}
+
+export async function getPromptStates(
+  userID: string,
+  taskIDs: PromptTaskID[],
+): Promise<Map<PromptTaskID, PromptStateCache>> {
+  const db = getDatabase();
+  const refs = await Promise.all(
+    taskIDs.map((id) => getTaskStateCacheReference(db, userID, id)),
+  );
+  const snapshots = await getDatabase().getAll(...refs);
+
+  const output: Map<PromptTaskID, PromptStateCache> = new Map();
+  snapshots.forEach((snapshot, index) => {
+    if (snapshot.exists) {
+      output.set(taskIDs[index], snapshot.data() as PromptStateCache);
+    }
+  });
+  return output;
 }

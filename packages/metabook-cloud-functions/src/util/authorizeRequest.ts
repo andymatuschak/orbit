@@ -7,6 +7,15 @@ export async function authorizeRequest(
   next: (userID: string) => unknown,
 ) {
   const accessCode = request.query["accessCode"];
+  const authorizationHeader = request.header("Authorization");
+  let idToken: string | null = null;
+  if (authorizationHeader) {
+    const match = authorizationHeader.match(/ID (.+)/ )
+    if (match) {
+      idToken = match[1];
+    }
+  }
+
   if (accessCode && typeof accessCode === "string") {
     try {
       const userID = await backend.auth.consumeAccessCode(
@@ -16,6 +25,14 @@ export async function authorizeRequest(
       next(userID);
     } catch (error) {
       console.error(`Couldn't consume access code ${accessCode}: ${error}`);
+      response.status(403).send();
+    }
+  } else if (idToken) {
+    try {
+      const userID = await backend.auth.validateIDToken(idToken);
+      next(userID);
+    } catch (error) {
+      console.error(`Couldn't validate ID token ${idToken}: ${error}`);
       response.status(403).send();
     }
   } else {
