@@ -56,14 +56,13 @@ function Summary() {
   return (
     <Text
       style={[
-        styles.type.label.layoutStyle,
+        styles.type.headline.layoutStyle,
         {
           color: styles.colors.white,
         },
       ]}
     >
-      Orbit is an experimental system that helps you engage with ideas more
-      deeply by returning to them over time.
+      Orbit helps you deeply internalize ideas through periodic review.
     </Text>
   );
 }
@@ -71,65 +70,53 @@ function Summary() {
 function Contents() {
   return (
     <>
-      <Heading>Making memory a&nbsp;choice</Heading>
+      <Heading>Orbit makes memory a&nbsp;choice</Heading>
       <Paragraph>
-        It’s disconcerting how quickly we forget much of what we read. That may
-        not matter much when we’re reading for fun, but it’s hard to understand
-        complex ideas—or to build on them ourselves—while constantly flipping
-        back a few pages to reinforce a fuzzy detail.
+        It’s frustrating how quickly we forget much of what we read. We may not care when we&rsquo;re just reading for fun. But it&rsquo;s hard to make sense of
+        complex ideas when they build on earlier details we&rsquo;ve already begun to forget. Often we take away a vague gist instead of accurate understanding.
       </Paragraph>
       <Paragraph>
-        This lossiness might seem like an immutable fact of life, but cognitive
-        scientists have understood how to guarantee you’ll remember something
-        permanently. Orbit lets authors build those ideas into their work,
-        making it easy for people to remember what they read.
+        Happily, cognitive scientists have developed simple strategies which can ensure you'll remember something permanently. Orbit lets authors build those techniques into their writing,
+        making it easy for you to remember what you&rsquo;ve read.
       </Paragraph>
       <Paragraph>
-        As you read, you’ll occasionally answer a few simple questions which
-        reinforce the ideas you’ve just seen. Those memories will fade, so after
-        a few days, we’ll send you an email inviting you to quickly review the
+        As you read, Orbit occasionally prompts you with quick questions to
+        reinforce the ideas you’ve just seen. Memory fades, so after
+        a few days, Orbit will send you an email inviting you to quickly review the
         text’s questions. If you still remember an answer, you’ll next see it
-        two weeks later. Then a month after that, then two months, and so on, in
-        an expanding schedule. If you forget an answer, the review schedule
+        two weeks later. Then a month after that, then two months, and so on. If you forget an answer, the schedule
         contracts to reinforce that question.
       </Paragraph>
       <Paragraph>
-        The exponentially expanding schedule means that you need just a few
-        reviews (typically a few seconds each) to remember an answer for years.
+        The expanding schedule means that you need just a few reviews (usually a few seconds each) to remember an answer for years.
         Memory is typically haphazard—we read something interesting and hope
-        we’ll remember it—but this review strategy guarantees you’ll remember.
-        By integrating these ideas into texts, Orbit creates a new{" "}
-        <em>mnemonic medium</em> which makes memory a choice.
+        we’ll remember it—but this review system <em>makes memory a choice</em>.
       </Paragraph>
       <Heading>Bringing ideas into your orbit</Heading>
       <Paragraph>
-        You may have used flashcards like these to memorize simple facts like
-        vocabulary words or anatomy. When done well, that can automate away
+        You may have made flashcards in school to memorize facts like
+        vocabulary words or anatomy. When used well, simple flashcards can automate away
         learning the “easy part” of a subject so you can focus on deeper, more
         conceptual issues. But one of the ideas motivating Orbit is that these
         review techniques can also directly help people master abstract,
         conceptual knowledge.
       </Paragraph>
       <Paragraph>
-        A text’s questions need not ask only for definitions: they can ask about
-        connections, implications, causes, and consequences. They can prompt you
+        Orbit questions can go beyond facts to probe connections, implications, causes, and consequences. They can prompt you
         to reflect or to synthesize something new. And by weaving these
-        questions into a narrative, authors can situate them in rich context,
+        questions into a narrative, authors can situate them in a rich context,
         breaking the ordinary constraints of flashcards as a medium.
       </Paragraph>
       <Paragraph>
         When you read a text that’s written with Orbit, you don’t just read it
-        once and then proceed with your life. The review sessions keep you in
-        contact with the ideas over time, returning you to the material again
+        once and then set it aside, perhaps forever. The review sessions keep you in
+        contact with the ideas, returning you to the material again
         and again over weeks and months. The ongoing practice changes your
-        relationship to what you read. It gives you a way to bring ideas into
-        your orbit.
+        relationship to what you read. It gives you a way to <em>bring ideas into
+        your orbit.</em>
       </Paragraph>
       <Paragraph>
-        Orbit’s a new platform—and very much an experiment. But ultimately, the
-        aspiration is that you won’t just use prompts that others have written:
-        you’ll write your own, not just representing others’ ideas but also your
-        own. When something seems interesting, you can tie a string to it and
+        Orbit’s a new platform—and very much an experiment. Future versions will enable you to write your own prompts, keeping you in touch with your own ideas. When something seems interesting, you can tie a string to it and
         throw it up in a lazy arc. It’ll swing back around at some point, but
         you’re not terribly concerned with when. You’ll give its string more or
         less slack over time. Floating above your head, then, is an
@@ -141,7 +128,7 @@ function Contents() {
       <Paragraph>
         Orbit is a project by{" "}
         <Link href={"https://andymatuschak.org"}>Andy Matuschak</Link>,
-        continuing a series of projects with collaborator{" "}
+        continuing a series of projects co-authored with{" "}
         <Link href={"http://michaelnielsen.org"}>Michael Nielsen</Link>. For
         more background:
         <ul style={{ marginTop: styles.layout.gridUnit * 2, marginBottom: 0 }}>
@@ -170,7 +157,7 @@ function Contents() {
             <Link href={"http://augmentingcognition.com/ltm.html"}>
               <em>Augmenting long-term memory</em>
             </Link>{" "}
-            by Michael Nielsen, explores the spaced repetition mechanic in much
+            (by Michael Nielsen) explores the spaced repetition mechanic in much
             more detail.
           </li>
         </ul>
@@ -180,8 +167,8 @@ function Contents() {
         <Link href="https://patreon.com/quantumcountry">
           my Patreon community
         </Link>{" "}
-        helps it stay that way. If you find this work interesting, you can
-        become a member to read regular patron-only articles and previews of
+        helps it stay that way. You can
+        become a member to support the work, and to read regular patron-only articles and previews of
         upcoming projects.
       </Paragraph>
       <Paragraph>
