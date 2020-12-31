@@ -4,6 +4,7 @@ import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode";
 import { createLoginToken } from "./api/internal/auth/createLoginToken";
 import { refreshSessionCookie } from "./api/internal/auth/refreshSessionCookie";
 import { recordPageView } from "./api/internal/recordPageView";
+import { getTaskStates } from "./api/taskStates";
 import corsHandler from "./api/util/corsHandler";
 
 const traceAPICall: express.RequestHandler = (request, _, next) => {
@@ -28,6 +29,8 @@ export function createAPIApp(): express.Application {
     next();
   });
   app.use(traceAPICall);
+
+  app.get("/taskStates", getTaskStates);
 
   app.get("/internal/auth/createLoginToken", createLoginToken);
   app.get("/internal/auth/consumeAccessCode", consumeAccessCode);

@@ -1,6 +1,11 @@
 import {
   getIDForPrompt,
+  getIDForPromptSync,
+  getIDForPromptTask,
   PromptRepetitionOutcome,
+  PromptState,
+  PromptTask,
+  PromptTaskID,
   promptTypeSupportsRetry,
 } from "metabook-core";
 import {
@@ -30,6 +35,7 @@ import {
   EmbeddedScreenState,
   embeddedScreenStateUpdateEventName,
 } from "../../../embedded-support/src/ipc";
+import serviceConfig from "../../serviceConfig.mjs";
 import {
   ReviewSessionWrapper,
   ReviewSessionWrapperProps,
@@ -50,6 +56,7 @@ import {
 } from "./useEmbeddedAuthenticationState";
 import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
 import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL";
+import { AuthenticationClient } from "../authentication";
 
 // Pass the local prompt states along to the hosting web page when they change (i.e. so that the starbursts in other review areas on this page reflect this one's progress).
 function useHostStateNotifier(items: ReviewItem[]) {
@@ -187,6 +194,16 @@ function EmbeddedScreenRenderer({
   const { height: interiorHeight, onLayout: onInteriorLayout } = useLayout();
   const { height: modalHeight, onLayout: onModalLayout } = useLayout();
 
+  const wasInitiallyComplete = useMemo(
+    () => !baseItems.some(({ promptState }) => promptState === null),
+    [baseItems],
+  );
+  useEffect(() => {
+    if (wasInitiallyComplete) {
+      setComplete(true);
+    }
+  }, [wasInitiallyComplete]);
+
   const interiorY = useTransitioningValue({
     value: isComplete
       ? (window.innerHeight -
@@ -242,6 +259,7 @@ function EmbeddedScreenRenderer({
         isSignedIn={authenticationState.status === "signedIn"}
         totalPromptCount={items.length}
         completePromptCount={currentItemIndex}
+        wasInitiallyComplete={wasInitiallyComplete}
         sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
       />
       <Animated.View
@@ -260,7 +278,8 @@ function EmbeddedScreenRenderer({
           position={isComplete ? "center" : "left"}
           showLegend={
             currentItemIndex <
-            items.length /* animate out the legend a little early */
+              items.length /* animate out the legend a little early */ &&
+            !wasInitiallyComplete
           }
           colorMode={isComplete ? "accent" : "bicolor"}
           colorPalette={colorPalette}
@@ -285,8 +304,7 @@ function EmbeddedScreenRenderer({
         </FadeView>
         <FadeView
           isVisible={
-            /* TODO: show this after saving is actually complete */
-            isComplete && !hasUncommittedActions
+            isComplete && !wasInitiallyComplete && !hasUncommittedActions
           }
           delayMillis={750}
           removeFromLayoutWhenHidden
@@ -455,17 +473,81 @@ function useMarkingManager(
   return { onMark, hasUncommittedActions: !!pendingActionsRecord };
 }
 
+function useInitialPromptStates(
+  authenticationClient: AuthenticationClient,
+  authenticationState: EmbeddedAuthenticationState,
+  initialItems: ReviewItem[] | null,
+): Map<ReviewItem, PromptState> | null {
+  const [initialPromptStates, setInitialPromptStates] = useState<Map<
+    ReviewItem,
+    PromptState
+  > | null>(null);
+
+  const status = authenticationState.status;
+  useEffect(() => {
+    if (status === "signedIn" && initialPromptStates === null && initialItems) {
+      authenticationClient.getCurrentIDToken().then(async (idToken) => {
+        // Get all the task IDs.
+        const taskIDs = initialItems.map((item) => {
+          return getIDForPromptTask({
+            promptID: getIDForPromptSync(item.prompt),
+            promptType: item.prompt.promptType,
+            promptParameters: item.promptParameters,
+          } as PromptTask);
+        });
+
+        const taskIDParameterSegment = taskIDs
+          .map((taskID) => `taskID=${encodeURIComponent(taskID)}`)
+          .join("&");
+        const url = `${serviceConfig.httpsAPIBaseURLString}/taskStates?${taskIDParameterSegment}`;
+        const request = new Request(url);
+        request.headers.set("Authorization", `ID ${idToken}`);
+        const fetchResult = await fetch(request);
+        if (!fetchResult.ok) {
+          throw new Error(
+            `Failed to fetch prompt states with status code ${
+              fetchResult.status
+            }: ${await fetchResult.text()}`,
+          );
+        }
+
+        const response = await fetchResult.json();
+        if (typeof response !== "object") {
+          throw new Error(`Unexpected prompt state response: ${response}`);
+        }
+        const output = new Map<ReviewItem, PromptState>();
+        initialItems.forEach((item, index) => {
+          const taskID = taskIDs[index];
+          // TODO: validate prompt states
+          if (response[taskID]) {
+            output.set(item, response[taskID]);
+          }
+        });
+        setInitialPromptStates(output);
+      });
+    }
+  }, [authenticationClient, initialItems, initialPromptStates, status]);
+
+  return initialPromptStates;
+}
+
 export default function EmbeddedScreen() {
   const [configuration] = useState(
     getEmbeddedScreenConfigurationFromURL(window.location.href),
   );
   const hostState = useHostState();
   const colorPalette = getEmbeddedColorPalette(configuration);
-  const baseItems = useResolvedReviewItems(configuration.embeddedItems);
+  const initialItems = useResolvedReviewItems(configuration.embeddedItems);
 
   const authenticationClient = useAuthenticationClient();
   const authenticationState = useEmbeddedAuthenticationState(
     authenticationClient,
+  );
+
+  const initialPromptStates = useInitialPromptStates(
+    authenticationClient,
+    authenticationState,
+    initialItems,
   );
 
   const { onMark, hasUncommittedActions } = useMarkingManager(
@@ -473,14 +555,29 @@ export default function EmbeddedScreen() {
     configuration,
   );
 
-  if (baseItems === null) {
+  const mergedItems = useMemo(() => {
+    if (initialPromptStates && initialItems) {
+      return initialItems.map((item) => {
+        const initialPromptState = initialPromptStates.get(item);
+        if (initialPromptState) {
+          return { ...item, promptState: initialPromptState };
+        } else {
+          return item;
+        }
+      });
+    } else {
+      return initialItems;
+    }
+  }, [initialItems, initialPromptStates]);
+
+  if (mergedItems === null) {
     return null; // TODO show loading screen: we may be downloading attachments.
   }
 
   return (
     <View style={{ height: "100vh", width: "100vw", overflow: "hidden" }}>
       <ReviewSessionWrapper
-        baseItems={baseItems}
+        baseItems={mergedItems}
         onMark={onMark}
         overrideColorPalette={colorPalette}
       >

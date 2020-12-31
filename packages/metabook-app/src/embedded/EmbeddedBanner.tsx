@@ -7,6 +7,7 @@ interface EmbeddedBannerMessageInputs {
   completePromptCount: number;
   totalPromptCount: number;
   sizeClass: styles.layout.SizeClass;
+  wasInitiallyComplete: boolean;
 }
 
 export interface EmbeddedBannerProps extends EmbeddedBannerMessageInputs {
@@ -18,6 +19,7 @@ function getBannerMessage({
   completePromptCount,
   totalPromptCount,
   sizeClass,
+  wasInitiallyComplete,
 }: EmbeddedBannerMessageInputs): string {
   function formatPrompts(n: number): string {
     return n === 1 ? "1 prompt" : `${n} prompts`;
@@ -28,7 +30,9 @@ function getBannerMessage({
       ? "Quickly review what you just read."
       : "Quick review:";
   } else {
-    if (completePromptCount === 0) {
+    if (completePromptCount >= totalPromptCount || wasInitiallyComplete) {
+      return `Review complete`;
+    } else if (completePromptCount === 0) {
       return sizeClass === "regular"
         ? `Review session: ${formatPrompts(totalPromptCount)}`
         : `Review: ${formatPrompts(totalPromptCount)}`;
@@ -39,7 +43,7 @@ function getBannerMessage({
           )} left`
         : `${formatPrompts(totalPromptCount - completePromptCount)} left`;
     } else {
-      return `Review complete`;
+      throw new Error("Unreachable");
     }
   }
 }
