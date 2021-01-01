@@ -182,10 +182,10 @@ export class OrbitReviewAreaElement extends HTMLElement {
         throw new Error("Invariant violation: no embedded host metadata");
       }
 
-      const effectiveWidth = this.iframe.getBoundingClientRect().width;
+      const effectiveWidth = iframe.getBoundingClientRect().width;
       // The extra 5 grid units are for the banner.
       // TODO: encapsulate the banner's height in some API exported by metabook-app.
-      this.iframe.style.height = `${
+      iframe.style.height = `${
         getHeightForReviewAreaOfWidth(effectiveWidth) + 8 * 5
       }px`;
 
