@@ -9,10 +9,11 @@ import {
   PromptActionLog,
   promptActionLogCanBeAppliedToPromptState,
   PromptState,
-  PromptTaskID
+  PromptTaskID,
 } from "metabook-core";
 import { maxServerTimestamp, ServerTimestamp } from "metabook-firebase-support";
 import { ReviewItem } from "metabook-ui";
+import { Platform } from "react-native";
 
 import { Task } from "../util/task";
 import actionLogInitialImportOperation from "./actionLogInitialImportOperation";
@@ -69,6 +70,9 @@ export default class DatabaseManager {
   }
 
   private async initializeData() {
+    // HACK: disable local storage on web until I think through resilience more carefully.
+    if (Platform.OS === "web") return;
+
     if (this.isClosed) return;
 
     const hasFinishedInitialImport = await this.actionLogStore.getHasFinishedInitialImport();
@@ -258,6 +262,9 @@ export default class DatabaseManager {
         limit: 100,
       },
       async (newLogs) => {
+        this.remoteLogSubscription?.();
+        this.remoteLogSubscription = null;
+
         console.log(`[Action log subscription] Got ${newLogs.length} new logs`);
         await this.patchLocalStateFromLogEntries(
           newLogs.map((entry) => ({
@@ -265,8 +272,6 @@ export default class DatabaseManager {
             log: getPromptActionLogFromActionLog(entry.log),
           })),
         );
-        this.remoteLogSubscription?.();
-        this.remoteLogSubscription = null;
 
         const newStartingTimestamp = newLogs.reduce(
           (latestTimestamp, { serverTimestamp }) =>
