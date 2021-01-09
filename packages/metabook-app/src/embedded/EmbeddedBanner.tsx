@@ -69,7 +69,9 @@ export default function EmbeddedBanner(props: EmbeddedBannerProps) {
       >
         {getBannerMessage(props)}
       </Text>
-      <Logo units={2} tintColor={palette.secondaryTextColor} />
+      <a href="https://withorbit.com" target="_blank" rel="noreferrer">
+        <Logo units={2} tintColor={palette.secondaryTextColor} />
+      </a>
     </View>
   );
 }
