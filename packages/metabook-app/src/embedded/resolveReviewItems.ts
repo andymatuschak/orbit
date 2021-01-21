@@ -4,9 +4,9 @@ import {
   getAttachmentTypeForAttachmentMimeType,
   getIDForAttachment,
 } from "metabook-core";
+import { ReviewItem } from "metabook-embedded-support";
 import { AttachmentResolutionMap } from "metabook-ui";
 import { EmbeddedItem } from "../../../embedded-support/src/embeddedScreenInterface";
-import { ReviewItem } from "../model/reviewItem";
 import {
   getAttachmentURLsInEmbeddedItem,
   getReviewItemFromEmbeddedItem,

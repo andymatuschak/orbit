@@ -6,14 +6,13 @@ import {
   textFieldHorizontalPadding,
   TextInput,
 } from "metabook-ui";
-import { SizeClass } from "metabook-ui/dist/styles/layout";
 import React from "react";
 import { Text, View } from "react-native";
 import { supportsLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";
 
 export interface OnboardingModalProps {
   colorPalette: styles.colors.ColorPalette;
-  sizeClass: SizeClass;
+  sizeClass: styles.layout.SizeClass;
 }
 
 // Obviously not exhaustive, but good enough for this purpose.

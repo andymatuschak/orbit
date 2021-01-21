@@ -44,6 +44,7 @@ export type EmbeddedAuthenticationState =
       onRequestStorageAccess: () => unknown;
     }
   | { status: "signedIn"; userRecord: Authentication.UserRecord };
+export type EmbeddedAuthenticationStatus = EmbeddedAuthenticationState["status"];
 
 // Watch for auth tokens broadcasted from the login popup or from peer iframes. These may come either via postMessage() to window.opener or via BroadcastChannel in supported browsers (either from the popup window or from a peer iframe).
 function useLoginTokenSubscription(

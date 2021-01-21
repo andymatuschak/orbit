@@ -1,10 +1,15 @@
 import { PromptState, PromptTaskID } from "metabook-core";
-import { ReviewItem } from "metabook-ui";
+import { ReviewItem } from "./reviewItem";
 
 // Messages from host to embedded:
-export const embeddedHostUpdateEventName = "hostUpdate";
+//================================
+
+export enum EmbeddedHostEventType {
+  HostUpdate = "hostUpdate",
+}
+
 export interface EmbeddedHostUpdateEvent {
-  type: typeof embeddedHostUpdateEventName;
+  type: typeof EmbeddedHostEventType.HostUpdate;
   state: EmbeddedHostState;
 }
 
@@ -18,10 +23,21 @@ export interface EmbeddedScreenRecord {
 }
 
 // Messages from embedded to host:
+//================================
+
+export enum EmbeddedScreenEventType {
+  ScreenRecordResolved = "screenRecordResolved",
+  PromptStateUpdate = "promptStateUpdate",
+}
 
 // This message is sent to the host when the embedded screen resolves all its review items.
-export const embeddedScreenRecordUpdateEventName = "screenRecordUpdate";
-export interface EmbeddedScreenRecordUpdateEvent {
-  type: typeof embeddedScreenRecordUpdateEventName;
+export interface EmbeddedScreenRecordResolvedEvent {
+  type: typeof EmbeddedScreenEventType.ScreenRecordResolved;
   record: EmbeddedScreenRecord;
+}
+
+export interface EmbeddedScreenPromptStateUpdateEvent {
+  type: typeof EmbeddedScreenEventType.PromptStateUpdate;
+  promptTaskID: PromptTaskID;
+  promptState: PromptState;
 }

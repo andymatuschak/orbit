@@ -1,13 +1,14 @@
-import { ColorPaletteName, PromptState, PromptTaskID } from "metabook-core";
+import { ColorPaletteName } from "metabook-core";
 import {
+  EmbeddedHostEventType,
   EmbeddedHostMetadata,
   EmbeddedHostUpdateEvent,
-  embeddedHostUpdateEventName,
   EmbeddedItem,
   EmbeddedScreenConfiguration,
+  EmbeddedScreenEventType,
+  EmbeddedScreenPromptStateUpdateEvent,
   EmbeddedScreenRecord,
-  EmbeddedScreenRecordUpdateEvent,
-  embeddedScreenRecordUpdateEventName,
+  EmbeddedScreenRecordResolvedEvent,
 } from "metabook-embedded-support";
 import { extractItems } from "./extractItems";
 import { getSharedMetadataMonitor } from "./metadataMonitor";
@@ -75,7 +76,7 @@ function markEmbeddedHostStateDirty() {
       );
       orderedReviewAreaElements.forEach((element, index) => {
         const event: EmbeddedHostUpdateEvent = {
-          type: embeddedHostUpdateEventName,
+          type: EmbeddedHostEventType.HostUpdate,
           state: {
             orderedScreenRecords,
             receiverIndex: index,
@@ -104,8 +105,8 @@ function onMessage(event: MessageEvent) {
   }
 
   switch (event.data.type) {
-    case embeddedScreenRecordUpdateEventName:
-      const recordUpdate = event.data as EmbeddedScreenRecordUpdateEvent;
+    case EmbeddedScreenEventType.ScreenRecordResolved:
+      const recordUpdate = event.data as EmbeddedScreenRecordResolvedEvent;
       const reviewArea = [..._activeReviewAreaElements].find(
         (element) => element.iframe?.contentWindow === event.source,
       );
@@ -118,6 +119,22 @@ function onMessage(event: MessageEvent) {
           "Ignoring state update from embedded screen with unknown review area",
         );
       }
+      break;
+
+    case EmbeddedScreenEventType.PromptStateUpdate:
+      const {
+        promptTaskID,
+        promptState,
+      } = event.data as EmbeddedScreenPromptStateUpdateEvent;
+      // May replace this with a straight lookup table if the full iteration becomes a problem, but usually N < 100.
+      for (const screenRecord of screenRecordsByReviewArea.values()) {
+        for (const reviewItem of screenRecord.reviewItems) {
+          if (reviewItem.promptTaskID === promptTaskID) {
+            reviewItem.promptState = promptState;
+          }
+        }
+      }
+      markEmbeddedHostStateDirty();
       break;
   }
 }

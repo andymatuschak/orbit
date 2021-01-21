@@ -11,11 +11,11 @@ import {
   PromptTaskID,
   reviewSession,
 } from "metabook-core";
+import { ReviewItem } from "metabook-embedded-support";
 
 import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";
 import DataRecordManager from "./dataRecordManager";
 import PromptStateStore from "./promptStateStore";
-import { ReviewItem } from "./reviewItem";
 
 const reviewQueueLengthLimit = 100; // TODO: this isn't the right place for this.
 
@@ -95,7 +95,6 @@ async function resolveReviewItems(
 
   return orderedDuePromptTasks
     .map((promptTask): ReviewItem | null => {
-      // TODO validate that task spec, task state, and task parameter types all match up... or, better, design the API to ensure that more reasonably
       const prompt = prompts.get(promptTask.promptID);
       if (!prompt) {
         return null;

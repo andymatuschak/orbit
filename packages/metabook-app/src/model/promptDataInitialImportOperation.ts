@@ -1,4 +1,4 @@
-import { PromptState, PromptTask } from "metabook-core";
+import { getPromptTaskForID, PromptState, PromptTaskID } from "metabook-core";
 import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";
 import { createTask, Task } from "../util/task";
 import DataRecordManager from "./dataRecordManager";
@@ -9,21 +9,27 @@ export default function promptDataInitialImportOperation(
   promptStateStore: PromptStateStore,
 ): Task<void> {
   return createTask(async (taskStatus) => {
-    let latestPromptTask: PromptTask | null = null;
+    let latestPromptTaskID: PromptTaskID | null = null;
     let promptTotal = 0;
     let attachmentTotal = 0;
     console.log("Prompt data import: starting");
     while (!taskStatus.isCancelled) {
       const promptStates: Map<
-        PromptTask,
+        PromptTaskID,
         PromptState
-      > = await promptStateStore.getAllPromptStates(latestPromptTask, 100);
+      > = await promptStateStore.getAllPromptStates(latestPromptTaskID, 100);
       if (taskStatus.isCancelled) return;
 
       if (promptStates.size > 0) {
-        const orderedPromptTasks = [...promptStates.keys()];
+        const orderedPromptTaskIDs = [...promptStates.keys()];
         const promptIDs = new Set(
-          orderedPromptTasks.map((promptTask) => promptTask.promptID),
+          orderedPromptTaskIDs.map((promptTaskID) => {
+            const promptTask = getPromptTaskForID(promptTaskID);
+            if (promptTask instanceof Error) {
+              throw promptTask;
+            }
+            return promptTask.promptID;
+          }),
         );
         const prompts = await dataRecordManager.getPrompts(promptIDs);
         if (taskStatus.isCancelled) return;
@@ -44,7 +50,8 @@ export default function promptDataInitialImportOperation(
         }
 
         promptTotal += prompts.size;
-        latestPromptTask = orderedPromptTasks[orderedPromptTasks.length - 1];
+        latestPromptTaskID =
+          orderedPromptTaskIDs[orderedPromptTaskIDs.length - 1];
       } else {
         console.log("Prompt data import: finished");
         break;

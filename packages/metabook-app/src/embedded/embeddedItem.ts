@@ -14,9 +14,9 @@ import {
   EmbeddedItem,
   EmbeddedPromptField,
   EmbeddedQAPrompt,
+  ReviewItem,
 } from "metabook-embedded-support";
 import { AttachmentResolutionMap } from "metabook-ui";
-import { ReviewItem } from "../model/reviewItem";
 
 function getPromptFieldFromEmbeddedPromptField(
   embeddedPromptField: EmbeddedPromptField,

@@ -1,9 +1,8 @@
-import { PromptTaskID } from "../dist";
 import { PromptID } from "./promptID";
 import { PromptState } from "./promptState/promptState";
 import { getDuePromptTasks } from "./reviewSession";
 import { qaPromptType } from "./types/prompt";
-import { getIDForPromptTask } from "./types/promptTask";
+import { getIDForPromptTask, PromptTaskID } from "./types/promptTask";
 
 function generateCardStates(count: number, dueCount: number) {
   const cardStates: Map<PromptTaskID, PromptState> = new Map();

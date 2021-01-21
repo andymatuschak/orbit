@@ -1,6 +1,7 @@
 import {
   ApplicationPromptTask,
   applicationPromptType,
+  ClozePromptTask,
   clozePromptType,
   createClozeMarkupRegexp,
   PromptProvenance,
@@ -20,11 +21,6 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import {
-  ApplicationReviewItem,
-  ClozeReviewItem,
-  QAReviewItem,
-} from "../../dist/reviewItem";
 import { ReviewAreaItem } from "../reviewAreaItem";
 import { colors, layout, type } from "../styles";
 import Button from "./Button";
@@ -42,7 +38,9 @@ function getQAPromptContents<PT extends QAPromptTask | ApplicationPromptTask>(
     case qaPromptType:
       return reviewItem.prompt as QAPrompt;
     case applicationPromptType:
-      const applicationReviewItem = reviewItem as ApplicationReviewItem;
+      const applicationReviewItem = reviewItem as ReviewAreaItem<
+        ApplicationPromptTask
+      >;
       return applicationReviewItem.prompt.variants[
         applicationReviewItem.taskParameters.variantIndex
       ];
@@ -233,7 +231,7 @@ export interface CardProps {
 }
 
 type QAPromptRendererType = CardProps & {
-  reviewItem: QAReviewItem | ApplicationReviewItem;
+  reviewItem: ReviewAreaItem<QAPromptTask | ApplicationPromptTask>;
 };
 function QAPromptRenderer({
   backIsRevealed,
@@ -309,7 +307,7 @@ function QAPromptRenderer({
 }
 
 type ClozePromptRendererProps = CardProps & {
-  reviewItem: ClozeReviewItem;
+  reviewItem: ReviewAreaItem<ClozePromptTask>;
 };
 
 function ClozePromptRenderer({
@@ -374,19 +372,9 @@ export default React.memo(function Card(props: CardProps) {
   switch (prompt.promptType) {
     case qaPromptType:
     case applicationPromptType:
-      return (
-        <QAPromptRenderer
-          {...props}
-          reviewItem={props.reviewItem as QAReviewItem | ApplicationReviewItem}
-        />
-      );
+      return <QAPromptRenderer {...props} reviewItem={props.reviewItem} />;
     case clozePromptType:
-      return (
-        <ClozePromptRenderer
-          {...props}
-          reviewItem={props.reviewItem as ClozeReviewItem}
-        />
-      );
+      return <ClozePromptRenderer {...props} reviewItem={props.reviewItem} />;
   }
 });
 

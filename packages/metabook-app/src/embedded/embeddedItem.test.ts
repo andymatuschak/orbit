@@ -2,11 +2,13 @@ import {
   AttachmentIDReference,
   ClozePrompt,
   clozePromptType,
+  getIDForAttachment,
+  imageAttachmentType,
   QAPrompt,
   qaPromptType,
 } from "metabook-core";
-import { EmbeddedClozePrompt } from "metabook-embedded-support";
-import { ReviewItem, styles } from "metabook-ui";
+import { EmbeddedClozePrompt, ReviewItem } from "metabook-embedded-support";
+import { styles } from "metabook-ui";
 import {
   getAttachmentURLsInEmbeddedItem,
   getReviewItemFromEmbeddedItem,
@@ -38,10 +40,8 @@ describe("getReviewItemFromEmbeddedItem", () => {
       embeddedItem: testEmbeddedQAPrompt,
       attachmentURLsToIDReferences: new Map(),
       attachmentResolutionMap: attachmentResolutionMap,
-      colorPalette: testColorPalette,
     }) as ReviewItem;
     expect(reviewItem).not.toBeInstanceOf(Error);
-    expect(reviewItem.provenance).toBeNull();
     expect(reviewItem.promptParameters).toBeNull();
     expect(reviewItem.attachmentResolutionMap).toBe(attachmentResolutionMap);
     expect((reviewItem.prompt as QAPrompt).question.contents).toEqual(
@@ -50,23 +50,31 @@ describe("getReviewItemFromEmbeddedItem", () => {
     expect((reviewItem.prompt as QAPrompt).answer.contents).toEqual("answer");
   });
 
-  test("basic attachments", () => {
+  test("basic attachments", async () => {
+    const attachmentIDA = await getIDForAttachment(Buffer.from("a"));
+    const attachmentIDB = await getIDForAttachment(Buffer.from("b"));
+
     const reviewItem = getReviewItemFromEmbeddedItem({
       embeddedItem: testBasicEmbeddedPromptsWithAttachments,
-      attachmentURLsToIDReferences: (new Map([
-        ["test-a", "id-a"],
-        ["test-b", "id-b"],
-      ]) as unknown) as Map<string, AttachmentIDReference>,
+      attachmentURLsToIDReferences: new Map([
+        [
+          "test-a",
+          { type: imageAttachmentType, id: attachmentIDA, byteLength: 1 },
+        ],
+        [
+          "test-b",
+          { type: imageAttachmentType, id: attachmentIDB, byteLength: 1 },
+        ],
+      ]),
       attachmentResolutionMap: new Map(),
-      colorPalette: testColorPalette,
     }) as ReviewItem;
     expect(reviewItem).not.toBeInstanceOf(Error);
-    expect((reviewItem.prompt as QAPrompt).question.attachments).toMatchObject([
-      "id-a",
-    ]);
-    expect((reviewItem.prompt as QAPrompt).answer.attachments).toMatchObject([
-      "id-b",
-    ]);
+    expect((reviewItem.prompt as QAPrompt).question.attachments[0].id).toEqual(
+      attachmentIDA,
+    );
+    expect((reviewItem.prompt as QAPrompt).answer.attachments[0].id).toEqual(
+      attachmentIDB,
+    );
   });
 
   test("cloze prompt", () => {
@@ -75,7 +83,6 @@ describe("getReviewItemFromEmbeddedItem", () => {
       embeddedItem: testEmbeddedClozePrompt,
       attachmentURLsToIDReferences: new Map(),
       attachmentResolutionMap: attachmentResolutionMap,
-      colorPalette: testColorPalette,
     }) as ReviewItem;
     expect(reviewItem).not.toBeInstanceOf(Error);
     expect((reviewItem.prompt as ClozePrompt).body.contents).toEqual(

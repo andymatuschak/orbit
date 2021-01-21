@@ -1,6 +1,7 @@
 import {
+  EmbeddedHostEventType,
   EmbeddedHostState,
-  embeddedHostUpdateEventName,
+  EmbeddedHostUpdateEvent,
 } from "metabook-embedded-support";
 import { useEffect, useState } from "react";
 
@@ -12,10 +13,10 @@ export function useEmbeddedHostState(): EmbeddedHostState | null {
       if (
         event.source === parent &&
         event.data &&
-        event.data.type === embeddedHostUpdateEventName
+        event.data.type === EmbeddedHostEventType.HostUpdate
       ) {
-        // console.log("Got new host state", event.data.state);
-        setHostState(event.data.record);
+        const updateEvent: EmbeddedHostUpdateEvent = event.data;
+        setHostState(updateEvent.state);
       }
     }
 

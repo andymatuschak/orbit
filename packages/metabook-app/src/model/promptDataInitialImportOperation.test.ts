@@ -1,11 +1,12 @@
 import {
   AttachmentID,
   AttachmentIDReference,
-  qaPromptType,
+  getIDForPromptTask,
   Prompt,
   PromptID,
   PromptState,
-  PromptTask,
+  PromptTaskID,
+  qaPromptType,
 } from "metabook-core";
 import { testQAPrompt } from "metabook-sample-data";
 import DataRecordManager from "./dataRecordManager";
@@ -26,13 +27,13 @@ test("basic run", async () => {
       promptStateStore.getAllPromptStates = jest
         .fn()
         .mockResolvedValue(new Map());
-      return new Map<PromptTask, PromptState>([
+      return new Map<PromptTaskID, PromptState>([
         [
-          {
+          getIDForPromptTask({
             promptID: "x" as PromptID,
             promptParameters: null,
             promptType: qaPromptType,
-          },
+          }),
           {} as PromptState,
         ],
       ]);

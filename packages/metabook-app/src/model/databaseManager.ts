@@ -2,7 +2,6 @@ import { MetabookDataClient, MetabookUserClient } from "metabook-client";
 import {
   ActionLogID,
   applyActionLogToPromptState,
-  AttachmentURLReference,
   getActionLogFromPromptActionLog,
   getIDForActionLog,
   getPromptActionLogFromActionLog,
@@ -24,7 +23,6 @@ import fetchReviewItemQueue from "./fetchReviewItemQueue";
 import promptDataInitialImportOperation from "./promptDataInitialImportOperation";
 import promptStateInitialImportOperation from "./promptStateInitialImportOperation";
 import PromptStateStore from "./promptStateStore";
-import { ReviewItem } from "./reviewItem";
 
 export default class DatabaseManager {
   private actionLogStore: ActionLogStore;

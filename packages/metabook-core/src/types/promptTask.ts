@@ -67,12 +67,20 @@ export interface PromptTaskMetadata extends TaskMetadata {
 
 export type PromptTaskID = string & { __promptTaskIDOpaqueType: never };
 
+function tooManyComponentsError(promptTaskID: PromptTaskID): Error {
+  return new Error(
+    `Can't parse ${promptTaskID}: task ID has too many components`,
+  );
+}
+
 export function getPromptTaskForID(
   promptTaskID: PromptTaskID,
 ): PromptTask | Error {
   const components = promptTaskID.split("/");
   if (components.length < 2) {
-    return new Error("Prompt task IDs must have at least 2 components");
+    return new Error(
+      `Can't parse ${promptTaskID}: prompt task IDs must have at least 2 components`,
+    );
   }
   const promptID = components[1] as PromptID;
   switch (components[0]) {
@@ -84,7 +92,7 @@ export function getPromptTaskForID(
           promptParameters: null,
         };
       } else {
-        return new Error("Task ID has too many components");
+        return tooManyComponentsError(promptTaskID);
       }
     case applicationPromptType:
       if (components.length === 2) {
@@ -94,7 +102,7 @@ export function getPromptTaskForID(
           promptParameters: null,
         };
       } else {
-        return new Error("Task ID has too many components");
+        return tooManyComponentsError(promptTaskID);
       }
     case clozePromptType:
       if (components.length === 3) {
@@ -104,10 +112,10 @@ export function getPromptTaskForID(
           promptParameters: { clozeIndex: Number.parseInt(components[2]) },
         };
       } else {
-        return new Error("Task ID has too many components");
+        return tooManyComponentsError(promptTaskID);
       }
     default:
-      return new Error("Unknown prompt type");
+      return new Error(`Can't parse ${promptTaskID}: unknown prompt type`);
   }
 }
 

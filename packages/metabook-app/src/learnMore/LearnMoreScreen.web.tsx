@@ -1,6 +1,5 @@
 import { Link, Logo, styles, useLayout } from "metabook-ui";
 import DebugGrid from "metabook-ui/dist/styles/DebugGrid";
-import { edgeMargin } from "metabook-ui/dist/styles/layout";
 import React, { ReactNode } from "react";
 import { StyleSheet, Image, Text, View } from "react-native";
 
@@ -255,7 +254,7 @@ function LargeLayout({ width }: { width: number }) {
 
 function SmallLayout({ width }: { width: number }) {
   return (
-    <View style={{ padding: edgeMargin }}>
+    <View style={{ padding: styles.layout.edgeMargin }}>
       <View
         style={{
           position: "absolute",

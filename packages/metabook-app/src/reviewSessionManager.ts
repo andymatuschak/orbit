@@ -8,9 +8,9 @@ import {
   PromptParametersOf,
   PromptTask,
 } from "metabook-core";
+import { ReviewItem } from "metabook-embedded-support";
 import { ReviewAreaItem } from "metabook-ui";
-import { useState } from "react";
-import { ReviewItem } from "./model/reviewItem";
+import { useMemo, useState } from "react";
 
 export interface ReviewSessionManagerState {
   reviewAreaQueue: ReviewAreaItem[];
@@ -23,6 +23,7 @@ export interface ReviewSessionManagerState {
 export interface ReviewSessionManagerActions {
   markCurrentItem(
     logEntries: { log: PromptActionLog; id: ActionLogID }[],
+    continuation?: (newState: ReviewSessionManagerState) => void,
   ): void;
 
   updateSessionItems(
@@ -135,17 +136,28 @@ function reviewSessionManagerMarkCurrentItem(
 function reviewSessionManagerUpdateSessionItems(
   state: ReviewSessionManagerState,
   mutator: (sessionItems: ReviewItem[]) => ReviewItem[],
-) {
+): ReviewSessionManagerState {
   const newSessionItems = mutator(state.sessionItems);
+
+  let newCurrentSessionItemIndex: number | null;
+  if (state.currentReviewAreaQueueIndex === null) {
+    newCurrentSessionItemIndex = null;
+  } else {
+    if (state.currentReviewAreaQueueIndex >= state.reviewAreaQueue.length) {
+      // If we're past the end of the queue, freeze the starburst wherever it stopped. Not a great solution.
+      newCurrentSessionItemIndex = state.currentSessionItemIndex;
+    } else {
+      newCurrentSessionItemIndex = findSessionItemIndex(
+        state.reviewAreaQueue[state.currentReviewAreaQueueIndex],
+        newSessionItems,
+      );
+    }
+  }
+
   return {
     ...state,
     sessionItems: newSessionItems,
-    currentSessionItemIndex: state.currentReviewAreaQueueIndex
-      ? findSessionItemIndex(
-          state.reviewAreaQueue[state.currentReviewAreaQueueIndex],
-          newSessionItems,
-        )
-      : null,
+    currentSessionItemIndex: newCurrentSessionItemIndex,
   };
 }
 
@@ -198,22 +210,32 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
     initialReviewSessionManagerState,
   );
 
-  const reviewSessionManagerActions: ReviewSessionManagerActions = {
-    markCurrentItem: (logEntries) =>
-      setState((state) =>
-        reviewSessionManagerMarkCurrentItem(state, logEntries),
-      ),
+  const reviewSessionManagerActions: ReviewSessionManagerActions = useMemo(
+    () => ({
+      markCurrentItem: (logEntries, continuation) => {
+        setState((state) =>
+          reviewSessionManagerMarkCurrentItem(state, logEntries),
+        );
+        // This is a pretty heinous abuse. Clients need to access the new state, so we invoke the reducer again but return its input (making it a no-op) to call the continuation with the correct context.
+        if (continuation) {
+          setState((newState) => {
+            continuation(newState);
+            return newState;
+          });
+        }
+      },
+      pushReviewAreaQueueItems: (queueItems) =>
+        setState((state) =>
+          reviewSessionManagerPushReviewAreaQueueItems(state, queueItems),
+        ),
 
-    pushReviewAreaQueueItems: (queueItems) =>
-      setState((state) =>
-        reviewSessionManagerPushReviewAreaQueueItems(state, queueItems),
-      ),
-
-    updateSessionItems: (mutator) =>
-      setState((state) =>
-        reviewSessionManagerUpdateSessionItems(state, mutator),
-      ),
-  };
+      updateSessionItems: (mutator) =>
+        setState((state) =>
+          reviewSessionManagerUpdateSessionItems(state, mutator),
+        ),
+    }),
+    [],
+  );
 
   return { ...reviewSessionManagerActions, ...state };
 }

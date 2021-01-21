@@ -1,5 +1,4 @@
 import type firebase from "firebase/app";
-import { MetabookUnsubscribe } from "metabook-client/dist/types/unsubscribe";
 import { Platform } from "react-native";
 import serviceConfig from "../../serviceConfig.mjs";
 import { AuthenticationClient, UserRecord } from "./authenticationClient";
@@ -65,7 +64,7 @@ export default class FirebaseAuthenticationClient
 
   subscribeToUserAuthState(
     callback: (userRecord: UserRecord | null) => void,
-  ): MetabookUnsubscribe {
+  ): () => void {
     let unsubscribe: (() => void) | null = null;
     this.auth().then((auth) => {
       unsubscribe = auth.onAuthStateChanged((newUser) => {

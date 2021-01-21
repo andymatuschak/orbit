@@ -17,9 +17,8 @@ import {
   repetitionActionLogType,
   WebPromptProvenance,
 } from "metabook-core";
-import { EmbeddedHostMetadata } from "metabook-embedded-support";
+import { EmbeddedHostMetadata, ReviewItem } from "metabook-embedded-support";
 import { ReviewAreaMarkingRecord } from "metabook-ui";
-import { ReviewItem } from "../model/reviewItem";
 import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
 
 type PromptActionLogEntry = { log: PromptActionLog; id: ActionLogID };
@@ -113,13 +112,13 @@ function createIngestLogEntries(
 }
 
 export function getActionsRecordForMarking({
-  marking,
+  markingRecord,
   reviewItem,
   hostMetadata,
   sessionStartTimestampMillis,
   markingTimestampMillis = Date.now(),
 }: {
-  marking: ReviewAreaMarkingRecord;
+  markingRecord: ReviewAreaMarkingRecord;
   reviewItem: ReviewItem;
   hostMetadata: EmbeddedHostMetadata;
   sessionStartTimestampMillis: number;
@@ -127,7 +126,7 @@ export function getActionsRecordForMarking({
 }): EmbeddedActionsRecord {
   const promptTask = getPromptTaskForID(reviewItem.promptTaskID);
   if (promptTask instanceof Error) {
-    throw Error;
+    throw promptTask;
   }
   const promptID = promptTask.promptID;
 
@@ -152,8 +151,8 @@ export function getActionsRecordForMarking({
     actionLogType: repetitionActionLogType,
     taskID: reviewItem.promptTaskID,
     parentActionLogIDs: repetitionParentActionLogIDs,
-    taskParameters: marking.reviewAreaItem.taskParameters,
-    outcome: marking.outcome,
+    taskParameters: markingRecord.reviewAreaItem.taskParameters,
+    outcome: markingRecord.outcome,
     context: `embedded/${sessionStartTimestampMillis}`,
     timestampMillis: markingTimestampMillis,
   };
@@ -166,8 +165,8 @@ export function getActionsRecordForMarking({
     logEntries: [...ingestLogEntries, repetitionLogEntry],
     promptsByID: { [promptID]: reviewItem.prompt },
     attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
-      marking.reviewAreaItem.prompt,
-      marking.reviewAreaItem.attachmentResolutionMap,
+      markingRecord.reviewAreaItem.prompt,
+      markingRecord.reviewAreaItem.attachmentResolutionMap,
     ),
   };
 }

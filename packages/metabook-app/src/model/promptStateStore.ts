@@ -183,12 +183,12 @@ export default class PromptStateStore {
   }
 
   async getAllPromptStates(
-    afterPromptTask: PromptTask | null,
+    afterPromptTaskID: PromptTaskID | null,
     limit?: number,
   ): Promise<Map<PromptTaskID, PromptState>> {
     const options: AbstractIteratorOptions = {};
-    if (afterPromptTask) {
-      options.gt = getIDForPromptTask(afterPromptTask);
+    if (afterPromptTaskID) {
+      options.gt = afterPromptTaskID;
     }
     return this.getPrompts(
       this.promptStateDB,

@@ -1,27 +1,42 @@
 import {
   ClozePromptTask,
   getClozeDeletionCount,
+  getIDForPromptSync,
+  getIDForPromptTask,
   getPromptTaskForID,
   ingestActionLogType,
   PromptRepetitionOutcome,
   RepetitionActionLog,
   repetitionActionLogType,
 } from "metabook-core";
+import { styles } from "metabook-ui";
 import { EmbeddedHostMetadata } from "metabook-embedded-support";
 import { testClozePrompt } from "metabook-sample-data";
-import { ReviewItemType } from "metabook-ui";
 import { getActionsRecordForMarking } from "./markingActions";
 
 test("clozes ingest all deletions", () => {
+  const promptParameters = { clozeIndex: 0 };
   const actionsRecord = getActionsRecordForMarking({
     hostMetadata: {} as EmbeddedHostMetadata,
-    marking: {
-      reviewItem: {
+    reviewItem: {
+      prompt: testClozePrompt,
+      promptParameters,
+      promptState: null,
+      attachmentResolutionMap: null,
+      promptTaskID: getIDForPromptTask({
+        promptID: getIDForPromptSync(testClozePrompt),
+        promptParameters,
+        promptType: testClozePrompt.promptType,
+      }),
+    },
+    markingRecord: {
+      reviewAreaItem: {
         prompt: testClozePrompt,
-        promptParameters: { clozeIndex: 0 },
+        promptParameters,
+        taskParameters: null,
         attachmentResolutionMap: null,
-        promptState: null,
-        reviewItemType: ReviewItemType,
+        colorPalette: styles.colors.palettes.red,
+        provenance: null,
       },
       outcome: PromptRepetitionOutcome.Remembered,
     },

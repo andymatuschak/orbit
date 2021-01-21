@@ -15,14 +15,15 @@ import {
   promptTypeSupportsRetry,
   repetitionActionLogType,
 } from "metabook-core";
+import { ReviewItem } from "metabook-embedded-support";
 import {
   ReviewArea,
   ReviewAreaItem,
+  ReviewAreaMarkingRecord,
   ReviewStarburst,
   styles,
   useWeakRef,
 } from "metabook-ui";
-import { layout } from "metabook-ui/dist/styles";
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -32,7 +33,6 @@ import {
   useCurrentUserRecord,
 } from "../authentication/authContext";
 import DatabaseManager from "../model/databaseManager";
-import { ReviewItem } from "../model/reviewItem";
 import { ReviewSessionContainer } from "../ReviewSessionContainer";
 import { useReviewSessionManager } from "../reviewSessionManager";
 import {
@@ -197,7 +197,7 @@ export default function ReviewSession() {
   const databaseManager = useDatabaseManager(userRecord);
   const initialQueue = useReviewItemQueue(databaseManager);
 
-  // When the initial queue becomes available, add it to the marking manager.
+  // When the initial queue becomes available, add it to the review session manager.
   const weakReviewSessionManager = useWeakRef(reviewSessionManager);
   useEffect(() => {
     if (initialQueue) {
@@ -219,6 +219,20 @@ export default function ReviewSession() {
   const currentColorPalette = reviewAreaQueue[currentReviewAreaQueueIndex]
     ? reviewAreaQueue[currentReviewAreaQueueIndex].colorPalette
     : styles.colors.palettes.red;
+
+  function onMark(markingRecord: ReviewAreaMarkingRecord) {
+    if (currentSessionItemIndex === null) {
+      throw new Error("onMark called with no valid current item index");
+    }
+    const logs = persistMarking({
+      databaseManager: databaseManager!,
+      reviewItem: sessionItems[currentSessionItemIndex],
+      outcome: markingRecord.outcome,
+      reviewSessionStartTimestampMillis:
+        reviewSessionStartTimestampMillis.current,
+    });
+    reviewSessionManager.markCurrentItem(logs);
+  }
 
   return (
     <ReviewSessionContainer
@@ -250,20 +264,11 @@ export default function ReviewSession() {
               <ReviewArea
                 items={reviewAreaQueue}
                 currentItemIndex={currentReviewAreaQueueIndex}
-                onMark={(markingRecord) => {
-                  const logs = persistMarking({
-                    databaseManager: databaseManager!,
-                    reviewItem: sessionItems[currentSessionItemIndex],
-                    outcome: markingRecord.outcome,
-                    reviewSessionStartTimestampMillis:
-                      reviewSessionStartTimestampMillis.current,
-                  });
-                  reviewSessionManager.markCurrentItem(logs);
-                }}
+                onMark={(markingRecord) => onMark(markingRecord)}
                 onPendingOutcomeChange={setPendingOutcome}
                 insetBottom={
                   // So long as the container isn't tall enough to be centered, we consume the bottom insets in the button bar's padding, extending the background down through the safe area.
-                  containerSize.height === layout.maximumContentHeight
+                  containerSize.height === styles.layout.maximumContentHeight
                     ? 0
                     : insets.bottom ?? 0
                 }

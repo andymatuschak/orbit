@@ -1,11 +1,18 @@
 import {
+  getNextTaskParameters,
   PromptRepetitionOutcome,
   promptTypeSupportsRetry,
 } from "metabook-core";
-import { EmbeddedHostState } from "metabook-embedded-support";
+import {
+  EmbeddedHostState,
+  EmbeddedScreenEventType,
+  EmbeddedScreenPromptStateUpdateEvent,
+  ReviewItem,
+} from "metabook-embedded-support";
 import {
   FadeView,
   ReviewArea,
+  ReviewAreaItem,
   ReviewAreaMarkingRecord,
   ReviewStarburst,
   ReviewStarburstItem,
@@ -17,10 +24,15 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Text, View } from "react-native";
 import { useAuthenticationClient } from "../authentication/authContext";
-import { ReviewItem } from "../model/reviewItem";
 import { ReviewSessionContainer } from "../ReviewSessionContainer";
+import {
+  ReviewSessionManagerState,
+  useReviewSessionManager,
+} from "../reviewSessionManager";
+import useByrefCallback from "../util/useByrefCallback";
 import EmbeddedBanner from "./EmbeddedBanner";
-import { useMarkingManager } from "./markingManager";
+import { getActionsRecordForMarking } from "./markingActions";
+import { useEmbeddedNetworkQueue } from "./embeddedNetworkQueue";
 import OnboardingModalWeb from "./OnboardingModal.web";
 import { TestModeBanner } from "./TestModeBanner";
 import {
@@ -29,6 +41,7 @@ import {
 } from "./useEmbeddedAuthenticationState";
 import { useEmbeddedHostState } from "./useEmbeddedHostState";
 import useResolvedReviewItems from "./useResolvedReviewItems";
+import { findItemsToRetry } from "./util/findItemsToRetry";
 import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
 import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL";
 
@@ -54,27 +67,31 @@ function getEndOfTaskLabel(
   }
 }
 
-interface EmbeddedScreenRendererProps {
+interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
   containerSize: { width: number; height: number };
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
-  localReviewItems: ReviewItem[];
-  currentItemIndex: number;
   authenticationState: EmbeddedAuthenticationState;
   colorPalette: styles.colors.ColorPalette;
   hostState: EmbeddedHostState | null;
   hasUncommittedActions: boolean;
   isDebug?: boolean;
+
+  // these review session manager fields can't be null
+  currentReviewAreaQueueIndex: number;
+  currentSessionItemIndex: number;
 }
 function EmbeddedScreenRenderer({
   onMark,
-  localReviewItems,
-  currentItemIndex,
   containerSize,
   authenticationState,
   colorPalette,
   hostState,
   hasUncommittedActions,
   isDebug,
+  currentSessionItemIndex,
+  currentReviewAreaQueueIndex,
+  sessionItems,
+  reviewAreaQueue,
 }: EmbeddedScreenRendererProps) {
   const [
     pendingOutcome,
@@ -119,7 +136,7 @@ function EmbeddedScreenRenderer({
     },
   });
 
-  if (currentItemIndex >= queueItems.length && !isComplete) {
+  if (currentReviewAreaQueueIndex >= reviewAreaQueue.length && !isComplete) {
     setTimeout(() => setComplete(true), 350);
     setTimeout(() => {
       // There are bugs with RNW's implementation of delay with spring animations, alas.
@@ -129,22 +146,17 @@ function EmbeddedScreenRenderer({
     }, 750);
   }
 
-  const starburstItems = useMemo(() => getStarburstItems(localReviewItems), [
-    localReviewItems,
+  const starburstItems = useMemo(() => getStarburstItems(sessionItems), [
+    sessionItems,
   ]);
-
-  const reviewItems = useMemo(
-    () => queueItems.map(({ reviewItem }) => reviewItem),
-    [queueItems],
-  );
 
   return (
     <>
       <EmbeddedBanner
         palette={colorPalette}
         isSignedIn={authenticationState.status === "signedIn"}
-        totalPromptCount={queueItems.length}
-        completePromptCount={currentItemIndex}
+        totalPromptCount={reviewAreaQueue.length}
+        completePromptCount={currentReviewAreaQueueIndex}
         sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
       />
       <Animated.View
@@ -155,15 +167,12 @@ function EmbeddedScreenRenderer({
           containerWidth={containerSize.width}
           containerHeight={containerSize.height}
           items={starburstItems}
-          currentItemIndex={
-            queueItems[Math.min(currentItemIndex, queueItems.length - 1)]
-              .starburstIndex
-          }
+          currentItemIndex={currentSessionItemIndex}
           pendingOutcome={pendingOutcome}
           position={isComplete ? "center" : "left"}
           showLegend={
-            currentItemIndex <
-            queueItems.length /* animate out the legend a little early */
+            currentReviewAreaQueueIndex <
+            reviewAreaQueue.length /* animate out the legend a little early */
           }
           colorMode={isComplete ? "accent" : "bicolor"}
           colorPalette={colorPalette}
@@ -208,8 +217,8 @@ function EmbeddedScreenRenderer({
       </Animated.View>
       {!isComplete && (
         <ReviewArea
-          items={reviewItems}
-          currentItemIndex={currentItemIndex}
+          items={reviewAreaQueue}
+          currentItemIndex={currentReviewAreaQueueIndex}
           onMark={onMark}
           onPendingOutcomeChange={(newPendingOutcome) => {
             setPendingOutcome(newPendingOutcome);
@@ -239,35 +248,46 @@ function EmbeddedScreenRenderer({
   );
 }
 
-function computeLocalQueueItems(
-  localReviewItems: ReviewItem[] | null,
-  hostState: EmbeddedHostState | null,
-): ReviewSessionQueueItem[] | null {
-  if (!localReviewItems) {
-    return null;
-  }
+function getSessionReviewItemsFromHostState(
+  hostState: EmbeddedHostState,
+): ReviewItem[] {
+  const itemLists = hostState.orderedScreenRecords.map(
+    (screenRecord) => screenRecord?.reviewItems ?? [],
+  );
+  return itemLists.reduce((whole, part) => whole.concat(part), []);
+}
 
-  // How far into the page-wide item set is this particular embedded screen?
-  // Sum over the size of the areas prior to this one.
-  let localPageItemOffset: number;
-  if (hostState) {
-    localPageItemOffset = hostState?.orderedScreenRecords
-      .slice(0, hostState?.receiverIndex)
-      .reduce(
-        (sum, screenState) => sum + (screenState?.reviewItems.length ?? 0),
-        0,
-      );
-  } else {
-    localPageItemOffset = 0;
-  }
-
-  return localReviewItems.map((reviewItem, index) => ({
-    reviewItem,
-    starburstIndex: index + localPageItemOffset,
+function getEmbeddedReviewAreaItemsFromReviewItems(
+  reviewItems: ReviewItem[],
+  colorPalette: styles.colors.ColorPalette,
+): ReviewAreaItem[] {
+  return reviewItems.map((item) => ({
+    prompt: item.prompt,
+    promptParameters: item.promptParameters,
+    taskParameters: getNextTaskParameters(
+      item.prompt,
+      item.promptState?.lastReviewTaskParameters ?? null,
+    ),
+    provenance: null, // We don't show provenance in the embedded UI.
+    attachmentResolutionMap: item.attachmentResolutionMap,
+    colorPalette,
   }));
 }
 
+function sendUpdatedReviewItemToHost(newReviewItem: ReviewItem) {
+  if (!newReviewItem.promptState) {
+    throw new Error("Review item should have prompt state after marking");
+  }
+  const event: EmbeddedScreenPromptStateUpdateEvent = {
+    type: EmbeddedScreenEventType.PromptStateUpdate,
+    promptTaskID: newReviewItem.promptTaskID,
+    promptState: newReviewItem.promptState,
+  };
+  parent.postMessage(event, "*");
+}
+
 export default function EmbeddedScreen() {
+  const reviewSessionStartTimestampMillis = useRef(Date.now());
   const configuration = useRef(
     getEmbeddedScreenConfigurationFromURL(window.location.href),
   ).current;
@@ -275,33 +295,120 @@ export default function EmbeddedScreen() {
     configuration,
   ]);
 
-  const hostState = useEmbeddedHostState();
-  const localReviewItems = useResolvedReviewItems(
-    configuration.embeddedItems,
-    colorPalette,
-  );
-  const localQueueItems = React.useMemo(
-    () => computeLocalQueueItems(localReviewItems, hostState),
-    [localReviewItems, hostState],
-  );
-
-  const authenticationClient = useAuthenticationClient();
   const authenticationState = useEmbeddedAuthenticationState(
-    authenticationClient,
+    useAuthenticationClient(),
   );
 
   const {
-    onMark,
+    currentSessionItemIndex,
+    currentReviewAreaQueueIndex,
+    sessionItems,
+    reviewAreaQueue,
+    ...reviewSessionManager
+  } = useReviewSessionManager();
+  const {
+    commitActionsRecord,
     hasUncommittedActions,
-    promptStates,
-    currentItemIndex,
-  } = useMarkingManager({
-    authenticationState: authenticationState,
-    configuration: configuration,
-    hostPromptStates: hostState?.promptStates ?? null,
-  });
+  } = useEmbeddedNetworkQueue(authenticationState.status);
 
-  if (localQueueItems === null || localReviewItems === null) {
+  const hostState = useEmbeddedHostState();
+  const embeddedReviewItems = useResolvedReviewItems(
+    configuration.embeddedItems,
+  );
+
+  // When the initial queue becomes available, add it to the review session manager.
+  const enqueueInitialItems = useByrefCallback(
+    (embeddedReviewItems: ReviewItem[]) => {
+      reviewSessionManager.updateSessionItems(() =>
+        hostState && hostState.orderedScreenRecords[hostState.receiverIndex]
+          ? getSessionReviewItemsFromHostState(hostState)
+          : embeddedReviewItems,
+      );
+      reviewSessionManager.pushReviewAreaQueueItems(
+        getEmbeddedReviewAreaItemsFromReviewItems(
+          embeddedReviewItems,
+          colorPalette,
+        ),
+      );
+    },
+  );
+  useEffect(() => {
+    if (embeddedReviewItems) {
+      enqueueInitialItems(embeddedReviewItems);
+    }
+  }, [embeddedReviewItems, enqueueInitialItems]);
+
+  // Update the review session manager when we get a new set of items from the host.
+  const updateSessionItemsFromHostState = useByrefCallback(
+    (hostState: EmbeddedHostState) => {
+      reviewSessionManager.updateSessionItems(() =>
+        getSessionReviewItemsFromHostState(hostState),
+      );
+    },
+  );
+  useEffect(() => {
+    if (hostState && hostState.orderedScreenRecords[hostState.receiverIndex]) {
+      updateSessionItemsFromHostState(hostState);
+    }
+  }, [hostState, updateSessionItemsFromHostState]);
+
+  function onMark(markingRecord: ReviewAreaMarkingRecord) {
+    if (currentSessionItemIndex === null) {
+      throw new Error("Marking without valid currentSessionItemIndex");
+    }
+    const actionsRecord = getActionsRecordForMarking({
+      hostMetadata: configuration.embeddedHostMetadata,
+      markingRecord: markingRecord,
+      reviewItem: sessionItems[currentSessionItemIndex],
+      sessionStartTimestampMillis: reviewSessionStartTimestampMillis.current,
+    });
+
+    // Update our local records for this item.
+    reviewSessionManager.markCurrentItem(
+      // When marking some embedded prompts (e.g. clozes), logs for multiple task IDs are generated, but the review session manager expects only to receive logs for the current item, so we filter others out.
+      actionsRecord.logEntries.filter(
+        ({ log }) =>
+          log.taskID === sessionItems[currentSessionItemIndex].promptTaskID,
+      ),
+      (newState) => {
+        // Propagate those updates to peer embedded screens.
+        sendUpdatedReviewItemToHost(
+          newState.sessionItems[currentSessionItemIndex],
+        );
+
+        // If we were at the end of our queue, refill it with items needing retry.
+        if (
+          newState.currentReviewAreaQueueIndex !== null &&
+          newState.currentReviewAreaQueueIndex >=
+            newState.reviewAreaQueue.length &&
+          hostState
+        ) {
+          const itemsToRetry = findItemsToRetry(
+            newState.sessionItems,
+            hostState,
+          );
+          console.log("Pushing items to retry", itemsToRetry);
+          reviewSessionManager.pushReviewAreaQueueItems(
+            getEmbeddedReviewAreaItemsFromReviewItems(
+              itemsToRetry,
+              colorPalette,
+            ),
+          );
+        }
+      },
+    );
+
+    // Send the update to the server.
+    if (!configuration.isDebug) {
+      commitActionsRecord(actionsRecord);
+    }
+  }
+
+  if (
+    embeddedReviewItems === null ||
+    currentReviewAreaQueueIndex === null ||
+    currentSessionItemIndex === null
+  ) {
     return null; // TODO show loading screen: we may be resolving attachments.
   }
 
@@ -310,11 +417,12 @@ export default function EmbeddedScreen() {
       <ReviewSessionContainer colorPalette={colorPalette}>
         {({ containerSize }) => (
           <EmbeddedScreenRenderer
+            currentSessionItemIndex={currentSessionItemIndex}
+            currentReviewAreaQueueIndex={currentReviewAreaQueueIndex}
+            reviewAreaQueue={reviewAreaQueue}
+            sessionItems={sessionItems}
             onMark={onMark}
-            currentItemIndex={currentItemIndex}
             containerSize={containerSize}
-            queueItems={localQueueItems}
-            localReviewItems={localReviewItems}
             authenticationState={authenticationState}
             colorPalette={colorPalette}
             hostState={hostState}
