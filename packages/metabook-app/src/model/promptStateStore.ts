@@ -43,6 +43,7 @@ export default class PromptStateStore {
   }
 
   private runOp<T>(op: () => Promise<T>): Promise<T> {
+    // TODO: serialize operations!
     return new Promise((resolve, reject) => {
       const runOp = () => {
         if (this.isClosed) {

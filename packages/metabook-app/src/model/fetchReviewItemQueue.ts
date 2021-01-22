@@ -12,6 +12,7 @@ import {
   reviewSession,
 } from "metabook-core";
 import { ReviewItem } from "metabook-embedded-support";
+import { Platform } from "react-native";
 
 import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";
 import DataRecordManager from "./dataRecordManager";
@@ -36,7 +37,8 @@ async function getInitialDuePromptStates(
   limit: number,
   hasFinishedInitialImport: boolean,
 ): Promise<Map<PromptTaskID, PromptState>> {
-  if (hasFinishedInitialImport) {
+  // HACK: Disabling local storage on web until I think through resilience more carefully.
+  if (hasFinishedInitialImport && Platform.OS !== "web") {
     console.log("Review queue: getting prompt data from cache");
     return promptStateStore.getDuePromptStates(dueBeforeTimestampMillis, limit);
   } else {

@@ -200,7 +200,7 @@ export default function ReviewSession() {
   // When the initial queue becomes available, add it to the review session manager.
   const weakReviewSessionManager = useWeakRef(reviewSessionManager);
   useEffect(() => {
-    if (initialQueue) {
+    if (initialQueue !== null) {
       weakReviewSessionManager.current.updateSessionItems(() => initialQueue);
       weakReviewSessionManager.current.pushReviewAreaQueueItems(
         getReviewAreaItemsFromReviewItems(initialQueue),
@@ -208,17 +208,16 @@ export default function ReviewSession() {
     }
   }, [initialQueue, weakReviewSessionManager]);
 
-  if (
-    currentSessionItemIndex === null ||
-    currentReviewAreaQueueIndex === null
-  ) {
+  if (initialQueue === null) {
     // TODO: display loading screen...
     return null;
   }
 
-  const currentColorPalette = reviewAreaQueue[currentReviewAreaQueueIndex]
-    ? reviewAreaQueue[currentReviewAreaQueueIndex].colorPalette
-    : styles.colors.palettes.red;
+  const currentColorPalette =
+    currentReviewAreaQueueIndex !== null &&
+    reviewAreaQueue[currentReviewAreaQueueIndex]
+      ? reviewAreaQueue[currentReviewAreaQueueIndex].colorPalette
+      : styles.colors.palettes.red;
 
   function onMark(markingRecord: ReviewAreaMarkingRecord) {
     if (currentSessionItemIndex === null) {
@@ -240,7 +239,11 @@ export default function ReviewSession() {
       colorPalette={currentColorPalette}
     >
       {({ containerSize }) => {
-        if (currentReviewAreaQueueIndex < reviewAreaQueue.length) {
+        if (
+          currentReviewAreaQueueIndex !== null &&
+          currentSessionItemIndex !== null &&
+          currentReviewAreaQueueIndex < reviewAreaQueue.length
+        ) {
           return (
             <>
               <ReviewStarburst
