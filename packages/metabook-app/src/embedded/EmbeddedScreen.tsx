@@ -3,12 +3,7 @@ import {
   PromptRepetitionOutcome,
   promptTypeSupportsRetry,
 } from "metabook-core";
-import {
-  EmbeddedHostState,
-  EmbeddedScreenEventType,
-  EmbeddedScreenPromptStateUpdateEvent,
-  ReviewItem,
-} from "metabook-embedded-support";
+import { EmbeddedHostState, ReviewItem } from "metabook-embedded-support";
 import {
   FadeView,
   ReviewArea,
@@ -23,6 +18,7 @@ import {
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Text, View } from "react-native";
+
 import { useAuthenticationClient } from "../authentication/authContext";
 import { ReviewSessionContainer } from "../ReviewSessionContainer";
 import {
@@ -31,8 +27,9 @@ import {
 } from "../reviewSessionManager";
 import useByrefCallback from "../util/useByrefCallback";
 import EmbeddedBanner from "./EmbeddedBanner";
-import { getActionsRecordForMarking } from "./markingActions";
 import { useEmbeddedNetworkQueue } from "./embeddedNetworkQueue";
+import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost";
+import { getActionsRecordForMarking } from "./markingActions";
 import OnboardingModalWeb from "./OnboardingModal.web";
 import { TestModeBanner } from "./TestModeBanner";
 import {
@@ -40,6 +37,7 @@ import {
   useEmbeddedAuthenticationState,
 } from "./useEmbeddedAuthenticationState";
 import { useEmbeddedHostState } from "./useEmbeddedHostState";
+import { useInitialPromptStates } from "./useInitialPromptStates";
 import useResolvedReviewItems from "./useResolvedReviewItems";
 import { findItemsToRetry } from "./util/findItemsToRetry";
 import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
@@ -79,6 +77,8 @@ interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
   // these review session manager fields can't be null
   currentReviewAreaQueueIndex: number;
   currentSessionItemIndex: number;
+
+  wasInitiallyComplete: boolean;
 }
 function EmbeddedScreenRenderer({
   onMark,
@@ -92,6 +92,7 @@ function EmbeddedScreenRenderer({
   currentReviewAreaQueueIndex,
   sessionItems,
   reviewAreaQueue,
+  wasInitiallyComplete,
 }: EmbeddedScreenRendererProps) {
   const [
     pendingOutcome,
@@ -109,6 +110,12 @@ function EmbeddedScreenRenderer({
   }, [authenticationState]);
   const { height: interiorHeight, onLayout: onInteriorLayout } = useLayout();
   const { height: modalHeight, onLayout: onModalLayout } = useLayout();
+
+  useEffect(() => {
+    if (wasInitiallyComplete) {
+      setComplete(true);
+    }
+  }, [wasInitiallyComplete]);
 
   const interiorY = useTransitioningValue({
     value: isComplete
@@ -157,6 +164,7 @@ function EmbeddedScreenRenderer({
         isSignedIn={authenticationState.status === "signedIn"}
         totalPromptCount={reviewAreaQueue.length}
         completePromptCount={currentReviewAreaQueueIndex}
+        wasInitiallyComplete={wasInitiallyComplete}
         sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
       />
       <Animated.View
@@ -171,8 +179,8 @@ function EmbeddedScreenRenderer({
           pendingOutcome={pendingOutcome}
           position={isComplete ? "center" : "left"}
           showLegend={
-            currentReviewAreaQueueIndex <
-            reviewAreaQueue.length /* animate out the legend a little early */
+            currentReviewAreaQueueIndex < reviewAreaQueue.length &&
+            !wasInitiallyComplete
           }
           colorMode={isComplete ? "accent" : "bicolor"}
           colorPalette={colorPalette}
@@ -196,7 +204,9 @@ function EmbeddedScreenRenderer({
           </Text>
         </FadeView>
         <FadeView
-          isVisible={isComplete && !hasUncommittedActions}
+          isVisible={
+            isComplete && !wasInitiallyComplete && !hasUncommittedActions
+          }
           delayMillis={750}
           removeFromLayoutWhenHidden
         >
@@ -274,18 +284,6 @@ function getEmbeddedReviewAreaItemsFromReviewItems(
   }));
 }
 
-function sendUpdatedReviewItemToHost(newReviewItem: ReviewItem) {
-  if (!newReviewItem.promptState) {
-    throw new Error("Review item should have prompt state after marking");
-  }
-  const event: EmbeddedScreenPromptStateUpdateEvent = {
-    type: EmbeddedScreenEventType.PromptStateUpdate,
-    promptTaskID: newReviewItem.promptTaskID,
-    promptState: newReviewItem.promptState,
-  };
-  parent.postMessage(event, "*");
-}
-
 export default function EmbeddedScreen() {
   const reviewSessionStartTimestampMillis = useRef(Date.now());
   const configuration = useRef(
@@ -295,8 +293,9 @@ export default function EmbeddedScreen() {
     configuration,
   ]);
 
+  const authenticationClient = useAuthenticationClient();
   const authenticationState = useEmbeddedAuthenticationState(
-    useAuthenticationClient(),
+    authenticationClient,
   );
 
   const {
@@ -352,6 +351,38 @@ export default function EmbeddedScreen() {
     }
   }, [hostState, updateSessionItemsFromHostState]);
 
+  const initialPromptStates = useInitialPromptStates(
+    authenticationClient,
+    authenticationState,
+    embeddedReviewItems,
+  );
+  const [wasInitiallyComplete, setWasInitiallyComplete] = useState(false);
+  const updateSessionItemsFromInitialPromptStates = useByrefCallback(() => {
+    if (initialPromptStates && embeddedReviewItems) {
+      // Potential races abound here, but in practice I don't think they actually matter.
+      reviewSessionManager.updateSessionItems((sessionItems) =>
+        sessionItems.map((item) => {
+          const initialPromptState = initialPromptStates.get(item.promptTaskID);
+          return initialPromptState
+            ? {
+                ...item,
+                promptState: initialPromptState,
+              }
+            : item;
+        }),
+      );
+
+      setWasInitiallyComplete(
+        embeddedReviewItems.every((item) =>
+          initialPromptStates.has(item.promptTaskID),
+        ),
+      );
+    }
+  });
+  useEffect(() => {
+    updateSessionItemsFromInitialPromptStates();
+  }, [initialPromptStates, updateSessionItemsFromInitialPromptStates]);
+
   function onMark(markingRecord: ReviewAreaMarkingRecord) {
     if (currentSessionItemIndex === null) {
       throw new Error("Marking without valid currentSessionItemIndex");
@@ -372,8 +403,13 @@ export default function EmbeddedScreen() {
       ),
       (newState) => {
         // Propagate those updates to peer embedded screens.
+        const updatedReviewItem =
+          newState.sessionItems[currentSessionItemIndex];
+        if (!updatedReviewItem.promptState)
+          throw new Error("Item should have prompt state after marking");
         sendUpdatedReviewItemToHost(
-          newState.sessionItems[currentSessionItemIndex],
+          updatedReviewItem.promptTaskID,
+          updatedReviewItem.promptState,
         );
 
         // If we were at the end of our queue, refill it with items needing retry.
@@ -428,6 +464,7 @@ export default function EmbeddedScreen() {
             hostState={hostState}
             hasUncommittedActions={hasUncommittedActions}
             isDebug={configuration.isDebug}
+            wasInitiallyComplete={wasInitiallyComplete}
           />
         )}
       </ReviewSessionContainer>
