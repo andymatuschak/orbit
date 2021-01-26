@@ -1,8 +1,10 @@
 import { Buffer } from "buffer";
 import {
   AttachmentID,
+  AttachmentIDReference,
   AttachmentMimeType,
   getAttachmentMimeTypeFromResourceMetadata,
+  getAttachmentTypeForAttachmentMimeType,
   getIDForAttachment,
 } from "metabook-core";
 import {
@@ -12,34 +14,39 @@ import {
   storageBucketName,
 } from "metabook-firebase-support";
 import fetch, * as Fetch from "node-fetch";
-import { getApp } from "./firebase";
+import { getApp, getDatabase } from "./firebase";
+
+const attachmentSizeLimitBytes = 10 * 1024 * 1024;
 
 function getAttachmentBucket() {
   return getApp().storage().bucket(storageBucketName);
 }
 
-export function _validateAttachmentDataFromReadStream(
+export function _computeAttachmentIDFromReadStream(
   readStream: NodeJS.ReadableStream,
-  claimedAttachmentID: AttachmentID,
-): Promise<void> {
+): Promise<AttachmentID> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     readStream.on("error", reject);
     readStream.on("end", async () => {
       const buffer = Buffer.concat(chunks);
       const computedAttachmentID = await getIDForAttachment(buffer);
-      if (computedAttachmentID === claimedAttachmentID) {
-        resolve();
-      } else {
-        reject(
-          new Error(
-            `Attachment does not match claimed hash ${claimedAttachmentID}: make sure its contents do not change over time`,
-          ),
-        );
-      }
+      resolve(computedAttachmentID);
     });
     readStream.on("data", (chunk: Buffer) => chunks.push(chunk));
   });
+}
+
+export async function _validateAttachmentDataFromReadStream(
+  readStream: NodeJS.ReadableStream,
+  claimedAttachmentID: AttachmentID,
+): Promise<void> {
+  const attachmentID = await _computeAttachmentIDFromReadStream(readStream);
+  if (claimedAttachmentID !== attachmentID) {
+    throw new Error(
+      `Attachment does not match claimed hash ${claimedAttachmentID}: make sure its contents do not change over time`,
+    );
+  }
 }
 
 export function _getAttachmentIDForStoredObjectName(objectName: string) {
@@ -95,22 +102,6 @@ function _getFileReferenceForAttachmentID(attachmentID: AttachmentID) {
   );
 }
 
-async function _storeFetchedAttachment(
-  responseBody: NodeJS.ReadableStream,
-  contentType: AttachmentMimeType,
-  attachmentID: AttachmentID,
-) {
-  const file = _getFileReferenceForAttachmentID(attachmentID);
-  const writeStream = file.createWriteStream({
-    contentType,
-  });
-  return new Promise((resolve, reject) => {
-    writeStream.on("finish", resolve);
-    writeStream.on("error", reject);
-    responseBody.pipe(writeStream);
-  });
-}
-
 export function _validateAttachmentResponse(
   response: Fetch.Response,
   url: string,
@@ -134,8 +125,7 @@ export function _validateAttachmentResponse(
 
 async function _storeAttachmentFromURL(
   url: string,
-  attachmentID: AttachmentID,
-) {
+): Promise<AttachmentIDReference> {
   const response = await fetch(url);
 
   const attachmentMimeType = _validateAttachmentResponse(response, url);
@@ -143,25 +133,44 @@ async function _storeAttachmentFromURL(
     throw attachmentMimeType;
   }
 
-  // We'll validate the attachment before storing it, even though we have a storage trigger which validates attachments. This way we can return a transacational result to the client and tell them whether everything's OK immediately.
-  const responseForStoring = response.clone();
-  await _validateAttachmentDataFromReadStream(response.body, attachmentID);
-  await _storeFetchedAttachment(
-    responseForStoring.body,
-    attachmentMimeType,
-    attachmentID,
-  );
-  console.log(`Stored attachment ${attachmentID}`);
+  const responseBuffer = await response.buffer();
+  if (responseBuffer.length > attachmentSizeLimitBytes) {
+    throw new Error(
+      `Attachment at ${url} is too large: ${responseBuffer.length}. Limit is ${attachmentSizeLimitBytes}`,
+    );
+  }
+
+  const attachmentID = await getIDForAttachment(responseBuffer);
+  await _getFileReferenceForAttachmentID(attachmentID).save(responseBuffer, {
+    contentType: attachmentMimeType,
+  });
+
+  return {
+    id: attachmentID,
+    byteLength: responseBuffer.length,
+    type: getAttachmentTypeForAttachmentMimeType(attachmentMimeType),
+  };
 }
 
-export async function storeAttachmentIfNecessary(
-  attachmentID: AttachmentID,
+export async function storeAttachmentAtURLIfNecessary(
   url: string,
-) {
-  const file = _getFileReferenceForAttachmentID(attachmentID);
-  const attachmentExists = (await file.exists())[0];
-  if (!attachmentExists) {
-    console.log(`Storing missing attachment ${attachmentID} at ${url}`);
-    return await _storeAttachmentFromURL(url, attachmentID);
+): Promise<AttachmentIDReference> {
+  const attachmentLookupRef = getDatabase().collection("attachmentsIDsByURL");
+
+  const records = await attachmentLookupRef.where("url", "==", url).get();
+  if (records.size === 1) {
+    return records.docs[0].data().idReference;
+  } else if (records.size === 0) {
+    const idReference = await _storeAttachmentFromURL(url);
+    await attachmentLookupRef.add({ url, idReference, createdAt: Date.now() });
+    return idReference;
+  } else {
+    throw new Error(
+      `Multiple attachment lookup records matching ${url}: ${JSON.stringify(
+        records.docs,
+        null,
+        "\t",
+      )}`,
+    );
   }
 }

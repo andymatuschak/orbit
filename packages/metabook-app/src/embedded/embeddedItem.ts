@@ -118,8 +118,9 @@ export function getReviewItemFromEmbeddedItem({
       promptID: getIDForPromptSync(prompt),
       promptParameters,
       promptType: prompt.promptType,
+      // Casting is because TypeScript can't prove that the sibling types are all correctly associated. This is really unfortunate: it means if we add a field to ReviewItem, this won't create an error.
     } as PromptTask),
-  };
+  } as ReviewItem;
 }
 
 export function getAttachmentURLsInEmbeddedItem(

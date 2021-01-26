@@ -21,12 +21,13 @@ function sendResolvedReviewItemsToHost(reviewItems: ReviewItem[]) {
 // Extracts prompts embedded in the URL and resolves attachments as necessary
 export default function useResolvedReviewItems(
   embeddedItems: EmbeddedItem[],
+  referrer: string,
 ): ReviewItem[] | null {
   const [reviewItems, setReviewItems] = React.useState<ReviewItem[] | null>(
     null,
   );
   React.useEffect(() => {
-    resolveReviewItems(embeddedItems).then((reviewItems) => {
+    resolveReviewItems(embeddedItems, referrer).then((reviewItems) => {
       setReviewItems(reviewItems);
       sendResolvedReviewItemsToHost(reviewItems);
     });

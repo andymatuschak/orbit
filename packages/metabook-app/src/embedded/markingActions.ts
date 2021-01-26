@@ -19,14 +19,12 @@ import {
 } from "metabook-core";
 import { EmbeddedHostMetadata, ReviewItem } from "metabook-embedded-support";
 import { ReviewAreaMarkingRecord } from "metabook-ui";
-import getAttachmentURLsByIDInReviewItem from "./util/getAttachmentURLsByIDInReviewItem";
 
 type PromptActionLogEntry = { log: PromptActionLog; id: ActionLogID };
 
 export interface EmbeddedActionsRecord {
   logEntries: PromptActionLogEntry[];
   promptsByID: { [key: string]: Prompt };
-  attachmentURLsByID: { [key: string]: string };
 }
 
 function createProvenance(
@@ -164,10 +162,6 @@ export function getActionsRecordForMarking({
   return {
     logEntries: [...ingestLogEntries, repetitionLogEntry],
     promptsByID: { [promptID]: reviewItem.prompt },
-    attachmentURLsByID: getAttachmentURLsByIDInReviewItem(
-      markingRecord.reviewAreaItem.prompt,
-      markingRecord.reviewAreaItem.attachmentResolutionMap,
-    ),
   };
 }
 
@@ -178,6 +172,5 @@ export function mergePendingActionsRecords(
   return {
     logEntries: [...a.logEntries, ...b.logEntries],
     promptsByID: { ...a.promptsByID, ...b.promptsByID },
-    attachmentURLsByID: { ...a.attachmentURLsByID, ...b.attachmentURLsByID },
   };
 }

@@ -1,23 +1,11 @@
 import * as functions from "firebase-functions";
-import { ActionLog, AttachmentID, Prompt } from "metabook-core";
+import { ActionLog, Prompt } from "metabook-core";
 import * as backend from "../backend";
 import { sharedLoggingService } from "../logging";
 
 interface RecordEmbeddedActionsArguments {
   logs: ActionLog[];
   promptsByID: { [key: string]: Prompt };
-  attachmentURLsByID: { [key: string]: string };
-}
-
-async function storeAttachments(attachmentURLsByID: { [key: string]: string }) {
-  await Promise.all(
-    Object.entries(attachmentURLsByID).map(([attachmentID, url]) =>
-      backend.attachments.storeAttachmentIfNecessary(
-        attachmentID as AttachmentID,
-        url,
-      ),
-    ),
-  );
 }
 
 async function storePrompts(promptsByID: {
@@ -64,9 +52,6 @@ export default functions.https.onCall(async function (
 
   try {
     console.log("Recording embedded actions", args);
-
-    // Store attachments as needed
-    await storeAttachments(args.attachmentURLsByID);
 
     // Store prompts as needed
     await storePrompts(args.promptsByID);

@@ -1,72 +1,74 @@
-import {
-  AttachmentIDReference,
-  getAttachmentMimeTypeFromResourceMetadata,
-  getAttachmentTypeForAttachmentMimeType,
-  getIDForAttachment,
-} from "metabook-core";
+import { AttachmentIDReference } from "metabook-core";
 import { ReviewItem } from "metabook-embedded-support";
 import { AttachmentResolutionMap } from "metabook-ui";
 import { EmbeddedItem } from "../../../embedded-support/src/embeddedScreenInterface";
+import serviceConfig from "../../serviceConfig.mjs";
 import {
   getAttachmentURLsInEmbeddedItem,
   getReviewItemFromEmbeddedItem,
 } from "./embeddedItem";
 
-async function fetchAttachment(url: string): Promise<AttachmentIDReference> {
-  // TODO: move all this to a server call
-  const response = await fetch(url);
-  const responseIsOK = response.status >= 200 && response.status < 300;
-  if (!responseIsOK) {
+// TODO: extract, generalize
+async function fetchAttachmentResolution(
+  urls: string[],
+  referrer: string,
+): Promise<{
+  [key: string]:
+    | { idReference: AttachmentIDReference }
+    | { error: { name: string; message: string } };
+}> {
+  const attachmentURLParameterSegment = urls
+    .map((url) => `attachmentURLs=${encodeURIComponent(url)}`)
+    .join("&");
+
+  const url = `${
+    serviceConfig.httpsAPIBaseURLString
+  }/internal/resolveAttachmentIDs?${attachmentURLParameterSegment}&referrer=${encodeURIComponent(
+    referrer,
+  )}`;
+  const fetchResult = await fetch(url);
+  if (!fetchResult.ok) {
     throw new Error(
-      `Error retrieving attachment at ${url}: ${response.status} ${response.type}`,
+      `Failed to resolve attachment URLs with status code ${
+        fetchResult.status
+      }: ${await fetchResult.text()}`,
     );
   }
 
-  const contentType = response.headers.get("Content-Type");
-  const attachmentMimeType = getAttachmentMimeTypeFromResourceMetadata(
-    contentType,
-    url,
-  );
-  if (!attachmentMimeType) {
-    throw new Error(
-      `Attachment at ${url} has unsupported MIME type ${contentType} and unsupported extension`,
-    );
-  }
-
-  const attachmentData = await response.arrayBuffer();
-  const attachmentID = await getIDForAttachment(new Uint8Array(attachmentData));
-
-  return {
-    id: attachmentID,
-    byteLength: attachmentData.byteLength,
-    type: getAttachmentTypeForAttachmentMimeType(attachmentMimeType),
-  };
+  return await fetchResult.json();
 }
 
 async function resolveAttachments(
   embeddedItems: EmbeddedItem[],
+  referrer: string,
 ): Promise<Map<string, AttachmentIDReference>> {
   const attachmentURLsToAttachmentIDReferences: Map<
     string,
     AttachmentIDReference
   > = new Map();
 
-  const promises: Promise<unknown>[] = [];
+  const urls: Set<string> = new Set();
   for (const item of embeddedItems) {
-    const urls = getAttachmentURLsInEmbeddedItem(item);
-    promises.push(
-      ...urls.map(async (url) => {
-        try {
-          const idReference = await fetchAttachment(url);
-          attachmentURLsToAttachmentIDReferences.set(url, idReference);
-        } catch (error) {
-          console.error(error);
-        }
-      }),
-    );
+    getAttachmentURLsInEmbeddedItem(item).forEach((url) => urls.add(url));
   }
 
-  await Promise.all(promises);
+  if (urls.size > 0) {
+    const resolvedReferences = await fetchAttachmentResolution(
+      [...urls],
+      referrer,
+    );
+
+    for (const url of Object.keys(resolvedReferences)) {
+      const result = resolvedReferences[url];
+      if ("error" in result) {
+        console.error(
+          `Couldn't resolve attachment at ${url}: ${result.error.message}`,
+        );
+      } else {
+        attachmentURLsToAttachmentIDReferences.set(url, result.idReference);
+      }
+    }
+  }
 
   return attachmentURLsToAttachmentIDReferences;
 }
@@ -74,9 +76,11 @@ async function resolveAttachments(
 // Resolve attachments (specified by URL) to their immutable IDs.
 export async function resolveReviewItems(
   embeddedItems: EmbeddedItem[],
+  referrer: string,
 ): Promise<ReviewItem[]> {
   const attachmentURLsToAttachmentIDReferences = await resolveAttachments(
     embeddedItems,
+    referrer,
   );
 
   const attachmentResolutionMap: AttachmentResolutionMap = new Map(
@@ -97,7 +101,7 @@ export async function resolveReviewItems(
     });
 
     if (reviewItem instanceof Error) {
-      console.error(`Skipping review item: error`);
+      console.error(`Skipping review item: ${reviewItem}`);
     } else {
       reviewItems.push(reviewItem);
     }

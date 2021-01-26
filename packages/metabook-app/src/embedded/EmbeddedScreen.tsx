@@ -313,6 +313,7 @@ export default function EmbeddedScreen() {
   const hostState = useEmbeddedHostState();
   const embeddedReviewItems = useResolvedReviewItems(
     configuration.embeddedItems,
+    document.referrer,
   );
 
   // When the initial queue becomes available, add it to the review session manager.

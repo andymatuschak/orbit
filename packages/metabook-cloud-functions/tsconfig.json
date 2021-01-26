@@ -3,8 +3,9 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": ["dom", "es6"],
-    "types": ["jest", "node"]
+    "lib": ["dom", "es2019"],
+    "types": ["jest", "node"],
+    "target": "es2019"
   },
   "include": ["src/**/*"]
 }

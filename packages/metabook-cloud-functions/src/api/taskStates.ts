@@ -3,19 +3,17 @@ import { PromptState, PromptTaskID } from "metabook-core";
 import { getPromptStateFromPromptStateCache } from "metabook-firebase-support";
 import * as backend from "../backend";
 import { authorizeRequest } from "../util/authorizeRequest";
+import { extractArrayQueryParameter } from "./util/extractArrayQueryParameter";
 
 export async function getTaskStates(
   request: express.Request,
   response: express.Response,
 ) {
   authorizeRequest(request, response, async (userID) => {
-    const taskIDQueryParameter = request.query["taskID"];
-    let taskIDs: PromptTaskID[];
-    if (typeof taskIDQueryParameter === "string") {
-      taskIDs = [taskIDQueryParameter] as PromptTaskID[];
-    } else if (taskIDQueryParameter && Array.isArray(taskIDQueryParameter)) {
-      taskIDs = taskIDQueryParameter as PromptTaskID[];
-    } else {
+    const taskIDs = extractArrayQueryParameter(request, "taskID") as
+      | PromptTaskID[]
+      | null;
+    if (taskIDs === null) {
       response.status(400).send("Missing taskID query parameter");
       return;
     }

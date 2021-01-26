@@ -4,6 +4,7 @@ import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode";
 import { createLoginToken } from "./api/internal/auth/createLoginToken";
 import { refreshSessionCookie } from "./api/internal/auth/refreshSessionCookie";
 import { recordPageView } from "./api/internal/recordPageView";
+import { resolveAttachmentIDs } from "./api/internal/resolveAttachmentIDs";
 import { getTaskStates } from "./api/taskStates";
 import corsHandler from "./api/util/corsHandler";
 
@@ -37,6 +38,8 @@ export function createAPIApp(): express.Application {
   app.get("/internal/auth/refreshSessionCookie", refreshSessionCookie);
 
   app.post("/internal/recordPageView", recordPageView);
+
+  app.get("/internal/resolveAttachmentIDs", resolveAttachmentIDs);
 
   return app;
 }

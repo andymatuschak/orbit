@@ -13,7 +13,6 @@ async function submitPendingActionsRecord(
   return getFirebaseFunctions().httpsCallable("recordEmbeddedActions")({
     logs: actionsRecord.logEntries.map(({ log }) => log),
     promptsByID: actionsRecord.promptsByID,
-    attachmentURLsByID: actionsRecord.attachmentURLsByID,
   });
 }
 
