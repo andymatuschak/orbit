@@ -12,11 +12,17 @@ import { AuthenticationClient } from "../authentication";
 import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost";
 import { EmbeddedAuthenticationState } from "./useEmbeddedAuthenticationState";
 
-export function useInitialPromptStates(
-  authenticationClient: AuthenticationClient,
-  authenticationState: EmbeddedAuthenticationState,
-  embeddedReviewItems: ReviewItem[] | null,
-): Map<PromptTaskID, PromptState> | null {
+export function useInitialPromptStates({
+  authenticationClient,
+  authenticationState,
+  embeddedReviewItems,
+  shouldRequestInitialPrompts,
+}: {
+  authenticationClient: AuthenticationClient;
+  authenticationState: EmbeddedAuthenticationState;
+  embeddedReviewItems: ReviewItem[] | null;
+  shouldRequestInitialPrompts: boolean;
+}): Map<PromptTaskID, PromptState> | null {
   const [initialPromptStates, setInitialPromptStates] = useState<Map<
     PromptTaskID,
     PromptState
@@ -27,7 +33,8 @@ export function useInitialPromptStates(
     if (
       status === "signedIn" &&
       initialPromptStates === null &&
-      embeddedReviewItems
+      embeddedReviewItems &&
+      shouldRequestInitialPrompts
     ) {
       authenticationClient.getCurrentIDToken().then(async (idToken) => {
         // Get all the task IDs.

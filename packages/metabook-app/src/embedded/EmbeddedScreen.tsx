@@ -352,11 +352,12 @@ export default function EmbeddedScreen() {
     }
   }, [hostState, updateSessionItemsFromHostState]);
 
-  const initialPromptStates = useInitialPromptStates(
-    authenticationClient,
-    authenticationState,
-    embeddedReviewItems,
-  );
+  const initialPromptStates = useInitialPromptStates({
+    authenticationClient: authenticationClient,
+    authenticationState: authenticationState,
+    embeddedReviewItems: embeddedReviewItems,
+    shouldRequestInitialPrompts: currentReviewAreaQueueIndex === 0,
+  });
   const [wasInitiallyComplete, setWasInitiallyComplete] = useState(false);
   const updateSessionItemsFromInitialPromptStates = useByrefCallback(() => {
     if (initialPromptStates && embeddedReviewItems) {
