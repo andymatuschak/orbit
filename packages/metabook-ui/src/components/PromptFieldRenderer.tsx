@@ -26,7 +26,7 @@ import {
 import Markdown, * as MarkdownDisplay from "react-native-markdown-display";
 import { AttachmentResolutionMap } from "../reviewAreaItem";
 
-import { colors, type } from "../styles";
+import { colors, type, layout } from "../styles";
 import { getVariantStyles } from "../styles/type";
 import usePrevious from "./hooks/usePrevious";
 import useWeakRef from "./hooks/useWeakRef";
@@ -219,6 +219,40 @@ const getMarkdownRenderRules = (
   math_block: renderBlockMath,
 });
 
+function useImageSize(
+  imageURL: string | null,
+  containerSize: { width: number; height: number } | null,
+): { width: number; height: number } | null {
+  const [size, setSize] = useState<{ width: number; height: number } | null>(
+    null,
+  );
+  useEffect(() => {
+    setSize(null);
+    if (imageURL) {
+      Image.getSize(
+        imageURL,
+        (width, height) => setSize({ width, height }),
+        (error) => {
+          console.error(`Couldn't get size for image at ${imageURL}: ${error}`);
+        },
+      );
+    }
+  }, [imageURL]);
+
+  return useMemo(() => {
+    if (containerSize && size !== null) {
+      const ratio = size.width / size.height;
+      const height = Math.min(
+        containerSize.width / ratio,
+        0.8 * containerSize.height,
+      );
+      return { width: height * ratio, height };
+    } else {
+      return null;
+    }
+  }, [containerSize, size]);
+}
+
 export default React.memo(function PromptFieldRenderer(props: {
   promptField: PromptField;
   attachmentResolutionMap: AttachmentResolutionMap | null;
@@ -261,7 +295,10 @@ export default React.memo(function PromptFieldRenderer(props: {
   );
   const [isLayoutReady, setLayoutReady] = useState(false);
   const [markdownHeight, setMarkdownHeight] = useState<number | null>(null);
-  const [containerHeight, setContainerHeight] = useState<number | null>(null);
+  const [containerSize, setContainerSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const previousPromptField = usePrevious(promptField);
   // Reset shrink factor when prompt field changes.
   if (previousPromptField && !isEqual(promptField, previousPromptField)) {
@@ -280,16 +317,20 @@ export default React.memo(function PromptFieldRenderer(props: {
     );
   }, [effectiveLargestSizeVariantIndex]);
 
+  const imageSize = useImageSize(imageURL, containerSize);
   useLayoutEffect(() => {
     if (
       markdownHeight !== null &&
-      containerHeight !== null &&
-      containerHeight > 0 // When the node is removed from the display list, its layout is reset to 0.
+      containerSize !== null &&
+      !(imageURL && !imageSize) && // i.e. wait until image is sized if there is one
+      containerSize.height > 0 // When the node is removed from the display list, its layout is reset to 0.
     ) {
       setSizeVariantIndex((sizeVariantIndex) => {
+        const renderedHeight =
+          markdownHeight + (imageSize ? imageSize.height + layout.gridUnit : 0);
         const sizeVariant = sizeVariants[sizeVariantIndex]!;
         if (
-          (markdownHeight > containerHeight ||
+          (renderedHeight > containerSize.height ||
             (sizeVariant.maximumLineCount &&
               markdownHeight / sizeVariant.style.lineHeight! >
                 sizeVariant.maximumLineCount)) &&
@@ -304,7 +345,7 @@ export default React.memo(function PromptFieldRenderer(props: {
         }
       });
     }
-  }, [markdownHeight, containerHeight, smallestSizeVariantIndex]);
+  }, [markdownHeight, containerSize, imageURL, imageSize, smallestSizeVariantIndex]);
 
   const sizeVariantRef = useWeakRef(sizeVariantIndex);
   useEffect(() => {
@@ -319,13 +360,18 @@ export default React.memo(function PromptFieldRenderer(props: {
       style={{
         flex: 1,
         opacity: isLayoutReady ? 1 : 0,
-        overflow: isLayoutReady ? "visible" : "hidden",
+        overflow: isLayoutReady ? "hidden" : "hidden",
+        justifyContent: "space-between",
       }}
       onLayout={useCallback((event) => {
-        setContainerHeight(event.nativeEvent.layout.height);
+        setContainerSize(event.nativeEvent.layout);
       }, [])}
     >
-      <View style={{ height: isLayoutReady ? undefined : 10000 }}>
+      <View
+        style={{
+          height: isLayoutReady ? undefined : 10000,
+        }}
+      >
         <Markdown
           rules={useMemo(
             () =>
@@ -348,14 +394,10 @@ export default React.memo(function PromptFieldRenderer(props: {
           {promptField.contents}
         </Markdown>
       </View>
-      {imageURL && (
+      {imageURL && imageSize && (
         <Image
           source={{ uri: imageURL }}
-          style={{
-            ...StyleSheet.absoluteFillObject,
-            zIndex: -1,
-            resizeMode: "contain",
-          }}
+          style={{ ...imageSize, flexShrink: 0, marginTop: layout.gridUnit }}
           onError={({ nativeEvent: { error } }) =>
             console.warn(`Error displaying image`, error)
           }

@@ -1,4 +1,4 @@
-import { boolean, number, text } from "@storybook/addon-knobs";
+import { boolean, number } from "@storybook/addon-knobs";
 import { Story } from "@storybook/react";
 import {
   AttachmentID,
@@ -80,7 +80,7 @@ const CardTemplate: Story<ReviewAreaItem> = (reviewItem) => {
                 key={index}
                 style={{
                   width: 375 - 16,
-                  height: layout.gridUnit * (5 * 10 + 2), // 2 fixed grid units for caption and its margin; the rest for 2:3 ratio of answer:question
+                  height: layout.gridUnit * (5 * 10 + 3), // 2 fixed grid units for caption and its margin; 1 for the space between question and answer; the rest for 2:3 ratio of answer:question
                   borderWidth: 1,
                   borderColor: "gray",
                   margin: 16,
@@ -142,7 +142,7 @@ const testAttachmentResolutionMap: AttachmentResolutionMap = new Map([
     testAttachmentIDReference.id,
     {
       type: imageAttachmentType,
-      url: "https://picsum.photos/200/300",
+      url: "https://picsum.photos/539/323",
     },
   ],
 ]);
@@ -226,13 +226,46 @@ MultilineClozePrompt.args = {
   promptParameters: { clozeIndex: 0 },
 };
 
-export const Image = CardTemplate.bind({});
-Image.args = {
+export const ImageQuestion = CardTemplate.bind({});
+ImageQuestion.args = {
   ...CardTemplate.args,
   prompt: {
     ...testQAPrompt,
     question: {
-      ...testQAPrompt.question,
+      contents:
+        "In the following diagram of an edgeworth box, how much food is being produced?",
+      attachments: [testAttachmentIDReference],
+    },
+  },
+  attachmentResolutionMap: testAttachmentResolutionMap,
+};
+
+export const ImageAnswer = CardTemplate.bind({});
+ImageAnswer.args = {
+  ...CardTemplate.args,
+  prompt: {
+    ...testQAPrompt,
+    answer: {
+      contents:
+        "In the following diagram of an edgeworth box, how much food is being produced?",
+      attachments: [testAttachmentIDReference],
+    },
+  },
+  attachmentResolutionMap: testAttachmentResolutionMap,
+};
+
+export const ImageBothSides = CardTemplate.bind({});
+ImageBothSides.args = {
+  ...CardTemplate.args,
+  prompt: {
+    ...testQAPrompt,
+    question: {
+      contents:
+        "In the following diagram of an edgeworth box, what region would offer both more food and shelter compared to the current allocation? (Visualize the answer)",
+      attachments: [testAttachmentIDReference],
+    },
+    answer: {
+      contents: "Anywhere in the blue shaded area.",
       attachments: [testAttachmentIDReference],
     },
   },

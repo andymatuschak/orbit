@@ -78,7 +78,7 @@ function useAnimatingStyles(
   return React.useMemo(() => {
     return {
       topAreaStyle: [
-        styles.topAreaContainer,
+        StyleSheet.absoluteFill,
         {
           transform: [
             {
@@ -103,19 +103,16 @@ function useAnimatingStyles(
           ],
         },
       ],
-      bottomBackStyle: [
-        StyleSheet.absoluteFill,
-        {
-          transform: [
-            {
-              translateY: bottomAreaTranslateAnimation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [30, 0],
-              }),
-            },
-          ],
-        },
-      ],
+      bottomBackStyle: {
+        transform: [
+          {
+            translateY: bottomAreaTranslateAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [14, 0],
+            }),
+          },
+        ],
+      },
     };
   }, [bottomAreaTranslateAnimation, topAreaTranslateAnimation]);
 }
@@ -223,6 +220,23 @@ function formatClozePromptContents(
   }
 }
 
+type PromptProportion = [topProportion: number, bottomProportion: number];
+function getProportions(
+  contents: QAPromptContents,
+): { unrevealed: PromptProportion; revealed: PromptProportion } {
+  const questionHasAttachments = contents.question.attachments.length > 0;
+  const answerHasAttachments = contents.answer.attachments.length > 0;
+  if (!questionHasAttachments && !answerHasAttachments) {
+    return { unrevealed: [2, 3], revealed: [2, 3] };
+  } else if (questionHasAttachments && !answerHasAttachments) {
+    return { unrevealed: [1, 3], revealed: [1, 1] };
+  } else if (!questionHasAttachments && answerHasAttachments) {
+    return { unrevealed: [2, 3], revealed: [1, 3] };
+  } else {
+    return { unrevealed: [1, 3], revealed: [1, 2] };
+  }
+}
+
 export interface CardProps {
   reviewItem: ReviewAreaItem;
   backIsRevealed: boolean;
@@ -239,14 +253,16 @@ function QAPromptRenderer({
   reviewItem,
 }: QAPromptRendererType) {
   const animatingStyles = useAnimatingStyles(backIsRevealed);
-  const spec = getQAPromptContents(reviewItem);
+  const contents = getQAPromptContents(reviewItem);
 
   const [frontSizeVariantIndex, setFrontSizeVariantIndex] = React.useState<
     number | undefined
   >(undefined);
 
+  const proportions = getProportions(contents);
+
   return (
-    <View style={styles.cardContainer}>
+    <View style={{ flex: 1 }}>
       <FadeView
         isVisible={backIsRevealed}
         durationMillis={100}
@@ -256,12 +272,20 @@ function QAPromptRenderer({
         <PromptContextLabel
           provenance={reviewItem.provenance}
           size="small"
-          style={styles.topContextLabel}
+          style={{
+            marginBottom: layout.gridUnit,
+          }}
           accentColor={accentColor}
         />
-        <View style={styles.topTextContainer}>
+        <View
+          style={{
+            flex: proportions.revealed[0],
+            marginBottom: layout.gridUnit,
+            width: "66.67%",
+          }}
+        >
           <CardField
-            promptField={spec.question}
+            promptField={contents.question}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
             largestSizeVariantIndex={
               frontSizeVariantIndex === undefined
@@ -271,37 +295,47 @@ function QAPromptRenderer({
             smallestSizeVariantIndex={4}
           />
         </View>
-      </FadeView>
-      <View style={styles.bottomAreaContainer}>
         <FadeView
           isVisible={backIsRevealed}
           durationMillis={100}
-          style={animatingStyles.bottomBackStyle}
+          style={[
+            { flex: proportions.revealed[1] },
+            animatingStyles.bottomBackStyle,
+          ]}
         >
           <CardField
-            promptField={spec.answer}
+            promptField={contents.answer}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
           />
         </FadeView>
-        <FadeView
-          isVisible={!backIsRevealed}
-          durationMillis={70}
-          style={animatingStyles.bottomFrontStyle}
+      </FadeView>
+      <FadeView
+        style={animatingStyles.bottomFrontStyle}
+        isVisible={!backIsRevealed}
+        durationMillis={70}
+      >
+        <View
+          style={{
+            flex: proportions.unrevealed[0],
+            marginTop: layout.gridUnit * 2,
+            marginBottom: layout.gridUnit,
+            justifyContent: "flex-end",
+          }}
         >
-          <View style={styles.bottomContextLabelContainer}>
-            <PromptContextLabel
-              provenance={reviewItem.provenance}
-              size="regular"
-              accentColor={accentColor}
-            />
-          </View>
+          <PromptContextLabel
+            provenance={reviewItem.provenance}
+            size="regular"
+            accentColor={accentColor}
+          />
+        </View>
+        <View style={{ flex: proportions.unrevealed[1] }}>
           <CardField
-            promptField={spec.question}
+            promptField={contents.question}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
             onLayout={setFrontSizeVariantIndex}
           />
-        </FadeView>
-      </View>
+        </View>
+      </FadeView>
     </View>
   );
 }
@@ -328,16 +362,22 @@ function ClozePromptRenderer({
     contents: formatClozePromptContents(body.contents, true, clozeIndex),
   };
   return (
-    <View style={styles.cardContainer}>
-      <View style={styles.topAreaContainer} />
-      <View style={styles.bottomAreaContainer}>
-        <View style={styles.bottomContextLabelContainer}>
-          <PromptContextLabel
-            provenance={reviewItem.provenance}
-            size="regular"
-            accentColor={accentColor}
-          />
-        </View>
+    <View style={{ flex: 1 }}>
+      <View
+        style={{
+          marginTop: layout.gridUnit * 2,
+          flex: 2,
+          marginBottom: layout.gridUnit,
+          justifyContent: "flex-end",
+        }}
+      >
+        <PromptContextLabel
+          provenance={reviewItem.provenance}
+          size="regular"
+          accentColor={accentColor}
+        />
+      </View>
+      <View style={{ flex: 3 }}>
         <FadeView
           isVisible={backIsRevealed}
           durationMillis={70}
@@ -376,39 +416,4 @@ export default React.memo(function Card(props: CardProps) {
     case clozePromptType:
       return <ClozePromptRenderer {...props} reviewItem={props.reviewItem} />;
   }
-});
-
-const styles = StyleSheet.create({
-  cardContainer: {
-    flex: 1,
-  },
-
-  topAreaContainer: {
-    flex: 2,
-    // This is a bit tricky: we want the text regions of the front and back to have a 3:2 ratio; this excludes the context label, which is printed above. So we leave room at the top of the top area for the context label then shift it up.
-    paddingTop: layout.gridUnit * 2,
-  },
-
-  topContextLabel: {
-    marginTop: -layout.gridUnit * 2,
-    marginBottom: layout.gridUnit,
-    width: "100%",
-  },
-
-  topTextContainer: {
-    flex: 1,
-    width: "66.67%",
-  },
-
-  bottomAreaContainer: {
-    flex: 3,
-  },
-
-  bottomContextLabelContainer: {
-    position: "absolute",
-    top: -(200 + layout.gridUnit),
-    width: "100%",
-    height: 200,
-    justifyContent: "flex-end",
-  },
 });
