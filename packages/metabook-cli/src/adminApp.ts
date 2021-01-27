@@ -6,7 +6,7 @@ import {
 } from "metabook-firebase-support";
 import serviceAccount from "./adminKey.json";
 
-const useEmulator = true;
+const useEmulator = false;
 
 let _adminApp: admin.app.App;
 export function getAdminApp() {
