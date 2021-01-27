@@ -229,7 +229,7 @@ function getProportions(
   if (!questionHasAttachments && !answerHasAttachments) {
     return { unrevealed: [2, 3], revealed: [2, 3] };
   } else if (questionHasAttachments && !answerHasAttachments) {
-    return { unrevealed: [1, 3], revealed: [1, 1] };
+    return { unrevealed: [1, 5], revealed: [1, 1] };
   } else if (!questionHasAttachments && answerHasAttachments) {
     return { unrevealed: [2, 3], revealed: [1, 3] };
   } else {
