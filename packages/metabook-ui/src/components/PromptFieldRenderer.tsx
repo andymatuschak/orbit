@@ -360,7 +360,7 @@ export default React.memo(function PromptFieldRenderer(props: {
       style={{
         flex: 1,
         opacity: isLayoutReady ? 1 : 0,
-        overflow: isLayoutReady ? "hidden" : "hidden",
+        overflow: isLayoutReady ? "visible" : "hidden",
         justifyContent: "space-between",
       }}
       onLayout={useCallback((event) => {
