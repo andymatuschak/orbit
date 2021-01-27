@@ -32,6 +32,7 @@ import {
   useAuthenticationClient,
   useCurrentUserRecord,
 } from "../authentication/authContext";
+import { findItemsToRetry } from "../embedded/util/findItemsToRetry";
 import DatabaseManager from "../model/databaseManager";
 import { ReviewSessionContainer } from "../ReviewSessionContainer";
 import { useReviewSessionManager } from "../reviewSessionManager";
@@ -230,7 +231,21 @@ export default function ReviewSession() {
       reviewSessionStartTimestampMillis:
         reviewSessionStartTimestampMillis.current,
     });
-    reviewSessionManager.markCurrentItem(logs);
+    reviewSessionManager.markCurrentItem(logs, (newState) => {
+      // Refill queue with items to retry if we're at the end.
+      if (
+        newState.currentReviewAreaQueueIndex !== null &&
+        newState.currentReviewAreaQueueIndex >= newState.reviewAreaQueue.length
+      ) {
+        const itemsToRetry = newState.sessionItems.filter(
+          (item) => !!item.promptState?.needsRetry,
+        );
+        console.log("Pushing items to retry", itemsToRetry);
+        reviewSessionManager.pushReviewAreaQueueItems(
+          getReviewAreaItemsFromReviewItems(itemsToRetry),
+        );
+      }
+    });
   }
 
   return (
@@ -251,8 +266,9 @@ export default function ReviewSession() {
                 containerHeight={containerSize.height}
                 items={sessionItems.map((item, index) => ({
                   promptState: item.promptState,
-                  // TODO: update for retry
-                  isPendingForSession: index >= currentReviewAreaQueueIndex,
+                  isPendingForSession:
+                    index >= currentReviewAreaQueueIndex ||
+                    !!item.promptState?.needsRetry,
                   supportsRetry: promptTypeSupportsRetry(
                     item.prompt.promptType,
                   ),
