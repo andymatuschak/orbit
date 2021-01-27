@@ -21,6 +21,7 @@ export type EmbeddedItem = EmbeddedQAPrompt | EmbeddedClozePrompt;
 export interface EmbeddedScreenConfiguration {
   embeddedItems: EmbeddedItem[];
   embeddedHostMetadata: EmbeddedHostMetadata;
+  sessionStartTimestampMillis: number;
   isDebug?: boolean;
 }
 

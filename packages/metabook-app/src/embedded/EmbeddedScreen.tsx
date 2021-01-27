@@ -36,7 +36,7 @@ import {
   EmbeddedAuthenticationState,
   useEmbeddedAuthenticationState,
 } from "./useEmbeddedAuthenticationState";
-import { useEmbeddedHostState } from "./useEmbeddedHostState";
+import { useEmbeddedHostState } from "./ipc/useEmbeddedHostState";
 import { useInitialPromptStates } from "./useInitialPromptStates";
 import useResolvedReviewItems from "./useResolvedReviewItems";
 import { findItemsToRetry } from "./util/findItemsToRetry";
@@ -285,7 +285,6 @@ function getEmbeddedReviewAreaItemsFromReviewItems(
 }
 
 export default function EmbeddedScreen() {
-  const reviewSessionStartTimestampMillis = useRef(Date.now());
   const configuration = useRef(
     getEmbeddedScreenConfigurationFromURL(window.location.href),
   ).current;
@@ -393,7 +392,7 @@ export default function EmbeddedScreen() {
       hostMetadata: configuration.embeddedHostMetadata,
       markingRecord: markingRecord,
       reviewItem: sessionItems[currentSessionItemIndex],
-      sessionStartTimestampMillis: reviewSessionStartTimestampMillis.current,
+      sessionStartTimestampMillis: configuration.sessionStartTimestampMillis,
     });
 
     // Update our local records for this item.

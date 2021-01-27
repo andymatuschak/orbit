@@ -152,6 +152,8 @@ function pageIsDebug() {
   return location.search.includes("orbitDebug");
 }
 
+const sessionStartTimestampMillis = Date.now();
+
 export class OrbitReviewAreaElement extends HTMLElement {
   private cachedMetadata: EmbeddedHostMetadata | null = null;
   private cachedItems: EmbeddedItem[] | null = null;
@@ -218,6 +220,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
           ...this.cachedMetadata,
           ...(colorOverride && { colorPaletteName: colorOverride }),
         },
+        sessionStartTimestampMillis,
         isDebug: pageIsDebug() || this.hasAttribute("debug"),
       };
 
