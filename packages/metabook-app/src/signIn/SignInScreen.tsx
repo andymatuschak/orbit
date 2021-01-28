@@ -103,7 +103,14 @@ export default function SignInScreen() {
       } else {
         if (Platform.OS === "web") {
           // TODO: redirect somewhere useful outside the embedded case
-          location.pathname = "/";
+          const continueURL = new URL(location.href).searchParams.get(
+            "continue",
+          );
+          if (continueURL && new URL(continueURL).origin === location.origin) {
+            location.href = continueURL;
+          } else {
+            location.pathname = "/";
+          }
         }
       }
     }

@@ -4,7 +4,7 @@ import * as functions from "firebase-functions";
 import { UserMetadata } from "metabook-firebase-support";
 import * as backend from "../backend";
 import serviceConfig from "../serviceConfig";
-import { authorizeRequest } from "../util/authorizeRequest";
+import { authenticateRequest } from "../util/authenticateRequest";
 
 export type UpdateNotificationSettingsAction = "unsubscribe" | "snooze1Week";
 
@@ -44,7 +44,7 @@ function getAction(
 
 const app = express();
 app.use((request, response) => {
-  authorizeRequest(request, response, async (userID) => {
+  authenticateRequest(request, response, async (userID) => {
     const action = getAction(request);
     if (action) {
       const metadataUpdate = actionTable[action](Date.now());

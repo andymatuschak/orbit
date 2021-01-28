@@ -2,14 +2,14 @@ import express from "express";
 import { PromptState, PromptTaskID } from "metabook-core";
 import { getPromptStateFromPromptStateCache } from "metabook-firebase-support";
 import * as backend from "../backend";
-import { authorizeRequest } from "../util/authorizeRequest";
+import { authenticateRequest } from "../util/authenticateRequest";
 import { extractArrayQueryParameter } from "./util/extractArrayQueryParameter";
 
 export async function getTaskStates(
   request: express.Request,
   response: express.Response,
 ) {
-  authorizeRequest(request, response, async (userID) => {
+  authenticateRequest(request, response, async (userID) => {
     const taskIDs = extractArrayQueryParameter(request, "taskID") as
       | PromptTaskID[]
       | null;

@@ -44,9 +44,22 @@ export async function createCustomLoginToken(userID: string): Promise<string> {
   return await getAuth().createCustomToken(userID);
 }
 
-interface AccessCodeRecord {
+type OneTimeAccessCodeRecord = {
+  type: typeof AccessCodeRecordType.OneTime;
   userID: string;
   expirationTimestamp: firebase.firestore.Timestamp;
+};
+
+type PersonalAccessTokenRecord = {
+  type: typeof AccessCodeRecordType.PersonalAccessToken;
+  userID: string;
+};
+
+type AccessCodeRecord = OneTimeAccessCodeRecord | PersonalAccessTokenRecord;
+
+enum AccessCodeRecordType {
+  OneTime = "oneTime",
+  PersonalAccessToken = "personalAccessToken",
 }
 
 function getAccessCodeCollection(): firebase.firestore.CollectionReference<
@@ -70,6 +83,19 @@ export async function createOneTimeAccessCode(
     expirationTimestamp: firebase.firestore.Timestamp.fromDate(
       dateFns.addDays(nowTimestampMillis, daysValid),
     ),
+    type: AccessCodeRecordType.OneTime,
+  });
+
+  return accessCodeDoc.id;
+}
+
+export async function createPersonalAccessToken(
+  userID: string,
+): Promise<string> {
+  const accessCodeDoc = getAccessCodeCollection().doc();
+  await accessCodeDoc.set({
+    userID,
+    type: AccessCodeRecordType.PersonalAccessToken,
   });
 
   return accessCodeDoc.id;
@@ -86,11 +112,17 @@ export async function consumeAccessCode(
 
     if (snapshot.exists) {
       const record = snapshot.data()!;
-      if (record.expirationTimestamp.toMillis() > nowTimestampMillis) {
-        await transaction.delete(documentRef);
+      if (!record.type || record.type === AccessCodeRecordType.OneTime) {
+        if (record.expirationTimestamp.toMillis() > nowTimestampMillis) {
+          await transaction.delete(documentRef);
+          return record.userID;
+        } else {
+          throw new Error("Access code has expired");
+        }
+      } else if (record.type === AccessCodeRecordType.PersonalAccessToken) {
         return record.userID;
       } else {
-        throw new Error("Access code has expired");
+        throw new Error(`Unknown access code type ${record}`);
       }
     } else {
       throw new Error(

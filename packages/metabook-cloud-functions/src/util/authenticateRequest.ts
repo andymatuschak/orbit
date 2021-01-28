@@ -1,7 +1,7 @@
 import express from "express";
 import * as backend from "../backend";
 
-export async function authorizeRequest(
+export async function authenticateRequest(
   request: express.Request,
   response: express.Response,
   next: (userID: string) => unknown,
@@ -10,7 +10,7 @@ export async function authorizeRequest(
   const authorizationHeader = request.header("Authorization");
   let idToken: string | null = null;
   if (authorizationHeader) {
-    const match = authorizationHeader.match(/ID (.+)/ )
+    const match = authorizationHeader.match(/ID (.+)/);
     if (match) {
       idToken = match[1];
     }
