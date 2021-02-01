@@ -62,14 +62,6 @@ export async function _getUserNotificationAction(
 ): Promise<UserNotificationAction | null> {
   const { sessionNotificationState = null } = userMetadata;
 
-  // HACK: Disabling notifications for recent registrations (ISU study)
-  if (
-    userMetadata.registrationTimestampMillis >=
-    Date.parse("2021-01-22 00:00:01")
-  ) {
-    return null;
-  }
-
   let promptStates: PromptState[] | null = null;
   let shouldSendNotification: boolean;
   if (sessionNotificationState) {
