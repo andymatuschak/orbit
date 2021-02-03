@@ -1,4 +1,4 @@
-import { PromptState } from "metabook-core";
+import { Prompt, PromptID, PromptState } from "metabook-core";
 import { ActionLogDocument } from "metabook-firebase-support";
 import { EmailSpec } from "../email/types";
 
@@ -34,6 +34,12 @@ export type SessionNotificationLog = {
   emailSpec: EmailSpec;
 };
 
+export type DataRecordLog = {
+  timestamp: number;
+  id: PromptID;
+  record: Prompt;
+};
+
 export interface LoggingService {
   logUserEvent(log: UserEventLog): Promise<unknown>;
 
@@ -46,4 +52,6 @@ export interface LoggingService {
   logPageView(log: PageViewLog): Promise<unknown>;
 
   logSessionNotification(log: SessionNotificationLog): Promise<unknown>;
+
+  logDataRecord(log: DataRecordLog): Promise<unknown>;
 }

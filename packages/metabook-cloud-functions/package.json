@@ -6,6 +6,7 @@
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "dev": "firebase emulators:start",
     "build": "tsc -b && rollup -c rollup.config.js",
     "predeploy": "yarn run build",
     "deploy": "firebase deploy --only functions",

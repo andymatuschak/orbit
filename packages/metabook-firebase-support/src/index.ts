@@ -19,6 +19,7 @@ export type { ServerTimestamp } from "./libraryAbstraction";
 export {
   getActionLogIDForFirebaseKey,
   getAttachmentIDForFirebaseKey,
+  getPromptIDForFirebaseKey,
   getFirebaseKeyForCIDString,
 } from "./firebaseKeyEncoding.js";
 export * from "./storage";

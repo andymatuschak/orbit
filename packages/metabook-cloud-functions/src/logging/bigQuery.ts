@@ -13,6 +13,7 @@ import {
 import path from "path";
 import serviceConfig from "../serviceConfig";
 import {
+  DataRecordLog,
   LoggingService,
   PageViewLog,
   SessionNotificationLog,
@@ -88,6 +89,12 @@ async function logEvent(
   tableName: "sessionNotifications",
   data: Omit<WithBigQueryTimestamp<SessionNotificationLog>, "emailSpec"> & {
     emailJSON: string;
+  },
+): Promise<unknown>;
+async function logEvent(
+  tableName: "dataRecords",
+  data: Omit<WithBigQueryTimestamp<DataRecordLog>, "record"> & {
+    dataJSON: string;
   },
 ): Promise<unknown>;
 async function logEvent<T>(tableName: string, data: T): Promise<unknown> {
@@ -179,6 +186,15 @@ export const bigQueryLoggingService: LoggingService = {
       ...rest,
       timestamp: createBigQueryTimestamp(log.timestamp),
       emailJSON: JSON.stringify(emailSpec),
+    });
+  },
+
+  logDataRecord(log: DataRecordLog): Promise<unknown> {
+    const { record, ...rest } = log;
+    return logEvent("dataRecords", {
+      ...rest,
+      timestamp: createBigQueryTimestamp(log.timestamp),
+      dataJSON: JSON.stringify(record),
     });
   },
 };

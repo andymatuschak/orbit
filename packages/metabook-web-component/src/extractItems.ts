@@ -18,13 +18,13 @@ export function extractItems(parentElement: HTMLElement): EmbeddedItem[] {
         });
       } else {
         const question = element.getAttribute("question");
-        if (!question) {
+        if (question === null) {
           console.error("Prompt is missing question", element);
           return;
         }
 
         const answer = element.getAttribute("answer");
-        if (!answer) {
+        if (answer === null) {
           console.error("Prompt is missing answer", element);
           return;
         }
