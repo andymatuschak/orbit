@@ -25,11 +25,13 @@ export function getDuePromptTasks({
   thresholdTimestampMillis: number;
   maxCardsInSession?: number;
 }): PromptTaskID[] {
-  const duePromptTaskIDs = [...promptStates.keys()].filter(
-    (promptTask) =>
-      promptStates.get(promptTask)!.dueTimestampMillis <=
-      thresholdTimestampMillis,
-  );
+  const duePromptTaskIDs = [...promptStates.keys()].filter((promptTask) => {
+    const promptState = promptStates.get(promptTask)!;
+    return (
+      promptState.dueTimestampMillis <= thresholdTimestampMillis &&
+      !promptState.taskMetadata.isDeleted
+    );
+  });
 
   duePromptTaskIDs.sort((a, b) => {
     const promptStateA = promptStates.get(a)!;
