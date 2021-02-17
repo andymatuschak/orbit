@@ -4,6 +4,7 @@ import {
   ActionLogDocument,
   getPromptStateFromPromptStateCache,
   PromptStateCache,
+  serverTimestampToTimestampMillis,
 } from "metabook-firebase-support";
 import * as backend from "../backend";
 import { sharedLoggingService } from "../logging";
@@ -41,10 +42,13 @@ export default functions.firestore
         oldPromptStateCache,
       );
 
-      await sharedLoggingService.logActionLog(
-        userID,
-        actionLog,
-        getPromptStateFromPromptStateCache(newPromptStateCache),
-      );
+      await sharedLoggingService.logActionLog({
+        userID: userID,
+        actionLog: actionLog,
+        serverTimestamp: serverTimestampToTimestampMillis(
+          actionLog.serverTimestamp,
+        ),
+        newTaskState: getPromptStateFromPromptStateCache(newPromptStateCache),
+      });
     }
   });

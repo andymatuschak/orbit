@@ -16,11 +16,22 @@ export type ActionLogDocument<
   suppressTaskStateCacheUpdate?: boolean;
 };
 
+export function getActionLogFromActionLogDocument(
+  document: ActionLogDocument,
+): ActionLog {
+  const {
+    serverTimestamp,
+    suppressTaskStateCacheUpdate,
+    ...actionLog
+  } = document;
+  return actionLog;
+}
+
 export async function storeLogs<D extends Database>(
   logs: ActionLog[],
   userID: string,
   database: D,
-  serverTimestampFieldValue: FieldValue,
+  getServerTimestampFieldValue: () => FieldValue,
   suppressTaskStateCacheUpdate = false,
 ): Promise<
   [
@@ -33,7 +44,7 @@ export async function storeLogs<D extends Database>(
       const logDocument: ActionLogDocument<TimestampOf<D>> = {
         ...log,
         // The force-cast is necessary because we often use a sentinel value ("update this server-side on write")
-        serverTimestamp: (serverTimestampFieldValue as unknown) as TimestampOf<
+        serverTimestamp: (getServerTimestampFieldValue() as unknown) as TimestampOf<
           D
         >,
         ...(suppressTaskStateCacheUpdate && {

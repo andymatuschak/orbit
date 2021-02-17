@@ -125,7 +125,7 @@ export async function listPromptStates(
   userID: string,
   query: {
     dueBeforeTimestampMillis?: number;
-    afterID?: PromptTaskID;
+    createdAfterID?: PromptTaskID;
     limit?: number;
   },
 ): Promise<Map<PromptTaskID, PromptState>> {
@@ -144,11 +144,15 @@ export async function listPromptStates(
       )
       .where("taskMetadata.isDeleted", "==", false);
   }
-  if (query.afterID) {
-    const baseRef = await getTaskStateCacheReference(db, userID, query.afterID);
+  if (query.createdAfterID) {
+    const baseRef = await getTaskStateCacheReference(
+      db,
+      userID,
+      query.createdAfterID,
+    );
     const baseSnapshot = await baseRef.get();
     if (!baseSnapshot.exists) {
-      throw new Error(`afterID ${query.afterID} does not exist`);
+      throw new Error(`createdAfterID ${query.createdAfterID} does not exist`);
     }
     ref.startAfter(baseSnapshot);
   }

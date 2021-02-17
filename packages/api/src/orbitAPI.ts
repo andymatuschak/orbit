@@ -12,7 +12,7 @@ export type Spec = {
       query:
         | {
             limit?: number;
-            createdAfterID?: string;
+            createdAfterID?: PromptTaskID;
             dueBeforeTimestampMillis?: number;
           }
         | { ids: string[] };

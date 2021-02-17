@@ -1,6 +1,7 @@
 import * as BigQuery from "@google-cloud/bigquery";
 import crypto from "crypto";
 import {
+  ActionLog,
   ActionLogID,
   ActionLogType,
   getIDForActionLog,
@@ -8,11 +9,13 @@ import {
 } from "metabook-core";
 import {
   ActionLogDocument,
+  ServerTimestamp,
   serverTimestampToTimestampMillis,
 } from "metabook-firebase-support";
 import path from "path";
 import serviceConfig from "../serviceConfig";
 import {
+  ActionLogLog,
   DataRecordLog,
   LoggingService,
   PageViewLog,
@@ -135,19 +138,13 @@ export const bigQueryLoggingService: LoggingService = {
     return logEvent("userEvents", bqLog);
   },
 
-  async logActionLog(
-    userID: string,
-    actionLog: ActionLogDocument,
-    newTaskState: PromptState,
-  ): Promise<unknown> {
-    const {
-      timestampMillis,
-      serverTimestamp,
-      actionLogType,
-      suppressTaskStateCacheUpdate,
-      taskID,
-      ...rest
-    } = actionLog;
+  async logActionLog({
+    userID,
+    actionLog,
+    serverTimestamp,
+    newTaskState,
+  }: ActionLogLog): Promise<unknown> {
+    const { timestampMillis, actionLogType, taskID, ...rest } = actionLog;
     let parentActionLogIDs: ActionLogID[] = [];
 
     let data: Omit<typeof rest, "parentActionLogIDs">;
@@ -160,9 +157,7 @@ export const bigQueryLoggingService: LoggingService = {
     const bqLog = {
       userID,
       timestamp: createBigQueryTimestamp(timestampMillis),
-      serverTimestamp: createBigQueryTimestamp(
-        serverTimestampToTimestampMillis(serverTimestamp),
-      ),
+      serverTimestamp: createBigQueryTimestamp(serverTimestamp),
       actionLogType,
       actionLogID: await getIDForActionLog(actionLog),
       parentActionLogIDs,

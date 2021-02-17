@@ -1,13 +1,14 @@
 import cookieParser from "cookie-parser";
 import express from "express";
 import { OrbitAPI } from "@withorbit/api";
+import { listActionLogs } from "./api/actionLogs";
 import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode";
 import { createLoginToken } from "./api/internal/auth/createLoginToken";
 import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens";
 import { refreshSessionCookie } from "./api/internal/auth/refreshSessionCookie";
 import { recordPageView } from "./api/internal/recordPageView";
 import { resolveAttachmentIDs } from "./api/internal/resolveAttachmentIDs";
-import { getTaskStates } from "./api/taskStates";
+import { listTaskStates } from "./api/taskStates";
 import corsHandler from "./api/util/corsHandler";
 import createTypedRouter from "./api/util/typedRouter";
 
@@ -47,15 +48,13 @@ export function createAPIApp(): express.Application {
 
   createTypedRouter<OrbitAPI.Spec>(app, {
     "/actionLogs": {
-      GET: (req) => {
-        throw new Error("Unimplemented");
-      },
+      GET: listActionLogs,
       PATCH: (req) => {
         throw new Error("Unimplemented");
       },
     },
     "/taskStates": {
-      GET: getTaskStates,
+      GET: listTaskStates,
     },
   });
 

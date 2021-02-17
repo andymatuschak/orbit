@@ -1,6 +1,11 @@
 import { API } from "@withorbit/api";
 import express from "express";
-import { TypedRequest, TypedResponse } from "../api/util/typedRouter";
+import {
+  CachePolicy,
+  TypedRequest,
+  TypedResponse,
+  TypedRouteHandler,
+} from "../api/util/typedRouter";
 import * as backend from "../backend";
 
 export async function authenticateRequest(
@@ -11,7 +16,7 @@ export async function authenticateRequest(
   authenticateTypedRequest(request, async (userID) => {
     next(userID);
     // HACK Not actually used:
-    return { status: 200, json: undefined };
+    return { status: 200, json: undefined, cachePolicy: CachePolicy.NoStore };
   });
 }
 
@@ -55,4 +60,18 @@ export async function authenticateTypedRequest<
   } else {
     return { status: 401 };
   }
+}
+
+export function authenticatedRequestHandler<
+  API extends API.Spec,
+  Path extends Extract<keyof API, string>,
+  Method extends Extract<keyof API[Path], API.HTTPMethod>
+>(
+  handler: (
+    request: TypedRequest<API[Path][Method]>,
+    userID: string,
+  ) => Promise<TypedResponse<API.RouteResponseData<API[Path][Method]>>>,
+): TypedRouteHandler<API, Path, Method> {
+  return (request) =>
+    authenticateTypedRequest(request, (userID) => handler(request, userID));
 }

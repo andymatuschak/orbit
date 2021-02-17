@@ -37,10 +37,7 @@ export const fastForwardUser: CommandModule<unknown, { userID: string }> = {
         parentActionLogIDs: doc.data().headActionLogIDs,
       }),
     );
-    await storeLogs(
-      logs,
-      userID,
-      db,
+    await storeLogs(logs, userID, db, () =>
       admin.firestore.FieldValue.serverTimestamp(),
     );
     console.log("Done");

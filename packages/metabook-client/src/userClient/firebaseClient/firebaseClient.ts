@@ -175,10 +175,7 @@ export class MetabookFirebaseUserClient implements MetabookUserClient {
   }
 
   async recordActionLogs(logs: ActionLog[]): Promise<void> {
-    await storeLogs(
-      logs,
-      this.userID,
-      this.database,
+    await storeLogs(logs, this.userID, this.database, () =>
       firebase.firestore.FieldValue.serverTimestamp(),
     );
   }

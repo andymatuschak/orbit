@@ -2,9 +2,9 @@ import { OrbitAPI } from "@withorbit/api";
 import { PromptState, PromptTaskID } from "metabook-core";
 import * as backend from "../backend";
 import { authenticateTypedRequest } from "../util/authenticateRequest";
-import { TypedRouteHandler } from "./util/typedRouter";
+import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";
 
-export const getTaskStates: TypedRouteHandler<
+export const listTaskStates: TypedRouteHandler<
   OrbitAPI.Spec,
   "/taskStates",
   "GET"
@@ -12,16 +12,17 @@ export const getTaskStates: TypedRouteHandler<
   return authenticateTypedRequest<OrbitAPI.Spec, "/taskStates", "GET">(
     request,
     async (userID) => {
+      const { query } = request;
       let promptStates: Map<PromptTaskID, PromptState>;
-      if ("ids" in request.query) {
+      if ("ids" in query) {
         promptStates = await backend.promptStates.getPromptStates(
           userID,
-          request.query.ids as PromptTaskID[],
+          query.ids as PromptTaskID[],
         );
       } else {
         promptStates = await backend.promptStates.listPromptStates(
           userID,
-          request.query,
+          query,
         );
       }
 
@@ -36,6 +37,7 @@ export const getTaskStates: TypedRouteHandler<
           })),
         },
         status: 200,
+        cachePolicy: CachePolicy.NoStore,
       };
     },
   );

@@ -1,6 +1,14 @@
-import { Prompt, PromptID, PromptState } from "metabook-core";
+import { ActionLog, Prompt, PromptID, PromptState } from "metabook-core";
 import { ActionLogDocument } from "metabook-firebase-support";
 import { EmailSpec } from "../email/types";
+
+export interface LoggingService {
+  logActionLog(log: ActionLogLog): Promise<unknown>;
+  logDataRecord(log: DataRecordLog): Promise<unknown>;
+  logPageView(log: PageViewLog): Promise<unknown>;
+  logSessionNotification(log: SessionNotificationLog): Promise<unknown>;
+  logUserEvent(log: UserEventLog): Promise<unknown>;
+}
 
 export type UserEventLogBase = {
   userID: string;
@@ -40,18 +48,10 @@ export type DataRecordLog = {
   record: Prompt;
 };
 
-export interface LoggingService {
-  logUserEvent(log: UserEventLog): Promise<unknown>;
-
-  logActionLog(
-    userID: string,
-    actionLog: ActionLogDocument,
-    newTaskState: PromptState,
-  ): Promise<unknown>;
-
-  logPageView(log: PageViewLog): Promise<unknown>;
-
-  logSessionNotification(log: SessionNotificationLog): Promise<unknown>;
-
-  logDataRecord(log: DataRecordLog): Promise<unknown>;
-}
+// Unfortunate naming!
+export type ActionLogLog = {
+  serverTimestamp: number;
+  userID: string;
+  actionLog: ActionLog;
+  newTaskState: PromptState;
+};

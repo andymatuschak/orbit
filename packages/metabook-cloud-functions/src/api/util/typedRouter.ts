@@ -34,9 +34,15 @@ export type TypedRouteHandler<
 ) => Promise<TypedResponse<API.RouteResponseData<API[Path][Method]>>>;
 
 export type TypedResponse<Data> =
-  | { status: 200; json: Data }
+  | { status: 200; json: Data; cachePolicy: CachePolicy }
   | { status: 204 }
   | { status: 400 | 401 };
+
+// We use a simplified set of caching policies.
+export enum CachePolicy {
+  Immutable = "public, max-age=86400, immutable", // can be cached by any layer for an extended period
+  NoStore = "no-store, max-age=0", // no layer should cache this response at all
+}
 
 export default function createTypedRouter<API extends API.Spec>(
   app: express.Express | express.Router,
@@ -59,6 +65,7 @@ export default function createTypedRouter<API extends API.Spec>(
         .then((result) => {
           response.status(result.status);
           if (result.status === 200) {
+            response.header("Cache-Control", result.cachePolicy);
             response.send(result.json);
           }
         })

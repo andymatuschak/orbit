@@ -30,10 +30,15 @@ async function storePrompts(promptsByID: {
 }
 
 async function storeLogs(userID: string, logs: ActionLog[]): Promise<void> {
-  const storedResults = await backend.actionLogs.storeLogs(logs, userID);
+  const storedResults = await backend.actionLogs.storeActionLogs(userID, logs);
   await Promise.all(
-    storedResults.map(({ logDocument, promptState }) =>
-      sharedLoggingService.logActionLog(userID, logDocument, promptState),
+    storedResults.map(({ log, serverTimestampMillis, promptState }) =>
+      sharedLoggingService.logActionLog({
+        userID: userID,
+        actionLog: log,
+        serverTimestamp: serverTimestampMillis,
+        newTaskState: promptState,
+      }),
     ),
   );
 }
