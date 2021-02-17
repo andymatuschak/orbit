@@ -1,0 +1,36 @@
+{
+  "creationTime": "1612380706909",
+  "etag": "GqCIxWO1HAHGKy5zOaY7LA==",
+  "id": "metabook-system:logs.dataRecords",
+  "kind": "bigquery#table",
+  "lastModifiedTime": "1612380706937",
+  "location": "US",
+  "numBytes": "0",
+  "numLongTermBytes": "0",
+  "numRows": "0",
+  "schema": {
+    "fields": [
+      {
+        "mode": "REQUIRED",
+        "name": "timestamp",
+        "type": "TIMESTAMP"
+      },
+      {
+        "mode": "REQUIRED",
+        "name": "dataJSON",
+        "type": "STRING"
+      }
+    ]
+  },
+  "selfLink": "https://bigquery.googleapis.com/bigquery/v2/projects/metabook-system/datasets/logs/tables/dataRecords",
+  "tableReference": {
+    "datasetId": "logs",
+    "projectId": "metabook-system",
+    "tableId": "dataRecords"
+  },
+  "timePartitioning": {
+    "field": "timestamp",
+    "type": "DAY"
+  },
+  "type": "TABLE"
+}

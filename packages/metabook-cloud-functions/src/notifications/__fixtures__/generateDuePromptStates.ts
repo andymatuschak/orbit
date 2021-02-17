@@ -1,19 +1,39 @@
 import * as dateFns from "date-fns";
-import { PromptState } from "metabook-core";
+import {
+  getIDForPromptTask,
+  PromptID,
+  PromptState,
+  PromptTaskID,
+  qaPromptType,
+} from "metabook-core";
+
+let globalCounter = 0;
 
 export function generateDuePromptStates(
   baseTimestampMillis: number,
   count: number,
   dueInDays: number,
   intervalDays: number,
-): PromptState[] {
-  return Array.from(new Array(count).keys()).map(
-    () =>
-      ({
+): Map<PromptTaskID, PromptState> {
+  const output: Map<PromptTaskID, PromptState> = new Map();
+  for (let i = 0; i < count; i++) {
+    globalCounter++;
+    output.set(
+      getIDForPromptTask({
+        promptType: qaPromptType,
+        promptParameters: null,
+        promptID: `${globalCounter}` as PromptID,
+      }),
+      {
         intervalMillis: intervalDays * 1000 * 60 * 60 * 24,
         dueTimestampMillis: dateFns
           .addDays(baseTimestampMillis, dueInDays)
           .valueOf(),
-      } as PromptState),
-  );
+        taskMetadata: {
+          isDeleted: false,
+        },
+      } as PromptState,
+    );
+  }
+  return output;
 }

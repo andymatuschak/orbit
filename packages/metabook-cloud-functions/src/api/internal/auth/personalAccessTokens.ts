@@ -16,7 +16,6 @@ export async function personalAccessTokens(
     const responseJSON: CreatePersonalAccessTokenResponse = {
       token,
     };
-    response.header("Cache-Control", "no-store");
     response.json(responseJSON);
   });
 }

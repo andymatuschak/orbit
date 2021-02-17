@@ -51,7 +51,7 @@ describe("_getUserNotificationAction", () => {
         testTimestamp,
         "",
         baseMetadata,
-        async () => [],
+        async () => new Map(),
         emailAccessMock,
       ),
     ).toBeNull();

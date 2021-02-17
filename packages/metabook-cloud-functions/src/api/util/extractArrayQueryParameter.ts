@@ -4,6 +4,7 @@ export function extractArrayQueryParameter(
   request: express.Request,
   key: string,
 ): string[] | null {
+  // TODO: validate typed API
   const queryParameter = request.query[key];
   if (typeof queryParameter === "string") {
     return [queryParameter];

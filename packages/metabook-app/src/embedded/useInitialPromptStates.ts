@@ -5,6 +5,7 @@ import {
   PromptTask,
   PromptTaskID,
 } from "metabook-core";
+import { UserClient } from "metabook-client";
 import { ReviewItem } from "metabook-embedded-support";
 import { useEffect, useState } from "react";
 import serviceConfig from "../../serviceConfig.mjs";
@@ -36,51 +37,42 @@ export function useInitialPromptStates({
       embeddedReviewItems &&
       shouldRequestInitialPrompts
     ) {
-      authenticationClient.getCurrentIDToken().then(async (idToken) => {
-        // Get all the task IDs.
-        const taskIDs = embeddedReviewItems.map((item) => {
-          return getIDForPromptTask({
-            promptID: getIDForPromptSync(item.prompt),
-            promptType: item.prompt.promptType,
-            promptParameters: item.promptParameters,
-          } as PromptTask);
-        });
+      // Get all the task IDs.
+      const taskIDs = embeddedReviewItems.map((item) => {
+        return getIDForPromptTask({
+          promptID: getIDForPromptSync(item.prompt),
+          promptType: item.prompt.promptType,
+          promptParameters: item.promptParameters,
+        } as PromptTask);
+      });
 
-        const taskIDParameterSegment = taskIDs
-          .map((taskID) => `taskID=${encodeURIComponent(taskID)}`)
-          .join("&");
+      // TODO: extract, share
+      const userClient = new UserClient(
+        async (request) => {
+          const idToken = await authenticationClient.getCurrentIDToken();
+          request.headers.set("Authorization", `ID ${idToken}`);
+        },
+        {
+          baseURL: serviceConfig.httpsAPIBaseURLString,
+        },
+      );
 
-        // TODO: extract
-        const url = `${serviceConfig.httpsAPIBaseURLString}/taskStates?${taskIDParameterSegment}`;
-        const request = new Request(url);
-        request.headers.set("Authorization", `ID ${idToken}`);
-        const fetchResult = await fetch(request);
-        if (!fetchResult.ok) {
-          throw new Error(
-            `Failed to fetch prompt states with status code ${
-              fetchResult.status
-            }: ${await fetchResult.text()}`,
-          );
-        }
-
-        const response = await fetchResult.json();
-        if (typeof response !== "object") {
-          throw new Error(`Unexpected prompt state response: ${response}`);
-        }
+      userClient.listTaskStates({ ids: taskIDs }).then((response) => {
         const output = new Map<PromptTaskID, PromptState>();
-        embeddedReviewItems.forEach((item, index) => {
-          const taskID = taskIDs[index];
-          // TODO: validate prompt states
-          const promptState = response[taskID];
-          if (promptState) {
-            output.set(item.promptTaskID, promptState);
-            sendUpdatedReviewItemToHost(taskID, promptState);
-          }
-        });
+        for (const { id, data } of response.data) {
+          output.set(id, data);
+          sendUpdatedReviewItemToHost(id, data);
+        }
         setInitialPromptStates(output);
       });
     }
-  }, [authenticationClient, embeddedReviewItems, initialPromptStates, status]);
+  }, [
+    authenticationClient,
+    embeddedReviewItems,
+    initialPromptStates,
+    shouldRequestInitialPrompts,
+    status,
+  ]);
 
   return initialPromptStates;
 }

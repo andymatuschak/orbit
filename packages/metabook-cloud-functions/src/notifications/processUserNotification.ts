@@ -1,5 +1,5 @@
 import dateFns from "date-fns";
-import { PromptState, reviewSession } from "metabook-core";
+import { PromptState, PromptTaskID } from "metabook-core";
 import {
   SessionNotificationState,
   UserMetadata,
@@ -20,16 +20,12 @@ import {
 async function _fetchUpcomingPromptStates(
   nowTimestampMillis: number,
   userID: string,
-): Promise<PromptState[]> {
-  const sessionThresholdTimestampMillis = reviewSession.getFuzzyDueTimestampThreshold(
-    dateFns
+) {
+  return await backend.promptStates.listPromptStates(userID, {
+    dueBeforeTimestampMillis: dateFns
       .addDays(nowTimestampMillis, reviewSessionBatchingLookaheadDays)
       .valueOf(),
-  );
-  return await backend.promptStates.getDuePromptStates(
-    userID,
-    sessionThresholdTimestampMillis,
-  );
+  });
 }
 
 export function _updateSessionNotificationStateForNewNotification(
@@ -62,7 +58,7 @@ export async function _getUserNotificationAction(
 ): Promise<UserNotificationAction | null> {
   const { sessionNotificationState = null } = userMetadata;
 
-  let promptStates: PromptState[] | null = null;
+  let promptStates: Map<PromptTaskID, PromptState> | null = null;
   let shouldSendNotification: boolean;
   if (sessionNotificationState) {
     // They already have a session pending. Is today a good day for a reminder?

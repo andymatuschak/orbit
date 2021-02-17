@@ -1,0 +1,46 @@
+{
+  "creationTime": "1603920070860",
+  "etag": "jg66D7EVCUBENByMa3V0Ww==",
+  "id": "metabook-system:logs.sessionNotifications",
+  "kind": "bigquery#table",
+  "lastModifiedTime": "1612373120804",
+  "location": "US",
+  "numBytes": "4736589",
+  "numLongTermBytes": "4432",
+  "numRows": "3417",
+  "schema": {
+    "fields": [
+      {
+        "mode": "REQUIRED",
+        "name": "timestamp",
+        "type": "TIMESTAMP"
+      },
+      {
+        "mode": "REQUIRED",
+        "name": "userID",
+        "type": "STRING"
+      },
+      {
+        "mode": "REQUIRED",
+        "name": "sessionNotificationNumber",
+        "type": "NUMERIC"
+      },
+      {
+        "mode": "REQUIRED",
+        "name": "emailJSON",
+        "type": "STRING"
+      }
+    ]
+  },
+  "selfLink": "https://bigquery.googleapis.com/bigquery/v2/projects/metabook-system/datasets/logs/tables/sessionNotifications",
+  "tableReference": {
+    "datasetId": "logs",
+    "projectId": "metabook-system",
+    "tableId": "sessionNotifications"
+  },
+  "timePartitioning": {
+    "field": "timestamp",
+    "type": "DAY"
+  },
+  "type": "TABLE"
+}

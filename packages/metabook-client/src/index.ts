@@ -1,4 +1,4 @@
-export { MetabookFirebaseUserClient } from "./userClient";
+export { MetabookFirebaseUserClient, UserClient } from "./userClient";
 export type {
   MetabookUserClient,
   MetabookPromptStateSnapshot,
@@ -12,3 +12,5 @@ export type { default as AttachmentUploader } from "./dataClient/attachmentUploa
 export { default as firebaseAttachmentUploader } from "./dataClient/firebaseAttachmentUploader";
 
 export { getDefaultFirebaseApp } from "./firebase";
+export type { APIConfig } from "./apiConfig";
+export { defaultAPIConfig } from "./apiConfig";

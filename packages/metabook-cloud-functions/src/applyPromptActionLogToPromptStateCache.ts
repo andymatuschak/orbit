@@ -26,6 +26,9 @@ export default async function applyActionLogDocumentToPromptStateCache({
   >;
 }): Promise<PromptStateCache | Error> {
   const promptActionLog = getPromptActionLogFromActionLog(actionLogDocument);
+  const creationServerTimestamp =
+    basePromptStateCache?.creationServerTimestamp ??
+    actionLogDocument.serverTimestamp;
   if (
     promptActionLogCanBeAppliedToPromptState(
       promptActionLog,
@@ -47,6 +50,7 @@ export default async function applyActionLogDocumentToPromptStateCache({
           actionLogDocument.serverTimestamp,
           basePromptStateCache?.latestLogServerTimestamp ?? null,
         ),
+        creationServerTimestamp,
         taskID: promptActionLog.taskID,
       };
     }
@@ -73,6 +77,7 @@ export default async function applyActionLogDocumentToPromptStateCache({
         ...mergedPromptState,
         taskID: actionLogDocument.taskID as PromptTaskID,
         latestLogServerTimestamp,
+        creationServerTimestamp,
       };
     }
   }

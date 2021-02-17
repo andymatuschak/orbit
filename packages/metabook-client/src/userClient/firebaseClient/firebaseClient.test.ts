@@ -77,10 +77,12 @@ describe("prompt states", () => {
       basePromptState: null,
       schedule: "default",
     }) as PromptState;
+    const timestamp = new firebase.firestore.Timestamp(0, 0);
     await ref.set({
       ...initialPromptState,
       taskID,
-      latestLogServerTimestamp: new firebase.firestore.Timestamp(0, 0),
+      latestLogServerTimestamp: timestamp,
+      creationServerTimestamp: timestamp,
     });
 
     const initialPromptStates = await client.getPromptStates({

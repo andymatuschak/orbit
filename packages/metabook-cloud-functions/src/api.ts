@@ -1,5 +1,6 @@
 import cookieParser from "cookie-parser";
 import express from "express";
+import { OrbitAPI } from "@withorbit/api";
 import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode";
 import { createLoginToken } from "./api/internal/auth/createLoginToken";
 import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens";
@@ -8,6 +9,7 @@ import { recordPageView } from "./api/internal/recordPageView";
 import { resolveAttachmentIDs } from "./api/internal/resolveAttachmentIDs";
 import { getTaskStates } from "./api/taskStates";
 import corsHandler from "./api/util/corsHandler";
+import createTypedRouter from "./api/util/typedRouter";
 
 const traceAPICall: express.RequestHandler = (request, _, next) => {
   console.log(
@@ -32,8 +34,6 @@ export function createAPIApp(): express.Application {
   });
   app.use(traceAPICall);
 
-  app.get("/taskStates", getTaskStates);
-
   app.post("/internal/auth/personalAccessTokens", personalAccessTokens);
 
   // These older auth APIs need some rethinking...
@@ -44,6 +44,20 @@ export function createAPIApp(): express.Application {
   app.post("/internal/recordPageView", recordPageView);
 
   app.get("/internal/resolveAttachmentIDs", resolveAttachmentIDs);
+
+  createTypedRouter<OrbitAPI.Spec>(app, {
+    "/actionLogs": {
+      GET: (req) => {
+        throw new Error("Unimplemented");
+      },
+      PATCH: (req) => {
+        throw new Error("Unimplemented");
+      },
+    },
+    "/taskStates": {
+      GET: getTaskStates,
+    },
+  });
 
   return app;
 }

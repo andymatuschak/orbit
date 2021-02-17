@@ -1,37 +1,42 @@
-import express from "express";
+import { OrbitAPI } from "@withorbit/api";
 import { PromptState, PromptTaskID } from "metabook-core";
-import { getPromptStateFromPromptStateCache } from "metabook-firebase-support";
 import * as backend from "../backend";
-import { authenticateRequest } from "../util/authenticateRequest";
-import { extractArrayQueryParameter } from "./util/extractArrayQueryParameter";
+import { authenticateTypedRequest } from "../util/authenticateRequest";
+import { TypedRouteHandler } from "./util/typedRouter";
 
-export async function getTaskStates(
-  request: express.Request,
-  response: express.Response,
-) {
-  authenticateRequest(request, response, async (userID) => {
-    const taskIDs = extractArrayQueryParameter(request, "taskID") as
-      | PromptTaskID[]
-      | null;
-    if (taskIDs === null) {
-      response.status(400).send("Missing taskID query parameter");
-      return;
-    }
-
-    const taskStateMap = await backend.promptStates.getPromptStates(
-      userID,
-      taskIDs,
-    );
-
-    const output: { [key: string]: PromptState | null } = {};
-    for (const taskID of taskIDs) {
-      const promptStateCache = taskStateMap.get(taskID);
-      if (promptStateCache) {
-        output[taskID] = getPromptStateFromPromptStateCache(promptStateCache);
+export const getTaskStates: TypedRouteHandler<
+  OrbitAPI.Spec,
+  "/taskStates",
+  "GET"
+> = (request) => {
+  return authenticateTypedRequest<OrbitAPI.Spec, "/taskStates", "GET">(
+    request,
+    async (userID) => {
+      let promptStates: Map<PromptTaskID, PromptState>;
+      if ("ids" in request.query) {
+        promptStates = await backend.promptStates.getPromptStates(
+          userID,
+          request.query.ids as PromptTaskID[],
+        );
       } else {
-        output[taskID] = null;
+        promptStates = await backend.promptStates.listPromptStates(
+          userID,
+          request.query,
+        );
       }
-    }
-    response.json(output);
-  });
-}
+
+      return {
+        json: {
+          objectType: "list",
+          hasMore: false,
+          data: [...promptStates.entries()].map(([id, data]) => ({
+            objectType: "taskState",
+            id,
+            data,
+          })),
+        },
+        status: 200,
+      };
+    },
+  );
+};

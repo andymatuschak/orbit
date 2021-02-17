@@ -1,5 +1,5 @@
 import * as dateFns from "date-fns";
-import { PromptState, reviewSession } from "metabook-core";
+import { PromptState, PromptTaskID, reviewSession } from "metabook-core";
 
 // We'll delay review sessions until we estimate doing so would cause at least this many prompts to be forgotten because of the delay.
 const forgottenPromptCountThreshold = 2;
@@ -28,17 +28,6 @@ function estimateOverdueForgottenPromptCount(
   }, 0);
 }
 
-function filterDuePromptStates(
-  promptStates: PromptState[],
-  sessionTimestampMillis: number,
-): PromptState[] {
-  return promptStates.filter(
-    (state) =>
-      state.dueTimestampMillis <=
-      reviewSession.getFuzzyDueTimestampThreshold(sessionTimestampMillis),
-  );
-}
-
 type ReviewSessionSchedulingDecision =
   | {
       shouldScheduleSession: true;
@@ -54,17 +43,20 @@ type ReviewSessionSchedulingDecision =
 
 export function evaluateReviewSessionSchedule(
   sessionTimestampMillis: number,
-  promptStates: PromptState[],
+  promptStates: Map<PromptTaskID, PromptState>,
   activePromptCount: number | null,
 ): ReviewSessionSchedulingDecision {
   const sessionMaxPromptCount = Math.min(
     activePromptCount ?? Number.MAX_VALUE,
     reviewSession.getReviewSessionCardLimit(),
   );
-  const initiallyDuePromptStates = filterDuePromptStates(
-    promptStates,
-    sessionTimestampMillis,
-  );
+  // TODO fuzzy threshold
+  const initiallyDuePromptStates = reviewSession
+    .getDuePromptTasks({
+      promptStates,
+      thresholdTimestampMillis: sessionTimestampMillis,
+    })
+    .map((id) => promptStates.get(id)!);
 
   if (initiallyDuePromptStates.length >= sessionMaxPromptCount) {
     return { shouldScheduleSession: true, reason: "full-session-ready" };
@@ -87,10 +79,12 @@ export function evaluateReviewSessionSchedule(
     const futureSessionTimestampMillis = dateFns
       .addDays(sessionTimestampMillis, dayIndex)
       .valueOf();
-    const futureDuePromptStates = filterDuePromptStates(
-      promptStates,
-      futureSessionTimestampMillis,
-    );
+    const futureDuePromptStates = reviewSession
+      .getDuePromptTasks({
+        promptStates,
+        thresholdTimestampMillis: futureSessionTimestampMillis,
+      })
+      .map((id) => promptStates.get(id)!);
 
     if (
       estimateOverdueForgottenPromptCount(

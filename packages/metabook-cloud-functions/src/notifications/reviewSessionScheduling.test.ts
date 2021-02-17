@@ -5,7 +5,7 @@ describe("shouldScheduleReviewSession", () => {
   const baseTimestampMillis = Date.now();
   test("no review session when no prompts are due", () => {
     expect(
-      evaluateReviewSessionSchedule(baseTimestampMillis, [], 100),
+      evaluateReviewSessionSchedule(baseTimestampMillis, new Map(), 100),
     ).toMatchObject({
       shouldScheduleSession: false,
       reason: "no-prompts-due",
@@ -55,10 +55,10 @@ describe("shouldScheduleReviewSession", () => {
     expect(
       evaluateReviewSessionSchedule(
         baseTimestampMillis,
-        [
+        new Map([
           ...generateDuePromptStates(baseTimestampMillis, 10, -5, 5),
           ...generateDuePromptStates(baseTimestampMillis, 50, 6, 5),
-        ],
+        ]),
         100,
       ),
     ).toMatchObject({
@@ -71,10 +71,10 @@ describe("shouldScheduleReviewSession", () => {
     expect(
       evaluateReviewSessionSchedule(
         baseTimestampMillis,
-        [
+        new Map([
           ...generateDuePromptStates(baseTimestampMillis, 20, -5, 5),
           ...generateDuePromptStates(baseTimestampMillis, 50, 2, 5),
-        ],
+        ]),
         100,
       ),
     ).toMatchObject({
@@ -87,10 +87,10 @@ describe("shouldScheduleReviewSession", () => {
     expect(
       evaluateReviewSessionSchedule(
         baseTimestampMillis,
-        [
+        new Map([
           ...generateDuePromptStates(baseTimestampMillis, 10, -3, 5),
           ...generateDuePromptStates(baseTimestampMillis, 50, 3, 5),
-        ],
+        ]),
         100,
       ),
     ).toMatchObject({

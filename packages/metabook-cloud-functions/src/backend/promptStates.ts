@@ -1,9 +1,15 @@
 import * as admin from "firebase-admin";
-import { ActionLogID, PromptTaskID, reviewSession } from "metabook-core";
+import {
+  ActionLogID,
+  PromptState,
+  PromptTaskID,
+  reviewSession,
+} from "metabook-core";
 import {
   ActionLogDocument,
   getActionLogIDForFirebaseKey,
   getLogCollectionReference,
+  getPromptStateFromPromptStateCache,
   getTaskStateCacheCollectionReference,
   getTaskStateCacheReference,
   getUserMetadataReference,
@@ -115,33 +121,63 @@ export async function updatePromptStateCacheWithLog(
   return result;
 }
 
-export async function getDuePromptStates(
+export async function listPromptStates(
   userID: string,
-  dueBeforeTimestampMillis: number,
-): Promise<PromptStateCache[]> {
-  const ref = getTaskStateCacheCollectionReference(getDatabase(), userID)
-    .where("dueTimestampMillis", "<=", dueBeforeTimestampMillis)
-    .where("taskMetadata.isDeleted", "==", false)
-    .limit(reviewSession.getReviewSessionCardLimit());
+  query: {
+    dueBeforeTimestampMillis?: number;
+    afterID?: PromptTaskID;
+    limit?: number;
+  },
+): Promise<Map<PromptTaskID, PromptState>> {
+  const db = getDatabase();
+  const ref = getTaskStateCacheCollectionReference(db, userID).orderBy(
+    "creationServerTimestamp",
+  );
+  if (query.dueBeforeTimestampMillis) {
+    ref
+      .where(
+        "dueTimestampMillis",
+        "<=",
+        reviewSession.getFuzzyDueTimestampThreshold(
+          query.dueBeforeTimestampMillis,
+        ),
+      )
+      .where("taskMetadata.isDeleted", "==", false);
+  }
+  if (query.afterID) {
+    const baseRef = await getTaskStateCacheReference(db, userID, query.afterID);
+    const baseSnapshot = await baseRef.get();
+    if (!baseSnapshot.exists) {
+      throw new Error(`afterID ${query.afterID} does not exist`);
+    }
+    ref.startAfter(baseSnapshot);
+  }
+  ref.limit(query.limit ?? 100);
+
   const snapshot = await ref.get();
-  return snapshot.docs.map((doc) => doc.data());
+  return new Map(
+    snapshot.docs.map((doc) => [
+      doc.id as PromptTaskID,
+      getPromptStateFromPromptStateCache(doc.data()),
+    ]),
+  );
 }
 
 export async function getPromptStates(
   userID: string,
   taskIDs: PromptTaskID[],
-): Promise<Map<PromptTaskID, PromptStateCache>> {
+): Promise<Map<PromptTaskID, PromptState>> {
   const db = getDatabase();
   const refs = await Promise.all(
     taskIDs.map((id) => getTaskStateCacheReference(db, userID, id)),
   );
   const snapshots = await getDatabase().getAll(...refs);
-
-  const output: Map<PromptTaskID, PromptStateCache> = new Map();
-  snapshots.forEach((snapshot, index) => {
-    if (snapshot.exists) {
-      output.set(taskIDs[index], snapshot.data() as PromptStateCache);
-    }
-  });
-  return output;
+  return new Map(
+    snapshots
+      .map((snapshot) =>
+        snapshot.exists ? (snapshot.data() as PromptStateCache) : null,
+      )
+      .filter((p): p is PromptStateCache => !!p)
+      .map((p) => [p.taskID, getPromptStateFromPromptStateCache(p)]),
+  );
 }
