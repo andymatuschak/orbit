@@ -57,7 +57,7 @@ export function useInitialPromptStates({
         },
       );
 
-      userClient.listTaskStates({ ids: taskIDs }).then((response) => {
+      userClient.getTaskStates(taskIDs).then((response) => {
         const output = new Map<PromptTaskID, PromptState>();
         for (const { id, data } of response.data) {
           output.set(id, data);

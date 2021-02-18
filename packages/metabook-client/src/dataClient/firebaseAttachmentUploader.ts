@@ -1,14 +1,15 @@
 import firebase from "firebase/app";
 import "firebase/storage";
-import { getFirebaseKeyForCIDString } from "metabook-firebase-support";
+import {
+  getFirebaseKeyForCIDString,
+  storageAttachmentsPathComponent,
+} from "metabook-firebase-support";
 import AttachmentUploader from "./attachmentUploader";
-
-const attachmentBucketSubpath = "attachments";
 
 export default function firebaseAttachmentUploader(
   storage: firebase.storage.Storage,
 ): AttachmentUploader {
-  const attachmentPathRef = storage.ref(attachmentBucketSubpath);
+  const attachmentPathRef = storage.ref(storageAttachmentsPathComponent);
   return async (attachment, attachmentID) => {
     const ref = attachmentPathRef.child(
       getFirebaseKeyForCIDString(attachmentID),

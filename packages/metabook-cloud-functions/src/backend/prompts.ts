@@ -5,12 +5,20 @@ import { getDatabase } from "./firebase";
 
 export async function getPrompts(
   promptIDs: PromptID[],
-): Promise<(Prompt | null)[]> {
+): Promise<Map<PromptID, Prompt>> {
   const db = getDatabase();
   const snapshots = (await getDatabase().getAll(
     ...promptIDs.map((promptID) => getDataRecordReference(db, promptID)),
   )) as admin.firestore.DocumentSnapshot<Prompt>[];
-  return snapshots.map((snapshot) => snapshot.data() ?? null);
+
+  const output: Map<PromptID, Prompt> = new Map();
+  for (const snapshot of snapshots) {
+    const prompt = snapshot.data();
+    if (prompt) {
+      output.set(snapshot.id as PromptID, prompt);
+    }
+  }
+  return output;
 }
 
 export function storePrompts(prompts: Prompt[]): Promise<PromptID[]> {

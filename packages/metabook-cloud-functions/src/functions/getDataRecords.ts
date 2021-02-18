@@ -15,8 +15,8 @@ export default functions.https.onCall(async function <R extends Prompt>(
   args: GetDataRecordsArguments<Prompt>,
 ): Promise<GetDataRecordsResult<Prompt>> {
   // TODO: implement length limit
-  const records = await backend.prompts.getPrompts(
+  const recordMap = await backend.prompts.getPrompts(
     args.recordIDs as PromptID[],
   );
-  return { records };
+  return { records: args.recordIDs.map((id) => recordMap.get(id) ?? null) };
 });

@@ -1,6 +1,8 @@
 import {
   ActionLog,
   ActionLogID,
+  Prompt,
+  PromptID,
   PromptState,
   PromptTaskID,
 } from "metabook-core";
@@ -15,7 +17,7 @@ export type Spec = {
             createdAfterID?: PromptTaskID;
             dueBeforeTimestampMillis?: number;
           }
-        | { ids: string[] };
+        | { ids: PromptTaskID[] };
       response: ResponseList<"taskState", PromptTaskID, PromptState>;
     };
   };
@@ -34,6 +36,26 @@ export type Spec = {
       response: void;
     };
   };
+
+  "/taskData": {
+    GET: {
+      query: { ids: PromptID[] };
+      response: ResponseList<"taskData", PromptID, Prompt>;
+    };
+
+    PATCH: {
+      body: { id: PromptID; data: Prompt }[];
+      response: void;
+    };
+  };
+
+  /*
+
+  POST /attachments: upload an attachment
+    encode with multipart/form-data, with the file in part named "file"
+    make sure to include Content-Type heading for your attachment
+    returns application/json encoded ResponseObject<"attachmentIDReference", AttachmentID, AttachmentIDReference>
+   */
 };
 
 export type ResponseList<

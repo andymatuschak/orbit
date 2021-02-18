@@ -1,6 +1,7 @@
 export { MetabookFirebaseUserClient } from "./firebaseClient";
 export * from "./userClient";
 import { OrbitAPI } from "@withorbit/api";
+import { PromptID, PromptTaskID } from "metabook-core";
 import { APIConfig, defaultAPIConfig } from "../apiConfig";
 import { RequestManager } from "../requestManager";
 import { Request } from "../util/fetch";
@@ -20,9 +21,20 @@ export class UserClient {
     );
   }
 
-  listTaskStates = (query: OrbitAPI.Spec["/taskStates"]["GET"]["query"] = {}) =>
+  listTaskStates = (
+    query: {
+      limit?: number;
+      createdAfterID?: PromptTaskID;
+      dueBeforeTimestampMillis?: number;
+    } = {},
+  ) =>
     this.requestManager.request("/taskStates", "GET", {
       query,
+    });
+
+  getTaskStates = (ids: PromptTaskID[]) =>
+    this.requestManager.request("/taskStates", "GET", {
+      query: { ids },
     });
 
   listActionLogs = (query: OrbitAPI.Spec["/actionLogs"]["GET"]["query"] = {}) =>
@@ -33,5 +45,15 @@ export class UserClient {
   storeActionLogs = (logs: OrbitAPI.Spec["/actionLogs"]["PATCH"]["body"]) =>
     this.requestManager.request("/actionLogs", "PATCH", {
       body: logs,
+    });
+
+  getTaskData = (ids: PromptID[]) =>
+    this.requestManager.request("/taskData", "GET", {
+      query: { ids },
+    });
+
+  storeTaskData = (data: OrbitAPI.Spec["/taskData"]["PATCH"]["body"]) =>
+    this.requestManager.request("/taskData", "PATCH", {
+      body: data,
     });
 }
