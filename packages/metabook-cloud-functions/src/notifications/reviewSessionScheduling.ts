@@ -46,11 +46,19 @@ export function evaluateReviewSessionSchedule(
   promptStates: Map<PromptTaskID, PromptState>,
   activePromptCount: number | null,
 ): ReviewSessionSchedulingDecision {
+  if (activePromptCount === null || activePromptCount === 0) {
+    if (promptStates.size > 0) {
+      throw new Error(
+        `Inconsistency: ${promptStates.size} due prompt states but missing activePromptCount`,
+      );
+    }
+    return { shouldScheduleSession: false, reason: "no-prompts-due" };
+  }
+
   const sessionMaxPromptCount = Math.min(
-    activePromptCount ?? Number.MAX_VALUE,
+    activePromptCount,
     reviewSession.getReviewSessionCardLimit(),
   );
-  // TODO fuzzy threshold
   const initiallyDuePromptStates = reviewSession
     .getDuePromptTasks({
       promptStates,

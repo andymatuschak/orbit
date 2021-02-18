@@ -44,6 +44,10 @@ describe("_getUserNotificationAction", () => {
 
   const fetchManyPromptsDueMock = async () =>
     generateDuePromptStates(testTimestamp, 100, -5, 5);
+  const manyDueUserMetadata: UserMetadata = {
+    ...baseMetadata,
+    activeTaskCount: 100,
+  };
 
   test("no session, not due yet", async () => {
     expect(
@@ -63,7 +67,7 @@ describe("_getUserNotificationAction", () => {
       await _getUserNotificationAction(
         testTimestamp,
         "",
-        baseMetadata,
+        manyDueUserMetadata,
         fetchManyPromptsDueMock,
         emailAccessMock,
       ),
