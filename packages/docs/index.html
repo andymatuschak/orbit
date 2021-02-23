@@ -87,7 +87,8 @@
       <a href="https://www.webcomponents.org">Web Component</a> which can be
       used in any HTML page. Setup is easy: add one
       <code>&lt;script&gt;</code> tag, then you can use special
-      <code>&lt;orbit-reviewarea&gt;</code> and <code>&lt;orbit-prompt&gt;</code> tags anywhere on the page to insert
+      <code>&lt;orbit-reviewarea&gt;</code> and
+      <code>&lt;orbit-prompt&gt;</code> tags anywhere on the page to insert
       prompts. Here's an example:
     </p>
     <pre id="exampleListing">
@@ -121,8 +122,9 @@
         answer="Orbit"
       ></orbit-prompt>
       <orbit-prompt
-        question="What's the new-ish web technology used to embed Orbit prompts into web pages?"
-        answer="Web components"
+        question="What kind of quantum gate is this?"
+        question-attachments="https://docs.withorbit.com/toffoli.png"
+        answer="A Toffoli gate."
       ></orbit-prompt>
       <orbit-prompt
         question="Given a right triangle with legs of length $a$
@@ -134,24 +136,46 @@
 
     <script>
       const colorIndex = Math.floor(Math.random() * 12);
-      const colorName = ["red", "orange", "brown", "yellow", "lime", "green", "turquoise", "cyan", "blue", "violet", "purple", "pink"][colorIndex];
-      const listingNode = document.getElementById("exampleListing")
-      listingNode.innerHTML = listingNode.innerHTML.replace(/"red"/, `"${colorName}"`);
+      const colorName = [
+        "red",
+        "orange",
+        "brown",
+        "yellow",
+        "lime",
+        "green",
+        "turquoise",
+        "cyan",
+        "blue",
+        "violet",
+        "purple",
+        "pink",
+      ][colorIndex];
+      const listingNode = document.getElementById("exampleListing");
+      listingNode.innerHTML = listingNode.innerHTML.replace(
+        /"red"/,
+        `"${colorName}"`,
+      );
       document.getElementById("reviewArea").setAttribute("color", colorName);
     </script>
 
     <p>
       That's it! You can publish that web page as it is. Your readers will be
-        prompted to sign into Orbit if they haven't already. The prompts they answered will be saved to their account. Next time they have prompts ready for review, they'll be notified by email and provided a link to the Orbit review interface, which displays prompts aggregated from all the sites they've visited.</p>
-
-    <p>You don't
-      have to do anything special to register your site, though in the future
-      I'll allow you to register URLs so that you can see reader analytics.
+      prompted to sign into Orbit if they haven't already. The prompts they
+      answered will be saved to their account. Next time they have prompts ready
+      for review, they'll be notified by email and provided a link to the Orbit
+      review interface, which displays prompts aggregated from all the sites
+      they've visited.
     </p>
 
     <p>
-      While that example can be published as it is, read on to learn more about how
-      to configure Orbit for your web site.
+      You don't have to do anything special to register your site, though in the
+      future I'll allow you to register URLs so that you can see reader
+      analytics.
+    </p>
+
+    <p>
+      While that example can be published as it is, read on to learn more about
+      how to configure Orbit for your web site.
     </p>
 
     <h2>Configuring review areas</h2>
@@ -159,16 +183,26 @@
     <h3>Prompts support simple formatting</h3>
 
     <p>
-        The <code>question</code> and <code>answer</code> attributes support a
-        subset of Markdown formatting. In particular, you can use inline styling
-        and multiple paragraphs. You can use LaTeX by enclosing inline math in $
-        symbols and display blocks in $$ symbols, as in the example above.
+      The <code>question</code> and <code>answer</code> attributes support a
+      subset of Markdown formatting. In particular, you can use inline styling
+      and multiple paragraphs. You can use LaTeX by enclosing inline math in $
+      symbols and display blocks in $$ symbols, as in the example above.
     </p>
 
     <p>
-        Support for images and videos is forthcoming. Please
-        <a href="mailto:andy@andymatuschak.org">let me know</a> if these absences
-        are blocking you to help me prioritize.
+      You can attach an image (PNG, GIF) to the question or answer by specifying
+      a URL using the <code>question-attachments</code> or
+      <code>answer-attachments</code> attribute, as in the example above. You
+      may omit the <code>question</code> or <code>answer</code> attributes if an
+      attachment is present. Note that you must supply an absolute URL, not a
+      relative URL like <code>/toffoli.png</code>. Your image will be cached on
+      Orbit's servers, and changes to its contents may not propage reliably. If
+      you need to update an image, you should also change its URL.
+    </p>
+    <p>
+      Support for videos, multiple images, and custom layouts is forthcoming.
+      Please <a href="mailto:andy@andymatuschak.org">let me know</a> if these
+      absences are blocking you to help me prioritize.
     </p>
 
     <h3>Review areas have colors</h3>
@@ -196,11 +230,11 @@
     <h3>Orbit relies on page metadata</h3>
 
     <p>
-      When readers review one of your prompts in their follow-up sessions, Orbit provides context by
-      displaying a link to the page containing those prompts. The interface may
-      also display progress grouped by "source" pages. It's important to make
-      sure that metadata is correct. Here's the information Orbit extracts from
-      your page and how to customize it:
+      When readers review one of your prompts in their follow-up sessions, Orbit
+      provides context by displaying a link to the page containing those
+      prompts. The interface may also display progress grouped by "source"
+      pages. It's important to make sure that metadata is correct. Here's the
+      information Orbit extracts from your page and how to customize it:
     </p>
     <ul>
       <li>
@@ -225,24 +259,28 @@
         tag if present.
       </li>
     </ul>
-    <p>Here's an example <code>&lt;head&gt;</code> demonstrating these values:</p>
-    <pre>&lt;head&gt;
+    <p>
+      Here's an example <code>&lt;head&gt;</code> demonstrating these values:
+    </p>
+    <pre>
+&lt;head&gt;
     &lt;title&gt;Obesity - Our World in Data&lt;/title&gt;
     &lt;link rel="canonical" href="https://ourworldindata.org/obesity"&gt;
     &lt;meta property="og:title" content="Obesity"&gt;
     &lt;meta property="og:site_name" content="Our World in Data"&gt;
-&lt;/head&gt;</pre>
+&lt;/head&gt;</pre
+    >
 
     <h3>You can include multiple review areas on a single page</h3>
 
     <p>
-      It's common to use several <code>&lt;orbit-reviewarea&gt;</code> tags on the same page, interleaving
-      them every few hundred words. Orbit currently assumes that all the review
-      areas which appear on a web page should be considered part of the same
-      single piece of content. This works fine for long-form content but will
-      produce confusing results in e.g. a blog layout which displays many posts'
-      contents on one big page. Orbit will eventually allow finer-grained
-      configuration here; please
+      It's common to use several <code>&lt;orbit-reviewarea&gt;</code> tags on
+      the same page, interleaving them every few hundred words. Orbit currently
+      assumes that all the review areas which appear on a web page should be
+      considered part of the same single piece of content. This works fine for
+      long-form content but will produce confusing results in e.g. a blog layout
+      which displays many posts' contents on one big page. Orbit will eventually
+      allow finer-grained configuration here; please
       <a href="mailto:andy@andymatuschak.org">let me know</a> if your site needs
       this to help me prioritize.
     </p>
@@ -263,9 +301,9 @@
 
     <p>
       The existing prompt interface and scheduler are tuned to questions which
-      help people remember and internalize what they read. I believe it's also possible to use
-      Orbit to prompt reflection, self-authorship, texts which extend over time,
-      and so on. Please
+      help people remember and internalize what they read. I believe it's also
+      possible to use Orbit to prompt reflection, self-authorship, texts which
+      extend over time, and so on. Please
       <a href="mailto:andy@andymatuschak.org">let me know</a> if you're
       interested in exploring these use cases; we can figure out how to extend
       the interface in a way that suits your text.
@@ -285,7 +323,16 @@
 
     <p>
       This topic ultimately deserves a small <em>Elements of Style</em>-like
-      book. I've begun by creating a guide to writing good prompts for your own personal study practice: <em><a href="https://andymatuschak.org/prompts">How to write good prompts</a></em>. Writing good prompts for other people is more challenging. Once I understand those considerations better, I'll write a follow-up guide on that topic. In the meantime, here are a few resources which might be useful:
+      book. I've begun by creating a guide to writing good prompts for your own
+      personal study practice:
+      <em
+        ><a href="https://andymatuschak.org/prompts"
+          >How to write good prompts</a
+        ></em
+      >. Writing good prompts for other people is more challenging. Once I
+      understand those considerations better, I'll write a follow-up guide on
+      that topic. In the meantime, here are a few resources which might be
+      useful:
     </p>
 
     <ul>
