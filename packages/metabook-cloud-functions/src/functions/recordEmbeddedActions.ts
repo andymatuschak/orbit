@@ -64,6 +64,7 @@ export default functions.https.onCall(async function (
     // Store logs
     await storeLogs(context.auth.uid, args.logs);
   } catch (error) {
-    throw new functions.https.HttpsError("invalid-argument", error.message);
+    console.error(error.message);
+    throw new functions.https.HttpsError("internal", error.message);
   }
 });
