@@ -1,37 +1,33 @@
 import { API } from "@withorbit/api";
 import { APIConfig } from "./apiConfig";
-import { fetch, Request } from "./util/fetch";
+import * as Network from "./util/fetch";
 
 export class RequestManager<API extends API.Spec> {
   private readonly config: APIConfig;
-  private readonly prepareRequest?: (request: Request) => Promise<void>;
+  private readonly authorizeRequest?: () => Promise<AuthenticationConfig>;
 
   constructor(
     config: APIConfig,
-    prepareRequest?: (request: Request) => Promise<void>,
+    authorizeRequest?: () => Promise<AuthenticationConfig>,
   ) {
     this.config = config;
-    this.prepareRequest = prepareRequest;
+    this.authorizeRequest = authorizeRequest;
   }
 
-  createRequest<
+  createRequestURL<
     Path extends Extract<keyof API, string>,
     Method extends Extract<keyof API[Path], API.HTTPMethod>
   >(
     path: Path,
     method: Method,
     requestData: API.RouteRequestData<API[Path][Method]>,
-  ): Request {
+  ): string {
     const url = new URL(`${this.config.baseURL}${path}`);
 
     if (requestData.query) {
       mergeQueryParameters(requestData.query, url.searchParams);
     }
-
-    // TODO: handle body
-    // Make sure to set header: "Content-Type": "application/json",
-
-    return new Request(url, { method, headers: defaultHTTPHeaders });
+    return url.href;
   }
 
   async request<
@@ -42,10 +38,25 @@ export class RequestManager<API extends API.Spec> {
     method: Method,
     requestData: API.RouteRequestData<API[Path][Method]>,
   ): Promise<API.RouteResponseData<API[Path][Method]>> {
-    const request = this.createRequest(path, method, requestData);
-    await this.prepareRequest?.(request);
+    const url = this.createRequestURL(path, method, requestData);
+    const authorizationConfig = await this.authorizeRequest?.();
+    const wireBody = getWireBody(requestData);
 
-    const response = await (this.config.fetch ?? fetch)(request);
+    const response = await (this.config.fetch ?? Network.fetch)(url, {
+      method,
+      headers: {
+        ...defaultHTTPHeaders,
+        ...(authorizationConfig && {
+          Authorization: getHeaderForAuthenticationConfig(authorizationConfig),
+        }),
+        ...(wireBody?.contentType &&
+          // When using multipart/form-data, we allow fetch() to set the content type header for us, since it includes the multipart boundary ID.
+          wireBody.contentType !== "multipart/form-data" && {
+            "Content-Type": wireBody.contentType,
+          }),
+      },
+      body: wireBody?.body as any,
+    });
     if (response.ok) {
       if (response.status === 204) {
         // TODO validate that the response should be void
@@ -60,7 +71,7 @@ export class RequestManager<API extends API.Spec> {
     } else {
       // TODO probably also include body information about the error
       throw new Error(
-        `Request failed (${response.status} ${response.statusText}): ${request.method} ${request.url}`,
+        `Request failed (${response.status} ${response.statusText}): ${method} ${response.url}`,
       );
     }
   }
@@ -82,6 +93,49 @@ function mergeQueryParameters(
     }
   }
 }
+
+function getWireBody<
+  API extends API.Spec,
+  Path extends Extract<keyof API, string>,
+  Method extends Extract<keyof API[Path], API.HTTPMethod>
+>(
+  requestData: API.RouteRequestData<API[Path][Method]>,
+): { body: Network.FormData | string; contentType: string } | null {
+  if (requestData.body) {
+    switch (requestData.contentType) {
+      case "multipart/form-data":
+        const formData = new Network.FormData();
+        for (const name of Object.keys(requestData.body)) {
+          formData.set(name, requestData.body[name]);
+        }
+        return { body: formData, contentType: requestData.contentType };
+      case "application/json":
+      case undefined:
+        return {
+          body: JSON.stringify(requestData.body),
+          contentType: "application/json",
+        };
+    }
+  } else {
+    return null;
+  }
+}
+
+function getHeaderForAuthenticationConfig(
+  config: AuthenticationConfig,
+): string {
+  if ("idToken" in config) {
+    return `ID ${config.idToken}`;
+  } else if ("personalAccessToken" in config) {
+    return `Token ${config.personalAccessToken}`;
+  } else {
+    throw new Error(`Unknown authentication config`);
+  }
+}
+
+export type AuthenticationConfig =
+  | { idToken: string }
+  | { personalAccessToken: string };
 
 const defaultHTTPHeaders = {
   Accept: "application/json",

@@ -10,11 +10,9 @@ import {
   PromptID,
 } from "metabook-core";
 import {
-  storageBucketName,
   DataRecord,
   DataRecordID,
-  storageAttachmentsPathComponent,
-  getFirebaseKeyForCIDString,
+  getAttachmentURL,
 } from "metabook-firebase-support";
 import AttachmentUploader from "./attachmentUploader";
 
@@ -90,8 +88,6 @@ export class MetabookFirebaseDataClient implements MetabookDataClient {
   }
 
   getAttachmentURL(attachmentID: AttachmentID): string {
-    return `https://storage.googleapis.com/${storageBucketName}/${storageAttachmentsPathComponent}/${getFirebaseKeyForCIDString(
-      attachmentID,
-    )}`;
+    return getAttachmentURL(attachmentID);
   }
 }

@@ -1,11 +1,14 @@
 import {
   ActionLog,
   ActionLogID,
+  AttachmentID,
+  AttachmentIDReference,
   Prompt,
   PromptID,
   PromptState,
   PromptTaskID,
 } from "metabook-core";
+import { BlobLike } from "./genericHTTPAPI";
 
 // Meant to conform to genericHTTPAPI/Spec, but I can't declare conformance without running into obscure Typescript limitations.
 export type Spec = {
@@ -46,6 +49,20 @@ export type Spec = {
     PATCH: {
       body: { id: PromptID; data: Prompt }[];
       response: void;
+    };
+  };
+
+  "/attachments": {
+    POST: {
+      contentType: "multipart/form-data";
+      body: {
+        file: BlobLike;
+      };
+      response: ResponseObject<
+        "attachmentIDReference",
+        AttachmentID,
+        AttachmentIDReference
+      >;
     };
   };
 

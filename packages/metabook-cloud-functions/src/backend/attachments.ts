@@ -1,5 +1,6 @@
 import { Buffer } from "buffer";
 import {
+  Attachment,
   AttachmentID,
   AttachmentIDReference,
   AttachmentMimeType,
@@ -9,6 +10,7 @@ import {
 } from "metabook-core";
 import {
   getAttachmentIDForFirebaseKey,
+  getAttachmentURL,
   getStorageObjectNameForAttachmentID,
   storageAttachmentsPathComponent,
   storageBucketName,
@@ -172,5 +174,28 @@ export async function storeAttachmentAtURLIfNecessary(
         "\t",
       )}`,
     );
+  }
+}
+
+export async function storeAttachment(
+  attachment: Attachment,
+): Promise<{
+  attachmentID: AttachmentID;
+  status: "stored" | "alreadyExists";
+  url: string;
+}> {
+  const attachmentID = await getIDForAttachment(attachment.contents);
+  const url = getAttachmentURL(attachmentID);
+
+  const fileRef = _getFileReferenceForAttachmentID(attachmentID);
+  const [exists] = await fileRef.exists();
+  if (exists) {
+    return { attachmentID, status: "alreadyExists", url };
+  } else {
+    await fileRef.save(attachment.contents, {
+      contentType: attachment.mimeType,
+    });
+    // TODO: move validation / metadata bits here.
+    return { attachmentID, status: "stored", url };
   }
 }

@@ -1,10 +1,16 @@
 export { MetabookFirebaseUserClient } from "./firebaseClient";
 export * from "./userClient";
 import { OrbitAPI } from "@withorbit/api";
-import { PromptID, PromptTaskID } from "metabook-core";
+import {
+  Attachment,
+  AttachmentID,
+  AttachmentIDReference,
+  PromptID,
+  PromptTaskID,
+} from "metabook-core";
 import { APIConfig, defaultAPIConfig } from "../apiConfig";
-import { RequestManager } from "../requestManager";
-import { Request } from "../util/fetch";
+import { AuthenticationConfig, RequestManager } from "../requestManager";
+import { Request, Blob } from "../util/fetch";
 
 export class UserClient {
   private requestManager: RequestManager<OrbitAPI.Spec>;
@@ -12,7 +18,7 @@ export class UserClient {
   // authenticateRequest delegates authorization of requests to the client. Clients should add an HTTP Authorization header according to their access method.
   // TODO: invert control, internalize this authorization logic into this library
   constructor(
-    authenticateRequest: (request: Request) => Promise<void>,
+    authenticateRequest: () => Promise<AuthenticationConfig>,
     config: APIConfig = defaultAPIConfig,
   ) {
     this.requestManager = new RequestManager<OrbitAPI.Spec>(
@@ -56,4 +62,20 @@ export class UserClient {
     this.requestManager.request("/taskData", "PATCH", {
       body: data,
     });
+
+  storeAttachment(
+    attachment: Attachment,
+  ): Promise<
+    OrbitAPI.ResponseObject<
+      "attachmentIDReference",
+      AttachmentID,
+      AttachmentIDReference
+    >
+  > {
+    const blob = new Blob([attachment.contents], { type: attachment.mimeType });
+    return this.requestManager.request("/attachments", "POST", {
+      contentType: "multipart/form-data",
+      body: { file: blob },
+    });
+  }
 }

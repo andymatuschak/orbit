@@ -1,9 +1,9 @@
-import { fetch } from "./util/fetch";
+import * as Network from "./util/fetch";
 
 export interface APIConfig {
   baseURL: string; // no trailing slash
 
-  fetch?: typeof fetch;
+  fetch?: typeof Network.fetch;
 }
 
 export const defaultAPIConfig: APIConfig = {

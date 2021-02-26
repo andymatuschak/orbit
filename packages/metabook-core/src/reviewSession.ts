@@ -1,12 +1,8 @@
 // Given some time might be computing whether a user has a session due, we evaluate whether cards are due using a date slightly shifted into the future, to find the cards that'd be due on that conceptual day.
-import { PromptID } from "../dist";
+import { PromptID } from "./promptID";
 import { PromptState } from "./promptState";
 import { clozePromptType } from "./types/prompt";
-import {
-  getPromptTaskForID,
-  PromptTask,
-  PromptTaskID,
-} from "./types/promptTask";
+import { getPromptTaskForID, PromptTaskID } from "./types/promptTask";
 
 export function getReviewSessionCardLimit(): number {
   return 50;

@@ -11,3 +11,9 @@ export function getStorageObjectNameForAttachmentID(
     attachmentID,
   )}`;
 }
+
+export function getAttachmentURL(attachmentID: AttachmentID): string {
+  return `https://storage.googleapis.com/${storageBucketName}/${storageAttachmentsPathComponent}/${getFirebaseKeyForCIDString(
+    attachmentID,
+  )}`;
+}

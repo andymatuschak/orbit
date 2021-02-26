@@ -31,34 +31,43 @@ export async function authenticateTypedRequest<
   ) => Promise<TypedResponse<API.RouteResponseData<API[Path][Method]>>>,
 ): Promise<TypedResponse<API.RouteResponseData<API[Path][Method]>>> {
   const authorizationHeader = request.header("Authorization");
-  let idToken: string | null = null;
   if (authorizationHeader) {
     const match = authorizationHeader.match(/ID (.+)/);
     if (match) {
-      idToken = match[1];
-    }
-  }
-
-  const accessCode = (request.query as any)["accessCode"];
-  if (accessCode && typeof accessCode === "string") {
-    let userID: string;
-    try {
-      userID = await backend.auth.consumeAccessCode(accessCode, Date.now());
-    } catch (error) {
-      console.error(`Couldn't consume access code ${accessCode}: ${error}`);
-      return { status: 401 };
-    }
-    return next(userID);
-  } else if (idToken) {
-    try {
-      const userID = await backend.auth.validateIDToken(idToken);
-      return next(userID);
-    } catch (error) {
-      console.error(`Couldn't validate ID token ${idToken}: ${error}`);
-      return { status: 401 };
+      try {
+        return next(await backend.auth.validateIDToken(match[1]));
+      } catch (error) {
+        console.error(`Couldn't validate ID token: ${error}`);
+        return { status: 401 };
+      }
+    } else {
+      const match = authorizationHeader.match(/Token (.+)/);
+      if (match) {
+        try {
+          return next(await backend.auth.consumeAccessCode(match[1]));
+        } catch (error) {
+          console.error(`Couldn't consume access token: ${error}`);
+          return { status: 401 };
+        }
+      } else {
+        console.error(`Unknown authorization scheme`);
+        return { status: 401 };
+      }
     }
   } else {
-    return { status: 401 };
+    const accessCode = (request.query as any)["accessCode"];
+    if (accessCode && typeof accessCode === "string") {
+      let userID: string;
+      try {
+        userID = await backend.auth.consumeAccessCode(accessCode, Date.now());
+      } catch (error) {
+        console.error(`Couldn't consume access code ${accessCode}: ${error}`);
+        return { status: 401 };
+      }
+      return next(userID);
+    } else {
+      return { status: 401 };
+    }
   }
 }
 

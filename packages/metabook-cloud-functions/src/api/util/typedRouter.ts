@@ -1,5 +1,8 @@
 import { API } from "@withorbit/api";
+import Busboy from "busboy";
 import express from "express";
+import Blob from "fetch-blob";
+import { Writable } from "stream";
 
 // Adapted from https://github.com/rawrmaan/restyped-express-async
 
@@ -33,10 +36,11 @@ export type TypedRouteHandler<
   request: TypedRequest<API[Path][Method]>,
 ) => Promise<TypedResponse<API.RouteResponseData<API[Path][Method]>>>;
 
-export type TypedResponse<Data> =
-  | { status: 200; json: Data; cachePolicy: CachePolicy }
+export type TypedResponse<Data> = (
+  | { status: 200 | 201; json: Data; cachePolicy: CachePolicy }
   | { status: 204 }
-  | { status: 400 | 401 };
+  | { status: 400 | 401 }
+) & { headers?: { [name: string]: string } };
 
 // We use a simplified set of caching policies.
 export enum CachePolicy {
@@ -59,14 +63,26 @@ export default function createTypedRouter<API extends API.Spec>(
     baseRouteMatcher: express.IRouterMatcher<void>,
     handler: TypedRouteHandler<API, Path, Method>,
   ) {
-    baseRouteMatcher(path, function (request, response, next) {
+    baseRouteMatcher(path, async function (request, response, next) {
+      if (request.header("Content-Type")?.startsWith("multipart/form-data")) {
+        const { fields, uploads } = await extractMultipartFormData(request);
+        request.body = { ...fields, ...uploads };
+      }
       // TODO: validate request data
+
       return handler(request as TypedRequest<API[Path][Method]>)
         .then((result) => {
           response.status(result.status);
+
+          for (const [name, value] of Object.entries(result.headers ?? {})) {
+            response.setHeader(name, value);
+          }
+
           if (result.status === 200) {
             response.header("Cache-Control", result.cachePolicy);
-            response.send(result.json);
+            response.json(result.json);
+          } else {
+            response.send();
           }
         })
         .catch((err) => next(err));
@@ -93,4 +109,61 @@ export default function createTypedRouter<API extends API.Spec>(
       createRoute(path, baseRouteMatchers[method], handlers[path][method]);
     }
   }
+}
+
+function extractMultipartFormData(
+  request: express.Request,
+): Promise<{
+  fields: API.RequestFormData;
+  uploads: { [fieldname: string]: Blob };
+}> {
+  return new Promise((resolve, reject) => {
+    if (request.method != "POST") {
+      return reject(405);
+    } else {
+      const busboy = new Busboy({ headers: request.headers });
+      const fields: API.RequestFormData = {};
+      const uploads: { [fieldname: string]: Blob } = {};
+      const writePromises: Promise<unknown>[] = [];
+
+      busboy.on("field", (fieldname, val) => (fields[fieldname] = val));
+
+      busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
+        const chunks: Buffer[] = [];
+        const writable = new Writable({
+          write(chunk, encoding, next) {
+            chunks.push(chunk);
+            next();
+          },
+        });
+
+        file.pipe(writable);
+
+        const promise = new Promise((resolve, reject) => {
+          file.on("end", () => {
+            uploads[fieldname] = new Blob(chunks, { type: mimetype });
+          });
+          writable.on("finish", resolve);
+          writable.on("error", reject);
+        });
+        writePromises.push(promise);
+      });
+
+      busboy.on("finish", async () => {
+        const result = { fields, uploads };
+        await Promise.all(writePromises);
+        resolve(result);
+      });
+
+      busboy.on("error", reject);
+
+      // GCS munges multipart requests in a way which prevents direct piping into Busboy, but it adds a rawBody field containing the original body. https://cloud.google.com/functions/docs/writing/http#handling_multipart_form_uploads
+      const { rawBody } = request as express.Request & { rawBody?: Buffer };
+      if (rawBody) {
+        busboy.end(rawBody);
+      } else {
+        request.pipe(busboy);
+      }
+    }
+  });
 }

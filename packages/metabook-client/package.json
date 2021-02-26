@@ -29,10 +29,12 @@
   },
   "dependencies": {
     "@withorbit/api": "0.0.1",
+    "fetch-blob": "^2.1.1",
     "firebase": "^8.2.0",
+    "formdata-node": "^2.4.0",
     "metabook-core": "0.0.1",
     "metabook-firebase-support": "0.0.1",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "next"
   },
   "scripts": {
     "build": "tsc -b",

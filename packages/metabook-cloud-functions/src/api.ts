@@ -2,6 +2,7 @@ import { OrbitAPI } from "@withorbit/api";
 import cookieParser from "cookie-parser";
 import express from "express";
 import { listActionLogs, storeActionLogs } from "./api/actionLogs";
+import { storeAttachment } from "./api/attachments";
 import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode";
 import { createLoginToken } from "./api/internal/auth/createLoginToken";
 import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens";
@@ -47,6 +48,9 @@ export function createAPIApp(): express.Application {
     "/taskData": {
       GET: listTaskData,
       PATCH: storeTaskData,
+    },
+    "/attachments": {
+      POST: storeAttachment,
     },
   });
 
