@@ -5,12 +5,9 @@ import {
   getPromptTaskForID,
   PromptID,
   PromptProvenanceType,
+  PromptState,
+  PromptTaskID,
 } from "metabook-core";
-import {
-  maxServerTimestamp,
-  PromptStateCache,
-  ServerTimestamp,
-} from "metabook-firebase-support";
 import spacedEverything from "spaced-everything";
 import subleveldown from "subleveldown";
 import drainIterator from "./util/drainIterator";
@@ -48,7 +45,7 @@ export interface CachedPromptRecord {
   ITPrompt: IT.Prompt;
 }
 
-const latestServerTimestampKey = "latestServerTimestamp";
+const lastStoredTaskID = "lastStoredTaskID";
 
 export default class SpacedEverythingImportCache {
   private db: LevelUp;
@@ -93,11 +90,8 @@ export default class SpacedEverythingImportCache {
     }
   }
 
-  async getLatestServerTimestamp(): Promise<ServerTimestamp | null> {
-    const result = await getJSONRecord<ServerTimestamp>(
-      this.db,
-      latestServerTimestampKey,
-    );
+  async getLastStoredTaskID(): Promise<string | null> {
+    const result = await getJSONRecord<string>(this.db, lastStoredTaskID);
     return result?.record ?? null;
   }
 
@@ -111,11 +105,11 @@ export default class SpacedEverythingImportCache {
     return result?.record ?? null;
   }
 
-  async storePromptStateCaches(
+  async storePromptStates(
     entries: {
-      promptStateCache: PromptStateCache;
+      promptState: PromptState;
       ITPrompt: IT.Prompt;
-      promptID: PromptID;
+      taskID: PromptTaskID;
     }[],
   ): Promise<void> {
     const promptRecordsByCSTIDBatch = this.promptRecordsByCSTID.batch();
@@ -124,43 +118,33 @@ export default class SpacedEverythingImportCache {
     const noteMetadataByNoteIDBatch = this.noteMetadataByNoteID.batch();
     const noteMap = new Map<string, CachedNoteMetadata>();
 
-    let latestServerTimestamp = (await this.getLatestServerTimestamp()) ?? {
-      seconds: 0,
-      nanoseconds: 0,
-    };
-
-    for (const { promptStateCache, ITPrompt } of entries) {
-      const { provenance } = promptStateCache.taskMetadata;
+    for (const { promptState, ITPrompt, taskID } of entries) {
+      const { provenance } = promptState.taskMetadata;
       if (provenance?.provenanceType !== PromptProvenanceType.Note) {
         throw new Error(
           `Unexpected prompt provenance type: ${
             provenance?.provenanceType
-          } in ${JSON.stringify(promptStateCache)}, null, "\t")}`,
+          } in ${JSON.stringify(promptState)}, null, "\t")}`,
         );
       }
 
-      const promptTask = getPromptTaskForID(promptStateCache.taskID);
+      const promptTask = getPromptTaskForID(taskID);
       if (promptTask instanceof Error) {
         console.error(
-          `Skipping prompt state with invalid prompt task ID ${promptStateCache.taskID}`,
+          `Skipping prompt state with invalid prompt task ID ${taskID}`,
         );
       } else {
-        latestServerTimestamp = maxServerTimestamp(
-          latestServerTimestamp,
-          promptStateCache.latestLogServerTimestamp,
-        );
-
         const existingNoteMetadata = noteMap.get(provenance.externalID);
         const CSTID = spacedEverything.notePrompts.getIDForPrompt(ITPrompt);
         const promptsByNoteIDKey = `${provenance.externalID}!${CSTID}`;
-        if (promptStateCache.taskMetadata.isDeleted) {
+        if (promptState.taskMetadata.isDeleted) {
           promptRecordsByCSTIDBatch.del(CSTID);
           CSTIDsByNoteIDBatch.del(promptsByNoteIDKey);
           CSTIDsByOrbitIDBatch.del(promptTask.promptID);
           noteMetadataByNoteIDBatch.del(promptsByNoteIDKey);
         } else {
           const promptRecord: CachedPromptRecord = {
-            headActionLogIDs: promptStateCache.headActionLogIDs,
+            headActionLogIDs: promptState.headActionLogIDs,
             ITPrompt: ITPrompt,
           };
           promptRecordsByCSTIDBatch.put(CSTID, JSON.stringify(promptRecord));
@@ -186,12 +170,12 @@ export default class SpacedEverythingImportCache {
     writePromises.push(CSTIDsByNoteIDBatch.write());
     writePromises.push(CSTIDsByOrbitIDBatch.write());
 
-    if (latestServerTimestamp.seconds !== 0) {
+    if (entries.length > 0) {
       writePromises.push(
         saveJSONRecord(
           this.db,
-          latestServerTimestampKey,
-          latestServerTimestamp,
+          lastStoredTaskID,
+          entries[entries.length - 1].taskID,
         ),
       );
     }

@@ -3,25 +3,12 @@ import leveldown from "leveldown";
 import path from "path";
 
 import IT from "incremental-thinking";
-import {
-  getDefaultFirebaseApp,
-  MetabookFirebaseDataClient,
-  MetabookFirebaseUserClient,
-} from "metabook-client";
+import { UserClient } from "metabook-client";
 import spacedEverything from "spaced-everything";
 import SpacedEverythingImportCache from "./importCache";
 import { createTaskCache } from "./taskCache";
 
 (async () => {
-  const app = getDefaultFirebaseApp();
-  const userClient = new MetabookFirebaseUserClient(
-    app.firestore(),
-    "x5EWk2UT56URxbfrl7djoxwxiqH2", // TODO
-  );
-  const dataClient = new MetabookFirebaseDataClient(app.functions(), () => {
-    throw new Error("Unimplemented");
-  });
-
   const importCache = new SpacedEverythingImportCache(
     levelup(leveldown("cache.db")),
   );
@@ -32,7 +19,14 @@ import { createTaskCache } from "./taskCache";
   const noteTaskSource = spacedEverything.notePrompts.createTaskSource(
     noteFilenames.map((filename) => path.join(noteDirectory, filename)),
   );
-  const orbitTaskSink = createTaskCache(userClient, dataClient, importCache);
+
+  const userClient = new UserClient(
+    async () => ({
+      personalAccessToken: "q6qA8bZE7Nya8h10JzNF",
+    }),
+    { baseURL: "http://localhost:5001/metabook-system/us-central1/api" },
+  );
+  const orbitTaskSink = createTaskCache(userClient, importCache);
 
   await spacedEverything.taskCache.updateTaskCache(
     orbitTaskSink,

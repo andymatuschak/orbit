@@ -1,10 +1,11 @@
+import { OrbitAPI } from "@withorbit/api";
 import * as IT from "incremental-thinking";
-import { MetabookDataClient, MetabookUserClient } from "metabook-client";
+import { UserClient } from "metabook-client";
 import {
   ActionLog,
-  qaPromptType,
   clozePromptType,
   getActionLogFromPromptActionLog,
+  getIDForActionLog,
   getIDForPrompt,
   getIDForPromptTask,
   getPromptTaskForID,
@@ -13,11 +14,12 @@ import {
   PromptID,
   PromptProvenance,
   PromptProvenanceType,
+  PromptState,
   PromptTask,
   PromptTaskID,
+  qaPromptType,
   updateMetadataActionLogType,
 } from "metabook-core";
-import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
 import spacedEverything from "spaced-everything";
 import SpacedEverythingImportCache, { CachedNoteMetadata } from "./importCache";
 import {
@@ -34,28 +36,35 @@ function flat<T>(lists: T[][]): T[] {
 
 // When we start up, we'll fetch all remote prompt states we don't already have locally cached. We'll also fetch all the prompt contents we don't have.
 async function initializeImportCache(
-  userClient: MetabookUserClient,
+  userClient: UserClient,
   importCache: SpacedEverythingImportCache,
-  dataClient: MetabookDataClient,
 ) {
-  const latestServerTimestamp = await importCache.getLatestServerTimestamp();
+  let lastCreatedTaskID = await importCache.getLastStoredTaskID();
   console.log(
-    `Fetching prompt states after ${latestServerTimestamp?.seconds}.${latestServerTimestamp?.nanoseconds}`,
+    `Fetching new prompt states (created after ${lastCreatedTaskID})`,
   );
 
-  const promptStates: PromptStateCache[] = [];
+  const promptStates: OrbitAPI.ResponseObject<
+    "taskState",
+    PromptTaskID,
+    PromptState
+  >[] = [];
 
-  let updatedAfterServerTimestamp: ServerTimestamp | undefined =
-    latestServerTimestamp ?? undefined;
   while (true) {
-    const newPromptStates = await userClient.getPromptStates({
-      provenanceType: PromptProvenanceType.Note,
-      updatedAfterServerTimestamp,
+    const newPromptStates = await userClient.listTaskStates({
+      createdAfterID: lastCreatedTaskID as PromptTaskID,
     });
-    if (newPromptStates.length > 0) {
-      promptStates.push(...newPromptStates);
-      updatedAfterServerTimestamp =
-        newPromptStates[newPromptStates.length - 1].latestLogServerTimestamp;
+    if (newPromptStates.data.length > 0) {
+      // TODO provenanceType: PromptProvenanceType.Note,
+      promptStates.push(
+        ...newPromptStates.data.filter(
+          (promptStateWrapper) =>
+            promptStateWrapper.data.taskMetadata.provenance?.provenanceType ===
+            PromptProvenanceType.Note,
+        ),
+      );
+      lastCreatedTaskID =
+        newPromptStates.data[newPromptStates.data.length - 1].id;
     } else {
       break;
     }
@@ -63,27 +72,34 @@ async function initializeImportCache(
 
   console.log(`Fetched ${promptStates.length} prompt states`);
   const promptStatesToStore: {
-    promptStateCache: PromptStateCache;
+    promptState: PromptState;
     ITPrompt: IT.Prompt;
-    promptID: PromptID;
+    taskID: PromptTaskID;
   }[] = [];
 
   // Get prompt contents for all the prompts we have cached.
-  const missingPromptIDs = new Map<PromptID, PromptStateCache>();
+  const missingPromptIDs = new Map<
+    PromptID,
+    OrbitAPI.ResponseObject<"taskState", PromptTaskID, PromptState>
+  >();
   await Promise.all(
-    promptStates.map(async (promptStateCache) => {
-      const promptTask = getPromptTaskForID(promptStateCache.taskID);
+    promptStates.map(async (promptStateResponse) => {
+      const promptTask = getPromptTaskForID(promptStateResponse.id);
       if (promptTask instanceof Error) {
         console.log(
-          `Skipping unparseable prompt task ID ${promptStateCache.taskID}`,
+          `Skipping unparseable prompt task ID ${promptStateResponse.id}`,
         );
       } else {
         const promptID = promptTask.promptID;
         const ITPrompt = await importCache.getPromptByOrbitPromptID(promptID);
         if (ITPrompt) {
-          promptStatesToStore.push({ promptStateCache, ITPrompt, promptID });
+          promptStatesToStore.push({
+            promptState: promptStateResponse.data,
+            ITPrompt,
+            taskID: promptStateResponse.id,
+          });
         } else {
-          missingPromptIDs.set(promptID, promptStateCache);
+          missingPromptIDs.set(promptID, promptStateResponse);
         }
       }
     }),
@@ -92,31 +108,29 @@ async function initializeImportCache(
   // If we haven't cached some of these prompts, download their contents now.
   if (missingPromptIDs.size > 0) {
     console.log(`Fetching ${missingPromptIDs.size} missing prompt IDs`);
-    const remotePromptMap = await dataClient.getPrompts(
-      missingPromptIDs.keys(),
-    );
-    for (const [promptID, prompt] of remotePromptMap) {
-      if (prompt) {
-        const ITPrompt = getITPromptForOrbitPrompt(prompt);
-        if (ITPrompt) {
-          promptStatesToStore.push({
-            promptStateCache: missingPromptIDs.get(promptID)!,
-            ITPrompt,
-            promptID,
-          });
-        } else {
-          console.log(
-            `Skipping prompt ID ${promptID} because it could not be converted to an incremental-thinking prompt`,
-          );
-        }
+    const taskDataResponse = await userClient.getTaskData([
+      ...missingPromptIDs.keys(),
+    ]);
+    for (const promptDataWrapper of taskDataResponse.data) {
+      const ITPrompt = getITPromptForOrbitPrompt(promptDataWrapper.data);
+      if (ITPrompt) {
+        const promptStateWrapper = missingPromptIDs.get(promptDataWrapper.id)!;
+        promptStatesToStore.push({
+          promptState: promptStateWrapper.data,
+          ITPrompt,
+          taskID: promptStateWrapper.id,
+        });
       } else {
-        console.warn(`Couldn't find source record for prompt ID ${promptID}`);
+        console.log(
+          `Skipping prompt ID ${promptDataWrapper.id} because it could not be converted to an incremental-thinking prompt`,
+        );
       }
     }
+    // TODO: warn if any of the requested prompt IDs were not found
   }
 
   // Now we can save the prompt states.
-  importCache.storePromptStateCaches(promptStatesToStore);
+  importCache.storePromptStates(promptStatesToStore);
   console.log(`Stored ${promptStatesToStore.length} states`);
 }
 
@@ -481,8 +495,7 @@ export async function getUpdatesForTaskCacheChange(
 }
 
 export function createTaskCache(
-  userClient: MetabookUserClient,
-  dataClient: MetabookDataClient,
+  userClient: UserClient,
   importCache: SpacedEverythingImportCache,
 ): spacedEverything.taskCache.TaskCache<
   NotePromptTask,
@@ -490,7 +503,7 @@ export function createTaskCache(
 > {
   return {
     async performOperations(continuation) {
-      await initializeImportCache(userClient, importCache, dataClient);
+      await initializeImportCache(userClient, importCache);
 
       // Index by task ID paths.
       return continuation({
@@ -540,10 +553,24 @@ export function createTaskCache(
             `${insertions.length} insertions; ${deletions.length} deletions; ${prompts.length} prompts to record`,
           );
 
-          await dataClient.recordPrompts(prompts);
+          await userClient.storeTaskData(
+            await Promise.all(
+              prompts.map(async (prompt) => ({
+                id: await getIDForPrompt(prompt),
+                data: prompt,
+              })),
+            ),
+          );
           console.log("Recorded prompts.");
 
-          await userClient.recordActionLogs(logs);
+          await userClient.storeActionLogs(
+            await Promise.all(
+              logs.map(async (log) => ({
+                id: await getIDForActionLog(log),
+                data: log,
+              })),
+            ),
+          );
           console.log("Recorded logs.");
           return;
         },
