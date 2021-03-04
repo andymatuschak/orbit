@@ -29,7 +29,7 @@
   "dependencies": {
     "@withorbit/api": "0.0.1",
     "fetch-blob": "^2.1.1",
-    "firebase": "^8.2.0",
+    "firebase": "^8.2.9",
     "formdata-node": "^2.4.0",
     "metabook-core": "0.0.1",
     "metabook-firebase-support": "0.0.1",

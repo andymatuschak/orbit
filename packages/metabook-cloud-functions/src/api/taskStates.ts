@@ -20,10 +20,19 @@ export const listTaskStates: TypedRouteHandler<
           query.ids as PromptTaskID[],
         );
       } else {
-        promptStates = await backend.promptStates.listPromptStates(
-          userID,
-          query,
-        );
+        // TODO HACK: need real type-safe parsing...
+        if (typeof query.limit === "string") {
+          query.limit = Number.parseInt(query.limit);
+        }
+        if (typeof query.dueBeforeTimestampMillis === "string") {
+          query.dueBeforeTimestampMillis = Number.parseInt(
+            query.dueBeforeTimestampMillis,
+          );
+        }
+        promptStates = await backend.promptStates.listPromptStates(userID, {
+          limit: 100,
+          ...query,
+        });
       }
 
       return {

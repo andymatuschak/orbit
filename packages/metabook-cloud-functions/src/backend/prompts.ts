@@ -1,6 +1,9 @@
 import * as admin from "firebase-admin";
 import { getIDForPrompt, Prompt, PromptID } from "metabook-core";
-import { getDataRecordReference } from "metabook-firebase-support";
+import {
+  getDataRecordReference,
+  getPromptIDForFirebaseKey,
+} from "metabook-firebase-support";
 import { getDatabase } from "./firebase";
 
 export async function getPrompts(
@@ -15,7 +18,7 @@ export async function getPrompts(
   for (const snapshot of snapshots) {
     const prompt = snapshot.data();
     if (prompt) {
-      output.set(snapshot.id as PromptID, prompt);
+      output.set(getPromptIDForFirebaseKey(snapshot.id), prompt);
     }
   }
   return output;

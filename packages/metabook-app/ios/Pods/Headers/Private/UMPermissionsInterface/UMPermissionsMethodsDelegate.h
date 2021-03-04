@@ -1,1 +1,1 @@
-../../../../../../../node_modules/react-native-unimodules/node_modules/unimodules-permissions-interface/ios/UMPermissionsInterface/UMPermissionsMethodsDelegate.h
+../../../../../../../node_modules/unimodules-permissions-interface/ios/UMPermissionsInterface/UMPermissionsMethodsDelegate.h

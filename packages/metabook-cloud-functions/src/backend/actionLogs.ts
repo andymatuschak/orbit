@@ -2,6 +2,7 @@ import * as firebase from "firebase-admin";
 import { ActionLog, ActionLogID, PromptState } from "metabook-core";
 import {
   getActionLogFromActionLogDocument,
+  getActionLogIDForFirebaseKey,
   getActionLogIDReference,
   getLogCollectionReference,
   getPromptStateFromPromptStateCache,
@@ -53,8 +54,8 @@ export async function storeActionLogs(
 export async function listActionLogs(
   userID: string,
   query: {
+    limit: number;
     createdAfterID?: ActionLogID;
-    limit?: number;
   },
 ): Promise<Map<ActionLogID, ActionLog>> {
   const db = getDatabase();
@@ -71,12 +72,12 @@ export async function listActionLogs(
     }
     ref.startAfter(baseSnapshot);
   }
-  ref.limit(query.limit ?? 100);
+  ref.limit(query.limit);
 
   const snapshot = await ref.get();
   return new Map(
     snapshot.docs.map((doc) => [
-      doc.id as ActionLogID,
+      getActionLogIDForFirebaseKey(doc.id),
       getActionLogFromActionLogDocument(doc.data()),
     ]),
   );

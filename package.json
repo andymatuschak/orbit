@@ -24,8 +24,5 @@
   "workspaces": [
     "packages/*"
   ],
-  "resolutions": {
-    "**/expo-error-recovery": "^1.2.2"
-  },
   "name": "metabook"
 }

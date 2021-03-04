@@ -263,7 +263,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "source ~/.nvm/nvm.sh\n\n../../../node_modules/react-native/scripts/react-native-xcode.sh\n../../../node_modules/expo-updates/scripts/create-manifest-ios.sh\n";
+			shellScript = "source ~/.nvm/nvm.sh\n\n../../../node_modules/react-native/scripts/react-native-xcode.sh\n../../../node_modules/expo-updates/scripts/create-manifest-ios.sh\n../../../node_modules/expo-constants/scripts/get-app-config-ios.sh\n";
 		};
 		3003D65099E33ACA0AB1183A /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;

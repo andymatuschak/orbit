@@ -10,10 +10,15 @@ export const listActionLogs: TypedRouteHandler<
   "/actionLogs",
   "GET"
 > = authenticatedRequestHandler(async (request, userID) => {
-  const actionLogs = await backend.actionLogs.listActionLogs(
-    userID,
-    request.query,
-  );
+  const { query } = request;
+  // TODO HACK: need real type-safe parsing...
+  if (typeof query.limit === "string") {
+    query.limit = Number.parseInt(query.limit);
+  }
+  const actionLogs = await backend.actionLogs.listActionLogs(userID, {
+    limit: 100,
+    ...query,
+  });
 
   // TODO: set cache control appropriately
   return {

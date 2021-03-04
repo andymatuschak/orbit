@@ -1,6 +1,8 @@
 // Web implementation of Firebase interface; see firebase.native.ts for native implementation.
-
 import firebase from "firebase/app";
+import "firebase/auth";
+import "firebase/functions";
+
 import serviceConfig from "../../serviceConfig";
 
 let _app: firebase.app.App | null;
@@ -17,17 +19,6 @@ export function getDefaultFirebaseApp(): firebase.app.App {
     });
   }
   return _app;
-}
-
-let _firestore: firebase.firestore.Firestore | null = null;
-export function getFirestore(): firebase.firestore.Firestore {
-  if (!_firestore) {
-    _firestore = getDefaultFirebaseApp().firestore();
-    if (serviceConfig.shouldUseLocalBackend) {
-      _firestore.useEmulator("localhost", 8080);
-    }
-  }
-  return _firestore;
 }
 
 let _functions: firebase.functions.Functions | null = null;

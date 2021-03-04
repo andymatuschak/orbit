@@ -9,9 +9,13 @@ export const listTaskData: TypedRouteHandler<
   "/taskData",
   "GET"
 > = async (request) => {
-  const taskData = await backend.prompts.getPrompts(request.query.ids);
+  // TODO HACK: Replace this with real query deserialization.
+  const ids = Array.isArray(request.query.ids)
+    ? request.query.ids
+    : [request.query.ids];
 
-  // TODO: set cache control appropriately
+  const taskData = await backend.prompts.getPrompts(ids);
+
   return {
     json: {
       objectType: "list",

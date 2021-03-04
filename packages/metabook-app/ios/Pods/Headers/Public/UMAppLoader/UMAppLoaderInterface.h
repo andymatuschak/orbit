@@ -1,1 +1,1 @@
-../../../../../../../node_modules/react-native-unimodules/node_modules/unimodules-app-loader/ios/UMAppLoader/Interfaces/UMAppLoaderInterface.h
+../../../../../../../node_modules/unimodules-app-loader/ios/UMAppLoader/Interfaces/UMAppLoaderInterface.h

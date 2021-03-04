@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Authentication from "./authentication";
@@ -34,28 +34,36 @@ function useNavigationState(): RootScreen {
   return RootScreen.Review;
 }
 
-const SignInScreen = React.lazy(() => import("./signIn/SignInScreen"));
-const ReviewSessionScreen = React.lazy(
-  () => import("./reviewSession/ReviewSessionScreen"),
-);
-const EmbedScreen = React.lazy(() => import("./embedded/EmbeddedScreen"));
-const SettingsScreen = React.lazy(() => import("./settings/SettingsScreen"));
-const LearnMoreScreen = React.lazy(() => import("./learnMore/LearnMoreScreen"));
-const TermsOfServiceScreen = React.lazy(
-  () => import("./terms/TermsOfServiceScreen"),
-);
-const screens: Record<RootScreen, React.ComponentType<unknown>> = {
-  [RootScreen.SignIn]: SignInScreen,
-  [RootScreen.Review]: ReviewSessionScreen,
-  [RootScreen.Embed]: EmbedScreen,
-  [RootScreen.Settings]: SettingsScreen,
-  [RootScreen.LearnMore]: LearnMoreScreen,
-  [RootScreen.TermsOfService]: TermsOfServiceScreen,
+const screens: Record<
+  RootScreen,
+  () => Promise<{ default: React.ComponentType<any> }>
+> = {
+  [RootScreen.SignIn]: () => import("./signIn/SignInScreen"),
+  [RootScreen.Review]: () => import("./reviewSession/ReviewSessionScreen"),
+  [RootScreen.Embed]: () => import("./embedded/EmbeddedScreen"),
+  [RootScreen.Settings]: () => import("./settings/SettingsScreen"),
+  [RootScreen.LearnMore]: () => import("./learnMore/LearnMoreScreen"),
+  [RootScreen.TermsOfService]: () => import("./terms/TermsOfServiceScreen"),
 };
+
+function Lazy<T extends React.ComponentType<any>>(props: {
+  load: () => Promise<{ default: T }>;
+}) {
+  const [component, setComponent] = useState<T | null>(null);
+
+  const { load } = props;
+  useEffect(() => {
+    load().then((result) => {
+      // console.log(result.default);
+      setComponent(() => result.default);
+    });
+  }, [load]);
+
+  return component ? React.createElement(component) : null;
+}
 
 export default function Root() {
   usePageViewTracking();
-
   const [authenticationClient] = useState(
     () => new Authentication.FirebaseAuthenticationClient(getFirebaseAuth()),
   );
@@ -63,9 +71,7 @@ export default function Root() {
   return (
     <AuthenticationClientContext.Provider value={authenticationClient}>
       <SafeAreaProvider>
-        <React.Suspense fallback={null}>
-          {React.createElement(screens[navigationState])}
-        </React.Suspense>
+        <Lazy load={screens[navigationState]} />
       </SafeAreaProvider>
     </AuthenticationClientContext.Provider>
   );

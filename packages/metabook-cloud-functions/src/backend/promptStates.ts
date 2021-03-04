@@ -124,9 +124,9 @@ export async function updatePromptStateCacheWithLog(
 export async function listPromptStates(
   userID: string,
   query: {
+    limit: number;
     dueBeforeTimestampMillis?: number;
     createdAfterID?: PromptTaskID;
-    limit?: number;
   },
 ): Promise<Map<PromptTaskID, PromptState>> {
   const db = getDatabase();
@@ -156,14 +156,14 @@ export async function listPromptStates(
     }
     ref.startAfter(baseSnapshot);
   }
-  ref.limit(query.limit ?? 100);
+  ref.limit(query.limit);
 
   const snapshot = await ref.get();
   return new Map(
-    snapshot.docs.map((doc) => [
-      doc.id as PromptTaskID,
-      getPromptStateFromPromptStateCache(doc.data()),
-    ]),
+    snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return [data.taskID, getPromptStateFromPromptStateCache(data)];
+    }),
   );
 }
 

@@ -24,7 +24,7 @@ export class RequestManager<API extends API.Spec> {
   ): string {
     const url = new URL(`${this.config.baseURL}${path}`);
 
-    const pathComponents = path.split("/");
+    const pathComponents = url.pathname.split("/");
     const consumedParams: Set<string> = new Set();
     for (let i = 0; i < pathComponents.length; i++) {
       if (pathComponents[i].startsWith(":")) {
@@ -99,7 +99,7 @@ export class RequestManager<API extends API.Spec> {
     } else {
       // TODO probably also include body information about the error
       throw new Error(
-        `Request failed (${response.status} ${response.statusText}): ${method} ${response.url}`,
+        `Request failed (${response.status} ${response.statusText}): ${method} ${url}`,
       );
     }
   }

@@ -12,7 +12,6 @@
 #import <UMCore/UMModuleRegistryProvider.h>
 #import <UMReactNativeAdapter/UMNativeModulesProxy.h>
 #import <UMReactNativeAdapter/UMModuleRegistryAdapter.h>
-#import <EXSplashScreen/EXSplashScreenService.h>
 
 #import "ORDebugManager.h"
 
@@ -271,10 +270,6 @@ static void InitializeFlipper(UIApplication *application) {
   UIViewController *rootViewController = [UIViewController new];
   rootViewController.view = rootView;
   self.window.rootViewController = rootViewController;
-
-  // Workaround for https://github.com/expo/expo/issues/7689e
-  EXSplashScreenService *splashScreenService = (EXSplashScreenService *)[UMModuleRegistryProvider getSingletonModuleForClass:[EXSplashScreenService class]];
-  [splashScreenService showSplashScreenFor:rootViewController];
 
 #if TARGET_OS_MACCATALYST
   dispatch_async(dispatch_get_main_queue(), ^{

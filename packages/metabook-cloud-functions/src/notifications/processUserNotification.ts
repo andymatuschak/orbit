@@ -25,6 +25,7 @@ async function _fetchUpcomingPromptStates(
     dueBeforeTimestampMillis: dateFns
       .addDays(nowTimestampMillis, reviewSessionBatchingLookaheadDays)
       .valueOf(),
+    limit: 100,
   });
 }
 
