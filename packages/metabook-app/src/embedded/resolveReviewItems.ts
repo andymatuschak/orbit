@@ -2,7 +2,7 @@ import { AttachmentIDReference } from "metabook-core";
 import { ReviewItem } from "metabook-embedded-support";
 import { AttachmentResolutionMap } from "metabook-ui";
 import { EmbeddedItem } from "../../../embedded-support/src/embeddedScreenInterface";
-import serviceConfig from "../../serviceConfig.mjs";
+import serviceConfig from "../../serviceConfig";
 import {
   getAttachmentURLsInEmbeddedItem,
   getReviewItemFromEmbeddedItem,

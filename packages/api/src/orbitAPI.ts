@@ -66,6 +66,15 @@ export type Spec = {
     };
   };
 
+  "/attachments/:id": {
+    GET: {
+      params: {
+        id: AttachmentID;
+      };
+      response: void;
+    };
+  };
+
   /*
 
   POST /attachments: upload an attachment

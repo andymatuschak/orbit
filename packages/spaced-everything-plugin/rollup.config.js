@@ -24,7 +24,7 @@ export default {
       id !== "dist/run.js" &&
       !/metabook-core/.test(id) &&
       !/metabook-firebase-support/.test(id) &&
-      !/metabook-client/.test(id)
+      !/@withorbit\/api-client/.test(id)
     );
   },
   plugins: [

@@ -1,1 +1,1 @@
-../../../../../../../node_modules/unimodules-task-manager-interface/ios/UMTaskManagerInterface/UMTaskConsumerInterface.h
+../../../../../../../node_modules/react-native-unimodules/node_modules/unimodules-task-manager-interface/ios/UMTaskManagerInterface/UMTaskConsumerInterface.h

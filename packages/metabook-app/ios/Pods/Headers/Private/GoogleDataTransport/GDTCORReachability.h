@@ -1,1 +1,1 @@
-../../../GoogleDataTransport/GoogleDataTransport/GDTCORLibrary/Public/GoogleDataTransport/GDTCORReachability.h
+../../../GoogleDataTransport/GoogleDataTransport/GDTCORLibrary/Internal/GDTCORReachability.h

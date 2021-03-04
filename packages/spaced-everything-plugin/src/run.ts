@@ -3,7 +3,7 @@ import leveldown from "leveldown";
 import path from "path";
 
 import IT from "incremental-thinking";
-import { UserClient } from "metabook-client";
+import { UserClient } from "@withorbit/api-client";
 import spacedEverything from "spaced-everything";
 import SpacedEverythingImportCache from "./importCache";
 import { createTaskCache } from "./taskCache";

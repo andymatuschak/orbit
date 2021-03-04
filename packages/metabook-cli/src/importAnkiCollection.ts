@@ -6,7 +6,7 @@ import fs from "fs";
 import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
-} from "metabook-client";
+} from "@withorbit/api-client";
 import { getIDForActionLog } from "metabook-core";
 import {
   ActionLogDocument,

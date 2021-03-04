@@ -1,1 +1,1 @@
-../../../FirebaseAuth/FirebaseAuth/Sources/Public/FIRUserMetadata.h
+../../../FirebaseAuth/FirebaseAuth/Sources/Public/FirebaseAuth/FIRUserMetadata.h

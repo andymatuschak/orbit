@@ -1,6 +1,6 @@
 import { OrbitAPI } from "@withorbit/api";
 import * as IT from "incremental-thinking";
-import { UserClient } from "metabook-client";
+import { UserClient } from "@withorbit/api-client";
 import {
   ActionLog,
   clozePromptType,

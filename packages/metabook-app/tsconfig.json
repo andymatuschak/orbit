@@ -14,12 +14,15 @@
     "./src/**/*.tsx",
     "./src/**/*.ts",
     "./App.tsx",
-    "./serviceConfig.mjs",
+    "./serviceConfig.*js",
     "../@types/**/*.d.ts"
   ],
   "references": [
     {
-      "path": "../metabook-client"
+      "path": "../api"
+    },
+    {
+      "path": "../api-client"
     },
     {
       "path": "../metabook-core"

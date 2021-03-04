@@ -15,7 +15,7 @@
     "incremental-thinking": "file:../../../computer-supported-thinking/vendor/incremental-thinking",
     "leveldown": "^5.6.0",
     "levelup": "^4.4.0",
-    "metabook-client": "0.0.1",
+    "@withorbit/api-client": "0.0.1",
     "metabook-core": "0.0.1",
     "metabook-sample-data": "0.0.1",
     "spaced-everything": "file:../../../computer-supported-thinking/spaced-everything",

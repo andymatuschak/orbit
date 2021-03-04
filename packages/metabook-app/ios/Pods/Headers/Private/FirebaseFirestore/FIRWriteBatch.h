@@ -1,1 +1,1 @@
-../../../FirebaseFirestore/Firestore/Source/Public/FIRWriteBatch.h
+../../../FirebaseFirestore/Firestore/Source/Public/FirebaseFirestore/FIRWriteBatch.h

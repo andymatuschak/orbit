@@ -1,1 +1,1 @@
-../../../FirebaseFirestore/Firestore/Source/Public/FIRFieldPath.h
+../../../FirebaseFirestore/Firestore/Source/Public/FirebaseFirestore/FIRFieldPath.h

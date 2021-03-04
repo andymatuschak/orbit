@@ -1,5 +1,6 @@
 #import "SentryFileManager.h"
 #import "NSDate+SentryExtras.h"
+#import "SentryDefaultCurrentDateProvider.h"
 #import "SentryDsn.h"
 #import "SentryError.h"
 #import "SentryEvent.h"
@@ -15,6 +16,7 @@ NSInteger const defaultMaxEnvelopes = 100;
 @interface
 SentryFileManager ()
 
+@property (nonatomic, strong) id<SentryCurrentDateProvider> currentDateProvider;
 @property (nonatomic, copy) NSString *sentryPath;
 @property (nonatomic, copy) NSString *eventsPath;
 @property (nonatomic, copy) NSString *envelopesPath;
@@ -26,10 +28,14 @@ SentryFileManager ()
 
 @implementation SentryFileManager
 
-- (_Nullable instancetype)initWithDsn:(SentryDsn *)dsn didFailWithError:(NSError **)error
+- (_Nullable instancetype)initWithDsn:(SentryDsn *)dsn
+               andCurrentDateProvider:(id<SentryCurrentDateProvider>)currentDateProvider
+                     didFailWithError:(NSError **)error
 {
     self = [super init];
     if (self) {
+        self.currentDateProvider = currentDateProvider;
+
         NSFileManager *fileManager = [NSFileManager defaultManager];
         NSString *cachePath
             = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)
@@ -71,7 +77,10 @@ SentryFileManager ()
 
 - (NSString *)uniqueAcendingJsonName
 {
-    return [NSString stringWithFormat:@"%f-%lu-%@.json", [[NSDate date] timeIntervalSince1970],
+    // %f = double, %lu = unsigned long, %@ = NSString
+    // For example 978307200.000000-0-3FE8C3AE-EB9C-4BEB-868C-14B8D47C33DD.json
+    return [NSString stringWithFormat:@"%f-%lu-%@.json",
+                     [[self.currentDateProvider date] timeIntervalSince1970],
                      (unsigned long)self.currentFileCounter++, [NSUUID UUID].UUIDString];
 }
 

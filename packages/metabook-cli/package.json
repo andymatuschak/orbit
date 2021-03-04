@@ -11,7 +11,7 @@
     "firebase-functions": "^3.13.0",
     "metabook-anki": "0.0.1",
     "metabook-app": "0.0.1",
-    "metabook-client": "0.0.1",
+    "@withorbit/api-client": "0.0.1",
     "metabook-firebase-support": "0.0.1",
     "multiformats": "^4.3.1",
     "yargs": "^16.1.0"

@@ -1,50 +1,48 @@
-import { MetabookUserClient } from "metabook-client";
-import { PromptStateCache, ServerTimestamp } from "metabook-firebase-support";
+import OrbitAPIClient from "@withorbit/api-client";
+import { PromptTaskID } from "metabook-core";
 import { createTask, Task } from "../util/task";
 import PromptStateStore from "./promptStateStore";
 
 // If you cancel, the completion promise rejects with CancelledError
 export default function promptStateInitialImportOperation(
-  userClient: MetabookUserClient,
+  apiClient: OrbitAPIClient,
   promptStateStore: PromptStateStore,
-): Task<ServerTimestamp | null> {
-  return createTask(
-    async (taskStatus): Promise<ServerTimestamp | null> => {
-      let afterServerTimestamp: ServerTimestamp | null = null;
-      let totalImported = 0;
+  // Returns the ID of the latest task created
+): Task<PromptTaskID | null> {
+  return createTask(async (taskStatus) => {
+    let afterTaskID: PromptTaskID | null = null;
+    let totalImported = 0;
 
-      console.log("Prompt state import: starting");
-      while (!taskStatus.isCancelled) {
-        const promptStateCaches: PromptStateCache[] = await userClient.getPromptStates(
-          {
-            limit: 500,
-            updatedAfterServerTimestamp: afterServerTimestamp ?? undefined,
-          },
+    console.log("Prompt state import: starting");
+    while (!taskStatus.isCancelled) {
+      // Typescript can't infer the type when the await's on the same line. No idea why.
+      const r = apiClient.listTaskStates({
+        limit: 500,
+        createdAfterID: afterTaskID ?? undefined,
+      });
+      const response = await r;
+
+      const promptStates = response.data;
+      if (taskStatus.isCancelled) return null;
+      // TODO: use hasMore
+      if (promptStates.length > 0) {
+        totalImported += promptStates.length;
+        console.log(
+          `Prompt state import: imported ${promptStates.length} prompt states (${totalImported} total)`,
         );
-        if (taskStatus.isCancelled) return null;
-        if (promptStateCaches.length > 0) {
-          totalImported += promptStateCaches.length;
-          console.log(
-            `Prompt state import: imported ${promptStateCaches.length} prompt states (${totalImported} total)`,
-          );
-          afterServerTimestamp =
-            promptStateCaches[promptStateCaches.length - 1]
-              .latestLogServerTimestamp;
+        afterTaskID = promptStates[promptStates.length - 1].id;
 
-          await promptStateStore.savePromptStates(
-            promptStateCaches.map(
-              ({ latestLogServerTimestamp, taskID, ...promptState }) => ({
-                taskID,
-                promptState,
-              }),
-            ),
-          );
-        } else {
-          console.log("Prompt state import: finished");
-          break;
-        }
+        await promptStateStore.savePromptStates(
+          promptStates.map(({ data, id }) => ({
+            taskID: id,
+            promptState: data,
+          })),
+        );
+      } else {
+        console.log("Prompt state import: finished");
+        break;
       }
-      return afterServerTimestamp;
-    },
-  );
+    }
+    return afterTaskID;
+  });
 }

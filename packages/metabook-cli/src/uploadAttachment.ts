@@ -5,7 +5,7 @@ import fs from "fs";
 import {
   getDefaultFirebaseApp,
   MetabookFirebaseDataClient,
-} from "metabook-client";
+} from "@withorbit/api-client";
 import {
   getAttachmentMimeTypeForFilename,
   getIDForAttachment,

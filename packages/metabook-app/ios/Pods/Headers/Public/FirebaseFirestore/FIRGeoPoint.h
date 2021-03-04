@@ -1,1 +1,1 @@
-../../../FirebaseFirestore/Firestore/Source/Public/FIRGeoPoint.h
+../../../FirebaseFirestore/Firestore/Source/Public/FirebaseFirestore/FIRGeoPoint.h

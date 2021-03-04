@@ -1,1 +1,1 @@
-../../../FirebaseFirestore/Firestore/Source/Public/FIRDocumentChange.h
+../../../FirebaseFirestore/Firestore/Source/Public/FirebaseFirestore/FIRDocumentChange.h

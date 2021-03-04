@@ -1,1 +1,1 @@
-../../../FirebaseFirestore/Firestore/Source/Public/FIRFirestoreErrors.h
+../../../FirebaseFirestore/Firestore/Source/Public/FirebaseFirestore/FIRFirestoreErrors.h

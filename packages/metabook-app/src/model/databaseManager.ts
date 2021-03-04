@@ -1,4 +1,4 @@
-import { MetabookDataClient, MetabookUserClient } from "metabook-client";
+import OrbitAPIClient from "@withorbit/api-client";
 import {
   ActionLogID,
   applyActionLogToPromptState,
@@ -11,7 +11,6 @@ import {
   PromptState,
   PromptTaskID,
 } from "metabook-core";
-import { maxServerTimestamp, ServerTimestamp } from "metabook-firebase-support";
 import { Platform } from "react-native";
 
 import { Task } from "../util/task";
@@ -30,36 +29,34 @@ export default class DatabaseManager {
   private dataRecordStore: DataRecordStore;
   private promptStateStore: PromptStateStore;
 
-  private userClient: MetabookUserClient;
+  private apiClient: OrbitAPIClient;
 
   private dataRecordManager: DataRecordManager;
 
   private isClosed: boolean;
   private currentTask: Task<unknown> | null;
-  private remoteLogSubscription: (() => void) | null;
 
   private cachedReviewItemQueuePromise: ReturnType<typeof fetchReviewItemQueue>;
 
-  constructor(userClient: MetabookUserClient, dataClient: MetabookDataClient) {
-    this.userClient = userClient;
+  constructor(apiClient: OrbitAPIClient) {
+    this.apiClient = apiClient;
     this.actionLogStore = new ActionLogStore();
     this.dataRecordStore = new DataRecordStore();
     this.promptStateStore = new PromptStateStore();
     this.dataRecordManager = new DataRecordManager(
-      dataClient,
+      apiClient,
       this.dataRecordStore,
       dataRecordClientFileStore,
     );
     this.isClosed = false;
     this.currentTask = null;
-    this.remoteLogSubscription = null;
 
     this.cachedReviewItemQueuePromise = this.actionLogStore
       .getHasFinishedInitialImport()
       .then((hasFinishedInitialImport) =>
         fetchReviewItemQueue({
           dataRecordManager: this.dataRecordManager,
-          userClient: this.userClient,
+          apiClient: this.apiClient,
           promptStateStore: this.promptStateStore,
           nowTimestampMillis: Date.now(),
           hasFinishedInitialImport,
@@ -77,8 +74,8 @@ export default class DatabaseManager {
     const hasFinishedInitialImport = await this.actionLogStore.getHasFinishedInitialImport();
     if (this.isClosed) return;
     if (hasFinishedInitialImport) {
-      this.listenForNewLogsAfterTimestamp(
-        await this.actionLogStore.getLatestServerTimestamp(),
+      this.fetchNewLogs(
+        await this.actionLogStore.getLatestCreatedSyncedLogID(),
       );
     } else {
       // Once we've downloaded a review queue, we try to download the user's full database.
@@ -98,13 +95,15 @@ export default class DatabaseManager {
       [...entries].map(async (log) => ({
         log,
         id: await getIDForActionLog(log),
-        serverTimestamp: null,
       })),
     );
 
     await Promise.all([
-      this.userClient.recordActionLogs(
-        promptLogEntries.map(({ log }) => getActionLogFromPromptActionLog(log)),
+      this.apiClient.storeActionLogs(
+        promptLogEntries.map(({ log, id }) => ({
+          id,
+          data: getActionLogFromPromptActionLog(log),
+        })),
       ),
       this.patchLocalStateFromLogEntries(promptLogEntries),
     ]);
@@ -114,7 +113,6 @@ export default class DatabaseManager {
     entries: {
       log: PromptActionLog;
       id: ActionLogID;
-      serverTimestamp: ServerTimestamp | null;
     }[],
   ): Promise<void> {
     const taskIDs = new Set<PromptTaskID>(
@@ -200,8 +198,6 @@ export default class DatabaseManager {
   async close(): Promise<void> {
     this.isClosed = true;
 
-    this.remoteLogSubscription?.();
-
     this.currentTask?.cancel();
     await Promise.all([
       this.actionLogStore.close(),
@@ -248,44 +244,28 @@ export default class DatabaseManager {
     }
   }
 
-  private async listenForNewLogsAfterTimestamp(
-    startingTimestamp: ServerTimestamp | null,
-  ) {
-    console.log(
-      "[Action log subscription] Subscribing to remote logs after",
-      startingTimestamp,
-    );
-    this.remoteLogSubscription = this.userClient.subscribeToActionLogs(
-      {
-        ...(startingTimestamp && { afterServerTimestamp: startingTimestamp }),
-        limit: 100,
-      },
-      async (newLogs) => {
-        this.remoteLogSubscription?.();
-        this.remoteLogSubscription = null;
+  private async fetchNewLogs(afterLogID: ActionLogID | null) {
+    console.log("[Database manager] Fetching logs after", afterLogID);
+    const createdAfterID = afterLogID ?? undefined;
+    const result = await this.apiClient.listActionLogs({
+      createdAfterID,
+      limit: 500,
+    });
+    console.log(`[Database manager] Got ${result.data.length} new logs`);
 
-        console.log(`[Action log subscription] Got ${newLogs.length} new logs`);
-        await this.patchLocalStateFromLogEntries(
-          newLogs.map((entry) => ({
-            ...entry,
-            log: getPromptActionLogFromActionLog(entry.log),
-          })),
-        );
-
-        const newStartingTimestamp = newLogs.reduce(
-          (latestTimestamp, { serverTimestamp }) =>
-            maxServerTimestamp(latestTimestamp, serverTimestamp),
-          startingTimestamp,
-        );
-        this.listenForNewLogsAfterTimestamp(newStartingTimestamp);
-      },
-      (error) => {
-        console.error(
-          `[Action log subscription] Error with log listener`,
-          error,
-        ); // TODO
-      },
+    await this.patchLocalStateFromLogEntries(
+      result.data.map(({ data, id }) => ({
+        id,
+        log: getPromptActionLogFromActionLog(data),
+      })),
     );
+
+    const newAfterLogID = result.data[result.data.length - 1].id;
+    this.actionLogStore.setLatestCreatedSyncedLogID(newAfterLogID);
+
+    if (result.hasMore) {
+      this.fetchNewLogs(newAfterLogID);
+    }
   }
 
   private async performInitialImport() {
@@ -295,38 +275,29 @@ export default class DatabaseManager {
     if (this.isClosed) return;
 
     const promptStateImportTask = promptStateInitialImportOperation(
-      this.userClient,
+      this.apiClient,
       this.promptStateStore,
     );
     this.currentTask = promptStateImportTask;
-    const latestPromptStateTimestamp = await promptStateImportTask.promise;
+    await promptStateImportTask.promise;
     this.currentTask = null;
     if (this.isClosed) return;
 
-    this.listenForNewLogsAfterTimestamp(latestPromptStateTimestamp);
+    this.currentTask = promptDataInitialImportOperation(
+      this.dataRecordManager,
+      this.promptStateStore,
+    );
+    await this.currentTask.promise;
+    this.currentTask = null;
+    if (this.isClosed) return;
 
-    if (latestPromptStateTimestamp !== null) {
-      this.currentTask = promptDataInitialImportOperation(
-        this.dataRecordManager,
-        this.promptStateStore,
-      );
-      await this.currentTask.promise;
-      this.currentTask = null;
-      if (this.isClosed) return;
-
-      this.currentTask = actionLogInitialImportOperation(
-        this.userClient,
-        this.actionLogStore,
-        latestPromptStateTimestamp,
-      );
-      await this.currentTask.promise;
-      this.currentTask = null;
-      if (this.isClosed) return;
-    } else {
-      console.log(
-        "Skipping action log import because there are no prompt states",
-      );
-    }
+    this.currentTask = actionLogInitialImportOperation(
+      this.apiClient,
+      this.actionLogStore,
+    );
+    await this.currentTask.promise;
+    this.currentTask = null;
+    if (this.isClosed) return;
 
     await this.actionLogStore.setHasFinishedInitialImport();
     if (this.isClosed) return;

@@ -1,1 +1,1 @@
-../../../../../../../node_modules/metabook-app/node_modules/expo-file-system/ios/EXFileSystem/EXSessionTasks/EXResumablesManager.h
+../../../../../../../node_modules/react-native-unimodules/node_modules/expo-file-system/ios/EXFileSystem/EXSessionTasks/EXResumablesManager.h

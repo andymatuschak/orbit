@@ -42,42 +42,6 @@ beforeAll(async () => {
   testRepetitionLogID = await getIDForActionLog(testRepetitionLog);
 });
 
-describe("server timestamps", () => {
-  beforeEach(async () => {
-    await actionLogStore.saveActionLogs([
-      {
-        log: testIngestLog,
-        id: testIngestLogID,
-        serverTimestamp: { seconds: 10, nanoseconds: 0 },
-      },
-    ]);
-  });
-
-  test("updates last server timestamp when newer", async () => {
-    expect(
-      (await actionLogStore.saveActionLogs([
-        {
-          log: testIngestLog,
-          id: testIngestLogID,
-          serverTimestamp: { seconds: 20, nanoseconds: 0 },
-        },
-      ]))!.seconds,
-    ).toEqual(20);
-  });
-
-  test("doesn't update last server timestamp when not newer", async () => {
-    expect(
-      (await actionLogStore.saveActionLogs([
-        {
-          log: testIngestLog,
-          id: testIngestLogID,
-          serverTimestamp: { seconds: 6, nanoseconds: 0 },
-        },
-      ]))!.seconds,
-    ).toEqual(10);
-  });
-});
-
 describe("taskID index", () => {
   test("returns logs by task ID", async () => {
     const testLogs = [

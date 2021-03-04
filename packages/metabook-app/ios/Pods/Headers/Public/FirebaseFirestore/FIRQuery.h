@@ -1,1 +1,1 @@
-../../../FirebaseFirestore/Firestore/Source/Public/FIRQuery.h
+../../../FirebaseFirestore/Firestore/Source/Public/FirebaseFirestore/FIRQuery.h

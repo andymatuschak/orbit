@@ -87,9 +87,6 @@ SentryCrashReportConverter ()
         event.threads = [self convertThreads];
         event.exceptions = [self convertExceptions];
 
-        // The releaseName must be set on the userInfo of SentryCrash.sharedInstance
-        event.releaseName = self.userContext[@"release"];
-
         event.dist = self.userContext[@"dist"];
         event.environment = self.userContext[@"environment"];
         event.context = self.userContext[@"context"];
@@ -101,10 +98,13 @@ SentryCrashReportConverter ()
         event.user = [self convertUser];
         event.breadcrumbs = [self convertBreadcrumbs];
 
-        NSDictionary *appContext = event.context[@"app"];
+        // The releaseName must be set on the userInfo of SentryCrash.sharedInstance
+        event.releaseName = self.userContext[@"release"];
+
         // We want to set the release and dist to the version from the crash report
         // itself otherwise it can happend that we have two different version when
         // the app crashes right before an app update #218 #219
+        NSDictionary *appContext = event.context[@"app"];
         if (nil == event.releaseName && appContext[@"app_identifier"] && appContext[@"app_version"]
             && appContext[@"app_build"]) {
             event.releaseName =

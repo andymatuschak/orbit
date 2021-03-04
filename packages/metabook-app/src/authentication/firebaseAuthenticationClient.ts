@@ -1,6 +1,6 @@
 import type firebase from "firebase/app";
 import { Platform } from "react-native";
-import serviceConfig from "../../serviceConfig.mjs";
+import serviceConfig from "../../serviceConfig";
 import { AuthenticationClient, UserRecord } from "./authenticationClient";
 import isBrowserStorageAvailable from "./isBrowserStorageAvailable";
 

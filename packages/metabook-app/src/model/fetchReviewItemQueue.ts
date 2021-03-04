@@ -1,4 +1,4 @@
-import { MetabookUserClient } from "metabook-client";
+import OrbitAPIClient from "@withorbit/api-client";
 import {
   AttachmentID,
   AttachmentURLReference,
@@ -18,7 +18,7 @@ import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";
 import DataRecordManager from "./dataRecordManager";
 import PromptStateStore from "./promptStateStore";
 
-const reviewQueueLengthLimit = 100; // TODO: this isn't the right place for this.
+const initialReviewQueueFetchLimit = 100; // TODO: this isn't the right place for this.
 
 function getPromptIDsInPromptTasks(
   promptTasks: Iterable<PromptTask>,
@@ -32,7 +32,7 @@ function getPromptIDsInPromptTasks(
 
 async function getInitialDuePromptStates(
   promptStateStore: PromptStateStore,
-  userClient: MetabookUserClient,
+  apiClient: OrbitAPIClient,
   dueBeforeTimestampMillis: number,
   limit: number,
   hasFinishedInitialImport: boolean,
@@ -43,13 +43,13 @@ async function getInitialDuePromptStates(
     return promptStateStore.getDuePromptStates(dueBeforeTimestampMillis, limit);
   } else {
     console.log("Review queue: getting prompt data from server");
-    const promptStateCaches = await userClient.getPromptStates({
+    const results = await apiClient.listTaskStates({
       limit,
       dueBeforeTimestampMillis,
     });
     const outputMap = new Map<PromptTaskID, PromptState>();
-    for (const cache of promptStateCaches) {
-      outputMap.set(cache.taskID, cache);
+    for (const { id, data } of results.data) {
+      outputMap.set(id, data);
     }
     return outputMap;
   }
@@ -117,22 +117,22 @@ async function resolveReviewItems(
 export default async function fetchReviewItemQueue({
   promptStateStore,
   dataRecordManager,
-  userClient,
+  apiClient,
   nowTimestampMillis,
   hasFinishedInitialImport,
 }: {
   promptStateStore: PromptStateStore;
   dataRecordManager: DataRecordManager;
-  userClient: MetabookUserClient;
+  apiClient: OrbitAPIClient;
   nowTimestampMillis: number;
   hasFinishedInitialImport: boolean;
 }) {
   console.log("Review queue: fetching due prompt states");
   const duePromptStates = await getInitialDuePromptStates(
     promptStateStore,
-    userClient,
+    apiClient,
     nowTimestampMillis,
-    reviewQueueLengthLimit,
+    initialReviewQueueFetchLimit,
     hasFinishedInitialImport,
   );
   console.log(

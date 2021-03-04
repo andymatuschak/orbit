@@ -3,12 +3,11 @@ import LevelUp, * as levelup from "levelup";
 import * as lexi from "lexicographic-integer";
 
 import { ActionLog, ActionLogID, PromptTaskID } from "metabook-core";
-import { maxServerTimestamp, ServerTimestamp } from "metabook-firebase-support";
-import RNLeveldown from "../util/leveldown";
 import sub from "subleveldown";
+import RNLeveldown from "../util/leveldown";
 import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";
 
-const latestLogServerTimestampDBKey = "_latestLogServerTimestamp";
+const latestCreatedSyncedLogID = "_latestCreatedSyncedLogID";
 const hasCompletedInitialImportDBKey = "_hasFinishedInitialImport";
 
 function getActionLogIDFromTaskIDIndexDBKey(key: string) {
@@ -16,12 +15,12 @@ function getActionLogIDFromTaskIDIndexDBKey(key: string) {
 }
 
 export default class ActionLogStore {
-  private rootDB: levelup.LevelUp;
-  private actionLogDB: levelup.LevelUp;
-  private taskIDIndexDB: levelup.LevelUp;
-  private danglingTaskIDsIndexDB: levelup.LevelUp;
+  private readonly rootDB: levelup.LevelUp;
+  private readonly actionLogDB: levelup.LevelUp;
+  private readonly taskIDIndexDB: levelup.LevelUp;
+  private readonly danglingTaskIDsIndexDB: levelup.LevelUp;
 
-  private cachedLatestServerTimestamp: ServerTimestamp | null | undefined;
+  private cachedLatestCreatedSyncedLogID: ActionLogID | null | undefined;
   private cachedHasFinishedInitialImport: boolean | undefined;
 
   constructor(storeName = "ActionLogStore") {
@@ -31,16 +30,26 @@ export default class ActionLogStore {
     this.danglingTaskIDsIndexDB = sub(this.rootDB, "danglingTaskIDsIndex"); // task IDs with merge errors
   }
 
-  async getLatestServerTimestamp(): Promise<ServerTimestamp | null> {
-    if (this.cachedLatestServerTimestamp === undefined) {
+  // i.e. the log ID corresponding to the most recently created task we've fetched--we use this for syncing
+  async getLatestCreatedSyncedLogID(): Promise<ActionLogID | null> {
+    if (this.cachedLatestCreatedSyncedLogID === undefined) {
       const result = await getJSONRecord(
         this.actionLogDB,
-        latestLogServerTimestampDBKey,
+        latestCreatedSyncedLogID,
       );
-      this.cachedLatestServerTimestamp =
-        (result?.record as ServerTimestamp) ?? null;
+      this.cachedLatestCreatedSyncedLogID =
+        (result?.record as ActionLogID) ?? null;
     }
-    return this.cachedLatestServerTimestamp ?? null;
+    return this.cachedLatestCreatedSyncedLogID ?? null;
+  }
+
+  async setLatestCreatedSyncedLogID(actionLogID: ActionLogID): Promise<void> {
+    this.cachedLatestCreatedSyncedLogID = actionLogID;
+    await saveJSONRecord(
+      this.actionLogDB,
+      latestCreatedSyncedLogID,
+      actionLogID,
+    );
   }
 
   async getHasFinishedInitialImport(): Promise<boolean> {
@@ -67,15 +76,11 @@ export default class ActionLogStore {
     entries: Iterable<{
       log: ActionLog;
       id: ActionLogID;
-      serverTimestamp: ServerTimestamp | null;
     }>,
-  ): Promise<ServerTimestamp | null> {
-    const initialLatestServerTimestamp = await this.getLatestServerTimestamp();
-    let latestServerTimestamp = initialLatestServerTimestamp;
-
+  ): Promise<void> {
     const operations: AbstractLeveldown.AbstractBatch[] = [];
     const taskIDIndexOperations: AbstractLeveldown.AbstractBatch[] = [];
-    for (const { log, id, serverTimestamp } of entries) {
+    for (const { log, id } of entries) {
       const encodedLog = JSON.stringify(log);
       operations.push({ type: "put", key: id, value: encodedLog });
       taskIDIndexOperations.push({
@@ -83,38 +88,12 @@ export default class ActionLogStore {
         key: `${log.taskID}!${lexi.pack(log.timestampMillis, "hex")}!${id}`,
         value: encodedLog,
       });
-
-      latestServerTimestamp = maxServerTimestamp(
-        serverTimestamp,
-        latestServerTimestamp,
-      );
-    }
-
-    if (
-      latestServerTimestamp?.seconds !==
-        initialLatestServerTimestamp?.seconds ||
-      latestServerTimestamp?.nanoseconds !== latestServerTimestamp?.nanoseconds
-    ) {
-      operations.push({
-        type: "put",
-        key: latestLogServerTimestampDBKey,
-        value: JSON.stringify(
-          latestServerTimestamp
-            ? {
-                seconds: latestServerTimestamp.seconds,
-                nanoseconds: latestServerTimestamp.nanoseconds,
-              }
-            : null,
-        ),
-      });
-      this.cachedLatestServerTimestamp = latestServerTimestamp;
     }
 
     await Promise.all([
       this.actionLogDB.batch(operations),
       this.taskIDIndexDB.batch(taskIDIndexOperations),
     ]);
-    return latestServerTimestamp;
   }
 
   async getActionLog(id: ActionLogID): Promise<ActionLog | null> {

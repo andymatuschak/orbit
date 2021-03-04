@@ -1,6 +1,6 @@
 import { BrowserOptions } from "@sentry/browser";
 import GitInfo from "react-git-info/macro";
-import serviceConfig from "../../serviceConfig.mjs";
+import serviceConfig from "../../serviceConfig";
 
 declare global {
   const Sentry: {

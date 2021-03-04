@@ -1,1 +1,1 @@
-../../../../../../../node_modules/unimodules-barcode-scanner-interface/ios/UMBarCodeScannerInterface/UMBarCodeScannerInterface.h
+../../../../../../../node_modules/react-native-unimodules/node_modules/unimodules-barcode-scanner-interface/ios/UMBarCodeScannerInterface/UMBarCodeScannerInterface.h

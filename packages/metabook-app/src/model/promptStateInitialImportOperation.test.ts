@@ -1,9 +1,9 @@
-import { MetabookUserClient } from "metabook-client";
+import OrbitAPIClient from "@withorbit/api-client";
 import { CancelledError } from "../util/task";
 import promptStateInitialImportOperation from "./promptStateInitialImportOperation";
 import PromptStateStore from "./promptStateStore";
 
-const userClient = {} as MetabookUserClient;
+const apiClient = {} as OrbitAPIClient;
 const promptStateStore = {} as PromptStateStore;
 promptStateStore.savePromptStates = jest.fn().mockResolvedValue(undefined);
 
@@ -12,26 +12,26 @@ afterEach(() => {
 });
 
 test("basic run", async () => {
-  userClient.getPromptStates = jest.fn().mockImplementation(async () => {
-    userClient.getPromptStates = jest.fn().mockResolvedValue([]);
-    return [{}];
+  apiClient.listTaskStates = jest.fn().mockImplementation(async () => {
+    apiClient.listTaskStates = jest.fn().mockResolvedValue({ data: [] });
+    return { data: [{ data: {}, id: "testID" }], hasMore: false };
   });
-  await promptStateInitialImportOperation(userClient, promptStateStore).promise;
+  await promptStateInitialImportOperation(apiClient, promptStateStore).promise;
   expect(promptStateStore.savePromptStates).toHaveBeenCalledTimes(1);
 });
 
 test("canceling", async () => {
-  userClient.getPromptStates = jest.fn().mockImplementation(async () => {
-    userClient.getPromptStates = jest.fn().mockReturnValue(
+  apiClient.listTaskStates = jest.fn().mockImplementation(async () => {
+    apiClient.listTaskStates = jest.fn().mockReturnValue(
       new Promise(() => {
         // intentional no-op: never resolve
         return;
       }),
     );
-    return [{}];
+    return { data: [{ data: {}, id: "testID" }], hasMore: false };
   });
   const { promise, cancel } = promptStateInitialImportOperation(
-    userClient,
+    apiClient,
     promptStateStore,
   );
   cancel();

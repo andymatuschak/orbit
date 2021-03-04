@@ -1,1 +1,1 @@
-../../../GoogleDataTransport/GoogleDataTransport/GDTCORLibrary/Public/GoogleDataTransport/GDTCORUploader.h
+../../../GoogleDataTransport/GoogleDataTransport/GDTCORLibrary/Internal/GDTCORUploader.h

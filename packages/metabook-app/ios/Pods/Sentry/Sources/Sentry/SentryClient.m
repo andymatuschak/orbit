@@ -1,31 +1,16 @@
 #import "SentryClient.h"
-#import "SentryBreadcrumbTracker.h"
-#import "SentryCrash.h"
 #import "SentryCrashDefaultBinaryImageProvider.h"
 #import "SentryCrashDefaultMachineContextWrapper.h"
-#import "SentryCrashInstallationReporter.h"
 #import "SentryDebugMetaBuilder.h"
+#import "SentryDefaultCurrentDateProvider.h"
 #import "SentryDsn.h"
-#import "SentryEnvelope.h"
-#import "SentryError.h"
-#import "SentryEvent.h"
-#import "SentryFileManager.h"
 #import "SentryGlobalEventProcessor.h"
-#import "SentryHttpTransport.h"
-#import "SentryIntegrationProtocol.h"
 #import "SentryLog.h"
 #import "SentryMeta.h"
-#import "SentryOptions.h"
-#import "SentryQueueableRequestManager.h"
-#import "SentrySDK.h"
 #import "SentryScope.h"
-#import "SentrySession.h"
 #import "SentryStacktraceBuilder.h"
-#import "SentryThread.h"
 #import "SentryThreadInspector.h"
-#import "SentryTransport.h"
 #import "SentryTransportFactory.h"
-#import "SentryUser.h"
 
 #if SENTRY_HAS_UIKIT
 #    import <UIKit/UIKit.h>
@@ -65,8 +50,11 @@ SentryClient ()
                                             andMachineContextWrapper:machineContextWrapper];
 
         NSError *error = nil;
-        self.fileManager = [[SentryFileManager alloc] initWithDsn:self.options.parsedDsn
-                                                 didFailWithError:&error];
+
+        self.fileManager =
+            [[SentryFileManager alloc] initWithDsn:self.options.parsedDsn
+                            andCurrentDateProvider:[[SentryDefaultCurrentDateProvider alloc] init]
+                                  didFailWithError:&error];
         if (nil != error) {
             [SentryLog logWithMessage:error.localizedDescription andLevel:kSentryLogLevelError];
             return nil;
@@ -108,6 +96,7 @@ SentryClient ()
 {
     SentryEvent *event = [[SentryEvent alloc] initWithLevel:kSentryLevelError];
     event.message = exception.reason;
+    [self setUserInfo:exception.userInfo withEvent:event];
     return [self sendEvent:event withScope:scope alwaysAttachStacktrace:YES];
 }
 
@@ -115,6 +104,7 @@ SentryClient ()
 {
     SentryEvent *event = [[SentryEvent alloc] initWithLevel:kSentryLevelError];
     event.message = error.localizedDescription;
+    [self setUserInfo:error.userInfo withEvent:event];
     return [self sendEvent:event withScope:scope alwaysAttachStacktrace:YES];
 }
 
@@ -263,6 +253,21 @@ SentryClient ()
         }
     }
     return newEvent;
+}
+
+- (void)setUserInfo:(NSDictionary *)userInfo withEvent:(SentryEvent *)event
+{
+    if (nil != event && nil != userInfo && userInfo.count > 0) {
+        NSMutableDictionary *context;
+        if (nil == event.context) {
+            context = [[NSMutableDictionary alloc] init];
+            event.context = context;
+        } else {
+            context = [event.context mutableCopy];
+        }
+
+        [context setValue:userInfo forKey:@"user info"];
+    }
 }
 
 @end

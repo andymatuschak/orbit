@@ -1,9 +1,10 @@
 {
   "references": [
+    { "path": "./api" },
+    { "path": "./api-client" },
     { "path": "./embedded-support" },
     { "path": "./metabook-anki" },
     { "path": "./metabook-app" },
-    { "path": "./metabook-client" },
     { "path": "./metabook-cloud-functions" },
     { "path": "./metabook-core" },
     { "path": "./metabook-firebase-support" },

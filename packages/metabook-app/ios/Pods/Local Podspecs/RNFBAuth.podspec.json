@@ -1,6 +1,6 @@
 {
   "name": "RNFBAuth",
-  "version": "8.0.9",
+  "version": "11.0.0",
   "description": "React Native Firebase - The authentication module provides an easy-to-use API to integrate an authentication workflow into new and existing applications. React Native Firebase provides access to all Firebase authentication methods and identity providers.",
   "summary": "A well tested feature rich Firebase implementation for React Native, supporting iOS & Android.",
   "homepage": "http://invertase.io/oss/react-native-firebase",
@@ -8,7 +8,7 @@
   "authors": "Invertase Limited",
   "source": {
     "git": "https://github.com/invertase/react-native-firebase.git",
-    "tag": "v8.0.9"
+    "tag": "v11.0.0"
   },
   "social_media_url": "http://twitter.com/invertaseio",
   "platforms": {
@@ -16,14 +16,14 @@
   },
   "source_files": "ios/**/*.{h,m}",
   "dependencies": {
-    "React": [
+    "React-Core": [
 
     ],
     "RNFBApp": [
 
     ],
     "Firebase/Auth": [
-      "~> 6.25.0"
+      "7.7.0"
     ]
   },
   "static_framework": false

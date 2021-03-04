@@ -1,1 +1,1 @@
-../../../FirebaseFirestore/Firestore/Source/Public/FIRDocumentSnapshot.h
+../../../FirebaseFirestore/Firestore/Source/Public/FirebaseFirestore/FIRDocumentSnapshot.h

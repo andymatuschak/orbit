@@ -1,1 +1,1 @@
-../../../FirebaseAuth/FirebaseAuth/Sources/Public/FIRGameCenterAuthProvider.h
+../../../FirebaseAuth/FirebaseAuth/Sources/Public/FirebaseAuth/FIRGameCenterAuthProvider.h

@@ -1,1 +1,0 @@
-../../../FirebaseAuth/FirebaseAuth/Sources/Public/FirebaseAuthVersion.h

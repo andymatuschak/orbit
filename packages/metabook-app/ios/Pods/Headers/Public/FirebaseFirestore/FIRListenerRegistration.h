@@ -1,1 +1,1 @@
-../../../FirebaseFirestore/Firestore/Source/Public/FIRListenerRegistration.h
+../../../FirebaseFirestore/Firestore/Source/Public/FirebaseFirestore/FIRListenerRegistration.h

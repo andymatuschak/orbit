@@ -1,1 +1,1 @@
-../../../FirebaseFirestore/Firestore/Source/Public/FIRSnapshotMetadata.h
+../../../FirebaseFirestore/Firestore/Source/Public/FirebaseFirestore/FIRSnapshotMetadata.h

@@ -7,7 +7,7 @@ import { Writable } from "stream";
 // Adapted from https://github.com/rawrmaan/restyped-express-async
 
 export interface TypedRequest<Route extends API.RouteData>
-  extends express.Request {
+  extends express.Request<Route["params"]> {
   // TODO: params
   body: Route["body"];
   query: Route["query"];
@@ -39,6 +39,7 @@ export type TypedRouteHandler<
 export type TypedResponse<Data> = (
   | { status: 200 | 201; json: Data; cachePolicy: CachePolicy }
   | { status: 204 }
+  | { status: 301 | 302; redirectURL: string; cachePolicy: CachePolicy }
   | { status: 400 | 401 }
 ) & { headers?: { [name: string]: string } };
 
@@ -68,6 +69,14 @@ export default function createTypedRouter<API extends API.Spec>(
         const { fields, uploads } = await extractMultipartFormData(request);
         request.body = { ...fields, ...uploads };
       }
+
+      const urlPathParametersValidation = validateURLPathParams(path, request);
+      if (urlPathParametersValidation.status === "failure") {
+        console.error(urlPathParametersValidation.error);
+        response.sendStatus(400);
+        return;
+      }
+
       // TODO: validate request data
 
       return handler(request as TypedRequest<API[Path][Method]>)
@@ -78,8 +87,15 @@ export default function createTypedRouter<API extends API.Spec>(
             response.setHeader(name, value);
           }
 
-          if (result.status === 200) {
+          if (result.status === 301 || result.status === 302) {
+            response.header("Location", result.redirectURL);
+          }
+
+          if ("cachePolicy" in result) {
             response.header("Cache-Control", result.cachePolicy);
+          }
+
+          if (result.status === 200) {
             response.json(result.json);
           } else {
             response.send();
@@ -166,4 +182,25 @@ function extractMultipartFormData(
       }
     }
   });
+}
+
+function validateURLPathParams(
+  path: string,
+  request: express.Request,
+): { status: "success" } | { status: "failure"; error: Error } {
+  const templatePathComponents = path.split("/");
+
+  for (let i = 0; i < templatePathComponents.length; i++) {
+    const templatePathComponent = templatePathComponents[i];
+    if (templatePathComponent.startsWith(":")) {
+      const parameterName = templatePathComponent.slice(1);
+      if (!request.params[parameterName]) {
+        return {
+          status: "failure",
+          error: new Error(`Missing URL path parameter ${parameterName}`),
+        };
+      }
+    }
+  }
+  return { status: "success" };
 }

@@ -1,7 +1,4 @@
-import {
-  MetabookFirebaseDataClient,
-  MetabookFirebaseUserClient,
-} from "metabook-client";
+import OrbitAPIClient from "@withorbit/api-client";
 import {
   ActionLogID,
   getIDForActionLogSync,
@@ -27,23 +24,18 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { UserRecord } from "../authentication";
+import serviceConfig from "../../serviceConfig";
+import { AuthenticationClient } from "../authentication";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
 } from "../authentication/authContext";
-import { findItemsToRetry } from "../embedded/util/findItemsToRetry";
 import DatabaseManager from "../model/databaseManager";
 import { ReviewSessionContainer } from "../ReviewSessionContainer";
 import { useReviewSessionManager } from "../reviewSessionManager";
-import {
-  getAttachmentUploader,
-  getFirebaseFunctions,
-  getFirestore,
-} from "../util/firebase";
 
 export function useDatabaseManager(
-  userRecord: UserRecord | null | undefined,
+  authenticationClient: AuthenticationClient,
 ): DatabaseManager | null {
   const [
     databaseManager,
@@ -58,19 +50,20 @@ export function useDatabaseManager(
   }, [databaseManager]);
 
   // Once we're signed in, create the database manager.
+  // TODO handle switching users etc
+  const userRecord = useCurrentUserRecord(authenticationClient);
   useEffect(() => {
     if (userRecord) {
-      const userClient = new MetabookFirebaseUserClient(
-        getFirestore(),
-        userRecord.userID,
+      // TODO: extract, share with EmbeddedSession
+      const apiClient = new OrbitAPIClient(
+        async () => ({
+          idToken: (await authenticationClient.getCurrentIDToken()) as string,
+        }),
+        { baseURL: serviceConfig.httpsAPIBaseURLString },
       );
-      const dataClient = new MetabookFirebaseDataClient(
-        getFirebaseFunctions(),
-        getAttachmentUploader(),
-      );
-      setDatabaseManager(new DatabaseManager(userClient, dataClient));
+      setDatabaseManager(new DatabaseManager(apiClient));
     }
-  }, [userRecord]);
+  }, [userRecord, authenticationClient]);
 
   return databaseManager;
 }
@@ -194,8 +187,8 @@ export default function ReviewSession() {
     ...reviewSessionManager
   } = useReviewSessionManager();
 
-  const userRecord = useCurrentUserRecord(useAuthenticationClient());
-  const databaseManager = useDatabaseManager(userRecord);
+  const authenticationClient = useAuthenticationClient();
+  const databaseManager = useDatabaseManager(authenticationClient);
   const initialQueue = useReviewItemQueue(databaseManager);
 
   // When the initial queue becomes available, add it to the review session manager.

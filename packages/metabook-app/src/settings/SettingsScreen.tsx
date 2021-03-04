@@ -1,7 +1,7 @@
 import { Link, Spacer, styles } from "metabook-ui";
 import React from "react";
 import { Platform, Text, View } from "react-native";
-import serviceConfig from "../../serviceConfig.mjs";
+import serviceConfig from "../../serviceConfig";
 import { FirebaseOpaqueIDToken } from "../authentication";
 import { useAuthenticationClient } from "../authentication/authContext";
 import { useEmbeddedAuthenticationState } from "../embedded/useEmbeddedAuthenticationState";

@@ -1,1 +1,1 @@
-../../../FirebaseFirestore/Firestore/Source/Public/FIRCollectionReference.h
+../../../FirebaseFirestore/Firestore/Source/Public/FirebaseFirestore/FIRCollectionReference.h

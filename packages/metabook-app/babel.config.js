@@ -36,11 +36,7 @@ module.exports = function (api) {
             [
               require("babel-plugin-rewrite-require"),
               {
-                // metabook-client should use RNFirebase when running in the react-native context, rather than the JS SDK
                 aliases: {
-                  "firebase/app": "@react-native-firebase/app",
-                  "firebase/firestore": "@react-native-firebase/firestore",
-                  "firebase/functions": "@react-native-firebase/functions",
                   crypto: "crypto-browserify",
                 },
                 throwForNonStringLiteral: true,

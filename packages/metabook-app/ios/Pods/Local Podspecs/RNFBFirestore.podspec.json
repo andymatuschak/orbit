@@ -1,6 +1,6 @@
 {
   "name": "RNFBFirestore",
-  "version": "7.2.3",
+  "version": "11.0.0",
   "description": "React Native Firebase - Cloud Firestore is a NoSQL cloud database to store and sync data between your React Native application and Firebase's database. The API matches the Firebase Web SDK whilst taking advantage of the native SDKs performance and offline capabilities.",
   "summary": "A well tested feature rich Firebase implementation for React Native, supporting iOS & Android.",
   "homepage": "http://invertase.io/oss/react-native-firebase",
@@ -8,22 +8,22 @@
   "authors": "Invertase Limited",
   "source": {
     "git": "https://github.com/invertase/react-native-firebase.git",
-    "tag": "v7.2.3"
+    "tag": "v11.0.0"
   },
   "social_media_url": "http://twitter.com/invertaseio",
   "platforms": {
-    "ios": "9.0"
+    "ios": "10.0"
   },
   "source_files": "ios/**/*.{h,m}",
   "dependencies": {
-    "React": [
+    "React-Core": [
 
     ],
     "RNFBApp": [
 
     ],
     "Firebase/Firestore": [
-      "~> 6.25.0"
+      "7.7.0"
     ]
   },
   "static_framework": false

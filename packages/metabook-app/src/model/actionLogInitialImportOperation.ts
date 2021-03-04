@@ -1,46 +1,50 @@
-import { MetabookUserClient } from "metabook-client";
-import { ActionLog, ActionLogID } from "metabook-core";
-import { ServerTimestamp } from "metabook-firebase-support";
+import OrbitAPIClient from "@withorbit/api-client";
+import { ActionLogID } from "metabook-core";
 import { createTask, Task } from "../util/task";
 import ActionLogStore from "./actionLogStore";
 
 export default function actionLogInitialImportOperation(
-  userClient: MetabookUserClient,
+  apiClient: OrbitAPIClient,
   actionLogStore: ActionLogStore,
-  onOrBeforeServerTimestamp: ServerTimestamp,
 ): Task<void> {
   return createTask(async (taskStatus) => {
-    let latestServerTimestamp: ServerTimestamp | null = null;
+    let afterLogID: ActionLogID | null = null;
     let logTotal = 0;
 
     const savePromises: Promise<unknown>[] = [];
 
     console.log("Action log import: starting");
     while (!taskStatus.isCancelled) {
-      const actionLogs: {
-        log: ActionLog;
-        id: ActionLogID;
-        serverTimestamp: ServerTimestamp;
-      }[] = await userClient.getActionLogs({
-        onOrBeforeServerTimestamp,
+      // Typescript can't infer the type when the await's on the same line. No idea why.
+      const r = apiClient.listActionLogs({
         limit: 1000,
-        afterServerTimestamp: latestServerTimestamp ?? undefined,
+        createdAfterID: afterLogID ?? undefined,
       });
+      const response = await r;
       if (taskStatus.isCancelled) return;
 
-      if (actionLogs.length > 0) {
-        logTotal += actionLogs.length;
-        savePromises.push(actionLogStore.saveActionLogs(actionLogs));
-        console.log(
-          `Action log import: imported ${actionLogs.length} action logs (${logTotal} total)`,
+      const actionLogWrappers = response.data;
+      // TODO: use hasMore
+      if (actionLogWrappers.length > 0) {
+        logTotal += actionLogWrappers.length;
+        savePromises.push(
+          actionLogStore.saveActionLogs(
+            actionLogWrappers.map(({ data, id }) => ({ log: data, id })),
+          ),
         );
-        latestServerTimestamp =
-          actionLogs[actionLogs.length - 1].serverTimestamp;
+        console.log(
+          `Action log import: imported ${actionLogWrappers.length} action logs (${logTotal} total)`,
+        );
+        afterLogID = actionLogWrappers[actionLogWrappers.length - 1].id;
       } else {
         await Promise.all(savePromises);
         console.log("Action log import: finished");
         break;
       }
+    }
+
+    if (afterLogID) {
+      await actionLogStore.setLatestCreatedSyncedLogID(afterLogID);
     }
   });
 }

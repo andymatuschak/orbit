@@ -5,10 +5,10 @@ import {
   PromptTask,
   PromptTaskID,
 } from "metabook-core";
-import { UserClient } from "metabook-client";
+import OrbitAPIClient from "@withorbit/api-client";
 import { ReviewItem } from "metabook-embedded-support";
 import { useEffect, useState } from "react";
-import serviceConfig from "../../serviceConfig.mjs";
+import serviceConfig from "../../serviceConfig";
 import { AuthenticationClient } from "../authentication";
 import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost";
 import { EmbeddedAuthenticationState } from "./useEmbeddedAuthenticationState";
@@ -47,10 +47,11 @@ export function useInitialPromptStates({
       });
 
       // TODO: extract, share
-      const userClient = new UserClient(
-        async (request) => {
-          const idToken = await authenticationClient.getCurrentIDToken();
-          request.headers.set("Authorization", `ID ${idToken}`);
+      const userClient = new OrbitAPIClient(
+        async () => {
+          return {
+            idToken: (await authenticationClient.getCurrentIDToken()) as string,
+          };
         },
         {
           baseURL: serviceConfig.httpsAPIBaseURLString,

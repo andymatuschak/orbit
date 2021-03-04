@@ -10,7 +10,7 @@ import {
 } from "metabook-core";
 import {
   getAttachmentIDForFirebaseKey,
-  getAttachmentURL,
+  getAttachmentURL as _getAttachmentURL,
   getStorageObjectNameForAttachmentID,
   storageAttachmentsPathComponent,
   storageBucketName,
@@ -198,4 +198,8 @@ export async function storeAttachment(
     // TODO: move validation / metadata bits here.
     return { attachmentID, status: "stored", url };
   }
+}
+
+export function getAttachmentURL(attachmentID: AttachmentID): string {
+  return _getAttachmentURL(attachmentID);
 }

@@ -60,7 +60,6 @@ export default function Root() {
     () => new Authentication.FirebaseAuthenticationClient(getFirebaseAuth()),
   );
   const navigationState = useNavigationState();
-
   return (
     <AuthenticationClientContext.Provider value={authenticationClient}>
       <SafeAreaProvider>

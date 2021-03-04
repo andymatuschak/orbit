@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import FirebaseAuthenticationClient from "./firebaseAuthenticationClient";
 import { AuthenticationClient, UserRecord } from "./index";
 
-export const AuthenticationClientContext = React.createContext<AuthenticationClient | null>(
+export const AuthenticationClientContext = React.createContext<FirebaseAuthenticationClient | null>(
   null,
 );
 

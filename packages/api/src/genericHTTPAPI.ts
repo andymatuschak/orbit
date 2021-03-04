@@ -7,12 +7,13 @@ export type Spec = {
 
 export type RouteData<
   Q extends QueryParameters = any,
+  P extends URLPathParameters = any,
   C extends RequestContentType | undefined = RequestContentType,
   B extends C extends "multipart/form-data" ? RequestFormData : any = any,
   R = any
 > = {
-  // TODO: URL path params...
   query?: Q;
+  params?: P;
   response: R;
 } & (
   | (C extends "application/json" | undefined
@@ -36,6 +37,10 @@ export type RequestFormData = {
 
 export type QueryParameters = {
   [name: string]: string | string[] | number | undefined;
+};
+
+export type URLPathParameters = {
+  [name: string]: string;
 };
 
 export type RouteRequestData<D> = D extends RouteData

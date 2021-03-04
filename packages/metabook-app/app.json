@@ -4,14 +4,8 @@
     "slug": "orbit",
     "privacy": "unlisted",
     "version": "1.0.0",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "assetBundlePatterns": ["**/*"],
+    "platforms": ["ios", "android", "web"],
     "packagerOpts": {
       "config": "metro.config.js"
     },
@@ -24,7 +18,7 @@
     "web": {
       "build": {
         "babel": {
-          "include": "metabook-client"
+          "include": "@withorbit/api-client"
         }
       }
     }

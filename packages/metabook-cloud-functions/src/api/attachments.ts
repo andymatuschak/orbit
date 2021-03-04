@@ -51,3 +51,15 @@ export const storeAttachment: TypedRouteHandler<
     headers: { Location: result.url },
   };
 });
+
+export const getAttachment: TypedRouteHandler<
+  OrbitAPI.Spec,
+  "/attachments/:id",
+  "GET"
+> = async (request) => {
+  return {
+    status: 302,
+    redirectURL: backend.attachments.getAttachmentURL(request.params.id),
+    cachePolicy: CachePolicy.Immutable,
+  };
+};

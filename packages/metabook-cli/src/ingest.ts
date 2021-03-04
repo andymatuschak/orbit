@@ -6,7 +6,7 @@ import {
   getDefaultFirebaseApp,
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
-} from "metabook-client";
+} from "@withorbit/api-client";
 import {
   applicationPromptType,
   Attachment,

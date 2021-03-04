@@ -63,7 +63,7 @@ SentrySDK.start(options: [
 
 For more information checkout the [docs](https://docs.sentry.io/platforms/cocoa/?platform=swift).
 
-<sup>(1)</sup>limited symbolication support
+<sup>(1)</sup>limited symbolication support and no crash handling.
 
 # Resources
 

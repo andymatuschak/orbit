@@ -13,7 +13,7 @@
 - (SentryCrashBinaryImage)getBinaryImage:(NSInteger)index
 {
     SentryCrashBinaryImage image = { 0 };
-    sentrycrashdl_getBinaryImage(index, &image);
+    sentrycrashdl_getBinaryImage((int)index, &image);
     return image;
 }
 

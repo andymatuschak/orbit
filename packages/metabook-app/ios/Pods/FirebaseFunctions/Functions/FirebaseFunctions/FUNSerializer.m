@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "FUNSerializer.h"
+#import "Functions/FirebaseFunctions/FUNSerializer.h"
 
-#import "FIRError.h"
-#import "FUNUsageValidation.h"
+#import "Functions/FirebaseFunctions/FUNUsageValidation.h"
+#import "Functions/FirebaseFunctions/Public/FirebaseFunctions/FIRError.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -142,7 +142,7 @@ NSError *FUNInvalidNumberError(id value, id wrapped) {
                          userInfo:userInfo];
 }
 
-- (id)decodeWrappedType:(NSDictionary *)wrapped error:(NSError **)error {
+- (nullable id)decodeWrappedType:(NSDictionary *)wrapped error:(NSError **)error {
   NSAssert(error, @"error must not be nil");
   NSString *type = wrapped[@"@type"];
   NSString *value = wrapped[@"value"];
@@ -153,7 +153,9 @@ NSError *FUNInvalidNumberError(id value, id wrapped) {
     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
     NSNumber *n = [formatter numberFromString:value];
     if (n == nil) {
-      *error = FUNInvalidNumberError(value, wrapped);
+      if (error != NULL) {
+        *error = FUNInvalidNumberError(value, wrapped);
+      }
       return nil;
     }
     return n;
@@ -164,12 +166,16 @@ NSError *FUNInvalidNumberError(id value, id wrapped) {
     unsigned long long n = strtoull(str, &end, 10);
     if (errno == ERANGE) {
       // This number was actually too big for an unsigned long long.
-      *error = FUNInvalidNumberError(value, wrapped);
+      if (error != NULL) {
+        *error = FUNInvalidNumberError(value, wrapped);
+      }
       return nil;
     }
     if (*end) {
       // The whole string wasn't parsed.
-      *error = FUNInvalidNumberError(value, wrapped);
+      if (error != NULL) {
+        *error = FUNInvalidNumberError(value, wrapped);
+      }
       return nil;
     }
     return @(n);
@@ -177,7 +183,7 @@ NSError *FUNInvalidNumberError(id value, id wrapped) {
   return nil;
 }
 
-- (id)decode:(id)object error:(NSError **)error {
+- (nullable id)decode:(id)object error:(NSError **)error {
   NSAssert(error, @"error must not be nil");
   if ([object isKindOfClass:[NSDictionary class]]) {
     if (object[@"@type"]) {
@@ -202,7 +208,9 @@ NSError *FUNInvalidNumberError(id value, id wrapped) {
           decoded[key] = decodedItem;
         }];
     if (decodeError) {
-      *error = decodeError;
+      if (error != NULL) {
+        *error = decodeError;
+      }
       return nil;
     }
     return decoded;

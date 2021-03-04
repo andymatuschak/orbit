@@ -27,6 +27,7 @@
 #include "Firestore/core/src/local/target_data.h"
 #include "Firestore/core/src/model/resource_path.h"
 #include "Firestore/core/src/model/types.h"
+#include "Firestore/core/src/util/statusor.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
 
@@ -37,6 +38,7 @@ namespace local {
 using model::DocumentKey;
 using model::ListenSequenceNumber;
 using model::ResourcePath;
+using util::StatusOr;
 
 LevelDbLruReferenceDelegate::LevelDbLruReferenceDelegate(
     LevelDbPersistence* persistence, LruParams lru_params)
@@ -76,7 +78,7 @@ void LevelDbLruReferenceDelegate::RemoveMutationReference(
 void LevelDbLruReferenceDelegate::RemoveTarget(const TargetData& target_data) {
   TargetData updated =
       target_data.WithSequenceNumber(current_sequence_number());
-  db_->target_cache()->UpdateTarget(std::move(updated));
+  db_->target_cache()->UpdateTarget(updated);
 }
 
 void LevelDbLruReferenceDelegate::UpdateLimboDocument(const DocumentKey& key) {
@@ -104,7 +106,7 @@ LruGarbageCollector* LevelDbLruReferenceDelegate::garbage_collector() {
   return gc_.get();
 }
 
-int64_t LevelDbLruReferenceDelegate::CalculateByteSize() {
+StatusOr<int64_t> LevelDbLruReferenceDelegate::CalculateByteSize() {
   return db_->CalculateByteSize();
 }
 
@@ -117,9 +119,9 @@ size_t LevelDbLruReferenceDelegate::GetSequenceNumberCount() {
   return total_count;
 }
 
-void LevelDbLruReferenceDelegate::EnumerateTargets(
-    const TargetCallback& callback) {
-  db_->target_cache()->EnumerateTargets(callback);
+void LevelDbLruReferenceDelegate::EnumerateTargetSequenceNumbers(
+    const SequenceNumberCallback& callback) {
+  db_->target_cache()->EnumerateSequenceNumbers(callback);
 }
 
 void LevelDbLruReferenceDelegate::EnumerateOrphanedDocuments(
@@ -145,7 +147,8 @@ int LevelDbLruReferenceDelegate::RemoveOrphanedDocuments(
 
 int LevelDbLruReferenceDelegate::RemoveTargets(
     ListenSequenceNumber sequence_number, const LiveQueryMap& live_queries) {
-  return db_->target_cache()->RemoveTargets(sequence_number, live_queries);
+  return static_cast<int>(
+      db_->target_cache()->RemoveTargets(sequence_number, live_queries));
 }
 
 bool LevelDbLruReferenceDelegate::IsPinned(const DocumentKey& key) {

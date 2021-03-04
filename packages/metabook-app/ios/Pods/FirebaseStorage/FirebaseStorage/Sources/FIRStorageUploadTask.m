@@ -12,15 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import <FirebaseStorage/FIRStorageUploadTask.h>
+#import "FirebaseStorage/Sources/Public/FirebaseStorage/FIRStorageUploadTask.h"
 
 #import "FirebaseStorage/Sources/FIRStorageConstants_Private.h"
 #import "FirebaseStorage/Sources/FIRStorageMetadata_Private.h"
 #import "FirebaseStorage/Sources/FIRStorageObservableTask_Private.h"
 #import "FirebaseStorage/Sources/FIRStorageTask_Private.h"
 #import "FirebaseStorage/Sources/FIRStorageUploadTask_Private.h"
+#import "FirebaseStorage/Sources/FIRStorage_Private.h"
 
+#if SWIFT_PACKAGE
+@import GTMSessionFetcherCore;
+#else
 #import <GTMSessionFetcher/GTMSessionUploadFetcher.h>
+#endif
 
 @implementation FIRStorageUploadTask
 
@@ -124,7 +129,7 @@
       uploadFetcher.comment = @"File UploadTask";
     }
 
-    uploadFetcher.maxRetryInterval = self.reference.storage.maxUploadRetryTime;
+    uploadFetcher.maxRetryInterval = self.reference.storage.maxUploadRetryInterval;
 
     [uploadFetcher setSendProgressBlock:^(int64_t bytesSent, int64_t totalBytesSent,
                                           int64_t totalBytesExpectedToSend) {
@@ -173,8 +178,9 @@
 
     [strongSelf->_uploadFetcher
         beginFetchWithCompletionHandler:^(NSData *_Nullable data, NSError *_Nullable error) {
-          if (weakSelf.fetcherCompletion != nil) {
-            weakSelf.fetcherCompletion(data, error);
+          FIRStorageUploadTask *strongSelf = weakSelf;
+          if (strongSelf.fetcherCompletion) {
+            strongSelf.fetcherCompletion(data, error);
           }
         }];
   }];
@@ -193,11 +199,14 @@
   }
 
   NSError *fileReachabilityError;
-  if (![_fileURL checkResourceIsReachableAndReturnError:&fileReachabilityError]) {
+  if (![_fileURL checkResourceIsReachableAndReturnError:&fileReachabilityError] ||
+      ![self fileURLisFile:_fileURL]) {
     if (outError != NULL) {
       NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithCapacity:2];
-      userInfo[NSLocalizedDescriptionKey] =
-          [NSString stringWithFormat:@"File at URL: %@ is not reachable.", _fileURL.absoluteString];
+      userInfo[NSLocalizedDescriptionKey] = [NSString
+          stringWithFormat:@"File at URL: %@ is not reachable. "
+                           @"Ensure file URL is not a directory, symbolic link, or invalid url.",
+                           _fileURL.absoluteString];
 
       if (fileReachabilityError) {
         userInfo[NSUnderlyingErrorKey] = fileReachabilityError;
@@ -255,6 +264,14 @@
     [weakSelf fireHandlersForStatus:FIRStorageTaskStatusResume snapshot:weakSelf.snapshot];
     weakSelf.state = FIRStorageTaskStateRunning;
   }];
+}
+
+#pragma mark - Private Helpers
+
+- (BOOL)fileURLisFile:(NSURL *)fileURL {
+  NSNumber *isFile = [NSNumber numberWithBool:NO];
+  [fileURL getResourceValue:&isFile forKey:NSURLIsRegularFileKey error:nil];
+  return [isFile boolValue];
 }
 
 @end

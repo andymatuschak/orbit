@@ -1,12 +1,23 @@
 // Web implementation of Firebase interface; see firebase.native.ts for native implementation.
 
-import type firebase from "firebase/app";
-import {
-  AttachmentUploader,
-  firebaseAttachmentUploader,
-  getDefaultFirebaseApp,
-} from "metabook-client";
-import serviceConfig from "../../serviceConfig.mjs";
+import firebase from "firebase/app";
+import serviceConfig from "../../serviceConfig";
+
+let _app: firebase.app.App | null;
+export function getDefaultFirebaseApp(): firebase.app.App {
+  if (!_app) {
+    _app = firebase.initializeApp({
+      apiKey: "AIzaSyAwlVFBlx4D3s3eSrwOvUyqOKr_DXFmj0c",
+      authDomain: "metabook-system.firebaseapp.com",
+      databaseURL: "https://metabook-system.firebaseio.com",
+      projectId: "metabook-system",
+      storageBucket: "metabook-system.appspot.com",
+      messagingSenderId: "748053153064",
+      appId: "1:748053153064:web:efc2dfbc9ac11d8512bc1d",
+    });
+  }
+  return _app;
+}
 
 let _firestore: firebase.firestore.Firestore | null = null;
 export function getFirestore(): firebase.firestore.Firestore {
@@ -39,23 +50,4 @@ export function getFirebaseAuth(): firebase.auth.Auth {
     }
   }
   return _auth;
-}
-
-export type PersistenceStatus = "pending" | "enabled" | "unavailable";
-let persistenceStatus: PersistenceStatus = "pending";
-// TODO rename and rationalize this nonsense
-export async function enableFirebasePersistence(): Promise<PersistenceStatus> {
-  if (persistenceStatus === "pending") {
-    try {
-      await getFirestore().enablePersistence();
-      persistenceStatus = "enabled";
-    } catch {
-      persistenceStatus = "unavailable";
-    }
-  }
-  return persistenceStatus;
-}
-
-export function getAttachmentUploader(): AttachmentUploader {
-  return firebaseAttachmentUploader(getDefaultFirebaseApp().storage());
 }

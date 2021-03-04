@@ -1,10 +1,7 @@
-import { MetabookDataClient } from "metabook-client";
+import OrbitAPIClient from "@withorbit/api-client";
 import {
   AttachmentID,
-  AttachmentMimeType,
   AttachmentURLReference,
-  getFileExtensionForAttachmentMimeType,
-  imageAttachmentType,
   Prompt,
   PromptID,
 } from "metabook-core";
@@ -19,16 +16,16 @@ export interface DataRecordClientFileStore {
 }
 
 export default class DataRecordManager {
-  private dataClient: MetabookDataClient;
+  private apiClient: OrbitAPIClient;
   private dataCache: DataRecordStore;
   private fileStore: DataRecordClientFileStore;
 
   constructor(
-    dataClient: MetabookDataClient,
+    apiClient: OrbitAPIClient,
     dataCache: DataRecordStore,
     fileStore: DataRecordClientFileStore,
   ) {
-    this.dataClient = dataClient;
+    this.apiClient = apiClient;
     this.dataCache = dataCache;
     this.fileStore = fileStore;
   }
@@ -52,13 +49,14 @@ export default class DataRecordManager {
 
     if (missingIDs.size > 0) {
       console.log(`Getting ${missingIDs.size} remote prompts`);
-      const prompts = await this.dataClient.getPrompts(missingIDs);
-      for (const [promptID, prompt] of prompts) {
-        if (prompt) {
-          promptMap.set(promptID, prompt);
-          this.dataCache.savePrompt(promptID, prompt);
-        } else {
-          console.warn("Unknown prompt ID", promptID);
+      const prompts = await this.apiClient.getTaskData([...missingIDs]);
+      for (const { id, data } of prompts.data) {
+        promptMap.set(id, data);
+        this.dataCache.savePrompt(id, data);
+      }
+      for (const missingID of missingIDs) {
+        if (!promptMap.has(missingID)) {
+          console.warn(`Could not find prompt ID ${missingID}`);
         }
       }
     }
@@ -69,7 +67,7 @@ export default class DataRecordManager {
     attachmentID: AttachmentID,
   ): Promise<AttachmentURLReference> {
     console.log("Caching attachment", attachmentID);
-    const url = this.dataClient.getAttachmentURL(attachmentID);
+    const url = this.apiClient.getAttachmentURL(attachmentID);
     const attachmentURLReference = await this.fileStore.storeFileFromURL(
       url,
       attachmentID,

@@ -1,23 +1,13 @@
 #import "SentryHttpTransport.h"
-#import "SentryBreadcrumbTracker.h"
-#import "SentryCrash.h"
-#import "SentryCrashInstallationReporter.h"
-#import "SentryDefaultRateLimits.h"
 #import "SentryDsn.h"
 #import "SentryEnvelopeItemType.h"
 #import "SentryEnvelopeRateLimit.h"
-#import "SentryError.h"
-#import "SentryEvent.h"
 #import "SentryFileContents.h"
-#import "SentryFileManager.h"
 #import "SentryLog.h"
 #import "SentryNSURLRequest.h"
 #import "SentryOptions.h"
 #import "SentryRateLimitCategoryMapper.h"
-#import "SentrySDK.h"
-#import "SentryScope.h"
 #import "SentrySerialization.h"
-#import "SentryUser.h"
 
 @interface
 SentryHttpTransport ()
@@ -78,10 +68,7 @@ SentryHttpTransport ()
 
     // TODO: We do multiple serializations here, we can improve this
     NSString *storedEventPath = [self.fileManager storeEvent:event];
-    [self sendRequest:request
-               storedPath:storedEventPath
-                 envelope:nil
-        completionHandler:completionHandler];
+    [self sendRequest:request storedPath:storedEventPath completionHandler:completionHandler];
 }
 
 // TODO: needs refactoring
@@ -118,10 +105,7 @@ SentryHttpTransport ()
     // TODO: We do multiple serializations here, we can improve this
     NSString *storedEnvelopePath = [self.fileManager storeEnvelope:envelope];
 
-    [self sendRequest:request
-               storedPath:storedEnvelopePath
-                 envelope:envelope
-        completionHandler:completionHandler];
+    [self sendRequest:request storedPath:storedEnvelopePath completionHandler:completionHandler];
 }
 
 #pragma mark private methods
@@ -133,14 +117,11 @@ SentryHttpTransport ()
         // If a response from the server is received, regardless of whether the
         // request completes successfully or fails, the response parameter
         // contains that information.
-        if (response == nil) {
-            // In case response is nil, we want to queue the event locally since
-            // this indicates no internet connection
-            return YES;
-        }
+        // In case response is nil, we want to queue the event locally since
+        // this indicates no internet connection.
         // In all other cases we don't want to retry sending it and just discard
-        // the event
-        return NO;
+        // the event.
+        return response == nil;
     };
 }
 
@@ -155,14 +136,12 @@ SentryHttpTransport ()
 
 - (void)sendRequest:(NSURLRequest *)request
            storedPath:(NSString *)storedPath
-             envelope:(SentryEnvelope *)envelope
     completionHandler:(_Nullable SentryRequestFinished)completionHandler
 {
-
     __block SentryHttpTransport *_self = self;
     [self sendRequest:request
         withCompletionHandler:^(NSHTTPURLResponse *_Nullable response, NSError *_Nullable error) {
-            if (self.shouldQueueEvent == nil || self.shouldQueueEvent(response, error) == NO) {
+            if (self.shouldQueueEvent == nil || !self.shouldQueueEvent(response, error)) {
                 // don't need to queue this -> it most likely got sent
                 // thus we can remove the event from disk
                 [_self.fileManager removeFileAtPath:storedPath];
@@ -203,10 +182,7 @@ SentryHttpTransport ()
         return NO;
     }
 
-    if ([self.rateLimits isRateLimitActive:category]) {
-        return NO;
-    }
-    return YES;
+    return ![self.rateLimits isRateLimitActive:category];
 }
 
 // TODO: This has to move somewhere else, we are missing the whole beforeSend

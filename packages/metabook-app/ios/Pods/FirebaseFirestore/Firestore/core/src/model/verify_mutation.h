@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Google
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,6 @@ class VerifyMutation : public Mutation {
 
     absl::optional<MaybeDocument> ApplyToLocalView(
         const absl::optional<MaybeDocument>& maybe_doc,
-        const absl::optional<MaybeDocument>&,
         const Timestamp&) const override;
 
     // Does not override Equals or Hash; Mutation's versions are sufficient.

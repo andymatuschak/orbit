@@ -13,9 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "FUNError.h"
+#import "Functions/FirebaseFunctions/FUNError.h"
 
-#import "FUNSerializer.h"
+#import "Functions/FirebaseFunctions/FUNSerializer.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -158,7 +158,7 @@ NSError *_Nullable FUNErrorForResponse(NSInteger status,
       if ([errorDetails isKindOfClass:[NSDictionary class]]) {
         if ([errorDetails[@"status"] isKindOfClass:[NSString class]]) {
           NSNumber *codeNumber = FIRFunctionsErrorCodeForName(errorDetails[@"status"]);
-          if (!codeNumber) {
+          if (codeNumber == nil) {
             // If the code in the body is invalid, treat the whole response as malformed.
             return FUNErrorForCode(FIRFunctionsErrorCodeInternal);
           }

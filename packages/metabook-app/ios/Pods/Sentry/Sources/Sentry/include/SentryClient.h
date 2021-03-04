@@ -1,21 +1,10 @@
-//
-//  SentryClient.h
-//  Sentry
-//
-//  Created by Daniel Griesser on 02/05/2017.
-//  Copyright © 2017 Sentry. All rights reserved.
-//
-
 #import <Foundation/Foundation.h>
 
 #import "SentryDefines.h"
-#import "SentryOptions.h"
-#import "SentryScope.h"
-#import "SentrySession.h"
 #import "SentryTransport.h"
 
-@class SentryEvent, SentryThread, SentryEnvelope;
-@class SentryFileManager;
+@class SentryOptions, SentrySession, SentryEvent, SentryScope, SentryThread, SentryEnvelope,
+    SentryFileManager;
 
 NS_ASSUME_NONNULL_BEGIN
 

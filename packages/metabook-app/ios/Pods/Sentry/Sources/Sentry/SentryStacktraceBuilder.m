@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 
     SentryCrashStackCursor stackCursor;
     // Always skip the first entry so we remove the current function from the stacktrace
-    sentrycrashsc_initSelfThread(&stackCursor, framesToSkip + 1);
+    sentrycrashsc_initSelfThread(&stackCursor, (int)framesToSkip + 1);
 
     while (stackCursor.advanceCursor(&stackCursor)) {
         if (stackCursor.symbolicate(&stackCursor)) {

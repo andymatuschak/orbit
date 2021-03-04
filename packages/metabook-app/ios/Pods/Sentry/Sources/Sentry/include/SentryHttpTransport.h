@@ -1,14 +1,11 @@
 #import <Foundation/Foundation.h>
 
 #import "SentryDefines.h"
-#import "SentryEnvelope.h"
-#import "SentryEvent.h"
 #import "SentryRateLimits.h"
 #import "SentryRequestManager.h"
-#import "SentryScope.h"
 #import "SentryTransport.h"
 
-@class SentryEnvelopeRateLimit;
+@class SentryEnvelopeRateLimit, SentryOptions, SentryEvent;
 
 NS_ASSUME_NONNULL_BEGIN
 

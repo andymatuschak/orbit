@@ -1,0 +1,1 @@
+../../../FirebaseFunctions/FirebaseCore/Sources/Private/FIROptionsInternal.h

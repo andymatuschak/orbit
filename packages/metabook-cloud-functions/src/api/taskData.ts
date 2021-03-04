@@ -8,7 +8,7 @@ export const listTaskData: TypedRouteHandler<
   OrbitAPI.Spec,
   "/taskData",
   "GET"
-> = authenticatedRequestHandler(async (request) => {
+> = async (request) => {
   const taskData = await backend.prompts.getPrompts(request.query.ids);
 
   // TODO: set cache control appropriately
@@ -25,7 +25,7 @@ export const listTaskData: TypedRouteHandler<
     status: 200,
     cachePolicy: CachePolicy.Immutable,
   };
-});
+};
 
 function validatePrompts(
   prompts: { id: PromptID; data: Prompt }[],

@@ -1,1 +1,1 @@
-../../../FirebaseFirestore/Firestore/Source/Public/FIRFirestoreSettings.h
+../../../FirebaseFirestore/Firestore/Source/Public/FirebaseFirestore/FIRFirestoreSettings.h

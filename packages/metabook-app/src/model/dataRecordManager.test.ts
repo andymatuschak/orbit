@@ -1,4 +1,4 @@
-import { MetabookDataClient } from "metabook-client";
+import OrbitAPIClient from "@withorbit/api-client";
 import {
   Attachment,
   AttachmentID,
@@ -15,44 +15,19 @@ import DataRecordManager, {
 } from "./dataRecordManager";
 import DataRecordStore from "./dataRecordStore";
 
-class MockDataClient implements MetabookDataClient {
-  private testData: { [key: string]: unknown };
-  constructor(testData: { [key: string]: unknown }) {
-    this.testData = testData;
-  }
+jest.mock("@withorbit/api-client");
+const mockedOrbitAPIClient = OrbitAPIClient as jest.MockedClass<
+  typeof OrbitAPIClient
+>;
 
-  async getAttachments(
-    attachmentIDs: Iterable<AttachmentID>,
-  ): Promise<Map<AttachmentID, Attachment | null>> {
-    return new Map(
-      [...attachmentIDs].map((id) => [id, this.testData[id] as Attachment]),
-    );
-  }
-
-  async getPrompts(
-    promptIDs: Iterable<PromptID>,
-  ): Promise<Map<PromptID, Prompt | null>> {
-    return new Map(
-      [...promptIDs].map((id) => [id, this.testData[id] as Prompt]),
-    );
-  }
-
-  recordAttachments(): Promise<unknown> {
-    throw new Error("Unimplemented");
-  }
-
-  recordPrompts(prompts: Prompt[]): Promise<unknown> {
-    throw new Error("Unimplemented");
-  }
-
-  getAttachmentURL(attachmentID: AttachmentID): string {
-    return attachmentID;
-  }
-}
-
+let apiClient: jest.Mocked<typeof OrbitAPIClient["prototype"]>;
 let dataRecordStore: DataRecordStore;
 let testQAPromptID: PromptID;
 beforeEach(async () => {
+  mockedOrbitAPIClient.mockClear();
+  apiClient = new mockedOrbitAPIClient(async () => ({
+    personalAccessToken: "token",
+  }));
   dataRecordStore = new DataRecordStore();
   testQAPromptID = await getIDForPrompt(testQAPrompt);
 });
@@ -65,7 +40,7 @@ afterEach(async () => {
 describe("prompts", () => {
   test("fetches cached prompts", async () => {
     const client = new DataRecordManager(
-      {} as MetabookDataClient,
+      apiClient,
       dataRecordStore,
       {} as DataRecordClientFileStore,
     );
@@ -75,8 +50,13 @@ describe("prompts", () => {
   });
 
   test("leaves unknown prompts undefined", async () => {
+    apiClient.getTaskData.mockResolvedValue({
+      hasMore: false,
+      data: [],
+      objectType: "list",
+    });
     const client = new DataRecordManager(
-      new MockDataClient({}),
+      apiClient,
       dataRecordStore,
       {} as DataRecordClientFileStore,
     );
