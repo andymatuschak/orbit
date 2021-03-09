@@ -1,15 +1,11 @@
 import * as axios from "axios";
-import { processor } from "incremental-thinking";
-import {
-  clozePromptType,
-  qaPromptType
-} from "incremental-thinking/dist/prompt";
+import { processor, clozePromptType, qaPromptType } from "incremental-thinking";
 import { AnyJson } from "../../../../util/JSONTypes";
 import unreachableCaseError from "../../../../util/unreachableCaseError";
 import {
   decodeTaskIDPath,
   encodeTaskIDPath,
-  TaskIDPath
+  TaskIDPath,
 } from "../../../taskCache";
 import {
   AnkiNote,
@@ -20,13 +16,13 @@ import {
   clozeModelName,
   isAnkiClozeNote,
   isAnkiQAPromptNote,
-  qaPromptModelName
+  qaPromptModelName,
 } from "../../dataModel";
 import {
   createAnkiTextFromClozePrompt,
   createClozePromptFromAnkiOriginalMarkdownField,
   decodeAnkiPathFieldToTaskIDPath,
-  encodeTaskIDPathToAnkiPathField
+  encodeTaskIDPathToAnkiPathField,
 } from "./ankiTextEncoding";
 
 export type RequestSpec<ResponseData extends AnyJson> = {
@@ -48,20 +44,20 @@ function createRequest<
       data: {
         action: actionName,
         version: 6,
-        params: parameters
+        params: parameters,
       },
       transformResponse: responseTransformer
         ? [
-            json => {
+            (json) => {
               const { result, error } = JSON.parse(json);
               return {
                 result: responseTransformer(result),
-                error
+                error,
               };
-            }
+            },
           ]
-        : undefined
-    }
+        : undefined,
+    },
   };
 }
 
@@ -78,7 +74,7 @@ function getAnkiFieldsForAnkiPrompt(ankiPrompt: AnkiPrompt): AnkiNoteFields {
       NoteURL: noteURL,
       _Path: encodeTaskIDPathToAnkiPathField(ankiPrompt.path),
       _OriginalMarkdown: processor.stringify(prompt.block),
-      _NoteDataJSON: JSON.stringify(ankiPrompt.noteData)
+      _NoteDataJSON: JSON.stringify(ankiPrompt.noteData),
     };
   } else if (prompt.type === qaPromptType) {
     return {
@@ -88,7 +84,7 @@ function getAnkiFieldsForAnkiPrompt(ankiPrompt: AnkiPrompt): AnkiNoteFields {
       NoteURL: ankiPrompt.noteData.externalNoteID?.openURL?.toString() ?? "",
       _Path: encodeTaskIDPathToAnkiPathField(ankiPrompt.path),
       _NoteDataJSON: JSON.stringify(ankiPrompt.noteData),
-      _PromptJSON: JSON.stringify(ankiPrompt.prompt)
+      _PromptJSON: JSON.stringify(ankiPrompt.prompt),
     };
   } else {
     throw unreachableCaseError(prompt);
@@ -102,13 +98,13 @@ export function getAnkiPromptForAnkiNote(ankiNote: AnkiNote): AnkiPrompt {
         ankiNote.fields._OriginalMarkdown
       ),
       path: decodeAnkiPathFieldToTaskIDPath(ankiNote.fields._Path),
-      noteData: JSON.parse(ankiNote.fields._NoteDataJSON)
+      noteData: JSON.parse(ankiNote.fields._NoteDataJSON),
     };
   } else if (isAnkiQAPromptNote(ankiNote)) {
     return {
       prompt: JSON.parse(ankiNote.fields._PromptJSON),
       noteData: JSON.parse(ankiNote.fields._NoteDataJSON),
-      path: decodeAnkiPathFieldToTaskIDPath(ankiNote.fields._Path)
+      path: decodeAnkiPathFieldToTaskIDPath(ankiNote.fields._Path),
     };
   } else {
     throw unreachableCaseError(ankiNote);
@@ -120,7 +116,7 @@ export function addNotes(
   deckName: string
 ): RequestSpec<AnkiNoteID[]> {
   return createRequest("addNotes", {
-    notes: ankiPrompts.map(ankiPrompt => {
+    notes: ankiPrompts.map((ankiPrompt) => {
       let modelName: string;
       const { prompt } = ankiPrompt;
       if (prompt.type === clozePromptType) {
@@ -134,9 +130,9 @@ export function addNotes(
         deckName,
         modelName,
         fields: getAnkiFieldsForAnkiPrompt(ankiPrompt),
-        tags: [ankiNoteTag]
+        tags: [ankiNoteTag],
       };
-    })
+    }),
   });
 }
 
@@ -145,7 +141,7 @@ export function getAnkiNoteIDsForSubtree(
 ): RequestSpec<AnkiNoteID[]> {
   return createRequest("findNotes", {
     // I don't know why the * is necessary. Anki doesn't find the result otherwise.
-    query: `_Path:${encodeTaskIDPathToAnkiPathField(path)}*`
+    query: `_Path:${encodeTaskIDPathToAnkiPathField(path)}*`,
   });
 }
 
@@ -162,7 +158,7 @@ export function findAllPromptAnkiNoteIDs(): RequestSpec<AnkiNoteID[]> {
 export function getAnkiNotes(
   ankiNoteIDs: AnkiNoteID[]
 ): RequestSpec<AnkiNote[]> {
-  return createRequest("notesInfo", { notes: ankiNoteIDs }, notes =>
+  return createRequest("notesInfo", { notes: ankiNoteIDs }, (notes) =>
     notes.map((note: any) => {
       const fields: { [key: string]: string } = {};
       for (const field of Object.keys(note.fields)) {
@@ -170,7 +166,7 @@ export function getAnkiNotes(
       }
       return {
         ...note,
-        fields
+        fields,
       };
     })
   );
@@ -180,8 +176,8 @@ export function updateAnkiNote(ankiNoteID: AnkiNoteID, ankiPrompt: AnkiPrompt) {
   return createRequest("updateNoteFields", {
     note: {
       id: ankiNoteID,
-      fields: getAnkiFieldsForAnkiPrompt(ankiPrompt)
-    }
+      fields: getAnkiFieldsForAnkiPrompt(ankiPrompt),
+    },
   });
 }
 
@@ -203,6 +199,6 @@ export function createModel(
     modelName,
     inOrderFields: fields,
     css,
-    cardTemplates
+    cardTemplates,
   });
 }

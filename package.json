@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"workspaces": ["incremental-thinking", "spaced-everything", "spaced-everything-cli"],
+	"workspaces": ["spaced-everything", "spaced-everything-cli"],
 	"scripts": {
 		"build": "(cd incremental-thinking; yarn run build) && (cd spaced-everything; yarn run build) && (cd spaced-everything-cli; yarn run build)"
 	}

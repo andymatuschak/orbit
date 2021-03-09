@@ -5,18 +5,18 @@ import {
   getClozeNoteTaskCollectionChildIDsForClozePrompt,
   PromptTask,
   PromptTaskCollection,
-  PromptTaskNoteData
+  PromptTaskNoteData,
 } from "../notePrompts";
 import {
   TaskCache,
   TaskCacheSessionChange,
   TaskID,
-  TaskIDPath
+  TaskIDPath,
 } from "../taskCache";
 import { TaskRecord } from "../taskSource";
 import {
   getAnkiPromptForAnkiNote,
-  sync
+  sync,
 } from "./ankiConnect/util/requestFactory";
 import { AnkiNote, AnkiPrompt } from "./dataModel";
 import {
@@ -25,7 +25,7 @@ import {
   deleteNoteSubtrees,
   getAllAnkiNotes,
   movePrompts,
-  updateNoteDatas
+  updateNoteDatas,
 } from "./operations";
 
 type AnkiOperationSet = {
@@ -45,7 +45,7 @@ export function _computeAnkiOperationSet(
     addPrompts: [],
     deleteNoteSubtrees: [],
     movePrompts: [],
-    updateNoteDatas: []
+    updateNoteDatas: [],
   };
 
   const changedNoteMap: { [key: string]: PromptTaskNoteData } = {};
@@ -67,7 +67,7 @@ export function _computeAnkiOperationSet(
           output.addPrompts.push({
             path: change.path,
             prompt: record.value.prompt,
-            noteData: record.value.noteData
+            noteData: record.value.noteData,
           });
         } else if (
           record.type === "collection" &&
@@ -93,7 +93,7 @@ export function _computeAnkiOperationSet(
           // TODO ideally pass along the Anki note IDs if we already have them
           output.updateNoteDatas.push({
             notePath: change.path,
-            noteData: change.record.value
+            noteData: change.record.value,
           });
         }
         break;
@@ -123,7 +123,7 @@ export function _computeAnkiOperationSet(
           prompt: change.record.value.prompt,
           oldPath: change.oldPath,
           path: change.path,
-          noteData: change.record.value.noteData
+          noteData: change.record.value.noteData,
         });
         break;
       default:
@@ -135,7 +135,9 @@ export function _computeAnkiOperationSet(
   const deduplicatedDeletedSubtrees: typeof output.deleteNoteSubtrees = [];
   const deletedSubtreeRootIDs = new Set<TaskID>();
   for (const deletedPath of output.deleteNoteSubtrees) {
-    if (deletedPath.filter(id => deletedSubtreeRootIDs.has(id)).length === 0) {
+    if (
+      deletedPath.filter((id) => deletedSubtreeRootIDs.has(id)).length === 0
+    ) {
       deletedSubtreeRootIDs.add(deletedPath[deletedPath.length - 1]);
       deduplicatedDeletedSubtrees.push(deletedPath);
     }
@@ -163,7 +165,7 @@ async function executeAnkiOperationSet(
       : Promise.resolve(undefined),
     operationSet.updateNoteDatas.length > 0
       ? updateNoteDatas(ankiClient, operationSet.updateNoteDatas)
-      : Promise.resolve(undefined)
+      : Promise.resolve(undefined),
   ]);
 }
 
@@ -183,9 +185,9 @@ export function _getPromptRecordFromAnkiNote(
       value: {
         type: "clozeBlock",
         prompt,
-        noteData: noteData
+        noteData: noteData,
       },
-      childIDs: getClozeNoteTaskCollectionChildIDsForClozePrompt(prompt)
+      childIDs: getClozeNoteTaskCollectionChildIDsForClozePrompt(prompt),
     };
   } else if (prompt.type === qaPromptType) {
     return {
@@ -193,8 +195,8 @@ export function _getPromptRecordFromAnkiNote(
       value: {
         type: "qaPrompt",
         prompt,
-        noteData
-      }
+        noteData,
+      },
     };
   } else {
     throw unreachableCaseError(prompt);
@@ -250,13 +252,13 @@ export function _getPromptTaskRecordFromAnkiNoteCacheRecord(
       const ankiPrompt = getAnkiPromptForAnkiNote(childNode.value);
       taskCollection = {
         type: "note",
-        ...ankiPrompt.noteData
+        ...ankiPrompt.noteData,
       };
     }
     return {
       type: "collection",
       value: taskCollection,
-      childIDs: cacheEntry.childIDs
+      childIDs: cacheEntry.childIDs,
     };
   } else {
     throw unreachableCaseError(cacheEntry);
@@ -268,10 +270,10 @@ export function createAnkiCache(
   syncToAnkiWebAfterPerformingOperations: boolean
 ): TaskCache<PromptTask, PromptTaskCollection> {
   return {
-    performOperations: async function(continuation): Promise<unknown> {
+    performOperations: async function (continuation): Promise<unknown> {
       const inMemoryAnkiNoteCache = await getAllAnkiNotes(ankiClient);
       const result = await inMemoryAnkiNoteCache.performOperations(
-        inMemoryAnkiNoteCacheSession => {
+        (inMemoryAnkiNoteCacheSession) => {
           return continuation({
             async getTaskNodes<Paths extends TaskIDPath[]>(paths: Paths) {
               const cachedNodeMap = await inMemoryAnkiNoteCacheSession.getTaskNodes(
@@ -284,7 +286,7 @@ export function createAnkiCache(
                     path,
                     cacheEntry,
                     inMemoryAnkiNoteCache
-                  )
+                  ),
                 ])
               );
             },
@@ -298,16 +300,19 @@ export function createAnkiCache(
               );
 
               await executeAnkiOperationSet(ankiClient, operationSet);
-            }
+
+              if (
+                Object.values(operationSet).some((v) => v.length > 0) &&
+                syncToAnkiWebAfterPerformingOperations
+              ) {
+                await ankiClient.request(sync());
+              }
+            },
           });
         }
       );
 
-      if (syncToAnkiWebAfterPerformingOperations) {
-        await ankiClient.request(sync());
-      }
-
       return result;
-    }
+    },
   };
 }

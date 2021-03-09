@@ -10,15 +10,14 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "types": ["node", "jest"],
-    "paths": {
-      "incremental-thinking": ["../incremental-thinking/dist"]
-    },
-    "baseUrl": "."
+    "composite": true,
+    "rootDir": "./src"
   },
-  "include": [
-    "./src/**/*.ts"
-  ],
-  "exclude": [
-    "./tsrc/**/*.test.ts"
+  "include": ["./src/**/*.ts"],
+  "exclude": ["./tsrc/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../vendor/incremental-thinking"
+    }
   ]
 }

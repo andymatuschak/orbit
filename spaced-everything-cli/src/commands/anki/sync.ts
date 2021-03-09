@@ -3,7 +3,7 @@ import {
   ankiCache,
   taskCache,
   notePrompts,
-  ankiClient
+  ankiClient,
 } from "spaced-everything";
 
 export default class Sync extends Command {
@@ -12,7 +12,7 @@ export default class Sync extends Command {
 You'll first need to have set up AnkiConnect and the note types in Anki--see the Readme.`;
 
   static examples = [
-    `$ spaced-everything anki sync --deck NotePrompts note1.org *.md`
+    `$ spaced-everything anki sync --deck NotePrompts note1.org *.md`,
   ];
 
   static flags = {
@@ -22,13 +22,13 @@ You'll first need to have set up AnkiConnect and the note types in Anki--see the
       char: "d",
       description:
         "the name of a Anki deck to sync notes to (deck must already exist)",
-      default: "Default"
+      default: "Default",
     }),
     syncToAnkiWeb: flags.boolean({
       char: "s",
       description: "if set, causes Anki to sync changes to AnkiWeb",
-      default: false
-    })
+      default: false,
+    }),
   };
 
   static strict = false;
@@ -36,8 +36,8 @@ You'll first need to have set up AnkiConnect and the note types in Anki--see the
     {
       name: "FILES...",
       required: true,
-      description: "One or more note files to sync prompts from"
-    }
+      description: "One or more note files to sync prompts from",
+    },
   ];
 
   async run() {

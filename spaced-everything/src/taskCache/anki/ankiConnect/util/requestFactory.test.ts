@@ -8,7 +8,7 @@ import {
   findAllPromptAnkiNoteIDs,
   getAnkiNoteIDsForSubtree,
   getAnkiNotes,
-  updateAnkiNote
+  updateAnkiNote,
 } from "./requestFactory";
 
 const clozePrompt = findAllPrompts(
@@ -24,9 +24,9 @@ test("addNotes request", () => {
         noteData: {
           externalNoteID: { id: "abc", type: "test", openURL: null },
           noteTitle: "test note title",
-          modificationTimestamp: 456
-        }
-      }
+          modificationTimestamp: 456,
+        },
+      },
     ],
     "Default"
   );
@@ -36,7 +36,7 @@ test("addNotes request", () => {
 test("getAnkiNoteIDsForSubtree request", () => {
   const request = getAnkiNoteIDsForSubtree([
     "test.md",
-    getIDForPrompt(clozePrompt)
+    getIDForPrompt(clozePrompt),
   ]);
   expect(request).toMatchSnapshot();
 });
@@ -67,10 +67,10 @@ test("updateAnkiNote", () => {
         externalNoteID: {
           type: "test",
           id: "abc",
-          openURL: "http://test.com"
+          openURL: "http://test.com",
         },
-        modificationTimestamp: 456
-      }
+        modificationTimestamp: 456,
+      },
     })
   ).toMatchSnapshot();
 });

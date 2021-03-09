@@ -3,7 +3,7 @@ import { getItemAtPath } from "../util/tests/getItemAtPath";
 import {
   JSONCacheCollectionNode,
   JSONCacheNode,
-  JSONInMemoryCache
+  JSONInMemoryCache,
 } from "./JSONCache";
 import { TaskCache, TaskIDPath } from "./taskCache";
 
@@ -34,7 +34,7 @@ beforeEach(() => {
   testCache = JSONInMemoryCache({
     type: "collection",
     children: {},
-    value: { color: null }
+    value: { color: null },
   });
 });
 
@@ -44,9 +44,9 @@ describe("mock cache", () => {
     testCache = JSONInMemoryCache({
       type: "collection",
       children: { a: { type: "task", value: testTask } },
-      value: {}
+      value: {},
     });
-    await testCache.performOperations(async session => {
+    await testCache.performOperations(async (session) => {
       const result = (await getItemAtPath(["a"], session))!;
       expect(result.type === "task" && result.value).toBe(testTask);
     });
@@ -60,12 +60,12 @@ describe("mock cache", () => {
         a: {
           type: "collection",
           value: {},
-          children: { b: { type: "task", value: testTask } }
-        }
+          children: { b: { type: "task", value: testTask } },
+        },
       },
-      value: {}
+      value: {},
     });
-    await testCache.performOperations(async session => {
+    await testCache.performOperations(async (session) => {
       const collectionResult = (await getItemAtPath(["a"], session))!;
       expect(
         collectionResult.type === "collection" && collectionResult.childIDs
@@ -77,7 +77,7 @@ describe("mock cache", () => {
   });
 
   test("inserting task", async () => {
-    await testCache.performOperations(async session => {
+    await testCache.performOperations(async (session) => {
       const testTask = {};
       await session.writeChanges([
         {
@@ -86,14 +86,14 @@ describe("mock cache", () => {
           record: {
             type: "collection",
             childIDs: new Set(["b"]),
-            value: { color: "red" }
-          }
+            value: { color: "red" },
+          },
         },
         {
           type: "insert",
           path: ["a", "b"],
-          record: { type: "task", value: testTask }
-        }
+          record: { type: "task", value: testTask },
+        },
       ]);
 
       const parentNode = (await getItemAtPath(["a"], session))!;
@@ -116,18 +116,18 @@ describe("mock cache", () => {
         a: {
           type: "collection",
           value: { color: "blue" },
-          children: { b: { type: "task", value: {} } }
-        }
+          children: { b: { type: "task", value: {} } },
+        },
       },
-      value: {}
+      value: {},
     });
 
-    await testCache.performOperations(async session => {
+    await testCache.performOperations(async (session) => {
       await session.writeChanges([
         {
           type: "delete",
-          path: ["a", "b"]
-        }
+          path: ["a", "b"],
+        },
       ]);
 
       const parentNode = (await getItemAtPath(["a"], session))!;
@@ -148,19 +148,19 @@ describe("mock cache", () => {
         a: {
           type: "collection",
           value: { color: "blue" },
-          children: { b: { type: "task", value: oldTask } }
-        }
+          children: { b: { type: "task", value: oldTask } },
+        },
       },
-      value: {}
+      value: {},
     });
 
-    await testCache.performOperations(async session => {
+    await testCache.performOperations(async (session) => {
       await session.writeChanges([
         {
           type: "update",
           path: ["a", "b"],
-          record: { type: "task", value: newTask }
-        }
+          record: { type: "task", value: newTask },
+        },
       ]);
 
       const parentNode = (await getItemAtPath(["a"], session))!;

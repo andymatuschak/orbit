@@ -3,16 +3,17 @@
     "lib": ["es2017"],
     "module": "commonjs",
     "target": "es2017",
-    "outDir": "dist",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "sourceMap": true,
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["node", "jest"],
-    "paths": {
-      "incremental-thinking": ["../incremental-thinking/dist"],
-      "spaced-everything": ["../spaced-everything/dist"]
-    },
-    "baseUrl": "."
-  }
+    "types": ["node", "jest"]
+  },
+  "references": [
+    {
+      "path": "../spaced-everything"
+    }
+  ]
 }

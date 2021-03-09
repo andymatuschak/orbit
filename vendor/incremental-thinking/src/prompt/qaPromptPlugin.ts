@@ -74,7 +74,7 @@ function extractQAPromptNodes(node: unist.Node): unist.Node {
           const qaPromptNode: QAPromptNode = {
             type: qaPromptNodeType,
             question: questionParagraphNode,
-            answer: answerParagraphNode
+            answer: answerParagraphNode,
           };
           parent.children.splice(answerParagraphIndex - 1, 2, qaPromptNode);
         }
@@ -89,7 +89,7 @@ function extractQAPromptNodes(node: unist.Node): unist.Node {
   for (const questionNode of questionNodes) {
     const paragraphNode = questionNode.parent!.node as mdast.Paragraph;
     const splitNodeIndex = paragraphNode.children.findIndex(
-      node =>
+      (node) =>
         node.type === "text" &&
         answerSplitRegexp.test((node as mdast.Text).value)
     );
@@ -108,7 +108,7 @@ function extractQAPromptNodes(node: unist.Node): unist.Node {
       // We've gotta split that node.
       questionPhrasingNodes.push({
         type: "text",
-        value: preSplitString
+        value: preSplitString,
       });
       answerPhrasingNodes[0].value = postSplitString;
     }
@@ -122,7 +122,7 @@ function extractQAPromptNodes(node: unist.Node): unist.Node {
     const qaPromptNode: QAPromptNode = {
       type: qaPromptNodeType,
       question: { type: "paragraph", children: questionPhrasingNodes },
-      answer: { type: "paragraph", children: answerPhrasingNodes }
+      answer: { type: "paragraph", children: answerPhrasingNodes },
     };
     const paragraphContainer = questionNode.parent!.parent!
       .node as unist.Parent;

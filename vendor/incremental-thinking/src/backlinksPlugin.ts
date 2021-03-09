@@ -24,7 +24,7 @@ export default function backlinksPlugin(this: unified.Processor) {
 }
 
 function getBacklinkSourceNodes(listNode: mdast.List): BacklinkSourceNode[] {
-  return listNode.children.map(listItem => {
+  return listNode.children.map((listItem) => {
     const sourceReference = listItem.children[0] as mdast.Paragraph;
     if (!sourceReference || sourceReference.type !== "paragraph") {
       throw new Error(
@@ -54,7 +54,7 @@ function getBacklinkSourceNodes(listNode: mdast.List): BacklinkSourceNode[] {
     }
     let excerpts: mdast.BlockContent[];
     excerpts = excerptList
-      ? excerptList.children.map(excerptListItem => {
+      ? excerptList.children.map((excerptListItem) => {
           if (excerptListItem.type !== "listItem") {
             throw new Error(
               `Unexpected backlinks excerpt list item: ${JSON.stringify(
@@ -84,7 +84,7 @@ Inside backlinks node: ${JSON.stringify(listItem, null, "\t")}`
     const backlinkSourceNode: BacklinkSourceNode = {
       type: "backlinkSourceNode",
       sourceNodeLink,
-      children: excerpts
+      children: excerpts,
     };
     return backlinkSourceNode;
   });
@@ -109,7 +109,7 @@ function extractBacklinksBlock(node: unist.Node): unist.Node {
 
       // TODO extract Bear comment node parser
       const nonCommentNodes = remainingNodes.filter(
-        n => n.type !== "html" || !(n as mdast.HTML).value.startsWith("<!--")
+        (n) => n.type !== "html" || !(n as mdast.HTML).value.startsWith("<!--")
       );
       if (nonCommentNodes.length > 0) {
         console.warn(
@@ -127,10 +127,10 @@ function extractBacklinksBlock(node: unist.Node): unist.Node {
         return [
           {
             type: backlinksNodeType,
-            children: sourceNodes
+            children: sourceNodes,
           } as BacklinksNode,
           ...remainingNodes,
-          ...(end ? [end] : [])
+          ...(end ? [end] : []),
         ];
       } catch (error) {
         console.warn(error);

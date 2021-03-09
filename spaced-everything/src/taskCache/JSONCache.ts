@@ -7,7 +7,7 @@ import {
   Task,
   TaskCollection,
   TaskRecord,
-  TaskSourceSession
+  TaskSourceSession,
 } from "./taskSource";
 
 export type JSONCacheNode<
@@ -62,16 +62,16 @@ async function getTaskNodes<
           {
             type: "collection",
             childIDs: new Set(Object.keys(node.children)),
-            value: node.value
-          }
+            value: node.value,
+          },
         ];
       } else {
         return [
           path,
           {
             type: "task",
-            value: node.value
-          }
+            value: node.value,
+          },
         ];
       }
     })
@@ -89,11 +89,11 @@ export function JSONInMemoryCache<
 >(initialRootNode: JSONCacheCollectionNode<T, TC>): JSONInMemoryCache<T, TC> {
   const cache: JSONInMemoryCache<T, TC> = {
     rootNode: initialRootNode,
-    performOperations: continuation => {
+    performOperations: (continuation) => {
       return continuation({
-        getTaskNodes: async paths => getTaskNodes(paths, cache),
+        getTaskNodes: async (paths) => getTaskNodes(paths, cache),
 
-        writeChanges: async changes => {
+        writeChanges: async (changes) => {
           function insertRecord(
             record: TaskRecord<T, TC>,
             cacheNode: JSONCacheNode<T, TC>,
@@ -113,7 +113,7 @@ export function JSONInMemoryCache<
               cacheNode.children[leafID] = {
                 type: "collection",
                 value: record.value,
-                children: {}
+                children: {},
               };
             }
           }
@@ -199,9 +199,9 @@ export function JSONInMemoryCache<
               throw unreachableCaseError(change);
             }
           }
-        }
+        },
       });
-    }
+    },
   };
   return cache;
 }
@@ -214,7 +214,7 @@ export default function JSONCache<
   initialValue: JSONCacheCollectionNode<T, TC>
 ): TaskCache<T, TC> {
   return {
-    performOperations: async continuation => {
+    performOperations: async (continuation) => {
       const cacheFileContents = await fs.promises
         .readFile(path, "utf-8")
         .catch(() => null);
@@ -234,6 +234,6 @@ export default function JSONCache<
         JSON.stringify(inMemoryCache.rootNode),
         "utf-8"
       );
-    }
+    },
   };
 }

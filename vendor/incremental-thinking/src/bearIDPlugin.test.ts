@@ -17,15 +17,10 @@ test("decodes IDs", () => {
   const ast = processor.runSync(processor.parse(input));
   expect((ast as mdast.Root).children).toContainEqual({
     type: bearIDNodeType,
-    bearID: testBearID
+    bearID: testBearID,
   });
 });
 
 test("encodes IDs", () => {
-  expect(
-    processor
-      .processSync(input)
-      .toString()
-      .trimRight()
-  ).toEqual(input);
+  expect(processor.processSync(input).toString().trimRight()).toEqual(input);
 });

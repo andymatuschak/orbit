@@ -2,12 +2,12 @@ import {
   findAllPrompts,
   ClozePrompt,
   clozePromptType,
-  processor
+  processor,
 } from "incremental-thinking";
 import {
   createAnkiTextFromClozePrompt,
   decodeAnkiPathFieldToTaskIDPath,
-  encodeTaskIDPathToAnkiPathField
+  encodeTaskIDPathToAnkiPathField,
 } from "./ankiTextEncoding";
 
 describe("anki text encoding", () => {

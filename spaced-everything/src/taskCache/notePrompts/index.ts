@@ -1,21 +1,19 @@
 import fs from "fs";
 import {
   ClozePrompt,
+  clozePromptType,
+  findAllPrompts,
+  getClozeNodesInClozePrompt,
+  getNoteID,
+  getNoteTitle,
   NoteID,
   processor,
   Prompt,
   QAPrompt,
-  getNoteTitle,
-  getNoteID,
-  findAllPrompts,
-  clozePromptType,
   qaPromptType,
-  getClozeNodesInClozePrompt,
-  listNoteFiles
 } from "incremental-thinking";
 import isEqual from "lodash.isequal";
 import mdast from "mdast";
-import path from "path";
 import uuid from "uuid/v5";
 import vfile from "vfile";
 import { JsonMap } from "../../util/JSONTypes";
@@ -26,7 +24,7 @@ import {
   TaskCollection,
   TaskCollectionRecord,
   TaskRecord,
-  TaskSource
+  TaskSource,
 } from "../taskSource";
 
 export type PromptTask =
@@ -65,9 +63,9 @@ async function readNote(notePath: string): Promise<mdast.Root> {
 }
 
 export function getPrompts(noteAST: mdast.Root): RegisteredPrompt[] {
-  return findAllPrompts(noteAST).map(prompt => ({
+  return findAllPrompts(noteAST).map((prompt) => ({
     ...prompt,
-    id: getIDForPrompt(prompt)
+    id: getIDForPrompt(prompt),
   }));
 }
 
@@ -92,52 +90,74 @@ export function getClozeNoteTaskCollectionChildIDsForClozePrompt(
   const promptID = getIDForPrompt(prompt);
 
   return new Set(
-    Array.from(new Array(clozeSpans.length).keys()).map(i => `${promptID}-${i}`)
+    Array.from(new Array(clozeSpans.length).keys()).map(
+      (i) => `${promptID}-${i}`
+    )
   );
 }
 
-export type RegisteredPrompt = Prompt & { id: string };
+type RegisteredPrompt = Prompt & { id: string };
+
+interface NoteFileRecord {
+  prompts: { [key: string]: RegisteredPrompt };
+  modificationTimestamp: number;
+  title: string | null;
+  id: (NoteID & JsonMap) | null;
+}
+
+async function readNoteFileRecord(
+  fullPath: string
+): Promise<NoteFileRecord | null> {
+  try {
+    const [noteAST, fileStats] = await Promise.all([
+      readNote(fullPath),
+      fs.promises.stat(fullPath),
+    ]);
+
+    const prompts: NoteFileRecord["prompts"] = {};
+    for (const prompt of getPrompts(noteAST)) {
+      const id = getIDForPrompt(prompt);
+      prompts[id] = { ...prompt, id };
+    }
+
+    return {
+      prompts,
+      modificationTimestamp: fileStats.mtimeMs,
+      title: getNoteTitle(noteAST),
+      id: getNoteID(noteAST),
+    };
+  } catch (error) {
+    console.debug(`Error reading ${fullPath}: ${error}`);
+    return null;
+  }
+}
+
+// TODO: we should structure this to avoid reading every note in the common case
+async function readNotes(
+  notePaths: string[]
+): Promise<Map<string, NoteFileRecord>> {
+  const cache: Map<string, NoteFileRecord> = new Map();
+  console.info(`Parsing ${notePaths.length} notes...`);
+  const startTimestamp = Date.now();
+  await Promise.all(
+    notePaths.map(async (notePath) => {
+      const record = await readNoteFileRecord(notePath);
+      if (record) {
+        const effectiveID = record.id?.id ?? notePath;
+        cache.set(effectiveID, record);
+      }
+    })
+  );
+  console.log(`Finished in ${(Date.now() - startTimestamp) / 1000} seconds`);
+  return cache;
+}
 
 export function createTaskSource(
   notePaths: string[]
 ): TaskSource<PromptTask, PromptTaskCollection> {
   return {
-    performOperations: function(continuation): Promise<unknown> {
-      interface NoteFileRecord {
-        prompts: { [key: string]: RegisteredPrompt };
-        modificationTimestamp: number;
-        title: string | null;
-        id: (NoteID & JsonMap) | null;
-      }
-      const cache: { [key: string]: NoteFileRecord } = {};
-      async function getNoteFileRecord(
-        fullPath: string
-      ): Promise<NoteFileRecord | null> {
-        if (!cache[fullPath]) {
-          try {
-            const [noteAST, fileStats] = await Promise.all([
-              readNote(fullPath),
-              fs.promises.stat(fullPath)
-            ]);
-
-            const prompts: NoteFileRecord["prompts"] = {};
-            for (const prompt of getPrompts(noteAST)) {
-              const id = getIDForPrompt(prompt);
-              prompts[id] = { ...prompt, id };
-            }
-
-            cache[fullPath] = {
-              prompts,
-              modificationTimestamp: fileStats.mtimeMs,
-              title: getNoteTitle(noteAST),
-              id: getNoteID(noteAST)
-            };
-          } catch (error) {
-            console.debug(`Error reading ${fullPath}: ${error}`);
-          }
-        }
-        return cache[fullPath] || null;
-      }
+    async performOperations(continuation): Promise<unknown> {
+      const cache = await readNotes(notePaths);
 
       return continuation({
         async getTaskNodes<Paths extends TaskIDPath[]>(
@@ -157,12 +177,12 @@ export function createTaskSource(
           for (const promptPath of paths) {
             if (promptPath.length === 0) {
               outputMap.set(promptPath, {
-                childIDs: new Set(notePaths),
+                childIDs: new Set(cache.keys()),
                 type: "collection",
-                value: { type: "root" }
+                value: { type: "root" },
               });
             } else if (promptPath.length <= 3) {
-              const noteFileRecord = await getNoteFileRecord(promptPath[0]);
+              const noteFileRecord = cache.get(promptPath[0]) ?? null;
               if (noteFileRecord === null) {
                 outputMap.set(promptPath, null);
               } else if (promptPath.length === 1) {
@@ -173,15 +193,15 @@ export function createTaskSource(
                     type: "note",
                     modificationTimestamp: noteFileRecord.modificationTimestamp,
                     noteTitle: noteFileRecord.title,
-                    externalNoteID: noteFileRecord.id
-                  }
+                    externalNoteID: noteFileRecord.id,
+                  },
                 } as TaskCollectionRecord<PromptTaskCollection>);
               } else if (promptPath.length === 2) {
                 const prompt = noteFileRecord.prompts[promptPath[1]] || null;
                 const noteData: PromptTaskNoteData = {
                   modificationTimestamp: noteFileRecord.modificationTimestamp,
                   noteTitle: noteFileRecord.title,
-                  externalNoteID: noteFileRecord.id
+                  externalNoteID: noteFileRecord.id,
                 };
                 if (prompt === null) {
                   outputMap.set(promptPath, null);
@@ -194,8 +214,8 @@ export function createTaskSource(
                     value: {
                       type: "clozeBlock",
                       prompt,
-                      noteData
-                    }
+                      noteData,
+                    },
                   });
                 } else if (prompt.type === qaPromptType) {
                   outputMap.set(promptPath, {
@@ -203,8 +223,8 @@ export function createTaskSource(
                     value: {
                       type: "qaPrompt",
                       prompt,
-                      noteData
-                    }
+                      noteData,
+                    },
                   });
                 } else {
                   throw unreachableCaseError(prompt);
@@ -215,8 +235,8 @@ export function createTaskSource(
                   outputMap.set(promptPath, {
                     type: "task",
                     value: {
-                      type: "cloze"
-                    }
+                      type: "cloze",
+                    },
                   });
                 } else if (prompt.type === qaPromptType) {
                   throw new Error(`Unexpected QA prompt at path ${promptPath}`);
@@ -258,8 +278,8 @@ export function createTaskSource(
             }
           }
           return false;
-        }
+        },
       });
-    }
+    },
   };
 }

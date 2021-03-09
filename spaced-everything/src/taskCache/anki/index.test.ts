@@ -8,7 +8,7 @@ import {
   getClozeNoteTaskCollectionChildIDsForClozePrompt,
   getIDForPrompt,
   PromptTaskCollection,
-  PromptTaskNoteData
+  PromptTaskNoteData,
 } from "../notePrompts";
 import { _computeCacheDelta, encodeTaskIDPath } from "../taskCache";
 import { TaskCollectionRecord } from "../taskSource";
@@ -20,18 +20,18 @@ import {
   ankiNoteTag,
   AnkiQAPromptNote,
   clozeModelName,
-  qaPromptModelName
+  qaPromptModelName,
 } from "./dataModel";
 import {
   _computeAnkiOperationSet,
   _getPromptTaskRecordFromAnkiNoteCacheRecord,
-  createAnkiCache
+  createAnkiCache,
 } from "./index";
 import {
   findAllPrompts,
   ClozePrompt,
   QAPrompt,
-  processor
+  processor,
 } from "incremental-thinking";
 
 beforeAll(() => {
@@ -52,7 +52,7 @@ describe("computeAnkiOperations", () => {
   const testNoteData: PromptTaskNoteData = {
     noteTitle: "title",
     externalNoteID: null,
-    modificationTimestamp: 456
+    modificationTimestamp: 456,
   };
 
   const clozeBlockRecord = {
@@ -60,15 +60,15 @@ describe("computeAnkiOperations", () => {
     value: {
       type: "clozeBlock",
       prompt: clozePrompt,
-      noteData: testNoteData
+      noteData: testNoteData,
     },
-    childIDs: new Set("0")
+    childIDs: new Set("0"),
   } as TaskCollectionRecord<PromptTaskCollection>;
 
   const cache = JSONInMemoryCache<AnkiNote, {}>({
     type: "collection",
     value: {},
-    children: {}
+    children: {},
   });
 
   test("accumulates insertions", () => {
@@ -83,15 +83,15 @@ describe("computeAnkiOperations", () => {
               type: "note",
               externalNoteID: { type: "test", id: "abc", openURL: null },
               modificationTimestamp: 456,
-              noteTitle: "Title"
+              noteTitle: "Title",
             },
-            childIDs: new Set(["ABC"])
-          }
+            childIDs: new Set(["ABC"]),
+          },
         },
         {
           type: "insert",
           path: ["test.md", "ABC"],
-          record: clozeBlockRecord
+          record: clozeBlockRecord,
         },
         {
           type: "insert",
@@ -101,10 +101,10 @@ describe("computeAnkiOperations", () => {
             value: {
               type: "qaPrompt",
               prompt: qaPrompt,
-              noteData: testNoteData
-            }
-          }
-        }
+              noteData: testNoteData,
+            },
+          },
+        },
       ],
       cache
     );
@@ -120,7 +120,7 @@ describe("computeAnkiOperations", () => {
     const ops = _computeAnkiOperationSet(
       [
         { type: "delete", path: ["test.md"] },
-        { type: "delete", path: ["test2.md"] }
+        { type: "delete", path: ["test2.md"] },
       ],
       cache
     );
@@ -134,7 +134,7 @@ describe("computeAnkiOperations", () => {
     const ops = _computeAnkiOperationSet(
       [
         { type: "delete", path: ["test.md", "ABC"] },
-        { type: "delete", path: ["test.md"] }
+        { type: "delete", path: ["test.md"] },
       ],
       cache
     );
@@ -157,7 +157,7 @@ describe("computeAnkiOperations", () => {
               type: "note",
               externalNoteID: null,
               noteTitle: "title",
-              modificationTimestamp: 456
+              modificationTimestamp: 456,
             },
             children: {
               [clozePromptID]: {
@@ -172,13 +172,13 @@ describe("computeAnkiOperations", () => {
                     NoteURL: "url",
                     _Path: encodeTaskIDPath(["a.md", clozePromptID]),
                     _OriginalMarkdown: promptMarkdown,
-                    _NoteDataJSON: JSON.stringify(testNoteData)
-                  }
-                } as AnkiClozeNote
-              }
-            }
-          }
-        }
+                    _NoteDataJSON: JSON.stringify(testNoteData),
+                  },
+                } as AnkiClozeNote,
+              },
+            },
+          },
+        },
       });
 
       const ops = _computeAnkiOperationSet(
@@ -187,8 +187,8 @@ describe("computeAnkiOperations", () => {
             type: "move",
             path: newPath,
             oldPath,
-            record: clozeBlockRecord
-          }
+            record: clozeBlockRecord,
+          },
         ],
         cache
       );
@@ -200,9 +200,9 @@ describe("computeAnkiOperations", () => {
           noteData: {
             noteTitle: "title",
             externalNoteID: null,
-            modificationTimestamp: 456
-          }
-        }
+            modificationTimestamp: 456,
+          },
+        },
       ]);
     });
 
@@ -216,8 +216,8 @@ describe("computeAnkiOperations", () => {
               type: "move",
               path: newPath,
               oldPath,
-              record: clozeBlockRecord
-            }
+              record: clozeBlockRecord,
+            },
           ],
           cache
         )
@@ -234,8 +234,8 @@ describe("computeAnkiOperations", () => {
               type: "move",
               path: newPath,
               oldPath,
-              record: clozeBlockRecord
-            }
+              record: clozeBlockRecord,
+            },
           ],
           cache
         )
@@ -252,8 +252,8 @@ describe("computeAnkiOperations", () => {
               type: "move",
               path: newPath,
               oldPath,
-              record: clozeBlockRecord
-            }
+              record: clozeBlockRecord,
+            },
           ],
           cache
         )
@@ -266,7 +266,7 @@ test("map anki notes onto prompt task records", async () => {
   const testNoteData = {
     noteTitle: "title",
     externalNoteID: { type: "test", id: "abc", openURL: null },
-    modificationTimestamp: 456
+    modificationTimestamp: 456,
   };
   const cache = JSONInMemoryCache<AnkiNote, PromptTaskCollection>({
     type: "collection",
@@ -276,7 +276,7 @@ test("map anki notes onto prompt task records", async () => {
         type: "collection",
         value: {
           type: "note",
-          ...testNoteData
+          ...testNoteData,
         },
         children: {
           [clozePromptID]: {
@@ -291,9 +291,9 @@ test("map anki notes onto prompt task records", async () => {
                 NoteURL: "url",
                 _Path: encodeTaskIDPath(["a", clozePromptID]),
                 _OriginalMarkdown: "Test {cloze} {bar}",
-                _NoteDataJSON: JSON.stringify(testNoteData)
-              }
-            } as AnkiClozeNote
+                _NoteDataJSON: JSON.stringify(testNoteData),
+              },
+            } as AnkiClozeNote,
           },
           [qaPromptID]: {
             type: "task",
@@ -308,16 +308,16 @@ test("map anki notes onto prompt task records", async () => {
                 NoteURL: "null",
                 _Path: encodeTaskIDPath(["a", qaPromptID]),
                 _NoteDataJSON: JSON.stringify(testNoteData),
-                _PromptJSON: JSON.stringify(qaPrompt)
-              }
-            } as AnkiQAPromptNote
-          }
-        }
-      }
-    }
+                _PromptJSON: JSON.stringify(qaPrompt),
+              },
+            } as AnkiQAPromptNote,
+          },
+        },
+      },
+    },
   });
 
-  await cache.performOperations(async session => {
+  await cache.performOperations(async (session) => {
     expect(
       _getPromptTaskRecordFromAnkiNoteCacheRecord(
         [],
@@ -327,7 +327,7 @@ test("map anki notes onto prompt task records", async () => {
     ).toEqual({
       type: "collection",
       value: { type: "root" },
-      childIDs: new Set(["a"])
+      childIDs: new Set(["a"]),
     });
 
     const noteData = {
@@ -336,8 +336,8 @@ test("map anki notes onto prompt task records", async () => {
       externalNoteID: {
         id: "abc",
         openURL: null,
-        type: "test"
-      }
+        type: "test",
+      },
     };
 
     expect(
@@ -350,9 +350,9 @@ test("map anki notes onto prompt task records", async () => {
       type: "collection",
       value: {
         type: "note",
-        ...noteData
+        ...noteData,
       },
-      childIDs: new Set([clozePromptID, qaPromptID])
+      childIDs: new Set([clozePromptID, qaPromptID]),
     });
 
     expect(
@@ -374,7 +374,7 @@ test("map anki notes onto prompt task records", async () => {
     expect(clozeBlockRecord).toMatchObject({
       type: "collection",
       value: { type: "clozeBlock", prompt: clozePrompt, noteData },
-      childIDs: clozeLeafIDs
+      childIDs: clozeLeafIDs,
     });
 
     expect(
@@ -386,7 +386,7 @@ test("map anki notes onto prompt task records", async () => {
     ).toBeNull();
 
     expect(clozeLeafIDs.size).toEqual(2);
-    clozeLeafIDs.forEach(async leafID => {
+    clozeLeafIDs.forEach(async (leafID) => {
       expect(
         _getPromptTaskRecordFromAnkiNoteCacheRecord(
           ["a", clozePromptID, leafID],
@@ -395,7 +395,7 @@ test("map anki notes onto prompt task records", async () => {
         )
       ).toEqual({
         type: "task",
-        value: { type: "cloze" }
+        value: { type: "cloze" },
       });
     });
 
@@ -424,7 +424,7 @@ test("anki cache integration", async () => {
   const noteSource = createTaskSource(["/a.md", "/b.md"]);
   mockFS({
     "/a.md": "Test",
-    "/b.md": "Another {with} {cloze}"
+    "/b.md": "Another {with} {cloze}",
   });
 
   const instance = axios.create();
@@ -436,8 +436,8 @@ test("anki cache integration", async () => {
     false
   );
 
-  await noteSource.performOperations(async noteSession => {
-    await ankiCache.performOperations(async ankiSession => {
+  await noteSource.performOperations(async (noteSession) => {
+    await ankiCache.performOperations(async (ankiSession) => {
       const changes = await _computeCacheDelta(ankiSession, noteSession);
       expect(changes).toMatchSnapshot();
       const operationSet = _computeAnkiOperationSet(changes, null);

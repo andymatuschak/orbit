@@ -7,16 +7,16 @@ import { JsonMap } from "./util/JSONTypes";
 
 export async function listNoteFiles(folderPath: string): Promise<string[]> {
   const noteDirectoryEntries = await fs.promises.readdir(folderPath, {
-    withFileTypes: true
+    withFileTypes: true,
   });
   return noteDirectoryEntries
     .filter(
-      entry =>
+      (entry) =>
         entry.isFile() &&
         !entry.name.startsWith(".") &&
         entry.name.endsWith(".md")
     )
-    .map(entry => entry.name);
+    .map((entry) => entry.name);
 }
 
 export interface NoteID extends JsonMap {
@@ -49,7 +49,7 @@ export function getNoteTitle(noteRoot: mdast.Root): string | null {
     if (firstNode.type === "heading") {
       return processor.stringify({
         type: "paragraph",
-        children: firstNode.children
+        children: firstNode.children,
       });
     } else {
       return processor.stringify(firstNode);

@@ -42,7 +42,7 @@ export function createAnkiConnectClient(
       }
     },
 
-    deckName
+    deckName,
   };
 }
 

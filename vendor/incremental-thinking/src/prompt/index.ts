@@ -56,19 +56,19 @@ export function findAllPrompts(tree: unist.Node): Prompt[] {
       visitedClozePromptBlocks.add(parent);
       clozePrompts.push({
         type: "cloze",
-        block: parent as mdast.BlockContent & JsonMap
+        block: parent as mdast.BlockContent & JsonMap,
       });
     }
   }
 
   const qaPrompts = selectAll(qaPromptNodeType, treeWithParents)
-    .filter(n => !promptNodeHasUnsupportedParent(n as NodeWithParent))
-    .map(n => {
+    .filter((n) => !promptNodeHasUnsupportedParent(n as NodeWithParent))
+    .map((n) => {
       const qaPromptNode = n as QAPromptNode;
       const qaPrompt: QAPrompt = {
         type: "qaPrompt",
         question: qaPromptNode.question as mdast.Parent & JsonMap,
-        answer: qaPromptNode.answer as mdast.Parent & JsonMap
+        answer: qaPromptNode.answer as mdast.Parent & JsonMap,
       };
       return qaPrompt;
     });
@@ -101,7 +101,7 @@ const blockTypes = new Set([
   "list",
   "table",
   "html",
-  "code"
+  "code",
 ]);
 
 function isBlockContent(node: unist.Node): node is mdast.BlockContent {

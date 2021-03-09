@@ -5,7 +5,7 @@ import {
   TaskCollectionRecord,
   TaskRecord,
   TaskSource,
-  TaskSourceSession
+  TaskSourceSession,
 } from "./taskSource";
 
 // Every ID (whether it's for a collection or a task) should be globally unique.
@@ -61,10 +61,8 @@ export async function _computeCacheDelta<T, TC>(
     sourceRecord: TaskRecord<T, TC> | null,
     isCacheHit: TaskSourceSession<T, TC>["isCacheHit"]
   ) {
-    console.log("Visiting", path);
-
     function enqueueSubtree(record: TaskCollectionRecord<TC>) {
-      record.childIDs.forEach(childID =>
+      record.childIDs.forEach((childID) =>
         pathQueue.add(encodeTaskIDPath([...path, childID]))
       );
     }
@@ -74,7 +72,7 @@ export async function _computeCacheDelta<T, TC>(
       outChangeSet.push({
         type: "insert",
         path: path,
-        record: sourceRecord
+        record: sourceRecord,
       });
       if (sourceRecord.type === "collection") {
         enqueueSubtree(sourceRecord);
@@ -83,7 +81,7 @@ export async function _computeCacheDelta<T, TC>(
       // Deletion
       outChangeSet.push({
         type: "delete",
-        path: path
+        path: path,
       });
     } else if (sourceRecord && cacheRecord) {
       // Update
@@ -97,7 +95,7 @@ export async function _computeCacheDelta<T, TC>(
         outChangeSet.push({
           type: "update",
           path: path,
-          record: sourceRecord
+          record: sourceRecord,
         });
 
         if (
@@ -112,13 +110,13 @@ export async function _computeCacheDelta<T, TC>(
   }
 
   while (pathQueue.size > 0) {
-    const paths = [...pathQueue.keys()].map(encodedPath =>
+    const paths = [...pathQueue.keys()].map((encodedPath) =>
       decodeTaskIDPath(encodedPath)
     );
     pathQueue.clear();
     const [cacheRecordMap, sourceRecordMap] = await Promise.all([
       cacheSession.getTaskNodes(paths),
-      sourceSession.getTaskNodes(paths)
+      sourceSession.getTaskNodes(paths),
     ]);
 
     for (const path of paths) {
@@ -156,17 +154,21 @@ export async function _computeCacheDelta<T, TC>(
           type: "move",
           oldPath: existingChange.path,
           path: change.path,
-          record: change.record
+          record: change.record,
         };
       } else if (existingChange.type === "insert" && change.type === "delete") {
         changeByLeafID[leafID] = {
           type: "move",
           oldPath: change.path,
           path: existingChange.path,
-          record: existingChange.record
+          record: existingChange.record,
         };
       } else {
-        console.error(`Incompatible changes:`, change, existingChange);
+        console.error(
+          `Incompatible changes:`,
+          JSON.stringify(change, null, "\t"),
+          JSON.stringify(existingChange, null, "\t")
+        );
       }
     }
   }
@@ -179,9 +181,9 @@ export async function updateTaskCache<
   T extends Task,
   TC extends TaskCollection
 >(cache: TaskCache<T, TC>, source: TaskSource<T, TC>) {
-  await cache.performOperations(async cacheSession => {
+  await cache.performOperations(async (cacheSession) => {
     let changes: TaskCacheSessionChange<T, TC>[] | null = null;
-    const result = await source.performOperations(async sourceSession => {
+    const result = await source.performOperations(async (sourceSession) => {
       changes = await _computeCacheDelta(cacheSession, sourceSession);
     });
 
@@ -200,7 +202,7 @@ export function encodeTaskIDPath(taskIDPath: TaskIDPath): EncodedTaskIDPath {
     return "/" as EncodedTaskIDPath;
   }
   return taskIDPath
-    .map(id => id.replace(/\//g, "\\/"))
+    .map((id) => id.replace(/\//g, "\\/"))
     .join("/") as EncodedTaskIDPath;
 }
 
@@ -212,6 +214,6 @@ export function decodeTaskIDPath(
   } else {
     return encodedTaskIDPath
       .split(/(?<!\\)\//)
-      .map(id => id.replace(/\\\//g, "/"));
+      .map((id) => id.replace(/\\\//g, "/"));
   }
 }

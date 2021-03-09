@@ -1,20 +1,19 @@
 {
   "compilerOptions": {
     "lib": ["es2017"],
-    "module": "commonjs",
+    "module": "es6",
     "target": "es2017",
+    "rootDir": "./src",
     "outDir": "./dist",
     "declaration": true,
     "sourceMap": true,
     "strict": true,
     "esModuleInterop": true,
     "types": ["node", "jest"],
+    "composite": true,
+    "moduleResolution": "node"
   },
   "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/node_modules/*"
+    "src/**/*"
   ]
 }

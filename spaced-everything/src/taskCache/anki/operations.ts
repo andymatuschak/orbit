@@ -9,7 +9,7 @@ import {
   getAnkiNoteIDsForSubtree,
   getAnkiNotes,
   getAnkiPromptForAnkiNote,
-  updateAnkiNote
+  updateAnkiNote,
 } from "./ankiConnect/util/requestFactory";
 import { AnkiNote, AnkiPrompt } from "./dataModel";
 
@@ -21,7 +21,7 @@ export function _createTreeFromAnkiNoteList(
   const tree = {
     type: "collection",
     value: { type: "root" },
-    children: {}
+    children: {},
   } as JSONCacheCollectionNode<AnkiNote, PromptTaskCollection>;
   for (const ankiNote of allAnkiNotes) {
     const taskIDPath = decodeAnkiPathFieldToTaskIDPath(ankiNote.fields._Path);
@@ -42,8 +42,8 @@ export function _createTreeFromAnkiNoteList(
           children: {},
           value: {
             type: "note",
-            ...ankiPrompt.noteData
-          }
+            ...ankiPrompt.noteData,
+          },
         };
         currentNode.children[parentPathID] = newNode;
       }
@@ -52,7 +52,7 @@ export function _createTreeFromAnkiNoteList(
 
     currentNode.children[taskIDPath[taskIDPath.length - 1]] = {
       type: "task",
-      value: ankiNote
+      value: ankiNote,
     };
   }
   return JSONInMemoryCache(tree);
@@ -85,7 +85,9 @@ export async function deleteNoteSubtrees(
   subtreePaths: TaskIDPath[]
 ) {
   const nestedIDsToDelete = await Promise.all(
-    subtreePaths.map(path => ankiClient.request(getAnkiNoteIDsForSubtree(path)))
+    subtreePaths.map((path) =>
+      ankiClient.request(getAnkiNoteIDsForSubtree(path))
+    )
   );
 
   const IDsToDelete = nestedIDsToDelete.reduce(
@@ -102,7 +104,7 @@ export async function movePrompts(
   })[]
 ) {
   const noteIDs = await Promise.all(
-    ankiPrompts.map(async ankiPrompt => {
+    ankiPrompts.map(async (ankiPrompt) => {
       const matchingNoteIDs = await ankiClient.request(
         getAnkiNoteIDsForSubtree(ankiPrompt.oldPath)
       );
@@ -140,7 +142,7 @@ export async function updateNoteDatas(
   changedNoteRecords: { notePath: TaskIDPath; noteData: PromptTaskNoteData }[]
 ) {
   const ankiNoteLists = await Promise.all(
-    changedNoteRecords.map(async changedNoteRecord => {
+    changedNoteRecords.map(async (changedNoteRecord) => {
       const matchingNoteIDs = await ankiClient.request(
         getAnkiNoteIDsForSubtree(changedNoteRecord.notePath)
       );
@@ -158,10 +160,10 @@ export async function updateNoteDatas(
     ankiNoteLists
       .map((ankiNoteList, index) => {
         const newNoteData = changedNoteRecords[index].noteData;
-        return ankiNoteList.map(ankiNote => {
+        return ankiNoteList.map((ankiNote) => {
           const newAnkiPrompt = {
             ...getAnkiPromptForAnkiNote(ankiNote),
-            noteData: newNoteData
+            noteData: newNoteData,
           };
           return ankiClient.request(
             updateAnkiNote(ankiNote.noteId, newAnkiPrompt)

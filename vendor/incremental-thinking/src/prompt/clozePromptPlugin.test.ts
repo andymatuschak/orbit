@@ -13,13 +13,18 @@ test("parses cloze", () => {
   const markdown = "This is {a test}";
   const ast = processor.parse(markdown);
   expect(ast).toMatchObject({
-    children: [{
-      type: "paragraph",
-      children: [
-        { type: "text", value: "This is " },
-        { type: clozeNodeType, children: [{ type: "text", value: "a test" }] }
-      ]
-    }]
+    children: [
+      {
+        type: "paragraph",
+        children: [
+          { type: "text", value: "This is " },
+          {
+            type: clozeNodeType,
+            children: [{ type: "text", value: "a test" }],
+          },
+        ],
+      },
+    ],
   });
 
   expect(processor.stringify(ast).trimRight()).toEqual(markdown);

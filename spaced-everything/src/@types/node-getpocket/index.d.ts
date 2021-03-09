@@ -5,24 +5,24 @@ declare module "node-getpocket" {
     constructor(config: GetPocket.Config, root_url?: string);
     get(
       params: GetPocket.GetParams,
-      callback: GetPocket.Callback<GetPocket.GetResponse>,
+      callback: GetPocket.Callback<GetPocket.GetResponse>
     ): void;
 
     delete(
       params: GetPocket.ItemListParams,
-      callback: GetPocket.Callback<GetPocket.Response>,
+      callback: GetPocket.Callback<GetPocket.Response>
     ): void;
 
     archive(
       params: GetPocket.ItemListParams,
-      callback: GetPocket.Callback<GetPocket.Response>,
+      callback: GetPocket.Callback<GetPocket.Response>
     ): void;
   }
 
   namespace GetPocket {
     export type Callback<Result> = (
       error: Error | null,
-      result: Result,
+      result: Result
     ) => void;
 
     export interface Config {
