@@ -1,0 +1,377 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`anki cache integration 1`] = `
+Array [
+  Object {
+    "path": Array [],
+    "record": Object {
+      "childIDs": Set {
+        "/a.md",
+        "/b.md",
+      },
+      "type": "collection",
+      "value": Object {
+        "type": "root",
+      },
+    },
+    "type": "update",
+  },
+  Object {
+    "path": Array [
+      "/a.md",
+    ],
+    "record": Object {
+      "childIDs": Set {},
+      "type": "collection",
+      "value": Object {
+        "externalNoteID": null,
+        "modificationTimestamp": 1581548242045,
+        "noteTitle": "Test",
+        "type": "note",
+      },
+    },
+    "type": "insert",
+  },
+  Object {
+    "path": Array [
+      "/b.md",
+    ],
+    "record": Object {
+      "childIDs": Set {
+        "1ed5c4a2-588e-5c35-a82d-384d1d830150",
+      },
+      "type": "collection",
+      "value": Object {
+        "externalNoteID": null,
+        "modificationTimestamp": 1581548242045,
+        "noteTitle": "Another {with} {cloze}",
+        "type": "note",
+      },
+    },
+    "type": "insert",
+  },
+  Object {
+    "path": Array [
+      "/b.md",
+      "1ed5c4a2-588e-5c35-a82d-384d1d830150",
+    ],
+    "record": Object {
+      "childIDs": Set {
+        "1ed5c4a2-588e-5c35-a82d-384d1d830150-0",
+        "1ed5c4a2-588e-5c35-a82d-384d1d830150-1",
+      },
+      "type": "collection",
+      "value": Object {
+        "noteData": Object {
+          "externalNoteID": null,
+          "modificationTimestamp": 1581548242045,
+          "noteTitle": "Another {with} {cloze}",
+        },
+        "prompt": Object {
+          "block": Object {
+            "children": Array [
+              Object {
+                "position": Position {
+                  "end": Object {
+                    "column": 9,
+                    "line": 1,
+                    "offset": 8,
+                  },
+                  "indent": Array [],
+                  "start": Object {
+                    "column": 1,
+                    "line": 1,
+                    "offset": 0,
+                  },
+                },
+                "type": "text",
+                "value": "Another ",
+              },
+              Object {
+                "children": Array [
+                  Object {
+                    "position": Position {
+                      "end": Object {
+                        "column": 14,
+                        "line": 1,
+                        "offset": 13,
+                      },
+                      "indent": Array [],
+                      "start": Object {
+                        "column": 10,
+                        "line": 1,
+                        "offset": 9,
+                      },
+                    },
+                    "type": "text",
+                    "value": "with",
+                  },
+                ],
+                "position": Position {
+                  "end": Object {
+                    "column": 15,
+                    "line": 1,
+                    "offset": 14,
+                  },
+                  "indent": Array [],
+                  "start": Object {
+                    "column": 9,
+                    "line": 1,
+                    "offset": 8,
+                  },
+                },
+                "type": "incremental-thinking-cloze",
+              },
+              Object {
+                "position": Position {
+                  "end": Object {
+                    "column": 16,
+                    "line": 1,
+                    "offset": 15,
+                  },
+                  "indent": Array [],
+                  "start": Object {
+                    "column": 15,
+                    "line": 1,
+                    "offset": 14,
+                  },
+                },
+                "type": "text",
+                "value": " ",
+              },
+              Object {
+                "children": Array [
+                  Object {
+                    "position": Position {
+                      "end": Object {
+                        "column": 22,
+                        "line": 1,
+                        "offset": 21,
+                      },
+                      "indent": Array [],
+                      "start": Object {
+                        "column": 17,
+                        "line": 1,
+                        "offset": 16,
+                      },
+                    },
+                    "type": "text",
+                    "value": "cloze",
+                  },
+                ],
+                "position": Position {
+                  "end": Object {
+                    "column": 23,
+                    "line": 1,
+                    "offset": 22,
+                  },
+                  "indent": Array [],
+                  "start": Object {
+                    "column": 16,
+                    "line": 1,
+                    "offset": 15,
+                  },
+                },
+                "type": "incremental-thinking-cloze",
+              },
+            ],
+            "position": Position {
+              "end": Object {
+                "column": 23,
+                "line": 1,
+                "offset": 22,
+              },
+              "indent": Array [],
+              "start": Object {
+                "column": 1,
+                "line": 1,
+                "offset": 0,
+              },
+            },
+            "type": "paragraph",
+          },
+          "id": "1ed5c4a2-588e-5c35-a82d-384d1d830150",
+          "type": "cloze",
+        },
+        "type": "clozeBlock",
+      },
+    },
+    "type": "insert",
+  },
+  Object {
+    "path": Array [
+      "/b.md",
+      "1ed5c4a2-588e-5c35-a82d-384d1d830150",
+      "1ed5c4a2-588e-5c35-a82d-384d1d830150-0",
+    ],
+    "record": Object {
+      "type": "task",
+      "value": Object {
+        "type": "cloze",
+      },
+    },
+    "type": "insert",
+  },
+  Object {
+    "path": Array [
+      "/b.md",
+      "1ed5c4a2-588e-5c35-a82d-384d1d830150",
+      "1ed5c4a2-588e-5c35-a82d-384d1d830150-1",
+    ],
+    "record": Object {
+      "type": "task",
+      "value": Object {
+        "type": "cloze",
+      },
+    },
+    "type": "insert",
+  },
+]
+`;
+
+exports[`anki cache integration 2`] = `
+Object {
+  "addPrompts": Array [
+    Object {
+      "noteData": Object {
+        "externalNoteID": null,
+        "modificationTimestamp": 1581548242045,
+        "noteTitle": "Another {with} {cloze}",
+      },
+      "path": Array [
+        "/b.md",
+        "1ed5c4a2-588e-5c35-a82d-384d1d830150",
+      ],
+      "prompt": Object {
+        "block": Object {
+          "children": Array [
+            Object {
+              "position": Position {
+                "end": Object {
+                  "column": 9,
+                  "line": 1,
+                  "offset": 8,
+                },
+                "indent": Array [],
+                "start": Object {
+                  "column": 1,
+                  "line": 1,
+                  "offset": 0,
+                },
+              },
+              "type": "text",
+              "value": "Another ",
+            },
+            Object {
+              "children": Array [
+                Object {
+                  "position": Position {
+                    "end": Object {
+                      "column": 14,
+                      "line": 1,
+                      "offset": 13,
+                    },
+                    "indent": Array [],
+                    "start": Object {
+                      "column": 10,
+                      "line": 1,
+                      "offset": 9,
+                    },
+                  },
+                  "type": "text",
+                  "value": "with",
+                },
+              ],
+              "position": Position {
+                "end": Object {
+                  "column": 15,
+                  "line": 1,
+                  "offset": 14,
+                },
+                "indent": Array [],
+                "start": Object {
+                  "column": 9,
+                  "line": 1,
+                  "offset": 8,
+                },
+              },
+              "type": "incremental-thinking-cloze",
+            },
+            Object {
+              "position": Position {
+                "end": Object {
+                  "column": 16,
+                  "line": 1,
+                  "offset": 15,
+                },
+                "indent": Array [],
+                "start": Object {
+                  "column": 15,
+                  "line": 1,
+                  "offset": 14,
+                },
+              },
+              "type": "text",
+              "value": " ",
+            },
+            Object {
+              "children": Array [
+                Object {
+                  "position": Position {
+                    "end": Object {
+                      "column": 22,
+                      "line": 1,
+                      "offset": 21,
+                    },
+                    "indent": Array [],
+                    "start": Object {
+                      "column": 17,
+                      "line": 1,
+                      "offset": 16,
+                    },
+                  },
+                  "type": "text",
+                  "value": "cloze",
+                },
+              ],
+              "position": Position {
+                "end": Object {
+                  "column": 23,
+                  "line": 1,
+                  "offset": 22,
+                },
+                "indent": Array [],
+                "start": Object {
+                  "column": 16,
+                  "line": 1,
+                  "offset": 15,
+                },
+              },
+              "type": "incremental-thinking-cloze",
+            },
+          ],
+          "position": Position {
+            "end": Object {
+              "column": 23,
+              "line": 1,
+              "offset": 22,
+            },
+            "indent": Array [],
+            "start": Object {
+              "column": 1,
+              "line": 1,
+              "offset": 0,
+            },
+          },
+          "type": "paragraph",
+        },
+        "id": "1ed5c4a2-588e-5c35-a82d-384d1d830150",
+        "type": "cloze",
+      },
+    },
+  ],
+  "deleteNoteSubtrees": Array [],
+  "movePrompts": Array [],
+  "updateNoteDatas": Array [],
+}
+`;

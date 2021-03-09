@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "lib": ["es2017"],
+    "module": "commonjs",
+    "target": "es2017",
+    "outDir": "dist",
+    "sourceMap": true,
+    "declaration": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["node", "jest"],
+    "paths": {
+      "incremental-thinking": ["../incremental-thinking/dist"]
+    },
+    "baseUrl": "."
+  },
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "./tsrc/**/*.test.ts"
+  ]
+}
