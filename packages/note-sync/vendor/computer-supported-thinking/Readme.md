@@ -1,0 +1,105 @@
+# `computer-supported-thinking`
+
+This repository contains various prototypes around the theme of computer-supported thinking. Working on refactoring all my sketches to live in this one repo. Packages:
+
+* `incremental-thinking`: library for parsing and manipulating incremental-thinking-oriented notes
+* `spaced-everything`: library for tracking and interacting with arbitrary "programmable attention" tasks, including traditional SRS memory prompts
+* `spaced-everything-cli`: command-line interface to `spaced-everything` 
+
+## Embedding spaced-repetition memory prompts in prose notes
+
+These libraries enable you to embed inline SRS prompts in plaintext files. For example, here's an excerpt of some notes I wrote as I was studying Service Workers:
+
+> During installation, service workers begin in the {installing} state, then transition to {activated} (or {error}) after {all the associated resources are fetched}. Before reaching that state, the service worker may transition to {waiting} until {no pre-existing service worker is controlling an open page}.
+>
+> Once activated, a service worker {performs one-time startup computation}, then transitions to {idle}. From that state, it’ll handle {fetch or message events} until it eventually terminates.
+>
+> Q. What’s the initial-registration gotcha for service workers’ control of web pages?
+>
+> A. They won’t control the web page which registered them until it’s refreshed, unless that client is specifically claimed.
+
+### The basics
+
+#### Creating typical two-sided SRS prompts
+
+> Q. How many dimensions are in a qubit's vector space?
+>
+> A. Two.
+
+The empty line between the question and answer is optional. The question and answer cannot currently span multiple paragraphs: the paragraph including `Q. ` or `A. ` is extracted as that field.
+
+#### Creating cloze deletion prompts
+
+In the context of prose notes, I'm finding cloze deletions are often somewhat more natural. This paragraph maps onto a single cloze deletion prompt with three cards:
+
+> Once activated, a service worker {performs one-time startup computation}, then transitions to {idle}. From that state, it’ll handle {fetch or message events} until it eventually terminates.
+
+The cloze prompt will use the entire paragraph surrounding the text. For example, this two-sided prompt is equivalent to one of the cards extracted from the previous example:
+
+> Q. Once activated, a service worker ______, then transitions to idle. From that state, it’ll handle fetch or message events until it eventually terminates.
+>
+> A. Once activated, a service worker *performs one-time startup computation*, then transitions to idle. From that state, it’ll handle fetch or message events until it eventually terminates.
+
+#### Idempotency and identity
+
+This system is meant to operate idempotently. That is: you can keep revising your note files over time, and it'll keep track of changes accordingly. As you change your notes, the system will maintain your SRS state for all the embedded prompts, except for the prompts you've directly edited.
+
+Somewhat more precisely, the embedded prompts have *identity*. You can modify the note around a prompt or even move the prompt to a new note, and your review history will be preserved. But if you modify a prompt's text, it will be treated as a new prompt, and your review history won't be ported from the old prompt. That's because this system's based on dumb plaintext files, which don't have enough semantic structure to unambiguously specify whether a given modification represents a new prompt or a modification of an old one. Fixing this would require introducing heuristics or extra identifying markup.
+
+Two-sided prompt identities are derived from the hash of their question and answer text. Cloze prompt identities are derived from the hash of their containing paragraph.
+
+While the system will happily track prompts if you move them between note files, the behavior is undefined if identical prompts appear in multiple note files.
+
+### Syncing extracted prompts with Anki
+
+`spaced-everything` can extract and interact with these SRS prompts, but there isn't yet an interface for viewing and marking them. So it contains a module to sync the extracted prompts to Anki.
+
+#### Setup
+
+1. Launch Anki on all your devices and sync everything. The next step will cause a full sync to be required.
+1. Open `spaced-everything/Spaced Everything.apkg`. This package will add the special note types we use to keep prompts in sync. Unfortunately, there's no API for this. The .apkg contains two suspended notes which use the new prompt types. Once you've imported it, you can easily delete those notes by deleting the "Spaced Everything" deck.
+1. Sync Anki on your desktop, then on all the other devices, to take care of the full sync.
+1. Run `yarn install` in the root of this repository.
+1. Run `yarn run build` in the root of this repository.
+1. Install [the AnkiConnect plugin](https://ankiweb.net/shared/info/2055492159). This adds an API layer to Anki. 
+
+#### Syncing
+
+The binary will be emitted at `spaced-everything-cli/bin/run`. Its help text:
+
+```
+Syncs the prompts in a set of incremental-thinking compatible notes files to Anki. Adds, updates, and deletes notes as necessary.
+
+USAGE
+  $ spaced-everything anki sync FILES...
+
+ARGUMENTS
+  FILES...  One or more note files to sync prompts from
+
+OPTIONS
+  -d, --deck=deck  [default: Default] the name of a Anki deck to sync notes to (deck must already exist)
+  -h, --help       show CLI help
+  -s, --syncToAnkiWeb  if set, causes Anki to sync changes to AnkiWeb
+
+DESCRIPTION
+  You'll first need to have set up AnkiConnect and the note types in Anki--see the Readme.
+
+EXAMPLE
+  $ spaced-everything anki sync --deck NotePrompts note1.org *.md
+```
+
+Note that by default it syncs to the Anki deck "Default". So a typical invocation looks like:
+
+```
+spaced-everything-cli/bin/run anki sync ~/Notes/*.md
+``` 
+
+Give it a try: you should see notes show up in Anki's browser as soon as the command completes.
+
+#### Some usage notes
+
+1. AnkiConnect only works when Anki is running, so you'll need to leave Anki running.
+2. The `spaced-everything` command syncs once and exits. If you want to continuously sync, use a cron job or a file watcher.
+3. By default, `spaced-everything` doesn't cause Anki to sync to AnkiWeb. Pass `-s` to synchronize your local changes to the web after the script finishes.
+4. The command only syncs _to_ Anki. Any modifications made within Anki will be clobbered.
+5. The Anki cards are presented with the title of the file from which they were extracted (considered to be the first line). If the file came from Bear, the title will be a hotlink to jump to the source Bear note. Support for "external note system identifiers" is general, so that feature can easily be extended for other editors which can be opened via URL (add to `getNoteID` in `incremental-thinking/src/notes.ts`).
