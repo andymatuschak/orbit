@@ -11,28 +11,18 @@
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
     "@babel/preset-typescript": "^7.12.1",
-    "@types/base64-js": "^1.2.5",
     "@types/jest": "^26.0.15",
     "@types/node": "^14.14.7",
-    "@typescript-eslint/eslint-plugin": "^4.7.0",
-    "@typescript-eslint/parser": "^4.7.0",
     "babel-jest": "^26.6.3",
-    "eslint": "^7.13.0",
-    "firebase-tools": "^8.16.1",
     "jest": "~26.6.3",
-    "jest-environment-uint8array": "^1.0.0",
-    "jest-workspace-resolver": "^1.0.0",
     "metabook-sample-data": "0.0.1",
-    "ts-node": "^9.0.0",
     "typescript": "^4.0.5"
   },
   "dependencies": {
     "@withorbit/api": "0.0.1",
     "fetch-blob": "^2.1.1",
-    "firebase": "^8.2.9",
     "formdata-node": "^2.4.0",
     "metabook-core": "0.0.1",
-    "metabook-firebase-support": "0.0.1",
     "node-fetch": "next"
   },
   "scripts": {

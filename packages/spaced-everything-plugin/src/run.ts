@@ -3,7 +3,7 @@ import leveldown from "leveldown";
 import path from "path";
 
 import IT from "incremental-thinking";
-import { UserClient } from "@withorbit/api-client";
+import OrbitAPIClient from "@withorbit/api-client";
 import spacedEverything from "spaced-everything";
 import SpacedEverythingImportCache from "./importCache";
 import { createTaskCache } from "./taskCache";
@@ -20,13 +20,13 @@ import { createTaskCache } from "./taskCache";
     noteFilenames.map((filename) => path.join(noteDirectory, filename)),
   );
 
-  const userClient = new UserClient(
+  const apiClient = new OrbitAPIClient(
     async () => ({
-      personalAccessToken: "q6qA8bZE7Nya8h10JzNF",
+      personalAccessToken: "nCjhTtkRH92sMDC9dtQR",
     }),
     { baseURL: "http://localhost:5001/metabook-system/us-central1/api" },
   );
-  const orbitTaskSink = createTaskCache(userClient, importCache);
+  const orbitTaskSink = createTaskCache(apiClient, importCache);
 
   await spacedEverything.taskCache.updateTaskCache(
     orbitTaskSink,

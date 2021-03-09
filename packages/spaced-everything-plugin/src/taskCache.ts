@@ -1,6 +1,6 @@
 import { OrbitAPI } from "@withorbit/api";
 import * as IT from "incremental-thinking";
-import { UserClient } from "@withorbit/api-client";
+import OrbitAPIClient from "@withorbit/api-client";
 import {
   ActionLog,
   clozePromptType,
@@ -36,7 +36,7 @@ function flat<T>(lists: T[][]): T[] {
 
 // When we start up, we'll fetch all remote prompt states we don't already have locally cached. We'll also fetch all the prompt contents we don't have.
 async function initializeImportCache(
-  userClient: UserClient,
+  apiClient: OrbitAPIClient,
   importCache: SpacedEverythingImportCache,
 ) {
   let lastCreatedTaskID = await importCache.getLastStoredTaskID();
@@ -51,7 +51,7 @@ async function initializeImportCache(
   >[] = [];
 
   while (true) {
-    const newPromptStates = await userClient.listTaskStates({
+    const newPromptStates = await apiClient.listTaskStates({
       createdAfterID: lastCreatedTaskID as PromptTaskID,
     });
     if (newPromptStates.data.length > 0) {
@@ -108,7 +108,7 @@ async function initializeImportCache(
   // If we haven't cached some of these prompts, download their contents now.
   if (missingPromptIDs.size > 0) {
     console.log(`Fetching ${missingPromptIDs.size} missing prompt IDs`);
-    const taskDataResponse = await userClient.getTaskData([
+    const taskDataResponse = await apiClient.getTaskData([
       ...missingPromptIDs.keys(),
     ]);
     for (const promptDataWrapper of taskDataResponse.data) {
@@ -495,7 +495,7 @@ export async function getUpdatesForTaskCacheChange(
 }
 
 export function createTaskCache(
-  userClient: UserClient,
+  apiClient: OrbitAPIClient,
   importCache: SpacedEverythingImportCache,
 ): spacedEverything.taskCache.TaskCache<
   NotePromptTask,
@@ -503,7 +503,7 @@ export function createTaskCache(
 > {
   return {
     async performOperations(continuation) {
-      await initializeImportCache(userClient, importCache);
+      await initializeImportCache(apiClient, importCache);
 
       // Index by task ID paths.
       return continuation({
@@ -553,7 +553,7 @@ export function createTaskCache(
             `${insertions.length} insertions; ${deletions.length} deletions; ${prompts.length} prompts to record`,
           );
 
-          await userClient.storeTaskData(
+          await apiClient.storeTaskData(
             await Promise.all(
               prompts.map(async (prompt) => ({
                 id: await getIDForPrompt(prompt),
@@ -563,7 +563,7 @@ export function createTaskCache(
           );
           console.log("Recorded prompts.");
 
-          await userClient.storeActionLogs(
+          await apiClient.storeActionLogs(
             await Promise.all(
               logs.map(async (log) => ({
                 id: await getIDForActionLog(log),
