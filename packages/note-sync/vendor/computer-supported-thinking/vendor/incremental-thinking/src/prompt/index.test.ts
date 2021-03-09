@@ -1,10 +1,12 @@
 import { selectAll } from "unist-util-select";
 import processor from "../processor";
 import {
-  clozeNodeType, ClozePrompt,
+  clozeNodeType,
+  ClozePrompt,
   ClozePromptNode,
   clozePromptType,
-  findAllPrompts, qaPromptType
+  findAllPrompts,
+  qaPromptType,
 } from "./index";
 
 function getPrompts(input: string) {
@@ -21,13 +23,11 @@ test("double cloze", () => {
   expect(prompts).toHaveLength(1);
   const prompt = prompts[0] as ClozePrompt;
   expect(prompt.type).toEqual(clozePromptType);
-  expect(prompt.block.type).toBe(
-    "paragraph"
-  );
+  expect(prompt.block.type).toBe("paragraph");
   const clozeNodes = selectAll(clozeNodeType, prompt.block);
   expect(clozeNodes).toHaveLength(2);
   expect((clozeNodes[1] as ClozePromptNode).children).toMatchObject([
-    { type: "text", value: "prompts" }
+    { type: "text", value: "prompts" },
   ]);
 });
 
@@ -53,7 +53,6 @@ This is another paragraph`);
   expect(prompts).toHaveLength(1);
   expect(prompts[0].type).toEqual(qaPromptType);
 });
-
 
 test("cloze in backlink section", () => {
   const prompts = getPrompts(`# Heading

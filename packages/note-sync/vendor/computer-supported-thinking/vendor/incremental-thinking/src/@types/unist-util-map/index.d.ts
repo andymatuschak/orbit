@@ -1,7 +1,7 @@
 declare module "unist-util-map" {
-import unist from "unist";
+  import unist from "unist";
 
-    interface Map {
+  interface Map {
     (
       tree: unist.Node,
       iteratee: (

@@ -9,13 +9,13 @@ import {
   decodeTaskIDPath,
   EncodedTaskIDPath,
   encodeTaskIDPath,
-  TaskIDPath
+  TaskIDPath,
 } from "../../../taskCache";
 import { AnkiPathField } from "../../dataModel";
 
 function ankiClozePlugin(this: unified.Processor) {
   this.Compiler.prototype.ankiClozeIndex = 1;
-  this.Compiler.prototype.visitors[clozeNodeType] = function(
+  this.Compiler.prototype.visitors[clozeNodeType] = function (
     this: remarkStringify.Compiler & {
       ankiClozeIndex: number;
       all: (node: unist.Node) => string[];
@@ -30,9 +30,7 @@ function ankiClozePlugin(this: unified.Processor) {
 }
 
 export function createAnkiTextFromClozePrompt(prompt: ClozePrompt): string {
-  const ankiProcessor = processor()
-    .use(ankiClozePlugin)
-    .use(stripMarkdown);
+  const ankiProcessor = processor().use(ankiClozePlugin).use(stripMarkdown);
   const strippedTree = ankiProcessor.runSync(prompt.block);
   return ankiProcessor.stringify(strippedTree);
 }
@@ -49,7 +47,7 @@ export function createClozePromptFromAnkiOriginalMarkdownField(
   }
   return {
     type: "cloze",
-    block: resultingNode.children[0] as mdast.BlockContent & JsonMap
+    block: resultingNode.children[0] as mdast.BlockContent & JsonMap,
   };
 }
 

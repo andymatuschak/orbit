@@ -14,7 +14,7 @@ export const markdownProcessor = unified()
     emphasis: "*",
     listItemIndent: "1",
     rule: "-",
-    ruleSpaces: false
+    ruleSpaces: false,
   });
 
 const processor = markdownProcessor()

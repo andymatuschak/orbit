@@ -8,7 +8,9 @@ export {
   Prompt,
   findAllPrompts,
   getClozeNodesInClozePrompt,
-  clozeNodeType
+  clozeNodeType,
 } from "./prompt";
 
 export { NoteID, listNoteFiles, getNoteTitle, getNoteID } from "./notes";
+
+export * as JSONTypes from "./util/JSONTypes";

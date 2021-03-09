@@ -1,7 +1,7 @@
 import {
   decodeTaskIDPath,
   encodeTaskIDPath,
-  updateTaskCache
+  updateTaskCache,
 } from "./taskCache";
 import { JSONCacheNode, JSONInMemoryCache } from "./JSONCache";
 import { TaskSource } from "./taskSource";
@@ -15,19 +15,19 @@ function createMockActivitySource(rootChildren: {
   const store = JSONInMemoryCache({
     type: "collection",
     children: rootChildren,
-    value: {}
+    value: {},
   });
 
   return {
-    performOperations: continuation =>
-      store.performOperations(session =>
+    performOperations: (continuation) =>
+      store.performOperations((session) =>
         continuation({
           ...session,
           isCacheHit: (cache, test) =>
             (cache.value["modificationDate"] || {}) ===
-            (test.value["modificationDate"] || {})
+            (test.value["modificationDate"] || {}),
         })
-      )
+      ),
   };
 }
 
@@ -44,7 +44,7 @@ describe("cache reconciliation", () => {
     const testCache = JSONInMemoryCache({
       type: "collection",
       children: cacheRootChildren,
-      value: { label: null }
+      value: { label: null },
     });
 
     const activitySource = createMockActivitySource(sourceRootChildren);
@@ -64,10 +64,10 @@ describe("cache reconciliation", () => {
         a: {
           type: "collection",
           children: {
-            b: { type: "task", value: { label: null } }
+            b: { type: "task", value: { label: null } },
           },
-          value: {}
-        }
+          value: {},
+        },
       }
     );
   });
@@ -78,10 +78,10 @@ describe("cache reconciliation", () => {
         a: {
           type: "collection",
           children: {
-            b: { type: "task", value: { label: null } }
+            b: { type: "task", value: { label: null } },
           },
-          value: {}
-        }
+          value: {},
+        },
       },
       {}
     );
@@ -95,19 +95,19 @@ describe("cache reconciliation", () => {
         a: {
           type: "collection",
           children: {
-            b: { type: "task", value: oldTask }
+            b: { type: "task", value: oldTask },
           },
-          value: {}
-        }
+          value: {},
+        },
       },
       {
         a: {
           type: "collection",
           children: {
-            b: { type: "task", value: newTask }
+            b: { type: "task", value: newTask },
           },
-          value: {}
-        }
+          value: {},
+        },
       }
     );
   });
@@ -124,13 +124,13 @@ describe("cache reconciliation", () => {
             c: {
               type: "collection",
               children: {
-                g: { type: "task", value: { label: null } }
+                g: { type: "task", value: { label: null } },
               },
-              value: {}
-            }
+              value: {},
+            },
           },
-          value: { label: "old" }
-        }
+          value: { label: "old" },
+        },
       },
       {
         a: {
@@ -140,13 +140,13 @@ describe("cache reconciliation", () => {
             f: {
               type: "collection",
               children: {
-                g: { type: "task", value: { label: null } }
+                g: { type: "task", value: { label: null } },
               },
-              value: {}
-            }
+              value: {},
+            },
           },
-          value: { label: "new" }
-        }
+          value: { label: "new" },
+        },
       }
     );
   });
@@ -162,18 +162,18 @@ describe("cache reconciliation", () => {
             c: {
               type: "collection",
               children: {
-                g: { type: "task", value: { label: null } }
+                g: { type: "task", value: { label: null } },
               },
-              value: {}
+              value: {},
             },
             d: {
               type: "collection",
               children: {},
-              value: {}
-            }
+              value: {},
+            },
           },
-          value: { label: "old" }
-        }
+          value: { label: "old" },
+        },
       },
       {
         a: {
@@ -182,18 +182,18 @@ describe("cache reconciliation", () => {
             c: {
               type: "collection",
               children: {},
-              value: {}
+              value: {},
             },
             d: {
               type: "collection",
               children: {
-                g: { type: "task", value: { label: null } }
+                g: { type: "task", value: { label: null } },
               },
-              value: {}
-            }
+              value: {},
+            },
           },
-          value: { label: "old" }
-        }
+          value: { label: "old" },
+        },
       }
     );
   });
@@ -204,15 +204,15 @@ describe("cache reconciliation", () => {
         a: {
           type: "collection",
           children: {},
-          value: { modificationDate: "old" }
-        }
+          value: { modificationDate: "old" },
+        },
       },
       {
         a: {
           type: "collection",
           children: { x: { type: "task", value: {} } },
-          value: { modificationDate: "old" }
-        }
+          value: { modificationDate: "old" },
+        },
       },
       false
     );

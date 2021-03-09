@@ -1,9 +1,8 @@
 import mdast from "mdast";
-import unist from "unist";
 import { select } from "unist-util-select";
 import backlinksPlugin, {
   BacklinksNode,
-  backlinksNodeType
+  backlinksNodeType,
 } from "./backlinksPlugin";
 import noteLinkProcessorPlugin from "./noteLinkProcessorPlugin";
 import { markdownProcessor } from "./processor";
@@ -18,7 +17,7 @@ function getBacklinksNode(
   const ast = processor.runSync(processor.parse(input)) as mdast.Root;
   return {
     backlinksNode: select(backlinksNodeType, ast) as BacklinksNode | null,
-    ast
+    ast,
   };
 }
 
@@ -32,7 +31,7 @@ A paragraph
 
 * [[Source node]]
 `;
-    const {backlinksNode} = getBacklinksNode(input);
+    const { backlinksNode } = getBacklinksNode(input);
     expect(backlinksNode!.children).toHaveLength(1);
     const backlinkSourceNode = backlinksNode!.children[0];
     expect(backlinkSourceNode.sourceNodeLink.targetNoteName).toEqual(
@@ -55,7 +54,7 @@ A paragraph
 
 ## Another section
 `;
-    const {backlinksNode, ast} = getBacklinksNode(input);
+    const { backlinksNode, ast } = getBacklinksNode(input);
     expect(backlinksNode!.children).toHaveLength(2);
     const firstSourceNode = backlinksNode!.children[0];
     expect(firstSourceNode.sourceNodeLink.targetNoteName).toEqual(
@@ -72,7 +71,10 @@ A paragraph
       "Another source node"
     );
 
-    const subsequentHeadingNode = select("heading[depth=2] *[value='Another section']", ast);
+    const subsequentHeadingNode = select(
+      "heading[depth=2] *[value='Another section']",
+      ast
+    );
     expect(subsequentHeadingNode).toBeTruthy();
   });
 
@@ -85,7 +87,7 @@ A paragraph
 
 <!-- #tag -->
 `;
-    const {backlinksNode, ast} = getBacklinksNode(input);
+    const { backlinksNode, ast } = getBacklinksNode(input);
     expect(backlinksNode!.children).toHaveLength(1);
     const backlinkSourceNode = backlinksNode!.children[0];
     expect(backlinkSourceNode.sourceNodeLink.targetNoteName).toEqual(

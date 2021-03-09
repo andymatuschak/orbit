@@ -1,13 +1,6 @@
 import { PromptTaskNoteData } from "../notePrompts";
-import { encodeTaskIDPath } from "../taskCache";
 import { encodeTaskIDPathToAnkiPathField } from "./ankiConnect/util/ankiTextEncoding";
-import {
-  AnkiNote,
-  AnkiNoteClozeFields,
-  AnkiNoteID,
-  ankiNoteTag,
-  clozeModelName
-} from "./dataModel";
+import { AnkiNote, AnkiNoteID, ankiNoteTag, clozeModelName } from "./dataModel";
 import { _createTreeFromAnkiNoteList } from "./operations";
 
 describe("create tree from anki note list", () => {
@@ -15,7 +8,7 @@ describe("create tree from anki note list", () => {
     const noteData: PromptTaskNoteData = {
       noteTitle: "First note title",
       modificationTimestamp: 123,
-      externalNoteID: null
+      externalNoteID: null,
     };
     const notes: AnkiNote[] = [
       {
@@ -28,8 +21,8 @@ describe("create tree from anki note list", () => {
           NoteURL: "",
           _Path: encodeTaskIDPathToAnkiPathField(["foo", "bar"]),
           _OriginalMarkdown: "*Test* {cloze}",
-          _NoteDataJSON: JSON.stringify(noteData)
-        }
+          _NoteDataJSON: JSON.stringify(noteData),
+        },
       },
       {
         modelName: clozeModelName,
@@ -41,8 +34,8 @@ describe("create tree from anki note list", () => {
           NoteURL: "",
           _Path: encodeTaskIDPathToAnkiPathField(["foo", "baz"]),
           _OriginalMarkdown: "__Another__ test {cloze}",
-          _NoteDataJSON: JSON.stringify(noteData)
-        }
+          _NoteDataJSON: JSON.stringify(noteData),
+        },
       },
       {
         modelName: clozeModelName,
@@ -57,24 +50,24 @@ describe("create tree from anki note list", () => {
           _NoteDataJSON: JSON.stringify({
             noteTitle: "Second note title",
             externalNoteID: null,
-            modificationTimestamp: 789
-          } as PromptTaskNoteData)
-        }
-      }
+            modificationTimestamp: 789,
+          } as PromptTaskNoteData),
+        },
+      },
     ];
 
     const cache = _createTreeFromAnkiNoteList(notes);
-    await cache.performOperations(async session => {
+    await cache.performOperations(async (session) => {
       const resultMap = await session.getTaskNodes([
         ["foo", "bar"],
         ["foo", "baz"],
-        ["quux", "bat"]
+        ["quux", "bat"],
       ]);
       expect(resultMap).toEqual(
         new Map([
           [["foo", "bar"], { type: "task", value: notes[0] }],
           [["foo", "baz"], { type: "task", value: notes[1] }],
-          [["quux", "bat"], { type: "task", value: notes[2] }]
+          [["quux", "bat"], { type: "task", value: notes[2] }],
         ])
       );
     });

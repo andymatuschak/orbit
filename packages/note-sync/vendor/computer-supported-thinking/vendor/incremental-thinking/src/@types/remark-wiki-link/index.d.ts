@@ -1,8 +1,8 @@
 declare module "remark-wiki-link" {
-import remarkStringify from "remark-stringify";
-import unified from "unified";
+  import remarkStringify from "remark-stringify";
+  import unified from "unified";
 
-    export = RemarkWikiLink;
+  export = RemarkWikiLink;
 
   function RemarkWikiLink(
     this: unified.Processor,

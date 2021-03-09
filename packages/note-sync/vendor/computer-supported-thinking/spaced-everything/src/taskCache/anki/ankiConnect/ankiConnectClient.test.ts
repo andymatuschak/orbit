@@ -1,22 +1,17 @@
+import axios from "axios";
+import MockAdapter from "axios-mock-adapter";
 import { AnyJson } from "../../../util/JSONTypes";
 import { EncodedTaskIDPath } from "../../taskCache";
-import {
-  AnkiClozeNote,
-  AnkiNoteID,
-  ankiNoteTag,
-  clozeModelName
-} from "../dataModel";
+import { AnkiNoteID, ankiNoteTag, clozeModelName } from "../dataModel";
 import {
   AnkiConnectClient,
-  createAnkiConnectClient
+  createAnkiConnectClient,
 } from "./ankiConnectClient";
 import {
   findAllPromptAnkiNoteIDs,
   getAnkiNotes,
-  RequestSpec
+  RequestSpec,
 } from "./util/requestFactory";
-import MockAdapter from "axios-mock-adapter";
-import axios from "axios";
 
 test("typechecking", async () => {
   const client: AnkiConnectClient = {
@@ -26,7 +21,7 @@ test("typechecking", async () => {
       return Promise.resolve([123] as ResponseData);
     },
 
-    deckName: "Default"
+    deckName: "Default",
   };
 
   const ankiNoteIDs = await client.request(findAllPromptAnkiNoteIDs());
@@ -46,16 +41,16 @@ describe("mock client", () => {
       fields: {
         Text: { value: "Test {{c1::hi}}", order: 1 },
         _OriginalMarkdown: { value: "Test {hi}", order: 2 },
-        _Path: { value: "123/456" as EncodedTaskIDPath, order: 3 }
-      }
+        _Path: { value: "123/456" as EncodedTaskIDPath, order: 3 },
+      },
     };
     mock
       .onPost("/", {
         action: "notesInfo",
         version: 6,
         params: {
-          notes: [123]
-        }
+          notes: [123],
+        },
       })
       .reply(200, JSON.stringify({ result: [ankiNote], error: null }));
 
@@ -67,9 +62,9 @@ describe("mock client", () => {
         fields: {
           Text: "Test {{c1::hi}}",
           _OriginalMarkdown: "Test {hi}",
-          _Path: "123/456"
-        }
-      }
+          _Path: "123/456",
+        },
+      },
     ]);
   });
 });

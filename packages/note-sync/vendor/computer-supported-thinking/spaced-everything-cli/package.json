@@ -45,7 +45,7 @@
   },
   "repository": "andymatuschak/",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -b",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "rm -rf dist && tsc -b && oclif-dev manifest && oclif-dev readme",
     "test": "echo NO TESTS",

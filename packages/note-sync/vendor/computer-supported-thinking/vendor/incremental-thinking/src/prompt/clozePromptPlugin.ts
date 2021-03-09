@@ -36,7 +36,7 @@ export default function clozePlugin(this: unified.Processor) {
       const children = this.tokenizeInline(match[1], now);
       const output: ClozePromptNode = {
         type: clozeNodeType,
-        children
+        children,
       };
       return eat(match[0])(output);
     }

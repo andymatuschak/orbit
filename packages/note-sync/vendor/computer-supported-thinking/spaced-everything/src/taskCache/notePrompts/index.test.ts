@@ -2,8 +2,9 @@ import * as fs from "fs";
 import {
   clozeNodeType,
   ClozePrompt,
+  Prompt,
   processor,
-  qaPromptType
+  qaPromptType,
 } from "incremental-thinking";
 import { getItemAtPath } from "../../util/tests/getItemAtPath";
 import { JSONInMemoryCache } from "../JSONCache";
@@ -13,7 +14,6 @@ import {
   getPrompts,
   PromptTask,
   PromptTaskCollection,
-  RegisteredPrompt
 } from "./index";
 import mockFS from "mock-fs";
 import mdast from "mdast";
@@ -21,9 +21,7 @@ beforeAll(() => {
   console.log("avoid mocking bug"); // https://github.com/tschaub/mock-fs/issues/234
 });
 
-function getPromptsFromMarkdownString(
-  markdownString: string
-): RegisteredPrompt[] {
+function getPromptsFromMarkdownString(markdownString: string): Prompt[] {
   const ast = processor.runSync(processor.parse(markdownString)) as mdast.Root;
   return getPrompts(ast);
 }
@@ -39,13 +37,13 @@ This is a paragraph without deletions.`);
     { type: "text", value: "Test " },
     {
       type: clozeNodeType,
-      children: [{ type: "text", value: "cloze" }]
+      children: [{ type: "text", value: "cloze" }],
     },
     { type: "text", value: " deletion " },
     {
       type: clozeNodeType,
-      children: [{ type: "text", value: "another" }]
-    }
+      children: [{ type: "text", value: "another" }],
+    },
   ]);
 });
 
@@ -92,43 +90,46 @@ describe("activity source", () => {
   beforeEach(() => {
     source = createTaskSource(["/a.md", "/b.md", "/qa.md"]);
     mockFS({
-      "/a.md": "Test",
+      "/a.md": `Test with ID
+      
+<!-- {BearID:A123} -->
+`,
       "/b.md": `# Titled note
       
 Another {with} {cloze}`,
       "/qa.md": `# Test QA note
       
 Q. Question
-A. Answer`
+A. Answer`,
     });
   });
 
   test("reads root", async () => {
-    await source.performOperations(async session => {
+    await source.performOperations(async (session) => {
       const result = (await getItemAtPath([], session))!;
       expect(result).toBeTruthy();
       if (result.type !== "collection") fail();
-      expect(result.childIDs).toEqual(new Set(["/a.md", "/b.md", "/qa.md"]));
+      expect(result.childIDs).toEqual(new Set(["A123", "/b.md", "/qa.md"]));
       expect(result.value.type).toBe("root");
     });
   });
 
   test("reads missing note", async () => {
-    await source.performOperations(async session => {
+    await source.performOperations(async (session) => {
       const result = (await getItemAtPath(["/c.md"], session))!;
       expect(result).toBeNull();
     });
   });
 
   test("reads missing note block", async () => {
-    await source.performOperations(async session => {
+    await source.performOperations(async (session) => {
       const result = (await getItemAtPath(["/a.md", "foo"], session))!;
       expect(result).toBeNull();
     });
   });
 
   test("reads note with prompt", async () => {
-    await source.performOperations(async session => {
+    await source.performOperations(async (session) => {
       const result = (await getItemAtPath(["/b.md"], session))!;
       expect(result).toBeTruthy();
       if (result.type !== "collection") fail();
@@ -157,14 +158,14 @@ A. Answer`
           { type: "text", value: "Another " },
           {
             type: clozeNodeType,
-            children: [{ type: "text", value: "with" }]
+            children: [{ type: "text", value: "with" }],
           },
           { type: "text", value: " " },
           {
             type: clozeNodeType,
-            children: [{ type: "text", value: "cloze" }]
-          }
-        ]
+            children: [{ type: "text", value: "cloze" }],
+          },
+        ],
       });
 
       const promptResult = (await getItemAtPath(
@@ -178,7 +179,7 @@ A. Answer`
   });
 
   test("reads note with QA prompt", async () => {
-    await source.performOperations(async session => {
+    await source.performOperations(async (session) => {
       const result = (await getItemAtPath(["/qa.md"], session))!;
       expect(result).toBeTruthy();
       if (result.type !== "collection") fail();
@@ -200,19 +201,19 @@ A. Answer`
         type: qaPromptType,
         question: {
           type: "paragraph",
-          children: [{ type: "text", value: "Question" }]
+          children: [{ type: "text", value: "Question" }],
         },
         answer: {
           type: "paragraph",
-          children: [{ type: "text", value: "Answer" }]
-        }
+          children: [{ type: "text", value: "Answer" }],
+        },
       });
     });
   });
 
   test("reads note without prompt", async () => {
-    await source.performOperations(async session => {
-      const result = (await getItemAtPath(["/a.md"], session))!;
+    await source.performOperations(async (session) => {
+      const result = (await getItemAtPath(["A123"], session))!;
       expect(result).toBeTruthy();
       if (result.type !== "collection") fail();
       expect(result.childIDs.size).toBe(0);
@@ -223,12 +224,12 @@ A. Answer`
     const cache = JSONInMemoryCache<PromptTask, PromptTaskCollection>({
       children: {},
       type: "collection",
-      value: { type: "root" }
+      value: { type: "root" },
     });
     await updateTaskCache(cache, source);
 
-    await source.performOperations(async sourceSession => {
-      return await cache.performOperations(async cacheSession => {
+    await source.performOperations(async (sourceSession) => {
+      return await cache.performOperations(async (cacheSession) => {
         const sourceResult = (await getItemAtPath(["/b.md"], sourceSession))!;
         const cacheResult = (await getItemAtPath(["/b.md"], cacheSession))!;
         expect(sourceSession.isCacheHit(cacheResult, sourceResult)).toBe(true);
@@ -240,14 +241,14 @@ A. Answer`
     const cache = JSONInMemoryCache<PromptTask, PromptTaskCollection>({
       children: {},
       type: "collection",
-      value: { type: "root" }
+      value: { type: "root" },
     });
     await updateTaskCache(cache, source);
 
     fs.writeFileSync("/b.md", "A different test");
     source = createTaskSource(["/b.md"]);
-    await source.performOperations(async sourceSession => {
-      return await cache.performOperations(async cacheSession => {
+    await source.performOperations(async (sourceSession) => {
+      return await cache.performOperations(async (cacheSession) => {
         const sourceResult = (await getItemAtPath(["/b.md"], sourceSession))!;
         const cacheResult = (await getItemAtPath(["/b.md"], cacheSession))!;
         expect(sourceSession.isCacheHit(cacheResult, sourceResult)).toBe(false);
