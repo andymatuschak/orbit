@@ -9,7 +9,7 @@
     "@types/node": "^14.14.7",
     "firebase-admin": "^9.4.2",
     "firebase-functions": "^3.13.0",
-    "metabook-anki": "0.0.1",
+    "@withorbit/anki-import": "0.0.1",
     "metabook-app": "0.0.1",
     "@withorbit/api-client": "0.0.1",
     "metabook-firebase-support": "0.0.1",

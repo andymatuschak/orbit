@@ -3,7 +3,7 @@
     { "path": "./api" },
     { "path": "./api-client" },
     { "path": "./embedded-support" },
-    { "path": "./metabook-anki" },
+    { "path": "./anki-import" },
     { "path": "./metabook-app" },
     { "path": "./metabook-cloud-functions" },
     { "path": "./metabook-core" },

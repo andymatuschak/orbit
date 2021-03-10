@@ -17,10 +17,7 @@ import {
   PromptStateCache,
 } from "metabook-firebase-support";
 import path from "path";
-import {
-  createImportPlan,
-  readAnkiCollectionPackage,
-} from "../../metabook-anki";
+import { createImportPlan, readAnkiCollectionPackage } from "../../anki-import";
 import { getAdminApp, uploadAttachment } from "./adminApp";
 
 class ImportAnkiCollection extends Command {

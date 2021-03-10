@@ -82,7 +82,7 @@ export async function readAnkiCollectionPackage<R>(
     attachmentIDsToExtractedPaths: { [key: string]: string },
   ) => Promise<R>,
 ): Promise<R> {
-  const workingDir = path.resolve(os.tmpdir(), `metabook-anki-${Date.now()}`);
+  const workingDir = path.resolve(os.tmpdir(), `anki-import-${Date.now()}`);
   await fs.promises.mkdir(workingDir, { recursive: true });
 
   let ankiCollectionWritePath: string | null = null;
