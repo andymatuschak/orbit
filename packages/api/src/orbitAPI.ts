@@ -15,11 +15,16 @@ export type Spec = {
   "/taskStates": {
     GET: {
       query:
-        | {
+        | ({
             limit?: number;
-            createdAfterID?: PromptTaskID;
-            dueBeforeTimestampMillis?: number;
-          }
+          } & (
+            | {
+                createdAfterID?: PromptTaskID;
+              }
+            | {
+                dueBeforeTimestampMillis: number;
+              }
+          ))
         | { ids: PromptTaskID[] };
       response: ResponseList<"taskState", PromptTaskID, PromptState>;
     };

@@ -125,16 +125,18 @@ export async function listPromptStates(
   userID: string,
   query: {
     limit: number;
-    dueBeforeTimestampMillis?: number;
-    createdAfterID?: PromptTaskID;
-  },
+  } & (
+    | { dueBeforeTimestampMillis: number }
+    | { createdAfterID?: PromptTaskID }
+  ),
 ): Promise<Map<PromptTaskID, PromptState>> {
   const db = getDatabase();
-  const ref = getTaskStateCacheCollectionReference(db, userID).orderBy(
-    "creationServerTimestamp",
+  let ref: admin.firestore.Query<PromptStateCache> = getTaskStateCacheCollectionReference(
+    db,
+    userID,
   );
-  if (query.dueBeforeTimestampMillis) {
-    ref
+  if ("dueBeforeTimestampMillis" in query) {
+    ref = ref
       .where(
         "dueTimestampMillis",
         "<=",
@@ -143,20 +145,24 @@ export async function listPromptStates(
         ),
       )
       .where("taskMetadata.isDeleted", "==", false);
-  }
-  if (query.createdAfterID) {
-    const baseRef = await getTaskStateCacheReference(
-      db,
-      userID,
-      query.createdAfterID,
-    );
-    const baseSnapshot = await baseRef.get();
-    if (!baseSnapshot.exists) {
-      throw new Error(`createdAfterID ${query.createdAfterID} does not exist`);
+  } else {
+    ref = ref.orderBy("creationServerTimestamp");
+    if (query.createdAfterID) {
+      const baseRef = await getTaskStateCacheReference(
+        db,
+        userID,
+        query.createdAfterID,
+      );
+      const baseSnapshot = await baseRef.get();
+      if (!baseSnapshot.exists) {
+        throw new Error(
+          `createdAfterID ${query.createdAfterID} does not exist`,
+        );
+      }
+      ref = ref.startAfter(baseSnapshot);
     }
-    ref.startAfter(baseSnapshot);
   }
-  ref.limit(query.limit);
+  ref = ref.limit(query.limit);
 
   const snapshot = await ref.get();
   return new Map(
