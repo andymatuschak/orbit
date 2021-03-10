@@ -2,7 +2,7 @@ import { PromptState, PromptTaskID } from "metabook-core";
 import {
   EmbeddedScreenEventType,
   EmbeddedScreenPromptStateUpdateEvent,
-} from "metabook-embedded-support";
+} from "@withorbit/embedded-support";
 
 export function sendUpdatedReviewItemToHost(
   promptTaskID: PromptTaskID,

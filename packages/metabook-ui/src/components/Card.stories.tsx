@@ -3,6 +3,7 @@ import { Story } from "@storybook/react";
 import {
   AttachmentID,
   AttachmentIDReference,
+  AttachmentResolutionMap,
   getIntervalSequenceForSchedule,
   imageAttachmentType,
   MetabookSpacedRepetitionSchedule,
@@ -13,10 +14,10 @@ import {
   testApplicationPrompt,
   testClozePrompt,
   testQAPrompt,
-} from "metabook-sample-data";
+} from "@withorbit/sample-data";
 import React, { ReactNode, useState } from "react";
 import { Button, View } from "react-native";
-import { AttachmentResolutionMap, ReviewAreaItem } from "../reviewAreaItem";
+import { ReviewAreaItem } from "../reviewAreaItem";
 import { colors, layout } from "../styles";
 import { productKeyColor } from "../styles/colors";
 import testCardProps from "./__fixtures__/testCardProps";

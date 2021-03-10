@@ -30,7 +30,7 @@ import {
   testApplicationPrompt,
   testQAPrompt,
   testClozePrompt,
-} from "metabook-sample-data";
+} from "@withorbit/sample-data";
 import path from "path";
 import { uploadAttachment } from "./adminApp";
 

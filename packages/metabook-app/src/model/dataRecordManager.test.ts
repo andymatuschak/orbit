@@ -9,7 +9,7 @@ import {
   Prompt,
   PromptID,
 } from "metabook-core";
-import { testApplicationPrompt, testQAPrompt } from "metabook-sample-data";
+import { testApplicationPrompt, testQAPrompt } from "@withorbit/sample-data";
 import DataRecordManager, {
   DataRecordClientFileStore,
 } from "./dataRecordManager";

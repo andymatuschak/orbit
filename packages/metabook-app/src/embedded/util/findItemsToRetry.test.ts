@@ -1,5 +1,5 @@
 import { PromptState } from "metabook-core";
-import { ReviewItem } from "metabook-embedded-support";
+import { ReviewItem } from "@withorbit/embedded-support";
 import { findItemsToRetry } from "./findItemsToRetry";
 
 function makeItem(needsRetry: boolean | null): ReviewItem {

@@ -1,4 +1,4 @@
-import { testQAPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "@withorbit/sample-data";
 import { CardProps } from "../Card";
 import { colors } from "../../styles";
 

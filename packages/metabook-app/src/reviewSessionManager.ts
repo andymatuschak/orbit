@@ -8,7 +8,7 @@ import {
   PromptParametersOf,
   PromptTask,
 } from "metabook-core";
-import { ReviewItem } from "metabook-embedded-support";
+import { ReviewItem } from "@withorbit/embedded-support";
 import { ReviewAreaItem } from "metabook-ui";
 import { useMemo, useState } from "react";
 

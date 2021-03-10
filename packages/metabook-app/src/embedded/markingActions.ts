@@ -17,7 +17,7 @@ import {
   repetitionActionLogType,
   WebPromptProvenance,
 } from "metabook-core";
-import { EmbeddedHostMetadata, ReviewItem } from "metabook-embedded-support";
+import { EmbeddedHostMetadata, ReviewItem } from "@withorbit/embedded-support";
 import { ReviewAreaMarkingRecord } from "metabook-ui";
 
 type PromptActionLogEntry = { log: PromptActionLog; id: ActionLogID };

@@ -12,7 +12,7 @@ import {
   PromptStateCache,
   ServerTimestamp,
 } from "metabook-firebase-support";
-import { testQAPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "@withorbit/sample-data";
 import applyPromptActionLogToPromptStateCache from "./applyPromptActionLogToPromptStateCache";
 
 let promptTaskID: PromptTaskID;

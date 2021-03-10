@@ -11,7 +11,7 @@ import {
   PromptTaskID,
   reviewSession,
 } from "metabook-core";
-import { ReviewItem } from "metabook-embedded-support";
+import { ReviewItem } from "@withorbit/embedded-support";
 import { Platform } from "react-native";
 
 import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";

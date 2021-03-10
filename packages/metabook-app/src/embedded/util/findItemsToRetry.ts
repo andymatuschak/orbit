@@ -1,4 +1,4 @@
-import { EmbeddedHostState, ReviewItem } from "metabook-embedded-support";
+import { EmbeddedHostState, ReviewItem } from "@withorbit/embedded-support";
 
 export function findItemsToRetry(
   sessionItems: ReviewItem[],

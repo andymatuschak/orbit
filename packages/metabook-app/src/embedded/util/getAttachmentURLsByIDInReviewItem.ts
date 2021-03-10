@@ -1,5 +1,8 @@
-import { getAttachmentIDsInPrompt, Prompt } from "metabook-core";
-import { AttachmentResolutionMap } from "metabook-ui";
+import {
+  AttachmentResolutionMap,
+  getAttachmentIDsInPrompt,
+  Prompt,
+} from "metabook-core";
 
 export default function getAttachmentURLsByIDInReviewItem(
   prompt: Prompt,

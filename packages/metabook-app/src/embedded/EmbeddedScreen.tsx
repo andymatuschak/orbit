@@ -3,7 +3,7 @@ import {
   PromptRepetitionOutcome,
   promptTypeSupportsRetry,
 } from "metabook-core";
-import { EmbeddedHostState, ReviewItem } from "metabook-embedded-support";
+import { EmbeddedHostState, ReviewItem } from "@withorbit/embedded-support";
 import {
   FadeView,
   ReviewArea,

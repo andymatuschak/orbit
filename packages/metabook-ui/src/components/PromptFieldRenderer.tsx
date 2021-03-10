@@ -1,5 +1,6 @@
 import isEqual from "lodash.isequal";
 import {
+  AttachmentResolutionMap,
   AttachmentURLReference,
   imageAttachmentType,
   PromptField,
@@ -24,7 +25,6 @@ import {
   ViewStyle,
 } from "react-native";
 import Markdown, * as MarkdownDisplay from "react-native-markdown-display";
-import { AttachmentResolutionMap } from "../reviewAreaItem";
 
 import { colors, type, layout } from "../styles";
 import { getVariantStyles } from "../styles/type";

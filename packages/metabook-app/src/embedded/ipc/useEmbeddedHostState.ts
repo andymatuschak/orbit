@@ -2,7 +2,7 @@ import {
   EmbeddedHostEventType,
   EmbeddedHostState,
   EmbeddedHostUpdateEvent,
-} from "metabook-embedded-support";
+} from "@withorbit/embedded-support";
 import { useEffect, useState } from "react";
 
 export function useEmbeddedHostState(): EmbeddedHostState | null {

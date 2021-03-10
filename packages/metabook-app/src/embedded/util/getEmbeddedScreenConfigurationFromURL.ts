@@ -1,4 +1,4 @@
-import { EmbeddedScreenConfiguration } from "metabook-embedded-support";
+import { EmbeddedScreenConfiguration } from "@withorbit/embedded-support";
 import { styles } from "metabook-ui";
 
 export default function getEmbeddedScreenConfigurationFromURL(

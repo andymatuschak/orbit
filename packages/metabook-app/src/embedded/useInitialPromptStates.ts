@@ -6,7 +6,7 @@ import {
   PromptTaskID,
 } from "metabook-core";
 import OrbitAPIClient from "@withorbit/api-client";
-import { ReviewItem } from "metabook-embedded-support";
+import { ReviewItem } from "@withorbit/embedded-support";
 import { useEffect, useState } from "react";
 import serviceConfig from "../../serviceConfig";
 import { AuthenticationClient } from "../authentication";

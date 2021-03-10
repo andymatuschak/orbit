@@ -1,5 +1,5 @@
 export { getPromptTaskIDForReviewItem } from "./reviewAreaItem";
-export type { ReviewAreaItem, AttachmentResolutionMap } from "./reviewAreaItem";
+export type { ReviewAreaItem } from "./reviewAreaItem";
 
 export * as styles from "./styles";
 

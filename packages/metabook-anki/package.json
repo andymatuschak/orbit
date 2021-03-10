@@ -10,7 +10,7 @@
   "dependencies": {
     "@types/unzipper": "^0.10.3",
     "metabook-core": "0.0.1",
-    "metabook-sample-data": "0.0.1",
+    "@withorbit/sample-data": "0.0.1",
     "rehype-parse": "^6.0.2",
     "rehype-remark": "^8.0.0",
     "remark-stringify": "^8.0.0",

@@ -1,5 +1,6 @@
 import {
   AttachmentIDReference,
+  AttachmentResolutionMap,
   clozePromptType,
   getIDForPromptSync,
   getIDForPromptTask,
@@ -15,8 +16,7 @@ import {
   EmbeddedPromptField,
   EmbeddedQAPrompt,
   ReviewItem,
-} from "metabook-embedded-support";
-import { AttachmentResolutionMap } from "metabook-ui";
+} from "@withorbit/embedded-support";
 
 function getPromptFieldFromEmbeddedPromptField(
   embeddedPromptField: EmbeddedPromptField,

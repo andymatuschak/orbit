@@ -8,7 +8,7 @@ import {
   PromptTaskID,
   qaPromptType,
 } from "metabook-core";
-import { testQAPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "@withorbit/sample-data";
 import DataRecordManager from "./dataRecordManager";
 import promptDataInitialImportOperation from "./promptDataInitialImportOperation";
 import PromptStateStore from "./promptStateStore";

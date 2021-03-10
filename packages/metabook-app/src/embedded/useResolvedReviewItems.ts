@@ -4,7 +4,7 @@ import {
   EmbeddedScreenRecord,
   EmbeddedScreenRecordResolvedEvent,
   ReviewItem,
-} from "metabook-embedded-support";
+} from "@withorbit/embedded-support";
 import React from "react";
 import { resolveReviewItems } from "./resolveReviewItems";
 

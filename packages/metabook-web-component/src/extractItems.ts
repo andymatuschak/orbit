@@ -1,5 +1,5 @@
 import { clozePromptType, qaPromptType } from "metabook-core";
-import { EmbeddedItem } from "metabook-embedded-support";
+import { EmbeddedItem } from "@withorbit/embedded-support";
 import { OrbitPromptElement } from "./OrbitPromptElement";
 
 export function extractItems(parentElement: HTMLElement): EmbeddedItem[] {

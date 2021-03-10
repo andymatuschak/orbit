@@ -7,7 +7,7 @@ import {
   PromptRepetitionOutcome,
   RescheduleActionLog,
 } from "metabook-core";
-import { testQAPrompt, testClozePrompt } from "metabook-sample-data";
+import { testQAPrompt, testClozePrompt } from "@withorbit/sample-data";
 import {
   testCard,
   testCollection,

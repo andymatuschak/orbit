@@ -1,5 +1,5 @@
 import { PromptID } from "metabook-core";
-import { testQAPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "@withorbit/sample-data";
 import DataRecordStore from "./dataRecordStore";
 
 let cache: DataRecordStore;

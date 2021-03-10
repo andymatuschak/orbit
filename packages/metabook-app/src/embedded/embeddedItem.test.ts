@@ -1,5 +1,5 @@
+import { EmbeddedClozePrompt, ReviewItem } from "@withorbit/embedded-support";
 import {
-  AttachmentIDReference,
   ClozePrompt,
   clozePromptType,
   getIDForAttachment,
@@ -7,13 +7,12 @@ import {
   QAPrompt,
   qaPromptType,
 } from "metabook-core";
-import { EmbeddedClozePrompt, ReviewItem } from "metabook-embedded-support";
 import { styles } from "metabook-ui";
+import { EmbeddedQAPrompt } from "../../../embedded-support/src/embeddedScreenInterface";
 import {
   getAttachmentURLsInEmbeddedItem,
   getReviewItemFromEmbeddedItem,
 } from "./embeddedItem";
-import { EmbeddedQAPrompt } from "../../../embedded-support/src/embeddedScreenInterface";
 
 const testEmbeddedQAPrompt: EmbeddedQAPrompt = {
   type: qaPromptType,

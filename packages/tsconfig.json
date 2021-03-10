@@ -8,7 +8,7 @@
     { "path": "./metabook-cloud-functions" },
     { "path": "./metabook-core" },
     { "path": "./metabook-firebase-support" },
-    { "path": "./metabook-sample-data" },
+    { "path": "./sample-data" },
     { "path": "./metabook-ui" },
     { "path": "./spaced-everything-plugin" }
   ],

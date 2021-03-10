@@ -9,7 +9,7 @@ import {
   EmbeddedScreenPromptStateUpdateEvent,
   EmbeddedScreenRecord,
   EmbeddedScreenRecordResolvedEvent,
-} from "metabook-embedded-support";
+} from "@withorbit/embedded-support";
 import { extractItems } from "./extractItems";
 import { getSharedMetadataMonitor } from "./metadataMonitor";
 

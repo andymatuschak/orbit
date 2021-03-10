@@ -1,5 +1,5 @@
 import { AttachmentID, imageAttachmentType, Prompt } from "metabook-core";
-import { testQAPrompt } from "metabook-sample-data";
+import { testQAPrompt } from "@withorbit/sample-data";
 import getAttachmentURLsByIDInReviewItem from "./getAttachmentURLsByIDInReviewItem";
 
 test("no attachments", () => {

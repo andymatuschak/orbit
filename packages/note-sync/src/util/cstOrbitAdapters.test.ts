@@ -1,4 +1,4 @@
-import { testClozePrompt } from "metabook-sample-data";
+import { testClozePrompt } from "@withorbit/sample-data";
 import { simpleOrbitPrompt } from "../__fixtures__/testData";
 import {
   getITPromptForOrbitPrompt,

@@ -1,5 +1,5 @@
 {
-  "name": "metabook-embedded-support",
+  "name": "@withorbit/embedded-support",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",

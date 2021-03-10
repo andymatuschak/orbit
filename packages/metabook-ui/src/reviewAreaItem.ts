@@ -1,6 +1,5 @@
 import {
-  AttachmentID,
-  AttachmentURLReference,
+  AttachmentResolutionMap,
   getIDForPromptSync,
   getIDForPromptTask,
   PromptOf,
@@ -11,8 +10,6 @@ import {
   PromptTaskParametersOf,
 } from "metabook-core";
 import { colors } from "./styles";
-
-export type AttachmentResolutionMap = Map<AttachmentID, AttachmentURLReference>;
 
 export interface ReviewAreaItem<PT extends PromptTask = PromptTask> {
   prompt: PromptOf<PT>;

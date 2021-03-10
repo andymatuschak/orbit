@@ -1,4 +1,4 @@
-import { EmbeddedScreenConfiguration } from "metabook-embedded-support";
+import { EmbeddedScreenConfiguration } from "@withorbit/embedded-support";
 import { styles } from "metabook-ui";
 
 // Simple string hash, just for choosing palettes from the URL.

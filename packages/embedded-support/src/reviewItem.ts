@@ -1,11 +1,11 @@
 import {
+  AttachmentResolutionMap,
   PromptOf,
   PromptParametersOf,
   PromptState,
   PromptTask,
   PromptTaskID,
 } from "metabook-core";
-import { AttachmentResolutionMap } from "metabook-ui";
 
 export interface ReviewItem<PT extends PromptTask = PromptTask> {
   prompt: PromptOf<PT>;

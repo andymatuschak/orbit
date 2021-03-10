@@ -1,5 +1,5 @@
 import { ColorPaletteName } from "metabook-core";
-import { EmbeddedHostMetadata } from "metabook-embedded-support";
+import { EmbeddedHostMetadata } from "@withorbit/embedded-support";
 
 let hasWarnedAboutTitle = false;
 function readMetadata(): EmbeddedHostMetadata {

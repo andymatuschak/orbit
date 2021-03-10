@@ -10,8 +10,8 @@ import {
   repetitionActionLogType,
 } from "metabook-core";
 import { styles } from "metabook-ui";
-import { EmbeddedHostMetadata } from "metabook-embedded-support";
-import { testClozePrompt } from "metabook-sample-data";
+import { EmbeddedHostMetadata } from "@withorbit/embedded-support";
+import { testClozePrompt } from "@withorbit/sample-data";
 import { getActionsRecordForMarking } from "./markingActions";
 
 test("clozes ingest all deletions", () => {
