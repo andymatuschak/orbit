@@ -1,7 +1,14 @@
 {
-	"private": true,
-	"workspaces": ["spaced-everything", "spaced-everything-cli"],
-	"scripts": {
-		"build": "(cd incremental-thinking; yarn run build) && (cd spaced-everything; yarn run build) && (cd spaced-everything-cli; yarn run build)"
-	}
+  "private": true,
+  "name": "computer-supported-thinking",
+  "version": "0.0.1",
+  "workspaces": [
+    "spaced-everything",
+    "spaced-everything-cli",
+    "vendor/incremental-thinking"
+  ],
+  "scripts": {
+    "build": "(cd incremental-thinking; yarn run build) && (cd spaced-everything; yarn run build) && (cd spaced-everything-cli; yarn run build)",
+    "prepack": "yarn build"
+  }
 }

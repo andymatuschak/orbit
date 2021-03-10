@@ -5,6 +5,7 @@
   "license": "UNLICENSED",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "type": "module",
   "private": true,
   "devDependencies": {
     "@types/jest": "^25.1.4",
@@ -30,7 +31,7 @@
     "citation-js": "^0.4.8",
     "exiftool-vendored": "~8",
     "file-metadata": "^1.0.0",
-    "incremental-thinking": "file:../vendor/incremental-thinking",
+    "incremental-thinking": "0.0.1",
     "lodash.isequal": "^4.5.0",
     "moment": "^2.24.0",
     "node-getpocket": "vicchi/node-getpocket",
