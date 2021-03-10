@@ -2,7 +2,7 @@ import unist from "unist";
 import mdast from "mdast";
 import unified from "unified";
 import heading from "mdast-util-heading-range";
-import { select } from "unist-util-select";
+import unistUtilSelect from "unist-util-select";
 import { NoteLinkNode, noteLinkNodeType } from "./noteLinkProcessorPlugin";
 
 export const backlinksNodeType = "backlinksNode";
@@ -29,41 +29,40 @@ function getBacklinkSourceNodes(listNode: mdast.List): BacklinkSourceNode[] {
     if (!sourceReference || sourceReference.type !== "paragraph") {
       throw new Error(
         `Unexpected backlinks source node: ${JSON.stringify(
-          sourceReference
-        )} ${JSON.stringify(listItem)}`
+          sourceReference,
+        )} ${JSON.stringify(listItem)}`,
       );
     }
-    const sourceNodeLink = select(
+    const sourceNodeLink = unistUtilSelect.select(
       noteLinkNodeType,
-      sourceReference
+      sourceReference,
     ) as NoteLinkNode;
     if (!sourceNodeLink) {
       throw new Error(
         `Couldn't find source node link ${JSON.stringify(
-          sourceReference
-        )} ${JSON.stringify(listItem)}`
+          sourceReference,
+        )} ${JSON.stringify(listItem)}`,
       );
     }
     const excerptList = listItem.children[1] as mdast.List | undefined;
     if (excerptList && excerptList.type !== "list") {
       throw new Error(
         `Unexpected backlinks excerpt list node: ${JSON.stringify(
-          excerptList
-        )} ${JSON.stringify(listItem)}`
+          excerptList,
+        )} ${JSON.stringify(listItem)}`,
       );
     }
-    let excerpts: mdast.BlockContent[];
-    excerpts = excerptList
+    const excerpts: mdast.BlockContent[] = excerptList
       ? excerptList.children.map((excerptListItem) => {
           if (excerptListItem.type !== "listItem") {
             throw new Error(
               `Unexpected backlinks excerpt list item: ${JSON.stringify(
                 excerptListItem,
                 null,
-                "\t"
+                "\t",
               )}
               
-Inside backlinks node: ${JSON.stringify(listItem, null, "\t")}`
+Inside backlinks node: ${JSON.stringify(listItem, null, "\t")}`,
             );
           }
           if (excerptListItem.children.length > 1) {
@@ -71,10 +70,10 @@ Inside backlinks node: ${JSON.stringify(listItem, null, "\t")}`
               `Backlinks excerpt list item has too many children: ${JSON.stringify(
                 excerptListItem,
                 null,
-                "\t"
+                "\t",
               )}
               
-Inside backlinks node: ${JSON.stringify(listItem, null, "\t")}`
+Inside backlinks node: ${JSON.stringify(listItem, null, "\t")}`,
             );
           }
           return excerptListItem.children[0] as mdast.BlockContent;
@@ -98,7 +97,7 @@ function extractBacklinksBlock(node: unist.Node): unist.Node {
       const listNode = nodes[0] as mdast.List;
       const defaultResult = parent.children.slice(
         startIndex,
-        endIndex ?? undefined
+        endIndex ?? undefined,
       );
       if (!listNode || listNode.type !== "list") {
         console.warn(`Unexpected node in backlinks node:`, listNode);
@@ -109,15 +108,15 @@ function extractBacklinksBlock(node: unist.Node): unist.Node {
 
       // TODO extract Bear comment node parser
       const nonCommentNodes = remainingNodes.filter(
-        (n) => n.type !== "html" || !(n as mdast.HTML).value.startsWith("<!--")
+        (n) => n.type !== "html" || !(n as mdast.HTML).value.startsWith("<!--"),
       );
       if (nonCommentNodes.length > 0) {
         console.warn(
           `Unexpected nodes in backlinks node: ${JSON.stringify(
             nonCommentNodes,
             null,
-            "\t"
-          )}`
+            "\t",
+          )}`,
         );
         return defaultResult;
       }
@@ -136,7 +135,7 @@ function extractBacklinksBlock(node: unist.Node): unist.Node {
         console.warn(error);
         return defaultResult;
       }
-    }
+    },
   );
   return node;
 }

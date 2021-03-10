@@ -3,14 +3,14 @@ import remarkStringify from "remark-stringify";
 import unified from "unified";
 import unist from "unist";
 import parents, { NodeWithParent } from "unist-util-parents";
-import { selectAll } from "unist-util-select";
+import unistUtilSelect from "unist-util-select";
 import { QAPromptNode, qaPromptNodeType } from "./index";
 
 // TODO: don't match QA prompts inside code and html blocks
 export default function qaPromptPlugin(this: unified.Processor) {
   const compilerPrototype = this.Compiler.prototype as remarkStringify.Compiler;
   compilerPrototype.visitors[qaPromptNodeType] = qaPromptCompiler as (
-    node: unist.Node
+    node: unist.Node,
   ) => string;
 
   return extractQAPromptNodes;
@@ -20,7 +20,7 @@ function qaPromptCompiler(
   this: remarkStringify.Compiler & {
     all: (node: unist.Node) => string[];
   },
-  node: QAPromptNode
+  node: QAPromptNode,
 ): string {
   throw new Error("Unimplemented");
 }
@@ -31,22 +31,22 @@ const answerSplitRegexp = new RegExp(`\n${answerPrefix}`, "m");
 
 function extractQAPromptNodes(node: unist.Node): unist.Node {
   const nodeWithParents = parents(node);
-  const answerNodes = selectAll(
+  const answerNodes = unistUtilSelect.selectAll(
     `paragraph>text[value^='${answerPrefix}']`,
-    nodeWithParents
+    nodeWithParents,
   ) as NodeWithParent[];
   for (const answerNode of answerNodes) {
     const parent = answerNode.parent!.parent!.node;
     const answerParagraphIndex = parent.children.indexOf(
-      answerNode.parent!.node
+      answerNode.parent!.node,
     );
     if (answerParagraphIndex === -1 || answerParagraphIndex === 0) {
       throw new Error(
         `Unexpected QA prompt answer node: ${JSON.stringify(
           answerNode,
           null,
-          "\t"
-        )}`
+          "\t",
+        )}`,
       );
     }
     const questionParagraphNode = parent.children[
@@ -64,11 +64,11 @@ function extractQAPromptNodes(node: unist.Node): unist.Node {
             answerParagraphIndex
           ] as mdast.Paragraph;
           questionTextNode.value = questionTextNode.value.slice(
-            questionPrefix.length
+            questionPrefix.length,
           );
           const answerTextNode = answerParagraphNode.children[0] as mdast.Text;
           answerTextNode.value = answerTextNode.value.slice(
-            answerPrefix.length
+            answerPrefix.length,
           );
 
           const qaPromptNode: QAPromptNode = {
@@ -82,16 +82,16 @@ function extractQAPromptNodes(node: unist.Node): unist.Node {
     }
   }
 
-  const questionNodes = selectAll(
+  const questionNodes = unistUtilSelect.selectAll(
     `paragraph>text[value^='${questionPrefix}']`,
-    nodeWithParents
+    nodeWithParents,
   ) as NodeWithParent[];
   for (const questionNode of questionNodes) {
     const paragraphNode = questionNode.parent!.node as mdast.Paragraph;
     const splitNodeIndex = paragraphNode.children.findIndex(
       (node) =>
         node.type === "text" &&
-        answerSplitRegexp.test((node as mdast.Text).value)
+        answerSplitRegexp.test((node as mdast.Text).value),
     );
     if (splitNodeIndex === -1) {
       continue;
@@ -102,8 +102,11 @@ function extractQAPromptNodes(node: unist.Node): unist.Node {
     const preSplitString = splitNode.value.slice(0, match.index!);
     const postSplitString = splitNode.value.slice(match.index!);
 
-    let questionPhrasingNodes = paragraphNode.children.slice(0, splitNodeIndex);
-    let answerPhrasingNodes = paragraphNode.children.slice(splitNodeIndex);
+    const questionPhrasingNodes = paragraphNode.children.slice(
+      0,
+      splitNodeIndex,
+    );
+    const answerPhrasingNodes = paragraphNode.children.slice(splitNodeIndex);
     if (preSplitString !== "") {
       // We've gotta split that node.
       questionPhrasingNodes.push({
@@ -113,10 +116,10 @@ function extractQAPromptNodes(node: unist.Node): unist.Node {
       answerPhrasingNodes[0].value = postSplitString;
     }
     (questionPhrasingNodes[0] as mdast.Text).value = (questionPhrasingNodes[0] as mdast.Text).value.slice(
-      questionPrefix.length
+      questionPrefix.length,
     );
     (answerPhrasingNodes[0] as mdast.Text).value = (answerPhrasingNodes[0] as mdast.Text).value.slice(
-      answerPrefix.length + 1 // add 1 for the newline
+      answerPrefix.length + 1, // add 1 for the newline
     );
 
     const qaPromptNode: QAPromptNode = {
@@ -129,7 +132,7 @@ function extractQAPromptNodes(node: unist.Node): unist.Node {
     paragraphContainer.children.splice(
       paragraphContainer.children.indexOf(paragraphNode),
       1,
-      qaPromptNode
+      qaPromptNode,
     );
   }
 

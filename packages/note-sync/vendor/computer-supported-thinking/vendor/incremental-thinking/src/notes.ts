@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import mdast from "mdast";
-import { selectAll } from "unist-util-select";
+import unistUtilSelect from "unist-util-select";
 import { BearIDNode, bearIDNodeType } from "./bearIDPlugin";
 import { processor } from "./index";
 import { JsonMap } from "./util/JSONTypes";
@@ -14,7 +14,7 @@ export async function listNoteFiles(folderPath: string): Promise<string[]> {
       (entry) =>
         entry.isFile() &&
         !entry.name.startsWith(".") &&
-        entry.name.endsWith(".md")
+        entry.name.endsWith(".md"),
     )
     .map((entry) => entry.name);
 }
@@ -30,7 +30,7 @@ function getOpenURLForBearID(bearID: string): string {
 }
 
 export function getNoteID(noteRoot: mdast.Root): NoteID | null {
-  const bearNoteIDNodes = selectAll(bearIDNodeType, noteRoot);
+  const bearNoteIDNodes = unistUtilSelect.selectAll(bearIDNodeType, noteRoot);
 
   if (bearNoteIDNodes.length === 1) {
     const bearID = (bearNoteIDNodes[0] as BearIDNode).bearID;

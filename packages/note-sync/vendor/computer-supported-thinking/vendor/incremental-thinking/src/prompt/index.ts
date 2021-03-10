@@ -1,7 +1,7 @@
 import unist from "unist";
 import mdast from "mdast";
 import parents, { NodeWithParent } from "unist-util-parents";
-import { selectAll } from "unist-util-select";
+import unistUtilSelect from "unist-util-select";
 import { backlinksNodeType } from "../backlinksPlugin";
 import { JsonMap } from "../util/JSONTypes";
 
@@ -35,9 +35,9 @@ export type Prompt = ClozePrompt | QAPrompt;
 
 export function findAllPrompts(tree: unist.Node): Prompt[] {
   const treeWithParents = parents(tree);
-  const clozeNodes = selectAll(
+  const clozeNodes = unistUtilSelect.selectAll(
     clozeNodeType,
-    treeWithParents
+    treeWithParents,
   ) as NodeWithParent[];
 
   const clozePrompts: ClozePrompt[] = [];
@@ -61,7 +61,8 @@ export function findAllPrompts(tree: unist.Node): Prompt[] {
     }
   }
 
-  const qaPrompts = selectAll(qaPromptNodeType, treeWithParents)
+  const qaPrompts = unistUtilSelect
+    .selectAll(qaPromptNodeType, treeWithParents)
     .filter((n) => !promptNodeHasUnsupportedParent(n as NodeWithParent))
     .map((n) => {
       const qaPromptNode = n as QAPromptNode;
@@ -77,9 +78,12 @@ export function findAllPrompts(tree: unist.Node): Prompt[] {
 }
 
 export function getClozeNodesInClozePrompt(
-  clozePrompt: ClozePrompt
+  clozePrompt: ClozePrompt,
 ): ClozePromptNode[] {
-  return selectAll(clozeNodeType, clozePrompt.block) as ClozePromptNode[];
+  return unistUtilSelect.selectAll(
+    clozeNodeType,
+    clozePrompt.block,
+  ) as ClozePromptNode[];
 }
 
 function promptNodeHasUnsupportedParent(promptNode: NodeWithParent): boolean {
