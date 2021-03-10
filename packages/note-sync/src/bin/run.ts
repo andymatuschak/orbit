@@ -3,17 +3,34 @@ import leveldown from "leveldown";
 import path from "path";
 
 import * as IT from "incremental-thinking";
-import OrbitAPIClient from "@withorbit/api-client";
+import OrbitAPIClient, {
+  defaultAPIConfig,
+  emulatorAPIConfig,
+} from "@withorbit/api-client";
 import * as spacedEverything from "spaced-everything";
-import SpacedEverythingImportCache from "./importCache";
-import { createTaskCache } from "./taskCache";
+import SpacedEverythingImportCache from "../importCache";
+import { createTaskCache } from "../taskCache";
 
 (async () => {
-  const importCache = new SpacedEverythingImportCache(
-    levelup(leveldown("cache.db")),
-  );
-
   const noteDirectory = process.argv[2];
+  if (!noteDirectory) {
+    console.error("Must provide note directory path");
+    process.exit(0);
+  }
+
+  const personalAccessToken = process.env["TOKEN"];
+  if (!personalAccessToken) {
+    console.error(
+      "Must provide personal access token via TOKEN environment variable",
+    );
+    process.exit(0);
+  }
+
+  const apiConfig =
+    process.env["API"] && process.env["API"] === "production"
+      ? defaultAPIConfig
+      : emulatorAPIConfig;
+
   const noteFilenames = await IT.listNoteFiles(noteDirectory);
   console.log(`Found ${noteFilenames.length} notes in ${noteDirectory}`);
   const noteTaskSource = spacedEverything.notePrompts.createTaskSource(
@@ -22,9 +39,12 @@ import { createTaskCache } from "./taskCache";
 
   const apiClient = new OrbitAPIClient(
     async () => ({
-      personalAccessToken: "GzXHpPJJuHUodgbrIhDt",
+      personalAccessToken,
     }),
-    { baseURL: "http://localhost:5001/metabook-system/us-central1/api" },
+    apiConfig,
+  );
+  const importCache = new SpacedEverythingImportCache(
+    levelup(leveldown("cache.db")),
   );
   const orbitTaskSink = createTaskCache(apiClient, importCache);
 

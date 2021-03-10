@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc -b",
     "test": "jest",
-    "sync": "node --loader ts-node/esm --experimental-specifier-resolution=node src/run.ts"
+    "sync": "node --loader ts-node/esm --experimental-specifier-resolution=node src/bin/run.ts"
   },
   "dependencies": {
     "@withorbit/api-client": "0.0.1",
