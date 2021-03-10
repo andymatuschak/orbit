@@ -20,7 +20,7 @@ import {
   qaPromptType,
   updateMetadataActionLogType,
 } from "metabook-core";
-import spacedEverything from "spaced-everything";
+import * as spacedEverything from "spaced-everything";
 import SpacedEverythingImportCache, { CachedNoteMetadata } from "./importCache";
 import {
   getITPromptForOrbitPrompt,
@@ -108,25 +108,45 @@ async function initializeImportCache(
   // If we haven't cached some of these prompts, download their contents now.
   if (missingPromptIDs.size > 0) {
     console.log(`Fetching ${missingPromptIDs.size} missing prompt IDs`);
-    const taskDataResponse = await apiClient.getTaskData([
-      ...missingPromptIDs.keys(),
-    ]);
-    for (const promptDataWrapper of taskDataResponse.data) {
-      const ITPrompt = getITPromptForOrbitPrompt(promptDataWrapper.data);
-      if (ITPrompt) {
-        const promptStateWrapper = missingPromptIDs.get(promptDataWrapper.id)!;
-        promptStatesToStore.push({
-          promptState: promptStateWrapper.data,
-          ITPrompt,
-          taskID: promptStateWrapper.id,
-        });
-      } else {
-        console.log(
-          `Skipping prompt ID ${promptDataWrapper.id} because it could not be converted to an incremental-thinking prompt`,
-        );
+    const missingPromptIDList = [...missingPromptIDs.keys()];
+    const fetchedPromptIDs = new Set<PromptID>();
+
+    const batchSize = 100;
+    for (
+      let sliceIndex = 0;
+      sliceIndex < missingPromptIDList.length / batchSize;
+      sliceIndex++
+    ) {
+      const slice = missingPromptIDList.slice(
+        sliceIndex * batchSize,
+        (sliceIndex + 1) * batchSize,
+      );
+      const taskDataResponse = await apiClient.getTaskData(slice);
+      for (const promptDataWrapper of taskDataResponse.data) {
+        const ITPrompt = getITPromptForOrbitPrompt(promptDataWrapper.data);
+        if (ITPrompt) {
+          const promptStateWrapper = missingPromptIDs.get(
+            promptDataWrapper.id,
+          )!;
+          promptStatesToStore.push({
+            promptState: promptStateWrapper.data,
+            ITPrompt,
+            taskID: promptStateWrapper.id,
+          });
+          fetchedPromptIDs.add(promptDataWrapper.id);
+        } else {
+          console.log(
+            `Skipping prompt ID ${promptDataWrapper.id} because it could not be converted to an incremental-thinking prompt`,
+          );
+        }
       }
     }
-    // TODO: warn if any of the requested prompt IDs were not found
+
+    for (const id of missingPromptIDs.keys()) {
+      if (!fetchedPromptIDs.has(id)) {
+        console.error(`Couldn't fetch prompt ID ${id} from server`);
+      }
+    }
   }
 
   // Now we can save the prompt states.

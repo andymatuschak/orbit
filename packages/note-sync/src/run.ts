@@ -2,9 +2,9 @@ import levelup from "levelup";
 import leveldown from "leveldown";
 import path from "path";
 
-import IT from "incremental-thinking";
+import * as IT from "incremental-thinking";
 import OrbitAPIClient from "@withorbit/api-client";
-import spacedEverything from "spaced-everything";
+import * as spacedEverything from "spaced-everything";
 import SpacedEverythingImportCache from "./importCache";
 import { createTaskCache } from "./taskCache";
 
@@ -22,7 +22,7 @@ import { createTaskCache } from "./taskCache";
 
   const apiClient = new OrbitAPIClient(
     async () => ({
-      personalAccessToken: "nCjhTtkRH92sMDC9dtQR",
+      personalAccessToken: "GzXHpPJJuHUodgbrIhDt",
     }),
     { baseURL: "http://localhost:5001/metabook-system/us-central1/api" },
   );

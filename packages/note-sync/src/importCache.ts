@@ -8,7 +8,7 @@ import {
   PromptState,
   PromptTaskID,
 } from "metabook-core";
-import spacedEverything from "spaced-everything";
+import * as spacedEverything from "spaced-everything";
 import subleveldown from "subleveldown";
 import drainIterator from "./util/drainIterator";
 
