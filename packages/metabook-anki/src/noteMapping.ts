@@ -9,7 +9,7 @@ import {
   PromptField,
   PromptProvenanceType,
 } from "metabook-core";
-import { getOrbitPromptForITPrompt } from "orbit-spaced-everything-plugin";
+import { getOrbitPromptForITPrompt } from "@withorbit/note-sync";
 import { Note, splitAnkiDBNoteFields } from "./ankiPkg";
 import { AnkiAttachmentReference } from "./ankiPkg/ankiAttachmentReference";
 import parseAnkiField from "./ankiPkg/parseAnkiField";

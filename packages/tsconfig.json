@@ -8,9 +8,9 @@
     { "path": "./metabook-cloud-functions" },
     { "path": "./metabook-core" },
     { "path": "./metabook-firebase-support" },
-    { "path": "./sample-data" },
     { "path": "./metabook-ui" },
-    { "path": "./spaced-everything-plugin" }
+    { "path": "./note-sync" },
+    { "path": "./sample-data" }
   ],
   "files": []
 }

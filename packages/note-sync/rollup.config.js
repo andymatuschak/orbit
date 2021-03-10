@@ -23,7 +23,6 @@ export default {
       !id.startsWith(path.resolve(__dirname, "dist")) &&
       id !== "dist/run.js" &&
       !/metabook-core/.test(id) &&
-      !/metabook-firebase-support/.test(id) &&
       !/@withorbit\/api-client/.test(id)
     );
   },
