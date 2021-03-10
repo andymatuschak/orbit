@@ -22,7 +22,9 @@
     "typescript": "^4.0.5"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "packages/note-sync/vendor/computer-supported-thinking/spaced-everything",
+    "packages/note-sync/vendor/computer-supported-thinking/vendor/incremental-thinking"
   ],
   "name": "metabook"
 }

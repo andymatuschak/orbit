@@ -8,17 +8,17 @@
   "scripts": {
     "build": "tsc -b",
     "test": "jest",
-    "run": "node --loader ts-node/esm --experimental-specifier-resolution=node src/run.ts"
+    "sync": "node --loader ts-node/esm --experimental-specifier-resolution=node src/run.ts"
   },
   "dependencies": {
+    "@withorbit/api-client": "0.0.1",
     "abstract-leveldown": "^6.3.0",
-    "incremental-thinking": "file:../../../computer-supported-thinking/vendor/incremental-thinking",
+    "incremental-thinking": "0.0.1",
     "leveldown": "^5.6.0",
     "levelup": "^4.4.0",
-    "@withorbit/api-client": "0.0.1",
     "metabook-core": "0.0.1",
     "metabook-sample-data": "0.0.1",
-    "spaced-everything": "file:../../../computer-supported-thinking/spaced-everything",
+    "spaced-everything": "0.0.1",
     "subleveldown": "^5.0.0"
   },
   "devDependencies": {
