@@ -1,3 +1,3 @@
 # embedded-support
 
-This module contains interfaces and constants used by both `metabook-app` and `metabook-web-component` to orchestrate the embedded experience.
+This module contains interfaces and constants used by both `@withorbit/app` and `@withorbit/web-component` to orchestrate the embedded experience.

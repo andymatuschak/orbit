@@ -23,6 +23,7 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/metabook-app/web-build" />
       <excludeFolder url="file://$MODULE_DIR$/packages/metabook-ui-web/dist" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/react-native-fit-image/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/web-component/.firebase" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
