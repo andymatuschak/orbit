@@ -7,7 +7,7 @@ import {
   getLogCollectionReference,
   getReferenceForDataRecordID,
   getTaskStateCacheReferenceForTaskID,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import { getAdminApp } from "../adminApp";
 
 class ReadTask extends Command {

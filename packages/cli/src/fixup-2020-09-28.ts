@@ -4,7 +4,7 @@ import {
   batchWriteEntries,
   getLogCollectionReference,
   getTaskStateCacheCollectionReference,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import { getAdminApp } from "./adminApp";
 import { deleteCollection } from "./deleteCollection";
 

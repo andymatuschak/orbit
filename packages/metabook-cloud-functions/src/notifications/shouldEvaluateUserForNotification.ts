@@ -1,5 +1,5 @@
 import { differenceInDays } from "date-fns";
-import { UserMetadata } from "metabook-firebase-support";
+import { UserMetadata } from "@withorbit/firebase-support";
 
 export function shouldEvaluateUserForNotification(
   userMetadata: UserMetadata,

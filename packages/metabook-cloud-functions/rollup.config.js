@@ -22,11 +22,8 @@ export default {
           replacement: path.resolve(__dirname, "../core/dist"),
         },
         {
-          find: "metabook-firebase-support",
-          replacement: path.resolve(
-            __dirname,
-            "../metabook-firebase-support/dist",
-          ),
+          find: "@withorbit/firebase-support",
+          replacement: path.resolve(__dirname, "../firebase-support/dist"),
         },
       ],
     }),

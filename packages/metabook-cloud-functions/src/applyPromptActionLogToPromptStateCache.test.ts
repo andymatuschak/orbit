@@ -11,7 +11,7 @@ import {
   ActionLogDocument,
   PromptStateCache,
   ServerTimestamp,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import { testQAPrompt } from "@withorbit/sample-data";
 import applyPromptActionLogToPromptStateCache from "./applyPromptActionLogToPromptStateCache";
 

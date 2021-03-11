@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import { Prompt, PromptID } from "@withorbit/core";
-import { DataRecord, DataRecordID } from "metabook-firebase-support";
+import { DataRecord, DataRecordID } from "@withorbit/firebase-support";
 import * as backend from "../backend";
 
 interface GetDataRecordsArguments<R extends DataRecord> {

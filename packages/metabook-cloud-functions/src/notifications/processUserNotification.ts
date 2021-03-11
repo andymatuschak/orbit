@@ -3,7 +3,7 @@ import { PromptState, PromptTaskID } from "@withorbit/core";
 import {
   SessionNotificationState,
   UserMetadata,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import * as backend from "../backend";
 import getDefaultEmailService from "../email";
 import { EmailSpec } from "../email/types";

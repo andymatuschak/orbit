@@ -8,7 +8,7 @@ import {
   getPromptStateFromPromptStateCache,
   serverTimestampToTimestampMillis,
   storeLogs as _storeLogs,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import { getDatabase } from "./firebase";
 import { updatePromptStateCacheWithLog } from "./promptStates";
 

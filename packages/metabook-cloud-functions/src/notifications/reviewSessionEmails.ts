@@ -1,5 +1,5 @@
 import * as dateFns from "date-fns";
-import { SessionNotificationState } from "metabook-firebase-support";
+import { SessionNotificationState } from "@withorbit/firebase-support";
 import { EmailSpec } from "../email/types";
 import serviceConfig from "../serviceConfig";
 

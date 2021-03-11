@@ -14,7 +14,7 @@ import {
   getTaskStateCacheReference,
   getUserMetadataReference,
   PromptStateCache,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import applyPromptActionLogToPromptStateCache from "../applyPromptActionLogToPromptStateCache";
 import { getDatabase } from "./firebase";
 

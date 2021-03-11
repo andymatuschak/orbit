@@ -3,7 +3,7 @@
   "scripts": {
     "build": "tsc -b packages/tsconfig.json",
     "watch": "tsc -b -w packages/tsconfig.json",
-    "test": "cd packages; npx jest --projects anki-import api-client metabook-cloud-functions core metabook-firebase-support web-component note-sync --runInBand",
+    "test": "cd packages; npx jest --projects anki-import api-client metabook-cloud-functions core firebase-support web-component note-sync --runInBand",
     "test:watch": "yarn run test --watch",
     "prepare": "git submodule update --init --recursive"
   },

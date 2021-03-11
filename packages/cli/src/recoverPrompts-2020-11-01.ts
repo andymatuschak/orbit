@@ -1,5 +1,5 @@
 import fs from "fs";
-import { batchWriteEntries } from "metabook-firebase-support";
+import { batchWriteEntries } from "@withorbit/firebase-support";
 import { getAdminApp } from "./adminApp";
 
 (async () => {

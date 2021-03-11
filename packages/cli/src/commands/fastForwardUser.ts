@@ -3,7 +3,7 @@ import { RescheduleActionLog, rescheduleActionLogType } from "@withorbit/core";
 import {
   getTaskStateCacheCollectionReference,
   storeLogs,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import { CommandModule } from "yargs";
 import { getAdminApp } from "../adminApp";
 

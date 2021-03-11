@@ -1,5 +1,5 @@
 import functions from "firebase-functions";
-import { UserMetadata } from "metabook-firebase-support";
+import { UserMetadata } from "@withorbit/firebase-support";
 import * as backend from "../../backend";
 import * as notifications from "../../notifications";
 

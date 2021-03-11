@@ -7,7 +7,7 @@
     { "path": "./embedded-support" },
     { "path": "./metabook-app" },
     { "path": "./metabook-cloud-functions" },
-    { "path": "./metabook-firebase-support" },
+    { "path": "./firebase-support" },
     { "path": "./ui" },
     { "path": "./note-sync" },
     { "path": "./sample-data" }

@@ -14,7 +14,7 @@ import {
   getStorageObjectNameForAttachmentID,
   storageAttachmentsPathComponent,
   storageBucketName,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import fetch, * as Fetch from "node-fetch";
 import { getApp, getDatabase } from "./firebase";
 

@@ -11,7 +11,7 @@ import {
   ActionLogDocument,
   ServerTimestamp,
   serverTimestampToTimestampMillis,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import path from "path";
 import serviceConfig from "../serviceConfig";
 import {

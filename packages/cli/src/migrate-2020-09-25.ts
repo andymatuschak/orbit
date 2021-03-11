@@ -20,10 +20,10 @@ import {
   getStorageObjectNameForAttachmentID,
   getTaskStateCacheCollectionReference,
   storageBucketName,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import CID from "multiformats/cid";
 import { base58btc } from "multiformats/bases/base58";
-import { getPromptIDForFirebaseKey } from "../../metabook-firebase-support/dist/firebaseKeyEncoding";
+import { getPromptIDForFirebaseKey } from "../../firebase-support/dist/firebaseKeyEncoding";
 import { getAdminApp } from "./adminApp";
 import { deleteCollection } from "./deleteCollection";
 

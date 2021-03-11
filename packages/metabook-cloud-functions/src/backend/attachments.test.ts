@@ -3,7 +3,7 @@ import {
   AttachmentMimeType,
   getIDForAttachment,
 } from "@withorbit/core";
-import { getStorageObjectNameForAttachmentID } from "metabook-firebase-support";
+import { getStorageObjectNameForAttachmentID } from "@withorbit/firebase-support";
 import stream from "stream";
 import {
   _getAttachmentIDForStoredObjectName,

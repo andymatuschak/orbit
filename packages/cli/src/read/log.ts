@@ -1,6 +1,6 @@
 import { Command, flags } from "@oclif/command";
 import { ActionLogID } from "@withorbit/core";
-import { getReferenceForActionLogID } from "metabook-firebase-support";
+import { getReferenceForActionLogID } from "@withorbit/firebase-support";
 import { getAdminApp } from "../adminApp";
 
 class ReadLog extends Command {

@@ -1,5 +1,5 @@
 import { getAdminApp } from "./adminApp";
-import { getPromptIDForFirebaseKey } from "metabook-firebase-support";
+import { getPromptIDForFirebaseKey } from "@withorbit/firebase-support";
 import fs from "fs";
 
 (async () => {

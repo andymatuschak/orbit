@@ -9,7 +9,7 @@ import {
 import {
   getLogCollectionReference,
   getReferenceForActionLogID,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import { getAdminApp } from "./adminApp";
 // import plan from "./importPlan.json";
 

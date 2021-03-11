@@ -3,7 +3,7 @@ import { Attachment, AttachmentID } from "@withorbit/core";
 import {
   getStorageObjectNameForAttachmentID,
   storageBucketName,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import serviceAccount from "./adminKey.json";
 
 const useEmulator = false;

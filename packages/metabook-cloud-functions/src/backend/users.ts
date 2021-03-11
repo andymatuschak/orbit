@@ -3,7 +3,7 @@ import admin from "firebase-admin";
 import {
   getUserMetadataReference,
   UserMetadata,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import { getDatabase } from "./firebase";
 
 export async function getUserMetadata(

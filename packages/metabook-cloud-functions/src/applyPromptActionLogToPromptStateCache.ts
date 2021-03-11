@@ -12,7 +12,7 @@ import {
   maxServerTimestamp,
   PromptStateCache,
   ServerTimestamp,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 
 export default async function applyActionLogDocumentToPromptStateCache({
   actionLogDocument,

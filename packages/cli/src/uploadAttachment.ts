@@ -11,7 +11,7 @@ import {
   getIDForAttachment,
   imageAttachmentType,
 } from "@withorbit/core";
-import { getFirebaseKeyForCIDString } from "metabook-firebase-support";
+import { getFirebaseKeyForCIDString } from "@withorbit/firebase-support";
 import path from "path";
 import { uploadAttachment } from "./adminApp";
 

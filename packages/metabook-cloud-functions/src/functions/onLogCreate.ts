@@ -5,7 +5,7 @@ import {
   getPromptStateFromPromptStateCache,
   PromptStateCache,
   serverTimestampToTimestampMillis,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import * as backend from "../backend";
 import { sharedLoggingService } from "../logging";
 

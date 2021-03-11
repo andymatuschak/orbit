@@ -3,7 +3,7 @@ import {
   batchWriteEntries,
   getLogCollectionReference,
   getTaskStateCacheCollectionReference,
-} from "metabook-firebase-support";
+} from "@withorbit/firebase-support";
 import admin from "firebase-admin";
 import { getAdminApp } from "./adminApp";
 import { deleteCollection } from "./deleteCollection";
