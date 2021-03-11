@@ -1,4 +1,4 @@
-import { styles } from "metabook-ui";
+import { styles } from "@withorbit/ui";
 import React from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { AuthenticationClient } from "../authentication";

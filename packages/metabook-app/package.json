@@ -59,7 +59,7 @@
     "mathjax": "3",
     "@withorbit/core": "0.0.1",
     "@withorbit/embedded-support": "0.0.1",
-    "metabook-ui": "0.0.1",
+    "@withorbit/ui": "0.0.1",
     "node-libs-react-native": "^1.0.3",
     "path-browserify": "0.0.0",
     "process": "^0.11.10",

@@ -20,7 +20,7 @@ import {
   ReviewStarburst,
   styles,
   useWeakRef,
-} from "metabook-ui";
+} from "@withorbit/ui";
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

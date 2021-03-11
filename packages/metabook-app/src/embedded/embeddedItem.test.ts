@@ -7,7 +7,7 @@ import {
   QAPrompt,
   qaPromptType,
 } from "@withorbit/core";
-import { styles } from "metabook-ui";
+import { styles } from "@withorbit/ui";
 import { EmbeddedQAPrompt } from "../../../embedded-support/src/embeddedScreenInterface";
 import {
   getAttachmentURLsInEmbeddedItem,

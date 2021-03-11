@@ -14,7 +14,7 @@ import {
   styles,
   useLayout,
   useTransitioningValue,
-} from "metabook-ui";
+} from "@withorbit/ui";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Text, View } from "react-native";

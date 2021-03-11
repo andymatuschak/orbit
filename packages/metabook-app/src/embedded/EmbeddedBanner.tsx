@@ -1,4 +1,4 @@
-import { Logo, styles } from "metabook-ui";
+import { Logo, styles } from "@withorbit/ui";
 import React from "react";
 import { Text, View } from "react-native";
 

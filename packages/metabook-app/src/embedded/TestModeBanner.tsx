@@ -1,4 +1,4 @@
-import { styles } from "metabook-ui";
+import { styles } from "@withorbit/ui";
 import React from "react";
 import { Text, View } from "react-native";
 

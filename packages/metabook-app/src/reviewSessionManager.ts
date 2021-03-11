@@ -9,7 +9,7 @@ import {
   PromptTask,
 } from "@withorbit/core";
 import { ReviewItem } from "@withorbit/embedded-support";
-import { ReviewAreaItem } from "metabook-ui";
+import { ReviewAreaItem } from "@withorbit/ui";
 import { useMemo, useState } from "react";
 
 export interface ReviewSessionManagerState {

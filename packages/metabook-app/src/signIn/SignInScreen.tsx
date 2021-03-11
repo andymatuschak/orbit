@@ -1,4 +1,4 @@
-import { SignInForm, SignInFormProps, styles } from "metabook-ui";
+import { SignInForm, SignInFormProps, styles } from "@withorbit/ui";
 import React from "react";
 import { ActivityIndicator, Alert, Platform, View } from "react-native";
 import { AuthenticationClient } from "../authentication";

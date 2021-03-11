@@ -18,7 +18,7 @@ import {
   WebPromptProvenance,
 } from "@withorbit/core";
 import { EmbeddedHostMetadata, ReviewItem } from "@withorbit/embedded-support";
-import { ReviewAreaMarkingRecord } from "metabook-ui";
+import { ReviewAreaMarkingRecord } from "@withorbit/ui";
 
 type PromptActionLogEntry = { log: PromptActionLog; id: ActionLogID };
 

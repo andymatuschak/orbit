@@ -5,7 +5,7 @@ import {
   styles,
   textFieldHorizontalPadding,
   TextInput,
-} from "metabook-ui";
+} from "@withorbit/ui";
 import React from "react";
 import { Text, View } from "react-native";
 import { supportsLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";

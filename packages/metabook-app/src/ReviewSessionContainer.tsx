@@ -1,4 +1,4 @@
-import { styles, useLayout, useTransitioningColorValue } from "metabook-ui";
+import { styles, useLayout, useTransitioningColorValue } from "@withorbit/ui";
 import React from "react";
 import { Animated, Easing, Insets, View } from "react-native";
 

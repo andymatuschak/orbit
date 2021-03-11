@@ -9,7 +9,7 @@ import {
   RepetitionActionLog,
   repetitionActionLogType,
 } from "@withorbit/core";
-import { styles } from "metabook-ui";
+import { styles } from "@withorbit/ui";
 import { EmbeddedHostMetadata } from "@withorbit/embedded-support";
 import { testClozePrompt } from "@withorbit/sample-data";
 import { getActionsRecordForMarking } from "./markingActions";

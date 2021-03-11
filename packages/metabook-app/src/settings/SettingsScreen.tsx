@@ -1,4 +1,4 @@
-import { Link, Spacer, styles } from "metabook-ui";
+import { Link, Spacer, styles } from "@withorbit/ui";
 import React from "react";
 import { Platform, Text, View } from "react-native";
 import serviceConfig from "../../serviceConfig";

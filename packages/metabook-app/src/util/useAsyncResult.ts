@@ -1,4 +1,4 @@
-import { useWeakRef } from "metabook-ui";
+import { useWeakRef } from "@withorbit/ui";
 import React from "react";
 
 export function useAsyncResult<T>(initializer: () => Promise<T>): T | null {

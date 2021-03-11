@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, Logo, Spacer, styles } from "metabook-ui";
+import { Link, Logo, Spacer, styles } from "@withorbit/ui";
 import { View, Text } from "react-native";
 
 const palette = styles.colors.palettes.green;
