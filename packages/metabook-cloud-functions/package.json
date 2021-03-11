@@ -10,7 +10,7 @@
     "build": "tsc -b && rollup -c rollup.config.js",
     "predeploy": "yarn run build",
     "deploy": "firebase deploy --only functions",
-    "shell": "cross-env SERVICE_ACCOUNT_PATH=../metabook-cli/src/adminKey.json firebase functions:shell",
+    "shell": "cross-env SERVICE_ACCOUNT_PATH=../cli/src/adminKey.json firebase functions:shell",
     "test": "jest"
   },
   "license": "UNLICENSED",
