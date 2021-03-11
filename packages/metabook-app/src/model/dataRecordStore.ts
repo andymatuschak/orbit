@@ -5,7 +5,7 @@ import {
   AttachmentURLReference,
   Prompt,
   PromptID,
-} from "metabook-core";
+} from "@withorbit/core";
 import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";
 
 const hasFinishedInitialImportKey = "__hasFinishedInitialImport";

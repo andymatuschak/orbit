@@ -2,7 +2,7 @@ import {
   AttachmentResolutionMap,
   getAttachmentIDsInPrompt,
   Prompt,
-} from "metabook-core";
+} from "@withorbit/core";
 
 export default function getAttachmentURLsByIDInReviewItem(
   prompt: Prompt,

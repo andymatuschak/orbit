@@ -16,7 +16,7 @@ import {
   qaPromptType,
   repetitionActionLogType,
   WebPromptProvenance,
-} from "metabook-core";
+} from "@withorbit/core";
 import { EmbeddedHostMetadata, ReviewItem } from "@withorbit/embedded-support";
 import { ReviewAreaMarkingRecord } from "metabook-ui";
 

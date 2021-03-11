@@ -6,7 +6,7 @@ import {
   ActionLogType,
   getIDForActionLog,
   PromptState,
-} from "metabook-core";
+} from "@withorbit/core";
 import {
   ActionLogDocument,
   ServerTimestamp,

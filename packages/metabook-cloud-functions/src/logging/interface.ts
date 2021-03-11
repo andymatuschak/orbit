@@ -1,4 +1,4 @@
-import { ActionLog, Prompt, PromptID, PromptState } from "metabook-core";
+import { ActionLog, Prompt, PromptID, PromptState } from "@withorbit/core";
 import { ActionLogDocument } from "metabook-firebase-support";
 import { EmailSpec } from "../email/types";
 

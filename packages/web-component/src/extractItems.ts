@@ -1,4 +1,4 @@
-import { clozePromptType, qaPromptType } from "metabook-core";
+import { clozePromptType, qaPromptType } from "@withorbit/core";
 import { EmbeddedItem } from "@withorbit/embedded-support";
 import { OrbitPromptElement } from "./OrbitPromptElement";
 

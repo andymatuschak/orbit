@@ -1,5 +1,5 @@
 import dateFns from "date-fns";
-import { PromptState, PromptTaskID } from "metabook-core";
+import { PromptState, PromptTaskID } from "@withorbit/core";
 import {
   SessionNotificationState,
   UserMetadata,

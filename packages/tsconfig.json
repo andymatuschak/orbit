@@ -1,12 +1,12 @@
 {
   "references": [
+    { "path": "./anki-import" },
     { "path": "./api" },
     { "path": "./api-client" },
+    { "path": "./core" },
     { "path": "./embedded-support" },
-    { "path": "./anki-import" },
     { "path": "./metabook-app" },
     { "path": "./metabook-cloud-functions" },
-    { "path": "./metabook-core" },
     { "path": "./metabook-firebase-support" },
     { "path": "./metabook-ui" },
     { "path": "./note-sync" },

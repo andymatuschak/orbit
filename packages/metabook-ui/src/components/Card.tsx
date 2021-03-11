@@ -10,7 +10,7 @@ import {
   QAPromptContents,
   QAPromptTask,
   qaPromptType,
-} from "metabook-core";
+} from "@withorbit/core";
 import React from "react";
 import {
   Animated,

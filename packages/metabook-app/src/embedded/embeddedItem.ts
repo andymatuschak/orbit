@@ -10,7 +10,7 @@ import {
   PromptTask,
   QAPrompt,
   qaPromptType,
-} from "metabook-core";
+} from "@withorbit/core";
 import {
   EmbeddedItem,
   EmbeddedPromptField,

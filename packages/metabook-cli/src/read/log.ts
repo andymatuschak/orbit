@@ -1,5 +1,5 @@
 import { Command, flags } from "@oclif/command";
-import { ActionLogID } from "metabook-core";
+import { ActionLogID } from "@withorbit/core";
 import { getReferenceForActionLogID } from "metabook-firebase-support";
 import { getAdminApp } from "../adminApp";
 

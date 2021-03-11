@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { getIDForPrompt, Prompt } from "metabook-core";
+import { getIDForPrompt, Prompt } from "@withorbit/core";
 import { getPromptIDForFirebaseKey } from "metabook-firebase-support";
 import { sharedLoggingService } from "../logging";
 

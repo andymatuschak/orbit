@@ -1,5 +1,5 @@
 import OrbitAPIClient from "@withorbit/api-client";
-import { ActionLogID } from "metabook-core";
+import { ActionLogID } from "@withorbit/core";
 import { createTask, Task } from "../util/task";
 import ActionLogStore from "./actionLogStore";
 

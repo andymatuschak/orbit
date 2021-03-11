@@ -18,7 +18,7 @@ module.exports = {
       {
         test: /\.js$/,
         use: "babel-loader",
-        include: [/node_modules/, /embedded-support/, /metabook-core/],
+        include: [/node_modules/, /withorbit/],
         exclude: [/node_modules\/react-native/],
       },
       {

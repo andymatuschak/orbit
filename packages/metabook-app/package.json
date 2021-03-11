@@ -57,7 +57,7 @@
     "lodash.isequal": "^4.5.0",
     "markdown-it-texmath": "^0.8.0",
     "mathjax": "3",
-    "metabook-core": "0.0.1",
+    "@withorbit/core": "0.0.1",
     "@withorbit/embedded-support": "0.0.1",
     "metabook-ui": "0.0.1",
     "node-libs-react-native": "^1.0.3",

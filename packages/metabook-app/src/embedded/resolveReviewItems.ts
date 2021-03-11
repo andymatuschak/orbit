@@ -1,4 +1,7 @@
-import { AttachmentIDReference, AttachmentResolutionMap } from "metabook-core";
+import {
+  AttachmentIDReference,
+  AttachmentResolutionMap,
+} from "@withorbit/core";
 import { ReviewItem } from "@withorbit/embedded-support";
 import { EmbeddedItem } from "../../../embedded-support/src/embeddedScreenInterface";
 import serviceConfig from "../../serviceConfig";

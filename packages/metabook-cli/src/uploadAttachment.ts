@@ -10,7 +10,7 @@ import {
   getAttachmentMimeTypeForFilename,
   getIDForAttachment,
   imageAttachmentType,
-} from "metabook-core";
+} from "@withorbit/core";
 import { getFirebaseKeyForCIDString } from "metabook-firebase-support";
 import path from "path";
 import { uploadAttachment } from "./adminApp";

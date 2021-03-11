@@ -1,5 +1,5 @@
 import { OrbitAPI } from "@withorbit/api";
-import { ActionLog, ActionLogID, getIDForActionLog } from "metabook-core";
+import { ActionLog, ActionLogID, getIDForActionLog } from "@withorbit/core";
 import * as backend from "../backend";
 import { sharedLoggingService } from "../logging";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";

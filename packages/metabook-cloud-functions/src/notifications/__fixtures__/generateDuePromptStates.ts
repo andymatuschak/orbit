@@ -5,7 +5,7 @@ import {
   PromptState,
   PromptTaskID,
   qaPromptType,
-} from "metabook-core";
+} from "@withorbit/core";
 
 let globalCounter = 0;
 

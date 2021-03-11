@@ -1,5 +1,5 @@
 import admin from "firebase-admin";
-import { Attachment, AttachmentID } from "metabook-core";
+import { Attachment, AttachmentID } from "@withorbit/core";
 import {
   getStorageObjectNameForAttachmentID,
   storageBucketName,

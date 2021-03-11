@@ -5,7 +5,7 @@ import {
   PromptState,
   PromptTask,
   PromptTaskID,
-} from "metabook-core";
+} from "@withorbit/core";
 import PromptStateStore from "./promptStateStore";
 
 let store: PromptStateStore;

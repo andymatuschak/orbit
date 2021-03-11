@@ -6,7 +6,7 @@ import {
   qaPromptType,
   clozePromptType,
   Prompt,
-} from "metabook-core";
+} from "@withorbit/core";
 
 export function getOrbitPromptForITPrompt(prompt: IT.Prompt): Prompt {
   function getMarkdownString(block: unist.Node): string {

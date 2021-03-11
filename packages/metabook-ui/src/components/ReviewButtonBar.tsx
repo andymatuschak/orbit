@@ -4,7 +4,7 @@ import {
   clozePromptType,
   PromptRepetitionOutcome,
   PromptType,
-} from "metabook-core";
+} from "@withorbit/core";
 import React, { useRef } from "react";
 import { View } from "react-native";
 import { colors, layout } from "../styles";

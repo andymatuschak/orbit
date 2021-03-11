@@ -1,4 +1,4 @@
-import { ColorPaletteName } from "metabook-core";
+import { ColorPaletteName } from "@withorbit/core";
 import {
   EmbeddedHostEventType,
   EmbeddedHostMetadata,

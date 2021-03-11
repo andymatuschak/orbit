@@ -2,7 +2,7 @@ import {
   getNextTaskParameters,
   PromptRepetitionOutcome,
   promptTypeSupportsRetry,
-} from "metabook-core";
+} from "@withorbit/core";
 import { EmbeddedHostState, ReviewItem } from "@withorbit/embedded-support";
 import {
   FadeView,

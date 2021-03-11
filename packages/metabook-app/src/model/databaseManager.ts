@@ -10,7 +10,7 @@ import {
   promptActionLogCanBeAppliedToPromptState,
   PromptState,
   PromptTaskID,
-} from "metabook-core";
+} from "@withorbit/core";
 import { Platform } from "react-native";
 
 import { Task } from "../util/task";

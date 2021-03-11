@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import { getIDForPrompt, Prompt, PromptID } from "metabook-core";
+import { getIDForPrompt, Prompt, PromptID } from "@withorbit/core";
 import {
   getDataRecordReference,
   getPromptIDForFirebaseKey,

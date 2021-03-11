@@ -4,7 +4,7 @@ import {
   PromptState,
   PromptTask,
   PromptTaskID,
-} from "metabook-core";
+} from "@withorbit/core";
 import OrbitAPIClient from "@withorbit/api-client";
 import { ReviewItem } from "@withorbit/embedded-support";
 import { useEffect, useState } from "react";

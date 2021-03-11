@@ -1,4 +1,4 @@
-import { AttachmentID, imageAttachmentType, Prompt } from "metabook-core";
+import { AttachmentID, imageAttachmentType, Prompt } from "@withorbit/core";
 import { testQAPrompt } from "@withorbit/sample-data";
 import getAttachmentURLsByIDInReviewItem from "./getAttachmentURLsByIDInReviewItem";
 

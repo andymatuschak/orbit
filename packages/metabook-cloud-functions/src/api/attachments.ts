@@ -4,7 +4,7 @@ import {
   AttachmentMimeType,
   getAttachmentTypeForAttachmentMimeType,
   getFileExtensionForAttachmentMimeType,
-} from "metabook-core";
+} from "@withorbit/core";
 import * as backend from "../backend";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";

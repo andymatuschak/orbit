@@ -7,7 +7,7 @@ import {
   getAttachmentMimeTypeFromResourceMetadata,
   getAttachmentTypeForAttachmentMimeType,
   getIDForAttachment,
-} from "metabook-core";
+} from "@withorbit/core";
 import {
   getAttachmentIDForFirebaseKey,
   getAttachmentURL as _getAttachmentURL,

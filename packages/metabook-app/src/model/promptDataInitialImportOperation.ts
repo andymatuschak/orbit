@@ -1,4 +1,4 @@
-import { getPromptTaskForID, PromptState, PromptTaskID } from "metabook-core";
+import { getPromptTaskForID, PromptState, PromptTaskID } from "@withorbit/core";
 import { getAttachmentIDsInPrompts } from "../util/getAttachmentIDsInPrompts";
 import { createTask, Task } from "../util/task";
 import DataRecordManager from "./dataRecordManager";

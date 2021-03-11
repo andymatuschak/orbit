@@ -8,7 +8,7 @@ import {
   Prompt,
   PromptField,
   PromptID,
-} from "metabook-core";
+} from "@withorbit/core";
 import {
   batchWriteEntries,
   getActionLogIDForFirebaseKey,

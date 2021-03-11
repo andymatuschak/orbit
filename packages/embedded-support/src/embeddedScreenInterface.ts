@@ -1,4 +1,8 @@
-import { clozePromptType, ColorPaletteName, qaPromptType } from "metabook-core";
+import {
+  clozePromptType,
+  ColorPaletteName,
+  qaPromptType,
+} from "@withorbit/core";
 
 export interface EmbeddedPromptField {
   contents: string;

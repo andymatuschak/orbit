@@ -8,7 +8,7 @@ import {
   qaPromptType,
 } from "..";
 
-// Unfortunately duplicates @withorbit/sample-data because there's a cyclical module dependency. I'd need to extract metabook-core's types to metabook-types to resolve it.
+// Unfortunately duplicates @withorbit/sample-data because there's a cyclical module dependency. I'd need to extract @withorbit/core's types to metabook-types to resolve it.
 export const testQAPromptContents: QAPromptContents = {
   question: {
     contents: "Test question",

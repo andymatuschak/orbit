@@ -10,7 +10,7 @@ import {
   PromptTask,
   PromptTaskID,
   reviewSession,
-} from "metabook-core";
+} from "@withorbit/core";
 import { ReviewItem } from "@withorbit/embedded-support";
 import { Platform } from "react-native";
 

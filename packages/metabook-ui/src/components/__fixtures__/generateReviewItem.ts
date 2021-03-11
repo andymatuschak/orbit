@@ -1,4 +1,4 @@
-import { ColorPaletteName, PromptProvenanceType } from "metabook-core";
+import { ColorPaletteName, PromptProvenanceType } from "@withorbit/core";
 import { testQAPrompt } from "@withorbit/sample-data";
 import { ReviewAreaItem } from "../../reviewAreaItem";
 import * as styles from "../../styles";

@@ -1,4 +1,4 @@
-import { PromptRepetitionOutcome } from "metabook-core";
+import { PromptRepetitionOutcome } from "@withorbit/core";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem";

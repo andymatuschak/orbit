@@ -6,7 +6,7 @@ import {
   mergeActionLogs,
   promptActionLogCanBeAppliedToPromptState,
   PromptTaskID,
-} from "metabook-core";
+} from "@withorbit/core";
 import {
   ActionLogDocument,
   maxServerTimestamp,

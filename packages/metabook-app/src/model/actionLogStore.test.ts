@@ -8,7 +8,7 @@ import {
   RepetitionActionLog,
   repetitionActionLogType,
   ActionLogID,
-} from "metabook-core";
+} from "@withorbit/core";
 import ActionLogStore from "./actionLogStore";
 
 let actionLogStore: ActionLogStore;

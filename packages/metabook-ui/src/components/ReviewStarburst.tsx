@@ -2,7 +2,7 @@ import {
   getNextRepetitionInterval,
   PromptRepetitionOutcome,
   PromptState,
-} from "metabook-core";
+} from "@withorbit/core";
 import React, { useMemo } from "react";
 import { Animated, Easing, View } from "react-native";
 import { colors, layout } from "../styles";

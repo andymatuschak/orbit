@@ -22,8 +22,7 @@ export default {
       !id.startsWith(".") &&
       !id.startsWith(path.resolve(__dirname, "dist")) &&
       id !== "dist/run.js" &&
-      !/metabook-core/.test(id) &&
-      !/@withorbit\/api-client/.test(id)
+      !/withorbit/.test(id)
     );
   },
   plugins: [

@@ -1,5 +1,5 @@
 import { OrbitAPI } from "@withorbit/api";
-import { PromptState, PromptTaskID } from "metabook-core";
+import { PromptState, PromptTaskID } from "@withorbit/core";
 import * as backend from "../backend";
 import { authenticateTypedRequest } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";

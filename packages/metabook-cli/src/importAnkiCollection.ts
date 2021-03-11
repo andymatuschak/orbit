@@ -7,7 +7,7 @@ import {
   MetabookFirebaseDataClient,
   MetabookFirebaseUserClient,
 } from "@withorbit/api-client";
-import { getIDForActionLog } from "metabook-core";
+import { getIDForActionLog } from "@withorbit/core";
 import {
   ActionLogDocument,
   batchWriteEntries,

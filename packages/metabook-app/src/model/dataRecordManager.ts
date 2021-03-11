@@ -4,7 +4,7 @@ import {
   AttachmentURLReference,
   Prompt,
   PromptID,
-} from "metabook-core";
+} from "@withorbit/core";
 import DataRecordStore from "./dataRecordStore";
 
 export interface DataRecordClientFileStore {

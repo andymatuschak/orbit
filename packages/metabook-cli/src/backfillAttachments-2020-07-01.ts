@@ -1,5 +1,5 @@
 import { Command } from "@oclif/command";
-import { Attachment, getIDForAttachment } from "metabook-core";
+import { Attachment, getIDForAttachment } from "@withorbit/core";
 import { getAdminApp, uploadAttachment } from "./adminApp";
 
 class BackfillAttachments extends Command {

@@ -1,5 +1,5 @@
 import * as fastestsmallesttextencoderdecoder from "fastestsmallesttextencoderdecoder";
-import { ActionLogID, AttachmentID, PromptID } from "metabook-core";
+import { ActionLogID, AttachmentID, PromptID } from "@withorbit/core";
 import { base58btc } from "multiformats/bases/base58";
 import CID from "multiformats/cid";
 import raw from "multiformats/codecs/raw";
@@ -13,7 +13,7 @@ const firebaseKeyBaseEncoding = base58btc;
 const assumedHasher = sha256;
 const assumedMulticodec = dagJSON;
 
-// TODO: we should be working in terms of CID objects, not encoded strings. PromptID et al should be instances of CID. Until then, this is the base encoding of the strings we'll output. Bad things will happen if this doesn't match the bases used in metabook-core.
+// TODO: we should be working in terms of CID objects, not encoded strings. PromptID et al should be instances of CID. Until then, this is the base encoding of the strings we'll output. Bad things will happen if this doesn't match the bases used in @withorbit/core.
 const outputCIDStringBaseEncoding = base58btc;
 
 // Firebase keys need to be distributed uniformly by lexicographic sort, but the multiformats have consistent prefixes. So we strip those prefixes off and use the straight hash, encoded as base58btc (but not as a multibase string--i.e. with a prefix) as our Firebase key.

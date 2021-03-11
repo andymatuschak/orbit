@@ -9,7 +9,7 @@ import {
   QAPromptTask,
   qaPromptType,
   repetitionActionLogType,
-} from "metabook-core";
+} from "@withorbit/core";
 import React, { useCallback, useMemo, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem";

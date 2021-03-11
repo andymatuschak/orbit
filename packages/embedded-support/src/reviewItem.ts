@@ -5,7 +5,7 @@ import {
   PromptState,
   PromptTask,
   PromptTaskID,
-} from "metabook-core";
+} from "@withorbit/core";
 
 export interface ReviewItem<PT extends PromptTask = PromptTask> {
   prompt: PromptOf<PT>;

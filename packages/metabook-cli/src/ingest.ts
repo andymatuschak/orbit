@@ -25,7 +25,7 @@ import {
   PromptTaskID,
   PromptTaskParameters,
   qaPromptType,
-} from "metabook-core";
+} from "@withorbit/core";
 import {
   testApplicationPrompt,
   testQAPrompt,

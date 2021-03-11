@@ -11,7 +11,7 @@ import {
   PromptTask,
   promptTypeSupportsRetry,
   repetitionActionLogType,
-} from "metabook-core";
+} from "@withorbit/core";
 import { ReviewItem } from "@withorbit/embedded-support";
 import {
   ReviewArea,

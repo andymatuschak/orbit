@@ -1,4 +1,4 @@
-import { ActionLogID } from "metabook-core";
+import { ActionLogID } from "@withorbit/core";
 import { ActionLogDocument } from "./actionLogDocument";
 import { DataRecord, DataRecordID } from "./dataRecord";
 import {

@@ -1,4 +1,4 @@
-import { QAPrompt, qaPromptType } from "metabook-core";
+import { QAPrompt, qaPromptType } from "@withorbit/core";
 
 const testQAPrompt: QAPrompt = {
   promptType: qaPromptType,

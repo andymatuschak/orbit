@@ -8,7 +8,7 @@ import {
   PromptRepetitionOutcome,
   RepetitionActionLog,
   repetitionActionLogType,
-} from "metabook-core";
+} from "@withorbit/core";
 import { styles } from "metabook-ui";
 import { EmbeddedHostMetadata } from "@withorbit/embedded-support";
 import { testClozePrompt } from "@withorbit/sample-data";

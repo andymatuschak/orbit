@@ -9,7 +9,7 @@ import {
   MetabookSpacedRepetitionSchedule,
   PromptProvenanceType,
   QAPrompt,
-} from "metabook-core";
+} from "@withorbit/core";
 import {
   testApplicationPrompt,
   testClozePrompt,

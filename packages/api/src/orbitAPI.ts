@@ -7,7 +7,7 @@ import {
   PromptID,
   PromptState,
   PromptTaskID,
-} from "metabook-core";
+} from "@withorbit/core";
 import { BlobLike } from "./genericHTTPAPI";
 
 // Meant to conform to genericHTTPAPI/Spec, but I can't declare conformance without running into obscure Typescript limitations.

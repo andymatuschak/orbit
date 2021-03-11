@@ -13,7 +13,7 @@
     "fastestsmallesttextencoderdecoder": "^1.0.22",
     "firebase": "^8.2.9",
     "firebase-admin": "^9.4.2",
-    "metabook-core": "0.0.1",
+    "@withorbit/core": "0.0.1",
     "multiformats": "^4.3.1"
   },
   "scripts": {

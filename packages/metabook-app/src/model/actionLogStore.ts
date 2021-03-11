@@ -2,7 +2,7 @@ import * as AbstractLeveldown from "abstract-leveldown";
 import LevelUp, * as levelup from "levelup";
 import * as lexi from "lexicographic-integer";
 
-import { ActionLog, ActionLogID, PromptTaskID } from "metabook-core";
+import { ActionLog, ActionLogID, PromptTaskID } from "@withorbit/core";
 import sub from "subleveldown";
 import RNLeveldown from "../util/leveldown";
 import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";

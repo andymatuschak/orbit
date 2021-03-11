@@ -5,7 +5,7 @@ import {
   ActionLogID,
   PromptState,
   PromptTaskID,
-} from "metabook-core";
+} from "@withorbit/core";
 import {
   getLogCollectionReference,
   getReferenceForActionLogID,

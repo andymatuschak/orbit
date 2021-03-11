@@ -1,4 +1,4 @@
-import { ActionLog, getIDForActionLog } from "metabook-core";
+import { ActionLog, getIDForActionLog } from "@withorbit/core";
 import batchWriteEntries from "./batchWriteEntries";
 import {
   Database,

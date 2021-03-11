@@ -1,5 +1,5 @@
 import * as firebase from "firebase-admin";
-import { ActionLog, ActionLogID, PromptState } from "metabook-core";
+import { ActionLog, ActionLogID, PromptState } from "@withorbit/core";
 import {
   getActionLogFromActionLogDocument,
   getActionLogIDForFirebaseKey,

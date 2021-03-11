@@ -4,7 +4,7 @@ import {
   AttachmentURLReference,
   imageAttachmentType,
   PromptField,
-} from "metabook-core";
+} from "@withorbit/core";
 import React, {
   useCallback,
   useEffect,

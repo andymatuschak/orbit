@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { Prompt, PromptID } from "metabook-core";
+import { Prompt, PromptID } from "@withorbit/core";
 import { DataRecord, DataRecordID } from "metabook-firebase-support";
 import * as backend from "../backend";
 

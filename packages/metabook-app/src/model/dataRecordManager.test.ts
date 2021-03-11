@@ -8,7 +8,7 @@ import {
   imageAttachmentType,
   Prompt,
   PromptID,
-} from "metabook-core";
+} from "@withorbit/core";
 import { testApplicationPrompt, testQAPrompt } from "@withorbit/sample-data";
 import DataRecordManager, {
   DataRecordClientFileStore,

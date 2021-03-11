@@ -1,5 +1,5 @@
 import admin from "firebase-admin";
-import { RescheduleActionLog, rescheduleActionLogType } from "metabook-core";
+import { RescheduleActionLog, rescheduleActionLogType } from "@withorbit/core";
 import {
   getTaskStateCacheCollectionReference,
   storeLogs,

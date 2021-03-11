@@ -1,4 +1,4 @@
-import { qaPromptType, clozePromptType } from "metabook-core";
+import { qaPromptType, clozePromptType } from "@withorbit/core";
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
 import {
   AnkiCollectionDBHandle,

@@ -6,7 +6,7 @@ import {
   PromptRepetitionOutcome,
   PromptTaskID,
   repetitionActionLogType,
-} from "metabook-core";
+} from "@withorbit/core";
 import {
   ActionLogDocument,
   PromptStateCache,

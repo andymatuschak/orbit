@@ -5,7 +5,7 @@ import {
   AttachmentIDReference,
   PromptID,
   PromptTaskID,
-} from "metabook-core";
+} from "@withorbit/core";
 import { APIConfig, defaultAPIConfig } from "./apiConfig";
 import { AuthenticationConfig, RequestManager } from "./requestManager";
 import { Blob } from "./util/fetch";

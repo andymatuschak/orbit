@@ -1,4 +1,4 @@
-import { PromptID } from "metabook-core";
+import { PromptID } from "@withorbit/core";
 import { testQAPrompt } from "@withorbit/sample-data";
 import DataRecordStore from "./dataRecordStore";
 

@@ -6,7 +6,7 @@ import {
   PromptIngestActionLog,
   PromptRepetitionOutcome,
   RescheduleActionLog,
-} from "metabook-core";
+} from "@withorbit/core";
 import { testQAPrompt, testClozePrompt } from "@withorbit/sample-data";
 import {
   testCard,

@@ -1,5 +1,5 @@
 import OrbitAPIClient from "@withorbit/api-client";
-import { PromptTaskID } from "metabook-core";
+import { PromptTaskID } from "@withorbit/core";
 import { createTask, Task } from "../util/task";
 import PromptStateStore from "./promptStateStore";
 

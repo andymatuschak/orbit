@@ -25,7 +25,7 @@
       "path": "../api-client"
     },
     {
-      "path": "../metabook-core"
+      "path": "../core"
     },
     {
       "path": "../embedded-support"

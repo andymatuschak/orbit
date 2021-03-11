@@ -9,7 +9,7 @@ import {
   PromptID,
   PromptTask,
   PromptTaskID,
-} from "metabook-core";
+} from "@withorbit/core";
 import * as path from "path";
 import { getAdminApp } from "./adminApp";
 

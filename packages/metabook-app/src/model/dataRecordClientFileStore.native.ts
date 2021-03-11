@@ -5,7 +5,7 @@ import {
   AttachmentURLReference,
   getAttachmentTypeForAttachmentMimeType,
   getFileExtensionForAttachmentMimeType,
-} from "metabook-core";
+} from "@withorbit/core";
 import { DataRecordClientFileStore } from "./dataRecordManager";
 
 function getAttachmentStorageBaseURL(): string {

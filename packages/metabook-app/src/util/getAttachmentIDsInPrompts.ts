@@ -1,4 +1,8 @@
-import { AttachmentID, getAttachmentIDsInPrompt, Prompt } from "metabook-core";
+import {
+  AttachmentID,
+  getAttachmentIDsInPrompt,
+  Prompt,
+} from "@withorbit/core";
 
 export function getAttachmentIDsInPrompts(
   prompts: Iterable<Prompt>,

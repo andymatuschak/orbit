@@ -6,7 +6,7 @@ import {
   PromptTaskID,
   PromptUpdateMetadataActionLog,
   updateMetadataActionLogType,
-} from "metabook-core";
+} from "@withorbit/core";
 import {
   batchWriteEntries,
   getActionLogIDReference,

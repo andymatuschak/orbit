@@ -1,4 +1,4 @@
-import { getIntervalSequenceForSchedule } from "metabook-core";
+import { getIntervalSequenceForSchedule } from "@withorbit/core";
 import React, { useRef } from "react";
 import { Animated } from "react-native";
 import Svg, { ClipPath, G, Path } from "react-native-svg";

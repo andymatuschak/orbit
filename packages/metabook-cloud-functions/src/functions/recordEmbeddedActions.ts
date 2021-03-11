@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { ActionLog, Prompt } from "metabook-core";
+import { ActionLog, Prompt } from "@withorbit/core";
 import * as backend from "../backend";
 import { sharedLoggingService } from "../logging";
 

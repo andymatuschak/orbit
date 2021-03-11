@@ -1,4 +1,4 @@
-import { getIntervalSequenceForSchedule } from "metabook-core";
+import { getIntervalSequenceForSchedule } from "@withorbit/core";
 import React, { useMemo } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { layout, type } from "../styles";

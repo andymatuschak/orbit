@@ -2,7 +2,7 @@ import {
   AttachmentMimeType,
   getAttachmentTypeForAttachmentMimeType,
   getFileExtensionForAttachmentMimeType,
-} from "metabook-core";
+} from "@withorbit/core";
 import { DataRecordClientFileStore } from "./dataRecordManager";
 
 let _cache: Cache | null = null;

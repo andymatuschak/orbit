@@ -7,7 +7,7 @@ import {
   PromptProvenanceType,
   PromptState,
   PromptTaskID,
-} from "metabook-core";
+} from "@withorbit/core";
 import * as spacedEverything from "spaced-everything";
 import subleveldown from "subleveldown";
 import drainIterator from "./util/drainIterator";

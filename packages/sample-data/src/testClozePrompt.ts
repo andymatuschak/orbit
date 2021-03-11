@@ -1,4 +1,4 @@
-import { ClozePrompt, clozePromptType } from "metabook-core";
+import { ClozePrompt, clozePromptType } from "@withorbit/core";
 
 const testClozePrompt: ClozePrompt = {
   promptType: clozePromptType,

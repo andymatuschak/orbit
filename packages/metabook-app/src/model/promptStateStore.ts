@@ -7,7 +7,7 @@ import {
   PromptState,
   PromptTask,
   PromptTaskID,
-} from "metabook-core";
+} from "@withorbit/core";
 import sub from "subleveldown";
 import RNLeveldown from "../util/leveldown";
 import { getJSONRecord, saveJSONRecord } from "./levelDBUtil";

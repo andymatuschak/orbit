@@ -8,7 +8,7 @@ import {
   Prompt,
   PromptField,
   PromptProvenanceType,
-} from "metabook-core";
+} from "@withorbit/core";
 import { getOrbitPromptForITPrompt } from "@withorbit/note-sync";
 import { Note, splitAnkiDBNoteFields } from "./ankiPkg";
 import { AnkiAttachmentReference } from "./ankiPkg/ankiAttachmentReference";

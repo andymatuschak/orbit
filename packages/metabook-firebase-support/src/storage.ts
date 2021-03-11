@@ -1,4 +1,4 @@
-import { AttachmentID } from "metabook-core";
+import { AttachmentID } from "@withorbit/core";
 import { getFirebaseKeyForCIDString } from "./firebaseKeyEncoding.js";
 
 export const storageBucketName = "metabook-system.appspot.com";

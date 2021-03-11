@@ -1,4 +1,4 @@
-import { ActionLogID, AttachmentID, PromptID } from "metabook-core";
+import { ActionLogID, AttachmentID, PromptID } from "@withorbit/core";
 import {
   getActionLogIDForFirebaseKey,
   getAttachmentIDForFirebaseKey,

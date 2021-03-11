@@ -2,7 +2,7 @@ import * as IT from "incremental-thinking";
 import {
   PromptUpdateMetadataActionLog,
   updateMetadataActionLogType,
-} from "metabook-core";
+} from "@withorbit/core";
 import * as spacedEverything from "spaced-everything";
 import { testClozePrompt } from "@withorbit/sample-data";
 import { simpleOrbitPrompt } from "./__fixtures__/testData";

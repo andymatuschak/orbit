@@ -1,4 +1,4 @@
-import { ApplicationPrompt } from "metabook-core";
+import { ApplicationPrompt } from "@withorbit/core";
 
 const testApplicationPrompt: ApplicationPrompt = {
   promptType: "applicationPrompt",

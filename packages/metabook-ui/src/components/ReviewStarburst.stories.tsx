@@ -1,5 +1,5 @@
 import { Story } from "@storybook/react";
-import { getIntervalSequenceForSchedule, PromptState } from "metabook-core";
+import { getIntervalSequenceForSchedule, PromptState } from "@withorbit/core";
 import React from "react";
 import { View } from "react-native";
 import { colors } from "../styles";

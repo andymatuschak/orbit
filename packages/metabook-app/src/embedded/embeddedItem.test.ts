@@ -6,7 +6,7 @@ import {
   imageAttachmentType,
   QAPrompt,
   qaPromptType,
-} from "metabook-core";
+} from "@withorbit/core";
 import { styles } from "metabook-ui";
 import { EmbeddedQAPrompt } from "../../../embedded-support/src/embeddedScreenInterface";
 import {

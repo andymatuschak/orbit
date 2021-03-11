@@ -1,4 +1,4 @@
-import { PromptState } from "metabook-core";
+import { PromptState } from "@withorbit/core";
 import { ReviewItem } from "@withorbit/embedded-support";
 import { findItemsToRetry } from "./findItemsToRetry";
 

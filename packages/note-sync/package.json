@@ -16,7 +16,7 @@
     "incremental-thinking": "0.0.1",
     "leveldown": "^5.6.0",
     "levelup": "^4.4.0",
-    "metabook-core": "0.0.1",
+    "@withorbit/core": "0.0.1",
     "@withorbit/sample-data": "0.0.1",
     "spaced-everything": "0.0.1",
     "subleveldown": "^5.0.0"

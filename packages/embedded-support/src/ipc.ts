@@ -1,4 +1,4 @@
-import { PromptState, PromptTaskID } from "metabook-core";
+import { PromptState, PromptTaskID } from "@withorbit/core";
 import { ReviewItem } from "./reviewItem";
 
 // Messages from host to embedded:

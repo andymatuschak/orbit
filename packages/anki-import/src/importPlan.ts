@@ -31,7 +31,7 @@ import {
   rescheduleActionLogType,
   ClozePromptTask,
   QAPromptTask,
-} from "metabook-core";
+} from "@withorbit/core";
 import * as Anki from "./ankiPkg";
 import { Card, CardQueue, Collection } from "./ankiPkg";
 import { getModelMapping, ModelMapping } from "./modelMapping";

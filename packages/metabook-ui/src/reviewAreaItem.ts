@@ -8,7 +8,7 @@ import {
   PromptTask,
   PromptTaskID,
   PromptTaskParametersOf,
-} from "metabook-core";
+} from "@withorbit/core";
 import { colors } from "./styles";
 
 export interface ReviewAreaItem<PT extends PromptTask = PromptTask> {

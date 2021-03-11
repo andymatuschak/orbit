@@ -1,4 +1,4 @@
-import { PromptState, PromptTaskID } from "metabook-core";
+import { PromptState, PromptTaskID } from "@withorbit/core";
 import { ServerTimestamp } from "./libraryAbstraction";
 
 export interface PromptStateCache extends PromptState {

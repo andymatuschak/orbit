@@ -19,7 +19,7 @@ import {
   PromptTaskID,
   qaPromptType,
   updateMetadataActionLogType,
-} from "metabook-core";
+} from "@withorbit/core";
 import * as spacedEverything from "spaced-everything";
 import SpacedEverythingImportCache, { CachedNoteMetadata } from "./importCache";
 import {

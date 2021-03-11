@@ -1,5 +1,5 @@
 import * as dateFns from "date-fns";
-import { PromptState, PromptTaskID, reviewSession } from "metabook-core";
+import { PromptState, PromptTaskID, reviewSession } from "@withorbit/core";
 
 // We'll delay review sessions until we estimate doing so would cause at least this many prompts to be forgotten because of the delay.
 const forgottenPromptCountThreshold = 2;

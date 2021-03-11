@@ -12,19 +12,14 @@ export default {
   context: "this",
   moduleContext: "this",
   external: (id) => {
-    return (
-      !id.startsWith(".") &&
-      !/metabook-core/.test(id) &&
-      !/metabook-cloud-functions/.test(id) &&
-      !/metabook-firebase-support/.test(id)
-    );
+    return !id.startsWith(".") && !/withorbit/.test(id);
   },
   plugins: [
     alias({
       entries: [
         {
-          find: "metabook-core",
-          replacement: path.resolve(__dirname, "../metabook-core/dist"),
+          find: "@withorbit/core",
+          replacement: path.resolve(__dirname, "../core/dist"),
         },
         {
           find: "metabook-firebase-support",
