@@ -17,7 +17,7 @@ While everything is written in Typescript, components of Orbit must run in Node,
 | `app` | Orbit client apps and embedded interface | | ✅ | ✅
 | `backend` | Server components of Orbit, including API backend, notifier, logging service, etc | ✅ | | |
 | `web-component` | Author-facing library for Orbit integration | | ✅ | |
-| `api` | Interface definitions for Orbit's REST API | ✅ | | |
+| `api` | Interface definitions for Orbit's REST API | ✅ | ✅ | ✅ |
 | `api-client` | Client implementation of Orbit API | ✅ | ✅ | ✅ |
 | `ui` | Shared styles and UI components | | ✅ | ✅ |
 | _Secondary packages:_ |
