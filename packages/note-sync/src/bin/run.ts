@@ -6,31 +6,17 @@ import * as IT from "incremental-thinking";
 import OrbitAPIClient, {
   defaultAPIConfig,
   emulatorAPIConfig,
+  APIConfig,
 } from "@withorbit/api-client";
 import * as spacedEverything from "spaced-everything";
 import SpacedEverythingImportCache from "../importCache";
 import { createTaskCache } from "../taskCache";
 
-(async () => {
-  const noteDirectory = process.argv[2];
-  if (!noteDirectory) {
-    console.error("Must provide note directory path");
-    process.exit(0);
-  }
-
-  const personalAccessToken = process.env["TOKEN"];
-  if (!personalAccessToken) {
-    console.error(
-      "Must provide personal access token via TOKEN environment variable",
-    );
-    process.exit(0);
-  }
-
-  const apiConfig =
-    process.env["API"] && process.env["API"] === "production"
-      ? defaultAPIConfig
-      : emulatorAPIConfig;
-
+async function sync(
+  noteDirectory: string,
+  personalAccessToken: string,
+  apiConfig: APIConfig,
+) {
   const noteFilenames = await IT.listNoteFiles(noteDirectory);
   console.log(`Found ${noteFilenames.length} notes in ${noteDirectory}`);
   const noteTaskSource = spacedEverything.notePrompts.createTaskSource(
@@ -54,6 +40,28 @@ import { createTaskCache } from "../taskCache";
   );
 
   await importCache.close();
+}
+
+(async () => {
+  const noteDirectory = process.argv[2];
+  if (!noteDirectory) {
+    console.error("Must provide note directory path");
+    process.exit(0);
+  }
+
+  const personalAccessToken = process.env["ORBIT_TOKEN"];
+  if (!personalAccessToken) {
+    console.error(
+      "Must provide personal access token via TOKEN environment variable",
+    );
+    process.exit(0);
+  }
+
+  const apiConfig =
+    process.env["ORBIT_ENV"] && process.env["ORBIT_ENV"] === "production"
+      ? defaultAPIConfig
+      : emulatorAPIConfig;
+  await sync(noteDirectory, personalAccessToken, apiConfig);
 })()
   .then(() => {
     console.log("Done");
