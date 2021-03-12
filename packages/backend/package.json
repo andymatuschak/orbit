@@ -10,7 +10,9 @@
     "build": "tsc -b && rollup -c rollup.config.js",
     "predeploy": "yarn run build",
     "deploy": "firebase deploy --only functions",
-    "shell": "cross-env SERVICE_ACCOUNT_PATH=../cli/src/adminKey.json firebase functions:shell",
+    "deployCORS": "gsutil cors set ../backend/firebase-storage-cors.json gs://metabook-system.appspot.com",
+    "deployFirestoreConfig": "firebase deploy --only firestore",
+    "fetchFirestoreIndexes": "firebase firestore:indexes > ../backend/firestore.indexes.json",
     "test": "jest"
   },
   "license": "UNLICENSED",
