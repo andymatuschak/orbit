@@ -13,20 +13,6 @@
           "order": "ASCENDING"
         }
       ]
-    },
-    {
-      "collectionGroup": "taskStates",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "taskMetadata.provenance.provenanceType",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "latestLogServerTimestamp",
-          "order": "ASCENDING"
-        }
-      ]
     }
   ],
   "fieldOverrides": []
