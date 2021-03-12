@@ -4,8 +4,8 @@
     "indexes": "./api-client/firestore.indexes.json"
   },
   "functions": {
-    "predeploy": "(cd metabook-cloud-functions; yarn run build)",
-    "source": "metabook-cloud-functions"
+    "predeploy": "(cd backend; yarn run build)",
+    "source": "backend"
   },
   "emulators": {
     "firestore": {

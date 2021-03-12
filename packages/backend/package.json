@@ -1,5 +1,5 @@
 {
-  "name": "metabook-cloud-functions",
+  "name": "@withorbit/backend",
   "version": "0.0.1",
   "private": true,
   "main": "./dist/bundle.js",
