@@ -1,11 +1,11 @@
 {
-  "name": "metabook-docs",
+  "name": "@withorbit/docs",
   "version": "0.0.1",
   "private": true,
   "scripts": {
     "deploy": "firebase deploy"
   },
   "devDependencies": {
-    "firebase-tools": "^8.16.1"
+    "firebase-tools": "^9.6.1"
   }
 }

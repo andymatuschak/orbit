@@ -1,12 +1,18 @@
 # backend
 
-This module contains the "serverless" backend for Orbit, implemented as Firebase Functions. The entry points for those functions are all stored in `/functions`.
+This module contains the backend server for Orbit.
+
+It's currently built for deployment on Firebase Cloud Functions. The entry points for those functions are all stored in `/functions`. But I'm trying to rely on Firebase-specific GCP-specific environment elements as little as possible, so that Orbit can be self-hosted at some point.
+
+To that end, most of the important elements are implemented as a normal REST API, routed via Express, in `/api`. Those endpoint implementations don't know about Firebase or GCP and call into service objects which encapsulate the cloud provider API calls.
 
 ## Development
 
-* To build the functions: `yarn build`
+* To build the backend: `yarn build`
+* To run the local backend emulator: `yarn dev`
+  * Note that this includes a test user: `test@test.com` with password `testtest`. This user has a personal access token configured with value: `TEST`.
 * To run the tests: `yarn test`
-* To deploy the functions: `yarn test`
+* To deploy the functions: `yarn deploy`
 
 ## Configuration
 
