@@ -1,4 +1,4 @@
-# orbit-cloud-functions
+# backend
 
 This module contains the "serverless" backend for Orbit, implemented as Firebase Functions. The entry points for those functions are all stored in `/functions`.
 

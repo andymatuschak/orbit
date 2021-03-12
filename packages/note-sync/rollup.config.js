@@ -20,7 +20,7 @@ export default {
     console.log(id);
     return (
       !id.startsWith(".") &&
-      !id.startsWith(path.resolve(__dirname, "dist")) &&
+      !/packages\/(.+?)\/dist/.test(id) &&
       id !== "dist/run.js" &&
       !/withorbit/.test(id)
     );

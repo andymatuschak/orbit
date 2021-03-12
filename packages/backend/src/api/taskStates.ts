@@ -24,7 +24,10 @@ export const listTaskStates: TypedRouteHandler<
         if (typeof query.limit === "string") {
           query.limit = Number.parseInt(query.limit);
         }
-        if (typeof query.dueBeforeTimestampMillis === "string") {
+        if (
+          "dueBeforeTimestampMillis" in query &&
+          typeof query.dueBeforeTimestampMillis === "string"
+        ) {
           query.dueBeforeTimestampMillis = Number.parseInt(
             query.dueBeforeTimestampMillis,
           );

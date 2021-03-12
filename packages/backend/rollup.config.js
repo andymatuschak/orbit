@@ -12,7 +12,11 @@ export default {
   context: "this",
   moduleContext: "this",
   external: (id) => {
-    return !id.startsWith(".") && !/withorbit/.test(id);
+    return (
+      !id.startsWith(".") &&
+      !/packages\/(.+?)\/dist/.test(id) &&
+      !/withorbit/.test(id)
+    );
   },
   plugins: [
     alias({
