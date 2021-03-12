@@ -5,17 +5,20 @@ This package is meant to allow you to write prompts embedded within plaintext no
 Sample invocation (assuming you have a local emulator running):
 
 ```
-# Set up a test note.
+# Set up a test note. Note that currently the script assumes these notes are exported from Bear, i.e. via https://github.com/andymatuschak/Bear-Markdown-Export. This requirement should be relaxed!
 mkdir -p testNotes
-cat "This is a {test cloze} note." > testNotes/note.md
+
+echo "# Test note\nThis is a {test cloze} note.\n<\!-- {BearID:BE407525-7100-4F63-9F11-690E325CDFE9-1084-00032CF318809DA5} -->" > testNotes/note.md
 
 # Sync that cloze to  
-ORBIT_ENV=development ORBIT_TOKEN=TEST yarn sync ~/testNotes
+ORBIT_ENV=development ORBIT_TOKEN=TEST yarn sync testNotes
 
 # Now if you visit http://localhost:19006/review as user test@test.com, you should see your test note.
 ```
 
-To sync with a different user, set `ORBIT_TOKEN` to a personal access token for your user (which you can generate by visiting `/settings?action=generatePersonalAccessToken` while logged in)
+To sync with a different user, set `ORBIT_TOKEN` to a personal access token for your user (which you can generate by visiting `/settings?action=generatePersonalAccessToken` while logged in).
+
+Note that the script performs some caching of user data, so you'll want to delete `cache.db` if you switch users.
 
 To run against the production server, set `ORBIT_ENV` to `production`.
 
