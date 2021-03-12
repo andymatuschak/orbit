@@ -10,7 +10,7 @@
     "firebase-admin": "^9.4.2",
     "firebase-functions": "^3.13.0",
     "@withorbit/anki-import": "0.0.1",
-    "metabook-app": "0.0.1",
+    "@withorbit/app": "0.0.1",
     "@withorbit/api-client": "0.0.1",
     "@withorbit/firebase-support": "0.0.1",
     "multiformats": "^4.3.1",

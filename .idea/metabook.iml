@@ -17,10 +17,10 @@
       <excludeFolder url="file://$MODULE_DIR$/metabook-ui/.cache" />
       <excludeFolder url="file://$MODULE_DIR$/metabook-web-component/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/embedded-app/build" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/metabook-app/.expo/web" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/metabook-app/android/build" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/metabook-app/ios/Pods" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/metabook-app/web-build" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/app/.expo/web" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/app/android/build" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/app/ios/Pods" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/app/web-build" />
       <excludeFolder url="file://$MODULE_DIR$/packages/metabook-ui-web/dist" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/react-native-fit-image/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/web-component/.firebase" />

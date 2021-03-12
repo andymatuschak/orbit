@@ -205,7 +205,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
 
       const effectiveWidth = iframe.getBoundingClientRect().width;
       // The extra 5 grid units are for the banner.
-      // TODO: encapsulate the banner's height in some API exported by metabook-app.
+      // TODO: encapsulate the banner's height in some API exported by @withorbit/app.
       iframe.style.height = `${
         getHeightForReviewAreaOfWidth(effectiveWidth) + 8 * 5
       }px`;

@@ -1,1 +1,0 @@
-../../../../../../../node_modules/expo-linear-gradient/ios/EXLinearGradient/EXLinearGradientLayer.h

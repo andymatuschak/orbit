@@ -1,1 +1,0 @@
-../../../FirebaseAuth/FirebaseAuth/Sources/MultiFactor/FIRMultiFactorSession+Internal.h
