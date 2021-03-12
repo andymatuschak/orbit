@@ -10,7 +10,7 @@ mkdir -p testNotes
 
 echo "# Test note\nThis is a {test cloze} note.\n<\!-- {BearID:BE407525-7100-4F63-9F11-690E325CDFE9-1084-00032CF318809DA5} -->" > testNotes/note.md
 
-# Sync that cloze to  
+# Sync that cloze to the test user test@test.com (see backend/Readme.md)
 ORBIT_ENV=development ORBIT_TOKEN=TEST yarn sync testNotes
 
 # Now if you visit http://localhost:19006/review as user test@test.com, you should see your test note.
