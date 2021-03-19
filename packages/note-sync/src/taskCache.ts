@@ -111,7 +111,7 @@ async function initializeImportCache(
     const missingPromptIDList = [...missingPromptIDs.keys()];
     const fetchedPromptIDs = new Set<PromptID>();
 
-    const batchSize = 100;
+    const batchSize = 50;
     for (
       let sliceIndex = 0;
       sliceIndex < missingPromptIDList.length / batchSize;

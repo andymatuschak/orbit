@@ -5,6 +5,7 @@ import {
   Prompt,
   PromptID,
 } from "@withorbit/core";
+import { getITPromptForOrbitPrompt } from "@withorbit/note-sync";
 import DataRecordStore from "./dataRecordStore";
 
 export interface DataRecordClientFileStore {
@@ -49,10 +50,23 @@ export default class DataRecordManager {
 
     if (missingIDs.size > 0) {
       console.log(`Getting ${missingIDs.size} remote prompts`);
-      const prompts = await this.apiClient.getTaskData([...missingIDs]);
-      for (const { id, data } of prompts.data) {
-        promptMap.set(id, data);
-        this.dataCache.savePrompt(id, data);
+
+      const batchSize = 50;
+      const missingIDList = [...missingIDs];
+      for (
+        let sliceIndex = 0;
+        sliceIndex < missingIDList.length / batchSize;
+        sliceIndex++
+      ) {
+        const slice = missingIDList.slice(
+          sliceIndex * batchSize,
+          (sliceIndex + 1) * batchSize,
+        );
+        const taskDataResponse = await this.apiClient.getTaskData(slice);
+        for (const { id, data } of taskDataResponse.data) {
+          promptMap.set(id, data);
+          this.dataCache.savePrompt(id, data);
+        }
       }
       for (const missingID of missingIDs) {
         if (!promptMap.has(missingID)) {
