@@ -51,7 +51,7 @@ export default class DataRecordManager {
     if (missingIDs.size > 0) {
       console.log(`Getting ${missingIDs.size} remote prompts`);
 
-      const batchSize = 50;
+      const batchSize = 10;
       const missingIDList = [...missingIDs];
       for (
         let sliceIndex = 0;
