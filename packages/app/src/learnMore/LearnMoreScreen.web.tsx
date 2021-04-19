@@ -179,7 +179,10 @@ function Contents() {
       </Paragraph>
       <Paragraph>
         If you’re an author interested in using Orbit in your own texts, please{" "}
-        <Link href="mailto:andy@andymatuschak.org">contact me</Link>.
+        <Link href="https://docs.withorbit.com">
+          view the preliminary documentation
+        </Link>
+        .
       </Paragraph>
     </>
   );

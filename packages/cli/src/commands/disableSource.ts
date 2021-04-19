@@ -40,7 +40,8 @@ export const disableSource: CommandModule<{}, { userID: string }> = {
 
     const logs = getTaskStateCacheCollectionReference(db, userID);
     const matchingLogSnapshot = await logs
-      .where("taskMetadata.provenance.url", "==", argv.URL)
+      .where("taskMetadata.provenance.url", ">=", argv.URL)
+      .where("taskMetadata.provenance.url", "<", `${argv.URL}~`)
       .get();
     console.log(`Found ${matchingLogSnapshot.size} matching tasks`);
 
