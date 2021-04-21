@@ -1,5 +1,5 @@
 ---
-name: Anything else
+name: Something else
 about: Something else on your mind?
 title: ''
 labels: ''
