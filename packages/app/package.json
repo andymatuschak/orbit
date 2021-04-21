@@ -1,7 +1,7 @@
 {
   "name": "@withorbit/app",
   "version": "0.0.1",
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0-or-later OR BUSL-1.1",
   "main": "index.js",
   "scripts": {
     "android": "react-native run-android",

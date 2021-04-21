@@ -15,7 +15,7 @@
     "fetchFirestoreIndexes": "firebase firestore:indexes > ../backend/firestore.indexes.json",
     "test": "jest"
   },
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0-or-later OR BUSL-1.1",
   "dependencies": {
     "@google-cloud/bigquery": "^5.5.0",
     "@google-cloud/pubsub": "^2.6.0",

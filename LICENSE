@@ -1,0 +1,7 @@
+Copyright 2020 Andy Matuschak.
+
+All sources in this repository, except those in the subtrees packages/app and packages/backend, and all compiled distribution binaries, are licensed under Apache 2.0 (see LICENSE.Apache-2.0 for text).
+
+Sources in packages/app and packages/backend are licensed under AGPL 3.0+ or BUSL 1.1 (your choice; see LICENSE.AGPL-3.0-or-later and LICENSE.BUSL1.1 for respective texts).
+
+See discussion in Readme.md for more background.

@@ -37,3 +37,10 @@ Once you've set your configuration parameters, it's convenient to store them loc
 ```
 firebase functions:config:get > .runtimeconfig.json
 ```
+
+---
+
+```
+Copyright 2020 Andy Matuschak
+SPDX-License-Identifier: AGPL-3.0-or-later OR BUSL-1.1
+```

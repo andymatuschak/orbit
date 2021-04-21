@@ -13,4 +13,11 @@ This package contains the main Orbit GUI app for the web, iOS, Android, and macO
 
 Unsure what a device's name is? Run `instruments -s devices`.
 
-You'll need to copy Orbit's commercial fonts into `/web/fonts` and `/android/app/src/main/assets`. The license doesn't permit me to distribute them with the repository.
+You'll need to copy Orbit's commercial fonts into `/web/fonts` and `/android/app/src/main/assets`. Those fonts are non-free, and their licenses don't permit me to distribute them with the repository. We should make a "no-trade-dress" flag you can set to get a "generic" build of Orbit.
+
+---
+
+```
+Copyright 2020 Andy Matuschak
+SPDX-License-Identifier: AGPL-3.0-or-later OR BUSL-1.1
+```

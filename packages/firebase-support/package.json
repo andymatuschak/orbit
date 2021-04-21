@@ -1,7 +1,7 @@
 {
   "name": "@withorbit/firebase-support",
   "version": "0.0.1",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",

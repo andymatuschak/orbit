@@ -2,7 +2,7 @@
   "name": "@withorbit/cli",
   "version": "0.0.1",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "dependencies": {
     "@oclif/command": "^1.5.19",

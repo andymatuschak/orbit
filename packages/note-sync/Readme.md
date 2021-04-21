@@ -127,3 +127,8 @@ Give it a try: you should see notes show up in Anki's browser as soon as the com
 3. By default, `spaced-everything` doesn't cause Anki to sync to AnkiWeb. Pass `-s` to synchronize your local changes to the web after the script finishes.
 4. The command only syncs _to_ Anki. Any modifications made within Anki will be clobbered.
 5. The Anki cards are presented with the title of the file from which they were extracted (considered to be the first line). If the file came from Bear, the title will be a hotlink to jump to the source Bear note. Support for "external note system identifiers" is general, so that feature can easily be extended for other editors which can be opened via URL (add to `getNoteID` in `incremental-thinking/src/notes.ts`).
+
+```
+Copyright 2020 Andy Matuschak
+SPDX-License-Identifier: Apache-2.0
+```

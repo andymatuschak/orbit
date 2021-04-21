@@ -12,3 +12,8 @@ This package is built into a single ES Module and deployed to a separate Firebas
 
 * To build: `yarn build`
 * To deploy: `yarn deploy`
+
+```
+Copyright 2020 Andy Matuschak
+SPDX-License-Identifier: Apache-2.0
+```

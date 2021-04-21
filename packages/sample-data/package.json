@@ -2,7 +2,7 @@
   "name": "@withorbit/sample-data",
   "version": "0.0.1",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

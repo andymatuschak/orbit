@@ -29,14 +29,16 @@
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json"
   ],
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "private": true,
   "main": "dist/index.js",
   "oclif": {
     "commands": "./dist/commands",
     "bin": "spaced-everything",
     "topics": {
-      "anki": {"description": "Commands for interacting with Anki"}
+      "anki": {
+        "description": "Commands for interacting with Anki"
+      }
     },
     "plugins": [
       "@oclif/plugin-help",

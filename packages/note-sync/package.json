@@ -2,7 +2,7 @@
   "name": "@withorbit/note-sync",
   "version": "0.0.1",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {

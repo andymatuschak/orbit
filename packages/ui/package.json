@@ -5,7 +5,7 @@
   "types": "./dist/index.d.ts",
   "exports": "./dist/index.js",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "private": true,
   "sideEffects": false,
   "devDependencies": {
