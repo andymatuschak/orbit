@@ -48,12 +48,12 @@ One more thing: as with many open-source projects, you'll need to sign a [Contri
 
 Orbit is open-source. We use an unusual licensing strategy intended to be as permissive as possible while discouraging commercial copy-cats. Here's a summary; see the `LICENSE` files and details in each package for more:
 
-* All libraries are provided under Apache 2.0.
+* All libraries are provided under the permissive [Apache License 2.0](https://github.com/andymatuschak/orbit/blob/master/LICENSE-Apache-2.0).
 * The Orbit client application and cloud service sources are provided under your choice of two licenses:
-  * GNU Affero General Public License 3.0 or later (strong copyleft, viral over the network)
-  * Business Software License 1.1 ("eventually open source": permits all non-production use, transforms into the permissive Apache 2.0 license after three years)
-  * If you're interested in purchasing an alternative license, please [contact me](andy@andymatuschak.org).
-* Official compiled binaries of the Orbit applications will be distributed under the Apache 2.0 license (so that [organizations terrified of AGPL](https://opensource.google/docs/using/agpl-policy/) can install the end-user binaries onto their machines).
+  * [GNU Affero General Public License 3.0 or later](https://github.com/andymatuschak/orbit/blob/master/LICENSE-AGPL-3.0-or-later) (strong copyleft, viral over the network)
+  * [Business Software License 1.1](https://github.com/andymatuschak/orbit/blob/master/LICENSE-BUSL-1.1) ("eventually open source": permits all non-production use, transforms into the permissive [Apache License 2.0](https://github.com/andymatuschak/orbit/blob/master/LICENSE-Apache-2.0) after three years)
+  * If you're interested in purchasing an alternative license, please [contact me](mailto:andy@andymatuschak.org).
+* Official compiled binaries of the Orbit applications will be distributed under the [Apache License 2.0](https://github.com/andymatuschak/orbit/blob/master/LICENSE-Apache-2.0) (so that [organizations terrified of AGPL](https://opensource.google/docs/using/agpl-policy/) can install the end-user binaries onto their machines).
 
 ## Acknowledgements
 
