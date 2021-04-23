@@ -84,6 +84,21 @@ function getMarkdownStyles(
     bullet_list: listSpacingStyle,
     ordered_list: listSpacingStyle,
 
+    code_inline: {
+      ...Platform.select({
+        ios: {
+          fontFamily: "Courier",
+        },
+        android: {
+          fontFamily: "monospace",
+        },
+        web: {
+          fontFamily: "monospace",
+          letterSpacing: "-0.05em",
+        },
+      }),
+    },
+
     clozeHighlight: {
       color: accentColor,
     },
