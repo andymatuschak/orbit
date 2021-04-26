@@ -3,14 +3,8 @@ import {
   AttachmentMimeType,
   getIDForAttachment,
 } from "@withorbit/core";
-import { getStorageObjectNameForAttachmentID } from "@withorbit/firebase-support";
 import stream from "stream";
-import {
-  _getAttachmentIDForStoredObjectName,
-  _validateAttachmentDataFromReadStream,
-  _validateAttachmentResponse,
-  _validateStoredAttachment,
-} from "./attachments";
+import { _validateAttachmentResponse } from "./attachments";
 import * as Fetch from "node-fetch";
 
 const testData = Buffer.from("Risus facilisis tempus sed dolor ante orci");
@@ -22,42 +16,6 @@ let readable: stream.PassThrough;
 beforeEach(() => {
   readable = new stream.PassThrough();
   readable.end(testData);
-});
-
-describe("_validateAttachmentDataFromReadStream", () => {
-  test("valid ID", async () => {
-    expect(
-      async () =>
-        await _validateAttachmentDataFromReadStream(readable, testDataID),
-    ).not.toThrow();
-  });
-  test("invalid ID", async () => {
-    expect(
-      _validateAttachmentDataFromReadStream(readable, "foo" as AttachmentID),
-    ).rejects.toBeInstanceOf(Error);
-  });
-});
-
-describe("_getAttachmentIDForStoredObjectName", () => {
-  test("round trips", async () => {
-    const id = await getIDForAttachment(testData);
-    const objectName = getStorageObjectNameForAttachmentID(id);
-    expect(_getAttachmentIDForStoredObjectName(objectName)).toEqual(id);
-  });
-});
-
-describe("_validateStoredAttachment", () => {
-  test("valid content type passes", () => {
-    expect(async () =>
-      _validateStoredAttachment(readable, AttachmentMimeType.PNG, testDataID),
-    ).not.toThrow();
-  });
-
-  test("null content type fails", () => {
-    expect(
-      _validateStoredAttachment(readable, null, testDataID),
-    ).rejects.toBeInstanceOf(Error);
-  });
 });
 
 describe("_validateAttachmentResponse", () => {
