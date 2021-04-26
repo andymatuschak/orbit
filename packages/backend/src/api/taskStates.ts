@@ -17,7 +17,7 @@ export const listTaskStates: TypedRouteHandler<
       if ("ids" in query) {
         promptStates = await backend.promptStates.getPromptStates(
           userID,
-          query.ids as PromptTaskID[],
+          Array.isArray(query.ids) ? query.ids : [query.ids],
         );
       } else {
         // TODO HACK: need real type-safe parsing...
