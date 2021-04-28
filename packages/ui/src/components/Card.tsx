@@ -280,8 +280,8 @@ function QAPromptRenderer({
         <View
           style={{
             flex: proportions.revealed[0],
-            marginBottom: layout.gridUnit,
-            width: "66.67%",
+            marginBottom: layout.gridUnit * 2,
+            // width: "66.67%",
           }}
         >
           <CardField
@@ -293,6 +293,8 @@ function QAPromptRenderer({
                 : frontSizeVariantIndex + 1
             }
             smallestSizeVariantIndex={4}
+            overflowColor={reviewItem.colorPalette.backgroundColor}
+            overflowAccentColor={reviewItem.colorPalette.secondaryTextColor}
           />
         </View>
         <FadeView

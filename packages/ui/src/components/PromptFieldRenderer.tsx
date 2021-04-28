@@ -35,6 +35,7 @@ import {
   renderBlockMath,
   renderInlineMath,
 } from "./PromptFieldRenderer/markdownLatexSupport";
+import { SawtoothPattern } from "./SawtoothPattern";
 
 const sizeVariantCount = 5;
 const defaultSmallestSizeVariant = 4;
@@ -289,6 +290,8 @@ export default React.memo(function PromptFieldRenderer(props: {
   attachmentResolutionMap: AttachmentResolutionMap | null;
 
   accentColor?: ColorValue;
+  overflowAccentColor?: ColorValue;
+  overflowColor?: ColorValue;
 
   onLayout?: (sizeVariant: number) => void;
   largestSizeVariantIndex?: number;
@@ -297,6 +300,8 @@ export default React.memo(function PromptFieldRenderer(props: {
   const {
     promptField,
     attachmentResolutionMap,
+    overflowColor,
+    overflowAccentColor,
     onLayout,
     accentColor,
     largestSizeVariantIndex,
@@ -386,12 +391,15 @@ export default React.memo(function PromptFieldRenderer(props: {
   const effectiveAccentColor = accentColor ?? colors.ink;
   const markdownItInstance = useMarkdownItInstance(true);
 
+  const isContentOverflow = markdownHeight && containerSize?.height && markdownHeight > containerSize?.height
+  const shouldClipContent = overflowColor && isContentOverflow
+
   return (
     <View
       style={{
         flex: 1,
         opacity: isLayoutReady ? 1 : 0,
-        overflow: isLayoutReady ? "visible" : "hidden",
+        overflow: isLayoutReady && !shouldClipContent ? "visible" : "hidden",
         justifyContent: "space-between",
       }}
       onLayout={useCallback((event) => {
@@ -425,6 +433,16 @@ export default React.memo(function PromptFieldRenderer(props: {
           {promptField.contents}
         </Markdown>
       </View>
+      { shouldClipContent && (
+        <View style={{ position: "absolute", bottom: 0, left: 0, width: "100%" }}>
+          <SawtoothPattern 
+            color={overflowColor?.toString() ?? colors.ink} 
+            strokeColor={overflowAccentColor?.toString()} 
+            teethWidth={24} 
+            teethHeight={12}
+          />
+        </View>
+      )}
       {imageURL && imageSize && (
         <Image
           source={{ uri: imageURL }}
