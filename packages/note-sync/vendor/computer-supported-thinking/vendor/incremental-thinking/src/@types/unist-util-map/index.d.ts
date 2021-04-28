@@ -7,8 +7,8 @@ declare module "unist-util-map" {
       iteratee: (
         node: unist.Node,
         index: number | null,
-        parent: unist.Node | null
-      ) => unist.Node
+        parent: unist.Node | null,
+      ) => unist.Node,
     ): unist.Node;
   }
 

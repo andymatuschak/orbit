@@ -39,7 +39,7 @@ type AnkiOperationSet = {
 
 export function _computeAnkiOperationSet(
   changes: TaskCacheSessionChange<PromptTask, PromptTaskCollection>[],
-  inMemoryAnkiNoteCache: JSONInMemoryCache<AnkiNote, {}> | null
+  inMemoryAnkiNoteCache: JSONInMemoryCache<AnkiNote, {}> | null,
 ): AnkiOperationSet {
   const output: AnkiOperationSet = {
     addPrompts: [],
@@ -79,7 +79,7 @@ export function _computeAnkiOperationSet(
       case "update":
         if (change.path.length > 1) {
           throw new Error(
-            `Unimplemented and should not occur: ${JSON.stringify(change)}`
+            `Unimplemented and should not occur: ${JSON.stringify(change)}`,
           );
         } else if (change.path.length === 1) {
           if (
@@ -87,7 +87,7 @@ export function _computeAnkiOperationSet(
             change.record.value.type !== "note"
           ) {
             throw new Error(
-              `Unimplemented update: ${JSON.stringify(change, null, "\t")}`
+              `Unimplemented update: ${JSON.stringify(change, null, "\t")}`,
             );
           }
           // TODO ideally pass along the Anki note IDs if we already have them
@@ -100,7 +100,7 @@ export function _computeAnkiOperationSet(
       case "move":
         if (change.path.length !== change.oldPath.length) {
           throw new Error(
-            `Unimplemented: moving between paths at different levels ${change.oldPath} -> ${change.path}`
+            `Unimplemented: moving between paths at different levels ${change.oldPath} -> ${change.path}`,
           );
         } else if (
           change.path.length !== 2 ||
@@ -111,11 +111,11 @@ export function _computeAnkiOperationSet(
           throw new Error(
             `Unimplemented; only moving clozeBlock collections is supported ${
               change.oldPath
-            } -> ${change.path}; ${JSON.stringify(change.record, null, "\t")}`
+            } -> ${change.path}; ${JSON.stringify(change.record, null, "\t")}`,
           );
         } else if (change.path[1] !== change.oldPath[1]) {
           throw new Error(
-            `Unimplemented; can't change leaf ID when moving a cloze block ${change.oldPath} -> ${change.path}`
+            `Unimplemented; can't change leaf ID when moving a cloze block ${change.oldPath} -> ${change.path}`,
           );
         }
 
@@ -148,10 +148,10 @@ export function _computeAnkiOperationSet(
 
 async function executeAnkiOperationSet(
   ankiClient: AnkiClient,
-  operationSet: AnkiOperationSet
+  operationSet: AnkiOperationSet,
 ) {
   console.log(
-    `Executing Anki operation set: ${JSON.stringify(operationSet, null, "\t")}`
+    `Executing Anki operation set: ${JSON.stringify(operationSet, null, "\t")}`,
   );
   await Promise.all([
     operationSet.addPrompts.length > 0
@@ -175,7 +175,7 @@ function getNoteDataFromAnkiNote(ankiNote: AnkiNote): PromptTaskNoteData {
 }
 
 export function _getPromptRecordFromAnkiNote(
-  ankiNote: AnkiNote
+  ankiNote: AnkiNote,
 ): TaskRecord<PromptTask, PromptTaskCollection> {
   const prompt = getAnkiPromptForAnkiNote(ankiNote).prompt;
   const noteData = getNoteDataFromAnkiNote(ankiNote);
@@ -206,14 +206,14 @@ export function _getPromptRecordFromAnkiNote(
 export function _getPromptTaskRecordFromAnkiNoteCacheRecord(
   path: TaskIDPath,
   cacheEntry: TaskRecord<AnkiNote, {}> | null,
-  inMemoryAnkiNoteCache: JSONInMemoryCache<AnkiNote, {}>
+  inMemoryAnkiNoteCache: JSONInMemoryCache<AnkiNote, {}>,
 ): TaskRecord<PromptTask, PromptTaskCollection> | null {
   if (cacheEntry === null) {
     if (path.length >= 3) {
       // It might be a cloze task entry, the child of a real note. We'll see if the parent fits that description.
       const parentNode = getNodeFromInMemoryCache(
         path.slice(0, path.length - 1),
-        inMemoryAnkiNoteCache
+        inMemoryAnkiNoteCache,
       );
       if (parentNode && parentNode.type === "task") {
         const taskRecord = _getPromptRecordFromAnkiNote(parentNode.value);
@@ -237,16 +237,16 @@ export function _getPromptTaskRecordFromAnkiNoteCacheRecord(
       // This node represents a note. We have to extract the note's metadata from a leaf node, since Anki has no way to represent collections.
       if (cacheEntry.childIDs.size === 0) {
         throw new Error(
-          `Anki cache record at ${path} has no children, but it's a collection`
+          `Anki cache record at ${path} has no children, but it's a collection`,
         );
       }
       const childNode = getNodeFromInMemoryCache(
         [...path, cacheEntry.childIDs.values().next().value!],
-        inMemoryAnkiNoteCache
+        inMemoryAnkiNoteCache,
       );
       if (!childNode || childNode.type !== "task") {
         throw new Error(
-          `Anki cache collection at ${path} has invalid child ${childNode}`
+          `Anki cache collection at ${path} has invalid child ${childNode}`,
         );
       }
       const ankiPrompt = getAnkiPromptForAnkiNote(childNode.value);
@@ -267,7 +267,7 @@ export function _getPromptTaskRecordFromAnkiNoteCacheRecord(
 
 export function createAnkiCache(
   ankiClient: AnkiClient,
-  syncToAnkiWebAfterPerformingOperations: boolean
+  syncToAnkiWebAfterPerformingOperations: boolean,
 ): TaskCache<PromptTask, PromptTaskCollection> {
   return {
     performOperations: async function (continuation): Promise<unknown> {
@@ -277,7 +277,7 @@ export function createAnkiCache(
           return continuation({
             async getTaskNodes<Paths extends TaskIDPath[]>(paths: Paths) {
               const cachedNodeMap = await inMemoryAnkiNoteCacheSession.getTaskNodes(
-                paths
+                paths,
               );
               return new Map(
                 [...cachedNodeMap.entries()].map(([path, cacheEntry]) => [
@@ -285,18 +285,18 @@ export function createAnkiCache(
                   _getPromptTaskRecordFromAnkiNoteCacheRecord(
                     path,
                     cacheEntry,
-                    inMemoryAnkiNoteCache
+                    inMemoryAnkiNoteCache,
                   ),
-                ])
+                ]),
               );
             },
             async writeChanges(changes) {
               console.log(
-                `Writing Anki changes: ${JSON.stringify(changes, null, "\t")}`
+                `Writing Anki changes: ${JSON.stringify(changes, null, "\t")}`,
               );
               const operationSet = _computeAnkiOperationSet(
                 changes,
-                inMemoryAnkiNoteCache
+                inMemoryAnkiNoteCache,
               );
 
               await executeAnkiOperationSet(ankiClient, operationSet);
@@ -309,7 +309,7 @@ export function createAnkiCache(
               }
             },
           });
-        }
+        },
       );
 
       return result;

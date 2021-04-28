@@ -16,7 +16,7 @@ describe("finding note IDs", () => {
       expect(noteID).toBeTruthy();
       expect(noteID!.id).toEqual(testBearID);
       expect(noteID!.openURL).toMatchInlineSnapshot(
-        `"bear://x-callback-url/open-note?id=860466DE-8254-47C1-AA71-BA9C0CE18FA3-402-00002ED1CDC440DA"`
+        `"bear://x-callback-url/open-note?id=860466DE-8254-47C1-AA71-BA9C0CE18FA3-402-00002ED1CDC440DA"`,
       );
     });
   });

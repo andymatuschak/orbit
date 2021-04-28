@@ -19,10 +19,10 @@ Some more text`;
     expect(qaPromptNode).toBeTruthy();
 
     expect(processor.stringify(qaPromptNode.question).trimRight()).toEqual(
-      "A question prompt"
+      "A question prompt",
     );
     expect(processor.stringify(qaPromptNode.answer).trimRight()).toEqual(
-      "An answer prompt"
+      "An answer prompt",
     );
   });
 
@@ -38,10 +38,10 @@ Some more text`;
     expect(qaPromptNode).toBeTruthy();
 
     expect(processor.stringify(qaPromptNode.question).trimRight()).toEqual(
-      "A question *prompt*"
+      "A question *prompt*",
     );
     expect(processor.stringify(qaPromptNode.answer).trimRight()).toEqual(
-      "An answer prompt"
+      "An answer prompt",
     );
   });
 

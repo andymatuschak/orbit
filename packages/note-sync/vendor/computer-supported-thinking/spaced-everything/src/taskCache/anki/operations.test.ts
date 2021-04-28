@@ -68,7 +68,7 @@ describe("create tree from anki note list", () => {
           [["foo", "bar"], { type: "task", value: notes[0] }],
           [["foo", "baz"], { type: "task", value: notes[1] }],
           [["quux", "bat"], { type: "task", value: notes[2] }],
-        ])
+        ]),
       );
     });
   });

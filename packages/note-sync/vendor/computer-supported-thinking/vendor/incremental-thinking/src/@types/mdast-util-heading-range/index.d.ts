@@ -16,8 +16,8 @@ declare module "mdast-util-heading-range" {
       start: mdast.Heading,
       nodes: unist.Node[],
       end: unist.Node | null,
-      scope: { parent: unist.Parent; start: number; end: number | null }
-    ) => unist.Node[]
+      scope: { parent: unist.Parent; start: number; end: number | null },
+    ) => unist.Node[],
   ): unist.Node;
   namespace HeadingRange {
     type TestFunction = (value: string, node: mdast.Heading) => boolean;

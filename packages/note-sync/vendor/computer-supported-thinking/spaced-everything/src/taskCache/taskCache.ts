@@ -15,7 +15,7 @@ export type TaskIDPath = TaskID[];
 
 export interface TaskCacheSession<T extends Task, TC extends TaskCollection> {
   getTaskNodes<Paths extends TaskIDPath[]>(
-    paths: Paths
+    paths: Paths,
   ): Promise<Map<Paths[number], TaskRecord<T, TC> | null>>;
   writeChanges(changes: TaskCacheSessionChange<T, TC>[]): Promise<void>;
 }
@@ -44,13 +44,13 @@ export type TaskCacheSessionChange<T extends Task, TC extends TaskCollection> =
 
 export interface TaskCache<T extends Task, TC extends TaskCollection> {
   performOperations(
-    continuation: (session: TaskCacheSession<T, TC>) => Promise<unknown>
+    continuation: (session: TaskCacheSession<T, TC>) => Promise<unknown>,
   ): Promise<unknown>;
 }
 
 export async function _computeCacheDelta<T, TC>(
   cacheSession: TaskCacheSession<T, TC>,
-  sourceSession: TaskSourceSession<T, TC>
+  sourceSession: TaskSourceSession<T, TC>,
 ): Promise<TaskCacheSessionChange<T, TC>[]> {
   const pathQueue: Set<EncodedTaskIDPath> = new Set([encodeTaskIDPath([])]);
   const outChangeSet: TaskCacheSessionChange<T, TC>[] = [];
@@ -59,11 +59,11 @@ export async function _computeCacheDelta<T, TC>(
     path: TaskIDPath,
     cacheRecord: TaskRecord<T, TC> | null,
     sourceRecord: TaskRecord<T, TC> | null,
-    isCacheHit: TaskSourceSession<T, TC>["isCacheHit"]
+    isCacheHit: TaskSourceSession<T, TC>["isCacheHit"],
   ) {
     function enqueueSubtree(record: TaskCollectionRecord<TC>) {
       record.childIDs.forEach((childID) =>
-        pathQueue.add(encodeTaskIDPath([...path, childID]))
+        pathQueue.add(encodeTaskIDPath([...path, childID])),
       );
     }
 
@@ -87,7 +87,7 @@ export async function _computeCacheDelta<T, TC>(
       // Update
       if (cacheRecord.type !== sourceRecord.type) {
         throw new Error(
-          `UNIMPLEMENTED: can't handle changes of tasks into collections (or vice versa). Path: ${path}`
+          `UNIMPLEMENTED: can't handle changes of tasks into collections (or vice versa). Path: ${path}`,
         );
       }
 
@@ -111,7 +111,7 @@ export async function _computeCacheDelta<T, TC>(
 
   while (pathQueue.size > 0) {
     const paths = [...pathQueue.keys()].map((encodedPath) =>
-      decodeTaskIDPath(encodedPath)
+      decodeTaskIDPath(encodedPath),
     );
     pathQueue.clear();
     const [cacheRecordMap, sourceRecordMap] = await Promise.all([
@@ -126,7 +126,7 @@ export async function _computeCacheDelta<T, TC>(
         path,
         cacheRecord,
         sourceRecord,
-        sourceSession.isCacheHit.bind(cacheSession)
+        sourceSession.isCacheHit.bind(cacheSession),
       );
     }
   }
@@ -139,7 +139,7 @@ export async function _computeCacheDelta<T, TC>(
   for (const change of outChangeSet) {
     if (change.type === "move") {
       throw new Error(
-        "Move changes shouldn't ever appear prior to this processing phase."
+        "Move changes shouldn't ever appear prior to this processing phase.",
       ); // I could use the type system for this, but being a bit sloppy.
     }
     if (change.path.length === 0) {
@@ -167,7 +167,7 @@ export async function _computeCacheDelta<T, TC>(
         console.error(
           `Incompatible changes:`,
           JSON.stringify(change, null, "\t"),
-          JSON.stringify(existingChange, null, "\t")
+          JSON.stringify(existingChange, null, "\t"),
         );
       }
     }
@@ -207,7 +207,7 @@ export function encodeTaskIDPath(taskIDPath: TaskIDPath): EncodedTaskIDPath {
 }
 
 export function decodeTaskIDPath(
-  encodedTaskIDPath: EncodedTaskIDPath
+  encodedTaskIDPath: EncodedTaskIDPath,
 ): TaskIDPath {
   if (encodedTaskIDPath === "/") {
     return [];

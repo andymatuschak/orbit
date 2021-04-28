@@ -43,7 +43,7 @@ const promptMarkdown = `Test {cloze} {bar}
 Q. Question
 A. Answer`;
 const [clozePrompt, qaPrompt] = findAllPrompts(
-  processor.runSync(processor.parse(promptMarkdown))
+  processor.runSync(processor.parse(promptMarkdown)),
 ) as [ClozePrompt, QAPrompt];
 const clozePromptID = getIDForPrompt(clozePrompt);
 const qaPromptID = getIDForPrompt(qaPrompt);
@@ -106,7 +106,7 @@ describe("computeAnkiOperations", () => {
           },
         },
       ],
-      cache
+      cache,
     );
     expect(ops.addPrompts).toHaveLength(2);
     expect(ops.addPrompts[0].prompt).toEqual(clozePrompt);
@@ -122,7 +122,7 @@ describe("computeAnkiOperations", () => {
         { type: "delete", path: ["test.md"] },
         { type: "delete", path: ["test2.md"] },
       ],
-      cache
+      cache,
     );
     expect(ops.addPrompts).toHaveLength(0);
     expect(ops.deleteNoteSubtrees).toHaveLength(2);
@@ -136,7 +136,7 @@ describe("computeAnkiOperations", () => {
         { type: "delete", path: ["test.md", "ABC"] },
         { type: "delete", path: ["test.md"] },
       ],
-      cache
+      cache,
     );
     expect(ops.addPrompts).toHaveLength(0);
     expect(ops.deleteNoteSubtrees).toHaveLength(1);
@@ -190,7 +190,7 @@ describe("computeAnkiOperations", () => {
             record: clozeBlockRecord,
           },
         ],
-        cache
+        cache,
       );
       expect(ops.movePrompts).toEqual([
         {
@@ -219,8 +219,8 @@ describe("computeAnkiOperations", () => {
               record: clozeBlockRecord,
             },
           ],
-          cache
-        )
+          cache,
+        ),
       ).toThrow();
     });
 
@@ -237,8 +237,8 @@ describe("computeAnkiOperations", () => {
               record: clozeBlockRecord,
             },
           ],
-          cache
-        )
+          cache,
+        ),
       ).toThrow();
     });
 
@@ -255,8 +255,8 @@ describe("computeAnkiOperations", () => {
               record: clozeBlockRecord,
             },
           ],
-          cache
-        )
+          cache,
+        ),
       ).toThrow();
     });
   });
@@ -322,8 +322,8 @@ test("map anki notes onto prompt task records", async () => {
       _getPromptTaskRecordFromAnkiNoteCacheRecord(
         [],
         await getItemAtPath([], session),
-        cache
-      )
+        cache,
+      ),
     ).toEqual({
       type: "collection",
       value: { type: "root" },
@@ -344,8 +344,8 @@ test("map anki notes onto prompt task records", async () => {
       _getPromptTaskRecordFromAnkiNoteCacheRecord(
         ["a"],
         await getItemAtPath(["a"], session),
-        cache
-      )
+        cache,
+      ),
     ).toEqual({
       type: "collection",
       value: {
@@ -359,17 +359,17 @@ test("map anki notes onto prompt task records", async () => {
       _getPromptTaskRecordFromAnkiNoteCacheRecord(
         ["b"],
         await getItemAtPath(["b"], session),
-        cache
-      )
+        cache,
+      ),
     ).toBeNull();
 
     const clozeLeafIDs = getClozeNoteTaskCollectionChildIDsForClozePrompt(
-      clozePrompt
+      clozePrompt,
     );
     const clozeBlockRecord = _getPromptTaskRecordFromAnkiNoteCacheRecord(
       ["a", clozePromptID],
       await getItemAtPath(["a", clozePromptID], session),
-      cache
+      cache,
     );
     expect(clozeBlockRecord).toMatchObject({
       type: "collection",
@@ -381,8 +381,8 @@ test("map anki notes onto prompt task records", async () => {
       _getPromptTaskRecordFromAnkiNoteCacheRecord(
         ["a", "foobar"],
         await getItemAtPath(["a", "foobar"], session),
-        cache
-      )
+        cache,
+      ),
     ).toBeNull();
 
     expect(clozeLeafIDs.size).toEqual(2);
@@ -391,8 +391,8 @@ test("map anki notes onto prompt task records", async () => {
         _getPromptTaskRecordFromAnkiNoteCacheRecord(
           ["a", clozePromptID, leafID],
           await getItemAtPath(["a", clozePromptID, leafID], session),
-          cache
-        )
+          cache,
+        ),
       ).toEqual({
         type: "task",
         value: { type: "cloze" },
@@ -403,14 +403,14 @@ test("map anki notes onto prompt task records", async () => {
       _getPromptTaskRecordFromAnkiNoteCacheRecord(
         ["a", clozePromptID, "foobarbaz"],
         await getItemAtPath(["a", clozePromptID, "foobarbaz"], session),
-        cache
-      )
+        cache,
+      ),
     ).toBeNull();
 
     const qaPromptRecord = _getPromptTaskRecordFromAnkiNoteCacheRecord(
       ["a", qaPromptID],
       await getItemAtPath(["a", qaPromptID], session),
-      cache
+      cache,
     )!;
     expect(qaPromptRecord).toBeTruthy();
     if (qaPromptRecord.type !== "task") fail();
@@ -433,7 +433,7 @@ test("anki cache integration", async () => {
 
   const ankiCache = createAnkiCache(
     createAnkiConnectClient(instance, "Default"),
-    false
+    false,
   );
 
   await noteSource.performOperations(async (noteSession) => {

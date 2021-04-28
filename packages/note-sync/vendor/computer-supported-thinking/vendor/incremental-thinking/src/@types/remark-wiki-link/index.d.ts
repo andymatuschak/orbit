@@ -6,7 +6,7 @@ declare module "remark-wiki-link" {
 
   function RemarkWikiLink(
     this: unified.Processor,
-    settings?: Partial<RemarkWikiLink.PluginSettings>
+    settings?: Partial<RemarkWikiLink.PluginSettings>,
   ): void;
 
   namespace RemarkWikiLink {
