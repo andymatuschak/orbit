@@ -1,0 +1,24 @@
+name: lint
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "**/*.{ts,tsx}"
+      - "**/*.{js,jsx}"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "**/*.{ts,tsx}"
+      - "**/*.{js,jsx}"
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: "install dependencies"
+        run: yarn install
+      - name: "run lint"
+        run: "yarn lint"
