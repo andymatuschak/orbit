@@ -1,4 +1,5 @@
 import * as functions from "firebase-functions";
+import { isRunningInEmulator } from "./util/isRunningInEmulator";
 
 const serviceConfig = {
   notificationEmails: {
@@ -17,10 +18,10 @@ const serviceConfig = {
   },
   webBaseURL: "https://withorbit.com",
 
-  sessionIDHashSalt: functions.config().logging.session_id_hash_salt,
+  sessionIDHashSalt: isRunningInEmulator ? "emulator-session-salt" : functions.config().logging.session_id_hash_salt,
   mailjet: {
-    apiKey: functions.config().mailjet.api_key,
-    secretKey: functions.config().mailjet.secret_key,
+    apiKey: isRunningInEmulator ? null : functions.config().mailjet.api_key,
+    secretKey: isRunningInEmulator ? null : functions.config().mailjet.secret_key,
   },
 };
 
