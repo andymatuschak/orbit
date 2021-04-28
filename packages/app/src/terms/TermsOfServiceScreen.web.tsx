@@ -22,11 +22,12 @@ export default function TermsOfServiceScreenWeb() {
         <Text style={styles.type.runningText.layoutStyle}>
           Orbit is an experimental research project. If you create an account,
           we will track your responses to prompts and notify you when review
-          sessions are ready. We'll use aggregated response data to conduct
-          research about how people read and learn. We may sometimes publish
-          that research, but never in a way which would reveal your identity. We
-          may allow authors to access anonymized response data for content
-          they've created, to help them understand and improve their work.
+          sessions are ready. We&rsquo;ll use aggregated response data to
+          conduct research about how people read and learn. We may sometimes
+          publish that research, but never in a way which would reveal your
+          identity. We may allow authors to access anonymized response data for
+          content they&rsquo;ve created, to help them understand and improve
+          their work.
         </Text>
         <Spacer units={3} />
         <Text style={styles.type.runningText.layoutStyle}>
@@ -39,9 +40,9 @@ export default function TermsOfServiceScreenWeb() {
         </Text>
         <Spacer units={3} />
         <Text style={styles.type.runningText.layoutStyle}>
-          If you'd like to withdraw consent for our use of your data, would like
-          your data forgotten, would like access to your data, or would like to
-          stop receiving notifications, please{" "}
+          If you&rsquo;d like to withdraw consent for our use of your data,
+          would like your data forgotten, would like access to your data, or
+          would like to stop receiving notifications, please{" "}
           <Link href="mailto:contact@withorbit.com">email us</Link>.
         </Text>
       </View>

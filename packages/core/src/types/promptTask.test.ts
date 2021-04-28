@@ -1,5 +1,5 @@
 import { PromptID } from "../promptID";
-import { applicationPromptType, qaPromptType, clozePromptType } from "./prompt";
+import { qaPromptType, clozePromptType } from "./prompt";
 import {
   getIDForPromptTask,
   getPromptTaskForID,

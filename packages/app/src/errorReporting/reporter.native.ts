@@ -92,7 +92,7 @@ class ExpoIntegration {
       }
     });
 
-    addGlobalEventProcessor(function (event, _hint) {
+    addGlobalEventProcessor(function (event) {
       const that = getCurrentHub().getIntegration(ExpoIntegration);
 
       if (that) {

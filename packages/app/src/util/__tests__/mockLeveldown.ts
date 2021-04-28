@@ -1,4 +1,5 @@
 jest.mock("../leveldown", () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const Memdown = require("memdown");
   return Memdown;
 });

@@ -42,10 +42,9 @@ export async function encodeRawBufferToCIDString(
   return createCIDFromHash(hash, raw.code);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export type CIDEncodable<T> = T extends PromptID | ActionLogID | AttachmentID
   ? CID
-  : T extends object
+  : T extends object // eslint-disable-line @typescript-eslint/ban-types
   ? { [K in keyof T]: CIDEncodable<T[K]> }
   : T extends (infer P)[]
   ? CIDEncodable<P>[]

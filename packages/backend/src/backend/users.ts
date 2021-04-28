@@ -24,7 +24,7 @@ export async function getUserEmail(userID: string): Promise<string | null> {
 type WithFirebaseFields<T> = {
   [K in keyof T]:
     | T[K]
-    | (T[K] extends object
+    | (T[K] extends Record<string, unknown>
         ? WithFirebaseFields<T[K]>
         : admin.firestore.FieldValue);
 };

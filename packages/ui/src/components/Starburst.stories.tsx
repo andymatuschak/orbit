@@ -1,11 +1,4 @@
-import {
-  boolean,
-  button,
-  number,
-  select,
-  text,
-  withKnobs,
-} from "@storybook/addon-knobs";
+import { boolean, button, number, select, text } from "@storybook/addon-knobs";
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import seedrandom from "seedrandom";

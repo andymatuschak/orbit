@@ -1,17 +1,14 @@
-import {
-  AttachmentID,
-  AttachmentMimeType,
-  getIDForAttachment,
-} from "@withorbit/core";
+import { AttachmentMimeType, getIDForAttachment } from "@withorbit/core";
 import stream from "stream";
 import { _validateAttachmentResponse } from "./attachments";
 import * as Fetch from "node-fetch";
 
 const testData = Buffer.from("Risus facilisis tempus sed dolor ante orci");
-let testDataID: AttachmentID;
+
 beforeAll(async () => {
-  testDataID = await getIDForAttachment(testData);
+  await getIDForAttachment(testData);
 });
+
 let readable: stream.PassThrough;
 beforeEach(() => {
   readable = new stream.PassThrough();

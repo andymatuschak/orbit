@@ -21,10 +21,10 @@ export async function addLatexSupport(
 
 export const renderInlineMath: MarkdownDisplay.RenderFunction = (
   node,
-  children,
-  parent,
-  styles,
-  inheritedStyles = {},
+  // children,
+  // parent,
+  // styles,
+  // inheritedStyles = {},
 ) => {
   let output: string;
   try {
@@ -44,10 +44,10 @@ export const renderInlineMath: MarkdownDisplay.RenderFunction = (
 
 export const renderBlockMath: MarkdownDisplay.RenderFunction = (
   node,
-  children,
-  parent,
+  _children,
+  _parent,
   styles,
-  inheritedStyles = {},
+  inheritedStyles = {}, // eslint-disable-line @typescript-eslint/no-unused-vars
 ) => {
   let output: string;
   try {

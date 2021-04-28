@@ -31,6 +31,6 @@ export default function useResolvedReviewItems(
       setReviewItems(reviewItems);
       sendResolvedReviewItemsToHost(reviewItems);
     });
-  }, [embeddedItems]);
+  }, [embeddedItems, referrer]);
   return reviewItems;
 }

@@ -1,6 +1,6 @@
 import { getIntervalSequenceForSchedule } from "@withorbit/core";
 import React, { useMemo } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { Animated, View } from "react-native";
 import { layout, type } from "../styles";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import {

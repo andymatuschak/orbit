@@ -5,7 +5,6 @@ import {
   Prompt,
   PromptID,
 } from "@withorbit/core";
-import { getITPromptForOrbitPrompt } from "@withorbit/note-sync";
 import DataRecordStore from "./dataRecordStore";
 
 export interface DataRecordClientFileStore {

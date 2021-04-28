@@ -169,6 +169,7 @@ function approximatePromptTaskNoteData(
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function unreachableCaseError(witness: never): Error {
   return new Error("unreachable");
 }

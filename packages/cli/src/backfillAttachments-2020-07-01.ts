@@ -1,6 +1,5 @@
 import { Command } from "@oclif/command";
-import { Attachment, getIDForAttachment } from "@withorbit/core";
-import { getAdminApp, uploadAttachment } from "./adminApp";
+import { getAdminApp } from "./adminApp";
 
 class BackfillAttachments extends Command {
   async run() {
@@ -35,7 +34,6 @@ class BackfillAttachments extends Command {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 (BackfillAttachments.run() as Promise<unknown>).catch(
-  require("@oclif/errors/handle"),
+  require("@oclif/errors/handle"), // eslint-disable-line @typescript-eslint/no-var-requires
 );
