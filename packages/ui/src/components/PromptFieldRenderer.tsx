@@ -436,6 +436,8 @@ export default React.memo(function PromptFieldRenderer(props: {
           <SawtoothPattern 
             fillColor={effectiveSawteethFillColor} 
             strokeColor={effectiveSawteethBorderColor} 
+            teethWidth={layout.gridUnit * 3} 
+            teethHeight={layout.gridUnit}
           />
         </View>
       )}
