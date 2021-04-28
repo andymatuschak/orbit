@@ -1,10 +1,12 @@
 module.exports = {
   parser: "@typescript-eslint/parser",
-  plugins: ["react-hooks"],
+  plugins: ["react", "react-hooks", "@typescript-eslint", "prettier"],
   extends: [
     "plugin:react/recommended",
     "plugin:@typescript-eslint/recommended",
-    "prettier/@typescript-eslint",
+    "prettier",
+    "plugin:prettier/recommended",
+    "plugin:react-hooks/recommended",
   ],
   rules: {
     "@typescript-eslint/ban-ts-comment": "off",
@@ -17,6 +19,10 @@ module.exports = {
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
+
+    "react/prop-types": "off",
+
+    "prettier/prettier": "error",
   },
   settings: {
     react: {
