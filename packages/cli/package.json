@@ -17,7 +17,7 @@
     "yargs": "^16.1.0"
   },
   "engines": {
-    "node": "12"
+    "node": "14"
   },
   "scripts": {
     "build": "tsc -b",
