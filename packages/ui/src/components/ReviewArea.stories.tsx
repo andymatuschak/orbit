@@ -26,18 +26,14 @@ export default {
   decorators: [withKnobs],
 };
 
-export function Basic() {
-  const colorKnobOffset = number("color shift", 0, {
-    min: 0,
-    max: Object.keys(colors.palettes).length - 1,
-    step: 1,
-    range: true,
-  });
+type ReviewAreaTemplateProps = {
+  colorKnobOffset: number;
+  questionOverrideText: string;
+  answerOverrideText: string;
+  sourceContext: string;
+}
 
-  const questionOverrideText = text("Question override text", "");
-  const answerOverrideText = text("Answer override text", "");
-  const sourceContext = text("Source context", "");
-
+function ReviewAreaTemplate({ colorKnobOffset, questionOverrideText, answerOverrideText, sourceContext }: ReviewAreaTemplateProps) {
   const items = useMemo<ReviewAreaItem[]>(
     () =>
       Array.from(new Array(25).keys()).map((i) =>
@@ -132,4 +128,41 @@ export function Basic() {
       </View>
     </Animated.View>
   );
+}
+
+export function Basic() {
+  const colorKnobOffset = number("color shift", 0, {
+    min: 0,
+    max: Object.keys(colors.palettes).length - 1,
+    step: 1,
+    range: true,
+  });
+
+  const questionOverrideText = text("Question override text", "");
+  const answerOverrideText = text("Answer override text", "");
+  const sourceContext = text("Source context", "");
+
+  return <ReviewAreaTemplate colorKnobOffset={colorKnobOffset} questionOverrideText={questionOverrideText} answerOverrideText={answerOverrideText} sourceContext={sourceContext} />
+}
+
+export function OverflowingPrompt() {
+  const colorKnobOffset = number("color shift", 0, {
+    min: 0,
+    max: Object.keys(colors.palettes).length - 1,
+    step: 1,
+    range: true,
+  });
+
+  const questionOverrideText = text("Question override text", `
+  What's the role of memory in this story?
+
+  1. Betsy wanted to bring Jacob a present.
+  2. She shook her piggy bank.
+  3. It made no sound.
+  4. She went to look for her mother.
+  `);
+  const answerOverrideText = text("Answer override text", `You must know many things to make sense of even this simple story: e.g. presents are usually purchased (not repurposed); children keep coins (not bills) in piggy banks, so no sound means no money; etc.`);
+  const sourceContext = text("Source context", "");
+
+  return <ReviewAreaTemplate colorKnobOffset={colorKnobOffset} questionOverrideText={questionOverrideText} answerOverrideText={answerOverrideText} sourceContext={sourceContext} />
 }
