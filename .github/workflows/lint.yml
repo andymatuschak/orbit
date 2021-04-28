@@ -5,14 +5,18 @@ on:
     branches:
       - master
     paths:
-      - "**/*.{ts,tsx}"
-      - "**/*.{js,jsx}"
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/*.js"
+      - "**/*.jsx"
   pull_request:
     branches:
       - master
     paths:
-      - "**/*.{ts,tsx}"
-      - "**/*.{js,jsx}"
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/*.js"
+      - "**/*.jsx"
 jobs:
   lint:
     runs-on: ubuntu-latest
