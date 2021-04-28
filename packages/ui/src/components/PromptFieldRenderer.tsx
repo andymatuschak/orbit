@@ -289,9 +289,7 @@ export default React.memo(function PromptFieldRenderer(props: {
   promptField: PromptField;
   attachmentResolutionMap: AttachmentResolutionMap | null;
 
-  accentColor?: ColorValue;
-  overflowAccentColor?: ColorValue;
-  overflowColor?: ColorValue;
+  colorPalette?: colors.ColorPalette;
 
   onLayout?: (sizeVariant: number) => void;
   largestSizeVariantIndex?: number;
@@ -300,10 +298,8 @@ export default React.memo(function PromptFieldRenderer(props: {
   const {
     promptField,
     attachmentResolutionMap,
-    overflowColor,
-    overflowAccentColor,
+    colorPalette,
     onLayout,
-    accentColor,
     largestSizeVariantIndex,
     smallestSizeVariantIndex,
   } = props;
@@ -388,11 +384,13 @@ export default React.memo(function PromptFieldRenderer(props: {
     onLayout?.(sizeVariantRef.current);
   }, [isLayoutReady, onLayout, sizeVariantRef]);
 
-  const effectiveAccentColor = accentColor ?? colors.ink;
+  const effectiveAccentColor = colorPalette?.accentColor ?? colors.ink;
   const markdownItInstance = useMarkdownItInstance(true);
 
   const isContentOverflow = markdownHeight && containerSize?.height && markdownHeight > containerSize?.height
-  const shouldClipContent = overflowColor && isContentOverflow
+  const shouldClipContent = colorPalette && isContentOverflow
+  const effectiveSawteethFillColor = colorPalette?.backgroundColor?.toString() ?? colors.ink
+  const effectiveSawteethBorderColor = colorPalette?.secondaryTextColor?.toString()
 
   return (
     <View
@@ -436,10 +434,8 @@ export default React.memo(function PromptFieldRenderer(props: {
       { shouldClipContent && (
         <View style={{ position: "absolute", bottom: 0, left: 0, width: "100%" }}>
           <SawtoothPattern 
-            color={overflowColor?.toString() ?? colors.ink} 
-            strokeColor={overflowAccentColor?.toString()} 
-            teethWidth={24} 
-            teethHeight={12}
+            fillColor={effectiveSawteethFillColor} 
+            strokeColor={effectiveSawteethBorderColor} 
           />
         </View>
       )}

@@ -281,7 +281,7 @@ function QAPromptRenderer({
           style={{
             flex: proportions.revealed[0],
             marginBottom: layout.gridUnit * 2,
-            // width: "66.67%",
+            width: "66.67%",
           }}
         >
           <CardField
@@ -293,8 +293,7 @@ function QAPromptRenderer({
                 : frontSizeVariantIndex + 1
             }
             smallestSizeVariantIndex={4}
-            overflowColor={reviewItem.colorPalette.backgroundColor}
-            overflowAccentColor={reviewItem.colorPalette.secondaryTextColor}
+            colorPalette={reviewItem.colorPalette}
           />
         </View>
         <FadeView
@@ -388,7 +387,7 @@ function ClozePromptRenderer({
           <CardField
             promptField={back}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
-            accentColor={accentColor}
+            colorPalette={reviewItem.colorPalette}
           />
         </FadeView>
         <FadeView
@@ -399,7 +398,7 @@ function ClozePromptRenderer({
           <CardField
             promptField={front}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
-            accentColor={accentColor}
+            colorPalette={reviewItem.colorPalette}
           />
         </FadeView>
       </View>
