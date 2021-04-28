@@ -1,2 +1,5 @@
 note-sync/vendor/**/*
+web-component/build/**/*
+app/.expo/**/*
+app/web-build/**/*
 */dist/**/*
