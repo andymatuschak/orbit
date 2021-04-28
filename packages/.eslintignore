@@ -1,1 +1,2 @@
-vendor/**/*
+note-sync/vendor/**/*
+*/dist/**/*

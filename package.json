@@ -5,8 +5,8 @@
     "watch": "tsc -b -w packages/tsconfig.json",
     "test": "cd packages; npx jest --projects anki-import api-client backend core firebase-support web-component note-sync --runInBand",
     "test:watch": "yarn run test --watch",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint": "cd packages; eslint ./; cd ..",
+    "lint:fix": "cd packages; eslint ./ --fix; cd .."
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.6.0",

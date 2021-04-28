@@ -9,6 +9,11 @@ module.exports = {
     "plugin:react-hooks/recommended",
   ],
   rules: {
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { varsIgnorePattern: "_^", argsIgnorePattern: "_^" },
+    ],
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-use-before-define": "off",
@@ -24,6 +29,14 @@ module.exports = {
 
     "prettier/prettier": "error",
   },
+  overrides: [
+    {
+      files: ["app/metro.config.js", "app/webpack.config.js"],
+      rules: {
+        "@typescript-eslint/no-var-requires": "off",
+      },
+    },
+  ],
   settings: {
     react: {
       version: "detect",
