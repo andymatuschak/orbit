@@ -387,10 +387,14 @@ export default React.memo(function PromptFieldRenderer(props: {
   const effectiveAccentColor = colorPalette?.accentColor ?? colors.ink;
   const markdownItInstance = useMarkdownItInstance(true);
 
-  const isContentOverflow = markdownHeight && containerSize?.height && markdownHeight > containerSize?.height
-  const shouldClipContent = colorPalette && isContentOverflow
-  const effectiveSawteethFillColor = colorPalette?.backgroundColor?.toString() ?? colors.ink
-  const effectiveSawteethBorderColor = colorPalette?.secondaryTextColor?.toString()
+  const isContentOverflow =
+    markdownHeight &&
+    containerSize?.height &&
+    markdownHeight > containerSize?.height;
+  const shouldClipContent = colorPalette && isContentOverflow;
+  const effectiveSawteethFillColor =
+    colorPalette?.backgroundColor?.toString() ?? colors.ink;
+  const effectiveSawteethBorderColor = colorPalette?.secondaryTextColor?.toString();
 
   return (
     <View
@@ -431,12 +435,14 @@ export default React.memo(function PromptFieldRenderer(props: {
           {promptField.contents}
         </Markdown>
       </View>
-      { shouldClipContent && (
-        <View style={{ position: "absolute", bottom: 0, left: 0, width: "100%" }}>
-          <SawtoothPattern 
-            fillColor={effectiveSawteethFillColor} 
-            strokeColor={effectiveSawteethBorderColor} 
-            teethWidth={layout.gridUnit * 3} 
+      {shouldClipContent && (
+        <View
+          style={{ position: "absolute", bottom: 0, left: 0, width: "100%" }}
+        >
+          <SawtoothPattern
+            fillColor={effectiveSawteethFillColor}
+            strokeColor={effectiveSawteethBorderColor}
+            teethWidth={layout.gridUnit * 3}
             teethHeight={layout.gridUnit}
           />
         </View>

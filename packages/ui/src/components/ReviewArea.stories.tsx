@@ -31,9 +31,14 @@ type ReviewAreaTemplateProps = {
   questionOverrideText: string;
   answerOverrideText: string;
   sourceContext: string;
-}
+};
 
-function ReviewAreaTemplate({ colorKnobOffset, questionOverrideText, answerOverrideText, sourceContext }: ReviewAreaTemplateProps) {
+function ReviewAreaTemplate({
+  colorKnobOffset,
+  questionOverrideText,
+  answerOverrideText,
+  sourceContext,
+}: ReviewAreaTemplateProps) {
   const items = useMemo<ReviewAreaItem[]>(
     () =>
       Array.from(new Array(25).keys()).map((i) =>
@@ -142,7 +147,14 @@ export function Basic() {
   const answerOverrideText = text("Answer override text", "");
   const sourceContext = text("Source context", "");
 
-  return <ReviewAreaTemplate colorKnobOffset={colorKnobOffset} questionOverrideText={questionOverrideText} answerOverrideText={answerOverrideText} sourceContext={sourceContext} />
+  return (
+    <ReviewAreaTemplate
+      colorKnobOffset={colorKnobOffset}
+      questionOverrideText={questionOverrideText}
+      answerOverrideText={answerOverrideText}
+      sourceContext={sourceContext}
+    />
+  );
 }
 
 export function OverflowingPrompt() {
@@ -153,16 +165,29 @@ export function OverflowingPrompt() {
     range: true,
   });
 
-  const questionOverrideText = text("Question override text", `
+  const questionOverrideText = text(
+    "Question override text",
+    `
   What's the role of memory in this story?
 
   1. Betsy wanted to bring Jacob a present.
   2. She shook her piggy bank.
   3. It made no sound.
   4. She went to look for her mother.
-  `);
-  const answerOverrideText = text("Answer override text", `You must know many things to make sense of even this simple story: e.g. presents are usually purchased (not repurposed); children keep coins (not bills) in piggy banks, so no sound means no money; etc.`);
+  `,
+  );
+  const answerOverrideText = text(
+    "Answer override text",
+    `You must know many things to make sense of even this simple story: e.g. presents are usually purchased (not repurposed); children keep coins (not bills) in piggy banks, so no sound means no money; etc.`,
+  );
   const sourceContext = text("Source context", "");
 
-  return <ReviewAreaTemplate colorKnobOffset={colorKnobOffset} questionOverrideText={questionOverrideText} answerOverrideText={answerOverrideText} sourceContext={sourceContext} />
+  return (
+    <ReviewAreaTemplate
+      colorKnobOffset={colorKnobOffset}
+      questionOverrideText={questionOverrideText}
+      answerOverrideText={answerOverrideText}
+      sourceContext={sourceContext}
+    />
+  );
 }
