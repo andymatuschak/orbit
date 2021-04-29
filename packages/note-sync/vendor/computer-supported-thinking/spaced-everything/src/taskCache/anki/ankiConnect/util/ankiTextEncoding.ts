@@ -20,7 +20,7 @@ function ankiClozePlugin(this: unified.Processor) {
       ankiClozeIndex: number;
       all: (node: unist.Node) => string[];
     },
-    node: unist.Node
+    node: unist.Node,
   ) {
     const interiorContent = this.all(node).join("");
     const output = `{{c${this.ankiClozeIndex}::${interiorContent}}}`;
@@ -36,13 +36,13 @@ export function createAnkiTextFromClozePrompt(prompt: ClozePrompt): string {
 }
 
 export function createClozePromptFromAnkiOriginalMarkdownField(
-  originalMarkdown: string
+  originalMarkdown: string,
 ): ClozePrompt {
   const ast = processor.parse(originalMarkdown);
   const resultingNode = processor.runSync(ast) as mdast.Root;
   if (resultingNode.children.length !== 1) {
     throw new Error(
-      `Anki note text has no Markdown content: ${originalMarkdown}`
+      `Anki note text has no Markdown content: ${originalMarkdown}`,
     );
   }
   return {
@@ -52,17 +52,17 @@ export function createClozePromptFromAnkiOriginalMarkdownField(
 }
 
 export function encodeTaskIDPathToAnkiPathField(
-  taskIDPath: TaskIDPath
+  taskIDPath: TaskIDPath,
 ): AnkiPathField {
   return Buffer.from(encodeTaskIDPath(taskIDPath)).toString(
-    "base64"
+    "base64",
   ) as AnkiPathField;
 }
 
 export function decodeAnkiPathFieldToTaskIDPath(
-  ankiPathField: AnkiPathField
+  ankiPathField: AnkiPathField,
 ): TaskIDPath {
   return decodeTaskIDPath(
-    Buffer.from(ankiPathField, "base64").toString("ascii") as EncodedTaskIDPath
+    Buffer.from(ankiPathField, "base64").toString("ascii") as EncodedTaskIDPath,
   );
 }

@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
 });
 
 export default React.memo(function Button(props: ButtonProps) {
-  const { onPendingInteractionStateDidChange, backgroundColor, style } = props;
+  const { onPendingInteractionStateDidChange, style } = props;
 
   const href = "href" in props ? props.href : null;
   const onPress = "onPress" in props ? props.onPress : null;

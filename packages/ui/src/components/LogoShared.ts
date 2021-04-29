@@ -1,4 +1,3 @@
-import { ImageStyle, StyleProp } from "react-native";
 import unreachableCaseError from "../util/unreachableCaseError";
 
 export interface LogoProps {

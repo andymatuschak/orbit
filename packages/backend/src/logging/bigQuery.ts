@@ -1,17 +1,6 @@
 import * as BigQuery from "@google-cloud/bigquery";
 import crypto from "crypto";
-import {
-  ActionLog,
-  ActionLogID,
-  ActionLogType,
-  getIDForActionLog,
-  PromptState,
-} from "@withorbit/core";
-import {
-  ActionLogDocument,
-  ServerTimestamp,
-  serverTimestampToTimestampMillis,
-} from "@withorbit/firebase-support";
+import { ActionLogID, ActionLogType, getIDForActionLog } from "@withorbit/core";
 import path from "path";
 import serviceConfig from "../serviceConfig";
 import {

@@ -29,7 +29,7 @@ export function getNodeFromInMemoryCache<
   TC extends TaskCollection & AnyJson
 >(
   path: TaskIDPath,
-  cache: JSONInMemoryCache<T, TC>
+  cache: JSONInMemoryCache<T, TC>,
 ): JSONCacheNode<T, TC> | null {
   return path.reduce((node: JSONCacheNode<T, TC> | null, component) => {
     if (node === null) {
@@ -48,7 +48,7 @@ async function getTaskNodes<
   TC extends TaskCollection & AnyJson
 >(
   paths: Paths,
-  cache: JSONInMemoryCache<T, TC>
+  cache: JSONInMemoryCache<T, TC>,
 ): ReturnType<TaskSourceSession<T, TC>["getTaskNodes"]> {
   return new Map(
     paths.map((path): [TaskIDPath, TaskRecord<T, TC> | null] => {
@@ -74,7 +74,7 @@ async function getTaskNodes<
           },
         ];
       }
-    })
+    }),
   );
 }
 
@@ -97,13 +97,13 @@ export function JSONInMemoryCache<
           function insertRecord(
             record: TaskRecord<T, TC>,
             cacheNode: JSONCacheNode<T, TC>,
-            leafID: TaskID
+            leafID: TaskID,
           ) {
             if (cacheNode.type === "task") {
               throw new Error(
                 `Can't insert ${JSON.stringify(
-                  record
-                )} because its parent-to-be is a task`
+                  record,
+                )} because its parent-to-be is a task`,
               );
             }
 
@@ -120,7 +120,7 @@ export function JSONInMemoryCache<
 
           function deleteRecord(
             parentNode: JSONCacheNode<T, TC>,
-            leafID: TaskID
+            leafID: TaskID,
           ) {
             if (parentNode.type === "task") {
               throw new Error("Expected collection, found task");
@@ -135,7 +135,7 @@ export function JSONInMemoryCache<
               const baseName = pathComponents.pop()!;
               const parentCacheNode = getNodeFromInMemoryCache(
                 pathComponents,
-                cache
+                cache,
               );
               if (parentCacheNode === null) {
                 throw new Error(`Unknown path: ${pathComponents}`);
@@ -161,7 +161,7 @@ export function JSONInMemoryCache<
                   cacheNode = childNode;
                 } else {
                   throw new Error(
-                    `Attempting to insert record at ${change.path}, but ${component} doesn't exist!`
+                    `Attempting to insert record at ${change.path}, but ${component} doesn't exist!`,
                   );
                 }
               }
@@ -169,31 +169,31 @@ export function JSONInMemoryCache<
             } else if (change.type === "move") {
               const oldParent = getNodeFromInMemoryCache(
                 change.oldPath.slice(0, change.oldPath.length - 1),
-                cache
+                cache,
               );
               if (oldParent === null) {
                 throw new Error(
-                  `Can't move from ${change.oldPath} to ${change.path} because the old parent doesn't exist`
+                  `Can't move from ${change.oldPath} to ${change.path} because the old parent doesn't exist`,
                 );
               }
               const newParent = getNodeFromInMemoryCache(
                 change.path.slice(0, change.path.length - 1),
-                cache
+                cache,
               );
               if (newParent === null) {
                 throw new Error(
-                  `Can't move from ${change.oldPath} to ${change.path} because the new parent doesn't exist`
+                  `Can't move from ${change.oldPath} to ${change.path} because the new parent doesn't exist`,
                 );
               }
 
               deleteRecord(
                 oldParent,
-                change.oldPath[change.oldPath.length - 1]
+                change.oldPath[change.oldPath.length - 1],
               );
               insertRecord(
                 change.record,
                 newParent,
-                change.path[change.path.length - 1]
+                change.path[change.path.length - 1],
               );
             } else {
               throw unreachableCaseError(change);
@@ -211,7 +211,7 @@ export default function JSONCache<
   TC extends TaskCollection & AnyJson
 >(
   path: string,
-  initialValue: JSONCacheCollectionNode<T, TC>
+  initialValue: JSONCacheCollectionNode<T, TC>,
 ): TaskCache<T, TC> {
   return {
     performOperations: async (continuation) => {
@@ -232,7 +232,7 @@ export default function JSONCache<
       await fs.promises.writeFile(
         path,
         JSON.stringify(inMemoryCache.rootNode),
-        "utf-8"
+        "utf-8",
       );
     },
   };

@@ -7,7 +7,6 @@ import {
   QAPrompt,
   qaPromptType,
 } from "@withorbit/core";
-import { styles } from "@withorbit/ui";
 import { EmbeddedQAPrompt } from "../../../embedded-support/src/embeddedScreenInterface";
 import {
   getAttachmentURLsInEmbeddedItem,
@@ -31,7 +30,6 @@ const testEmbeddedClozePrompt: EmbeddedClozePrompt = {
   body: { contents: "Test {cloze}" },
 };
 
-const testColorPalette = styles.colors.palettes.red;
 describe("getReviewItemFromEmbeddedItem", () => {
   test("qa prompt", () => {
     const attachmentResolutionMap = new Map();

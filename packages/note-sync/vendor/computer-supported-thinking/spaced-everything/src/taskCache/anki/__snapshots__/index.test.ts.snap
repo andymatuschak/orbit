@@ -25,7 +25,7 @@ Array [
       "type": "collection",
       "value": Object {
         "externalNoteID": null,
-        "modificationTimestamp": 1590539564954,
+        "modificationTimestamp": 1619578284100,
         "noteTitle": "Test",
         "type": "note",
       },
@@ -43,7 +43,7 @@ Array [
       "type": "collection",
       "value": Object {
         "externalNoteID": null,
-        "modificationTimestamp": 1590539564955,
+        "modificationTimestamp": 1619578284100,
         "noteTitle": "Another {with} {cloze}",
         "type": "note",
       },
@@ -64,7 +64,7 @@ Array [
       "value": Object {
         "noteData": Object {
           "externalNoteID": null,
-          "modificationTimestamp": 1590539564955,
+          "modificationTimestamp": 1619578284100,
           "noteTitle": "Another {with} {cloze}",
         },
         "prompt": Object {
@@ -235,7 +235,7 @@ Object {
     Object {
       "noteData": Object {
         "externalNoteID": null,
-        "modificationTimestamp": 1590539564955,
+        "modificationTimestamp": 1619578284100,
         "noteTitle": "Another {with} {cloze}",
       },
       "path": Array [

@@ -78,9 +78,9 @@ function Contents() {
       </Paragraph>
       <Paragraph>
         Happily, cognitive scientists have developed simple strategies which can
-        ensure you'll remember something permanently. Orbit lets authors build
-        those techniques into their writing, making it easy for you to remember
-        what you&rsquo;ve read.
+        ensure you&rsquo;ll remember something permanently. Orbit lets authors
+        build those techniques into their writing, making it easy for you to
+        remember what you&rsquo;ve read.
       </Paragraph>
       <Paragraph>
         As you read, Orbit occasionally prompts you with quick questions to
@@ -261,7 +261,7 @@ function LargeLayout({ width }: { width: number }) {
   );
 }
 
-function SmallLayout({ width }: { width: number }) {
+function SmallLayout() {
   return (
     <View style={{ padding: styles.layout.edgeMargin }}>
       <View
@@ -331,11 +331,7 @@ export default function LearnMoreScreenWeb() {
     >
       {size && (
         <SizeContext.Provider value={size}>
-          {size === "large" ? (
-            <LargeLayout width={width} />
-          ) : (
-            <SmallLayout width={width} />
-          )}
+          {size === "large" ? <LargeLayout width={width} /> : <SmallLayout />}
         </SizeContext.Provider>
       )}
     </View>

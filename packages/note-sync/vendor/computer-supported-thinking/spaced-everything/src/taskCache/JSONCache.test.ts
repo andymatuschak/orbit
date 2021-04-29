@@ -14,7 +14,7 @@ let testCache: TaskCache<TestTask, TestTaskCollection>;
 
 function getMockActivitySourceNodeAtPath(
   path: TaskIDPath,
-  activitySourceRootNode: JSONCacheCollectionNode<TestTask, TestTaskCollection>
+  activitySourceRootNode: JSONCacheCollectionNode<TestTask, TestTaskCollection>,
 ): JSONCacheNode<TestTask, TestTaskCollection> | null {
   return path.reduce(
     (node: JSONCacheNode<TestTask, TestTaskCollection> | null, component) => {
@@ -26,7 +26,7 @@ function getMockActivitySourceNodeAtPath(
         throw new Error("Unexpectedly encountered task node in mock cache");
       }
     },
-    activitySourceRootNode
+    activitySourceRootNode,
   );
 }
 
@@ -68,7 +68,7 @@ describe("mock cache", () => {
     await testCache.performOperations(async (session) => {
       const collectionResult = (await getItemAtPath(["a"], session))!;
       expect(
-        collectionResult.type === "collection" && collectionResult.childIDs
+        collectionResult.type === "collection" && collectionResult.childIDs,
       ).toEqual(new Set(["b"]));
 
       const childResult = (await getItemAtPath(["a", "b"], session))!;
@@ -133,7 +133,7 @@ describe("mock cache", () => {
       const parentNode = (await getItemAtPath(["a"], session))!;
       expect(parentNode).toBeTruthy();
       expect(parentNode.type === "collection" && parentNode.value.color).toBe(
-        "blue"
+        "blue",
       );
       expect(await getItemAtPath(["a", "b"], session)).toBeNull();
     });

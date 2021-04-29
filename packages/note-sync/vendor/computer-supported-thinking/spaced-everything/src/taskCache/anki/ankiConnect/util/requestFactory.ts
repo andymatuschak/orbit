@@ -35,7 +35,7 @@ function createRequest<
 >(
   actionName: string,
   parameters?: AnyJson,
-  responseTransformer?: (data: ServerResponseData) => TransformedResponseData
+  responseTransformer?: (data: ServerResponseData) => TransformedResponseData,
 ): RequestSpec<TransformedResponseData> {
   return {
     config: {
@@ -65,7 +65,7 @@ const untitledNoteSentinel = "[untitled note]";
 
 function getAnkiFieldsForAnkiPrompt(ankiPrompt: AnkiPrompt): AnkiNoteFields {
   const prompt = ankiPrompt.prompt;
-  let noteTitle = ankiPrompt.noteData.noteTitle ?? untitledNoteSentinel;
+  const noteTitle = ankiPrompt.noteData.noteTitle ?? untitledNoteSentinel;
   const noteURL = ankiPrompt.noteData.externalNoteID?.openURL?.toString() ?? "";
   if (prompt.type === clozePromptType) {
     return {
@@ -95,7 +95,7 @@ export function getAnkiPromptForAnkiNote(ankiNote: AnkiNote): AnkiPrompt {
   if (isAnkiClozeNote(ankiNote)) {
     return {
       prompt: createClozePromptFromAnkiOriginalMarkdownField(
-        ankiNote.fields._OriginalMarkdown
+        ankiNote.fields._OriginalMarkdown,
       ),
       path: decodeAnkiPathFieldToTaskIDPath(ankiNote.fields._Path),
       noteData: JSON.parse(ankiNote.fields._NoteDataJSON),
@@ -113,7 +113,7 @@ export function getAnkiPromptForAnkiNote(ankiNote: AnkiNote): AnkiPrompt {
 
 export function addNotes(
   ankiPrompts: AnkiPrompt[],
-  deckName: string
+  deckName: string,
 ): RequestSpec<AnkiNoteID[]> {
   return createRequest("addNotes", {
     notes: ankiPrompts.map((ankiPrompt) => {
@@ -137,7 +137,7 @@ export function addNotes(
 }
 
 export function getAnkiNoteIDsForSubtree(
-  path: TaskIDPath
+  path: TaskIDPath,
 ): RequestSpec<AnkiNoteID[]> {
   return createRequest("findNotes", {
     // I don't know why the * is necessary. Anki doesn't find the result otherwise.
@@ -146,7 +146,7 @@ export function getAnkiNoteIDsForSubtree(
 }
 
 export function deleteAnkiNoteIDs(
-  ankiNoteIDs: AnkiNoteID[]
+  ankiNoteIDs: AnkiNoteID[],
 ): RequestSpec<null> {
   return createRequest("deleteNotes", { notes: ankiNoteIDs });
 }
@@ -156,7 +156,7 @@ export function findAllPromptAnkiNoteIDs(): RequestSpec<AnkiNoteID[]> {
 }
 
 export function getAnkiNotes(
-  ankiNoteIDs: AnkiNoteID[]
+  ankiNoteIDs: AnkiNoteID[],
 ): RequestSpec<AnkiNote[]> {
   return createRequest("notesInfo", { notes: ankiNoteIDs }, (notes) =>
     notes.map((note: any) => {
@@ -168,7 +168,7 @@ export function getAnkiNotes(
         ...note,
         fields,
       };
-    })
+    }),
   );
 }
 
@@ -193,7 +193,7 @@ export function createModel(
   modelName: string,
   fields: string[],
   css: string,
-  cardTemplates: { Front: string; Back: string }
+  cardTemplates: { Front: string; Back: string },
 ) {
   return createRequest("createModel", {
     modelName,

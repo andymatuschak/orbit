@@ -136,18 +136,18 @@ A. Answer`,
       expect(result.childIDs.size).toBe(1);
       if (result.value.type !== "note") fail();
       expect(result.value.type === "note" && result.value.noteTitle).toEqual(
-        "Titled note"
+        "Titled note",
       );
       const promptID = result.childIDs.values().next().value;
 
       const promptBlockResult = (await getItemAtPath(
         ["/b.md", promptID],
-        session
+        session,
       ))!;
       expect(promptBlockResult).toBeTruthy();
       if (promptBlockResult.type !== "collection") fail();
       expect(promptBlockResult.childIDs).toEqual(
-        new Set([`${promptID}-0`, `${promptID}-1`])
+        new Set([`${promptID}-0`, `${promptID}-1`]),
       );
       const promptBlock = promptBlockResult.value;
       if (promptBlock.type !== "clozeBlock") fail();
@@ -170,7 +170,7 @@ A. Answer`,
 
       const promptResult = (await getItemAtPath(
         ["/b.md", promptID, "0"],
-        session
+        session,
       ))!;
       expect(promptResult).toBeTruthy();
       if (promptResult.type !== "task") fail();
@@ -186,13 +186,13 @@ A. Answer`,
       expect(result.childIDs.size).toBe(1);
       if (result.value.type !== "note") fail();
       expect(result.value.type === "note" && result.value.noteTitle).toEqual(
-        "Test QA note"
+        "Test QA note",
       );
       const promptID = result.childIDs.values().next().value;
 
       const qaPromptResult = (await getItemAtPath(
         ["/qa.md", promptID],
-        session
+        session,
       ))!;
       expect(qaPromptResult).toBeTruthy();
       if (qaPromptResult.type !== "task") fail();

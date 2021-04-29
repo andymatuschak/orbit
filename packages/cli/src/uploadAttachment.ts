@@ -59,7 +59,6 @@ class UploadAttachment extends Command {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 (UploadAttachment.run() as Promise<unknown>).catch(
-  require("@oclif/errors/handle"),
+  require("@oclif/errors/handle"), // eslint-disable-line @typescript-eslint/no-var-requires
 );

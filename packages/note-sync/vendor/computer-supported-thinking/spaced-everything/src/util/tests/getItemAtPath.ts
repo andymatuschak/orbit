@@ -8,7 +8,7 @@ import {
 
 export async function getItemAtPath<T extends Task, TC extends TaskCollection>(
   path: TaskIDPath,
-  session: TaskCacheSession<T, TC> | TaskSourceSession<T, TC>
+  session: TaskCacheSession<T, TC> | TaskSourceSession<T, TC>,
 ): Promise<TaskRecord<T, TC> | null> {
   const resultMap = await session.getTaskNodes([path]);
   return resultMap.get(path) || null;
