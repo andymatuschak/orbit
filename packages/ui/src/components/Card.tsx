@@ -293,6 +293,8 @@ function QAPromptRenderer({
                 : frontSizeVariantIndex + 1
             }
             smallestSizeVariantIndex={4}
+            colorPalette={reviewItem.colorPalette}
+            clipContent
           />
         </View>
         <FadeView
@@ -386,7 +388,7 @@ function ClozePromptRenderer({
           <CardField
             promptField={back}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
-            accentColor={accentColor}
+            colorPalette={reviewItem.colorPalette}
           />
         </FadeView>
         <FadeView
@@ -397,7 +399,7 @@ function ClozePromptRenderer({
           <CardField
             promptField={front}
             attachmentResolutionMap={reviewItem.attachmentResolutionMap}
-            accentColor={accentColor}
+            colorPalette={reviewItem.colorPalette}
           />
         </FadeView>
       </View>

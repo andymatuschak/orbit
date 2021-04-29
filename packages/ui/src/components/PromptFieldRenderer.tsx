@@ -35,6 +35,7 @@ import {
   renderBlockMath,
   renderInlineMath,
 } from "./PromptFieldRenderer/markdownLatexSupport";
+import { SawtoothPattern } from "./SawtoothPattern";
 
 const sizeVariantCount = 5;
 const defaultSmallestSizeVariant = 4;
@@ -288,7 +289,8 @@ export default React.memo(function PromptFieldRenderer(props: {
   promptField: PromptField;
   attachmentResolutionMap: AttachmentResolutionMap | null;
 
-  accentColor?: ColorValue;
+  colorPalette?: colors.ColorPalette;
+  clipContent?: boolean;
 
   onLayout?: (sizeVariant: number) => void;
   largestSizeVariantIndex?: number;
@@ -297,8 +299,8 @@ export default React.memo(function PromptFieldRenderer(props: {
   const {
     promptField,
     attachmentResolutionMap,
+    colorPalette,
     onLayout,
-    accentColor,
     largestSizeVariantIndex,
     smallestSizeVariantIndex,
   } = props;
@@ -383,15 +385,25 @@ export default React.memo(function PromptFieldRenderer(props: {
     onLayout?.(sizeVariantRef.current);
   }, [isLayoutReady, onLayout, sizeVariantRef]);
 
-  const effectiveAccentColor = accentColor ?? colors.ink;
+  const effectiveAccentColor = colorPalette?.accentColor ?? colors.ink;
   const markdownItInstance = useMarkdownItInstance(true);
+
+  const shouldClipContent = (() => {
+    if (!markdownHeight) return false;
+    if (!containerSize?.height) return false;
+    if (!colorPalette) return false;
+    return markdownHeight > containerSize.height;
+  })();
+
+  const effectiveOverflowColor = colorPalette?.backgroundColor ?? colors.ink;
+  const effectiveSawteethBorderColor = colorPalette?.secondaryTextColor;
 
   return (
     <View
       style={{
         flex: 1,
         opacity: isLayoutReady ? 1 : 0,
-        overflow: isLayoutReady ? "visible" : "hidden",
+        overflow: isLayoutReady && !shouldClipContent ? "visible" : "hidden",
         justifyContent: "space-between",
       }}
       onLayout={useCallback((event) => {
@@ -425,6 +437,25 @@ export default React.memo(function PromptFieldRenderer(props: {
           {promptField.contents}
         </Markdown>
       </View>
+      {shouldClipContent && (
+        <View
+          style={{ position: "absolute", bottom: 0, left: 0, width: "100%" }}
+        >
+          <SawtoothPattern
+            fillColor={effectiveOverflowColor}
+            strokeColor={effectiveSawteethBorderColor}
+            teethWidth={layout.gridUnit * 3}
+            teethHeight={layout.gridUnit}
+          />
+          <View
+            style={{
+              height: layout.gridUnit,
+              width: "100%",
+              backgroundColor: effectiveOverflowColor,
+            }}
+          ></View>
+        </View>
+      )}
       {imageURL && imageSize && (
         <Image
           source={{ uri: imageURL }}
