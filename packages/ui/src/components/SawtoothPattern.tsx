@@ -3,9 +3,9 @@ import Svg, { Path, Pattern, Rect } from "react-native-svg";
 
 type SawtoothPatternProps = {
   fillColor: string;
-  strokeColor?: string;
   teethHeight: number;
   teethWidth: number;
+  strokeColor?: string;
 };
 
 export function SawtoothPattern({
@@ -14,6 +14,7 @@ export function SawtoothPattern({
   teethHeight,
   strokeColor,
 }: SawtoothPatternProps) {
+  const midX = teethWidth / 2;
   return (
     <Svg width="100%" height={teethHeight}>
       <Pattern
@@ -25,9 +26,7 @@ export function SawtoothPattern({
         {/* Open Path to avoid drawing a bottom border below the teeth */}
         <Path
           fill={fillColor}
-          d={`M0 ${teethHeight} L${
-            teethWidth / 2
-          } 0 L${teethWidth} ${teethHeight}`}
+          d={`M0 ${teethHeight} L${midX} 0 L${teethWidth} ${teethHeight}`}
           stroke={strokeColor}
           strokeWidth={2}
         />

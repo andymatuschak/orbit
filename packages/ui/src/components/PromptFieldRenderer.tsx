@@ -290,6 +290,7 @@ export default React.memo(function PromptFieldRenderer(props: {
   attachmentResolutionMap: AttachmentResolutionMap | null;
 
   colorPalette?: colors.ColorPalette;
+  clipContent?: boolean;
 
   onLayout?: (sizeVariant: number) => void;
   largestSizeVariantIndex?: number;
@@ -387,14 +388,15 @@ export default React.memo(function PromptFieldRenderer(props: {
   const effectiveAccentColor = colorPalette?.accentColor ?? colors.ink;
   const markdownItInstance = useMarkdownItInstance(true);
 
-  const isContentOverflow =
-    markdownHeight &&
-    containerSize?.height &&
-    markdownHeight > containerSize?.height;
-  const shouldClipContent = colorPalette && isContentOverflow;
-  const effectiveSawteethFillColor =
-    colorPalette?.backgroundColor?.toString() ?? colors.ink;
-  const effectiveSawteethBorderColor = colorPalette?.secondaryTextColor?.toString();
+  const shouldClipContent = (() => {
+    if (!markdownHeight) return false;
+    if (!containerSize?.height) return false;
+    if (!colorPalette) return false;
+    return markdownHeight > containerSize.height;
+  })();
+
+  const effectiveOverflowColor = colorPalette?.backgroundColor ?? colors.ink;
+  const effectiveSawteethBorderColor = colorPalette?.secondaryTextColor;
 
   return (
     <View
@@ -440,11 +442,18 @@ export default React.memo(function PromptFieldRenderer(props: {
           style={{ position: "absolute", bottom: 0, left: 0, width: "100%" }}
         >
           <SawtoothPattern
-            fillColor={effectiveSawteethFillColor}
+            fillColor={effectiveOverflowColor}
             strokeColor={effectiveSawteethBorderColor}
             teethWidth={layout.gridUnit * 3}
             teethHeight={layout.gridUnit}
           />
+          <View
+            style={{
+              height: layout.gridUnit,
+              width: "100%",
+              backgroundColor: effectiveOverflowColor,
+            }}
+          ></View>
         </View>
       )}
       {imageURL && imageSize && (

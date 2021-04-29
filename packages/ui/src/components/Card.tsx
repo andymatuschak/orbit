@@ -280,7 +280,7 @@ function QAPromptRenderer({
         <View
           style={{
             flex: proportions.revealed[0],
-            marginBottom: layout.gridUnit * 2,
+            marginBottom: layout.gridUnit,
             width: "66.67%",
           }}
         >
@@ -294,6 +294,7 @@ function QAPromptRenderer({
             }
             smallestSizeVariantIndex={4}
             colorPalette={reviewItem.colorPalette}
+            clipContent
           />
         </View>
         <FadeView
