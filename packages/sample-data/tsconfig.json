@@ -5,5 +5,10 @@
     "rootDir": "./src",
     "jsx": "preserve"
   },
-  "include": ["./src/**/*.ts"]
+  "include": ["./src/**/*.ts"],
+  "references": [
+    {
+      "path": "../core"
+    },
+  ]
 }
