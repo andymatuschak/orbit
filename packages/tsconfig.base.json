@@ -8,7 +8,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-    "lib": ["es7"],
+    "lib": ["es2020"],
     "module": "es6",
     "moduleResolution": "node",
     "resolveJsonModule": true,

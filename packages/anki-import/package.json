@@ -10,13 +10,12 @@
   "dependencies": {
     "@types/unzipper": "^0.10.3",
     "@withorbit/core": "0.0.1",
-    "@withorbit/sample-data": "0.0.1",
     "@withorbit/note-sync": "0.0.1",
+    "@withorbit/sample-data": "0.0.1",
     "rehype-parse": "^6.0.2",
     "rehype-remark": "^8.0.0",
     "remark-stringify": "^8.0.0",
     "sqlite": "^3.0.6",
-    "string.prototype.matchall": "^4.0.2",
     "unified": "^9.0.0",
     "unist-util-select": "^3.0.1",
     "unzipper": "^0.10.11"
