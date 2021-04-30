@@ -5,5 +5,13 @@
     "rootDir": "./src",
     "types": ["node", "jest", "mdast", "unist"]
   },
-  "include": ["./src/**/*.ts"]
+  "include": ["./src/**/*.ts"],
+  "references": [
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../sample-data"
+    }
+  ]
 }

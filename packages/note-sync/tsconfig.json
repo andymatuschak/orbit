@@ -9,6 +9,15 @@
   "include": ["./src/**/*"],
   "references": [
     {
+      "path": "../core"
+    },
+    {
+      "path": "../api-client"
+    },
+    {
+      "path": "../sample-data"
+    },
+    {
       "path": "vendor/computer-supported-thinking/spaced-everything"
     },
     {

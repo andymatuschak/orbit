@@ -7,5 +7,19 @@
     "types": ["jest", "node"],
     "target": "es2019"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../firebase-support"
+    },
+    {
+      "path": "../sample-data"
+    },
+    {
+      "path": "../api"
+    }
+  ]
 }
