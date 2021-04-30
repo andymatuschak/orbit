@@ -423,8 +423,16 @@ test("map anki notes onto prompt task records", async () => {
 test("anki cache integration", async () => {
   const noteSource = createTaskSource(["/a.md", "/b.md"]);
   mockFS({
-    "/a.md": "Test",
-    "/b.md": "Another {with} {cloze}",
+    "/a.md": mockFS.file({
+      content: "Test",
+      ctime: new Date(1),
+      mtime: new Date(1),
+    }),
+    "/b.md": mockFS.file({
+      content: "Another {with} {cloze}",
+      ctime: new Date(1),
+      mtime: new Date(1),
+    }),
   });
 
   const instance = axios.create();
