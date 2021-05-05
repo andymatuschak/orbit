@@ -18,14 +18,17 @@ export function initializeReporter() {
   if (!enabled) {
     console.log("[sentry] Disabling Sentry in development");
   }
-
-  Sentry.onLoad(() => {
-    Sentry.init({
-      enabled,
-      release: `${serviceConfig.sentryProject}@${GitInfo().commit.hash}`,
+  try {
+    Sentry.onLoad(() => {
+      Sentry.init({
+        enabled,
+        release: `${serviceConfig.sentryProject}@${GitInfo().commit.hash}`,
+      });
+      Sentry.setTags({
+        platform: "web",
+      });
     });
-    Sentry.setTags({
-      platform: "web",
-    });
-  });
+  } catch (e) {
+    console.error('[sentry] Failed to load Sentry');
+  }
 }
