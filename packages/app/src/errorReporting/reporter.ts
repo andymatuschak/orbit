@@ -29,6 +29,6 @@ export function initializeReporter() {
       });
     });
   } catch (e) {
-    console.error('[sentry] Failed to load Sentry');
+    console.error("[sentry] Failed to load Sentry");
   }
 }
