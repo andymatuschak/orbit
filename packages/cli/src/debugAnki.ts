@@ -1,45 +1,35 @@
 import firebase from "firebase";
 import admin from "firebase-admin";
-import {
-  ActionLog,
-  ActionLogID,
-  PromptState,
-  PromptTaskID,
-} from "@withorbit/core";
-import {
-  getLogCollectionReference,
-  getReferenceForActionLogID,
-} from "@withorbit/firebase-support";
-import { getAdminApp } from "./adminApp";
+import { getLogCollectionReference } from "@withorbit/firebase-support";
 // import plan from "./importPlan.json";
 
-function formatMillis(millis: number): string {
-  let working = millis;
-  if (millis < 1000) {
-    return `${millis}ms`;
-  }
-  working /= 1000;
-  if (working < 60) {
-    return `${working}s`;
-  }
-  working /= 60;
-  if (working < 60) {
-    return `${working}m`;
-  }
-  working /= 60;
-  if (working < 24) {
-    return `${working}h`;
-  }
-  working /= 24;
-  return `${working}d`;
-}
+// function formatMillis(millis: number): string {
+//   let working = millis;
+//   if (millis < 1000) {
+//     return `${millis}ms`;
+//   }
+//   working /= 1000;
+//   if (working < 60) {
+//     return `${working}s`;
+//   }
+//   working /= 60;
+//   if (working < 60) {
+//     return `${working}m`;
+//   }
+//   working /= 60;
+//   if (working < 24) {
+//     return `${working}h`;
+//   }
+//   working /= 24;
+//   return `${working}d`;
+// }
 
 (async () => {
-  const promptStates = new Map<PromptTaskID, PromptState>();
-  const logs: { [key: string]: ActionLog } = {};
+  // const promptStates = new Map<PromptTaskID, PromptState>();
+  // const logs: { [key: string]: ActionLog } = {};
 
-  const adminApp = getAdminApp();
-  const adminDB = adminApp.firestore();
+  // const adminApp = getAdminApp();
+  // const adminDB = adminApp.firestore();
 
   const app = firebase.initializeApp({
     apiKey: "AIzaSyAwlVFBlx4D3s3eSrwOvUyqOKr_DXFmj0c",
@@ -78,7 +68,7 @@ function formatMillis(millis: number): string {
     0,
     0,
   );
-  let baseSnapshot: any = null;
+  // let baseSnapshot: any = null;
   let total = 0;
   while (true) {
     // if (baseSnapshot) {
@@ -92,7 +82,7 @@ function formatMillis(millis: number): string {
     total += snapshot.size;
     // console.log(`Got ${snapshot.size} logs; ${total} total`);
     if (snapshot.size > 0) {
-      baseSnapshot = snapshot.docs[snapshot.size - 1];
+      // baseSnapshot = snapshot.docs[snapshot.size - 1];
       baseServerTimestamp = snapshot.docs[snapshot.size - 1].data()
         .serverTimestamp;
     } else {

@@ -13,8 +13,8 @@ import {
 describe("anki text encoding", () => {
   const prompt = findAllPrompts(
     processor.parse(
-      "This *is* a __test__ of {cloze} stripping with {two} cloze deletions."
-    )
+      "This *is* a __test__ of {cloze} stripping with {two} cloze deletions.",
+    ),
   )[0] as ClozePrompt;
   expect(prompt.type).toEqual(clozePromptType);
 
@@ -22,7 +22,7 @@ describe("anki text encoding", () => {
 
   test("keeps Markdown", () => {
     expect(text).toEqual(
-      "This is a test of {{c1::cloze}} stripping with {{c2::two}} cloze deletions."
+      "This is a test of {{c1::cloze}} stripping with {{c2::two}} cloze deletions.",
     );
   });
 
@@ -41,7 +41,9 @@ describe("anki path field", () => {
   test("round trips paths", () => {
     const testPath = ["/foo.md", "aslkdfjklasdfj", "3"];
     expect(
-      decodeAnkiPathFieldToTaskIDPath(encodeTaskIDPathToAnkiPathField(testPath))
+      decodeAnkiPathFieldToTaskIDPath(
+        encodeTaskIDPathToAnkiPathField(testPath),
+      ),
     ).toEqual(testPath);
   });
 });

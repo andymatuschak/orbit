@@ -1,5 +1,4 @@
 import { Command, flags } from "@oclif/command";
-import { MetabookFirebaseDataClient } from "@withorbit/api-client";
 import { getPromptTaskForID } from "@withorbit/core";
 import {
   compareServerTimestamps,

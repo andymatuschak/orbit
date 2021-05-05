@@ -1,5 +1,4 @@
 import { ActionLog, Prompt, PromptID, PromptState } from "@withorbit/core";
-import { ActionLogDocument } from "@withorbit/firebase-support";
 import { EmailSpec } from "../email/types";
 
 export interface LoggingService {

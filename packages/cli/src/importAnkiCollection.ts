@@ -1,24 +1,16 @@
 import { Command, flags } from "@oclif/command";
 import firebase from "firebase";
 import "firebase/firestore";
-import admin from "firebase-admin";
 import fs from "fs";
-import {
-  MetabookFirebaseDataClient,
-  MetabookFirebaseUserClient,
-} from "@withorbit/api-client";
-import { getIDForActionLog } from "@withorbit/core";
+import { ActionLogID, getIDForActionLog } from "@withorbit/core";
 import {
   ActionLogDocument,
   batchWriteEntries,
   getLogCollectionReference,
-  getReferenceForActionLogID,
-  getTaskStateCacheReferenceForTaskID,
-  PromptStateCache,
 } from "@withorbit/firebase-support";
 import path from "path";
 import { createImportPlan, readAnkiCollectionPackage } from "../../anki-import";
-import { getAdminApp, uploadAttachment } from "./adminApp";
+import { uploadAttachment } from "./adminApp";
 
 class ImportAnkiCollection extends Command {
   static flags = {
@@ -109,7 +101,13 @@ class ImportAnkiCollection extends Command {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 (ImportAnkiCollection.run() as Promise<unknown>).catch(
-  require("@oclif/errors/handle"),
+  require("@oclif/errors/handle"), // eslint-disable-line @typescript-eslint/no-var-requires
 );
+function getReferenceForActionLogID(
+  arg0: firebase.firestore.Firestore, // eslint-disable-line @typescript-eslint/no-unused-vars
+  userID: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+  arg2: ActionLogID, // eslint-disable-line @typescript-eslint/no-unused-vars
+): any {
+  throw new Error("Function not implemented.");
+}

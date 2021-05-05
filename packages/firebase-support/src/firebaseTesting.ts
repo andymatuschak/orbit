@@ -27,7 +27,7 @@ export function startFirebaseTestingEmulator() {
     localEmulatorProcess.stdout.on("data", (data) => {
       console.log(data.toString());
       if (/All emulators ready/.test(data.toString())) {
-        resolve();
+        resolve(undefined);
       }
     });
 
@@ -67,7 +67,10 @@ export function createTestFirebaseApp(
     sharedFunctionsInstance = app.functions();
     sharedFunctionsInstance.useEmulator("localhost", 5001);
   }
-  return { firestore: testApp.firestore(), functions: sharedFunctionsInstance };
+  return {
+    firestore: testApp.firestore() as firebase.firestore.Firestore,
+    functions: sharedFunctionsInstance,
+  };
 }
 
 export function createTestAdminFirebaseApp(): {
@@ -76,7 +79,7 @@ export function createTestAdminFirebaseApp(): {
   const testApp = firebaseTesting.initializeAdminApp({
     projectId: projectID,
   });
-  return { firestore: testApp.firestore() };
+  return { firestore: testApp.firestore() as firebase.firestore.Firestore };
 }
 
 export async function resetTestFirestore(

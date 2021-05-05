@@ -18,17 +18,17 @@ export type TaskCollectionRecord<TC extends TaskCollection> = {
 
 export interface TaskSourceSession<T extends Task, TC extends TaskCollection> {
   getTaskNodes<Paths extends TaskIDPath[]>(
-    paths: Paths
+    paths: Paths,
   ): Promise<Map<Paths[number], TaskRecord<T, TC> | null>>;
 
   isCacheHit(
     cacheRecord: TaskRecord<T, TC>,
-    testRecord: TaskRecord<T, TC>
+    testRecord: TaskRecord<T, TC>,
   ): boolean;
 }
 
 export interface TaskSource<T extends Task, TC extends TaskCollection> {
   performOperations(
-    continuation: (session: TaskSourceSession<T, TC>) => Promise<unknown>
+    continuation: (session: TaskSourceSession<T, TC>) => Promise<unknown>,
   ): Promise<unknown>;
 }

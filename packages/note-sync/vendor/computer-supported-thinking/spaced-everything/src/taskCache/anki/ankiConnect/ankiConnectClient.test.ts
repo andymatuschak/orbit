@@ -16,7 +16,7 @@ import {
 test("typechecking", async () => {
   const client: AnkiConnectClient = {
     request<ResponseData extends AnyJson>(
-      request: RequestSpec<ResponseData>
+      request: RequestSpec<ResponseData>,
     ): Promise<ResponseData> {
       return Promise.resolve([123] as ResponseData);
     },

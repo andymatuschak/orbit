@@ -26,7 +26,7 @@ function createMockActivitySource(rootChildren: {
           isCacheHit: (cache, test) =>
             (cache.value["modificationDate"] || {}) ===
             (test.value["modificationDate"] || {}),
-        })
+        }),
       ),
   };
 }
@@ -39,7 +39,7 @@ describe("cache reconciliation", () => {
     sourceRootChildren: {
       [key: string]: JSONCacheNode<TestTask, TestTaskCollection>;
     },
-    expectEqual: boolean = true
+    expectEqual = true,
   ) {
     const testCache = JSONInMemoryCache({
       type: "collection",
@@ -68,7 +68,7 @@ describe("cache reconciliation", () => {
           },
           value: {},
         },
-      }
+      },
     );
   });
 
@@ -83,7 +83,7 @@ describe("cache reconciliation", () => {
           value: {},
         },
       },
-      {}
+      {},
     );
   });
 
@@ -108,7 +108,7 @@ describe("cache reconciliation", () => {
           },
           value: {},
         },
-      }
+      },
     );
   });
 
@@ -147,7 +147,7 @@ describe("cache reconciliation", () => {
           },
           value: { label: "new" },
         },
-      }
+      },
     );
   });
 
@@ -194,7 +194,7 @@ describe("cache reconciliation", () => {
           },
           value: { label: "old" },
         },
-      }
+      },
     );
   });
 
@@ -214,7 +214,7 @@ describe("cache reconciliation", () => {
           value: { modificationDate: "old" },
         },
       },
-      false
+      false,
     );
   });
 });

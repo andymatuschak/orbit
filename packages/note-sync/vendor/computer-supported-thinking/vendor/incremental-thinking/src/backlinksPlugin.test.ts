@@ -12,7 +12,7 @@ const processor = markdownProcessor()
   .use(backlinksPlugin);
 
 function getBacklinksNode(
-  input: string
+  input: string,
 ): { backlinksNode: BacklinksNode | null; ast: mdast.Root } {
   const ast = processor.runSync(processor.parse(input)) as mdast.Root;
   return {
@@ -35,7 +35,7 @@ A paragraph
     expect(backlinksNode!.children).toHaveLength(1);
     const backlinkSourceNode = backlinksNode!.children[0];
     expect(backlinkSourceNode.sourceNodeLink.targetNoteName).toEqual(
-      "Source node"
+      "Source node",
     );
     expect(backlinkSourceNode.children).toHaveLength(0);
   });
@@ -58,22 +58,22 @@ A paragraph
     expect(backlinksNode!.children).toHaveLength(2);
     const firstSourceNode = backlinksNode!.children[0];
     expect(firstSourceNode.sourceNodeLink.targetNoteName).toEqual(
-      "Source node"
+      "Source node",
     );
     expect(firstSourceNode.children).toHaveLength(2);
     expect(
-      processor.stringify(firstSourceNode.children[0]).trimRight()
+      processor.stringify(firstSourceNode.children[0]).trimRight(),
     ).toEqual("This is an excerpt from the source node.");
     expect(
-      processor.stringify(firstSourceNode.children[1]).trimRight()
+      processor.stringify(firstSourceNode.children[1]).trimRight(),
     ).toEqual("Another excerpt");
     expect(backlinksNode!.children[1].sourceNodeLink.targetNoteName).toEqual(
-      "Another source node"
+      "Another source node",
     );
 
     const subsequentHeadingNode = select(
       "heading[depth=2] *[value='Another section']",
-      ast
+      ast,
     );
     expect(subsequentHeadingNode).toBeTruthy();
   });
@@ -91,7 +91,7 @@ A paragraph
     expect(backlinksNode!.children).toHaveLength(1);
     const backlinkSourceNode = backlinksNode!.children[0];
     expect(backlinkSourceNode.sourceNodeLink.targetNoteName).toEqual(
-      "Source node"
+      "Source node",
     );
     expect(backlinkSourceNode.children).toHaveLength(0);
 

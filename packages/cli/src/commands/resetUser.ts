@@ -7,7 +7,10 @@ import { CommandModule } from "yargs";
 import { getAdminApp } from "../adminApp";
 import { deleteCollection } from "../deleteCollection";
 
-export const resetUser: CommandModule<{}, { userID: string }> = {
+export const resetUser: CommandModule<
+  Record<string, unknown>,
+  { userID: string }
+> = {
   command: "resetUser <userID>",
   describe: "delete all user data associated with a user",
   builder: (yargs) =>

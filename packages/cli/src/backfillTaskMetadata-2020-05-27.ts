@@ -1,12 +1,10 @@
 import { Command, flags } from "@oclif/command";
 import {
   batchWriteEntries,
-  getLogCollectionReference,
   getTaskStateCacheCollectionReference,
 } from "@withorbit/firebase-support";
 import admin from "firebase-admin";
 import { getAdminApp } from "./adminApp";
-import { deleteCollection } from "./deleteCollection";
 
 class ResetUser extends Command {
   static flags = {

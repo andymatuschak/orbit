@@ -2,28 +2,19 @@ import fs from "fs";
 import {
   ActionLog,
   ActionLogID,
-  AttachmentID,
   getIDForActionLog,
-  getIDForPrompt,
-  Prompt,
-  PromptField,
   PromptID,
 } from "@withorbit/core";
 import {
   batchWriteEntries,
   getActionLogIDForFirebaseKey,
   getActionLogIDReference,
-  getAttachmentIDForFirebaseKey,
-  getDataRecordReference,
   getFirebaseKeyForCIDString,
   getLogCollectionReference,
-  getStorageObjectNameForAttachmentID,
   getTaskStateCacheCollectionReference,
-  storageBucketName,
 } from "@withorbit/firebase-support";
 import CID from "multiformats/cid";
 import { base58btc } from "multiformats/bases/base58";
-import { getPromptIDForFirebaseKey } from "../../firebase-support/dist/firebaseKeyEncoding";
 import { getAdminApp } from "./adminApp";
 import { deleteCollection } from "./deleteCollection";
 
@@ -63,10 +54,10 @@ const userID = "k2SFGEIg70UEltRbHEAed8yERc32";
   // 2. Prompts.
   const app = getAdminApp();
   const db = app.firestore();
-  const promptCollection = db.collection("data");
-  const prompts = await promptCollection.get();
+  // const promptCollection = db.collection("data");
+  // const prompts = await promptCollection.get();
   const promptMapping: { [key: string]: PromptID } = {};
-  const promptEntries: [unknown, unknown][] = [];
+  // const promptEntries: [unknown, unknown][] = [];
   /*for (const promptDoc of prompts.docs) {
     const mismappedCIDString = getPromptIDForFirebaseKey(promptDoc.id);
     const mismappedCID = CID.parse(mismappedCIDString);

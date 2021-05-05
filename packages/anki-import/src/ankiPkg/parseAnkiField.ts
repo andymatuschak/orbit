@@ -1,12 +1,9 @@
 import * as mdast from "mdast";
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 import rehypeParse from "rehype-parse";
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
 import rehype2Remark from "rehype-remark";
 import remarkStringify from "remark-stringify";
-import matchAll from "string.prototype.matchAll";
 import unified from "unified";
 import { selectAll } from "unist-util-select";
 import { AnkiAttachmentReference } from "./ankiAttachmentReference";
@@ -36,7 +33,7 @@ export default function parseAnkiField(
 
   // Extract sounds
   const soundRegexp = /\\\[sound:([^\]]+)]/g;
-  const soundNames = [...matchAll(markdown, soundRegexp)].map(
+  const soundNames = [...markdown.matchAll(soundRegexp)].map(
     (matchArray) => matchArray[1],
   );
   markdown = markdown.replace(soundRegexp, "");

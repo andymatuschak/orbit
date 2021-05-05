@@ -11,9 +11,9 @@ export function getPromptStateFromPromptStateCache(
   promptStateCache: PromptStateCache,
 ): PromptState {
   const {
-    taskID,
-    creationServerTimestamp,
-    latestLogServerTimestamp,
+    taskID, // eslint-disable-line @typescript-eslint/no-unused-vars
+    creationServerTimestamp, // eslint-disable-line @typescript-eslint/no-unused-vars
+    latestLogServerTimestamp, // eslint-disable-line @typescript-eslint/no-unused-vars
     ...promptState
   } = promptStateCache;
   return promptState;

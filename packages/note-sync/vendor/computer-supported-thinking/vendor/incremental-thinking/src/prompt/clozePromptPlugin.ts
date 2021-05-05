@@ -16,7 +16,7 @@ export default function clozePlugin(this: unified.Processor) {
           line: number;
           column: number;
           offset: number;
-        }
+        },
       ) => mdast.PhrasingContent[];
     },
     eat: remarkParse.Eat & {
@@ -26,7 +26,7 @@ export default function clozePlugin(this: unified.Processor) {
         offset: number;
       };
     },
-    value: string
+    value: string,
   ) {
     const match = clozeRegexp.exec(value);
     if (match) {
@@ -49,11 +49,11 @@ export default function clozePlugin(this: unified.Processor) {
   parserPrototype.inlineMethods.splice(
     parserPrototype.inlineMethods.indexOf("text"),
     0,
-    "clozePrompt"
+    "clozePrompt",
   );
   const compilerPrototype = this.Compiler.prototype as remarkStringify.Compiler;
   compilerPrototype.visitors[clozeNodeType] = clozePromptCompiler as (
-    node: unist.Node
+    node: unist.Node,
   ) => string;
 }
 
@@ -61,7 +61,7 @@ function clozePromptCompiler(
   this: remarkStringify.Compiler & {
     all: (node: unist.Node) => string[];
   },
-  node: ClozePromptNode
+  node: ClozePromptNode,
 ): string {
   const content = this.all(node).join("");
   return `{${content}}`;

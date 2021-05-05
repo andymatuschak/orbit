@@ -45,11 +45,11 @@ You'll first need to have set up AnkiConnect and the note types in Anki--see the
 
     const noteSource = notePrompts.createTaskSource(argv);
     const ankiConnectClient = ankiClient.createDefaultLocalAnkiConnectClient(
-      flags.deck
+      flags.deck,
     );
     const anki = ankiCache.createAnkiCache(
       ankiConnectClient,
-      flags.syncToAnkiWeb
+      flags.syncToAnkiWeb,
     );
     try {
       await taskCache.updateTaskCache(anki, noteSource);

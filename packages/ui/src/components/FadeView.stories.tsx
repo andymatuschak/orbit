@@ -22,7 +22,7 @@ export function Basic() {
       >
         <View style={{ backgroundColor: "red", width: 50, height: 50 }} />
       </FadeView>
-      <Button title="Toggle" onPress={() => setVisible(v => !v)} />
+      <Button title="Toggle" onPress={() => setVisible((v) => !v)} />
     </View>
   );
 }

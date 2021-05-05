@@ -76,7 +76,7 @@ export function getIDForPrompt(prompt: Prompt): string {
   } else if (prompt.type === qaPromptType) {
     return uuid(
       processor.stringify(prompt.question) + processor.stringify(prompt.answer),
-      namespaceUUID
+      namespaceUUID,
     );
   } else {
     throw unreachableCaseError(prompt);
@@ -84,15 +84,15 @@ export function getIDForPrompt(prompt: Prompt): string {
 }
 
 export function getClozeNoteTaskCollectionChildIDsForClozePrompt(
-  prompt: ClozePrompt
+  prompt: ClozePrompt,
 ): Set<TaskID> {
   const clozeSpans = getClozeNodesInClozePrompt(prompt);
   const promptID = getIDForPrompt(prompt);
 
   return new Set(
     Array.from(new Array(clozeSpans.length).keys()).map(
-      (i) => `${promptID}-${i}`
-    )
+      (i) => `${promptID}-${i}`,
+    ),
   );
 }
 
@@ -106,7 +106,7 @@ interface NoteFileRecord {
 }
 
 async function readNoteFileRecord(
-  fullPath: string
+  fullPath: string,
 ): Promise<NoteFileRecord | null> {
   try {
     const [noteAST, fileStats] = await Promise.all([
@@ -134,7 +134,7 @@ async function readNoteFileRecord(
 
 // TODO: we should structure this to avoid reading every note in the common case
 async function readNotes(
-  notePaths: string[]
+  notePaths: string[],
 ): Promise<Map<string, NoteFileRecord>> {
   const cache: Map<string, NoteFileRecord> = new Map();
   console.info(`Parsing ${notePaths.length} notes...`);
@@ -146,14 +146,14 @@ async function readNotes(
         const effectiveID = record.id?.id ?? notePath;
         cache.set(effectiveID, record);
       }
-    })
+    }),
   );
   console.log(`Finished in ${(Date.now() - startTimestamp) / 1000} seconds`);
   return cache;
 }
 
 export function createTaskSource(
-  notePaths: string[]
+  notePaths: string[],
 ): TaskSource<PromptTask, PromptTaskCollection> {
   return {
     async performOperations(continuation): Promise<unknown> {
@@ -161,7 +161,7 @@ export function createTaskSource(
 
       return continuation({
         async getTaskNodes<Paths extends TaskIDPath[]>(
-          paths: Paths
+          paths: Paths,
         ): Promise<
           Map<
             Paths[number],
@@ -209,7 +209,7 @@ export function createTaskSource(
                   outputMap.set(promptPath, {
                     type: "collection",
                     childIDs: getClozeNoteTaskCollectionChildIDsForClozePrompt(
-                      prompt
+                      prompt,
                     ),
                     value: {
                       type: "clozeBlock",

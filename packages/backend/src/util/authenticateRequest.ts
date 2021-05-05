@@ -1,4 +1,4 @@
-import { API } from "@withorbit/api";
+import { API as ApiType } from "@withorbit/api";
 import express from "express";
 import {
   CachePolicy,
@@ -21,15 +21,15 @@ export async function authenticateRequest(
 }
 
 export async function authenticateTypedRequest<
-  API extends API.Spec,
+  API extends ApiType.Spec,
   Path extends Extract<keyof API, string>,
-  Method extends Extract<keyof API[Path], API.HTTPMethod>
+  Method extends Extract<keyof API[Path], ApiType.HTTPMethod>
 >(
   request: TypedRequest<API[Path][Method]>,
   next: (
     userID: string,
-  ) => Promise<TypedResponse<API.RouteResponseData<API[Path][Method]>>>,
-): Promise<TypedResponse<API.RouteResponseData<API[Path][Method]>>> {
+  ) => Promise<TypedResponse<ApiType.RouteResponseData<API[Path][Method]>>>,
+): Promise<TypedResponse<ApiType.RouteResponseData<API[Path][Method]>>> {
   const authorizationHeader = request.header("Authorization");
   if (authorizationHeader) {
     const match = authorizationHeader.match(/ID (.+)/);
@@ -72,14 +72,14 @@ export async function authenticateTypedRequest<
 }
 
 export function authenticatedRequestHandler<
-  API extends API.Spec,
+  API extends ApiType.Spec,
   Path extends Extract<keyof API, string>,
-  Method extends Extract<keyof API[Path], API.HTTPMethod>
+  Method extends Extract<keyof API[Path], ApiType.HTTPMethod>
 >(
   handler: (
     request: TypedRequest<API[Path][Method]>,
     userID: string,
-  ) => Promise<TypedResponse<API.RouteResponseData<API[Path][Method]>>>,
+  ) => Promise<TypedResponse<ApiType.RouteResponseData<API[Path][Method]>>>,
 ): TypedRouteHandler<API, Path, Method> {
   return (request) =>
     authenticateTypedRequest(request, (userID) => handler(request, userID));

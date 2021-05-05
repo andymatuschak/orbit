@@ -16,7 +16,7 @@ import { AnkiNote, AnkiPrompt } from "./dataModel";
 export type AnkiClient = AnkiConnectClient;
 
 export function _createTreeFromAnkiNoteList(
-  allAnkiNotes: AnkiNote[]
+  allAnkiNotes: AnkiNote[],
 ): JSONInMemoryCache<AnkiNote, PromptTaskCollection> {
   const tree = {
     type: "collection",
@@ -33,8 +33,8 @@ export function _createTreeFromAnkiNoteList(
       if (newNode && newNode.type !== "collection") {
         throw new Error(
           `Inconsistent Anki database: a task has ID ${parentPathID}, which also appears in path ${encodeTaskIDPath(
-            taskIDPath
-          )}`
+            taskIDPath,
+          )}`,
         );
       } else if (!newNode) {
         newNode = {
@@ -59,13 +59,13 @@ export function _createTreeFromAnkiNoteList(
 }
 
 export async function getAllAnkiNotes(
-  ankiClient: AnkiClient
+  ankiClient: AnkiClient,
 ): Promise<JSONInMemoryCache<AnkiNote, PromptTaskCollection>> {
   const allNoteIDs = await ankiClient.request(
-    requestFactory.findAllPromptAnkiNoteIDs()
+    requestFactory.findAllPromptAnkiNoteIDs(),
   );
   const allAnkiNotes = await ankiClient.request(
-    requestFactory.getAnkiNotes(allNoteIDs)
+    requestFactory.getAnkiNotes(allNoteIDs),
   );
 
   return _createTreeFromAnkiNoteList(allAnkiNotes);
@@ -73,26 +73,26 @@ export async function getAllAnkiNotes(
 
 export async function addPrompts(
   ankiClient: AnkiClient,
-  ankiPrompts: AnkiPrompt[]
+  ankiPrompts: AnkiPrompt[],
 ) {
   return ankiClient.request(
-    requestFactory.addNotes(ankiPrompts, ankiClient.deckName)
+    requestFactory.addNotes(ankiPrompts, ankiClient.deckName),
   );
 }
 
 export async function deleteNoteSubtrees(
   ankiClient: AnkiClient,
-  subtreePaths: TaskIDPath[]
+  subtreePaths: TaskIDPath[],
 ) {
   const nestedIDsToDelete = await Promise.all(
     subtreePaths.map((path) =>
-      ankiClient.request(getAnkiNoteIDsForSubtree(path))
-    )
+      ankiClient.request(getAnkiNoteIDsForSubtree(path)),
+    ),
   );
 
   const IDsToDelete = nestedIDsToDelete.reduce(
     (flatIDs, subtreeIDs) => [...flatIDs, ...subtreeIDs],
-    []
+    [],
   );
   await ankiClient.request(deleteAnkiNoteIDs(IDsToDelete));
 }
@@ -101,12 +101,12 @@ export async function movePrompts(
   ankiClient: AnkiClient,
   ankiPrompts: (AnkiPrompt & {
     oldPath: TaskIDPath;
-  })[]
+  })[],
 ) {
   const noteIDs = await Promise.all(
     ankiPrompts.map(async (ankiPrompt) => {
       const matchingNoteIDs = await ankiClient.request(
-        getAnkiNoteIDsForSubtree(ankiPrompt.oldPath)
+        getAnkiNoteIDsForSubtree(ankiPrompt.oldPath),
       );
       if (matchingNoteIDs.length === 1) {
         return matchingNoteIDs[0];
@@ -114,46 +114,46 @@ export async function movePrompts(
         if (matchingNoteIDs.length === 0) {
           console.warn(
             "Attempting to update note but it does not exist in Anki",
-            ankiPrompt
+            ankiPrompt,
           );
         } else {
           console.error(
             "Attempting to update note but Anki returned multiple matching notes",
             ankiPrompt,
-            matchingNoteIDs
+            matchingNoteIDs,
           );
         }
         return null;
       }
-    })
+    }),
   );
 
   await Promise.all(
     noteIDs.map((noteID, index) =>
       noteID
         ? ankiClient.request(updateAnkiNote(noteID, ankiPrompts[index]))
-        : Promise.resolve(undefined)
-    )
+        : Promise.resolve(undefined),
+    ),
   );
 }
 
 export async function updateNoteDatas(
   ankiClient: AnkiClient,
-  changedNoteRecords: { notePath: TaskIDPath; noteData: PromptTaskNoteData }[]
+  changedNoteRecords: { notePath: TaskIDPath; noteData: PromptTaskNoteData }[],
 ) {
   const ankiNoteLists = await Promise.all(
     changedNoteRecords.map(async (changedNoteRecord) => {
       const matchingNoteIDs = await ankiClient.request(
-        getAnkiNoteIDsForSubtree(changedNoteRecord.notePath)
+        getAnkiNoteIDsForSubtree(changedNoteRecord.notePath),
       );
       if (matchingNoteIDs.length === 0) {
         console.warn(
           "Attempting to update note but it does not exist in Anki",
-          changedNoteRecord
+          changedNoteRecord,
         );
       }
       return await ankiClient.request(getAnkiNotes(matchingNoteIDs));
-    })
+    }),
   );
 
   await Promise.all(
@@ -166,10 +166,10 @@ export async function updateNoteDatas(
             noteData: newNoteData,
           };
           return ankiClient.request(
-            updateAnkiNote(ankiNote.noteId, newAnkiPrompt)
+            updateAnkiNote(ankiNote.noteId, newAnkiPrompt),
           );
         });
       })
-      .reduce((a, l) => [...a, ...l], [])
+      .reduce((a, l) => [...a, ...l], []),
   );
 }

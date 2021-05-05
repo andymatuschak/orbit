@@ -15,7 +15,6 @@ import {
 import {
   getIDForPromptTask,
   PromptTaskID,
-  PromptTaskParameters,
   QAPromptTask,
 } from "../types/promptTask";
 import { mergeActionLogs } from "./mergeActionLogs";

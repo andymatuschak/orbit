@@ -1,1 +1,6 @@
-vendor/**/*
+note-sync/vendor/**/*
+web-component/build/**/*
+app/index.js
+app/.expo/**/*
+app/web-build/**/*
+*/dist/**/*

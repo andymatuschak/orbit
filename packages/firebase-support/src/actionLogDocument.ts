@@ -20,8 +20,8 @@ export function getActionLogFromActionLogDocument(
   document: ActionLogDocument,
 ): ActionLog {
   const {
-    serverTimestamp,
-    suppressTaskStateCacheUpdate,
+    serverTimestamp, // eslint-disable-line @typescript-eslint/no-unused-vars
+    suppressTaskStateCacheUpdate, // eslint-disable-line @typescript-eslint/no-unused-vars
     ...actionLog
   } = document;
   return actionLog;

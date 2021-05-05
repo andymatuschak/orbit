@@ -12,7 +12,7 @@ import {
 } from "./requestFactory";
 
 const clozePrompt = findAllPrompts(
-  processor.parse("Testing {cloze} prompts")
+  processor.parse("Testing {cloze} prompts"),
 )[0];
 
 test("addNotes request", () => {
@@ -28,7 +28,7 @@ test("addNotes request", () => {
         },
       },
     ],
-    "Default"
+    "Default",
   );
   expect(request).toMatchSnapshot();
 });
@@ -43,7 +43,7 @@ test("getAnkiNoteIDsForSubtree request", () => {
 
 test("deleteAnkiNoteIDs", () => {
   expect(
-    deleteAnkiNoteIDs([123 as AnkiNoteID, 456 as AnkiNoteID])
+    deleteAnkiNoteIDs([123 as AnkiNoteID, 456 as AnkiNoteID]),
   ).toMatchSnapshot();
 });
 
@@ -53,7 +53,7 @@ test("findAllPromptAnkiNoteIDs", () => {
 
 test("getAnkiNotes", () => {
   expect(
-    getAnkiNotes([123 as AnkiNoteID, 456 as AnkiNoteID])
+    getAnkiNotes([123 as AnkiNoteID, 456 as AnkiNoteID]),
   ).toMatchSnapshot();
 });
 
@@ -71,6 +71,6 @@ test("updateAnkiNote", () => {
         },
         modificationTimestamp: 456,
       },
-    })
+    }),
   ).toMatchSnapshot();
 });

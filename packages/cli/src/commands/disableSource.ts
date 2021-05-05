@@ -17,7 +17,7 @@ import { getAdminApp } from "../adminApp";
 
 import admin from "firebase-admin";
 
-export const disableSource: CommandModule<{}, { userID: string }> = {
+export const disableSource: CommandModule<unknown, { userID: string }> = {
   command: "disableSource <userID> <URL>",
   describe: "disables all prompts added from a particular URL",
   builder: (yargs) =>

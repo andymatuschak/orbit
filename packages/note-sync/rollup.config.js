@@ -3,9 +3,7 @@ import resolve from "@rollup/plugin-node-resolve";
 import commonJS from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import extensions from "rollup-plugin-extensions";
-import builtins from "builtin-modules";
 // import builtins from "rollup-plugin-node-builtins";
-import globals from "rollup-plugin-node-globals";
 import path from "path";
 
 export default {
