@@ -1,6 +1,6 @@
 # Orbit
 
-Orbit is an experimental platform for publishing and engaging with small tasks repeatedly over time. More concretely, it's currently focused on helping people deeply internalize ideas by returning to them over time. Another angle: Orbit aspires to offer a more general form of spaced repetition systems like [Anki](https://apps.ankiweb.net), as part of a connected cloud service. Learn more on the [home page](https://withorbit.com).
+Orbit is an experimental platform for publishing and engaging with small tasks repeatedly over time. In the short term, it's focused on supporting the "[mnemonic medium](https://numinous.productions/ttft/)", a way of augmenting texts so that readers can easily remember all the key details. For an example, see [Quantum Country](https://quantum.country), a textbook on quantum computation. More abstractly, Orbit aspires to offer a more general form of spaced repetition systems like [Anki](https://apps.ankiweb.net), as part of a connected cloud service. Learn more on the [home page](https://withorbit.com).
 
 Orbit is a (nascent) ecosystem. At its core are decentralized data structures defining tasks, review actions, and scheduling algorithms. Tasks can be ingested from around the web, via APIs or embedded iframes, or through various services running on your local computer. You can complete scheduled tasks in desktop, mobile, and web applications. A backend service syncs user data and orchestrates notifications.
 
