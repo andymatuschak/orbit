@@ -3,6 +3,7 @@
 This package contains the main Orbit GUI app for the web, iOS, Android, and macOS. It's built on react-native (via a bare Expo project); the web app is built with react-native-web.
 
 * Local development
+    * First, make sure all the libraries are built by running `yarn build` from the monorepo root.
     * To run the Orbit web app: `yarn run web`
     * To run the Orbit iOS app on the simulator: `yarn run ios`
        * (You'll need to `cd ios; pod install` first)
