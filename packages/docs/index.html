@@ -313,11 +313,15 @@
     <p>
       While you're writing and revising your prompts, you may want to enable a
       "test mode" which won't save of your actions to your account. To do this,
-      append <code>?orbitDebug</code> to your URL. So for instance, if you're viewing
-      <code>http://you.com/test</code>, point your browser at
-      <code>http://you.com/test?orbitDebug</code>. If the URL already has a <code>?</code> in it, add
-      <code>&orbitDebug</code> instead, e.g. <code>http://you.com/test?id=4</code> becomes
-      <code>http://you.com/test?id=4&orbitDebug</code>.
+      append <code>?orbitDebug</code> to your URL. So for instance, if you're
+      viewing <code>http://you.com/test</code>, point your browser at
+      <code>http://you.com/test?orbitDebug</code>. If the URL already has a
+      <code>?</code> in it, add <code>&orbitDebug</code> instead, e.g.
+      <code>http://you.com/test?id=4</code> becomes
+      <code>http://you.com/test?id=4&orbitDebug</code>. And if your web server
+      redirects <code>http://you.com/test</code> to
+      <code>http://you.com/test/</code>, you'll want to visit
+      <code>http://you.com/test/?orbitDebug</code>.
     </p>
 
     <h2>Writing well with Orbit</h2>
