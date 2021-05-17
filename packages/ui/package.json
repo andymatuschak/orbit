@@ -43,7 +43,7 @@
     "seedrandom": "^3.0.5",
     "svgs": "^4.1.1",
     "ts-jest": "^26.4.4",
-    "typescript": "^4.0.5"
+    "typescript": "^4.2.4"
   },
   "peerDependencies": {
     "@types/react": "^16.9.23",
