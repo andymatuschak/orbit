@@ -62,7 +62,8 @@ export type PromptActionLog<PT extends PromptTask = PromptTask> =
 export function getActionLogFromPromptActionLog(
   promptActionLog: PromptActionLog,
 ): ActionLog {
-  return promptActionLog;
+  // NOTE: As of Typescript 4.2.4 PromptActionLog is not equivalent ActionLog. Looks to be compiler limitation
+  return promptActionLog as ActionLog;
 }
 
 export function getPromptActionLogFromActionLog(

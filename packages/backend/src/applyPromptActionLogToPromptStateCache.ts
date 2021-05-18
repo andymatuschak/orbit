@@ -1,6 +1,7 @@
 import {
   ActionLogID,
   applyActionLogToPromptState,
+  getActionLogFromPromptActionLog,
   getIDForActionLog,
   getPromptActionLogFromActionLog,
   mergeActionLogs,
@@ -37,7 +38,9 @@ export default async function applyActionLogDocumentToPromptStateCache({
   ) {
     const newPromptState = applyActionLogToPromptState({
       basePromptState: basePromptStateCache,
-      actionLogID: await getIDForActionLog(promptActionLog),
+      actionLogID: await getIDForActionLog(
+        getActionLogFromPromptActionLog(promptActionLog),
+      ),
       promptActionLog,
       schedule: "default",
     });

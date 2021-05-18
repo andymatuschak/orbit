@@ -40,8 +40,9 @@ describe("repetition", () => {
     context: null,
   };
 
-  const p = promptActionLog.taskParameters;
-  p.variantIndex;
+  // NOTE: As of Typescript 4.2.4 PromptActionLog is not equivalent ActionLog. Looks to be compiler limitation
+  const p = promptActionLog.taskParameters as { variantIndex: number };
+  expect(p.variantIndex).toBeDefined();
 
   const actionLog = getActionLogFromPromptActionLog(promptActionLog);
   test("round trip", () => {
