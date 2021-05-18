@@ -120,7 +120,7 @@ describe("mock cache", () => {
         },
       },
       value: {},
-    });
+    }) as TaskCache<TestTask, TestTaskCollection>;
 
     await testCache.performOperations(async (session) => {
       await session.writeChanges([
@@ -152,7 +152,7 @@ describe("mock cache", () => {
         },
       },
       value: {},
-    });
+    }) as TaskCache<TestTask, TestTaskCollection>;
 
     await testCache.performOperations(async (session) => {
       await session.writeChanges([
