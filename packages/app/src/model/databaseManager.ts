@@ -183,7 +183,10 @@ export default class DatabaseManager {
 
     // NOTE: As of Typescript 4.2.4 PromptActionLog is not equivalent ActionLog. Looks to be compiler limitation
     await this.actionLogStore.saveActionLogs(
-      entries as { log: ActionLog; id: ActionLogID }[],
+      entries.map(({ id, log }) => ({
+        id,
+        log: getActionLogFromPromptActionLog(log),
+      })),
     );
 
     await this.promptStateStore.savePromptStates(
