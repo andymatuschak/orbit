@@ -1,6 +1,5 @@
 import OrbitAPIClient from "@withorbit/api-client";
 import {
-  ActionLog,
   ActionLogID,
   applyActionLogToPromptState,
   getActionLogFromPromptActionLog,
