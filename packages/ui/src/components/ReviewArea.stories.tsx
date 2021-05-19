@@ -1,6 +1,7 @@
 import { boolean, number, text, withKnobs } from "@storybook/addon-knobs";
 import {
   applyActionLogToPromptState,
+  getActionLogFromPromptActionLog,
   getIDForActionLog,
   getIDForPromptTask,
   PromptID,
@@ -113,7 +114,9 @@ function ReviewAreaTemplate({
               taskParameters: null,
               timestampMillis: Date.now(),
             };
-            const actionLogID = await getIDForActionLog(log);
+            const actionLogID = await getIDForActionLog(
+              getActionLogFromPromptActionLog(log),
+            );
             setLocalPromptStates((states) => {
               return [
                 ...states,

@@ -1,6 +1,8 @@
 import {
+  ApplicationPrompt,
   ApplicationPromptTask,
   applicationPromptType,
+  ClozePrompt,
   ClozePromptTask,
   clozePromptType,
   createClozeMarkupRegexp,
@@ -41,9 +43,14 @@ function getQAPromptContents<PT extends QAPromptTask | ApplicationPromptTask>(
       const applicationReviewItem = reviewItem as ReviewAreaItem<
         ApplicationPromptTask
       >;
-      return applicationReviewItem.prompt.variants[
-        applicationReviewItem.taskParameters.variantIndex
-      ];
+      const taskParameters = applicationReviewItem.taskParameters as {
+        variantIndex: number;
+      };
+      const applicationPrompt = applicationReviewItem.prompt as ApplicationPrompt;
+
+      return applicationPrompt.variants[taskParameters.variantIndex];
+    case clozePromptType:
+      throw new Error("cloze prompt is not a QA prompt");
   }
 }
 
@@ -352,9 +359,10 @@ function ClozePromptRenderer({
   reviewItem,
 }: ClozePromptRendererProps) {
   const {
-    prompt: { body },
+    prompt,
     promptParameters: { clozeIndex },
   } = reviewItem;
+  const { body } = prompt as ClozePrompt;
   const front = {
     ...body,
     contents: formatClozePromptContents(body.contents, false, clozeIndex),

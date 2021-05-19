@@ -200,7 +200,9 @@ describe("repetition", () => {
         ...testRepetitionLog,
         outcome: PromptRepetitionOutcome.Forgotten,
       };
-      const logID = await getIDForActionLog(log);
+      const logID = await getIDForActionLog(
+        getActionLogFromPromptActionLog(log),
+      );
 
       const promptState = applyActionLogToPromptState({
         promptActionLog: log,
@@ -245,7 +247,9 @@ describe("repetition", () => {
       };
       const nextPromptState = applyActionLogToPromptState({
         promptActionLog: log,
-        actionLogID: await getIDForActionLog(log),
+        actionLogID: await getIDForActionLog(
+          getActionLogFromPromptActionLog(log),
+        ),
         basePromptState,
         schedule: testSchedule,
       }) as PromptState;
@@ -273,7 +277,9 @@ describe("repetition", () => {
       };
       const nextPromptState = applyActionLogToPromptState({
         promptActionLog: log,
-        actionLogID: await getIDForActionLog(log),
+        actionLogID: await getIDForActionLog(
+          getActionLogFromPromptActionLog(log),
+        ),
         basePromptState,
         schedule: testSchedule,
       }) as PromptState;
@@ -294,7 +300,7 @@ describe("repetition", () => {
         promptParameters: null,
       }),
     };
-    const logID = await getIDForActionLog(log);
+    const logID = await getIDForActionLog(getActionLogFromPromptActionLog(log));
     expect(
       (applyActionLogToPromptState({
         promptActionLog: log,

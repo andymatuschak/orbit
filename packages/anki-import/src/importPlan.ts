@@ -314,7 +314,9 @@ export async function createImportPlan(
       promptActionLog.taskID,
       applyActionLogToPromptState({
         promptActionLog,
-        actionLogID: await getIDForActionLog(promptActionLog),
+        actionLogID: await getIDForActionLog(
+          getActionLogFromPromptActionLog(promptActionLog),
+        ),
         schedule: "default",
         basePromptState: null,
       }) as PromptState,
@@ -336,11 +338,13 @@ export async function createImportPlan(
     }
 
     const promptActionLog = await createPlanForLog(ankiLog, cardLastActionLog);
-    plan.logs.push(promptActionLog);
+    plan.logs.push(getActionLogFromPromptActionLog(promptActionLog));
 
     const newPromptState = applyActionLogToPromptState({
       promptActionLog,
-      actionLogID: await getIDForActionLog(promptActionLog),
+      actionLogID: await getIDForActionLog(
+        getActionLogFromPromptActionLog(promptActionLog),
+      ),
       schedule: "default",
       basePromptState: taskIDsToPromptStates.get(promptActionLog.taskID)!,
     }) as PromptState;

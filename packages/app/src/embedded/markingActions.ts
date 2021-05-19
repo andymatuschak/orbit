@@ -3,6 +3,7 @@ import {
   applicationPromptType,
   ClozePromptParameters,
   clozePromptType,
+  getActionLogFromPromptActionLog,
   getClozeDeletionCount,
   getIDForActionLogSync,
   getIDForPromptTask,
@@ -156,7 +157,7 @@ export function getActionsRecordForMarking({
   };
   const repetitionLogEntry = {
     log: repetitionLog,
-    id: getIDForActionLogSync(repetitionLog),
+    id: getIDForActionLogSync(getActionLogFromPromptActionLog(repetitionLog)),
   };
 
   return {

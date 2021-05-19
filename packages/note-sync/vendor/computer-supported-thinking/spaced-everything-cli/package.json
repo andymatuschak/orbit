@@ -18,7 +18,7 @@
     "@types/node": "~10",
     "globby": "^10.0.2",
     "ts-node": "~8",
-    "typescript": "beta"
+    "typescript": "^4.2.4"
   },
   "engines": {
     "node": ">=10.0.0"

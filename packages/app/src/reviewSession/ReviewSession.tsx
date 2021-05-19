@@ -4,6 +4,7 @@ import {
   getIDForActionLogSync,
   getIDForPromptSync,
   getIDForPromptTask,
+  getActionLogFromPromptActionLog,
   getNextTaskParameters,
   PromptActionLog,
   PromptProvenanceType,
@@ -107,7 +108,14 @@ function persistMarking({
       console.error("Couldn't commit", reviewItem.prompt, error);
     });
 
-  return [{ log: promptActionLog, id: getIDForActionLogSync(promptActionLog) }];
+  return [
+    {
+      log: promptActionLog,
+      id: getIDForActionLogSync(
+        getActionLogFromPromptActionLog(promptActionLog),
+      ),
+    },
+  ];
 }
 
 function useReviewItemQueue(

@@ -94,7 +94,7 @@ export default class DatabaseManager {
     const promptLogEntries = await Promise.all(
       [...entries].map(async (log) => ({
         log,
-        id: await getIDForActionLog(log),
+        id: await getIDForActionLog(getActionLogFromPromptActionLog(log)),
       })),
     );
 
@@ -180,7 +180,13 @@ export default class DatabaseManager {
       }
     }
 
-    await this.actionLogStore.saveActionLogs(entries);
+    // NOTE: As of Typescript 4.2.4 PromptActionLog is not equivalent ActionLog. Looks to be compiler limitation
+    await this.actionLogStore.saveActionLogs(
+      entries.map(({ id, log }) => ({
+        id,
+        log: getActionLogFromPromptActionLog(log),
+      })),
+    );
 
     await this.promptStateStore.savePromptStates(
       updates.map(({ newPromptState, taskID }) => ({
