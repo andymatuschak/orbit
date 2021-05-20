@@ -1,0 +1,527 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "Partial<TaskMetadata>": {
+            "additionalProperties": false,
+            "properties": {
+                "isDeleted": {
+                    "type": "boolean"
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/TaskProvenance"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "type": "object"
+        },
+        "PromptProvenanceType": {
+            "enum": [
+                "anki",
+                "note",
+                "web"
+            ],
+            "type": "string"
+        },
+        "TaskProvenance": {
+            "additionalProperties": false,
+            "properties": {
+                "externalID": {
+                    "type": "string"
+                },
+                "modificationTimestampMillis": {
+                    "type": [
+                        "null",
+                        "number"
+                    ]
+                },
+                "provenanceType": {
+                    "$ref": "#/definitions/PromptProvenanceType"
+                },
+                "title": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                },
+                "url": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                }
+            },
+            "required": [
+                "externalID",
+                "modificationTimestampMillis",
+                "provenanceType",
+                "title",
+                "url"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "/actionLogs": {
+            "additionalProperties": false,
+            "properties": {
+                "GET": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "query": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "createdAfterID": {
+                                    "description": "Created After ActionLogID",
+                                    "type": "string"
+                                },
+                                "limit": {
+                                    "default": 100,
+                                    "minimum": 1,
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "response": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "data": {
+                                    "items": {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                            "data": {
+                                                "anyOf": [
+                                                    {
+                                                        "additionalProperties": false,
+                                                        "properties": {
+                                                            "actionLogType": {
+                                                                "enum": [
+                                                                    "ingest"
+                                                                ],
+                                                                "type": "string"
+                                                            },
+                                                            "provenance": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "$ref": "#/definitions/TaskProvenance"
+                                                                    },
+                                                                    {
+                                                                        "type": "null"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "taskID": {
+                                                                "type": "string"
+                                                            },
+                                                            "timestampMillis": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "actionLogType",
+                                                            "provenance",
+                                                            "taskID",
+                                                            "timestampMillis"
+                                                        ],
+                                                        "type": "object"
+                                                    },
+                                                    {
+                                                        "additionalProperties": false,
+                                                        "properties": {
+                                                            "actionLogType": {
+                                                                "enum": [
+                                                                    "repetition"
+                                                                ],
+                                                                "type": "string"
+                                                            },
+                                                            "context": {
+                                                                "type": [
+                                                                    "null",
+                                                                    "string"
+                                                                ]
+                                                            },
+                                                            "outcome": {
+                                                                "type": "string"
+                                                            },
+                                                            "parentActionLogIDs": {
+                                                                "items": {
+                                                                    "additionalProperties": false,
+                                                                    "properties": {
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "type": "array"
+                                                            },
+                                                            "taskID": {
+                                                                "type": "string"
+                                                            },
+                                                            "taskParameters": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "additionalProperties": {
+                                                                            "type": [
+                                                                                "null",
+                                                                                "string",
+                                                                                "number"
+                                                                            ]
+                                                                        },
+                                                                        "type": "object"
+                                                                    },
+                                                                    {
+                                                                        "type": "null"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "timestampMillis": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "actionLogType",
+                                                            "context",
+                                                            "outcome",
+                                                            "parentActionLogIDs",
+                                                            "taskID",
+                                                            "taskParameters",
+                                                            "timestampMillis"
+                                                        ],
+                                                        "type": "object"
+                                                    },
+                                                    {
+                                                        "additionalProperties": false,
+                                                        "properties": {
+                                                            "actionLogType": {
+                                                                "enum": [
+                                                                    "reschedule"
+                                                                ],
+                                                                "type": "string"
+                                                            },
+                                                            "newTimestampMillis": {
+                                                                "type": "number"
+                                                            },
+                                                            "parentActionLogIDs": {
+                                                                "items": {
+                                                                    "additionalProperties": false,
+                                                                    "properties": {
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "type": "array"
+                                                            },
+                                                            "taskID": {
+                                                                "type": "string"
+                                                            },
+                                                            "timestampMillis": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "actionLogType",
+                                                            "newTimestampMillis",
+                                                            "parentActionLogIDs",
+                                                            "taskID",
+                                                            "timestampMillis"
+                                                        ],
+                                                        "type": "object"
+                                                    },
+                                                    {
+                                                        "additionalProperties": false,
+                                                        "properties": {
+                                                            "actionLogType": {
+                                                                "enum": [
+                                                                    "updateMetadata"
+                                                                ],
+                                                                "type": "string"
+                                                            },
+                                                            "parentActionLogIDs": {
+                                                                "items": {
+                                                                    "additionalProperties": false,
+                                                                    "properties": {
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "type": "array"
+                                                            },
+                                                            "taskID": {
+                                                                "type": "string"
+                                                            },
+                                                            "timestampMillis": {
+                                                                "type": "number"
+                                                            },
+                                                            "updates": {
+                                                                "$ref": "#/definitions/Partial<TaskMetadata>"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "actionLogType",
+                                                            "parentActionLogIDs",
+                                                            "taskID",
+                                                            "timestampMillis",
+                                                            "updates"
+                                                        ],
+                                                        "type": "object"
+                                                    }
+                                                ]
+                                            },
+                                            "id": {
+                                                "additionalProperties": false,
+                                                "properties": {
+                                                },
+                                                "type": "object"
+                                            },
+                                            "objectType": {
+                                                "enum": [
+                                                    "actionLog"
+                                                ],
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "data",
+                                            "id",
+                                            "objectType"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                },
+                                "hasMore": {
+                                    "type": "boolean"
+                                },
+                                "objectType": {
+                                    "enum": [
+                                        "list"
+                                    ],
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "data",
+                                "hasMore",
+                                "objectType"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "query"
+                    ],
+                    "type": "object"
+                },
+                "PATCH": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "body": {
+                            "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                    "data": {
+                                        "anyOf": [
+                                            {
+                                                "additionalProperties": false,
+                                                "properties": {
+                                                    "actionLogType": {
+                                                        "enum": [
+                                                            "ingest"
+                                                        ],
+                                                        "type": "string"
+                                                    },
+                                                    "provenance": {
+                                                        "anyOf": [
+                                                            {
+                                                                "$ref": "#/definitions/TaskProvenance"
+                                                            },
+                                                            {
+                                                                "type": "null"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "taskID": {
+                                                        "type": "string"
+                                                    },
+                                                    "timestampMillis": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "actionLogType",
+                                                    "provenance",
+                                                    "taskID",
+                                                    "timestampMillis"
+                                                ],
+                                                "type": "object"
+                                            },
+                                            {
+                                                "additionalProperties": false,
+                                                "properties": {
+                                                    "actionLogType": {
+                                                        "enum": [
+                                                            "repetition"
+                                                        ],
+                                                        "type": "string"
+                                                    },
+                                                    "context": {
+                                                        "type": [
+                                                            "null",
+                                                            "string"
+                                                        ]
+                                                    },
+                                                    "outcome": {
+                                                        "type": "string"
+                                                    },
+                                                    "parentActionLogIDs": {
+                                                        "items": {
+                                                            "additionalProperties": false,
+                                                            "properties": {
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "type": "array"
+                                                    },
+                                                    "taskID": {
+                                                        "type": "string"
+                                                    },
+                                                    "taskParameters": {
+                                                        "anyOf": [
+                                                            {
+                                                                "additionalProperties": {
+                                                                    "type": [
+                                                                        "null",
+                                                                        "string",
+                                                                        "number"
+                                                                    ]
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            {
+                                                                "type": "null"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "timestampMillis": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "actionLogType",
+                                                    "context",
+                                                    "outcome",
+                                                    "parentActionLogIDs",
+                                                    "taskID",
+                                                    "taskParameters",
+                                                    "timestampMillis"
+                                                ],
+                                                "type": "object"
+                                            },
+                                            {
+                                                "additionalProperties": false,
+                                                "properties": {
+                                                    "actionLogType": {
+                                                        "enum": [
+                                                            "reschedule"
+                                                        ],
+                                                        "type": "string"
+                                                    },
+                                                    "newTimestampMillis": {
+                                                        "type": "number"
+                                                    },
+                                                    "parentActionLogIDs": {
+                                                        "items": {
+                                                            "additionalProperties": false,
+                                                            "properties": {
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "type": "array"
+                                                    },
+                                                    "taskID": {
+                                                        "type": "string"
+                                                    },
+                                                    "timestampMillis": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "actionLogType",
+                                                    "newTimestampMillis",
+                                                    "parentActionLogIDs",
+                                                    "taskID",
+                                                    "timestampMillis"
+                                                ],
+                                                "type": "object"
+                                            },
+                                            {
+                                                "additionalProperties": false,
+                                                "properties": {
+                                                    "actionLogType": {
+                                                        "enum": [
+                                                            "updateMetadata"
+                                                        ],
+                                                        "type": "string"
+                                                    },
+                                                    "parentActionLogIDs": {
+                                                        "items": {
+                                                            "additionalProperties": false,
+                                                            "properties": {
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "type": "array"
+                                                    },
+                                                    "taskID": {
+                                                        "type": "string"
+                                                    },
+                                                    "timestampMillis": {
+                                                        "type": "number"
+                                                    },
+                                                    "updates": {
+                                                        "$ref": "#/definitions/Partial<TaskMetadata>"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "actionLogType",
+                                                    "parentActionLogIDs",
+                                                    "taskID",
+                                                    "timestampMillis",
+                                                    "updates"
+                                                ],
+                                                "type": "object"
+                                            }
+                                        ]
+                                    },
+                                    "id": {
+                                        "description": "Created After ActionLogID",
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "data",
+                                    "id"
+                                ],
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        "response": {
+                            "type": "null"
+                        }
+                    },
+                    "required": [
+                        "body"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "type": "object"
+}
+
