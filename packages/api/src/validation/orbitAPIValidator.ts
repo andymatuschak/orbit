@@ -1,0 +1,87 @@
+import { ValidatableSpec } from "@withorbit/api/src/orbitAPI";
+import OrbitAPISchema from "@withorbit/api/src/orbitAPISchema.json";
+import Ajv, {
+  ErrorObject as AjvErrorObject,
+  ValidateFunction as AjvValidationFunction,
+} from "ajv";
+import {
+  APIValidatorRequest,
+  APIValidatorError,
+  APIValidator,
+} from "./apiValidator";
+
+type OrbitAPIValidatorConfig = {
+  mutateWithDefaultValues: boolean;
+  allowUnsupportedRoute: boolean;
+};
+
+export class OrbitAPIValidator implements APIValidator {
+  private readonly validator: AjvValidationFunction;
+  private readonly config: OrbitAPIValidatorConfig;
+
+  constructor(config: OrbitAPIValidatorConfig) {
+    this.config = config;
+    const ajv = new Ajv({
+      allowUnionTypes: true,
+      useDefaults: config.mutateWithDefaultValues,
+    });
+    this.validator = ajv.compile<ValidatableSpec>(OrbitAPISchema);
+  }
+
+  validateRequest(request: APIValidatorRequest): APIValidatorError | true {
+    return this.validate(request, undefined);
+  }
+
+  validateResponse(
+    request: APIValidatorRequest,
+    response: unknown,
+  ): APIValidatorError | true {
+    return this.validate(request, response);
+  }
+
+  private validate(
+    { method, path, query, body }: APIValidatorRequest,
+    response: unknown,
+  ) {
+    const isValid = this.validator({
+      [path]: {
+        [method]: {
+          ...(method === "GET" ? { query } : { body: body }),
+          response,
+        },
+      },
+    });
+
+    if (
+      isValid ||
+      (this.config.allowUnsupportedRoute && this._isUnsupportedRoute())
+    ) {
+      return true;
+    } else if (this.validator.errors) {
+      return {
+        errors: this.validator.errors.map(this._createAPIValidationError),
+      };
+    } else {
+      return {
+        errors: [{ message: "An unknown validation error occurred" }],
+      };
+    }
+  }
+
+  private _isUnsupportedRoute(): boolean {
+    if (this.validator.errors) {
+      return this.validator.errors[0].schemaPath === "#/additionalProperties";
+    }
+    return false;
+  }
+
+  private _createAPIValidationError(error: AjvErrorObject) {
+    // Assume the format is /#/properties/[HTTP_PATH]/properties/[VERB]/properties/query/*;
+    // strip everything up to query
+    const isolatedInstancePath = error.schemaPath.split("/").slice(6).join("/");
+
+    return {
+      message: `${isolatedInstancePath} ${error.message}`,
+    };
+  }
+}
