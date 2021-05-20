@@ -17,12 +17,12 @@
   },
   "license": "AGPL-3.0-or-later OR BUSL-1.1",
   "dependencies": {
-    "@withorbit/core": "0.0.1",
-    "@withorbit/api": "0.0.1",
-    "@withorbit/firebase-support": "0.0.1",
     "@google-cloud/bigquery": "^5.5.0",
     "@google-cloud/pubsub": "^2.6.0",
     "@ipld/dag-json": "^4.0.0",
+    "@withorbit/api": "0.0.1",
+    "@withorbit/core": "0.0.1",
+    "@withorbit/firebase-support": "0.0.1",
     "busboy": "^0.3.1",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
@@ -45,7 +45,6 @@
     "node": "14"
   },
   "devDependencies": {
-    "@withorbit/sample-data": "0.0.1",
     "@babel/core": "^7.12.3",
     "@babel/plugin-transform-modules-commonjs": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
@@ -63,6 +62,7 @@
     "@types/request-ip": "^0.0.35",
     "@typescript-eslint/eslint-plugin": "^4.7.0",
     "@typescript-eslint/parser": "^4.7.0",
+    "@withorbit/sample-data": "0.0.1",
     "babel-jest": "^26.6.3",
     "babel-loader": "^8.1.0",
     "babel-plugin-add-import-extension": "^1.4.3",
