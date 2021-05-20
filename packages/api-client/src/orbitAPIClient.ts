@@ -1,4 +1,4 @@
-import { OrbitAPI, API } from "@withorbit/api";
+import { OrbitAPI, API, OrbitAPIValidator } from "@withorbit/api";
 import {
   Attachment,
   AttachmentID,
@@ -10,6 +10,11 @@ import { APIConfig, defaultAPIConfig } from "./apiConfig";
 import { AuthenticationConfig, RequestManager } from "./requestManager";
 import { Blob } from "./util/fetch";
 
+const ajvValidator = new OrbitAPIValidator({
+  allowUnsupportedRoute: true,
+  mutateWithDefaultValues: false,
+});
+
 export class OrbitAPIClient {
   private requestManager: RequestManager<OrbitAPI.Spec>;
 
@@ -20,6 +25,7 @@ export class OrbitAPIClient {
   ) {
     this.requestManager = new RequestManager<OrbitAPI.Spec>(
       config,
+      ajvValidator,
       authenticateRequest,
     );
   }
