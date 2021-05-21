@@ -24,6 +24,7 @@ export class OrbitAPIValidator implements APIValidator {
     const ajv = new Ajv({
       allowUnionTypes: true,
       useDefaults: config.mutateWithDefaultValues,
+      coerceTypes: true,
     });
     this.validator = ajv.compile<ValidatableSpec>(OrbitAPISchema);
   }

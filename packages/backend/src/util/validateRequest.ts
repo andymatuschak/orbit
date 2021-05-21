@@ -8,8 +8,6 @@ export const validateRequest: CurriedMiddleware = (validator) => (
   res,
   next,
 ) => {
-  convertNumbersToPrimitiveType(req.query);
-
   const validationResult = validator.validateRequest({
     method: req.method,
     path: req.path,
@@ -23,13 +21,3 @@ export const validateRequest: CurriedMiddleware = (validator) => (
     res.status(400).send(validationResult);
   }
 };
-
-function convertNumbersToPrimitiveType(object: Record<string, unknown>) {
-  for (const [key, val] of Object.entries(object)) {
-    if (typeof val !== "string") continue;
-
-    if (!isNaN(Number(val))) {
-      object[key] = Number(val);
-    }
-  }
-}
