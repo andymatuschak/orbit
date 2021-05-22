@@ -145,4 +145,29 @@ describe("AjvAPIValidator", () => {
       errors: [{ message: "query/properties/limit/type must be integer" }],
     });
   });
+
+  it("coerces integer type from string values", () => {
+    const query = { limit: "3" };
+    const result = validator.validateResponse(
+      {
+        path: "/basket",
+        method: "GET",
+        query,
+      },
+      [{ isSliced: true }],
+    );
+    expect(result).toEqual(true);
+  });
+
+  it("coerces boolean type from string values", () => {
+    const result = validator.validateResponse(
+      {
+        path: "/basket",
+        method: "GET",
+        query: {},
+      },
+      [{ isSliced: "true" }],
+    );
+    expect(result).toEqual(true);
+  });
 });
