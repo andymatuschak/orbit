@@ -1,44 +1,53 @@
 import { ActionLogID } from "../actionLogID";
 import { TaskMetadata, TaskProvenance } from "./taskMetadata";
 
-export type BaseActionLog = {
+export interface BaseActionLog {
   timestampMillis: number;
   taskID: string;
-};
+}
 
 export type ActionLogMetadata = { [key: string]: string | number | null };
 
 export const ingestActionLogType = "ingest";
-export type IngestActionLog = {
+export interface IngestActionLog extends BaseActionLog {
   actionLogType: typeof ingestActionLogType;
   provenance: TaskProvenance | null;
-} & BaseActionLog;
+}
 
 export const repetitionActionLogType = "repetition";
-export type RepetitionActionLog = {
+export interface RepetitionActionLog extends BaseActionLog {
   actionLogType: typeof repetitionActionLogType;
+  /**
+   * @items.type string
+   */
   parentActionLogIDs: ActionLogID[];
   taskParameters: ActionLogMetadata | null;
 
   outcome: string;
   context: string | null;
-} & BaseActionLog;
+}
 
 export const rescheduleActionLogType = "reschedule";
-export type RescheduleActionLog = {
+export interface RescheduleActionLog extends BaseActionLog {
   actionLogType: typeof rescheduleActionLogType;
+  /**
+   * @items.type string
+   */
   parentActionLogIDs: ActionLogID[];
 
   newTimestampMillis: number;
-} & BaseActionLog;
+}
 
 export const updateMetadataActionLogType = "updateMetadata";
-export type UpdateMetadataActionLog = {
+export interface UpdateMetadataActionLog extends BaseActionLog {
   actionLogType: typeof updateMetadataActionLogType;
+  /**
+   * @items.type string
+   */
   parentActionLogIDs: ActionLogID[];
 
   updates: Partial<TaskMetadata>;
-} & BaseActionLog;
+}
 
 export type ActionLog =
   | IngestActionLog

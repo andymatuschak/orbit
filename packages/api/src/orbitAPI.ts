@@ -9,9 +9,10 @@ import {
   PromptTaskID,
 } from "@withorbit/core";
 import { BlobLike } from "./genericHTTPAPI";
+import { RequiredSpec } from "./util/requiredSpec";
 
 // Meant to conform to genericHTTPAPI/Spec, but I can't declare conformance without running into obscure Typescript limitations.
-export type Spec = {
+type SpecLegacy = {
   "/taskStates": {
     GET: {
       query:
@@ -27,21 +28,6 @@ export type Spec = {
           ))
         | { ids: PromptTaskID[] };
       response: ResponseList<"taskState", PromptTaskID, PromptState>;
-    };
-  };
-
-  "/actionLogs": {
-    GET: {
-      query: {
-        limit?: number;
-        createdAfterID?: ActionLogID;
-      };
-      response: ResponseList<"actionLog", ActionLogID, ActionLog>;
-    };
-
-    PATCH: {
-      body: { id: ActionLogID; data: ActionLog }[];
-      response: void;
     };
   };
 
@@ -89,6 +75,33 @@ export type Spec = {
    */
 };
 
+export type ValidatableSpec = {
+  "/actionLogs"?: {
+    GET?: {
+      query: {
+        /**
+         * @minimum 1
+         * @default 100
+         * @TJS-type integer
+         */
+        limit?: number;
+        createdAfterID?: ActionLogID;
+      };
+      response?: ResponseList<"actionLog", ActionLogID, ActionLog>;
+    };
+
+    PATCH?: {
+      body: {
+        id: ActionLogID;
+        data: ActionLog;
+      }[];
+      response?: null;
+    };
+  };
+};
+
+export type Spec = RequiredSpec<ValidatableSpec> & SpecLegacy;
+
 export type ResponseList<
   ObjectTypeString extends string,
   IDType extends string,
@@ -105,6 +118,9 @@ export type ResponseObject<
   DataType
 > = {
   objectType: ObjectType;
+  /**
+   * @TJS-type string
+   */
   id: IDType;
   data: DataType;
 };

@@ -1,16 +1,19 @@
-import { API } from "@withorbit/api";
+import { API, APIValidator } from "@withorbit/api";
 import { APIConfig } from "./apiConfig";
 import * as Network from "./util/fetch";
 
 export class RequestManager<API extends API.Spec> {
   private readonly config: APIConfig;
   private readonly authorizeRequest?: () => Promise<AuthenticationConfig>;
+  private readonly validator: APIValidator;
 
   constructor(
     config: APIConfig,
+    validator: APIValidator,
     authorizeRequest?: () => Promise<AuthenticationConfig>,
   ) {
     this.config = config;
+    this.validator = validator;
     this.authorizeRequest = authorizeRequest;
   }
 
@@ -93,7 +96,18 @@ export class RequestManager<API extends API.Spec> {
         >;
       } else {
         const json = await response.json();
-        // TODO validate
+
+        const validationResult = this.validator.validateResponse(
+          { path, method, ...requestData },
+          json,
+        );
+        if (validationResult !== true) {
+          console.warn(
+            `Validation Error: (${method}) ${path} did not match the expected value for this route`,
+          );
+          console.warn(validationResult);
+        }
+
         return json as API.RouteResponseData<API[Path][Method]>;
       }
     } else {

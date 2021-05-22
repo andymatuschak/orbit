@@ -1,4 +1,5 @@
 import { RequestManager } from "./requestManager";
+import { MockOrbitAPIValidation } from "./util/mockAPIValiation";
 
 const testAPIConfig = { baseURL: "https://localhost" };
 
@@ -17,7 +18,11 @@ describe("URL parameter interpolation", () => {
       GET: { response: void };
     };
   };
-  const requestManager = new RequestManager<TestAPI>(testAPIConfig);
+  const mockedValidator = new MockOrbitAPIValidation();
+  const requestManager = new RequestManager<TestAPI>(
+    testAPIConfig,
+    mockedValidator,
+  );
 
   test("interpolates parameters", () => {
     const url = requestManager.getRequestURL("/foo/:bar/baz/:bat", "GET", {
