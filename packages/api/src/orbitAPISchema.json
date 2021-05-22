@@ -83,10 +83,7 @@
                 },
                 "parentActionLogIDs": {
                     "items": {
-                        "additionalProperties": false,
-                        "properties": {
-                        },
-                        "type": "object"
+                        "type": "string"
                     },
                     "type": "array"
                 },
@@ -139,10 +136,7 @@
                 },
                 "parentActionLogIDs": {
                     "items": {
-                        "additionalProperties": false,
-                        "properties": {
-                        },
-                        "type": "object"
+                        "type": "string"
                     },
                     "type": "array"
                 },
@@ -210,10 +204,7 @@
                 },
                 "parentActionLogIDs": {
                     "items": {
-                        "additionalProperties": false,
-                        "properties": {
-                        },
-                        "type": "object"
+                        "type": "string"
                     },
                     "type": "array"
                 },
@@ -248,10 +239,7 @@
                             "additionalProperties": false,
                             "properties": {
                                 "createdAfterID": {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                    },
-                                    "type": "object"
+                                    "type": "string"
                                 },
                                 "limit": {
                                     "default": 100,
@@ -285,10 +273,7 @@
                                                 ]
                                             },
                                             "id": {
-                                                "additionalProperties": false,
-                                                "properties": {
-                                                },
-                                                "type": "object"
+                                                "type": "string"
                                             },
                                             "objectType": {
                                                 "enum": [
@@ -353,10 +338,7 @@
                                         ]
                                     },
                                     "id": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                        },
-                                        "type": "object"
+                                        "type": "string"
                                     }
                                 },
                                 "required": [

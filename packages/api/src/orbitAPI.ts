@@ -85,10 +85,6 @@ export type ValidatableSpec = {
          * @TJS-type integer
          */
         limit?: number;
-        /**
-         * Created After ActionLogID
-         * @TJS-type string
-         */
         createdAfterID?: ActionLogID;
       };
       response?: ResponseList<"actionLog", ActionLogID, ActionLog>;
@@ -96,10 +92,6 @@ export type ValidatableSpec = {
 
     PATCH?: {
       body: {
-        /**
-         * Created After ActionLogID
-         * @TJS-type string
-         */
         id: ActionLogID;
         data: ActionLog;
       }[];
@@ -126,6 +118,9 @@ export type ResponseObject<
   DataType
 > = {
   objectType: ObjectType;
+  /**
+   * @TJS-type string
+   */
   id: IDType;
   data: DataType;
 };
