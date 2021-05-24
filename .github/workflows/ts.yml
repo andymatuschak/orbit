@@ -45,7 +45,7 @@ jobs:
       - name: "run test"
         run: "yarn test"
   stale-api-schema:
-    name: API schema is up to date
+    name: Generated API schema matches source interfaces
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
