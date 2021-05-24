@@ -142,16 +142,10 @@ function canonicalizeActionLog(actionLog: ActionLog): CIDEncodable<ActionLog> {
   }
 }
 
-// without creating a boxed type the typescript-json-schema will not
-// generate the correct type
-interface BoxActionLogID {
-  id: string & { __actionLogIDOpaqueType: never };
-}
-
 /**
  * @TJS-type string
  */
-export type ActionLogID = BoxActionLogID["id"];
+export type ActionLogID = string & { __actionLogIDOpaqueType: never };
 
 export async function getIDForActionLog(
   actionLog: ActionLog,

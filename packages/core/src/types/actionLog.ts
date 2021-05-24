@@ -17,9 +17,6 @@ export interface IngestActionLog extends BaseActionLog {
 export const repetitionActionLogType = "repetition";
 export interface RepetitionActionLog extends BaseActionLog {
   actionLogType: typeof repetitionActionLogType;
-  /**
-   * @items.type string
-   */
   parentActionLogIDs: ActionLogID[];
   taskParameters: ActionLogMetadata | null;
 
@@ -30,9 +27,6 @@ export interface RepetitionActionLog extends BaseActionLog {
 export const rescheduleActionLogType = "reschedule";
 export interface RescheduleActionLog extends BaseActionLog {
   actionLogType: typeof rescheduleActionLogType;
-  /**
-   * @items.type string
-   */
   parentActionLogIDs: ActionLogID[];
 
   newTimestampMillis: number;
@@ -41,9 +35,6 @@ export interface RescheduleActionLog extends BaseActionLog {
 export const updateMetadataActionLogType = "updateMetadata";
 export interface UpdateMetadataActionLog extends BaseActionLog {
   actionLogType: typeof updateMetadataActionLogType;
-  /**
-   * @items.type string
-   */
   parentActionLogIDs: ActionLogID[];
 
   updates: Partial<TaskMetadata>;
