@@ -7,12 +7,16 @@
   "private": true,
   "scripts": {
     "build": "tsc -b",
+    "test": "jest --runInBand",
     "generateSchema": "typescript-json-schema src/orbitAPI.ts ValidatableSpec -o src/orbitAPISchema.json --noExtraProps --required --ignoreErrors --strictNullChecks"
   },
   "dependencies": {
     "ajv": "8.4.0"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.23",
+    "babel-jest": "^26.6.3",
+    "jest": "^26.6.3",
     "typescript": "^4.2.4",
     "typescript-json-schema": "^0.50.0"
   }
