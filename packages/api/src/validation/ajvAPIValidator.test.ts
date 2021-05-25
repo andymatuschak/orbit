@@ -10,6 +10,12 @@ type MockSpec = {
       response: (Apple | Flour)[];
     };
   };
+  "/items": {
+    PATCH: {
+      body: { ids: string[] };
+      response: null;
+    };
+  };
 };
 
 const mockSchema: Schema = {
@@ -57,6 +63,30 @@ const mockSchema: Schema = {
                 ],
               },
             },
+          },
+        },
+      },
+    },
+    "/items": {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        PATCH: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            body: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                ids: {
+                  items: { type: "string" },
+                  type: "array",
+                },
+              },
+              required: ["ids"],
+            },
+            response: { type: "null" },
           },
         },
       },
@@ -169,5 +199,19 @@ describe("AjvAPIValidator", () => {
       [{ isSliced: "true" }],
     );
     expect(result).toEqual(true);
+  });
+
+  it("coerces array type from a single string value", () => {
+    const body = { ids: "id1" };
+    const result = validator.validateResponse(
+      {
+        path: "/items",
+        method: "PATCH",
+        body,
+      },
+      null,
+    );
+    expect(result).toEqual(true);
+    expect(body).toEqual({ ids: ["id1"] });
   });
 });

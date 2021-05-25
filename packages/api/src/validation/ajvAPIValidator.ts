@@ -23,7 +23,8 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
     const ajv = new Ajv({
       allowUnionTypes: true,
       useDefaults: config.mutateWithDefaultValues,
-      coerceTypes: true,
+      // coerce numbers, boolean values AND array
+      coerceTypes: "array",
     });
     this.validator = ajv.compile<T>(schema);
   }
