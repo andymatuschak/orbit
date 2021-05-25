@@ -1,6 +1,6 @@
 # @withorbit/app
 
-This package contains the main Orbit GUI app for the web, iOS, Android, and macOS. It's built on react-native (via a bare Expo project); the web app is built with react-native-web.
+This package contains the main Orbit GUI app for the web, iOS, Android, and macOS. It's built [React Native](https://reactnative.dev) (via [Expo](https://docs.expo.io) with a bare workflow); the web app is built with [react-native-web](https://github.com/necolas/react-native-web).
 
 * Local development
     * First, make sure all the libraries are built by running `yarn install && yarn build` from the monorepo root.
