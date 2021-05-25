@@ -2,6 +2,70 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "additionalProperties": false,
     "definitions": {
+        "ApplicationPrompt": {
+            "additionalProperties": false,
+            "properties": {
+                "promptType": {
+                    "enum": [
+                        "applicationPrompt"
+                    ],
+                    "type": "string"
+                },
+                "variants": {
+                    "items": {
+                        "$ref": "#/definitions/QAPromptContents"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "promptType",
+                "variants"
+            ],
+            "type": "object"
+        },
+        "AttachmentIDReference": {
+            "additionalProperties": false,
+            "properties": {
+                "byteLength": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "image"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "byteLength",
+                "id",
+                "type"
+            ],
+            "type": "object"
+        },
+        "ClozePrompt": {
+            "additionalProperties": false,
+            "properties": {
+                "body": {
+                    "$ref": "#/definitions/PromptField"
+                },
+                "promptType": {
+                    "enum": [
+                        "clozePrompt"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "body",
+                "promptType"
+            ],
+            "type": "object"
+        },
         "IngestActionLog": {
             "additionalProperties": false,
             "properties": {
@@ -55,6 +119,25 @@
             },
             "type": "object"
         },
+        "PromptField": {
+            "additionalProperties": false,
+            "properties": {
+                "attachments": {
+                    "items": {
+                        "$ref": "#/definitions/AttachmentIDReference"
+                    },
+                    "type": "array"
+                },
+                "contents": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "attachments",
+                "contents"
+            ],
+            "type": "object"
+        },
         "PromptProvenanceType": {
             "enum": [
                 "anki",
@@ -62,6 +145,51 @@
                 "web"
             ],
             "type": "string"
+        },
+        "QAPrompt": {
+            "additionalProperties": false,
+            "properties": {
+                "answer": {
+                    "$ref": "#/definitions/PromptField"
+                },
+                "explanation": {
+                    "$ref": "#/definitions/PromptField"
+                },
+                "promptType": {
+                    "enum": [
+                        "qaPrompt"
+                    ],
+                    "type": "string"
+                },
+                "question": {
+                    "$ref": "#/definitions/PromptField"
+                }
+            },
+            "required": [
+                "answer",
+                "promptType",
+                "question"
+            ],
+            "type": "object"
+        },
+        "QAPromptContents": {
+            "additionalProperties": false,
+            "properties": {
+                "answer": {
+                    "$ref": "#/definitions/PromptField"
+                },
+                "explanation": {
+                    "$ref": "#/definitions/PromptField"
+                },
+                "question": {
+                    "$ref": "#/definitions/PromptField"
+                }
+            },
+            "required": [
+                "answer",
+                "question"
+            ],
+            "type": "object"
         },
         "RepetitionActionLog": {
             "additionalProperties": false,
@@ -334,6 +462,133 @@
                                             },
                                             {
                                                 "$ref": "#/definitions/UpdateMetadataActionLog"
+                                            }
+                                        ]
+                                    },
+                                    "id": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "data",
+                                    "id"
+                                ],
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        "response": {
+                            "type": "null"
+                        }
+                    },
+                    "required": [
+                        "body"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "/taskData": {
+            "additionalProperties": false,
+            "properties": {
+                "GET": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "query": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "ids": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                }
+                            },
+                            "required": [
+                                "ids"
+                            ],
+                            "type": "object"
+                        },
+                        "response": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "data": {
+                                    "items": {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                            "data": {
+                                                "anyOf": [
+                                                    {
+                                                        "$ref": "#/definitions/QAPrompt"
+                                                    },
+                                                    {
+                                                        "$ref": "#/definitions/ApplicationPrompt"
+                                                    },
+                                                    {
+                                                        "$ref": "#/definitions/ClozePrompt"
+                                                    }
+                                                ]
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "objectType": {
+                                                "enum": [
+                                                    "taskData"
+                                                ],
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "data",
+                                            "id",
+                                            "objectType"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                },
+                                "hasMore": {
+                                    "type": "boolean"
+                                },
+                                "objectType": {
+                                    "enum": [
+                                        "list"
+                                    ],
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "data",
+                                "hasMore",
+                                "objectType"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "query"
+                    ],
+                    "type": "object"
+                },
+                "PATCH": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "body": {
+                            "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                    "data": {
+                                        "anyOf": [
+                                            {
+                                                "$ref": "#/definitions/QAPrompt"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/ApplicationPrompt"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/ClozePrompt"
                                             }
                                         ]
                                     },
