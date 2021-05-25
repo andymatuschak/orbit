@@ -23,6 +23,7 @@
     "@withorbit/api": "0.0.1",
     "@withorbit/core": "0.0.1",
     "@withorbit/firebase-support": "0.0.1",
+    "ajv": "^8.5.0",
     "busboy": "^0.3.1",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
