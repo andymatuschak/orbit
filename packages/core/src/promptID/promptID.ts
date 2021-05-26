@@ -58,6 +58,9 @@ function canonicalizePrompt(prompt: Prompt): CIDEncodable<Prompt> {
   }
 }
 
+/**
+ * @TJS-type string
+ */
 export type PromptID = string & { __promptIDOpaqueType: never };
 
 export async function getIDForPrompt(prompt: Prompt): Promise<PromptID> {

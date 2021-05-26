@@ -31,18 +31,6 @@ type SpecLegacy = {
     };
   };
 
-  "/taskData": {
-    GET: {
-      query: { ids: PromptID[] };
-      response: ResponseList<"taskData", PromptID, Prompt>;
-    };
-
-    PATCH: {
-      body: { id: PromptID; data: Prompt }[];
-      response: void;
-    };
-  };
-
   "/attachments": {
     POST: {
       contentType: "multipart/form-data";
@@ -95,6 +83,17 @@ export type ValidatableSpec = {
         id: ActionLogID;
         data: ActionLog;
       }[];
+      response?: null;
+    };
+  };
+
+  "/taskData"?: {
+    GET?: {
+      query: { ids: PromptID[] };
+      response?: ResponseList<"taskData", PromptID, Prompt>;
+    };
+    PATCH?: {
+      body: { id: PromptID; data: Prompt }[];
       response?: null;
     };
   };

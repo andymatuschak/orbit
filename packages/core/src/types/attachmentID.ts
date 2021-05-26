@@ -1,5 +1,8 @@
 import { encodeRawBufferToCIDString } from "../util/cids";
 
+/**
+ * @TJS-type string
+ */
 export type AttachmentID = string & { __attachmentIDOpaqueType: never };
 
 export async function getIDForAttachment(

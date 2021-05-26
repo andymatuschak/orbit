@@ -23,7 +23,12 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
     const ajv = new Ajv({
       allowUnionTypes: true,
       useDefaults: config.mutateWithDefaultValues,
-      coerceTypes: true,
+      // Coerce incoming values to the schema-specified types. When the schema
+      // specifies an array type, it will map x to [x] as needed.
+      //
+      // ex: let ids be defined as an array in the schema
+      // a value of { ids: "idA" } will be coerced to { ids: ["idA"] }
+      coerceTypes: "array",
     });
     this.validator = ajv.compile<T>(schema);
   }
@@ -78,7 +83,10 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
   private _createAPIValidationError(error: AjvErrorObject) {
     // Assume the format is /#/properties/[HTTP_PATH]/properties/[VERB]/properties/query/*;
     // strip everything up to query
-    const isolatedInstancePath = error.schemaPath.split("/").slice(6).join("/");
+    const isolatedInstancePath = error.instancePath
+      .split("/")
+      .slice(3)
+      .join("/");
 
     return {
       message: `${isolatedInstancePath} ${error.message}`,
