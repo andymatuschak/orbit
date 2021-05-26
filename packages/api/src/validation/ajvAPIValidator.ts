@@ -83,9 +83,9 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
   private _createAPIValidationError(error: AjvErrorObject) {
     // Assume the format is /#/properties/[HTTP_PATH]/properties/[VERB]/properties/query/*;
     // strip everything up to query
-    const isolatedInstancePath = error.instancePath
-      .split("/")
-      .slice(3)
+    const splitInstancePath = error.instancePath.split("/");
+    const isolatedInstancePath: string = splitInstancePath
+      .slice(Math.min(splitInstancePath.length - 1, 3))
       .join("/");
 
     return {
