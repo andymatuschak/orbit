@@ -100,6 +100,30 @@
             ],
             "type": "object"
         },
+        "FileUploadBlob": {
+            "additionalProperties": true,
+            "properties": {
+                "size": {
+                    "description": "File must be less than 10mb in size",
+                    "maximum": 10000000,
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "type": {
+                    "enum": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/svg+xml"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "size",
+                "type"
+            ],
+            "type": "object"
+        },
         "IngestActionLog": {
             "additionalProperties": false,
             "properties": {
@@ -719,7 +743,15 @@
                     "description": "encode with multipart/form-data, with the file in part named \"file\"\nmake sure to include Content-Type heading for your attachment\nreturns application/json encoded ResponseObject<\"attachmentIDReference\", AttachmentID, AttachmentIDReference>",
                     "properties": {
                         "body": {
-                            "additionalProperties": true,
+                            "additionalProperties": false,
+                            "properties": {
+                                "file": {
+                                    "$ref": "#/definitions/FileUploadBlob"
+                                }
+                            },
+                            "required": [
+                                "file"
+                            ],
                             "type": "object"
                         },
                         "contentType": {

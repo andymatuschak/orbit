@@ -99,14 +99,8 @@ export type ValidatableSpec = {
        * @TJS-pattern multipart/form-data
        */
       contentType: "multipart/form-data";
-      /**
-       * @additionalProperties true
-       */
       body: {
-        /**
-         * @ignore
-         */
-        file: BlobLike;
+        file: FileUploadBlob;
       };
       response?: ResponseObject<
         "attachmentIDReference",
@@ -116,6 +110,20 @@ export type ValidatableSpec = {
     };
   };
 };
+
+/**
+ * @additionalProperties true
+ */
+interface FileUploadBlob extends BlobLike {
+  type: "image/png" | "image/jpeg" | "image/svg+xml";
+  /**
+   * File must be less than 10mb in size
+   * @minimum 0
+   * @maximum 10000000
+   * @TJS-type integer
+   */
+  size: number;
+}
 
 export type Spec = RequiredSpec<ValidatableSpec> & SpecLegacy;
 

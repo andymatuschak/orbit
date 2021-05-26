@@ -3,7 +3,6 @@ import {
   AttachmentIDReference,
   AttachmentMimeType,
   getAttachmentTypeForAttachmentMimeType,
-  getFileExtensionForAttachmentMimeType,
 } from "@withorbit/core";
 import * as backend from "../backend";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";
@@ -19,10 +18,6 @@ export const storeAttachment: TypedRouteHandler<
 
   // HACK: cheap way to validate mime type
   const attachmentMimeType = request.body.file.type as AttachmentMimeType;
-  if (!getFileExtensionForAttachmentMimeType(attachmentMimeType)) {
-    console.error("Unsupported attachment mime type", attachmentMimeType);
-    return { status: 400 };
-  }
   const buffer = new Uint8Array(await request.body.file.arrayBuffer());
 
   const attachmentType = getAttachmentTypeForAttachmentMimeType(
