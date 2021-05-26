@@ -82,5 +82,8 @@
       "firebase-functions",
       "firebase-admin"
     ]
+  },
+  "resolutions": {
+    "api/ajv": "^8.5.0"
   }
 }
