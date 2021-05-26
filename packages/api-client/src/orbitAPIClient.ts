@@ -102,6 +102,7 @@ export class OrbitAPIClient {
 
   getAttachmentURL(attachmentID: AttachmentID): string {
     return this.requestManager.getRequestURL("/attachments/:id", "GET", {
+      query: {},
       params: { id: attachmentID },
     });
   }

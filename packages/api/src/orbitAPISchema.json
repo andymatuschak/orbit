@@ -809,12 +809,18 @@
                             ],
                             "type": "object"
                         },
+                        "query": {
+                            "properties": {
+                            },
+                            "type": "object"
+                        },
                         "response": {
                             "type": "null"
                         }
                     },
                     "required": [
-                        "params"
+                        "params",
+                        "query"
                     ],
                     "type": "object"
                 }

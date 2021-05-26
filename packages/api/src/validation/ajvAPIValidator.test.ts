@@ -157,7 +157,7 @@ describe("AjvAPIValidator", () => {
       query: {},
     });
     expect(result).toEqual({
-      errors: [{ message: " must NOT have additional properties" }],
+      errors: [{ message: "~1basket must NOT have additional properties" }],
     });
   });
 
