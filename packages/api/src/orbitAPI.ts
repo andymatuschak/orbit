@@ -13,24 +13,6 @@ import { RequiredSpec } from "./util/requiredSpec";
 
 // Meant to conform to genericHTTPAPI/Spec, but I can't declare conformance without running into obscure Typescript limitations.
 type SpecLegacy = {
-  "/taskStates": {
-    GET: {
-      query:
-        | ({
-            limit?: number;
-          } & (
-            | {
-                createdAfterID?: PromptTaskID;
-              }
-            | {
-                dueBeforeTimestampMillis: number;
-              }
-          ))
-        | { ids: PromptTaskID[] };
-      response: ResponseList<"taskState", PromptTaskID, PromptState>;
-    };
-  };
-
   "/attachments": {
     POST: {
       contentType: "multipart/form-data";
@@ -64,6 +46,31 @@ type SpecLegacy = {
 };
 
 export type ValidatableSpec = {
+  "/taskStates"?: {
+    GET?: {
+      query:
+        | ({
+            /**
+             * @minimum 1
+             * @TJS-type integer
+             */
+            limit?: number;
+          } & (
+            | {
+                createdAfterID?: PromptTaskID;
+              }
+            | {
+                /**
+                 * @TJS-type integer
+                 */
+                dueBeforeTimestampMillis: number;
+              }
+          ))
+        | { ids: PromptTaskID[] };
+      response?: ResponseList<"taskState", PromptTaskID, PromptState>;
+    };
+  };
+
   "/actionLogs"?: {
     GET?: {
       query: {

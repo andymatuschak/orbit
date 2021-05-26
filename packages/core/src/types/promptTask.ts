@@ -65,6 +65,9 @@ export interface PromptTaskMetadata extends TaskMetadata {
   provenance: PromptProvenance | null;
 }
 
+/**
+ * @TJS-type string
+ */
 export type PromptTaskID = string & { __promptTaskIDOpaqueType: never };
 
 function tooManyComponentsError(promptTaskID: PromptTaskID): Error {
