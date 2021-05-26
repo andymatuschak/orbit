@@ -62,6 +62,7 @@ export class OrbitAPIClient {
     logs: OrbitAPI.Spec["/actionLogs"]["PATCH"]["body"],
   ): Promise<API.RouteResponseData<OrbitAPI.Spec["/actionLogs"]["PATCH"]>> {
     return this.requestManager.request("/actionLogs", "PATCH", {
+      contentType: "application/json",
       body: logs,
     });
   }
@@ -78,6 +79,7 @@ export class OrbitAPIClient {
     data: OrbitAPI.Spec["/taskData"]["PATCH"]["body"],
   ): Promise<API.RouteResponseData<OrbitAPI.Spec["/taskData"]["PATCH"]>> {
     return this.requestManager.request("/taskData", "PATCH", {
+      contentType: "application/json",
       body: data,
     });
   }
@@ -94,7 +96,7 @@ export class OrbitAPIClient {
     const blob = new Blob([attachment.contents], { type: attachment.mimeType });
     return this.requestManager.request("/attachments", "POST", {
       contentType: "multipart/form-data",
-      body: { file: blob },
+      body: { file: blob as OrbitAPI.FileUploadBlob },
     });
   }
 

@@ -77,12 +77,14 @@ export default function createTypedRouter<API extends API.Spec>(
         response.sendStatus(400);
         return;
       }
-
       const validationResult = validator.validateRequest({
         method: request.method,
-        path: request.path,
+        // must use this path instead of request.path to support dynamic urls
+        // since it does not contain route params
+        path,
         query: request.query,
         body: request.body,
+        params: request.params,
         contentType: request.headers["content-type"],
       });
       if (validationResult !== true) {

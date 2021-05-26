@@ -791,6 +791,36 @@
             },
             "type": "object"
         },
+        "/attachments/:id": {
+            "additionalProperties": false,
+            "properties": {
+                "GET": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "params": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id"
+                            ],
+                            "type": "object"
+                        },
+                        "response": {
+                            "type": "null"
+                        }
+                    },
+                    "required": [
+                        "params"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
         "/taskData": {
             "additionalProperties": false,
             "properties": {

@@ -45,14 +45,25 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
   }
 
   private validate(
-    { method, path, contentType, query, body }: APIValidatorRequest,
+    { method, path, contentType, query, body, params }: APIValidatorRequest,
     response: unknown,
   ) {
+    // helper to make sure that objects are not empty
+    const isDefined = (obj: Record<string, unknown> | undefined) => {
+      if (!obj) return undefined;
+      if (typeof obj === "object" && Object.keys(obj).length === 0) {
+        return undefined;
+      }
+      return obj;
+    };
+
     const isValid = this.validator({
       [path]: {
         [method]: {
-          ...(method === "GET" ? { query } : { body: body }),
+          ...(isDefined(query) && { query }),
+          ...(isDefined(params) && { params }),
           ...(contentType && { contentType }),
+          ...(method !== "GET" && { body }),
           response,
         },
       },

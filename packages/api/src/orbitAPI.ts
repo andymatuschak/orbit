@@ -12,17 +12,6 @@ import { BlobLike } from "./genericHTTPAPI";
 import { RequiredSpec } from "./util/requiredSpec";
 
 // Meant to conform to genericHTTPAPI/Spec, but I can't declare conformance without running into obscure Typescript limitations.
-type SpecLegacy = {
-  "/attachments/:id": {
-    GET: {
-      params: {
-        id: AttachmentID;
-      };
-      response: void;
-    };
-  };
-};
-
 export type ValidatableSpec = {
   "/taskStates"?: {
     GET?: {
@@ -109,12 +98,21 @@ export type ValidatableSpec = {
       >;
     };
   };
+
+  "/attachments/:id"?: {
+    GET?: {
+      params: {
+        id: AttachmentID;
+      };
+      response?: null;
+    };
+  };
 };
 
 /**
  * @additionalProperties true
  */
-interface FileUploadBlob extends BlobLike {
+export interface FileUploadBlob extends BlobLike {
   type: "image/png" | "image/jpeg" | "image/svg+xml";
   /**
    * File must be less than 10mb in size
@@ -125,7 +123,7 @@ interface FileUploadBlob extends BlobLike {
   size: number;
 }
 
-export type Spec = RequiredSpec<ValidatableSpec> & SpecLegacy;
+export type Spec = RequiredSpec<ValidatableSpec>;
 
 /**
  * @TJS-type string
