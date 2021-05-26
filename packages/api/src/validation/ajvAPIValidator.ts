@@ -23,7 +23,11 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
     const ajv = new Ajv({
       allowUnionTypes: true,
       useDefaults: config.mutateWithDefaultValues,
-      // coerce numbers, boolean values AND array
+      // Coerce incoming values to the schema-specified types. When the schema
+      // specifies an array type, it will map x to [x] as needed.
+      //
+      // ex: let ids be defined as an array in the schema
+      // a value of { ids: "idA" } will be coerced to { ids: ["idA"] }
       coerceTypes: "array",
     });
     this.validator = ajv.compile<T>(schema);
