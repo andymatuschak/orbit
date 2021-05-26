@@ -172,7 +172,7 @@ describe("AjvAPIValidator", () => {
       [{ isSliced: true }],
     );
     expect(result).toEqual({
-      errors: [{ message: "query/properties/limit/type must be integer" }],
+      errors: [{ message: "query/limit must be integer" }],
     });
   });
 
