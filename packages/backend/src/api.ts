@@ -13,7 +13,6 @@ import { listTaskData, storeTaskData } from "./api/taskData";
 import { listTaskStates } from "./api/taskStates";
 import corsHandler from "./api/util/corsHandler";
 import createTypedRouter from "./api/util/typedRouter";
-import { validateRequest } from "./util/validateRequest";
 
 const traceAPICall: express.RequestHandler = (request, _, next) => {
   console.log(
@@ -42,9 +41,8 @@ export function createAPIApp(): express.Application {
     next();
   });
   app.use(traceAPICall);
-  app.use(validateRequest(routeValidator));
 
-  createTypedRouter<OrbitAPI.Spec>(app, {
+  createTypedRouter<OrbitAPI.Spec>(app, routeValidator, {
     "/actionLogs": {
       GET: listActionLogs,
       PATCH: storeActionLogs,

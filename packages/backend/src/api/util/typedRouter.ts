@@ -1,4 +1,4 @@
-import { API } from "@withorbit/api";
+import { API, APIValidator } from "@withorbit/api";
 import Busboy from "busboy";
 import express from "express";
 import Blob from "fetch-blob";
@@ -51,6 +51,7 @@ export enum CachePolicy {
 
 export default function createTypedRouter<API extends API.Spec>(
   app: express.Express | express.Router,
+  validator: APIValidator,
   handlers: TypedAPIImplementation<API>,
 ) {
   type APIPaths = Extract<keyof API, string>;
@@ -77,7 +78,17 @@ export default function createTypedRouter<API extends API.Spec>(
         return;
       }
 
-      // TODO: validate request data
+      const validationResult = validator.validateRequest({
+        method: request.method,
+        path: request.path,
+        query: request.query,
+        body: request.body,
+        contentType: request.headers["content-type"],
+      });
+      if (validationResult !== true) {
+        response.status(400).send(validationResult);
+        return;
+      }
 
       return handler(request as TypedRequest<API[Path][Method]>)
         .then((result) => {
