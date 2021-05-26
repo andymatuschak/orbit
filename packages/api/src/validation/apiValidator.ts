@@ -1,6 +1,7 @@
 export type APIValidatorRequest = {
   method: string;
   path: string;
+  contentType?: string;
   query?: unknown;
   body?: unknown;
 };

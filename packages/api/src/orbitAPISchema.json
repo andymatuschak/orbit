@@ -694,12 +694,65 @@
                             },
                             "type": "array"
                         },
+                        "contentType": {
+                            "pattern": "application/json",
+                            "type": "string"
+                        },
                         "response": {
                             "type": "null"
                         }
                     },
                     "required": [
-                        "body"
+                        "body",
+                        "contentType"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "/attachments": {
+            "additionalProperties": false,
+            "properties": {
+                "POST": {
+                    "additionalProperties": false,
+                    "description": "encode with multipart/form-data, with the file in part named \"file\"\nmake sure to include Content-Type heading for your attachment\nreturns application/json encoded ResponseObject<\"attachmentIDReference\", AttachmentID, AttachmentIDReference>",
+                    "properties": {
+                        "body": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        },
+                        "contentType": {
+                            "pattern": "multipart/form-data",
+                            "type": "string"
+                        },
+                        "response": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/AttachmentIDReference"
+                                },
+                                "id": {
+                                    "type": "string"
+                                },
+                                "objectType": {
+                                    "enum": [
+                                        "attachmentIDReference"
+                                    ],
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "data",
+                                "id",
+                                "objectType"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "body",
+                        "contentType"
                     ],
                     "type": "object"
                 }
@@ -821,12 +874,17 @@
                             },
                             "type": "array"
                         },
+                        "contentType": {
+                            "pattern": "application/json",
+                            "type": "string"
+                        },
                         "response": {
                             "type": "null"
                         }
                     },
                     "required": [
-                        "body"
+                        "body",
+                        "contentType"
                     ],
                     "type": "object"
                 }

@@ -45,13 +45,14 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
   }
 
   private validate(
-    { method, path, query, body }: APIValidatorRequest,
+    { method, path, contentType, query, body }: APIValidatorRequest,
     response: unknown,
   ) {
     const isValid = this.validator({
       [path]: {
         [method]: {
           ...(method === "GET" ? { query } : { body: body }),
+          ...(contentType && { contentType }),
           response,
         },
       },

@@ -13,20 +13,6 @@ import { RequiredSpec } from "./util/requiredSpec";
 
 // Meant to conform to genericHTTPAPI/Spec, but I can't declare conformance without running into obscure Typescript limitations.
 type SpecLegacy = {
-  "/attachments": {
-    POST: {
-      contentType: "multipart/form-data";
-      body: {
-        file: BlobLike;
-      };
-      response: ResponseObject<
-        "attachmentIDReference",
-        AttachmentID,
-        AttachmentIDReference
-      >;
-    };
-  };
-
   "/attachments/:id": {
     GET: {
       params: {
@@ -35,14 +21,6 @@ type SpecLegacy = {
       response: void;
     };
   };
-
-  /*
-
-  POST /attachments: upload an attachment
-    encode with multipart/form-data, with the file in part named "file"
-    make sure to include Content-Type heading for your attachment
-    returns application/json encoded ResponseObject<"attachmentIDReference", AttachmentID, AttachmentIDReference>
-   */
 };
 
 export type ValidatableSpec = {
@@ -86,6 +64,7 @@ export type ValidatableSpec = {
     };
 
     PATCH?: {
+      contentType: JSONContentType;
       body: {
         id: ActionLogID;
         data: ActionLog;
@@ -100,13 +79,51 @@ export type ValidatableSpec = {
       response?: ResponseList<"taskData", PromptID, Prompt>;
     };
     PATCH?: {
+      contentType: JSONContentType;
       body: { id: PromptID; data: Prompt }[];
       response?: null;
+    };
+  };
+
+  "/attachments"?: {
+    /**
+     * encode with multipart/form-data, with the file in part named "file"
+     * make sure to include Content-Type heading for your attachment
+     * returns application/json encoded ResponseObject<"attachmentIDReference", AttachmentID, AttachmentIDReference>
+     */
+    POST?: {
+      // NOTE: Content-type must use regex to be validated since additional data is usually
+      // included alongside the contentType (i.e. the form-data length)
+      /**
+       * @TJS-type string
+       * @TJS-pattern multipart/form-data
+       */
+      contentType: "multipart/form-data";
+      /**
+       * @additionalProperties true
+       */
+      body: {
+        /**
+         * @ignore
+         */
+        file: BlobLike;
+      };
+      response?: ResponseObject<
+        "attachmentIDReference",
+        AttachmentID,
+        AttachmentIDReference
+      >;
     };
   };
 };
 
 export type Spec = RequiredSpec<ValidatableSpec> & SpecLegacy;
+
+/**
+ * @TJS-type string
+ * @TJS-pattern application/json
+ */
+type JSONContentType = "application/json";
 
 export type ResponseList<
   ObjectTypeString extends string,

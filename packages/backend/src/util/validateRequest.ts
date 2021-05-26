@@ -13,6 +13,7 @@ export const validateRequest: CurriedMiddleware = (validator) => (
     path: req.path,
     query: req.query,
     body: req.body,
+    contentType: req.headers["content-type"],
   });
 
   if (validationResult === true) {
