@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Orbit Extension",
+    "slug": "orbit-extension",
+    "privacy": "unlisted",
+    "version": "0.0.1",
+    "assetBundlePatterns": ["**/*"],
+    "platforms": ["web"],
+    "web": {
+      "build": {
+        "babel": {
+          "include": "@withorbit/ui"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "Orbit",
+  "description": "Extension for Orbit (withorbit.com)",
+  "version": "0.0.1",
+  "manifest_version": 3,
+  "permissions": ["storage", "activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Orbit",
+    "default_icon": {
+      "16": "/assets/icons/16.png",
+      "32": "/assets/icons/32.png",
+      "48": "/assets/icons/32.png",
+      "128": "/assets/icons/32.png"
+    }
+  },
+  "icons": {
+    "16": "/assets/icons/16.png",
+    "32": "/assets/icons/32.png",
+    "48": "/assets/icons/32.png",
+    "128": "/assets/icons/32.png"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+O"
+      }
+    }
+  }
+}

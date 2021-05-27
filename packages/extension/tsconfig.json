@@ -1,0 +1,34 @@
+{
+  "extends": "../tsconfig.base",
+  "compilerOptions": {
+    "jsx": "react-native",
+    "lib": ["dom", "esnext"],
+    "types": ["jest"],
+    "module": "esnext",
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "importHelpers": true,
+    "removeComments": true
+  },
+  "include": ["./src/**/*.tsx", "./src/**/*.ts", "../@types/**/*.d.ts"],
+  "references": [
+    {
+      "path": "../api"
+    },
+    {
+      "path": "../api-client"
+    },
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../embedded-support"
+    },
+    {
+      "path": "../sample-data"
+    },
+    {
+      "path": "../ui"
+    }
+  ]
+}

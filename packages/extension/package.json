@@ -1,0 +1,23 @@
+{
+  "name": "@withorbit/extension",
+  "version": "0.0.1",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "expo start:web --web",
+    "build": "expo build:web --no-pwa"
+  },
+  "dependencies": {
+    "@withorbit/ui": "0.0.1",
+    "expo": "^40.0.0",
+    "react": "17.0.1",
+    "react-native": "0.63.4",
+    "react-native-web": "~0.15.0"
+  },
+  "devDependencies": {
+    "@babel/core": "~7.9.0",
+    "@types/chrome": "^0.0.142",
+    "@types/react": "~17.0.3",
+    "@types/react-native": "~0.63.2",
+    "babel-preset-expo": "^8.3.0"
+  }
+}
