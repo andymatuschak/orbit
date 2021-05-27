@@ -49,9 +49,9 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
     response: unknown,
   ) {
     // helper to make sure that objects are not empty
-    const isDefined = (obj: Record<string, unknown> | undefined) => {
-      if (!obj) return undefined;
-      if (Object.keys(obj).length === 0) return undefined;
+    const nullIfEmpty = (obj: Record<string, unknown> | undefined) => {
+      if (!obj) return null;
+      if (Object.keys(obj).length === 0) return null;
       return obj;
     };
 
@@ -59,7 +59,7 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
       [path]: {
         [method]: {
           ...(method === "GET" ? { query } : { body: body }),
-          ...(isDefined(params) && { params }),
+          ...(nullIfEmpty(params) && { params }),
           ...(contentType && { contentType }),
           response,
         },

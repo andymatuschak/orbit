@@ -4,7 +4,7 @@ export type APIValidatorRequest = {
   contentType?: string;
   params?: { [key: string]: unknown };
   query?: { [key: string]: unknown };
-  body?: any;
+  body?: unknown;
 };
 
 export type APIValidatorError = {

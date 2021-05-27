@@ -81,6 +81,14 @@
             ],
             "type": "object"
         },
+        "AttachmentMimeType": {
+            "enum": [
+                "image/jpeg",
+                "image/png",
+                "image/svg+xml"
+            ],
+            "type": "string"
+        },
         "ClozePrompt": {
             "additionalProperties": false,
             "properties": {
@@ -110,12 +118,7 @@
                     "type": "integer"
                 },
                 "type": {
-                    "enum": [
-                        "image/jpeg",
-                        "image/png",
-                        "image/svg+xml"
-                    ],
-                    "type": "string"
+                    "$ref": "#/definitions/AttachmentMimeType"
                 }
             },
             "required": [

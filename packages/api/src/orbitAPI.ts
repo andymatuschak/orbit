@@ -3,6 +3,7 @@ import {
   ActionLogID,
   AttachmentID,
   AttachmentIDReference,
+  AttachmentMimeType,
   Prompt,
   PromptID,
   PromptState,
@@ -81,8 +82,8 @@ export type ValidatableSpec = {
      * returns application/json encoded ResponseObject<"attachmentIDReference", AttachmentID, AttachmentIDReference>
      */
     POST?: {
-      // NOTE: Content-type must use regex to be validated since additional data is usually
-      // included alongside the contentType (i.e. the form-data length)
+      // NOTE: Content-type must use regex to be validated since ince additional data,
+      // like the form-data length, is usually appended to the MIME type
       /**
        * @TJS-type string
        * @TJS-pattern multipart/form-data
@@ -116,7 +117,7 @@ export type ValidatableSpec = {
  * @additionalProperties true
  */
 export interface FileUploadBlob extends BlobLike {
-  type: "image/png" | "image/jpeg" | "image/svg+xml";
+  type: AttachmentMimeType;
   /**
    * File must be less than 10mb in size
    * @minimum 0
