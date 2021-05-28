@@ -722,7 +722,9 @@
                             "type": "array"
                         },
                         "contentType": {
-                            "pattern": "application/json",
+                            "enum": [
+                                "application/json"
+                            ],
                             "type": "string"
                         },
                         "response": {
@@ -758,7 +760,7 @@
                             "type": "object"
                         },
                         "contentType": {
-                            "pattern": "multipart/form-data",
+                            "pattern": "^multipart/form-data",
                             "type": "string"
                         },
                         "response": {
@@ -946,7 +948,9 @@
                             "type": "array"
                         },
                         "contentType": {
-                            "pattern": "application/json",
+                            "enum": [
+                                "application/json"
+                            ],
                             "type": "string"
                         },
                         "response": {

@@ -54,7 +54,7 @@ export type ValidatableSpec = {
     };
 
     PATCH?: {
-      contentType: JSONContentType;
+      contentType: "application/json";
       body: {
         id: ActionLogID;
         data: ActionLog;
@@ -69,7 +69,7 @@ export type ValidatableSpec = {
       response?: ResponseList<"taskData", PromptID, Prompt>;
     };
     PATCH?: {
-      contentType: JSONContentType;
+      contentType: "application/json";
       body: { id: PromptID; data: Prompt }[];
       response?: null;
     };
@@ -86,7 +86,7 @@ export type ValidatableSpec = {
       // like the form-data length, is usually appended to the MIME type
       /**
        * @TJS-type string
-       * @TJS-pattern multipart/form-data
+       * @TJS-pattern ^multipart/form-data
        */
       contentType: "multipart/form-data";
       body: {
@@ -128,12 +128,6 @@ export interface FileUploadBlob extends BlobLike {
 }
 
 export type Spec = RequiredSpec<ValidatableSpec>;
-
-/**
- * @TJS-type string
- * @TJS-pattern application/json
- */
-type JSONContentType = "application/json";
 
 export type ResponseList<
   ObjectTypeString extends string,
