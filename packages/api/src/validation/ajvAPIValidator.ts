@@ -45,13 +45,22 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
   }
 
   private validate(
-    { method, path, query, body }: APIValidatorRequest,
+    { method, path, contentType, query, body, params }: APIValidatorRequest,
     response: unknown,
   ) {
+    // helper to make sure that objects are not empty
+    const nullIfEmpty = (obj: Record<string, unknown> | undefined) => {
+      if (!obj) return null;
+      if (Object.keys(obj).length === 0) return null;
+      return obj;
+    };
+
     const isValid = this.validator({
       [path]: {
         [method]: {
           ...(method === "GET" ? { query } : { body: body }),
+          ...(nullIfEmpty(params) && { params }),
+          ...(contentType && { contentType }),
           response,
         },
       },
@@ -83,9 +92,9 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
   private _createAPIValidationError(error: AjvErrorObject) {
     // Assume the format is /#/properties/[HTTP_PATH]/properties/[VERB]/properties/query/*;
     // strip everything up to query
-    const isolatedInstancePath = error.instancePath
-      .split("/")
-      .slice(3)
+    const splitInstancePath = error.instancePath.split("/");
+    const isolatedInstancePath: string = splitInstancePath
+      .slice(Math.min(splitInstancePath.length - 1, 3))
       .join("/");
 
     return {

@@ -3,6 +3,7 @@ import {
   ActionLogID,
   AttachmentID,
   AttachmentIDReference,
+  AttachmentMimeType,
   Prompt,
   PromptID,
   PromptState,
@@ -12,58 +13,32 @@ import { BlobLike } from "./genericHTTPAPI";
 import { RequiredSpec } from "./util/requiredSpec";
 
 // Meant to conform to genericHTTPAPI/Spec, but I can't declare conformance without running into obscure Typescript limitations.
-type SpecLegacy = {
-  "/taskStates": {
-    GET: {
+export type ValidatableSpec = {
+  "/taskStates"?: {
+    GET?: {
       query:
         | ({
+            /**
+             * @minimum 1
+             * @TJS-type integer
+             */
             limit?: number;
           } & (
             | {
                 createdAfterID?: PromptTaskID;
               }
             | {
+                /**
+                 * @TJS-type integer
+                 */
                 dueBeforeTimestampMillis: number;
               }
           ))
         | { ids: PromptTaskID[] };
-      response: ResponseList<"taskState", PromptTaskID, PromptState>;
+      response?: ResponseList<"taskState", PromptTaskID, PromptState>;
     };
   };
 
-  "/attachments": {
-    POST: {
-      contentType: "multipart/form-data";
-      body: {
-        file: BlobLike;
-      };
-      response: ResponseObject<
-        "attachmentIDReference",
-        AttachmentID,
-        AttachmentIDReference
-      >;
-    };
-  };
-
-  "/attachments/:id": {
-    GET: {
-      params: {
-        id: AttachmentID;
-      };
-      response: void;
-    };
-  };
-
-  /*
-
-  POST /attachments: upload an attachment
-    encode with multipart/form-data, with the file in part named "file"
-    make sure to include Content-Type heading for your attachment
-    returns application/json encoded ResponseObject<"attachmentIDReference", AttachmentID, AttachmentIDReference>
-   */
-};
-
-export type ValidatableSpec = {
   "/actionLogs"?: {
     GET?: {
       query: {
@@ -79,6 +54,7 @@ export type ValidatableSpec = {
     };
 
     PATCH?: {
+      contentType: "application/json";
       body: {
         id: ActionLogID;
         data: ActionLog;
@@ -93,13 +69,65 @@ export type ValidatableSpec = {
       response?: ResponseList<"taskData", PromptID, Prompt>;
     };
     PATCH?: {
+      contentType: "application/json";
       body: { id: PromptID; data: Prompt }[];
+      response?: null;
+    };
+  };
+
+  "/attachments"?: {
+    /**
+     * encode with multipart/form-data, with the file in part named "file"
+     * make sure to include Content-Type heading for your attachment
+     * returns application/json encoded ResponseObject<"attachmentIDReference", AttachmentID, AttachmentIDReference>
+     */
+    POST?: {
+      // NOTE: Content-type must use regex to be validated since ince additional data,
+      // like the form-data length, is usually appended to the MIME type
+      /**
+       * @TJS-type string
+       * @TJS-pattern ^multipart/form-data
+       */
+      contentType: "multipart/form-data";
+      body: {
+        file: FileUploadBlob;
+      };
+      response?: ResponseObject<
+        "attachmentIDReference",
+        AttachmentID,
+        AttachmentIDReference
+      >;
+    };
+  };
+
+  "/attachments/:id"?: {
+    GET?: {
+      // allow empty to indicate it takes no query values
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      query: {};
+      params: {
+        id: AttachmentID;
+      };
       response?: null;
     };
   };
 };
 
-export type Spec = RequiredSpec<ValidatableSpec> & SpecLegacy;
+/**
+ * @additionalProperties true
+ */
+export interface FileUploadBlob extends BlobLike {
+  type: AttachmentMimeType;
+  /**
+   * File must be less than 10mb in size
+   * @minimum 0
+   * @maximum 10000000
+   * @TJS-type integer
+   */
+  size: number;
+}
+
+export type Spec = RequiredSpec<ValidatableSpec>;
 
 export type ResponseList<
   ObjectTypeString extends string,

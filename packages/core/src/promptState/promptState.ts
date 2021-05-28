@@ -12,6 +12,11 @@ export interface PromptState<PT extends PromptTask = PromptTask> {
   taskMetadata: PromptTaskMetadata;
 
   lastReviewTimestampMillis: number;
+  /**
+   * @TJS-type object
+   * @additionalProperties true
+   * @nullable
+   */
   lastReviewTaskParameters: PromptTaskParametersOf<PT> | null;
   dueTimestampMillis: number;
   needsRetry: boolean;

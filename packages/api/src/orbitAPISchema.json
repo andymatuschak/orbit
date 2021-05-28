@@ -2,6 +2,40 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "additionalProperties": false,
     "definitions": {
+        "AnkiPromptProvenance": {
+            "additionalProperties": false,
+            "properties": {
+                "externalID": {
+                    "type": "string"
+                },
+                "modificationTimestampMillis": {
+                    "type": [
+                        "null",
+                        "number"
+                    ]
+                },
+                "provenanceType": {
+                    "enum": [
+                        "anki"
+                    ],
+                    "type": "string"
+                },
+                "title": {
+                    "type": "null"
+                },
+                "url": {
+                    "type": "null"
+                }
+            },
+            "required": [
+                "externalID",
+                "modificationTimestampMillis",
+                "provenanceType",
+                "title",
+                "url"
+            ],
+            "type": "object"
+        },
         "ApplicationPrompt": {
             "additionalProperties": false,
             "properties": {
@@ -47,6 +81,14 @@
             ],
             "type": "object"
         },
+        "AttachmentMimeType": {
+            "enum": [
+                "image/jpeg",
+                "image/png",
+                "image/svg+xml"
+            ],
+            "type": "string"
+        },
         "ClozePrompt": {
             "additionalProperties": false,
             "properties": {
@@ -63,6 +105,25 @@
             "required": [
                 "body",
                 "promptType"
+            ],
+            "type": "object"
+        },
+        "FileUploadBlob": {
+            "additionalProperties": true,
+            "properties": {
+                "size": {
+                    "description": "File must be less than 10mb in size",
+                    "maximum": 10000000,
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/AttachmentMimeType"
+                }
+            },
+            "required": [
+                "size",
+                "type"
             ],
             "type": "object"
         },
@@ -97,6 +158,40 @@
                 "provenance",
                 "taskID",
                 "timestampMillis"
+            ],
+            "type": "object"
+        },
+        "NotePromptProvenance": {
+            "additionalProperties": false,
+            "properties": {
+                "externalID": {
+                    "type": "string"
+                },
+                "modificationTimestampMillis": {
+                    "type": "number"
+                },
+                "provenanceType": {
+                    "enum": [
+                        "note"
+                    ],
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                }
+            },
+            "required": [
+                "externalID",
+                "modificationTimestampMillis",
+                "provenanceType",
+                "title",
+                "url"
             ],
             "type": "object"
         },
@@ -145,6 +240,89 @@
                 "web"
             ],
             "type": "string"
+        },
+        "PromptState<PromptTask>": {
+            "additionalProperties": false,
+            "properties": {
+                "bestIntervalMillis": {
+                    "type": [
+                        "null",
+                        "number"
+                    ]
+                },
+                "dueTimestampMillis": {
+                    "type": "number"
+                },
+                "headActionLogIDs": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "intervalMillis": {
+                    "type": "number"
+                },
+                "lastReviewTaskParameters": {
+                    "anyOf": [
+                        {
+                            "additionalProperties": true,
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "lastReviewTimestampMillis": {
+                    "type": "number"
+                },
+                "needsRetry": {
+                    "type": "boolean"
+                },
+                "taskMetadata": {
+                    "$ref": "#/definitions/PromptTaskMetadata"
+                }
+            },
+            "required": [
+                "bestIntervalMillis",
+                "dueTimestampMillis",
+                "headActionLogIDs",
+                "intervalMillis",
+                "lastReviewTaskParameters",
+                "lastReviewTimestampMillis",
+                "needsRetry",
+                "taskMetadata"
+            ],
+            "type": "object"
+        },
+        "PromptTaskMetadata": {
+            "additionalProperties": false,
+            "properties": {
+                "isDeleted": {
+                    "type": "boolean"
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/AnkiPromptProvenance"
+                        },
+                        {
+                            "$ref": "#/definitions/NotePromptProvenance"
+                        },
+                        {
+                            "$ref": "#/definitions/WebPromptProvenance"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "isDeleted",
+                "provenance"
+            ],
+            "type": "object"
         },
         "QAPrompt": {
             "additionalProperties": false,
@@ -354,6 +532,72 @@
                 "updates"
             ],
             "type": "object"
+        },
+        "WebPromptProvenance": {
+            "additionalProperties": false,
+            "properties": {
+                "colorPaletteName": {
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "blue",
+                                "brown",
+                                "cyan",
+                                "green",
+                                "lime",
+                                "orange",
+                                "pink",
+                                "purple",
+                                "red",
+                                "turquoise",
+                                "violet",
+                                "yellow"
+                            ],
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "externalID": {
+                    "type": "string"
+                },
+                "modificationTimestampMillis": {
+                    "type": "null"
+                },
+                "provenanceType": {
+                    "enum": [
+                        "web"
+                    ],
+                    "type": "string"
+                },
+                "siteName": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                },
+                "title": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                },
+                "url": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "colorPaletteName",
+                "externalID",
+                "modificationTimestampMillis",
+                "provenanceType",
+                "siteName",
+                "title",
+                "url"
+            ],
+            "type": "object"
         }
     },
     "properties": {
@@ -477,12 +721,111 @@
                             },
                             "type": "array"
                         },
+                        "contentType": {
+                            "enum": [
+                                "application/json"
+                            ],
+                            "type": "string"
+                        },
                         "response": {
                             "type": "null"
                         }
                     },
                     "required": [
-                        "body"
+                        "body",
+                        "contentType"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "/attachments": {
+            "additionalProperties": false,
+            "properties": {
+                "POST": {
+                    "additionalProperties": false,
+                    "description": "encode with multipart/form-data, with the file in part named \"file\"\nmake sure to include Content-Type heading for your attachment\nreturns application/json encoded ResponseObject<\"attachmentIDReference\", AttachmentID, AttachmentIDReference>",
+                    "properties": {
+                        "body": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "file": {
+                                    "$ref": "#/definitions/FileUploadBlob"
+                                }
+                            },
+                            "required": [
+                                "file"
+                            ],
+                            "type": "object"
+                        },
+                        "contentType": {
+                            "pattern": "^multipart/form-data",
+                            "type": "string"
+                        },
+                        "response": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/AttachmentIDReference"
+                                },
+                                "id": {
+                                    "type": "string"
+                                },
+                                "objectType": {
+                                    "enum": [
+                                        "attachmentIDReference"
+                                    ],
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "data",
+                                "id",
+                                "objectType"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "body",
+                        "contentType"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "/attachments/:id": {
+            "additionalProperties": false,
+            "properties": {
+                "GET": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "params": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id"
+                            ],
+                            "type": "object"
+                        },
+                        "query": {
+                            "properties": {
+                            },
+                            "type": "object"
+                        },
+                        "response": {
+                            "type": "null"
+                        }
+                    },
+                    "required": [
+                        "params",
+                        "query"
                     ],
                     "type": "object"
                 }
@@ -604,12 +947,128 @@
                             },
                             "type": "array"
                         },
+                        "contentType": {
+                            "enum": [
+                                "application/json"
+                            ],
+                            "type": "string"
+                        },
                         "response": {
                             "type": "null"
                         }
                     },
                     "required": [
-                        "body"
+                        "body",
+                        "contentType"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "/taskStates": {
+            "additionalProperties": false,
+            "properties": {
+                "GET": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "query": {
+                            "anyOf": [
+                                {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "createdAfterID": {
+                                            "type": "string"
+                                        },
+                                        "limit": {
+                                            "minimum": 1,
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "dueBeforeTimestampMillis": {
+                                            "type": "integer"
+                                        },
+                                        "limit": {
+                                            "minimum": 1,
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "required": [
+                                        "dueBeforeTimestampMillis"
+                                    ],
+                                    "type": "object"
+                                },
+                                {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "ids": {
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "type": "array"
+                                        }
+                                    },
+                                    "required": [
+                                        "ids"
+                                    ],
+                                    "type": "object"
+                                }
+                            ]
+                        },
+                        "response": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "data": {
+                                    "items": {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                            "data": {
+                                                "$ref": "#/definitions/PromptState<PromptTask>"
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "objectType": {
+                                                "enum": [
+                                                    "taskState"
+                                                ],
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "data",
+                                            "id",
+                                            "objectType"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "array"
+                                },
+                                "hasMore": {
+                                    "type": "boolean"
+                                },
+                                "objectType": {
+                                    "enum": [
+                                        "list"
+                                    ],
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "data",
+                                "hasMore",
+                                "objectType"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "query"
                     ],
                     "type": "object"
                 }
