@@ -12,7 +12,8 @@
     "build:web": "ORBIT_PLATFORM=web expo build:web",
     "deploy:web": "scripts/deploy_web.sh",
     "analyze": "cross-env ANALYZE=true ORBIT_PLATFORM=web expo build:web",
-    "postinstall": "expo-yarn-workspaces postinstall"
+    "postinstall": "expo-yarn-workspaces postinstall",
+    "generateBrowserCompatibility": "scripts/generate_browser_compatibility_regex.sh"
   },
   "dependencies": {
     "@react-native-firebase/app": "^11.0.0",
@@ -103,6 +104,7 @@
     "babel-plugin-rewrite-require": "^1.14.5",
     "babel-preset-expo": "8.3.0",
     "babel-preset-react-native": "^4.0.1",
+    "browserslist-useragent-regexp": "^3.0.0",
     "expo-yarn-workspaces": "^1.2.1",
     "firebase-tools": "^9.6.1",
     "husky": "^4.2.3",
