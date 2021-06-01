@@ -1,4 +1,9 @@
-import { SignInForm, SignInFormProps, styles } from "@withorbit/ui";
+import {
+  ContinueWithUser,
+  SignInForm,
+  SignInFormProps,
+  styles,
+} from "@withorbit/ui";
 import React from "react";
 import { ActivityIndicator, Alert, Platform, View } from "react-native";
 import { AuthenticationClient } from "../authentication";
@@ -80,6 +85,10 @@ export default function SignInScreen() {
   const [isPendingServerResponse, setPendingServerResponse] = React.useState(
     false,
   );
+  const [
+    shouldDoubleCheckAccountStatus,
+    setShouldDoubleCheckAccountStatus,
+  ] = React.useState<"requiresUserApproval" | "approved" | null>(null);
 
   // If we have an override email address, figure out whether that account exists.
   React.useEffect(() => {
@@ -95,11 +104,22 @@ export default function SignInScreen() {
   }, [authenticationClient, overrideEmailAddress]);
 
   const userRecord = useCurrentUserRecord(authenticationClient);
+
+  React.useEffect(() => {
+    if (userRecord && shouldDoubleCheckAccountStatus === null) {
+      // a user record was received before the user entered their credentials
+      // lets double check they want to use this account
+      setShouldDoubleCheckAccountStatus("requiresUserApproval");
+    }
+  }, [userRecord, shouldDoubleCheckAccountStatus]);
+
   React.useEffect(() => {
     if (userRecord) {
       const tokenTarget = getCurrentLoginTokenTarget();
       if (tokenTarget) {
-        sendTokenToTargetAndClose(authenticationClient, tokenTarget);
+        if (shouldDoubleCheckAccountStatus === "approved") {
+          sendTokenToTargetAndClose(authenticationClient, tokenTarget);
+        }
       } else {
         if (Platform.OS === "web") {
           // TODO: redirect somewhere useful outside the embedded case
@@ -114,11 +134,12 @@ export default function SignInScreen() {
         }
       }
     }
-  }, [authenticationClient, userRecord]);
+  }, [authenticationClient, userRecord, shouldDoubleCheckAccountStatus]);
 
   const onLogin = React.useCallback(
     async (email, password) => {
       setPendingServerResponse(true);
+      setShouldDoubleCheckAccountStatus("approved");
 
       try {
         switch (formMode) {
@@ -155,6 +176,10 @@ export default function SignInScreen() {
     [authenticationClient],
   );
 
+  const onContinueWithUser = React.useCallback(() => {
+    setShouldDoubleCheckAccountStatus("approved");
+  }, []);
+
   return (
     <View
       style={{
@@ -165,14 +190,22 @@ export default function SignInScreen() {
       }}
     >
       {formMode ? (
-        <SignInForm
-          overrideEmailAddress={overrideEmailAddress}
-          onSubmit={onLogin}
-          onResetPassword={onResetPassword}
-          mode={formMode}
-          isPendingServerResponse={isPendingServerResponse}
-          colorPalette={colorPalette}
-        />
+        shouldDoubleCheckAccountStatus === "requiresUserApproval" ? (
+          <ContinueWithUser
+            colorPalette={colorPalette}
+            email={userRecord?.emailAddress ?? null}
+            onContinueWithUser={onContinueWithUser}
+          />
+        ) : (
+          <SignInForm
+            overrideEmailAddress={overrideEmailAddress}
+            onSubmit={onLogin}
+            onResetPassword={onResetPassword}
+            mode={formMode}
+            isPendingServerResponse={isPendingServerResponse}
+            colorPalette={colorPalette}
+          />
+        )
       ) : (
         <ActivityIndicator size="large" color={colorPalette.accentColor} />
       )}
