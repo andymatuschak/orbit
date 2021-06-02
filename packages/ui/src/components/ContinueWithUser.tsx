@@ -27,8 +27,7 @@ export default function ContinueWithUser({
       {email ? (
         <>
           <Text style={styles.label}>
-            We have found sign in credentials for {email}, would you like to
-            continue with this user?
+            Welcome back, {email}. We signed you in using a saved password.
           </Text>
           <Spacer units={3.5} />
           <View>
@@ -36,7 +35,7 @@ export default function ContinueWithUser({
               color={colors.white}
               accentColor={colorPalette.accentColor}
               iconName={IconName.ArrowRight}
-              title={`Continue with ${email}`}
+              title={`Continue`}
               onPress={onContinueWithUser}
             />
           </View>
