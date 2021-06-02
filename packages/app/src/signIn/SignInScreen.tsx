@@ -114,6 +114,13 @@ export default function SignInScreen() {
   }, [userRecord, shouldDoubleCheckAccountStatus]);
 
   React.useEffect(() => {
+    if (userRecord && userRecord.emailAddress !== overrideEmailAddress) {
+      authenticationClient.signOut();
+      setShouldDoubleCheckAccountStatus(null);
+    }
+  }, [authenticationClient, userRecord, overrideEmailAddress]);
+
+  React.useEffect(() => {
     if (userRecord) {
       const tokenTarget = getCurrentLoginTokenTarget();
       if (tokenTarget) {

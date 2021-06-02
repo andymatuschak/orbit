@@ -92,6 +92,11 @@ export default class FirebaseAuthenticationClient
     return auth.signInWithEmailAndPassword(email, password);
   }
 
+  async signOut() {
+    const auth = await this.auth();
+    await auth.signOut();
+  }
+
   async createUserWithEmailAndPassword(email: string, password: string) {
     const auth = await this.auth();
     return auth.createUserWithEmailAndPassword(email, password);

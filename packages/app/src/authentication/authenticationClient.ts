@@ -10,6 +10,7 @@ export interface AuthenticationClient<LoginToken = unknown, IDToken = unknown> {
   getUserAuthState(): Promise<UserRecord | null>;
 
   signInWithEmailAndPassword(email: string, password: string): Promise<unknown>;
+  signOut(): Promise<unknown>;
 
   createUserWithEmailAndPassword(
     email: string,
