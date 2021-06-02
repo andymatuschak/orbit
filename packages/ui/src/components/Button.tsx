@@ -49,6 +49,7 @@ export type ButtonProps = ButtonContents &
 
     numberOfLines?: number;
     ellipsizeMode?: TextProps["ellipsizeMode"];
+    focusOnMount?: boolean;
   };
 
 const pressedButtonOpacity = 0.2;
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
 
 export default React.memo(function Button(props: ButtonProps) {
   const { onPendingInteractionStateDidChange, style } = props;
-
+  const ref = React.useRef<View | null>(null);
   const href = "href" in props ? props.href : null;
   const onPress = "onPress" in props ? props.onPress : null;
 
@@ -223,6 +224,12 @@ export default React.memo(function Button(props: ButtonProps) {
 
   const isSoloIcon = !("title" in props);
 
+  React.useEffect(() => {
+    if (props.focusOnMount && ref.current) {
+      ref.current.focus();
+    }
+  }, [props.focusOnMount]);
+
   // @ts-ignore
   return (
     <Hoverable
@@ -237,6 +244,7 @@ export default React.memo(function Button(props: ButtonProps) {
     >
       {(isHovered) => (
         <Pressable
+          ref={ref}
           accessible={true}
           accessibilityRole={href ? "link" : "button"}
           accessibilityLabel={accessibilityLabel}

@@ -37,6 +37,7 @@ export default function ContinueWithUser({
               iconName={IconName.ArrowRight}
               title={`Continue`}
               onPress={onContinueWithUser}
+              focusOnMount
             />
           </View>
         </>
