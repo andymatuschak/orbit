@@ -5,12 +5,13 @@ import {
   PromptRepetitionOutcome,
   PromptType,
 } from "@withorbit/core";
-import React, { useRef } from "react";
+import React, { useRef, useMemo } from "react";
 import { View } from "react-native";
 import { colors, layout } from "../styles";
 import { ColorPalette } from "../styles/colors";
 import unreachableCaseError from "../util/unreachableCaseError";
 import Button, { ButtonPendingActivationState } from "./Button";
+import useKey from "./hooks/useKey";
 import useLayout from "./hooks/useLayout";
 import { IconName } from "./IconShared";
 import Spacer from "./Spacer";
@@ -81,6 +82,22 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
 }) {
   const { width, onLayout } = useLayout();
   const isVeryNarrow = width > 0 && width < 320;
+
+  const actions = useMemo(
+    () => [
+      () => onMark(PromptRepetitionOutcome.Forgotten),
+      () => onMark(PromptRepetitionOutcome.Remembered),
+    ],
+    [onMark],
+  );
+
+  // default action (Space)
+  useKey(" ", isShowingAnswer ? actions[1] : onReveal);
+
+  // list of actions (1, 2, 3, ...)
+  actions.forEach((action, index) => {
+    useKey((index + 1).toString(), action, { disabled: !isShowingAnswer });
+  });
 
   const buttonStyle = {
     flex: 1,

@@ -6,7 +6,6 @@ import { colors, layout } from "../styles";
 import { Size } from "../util/Size";
 import Card, { CardProps } from "./Card";
 import FadeView from "./FadeView";
-import useKey from "./hooks/useKey";
 import useLayout from "./hooks/useLayout";
 import usePrevious from "./hooks/usePrevious";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
@@ -220,34 +219,6 @@ export default React.memo(function ReviewArea({
       ? currentItem?.colorPalette ?? items[items.length - 1].colorPalette
       : colors.palettes.red;
 
-  const onMemoizedMark = useCallback(
-    (outcome: PromptRepetitionOutcome) => {
-      if (!currentItem) {
-        throw new Error("Marking without a topmost item");
-      }
-      onMark({ reviewAreaItem: currentItem, outcome });
-    },
-    [currentItem, onMark],
-  );
-
-  // default action (Space)
-  useKey(" ", () => {
-    if (!isShowingAnswer) {
-      setShowingAnswer(true);
-    } else {
-      onMemoizedMark(PromptRepetitionOutcome.Remembered);
-    }
-  });
-
-  // list of actions (1, 2, 3, ...)
-  const actions = [
-    () => onMemoizedMark(PromptRepetitionOutcome.Forgotten),
-    () => onMemoizedMark(PromptRepetitionOutcome.Remembered),
-  ];
-  actions.forEach((action, index) => {
-    useKey((index + 1).toString(), action, { disabled: !isShowingAnswer });
-  });
-
   return (
     <View style={{ flex: 1 }}>
       <PromptStack
@@ -258,7 +229,15 @@ export default React.memo(function ReviewArea({
 
       <ReviewButtonBar
         colorPalette={currentColorPalette}
-        onMark={onMemoizedMark}
+        onMark={useCallback(
+          (outcome: PromptRepetitionOutcome) => {
+            if (!currentItem) {
+              throw new Error("Marking without a topmost item");
+            }
+            onMark({ reviewAreaItem: currentItem, outcome });
+          },
+          [currentItem, onMark],
+        )}
         onReveal={useCallback(() => {
           setShowingAnswer(true);
         }, [])}
