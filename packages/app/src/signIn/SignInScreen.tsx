@@ -85,10 +85,9 @@ export default function SignInScreen() {
   const [isPendingServerResponse, setPendingServerResponse] = React.useState(
     false,
   );
-  const [
-    shouldDoubleCheckAccountStatus,
-    setShouldDoubleCheckAccountStatus,
-  ] = React.useState<"requiresUserApproval" | "approved" | null>(null);
+  const [automaticLoginState, setAutomaticLoginState] = React.useState<
+    "requiresUserApproval" | "approved" | null
+  >(null);
 
   // If we have an override email address, figure out whether that account exists.
   React.useEffect(() => {
@@ -106,26 +105,18 @@ export default function SignInScreen() {
   const userRecord = useCurrentUserRecord(authenticationClient);
 
   React.useEffect(() => {
-    if (userRecord && shouldDoubleCheckAccountStatus === null) {
-      // a user record was received before the user entered their credentials
-      // lets double check they want to use this account
-      setShouldDoubleCheckAccountStatus("requiresUserApproval");
-    }
-  }, [userRecord, shouldDoubleCheckAccountStatus]);
-
-  React.useEffect(() => {
-    if (userRecord && userRecord.emailAddress !== overrideEmailAddress) {
-      authenticationClient.signOut();
-      setShouldDoubleCheckAccountStatus(null);
-    }
-  }, [authenticationClient, userRecord, overrideEmailAddress]);
-
-  React.useEffect(() => {
     if (userRecord) {
       const tokenTarget = getCurrentLoginTokenTarget();
       if (tokenTarget) {
-        if (shouldDoubleCheckAccountStatus === "approved") {
+        if (automaticLoginState === "approved") {
           sendTokenToTargetAndClose(authenticationClient, tokenTarget);
+        } else if (automaticLoginState === null) {
+          // a user record was received before the user entered their credentials
+          // lets double check they want to use this account
+          setAutomaticLoginState("requiresUserApproval");
+        } else if (userRecord.emailAddress !== overrideEmailAddress) {
+          authenticationClient.signOut();
+          setAutomaticLoginState(null);
         }
       } else {
         if (Platform.OS === "web") {
@@ -141,12 +132,17 @@ export default function SignInScreen() {
         }
       }
     }
-  }, [authenticationClient, userRecord, shouldDoubleCheckAccountStatus]);
+  }, [
+    authenticationClient,
+    userRecord,
+    automaticLoginState,
+    overrideEmailAddress,
+  ]);
 
   const onLogin = React.useCallback(
     async (email, password) => {
       setPendingServerResponse(true);
-      setShouldDoubleCheckAccountStatus("approved");
+      setAutomaticLoginState("approved");
 
       try {
         switch (formMode) {
@@ -184,8 +180,18 @@ export default function SignInScreen() {
   );
 
   const onContinueWithUser = React.useCallback(() => {
-    setShouldDoubleCheckAccountStatus("approved");
+    setAutomaticLoginState("approved");
   }, []);
+
+  const continueWithUserEmail = (() => {
+    if (automaticLoginState === "requiresUserApproval") {
+      if (userRecord?.emailAddress) {
+        return userRecord.emailAddress;
+      }
+      throw new Error("A user without an associated email has been found");
+    }
+    return null;
+  })();
 
   return (
     <View
@@ -197,10 +203,10 @@ export default function SignInScreen() {
       }}
     >
       {formMode ? (
-        shouldDoubleCheckAccountStatus === "requiresUserApproval" ? (
+        continueWithUserEmail ? (
           <ContinueWithUser
             colorPalette={colorPalette}
-            email={userRecord?.emailAddress ?? null}
+            email={continueWithUserEmail}
             onContinueWithUser={onContinueWithUser}
           />
         ) : (

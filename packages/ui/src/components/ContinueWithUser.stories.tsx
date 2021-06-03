@@ -11,7 +11,7 @@ export default {
 
 const Template: Story<{
   colorPaletteIndex: number;
-  email: string | null;
+  email: string;
 }> = (args) => {
   const colorPalette =
     colors.palettes[colors.orderedPaletteNames[args.colorPaletteIndex]];
@@ -45,6 +45,3 @@ Template.args = {
 
 export const Basic = Template.bind({});
 Basic.args = { ...Template.args };
-
-export const InvalidEmail = Template.bind({});
-InvalidEmail.args = { ...Template.args, email: null };

@@ -8,7 +8,7 @@ import Spacer from "./Spacer";
 
 export interface ContinueWithUserProps {
   colorPalette: colors.ColorPalette;
-  email: string | null;
+  email: string;
   onContinueWithUser: () => void;
 }
 
@@ -24,31 +24,20 @@ export default function ContinueWithUser({
       {flexibleSpacer}
       <Logo units={3} tintColor={colorPalette.secondaryTextColor} />
       <Spacer units={8} />
-      {email ? (
-        <>
-          <Text style={styles.label}>
-            Welcome back, {email}. We signed you in using a saved password.
-          </Text>
-          <Spacer units={3.5} />
-          <View>
-            <Button
-              color={colors.white}
-              accentColor={colorPalette.accentColor}
-              iconName={IconName.ArrowRight}
-              title={`Continue`}
-              onPress={onContinueWithUser}
-              focusOnMount
-            />
-          </View>
-        </>
-      ) : (
-        <View>
-          <Text style={styles.label}>
-            An unknown error occurred. A user without an unassociated email has
-            been found.
-          </Text>
-        </View>
-      )}
+      <Text style={styles.label}>
+        Welcome back, {email}. We signed you in using a saved password.
+      </Text>
+      <Spacer units={3.5} />
+      <View>
+        <Button
+          color={colors.white}
+          accentColor={colorPalette.accentColor}
+          iconName={IconName.ArrowRight}
+          title={`Continue`}
+          onPress={onContinueWithUser}
+          focusOnMount
+        />
+      </View>
       {flexibleSpacer}
     </View>
   );
