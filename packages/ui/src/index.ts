@@ -9,6 +9,8 @@ export type { ButtonProps } from "./components/Button";
 export { default as Card } from "./components/Card";
 export type { CardProps } from "./components/Card";
 
+export { default as ContinueWithUser } from "./components/ContinueWithUser";
+
 export { default as FadeView } from "./components/FadeView";
 export type { FadeViewProps } from "./components/FadeView";
 
