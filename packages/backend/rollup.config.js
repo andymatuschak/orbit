@@ -1,4 +1,5 @@
 import alias from "@rollup/plugin-alias";
+import json from "@rollup/plugin-json";
 import resolve from "@rollup/plugin-node-resolve";
 import extensions from "rollup-plugin-extensions";
 import path from "path";
@@ -22,6 +23,10 @@ export default {
     alias({
       entries: [
         {
+          find: "@withorbit/api",
+          replacement: path.resolve(__dirname, "../api/dist"),
+        },
+        {
           find: "@withorbit/core",
           replacement: path.resolve(__dirname, "../core/dist"),
         },
@@ -31,6 +36,7 @@ export default {
         },
       ],
     }),
+    json(),
     resolve(),
 
     extensions(),
