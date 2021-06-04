@@ -43,6 +43,7 @@ async function storeLogs(userID: string, logs: ActionLog[]): Promise<void> {
   );
 }
 
+// TODO: Remove this function; migrate clients to public APIs.
 export default functions.https.onCall(async function (
   args: RecordEmbeddedActionsArguments,
   context: functions.https.CallableContext,

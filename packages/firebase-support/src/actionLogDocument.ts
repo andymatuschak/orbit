@@ -27,6 +27,7 @@ export function getActionLogFromActionLogDocument(
   return actionLog;
 }
 
+// TODO: move into backend
 export async function storeLogs<D extends Database>(
   logs: ActionLog[],
   userID: string,

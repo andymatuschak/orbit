@@ -1,4 +1,3 @@
-import * as firebase from "firebase-admin";
 import { ActionLog, ActionLogID, PromptState } from "@withorbit/core";
 import {
   getActionLogFromActionLogDocument,
@@ -9,8 +8,10 @@ import {
   serverTimestampToTimestampMillis,
   storeLogs as _storeLogs,
 } from "@withorbit/firebase-support";
+import * as firebase from "firebase-admin";
 import { getDatabase } from "./firebase";
 import { updatePromptStateCacheWithLog } from "./promptStates";
+import { clearUserSessionNotificationState } from "./users";
 
 type StoreActionLogResults = {
   log: ActionLog;
@@ -34,11 +35,17 @@ export async function storeActionLogs(
 
   // Apply each log sequentially, with a separate transaction for each. This is a bit wasteful.
   const results: StoreActionLogResults = [];
+  let hasReviewedOldPrompt = false;
+
   for (const [, log] of storedLogs) {
-    const { newPromptStateCache } = await updatePromptStateCacheWithLog(
-      log,
-      userID,
-    );
+    const {
+      oldPromptStateCache,
+      newPromptStateCache,
+    } = await updatePromptStateCacheWithLog(log, userID);
+    if (oldPromptStateCache) {
+      hasReviewedOldPrompt = true;
+    }
+
     results.push({
       log: getActionLogFromActionLogDocument(log),
       serverTimestampMillis: serverTimestampToTimestampMillis(
@@ -46,6 +53,11 @@ export async function storeActionLogs(
       ),
       promptState: getPromptStateFromPromptStateCache(newPromptStateCache),
     });
+  }
+
+  if (hasReviewedOldPrompt) {
+    // We reset the user's review session notification state when they review a prompt, unless they're just collecting it for the first time.
+    await clearUserSessionNotificationState(userID);
   }
 
   return results;

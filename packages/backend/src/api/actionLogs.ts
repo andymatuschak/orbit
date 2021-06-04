@@ -64,6 +64,7 @@ export const storeActionLogs: TypedRouteHandler<
     userID,
     logs.map(({ data }) => data),
   );
+
   await Promise.all(
     storedResults.map(({ log, serverTimestampMillis, promptState }) =>
       sharedLoggingService.logActionLog({
