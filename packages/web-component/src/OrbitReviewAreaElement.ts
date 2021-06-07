@@ -148,6 +148,21 @@ function addEmbeddedScreenMessageListener() {
   _hasAddedMessageListener = true;
 }
 
+const iframeResizeObserver = new ResizeObserver((entries) => {
+  for (const entry of entries) {
+    setIFrameSize(entry.target as HTMLIFrameElement);
+  }
+});
+
+function setIFrameSize(iframe: HTMLIFrameElement) {
+  const effectiveWidth = iframe.getBoundingClientRect().width;
+  // The extra 5 grid units are for the banner.
+  // TODO: encapsulate the banner's height in some API exported by @withorbit/app.
+  iframe.style.height = `${
+    getHeightForReviewAreaOfWidth(effectiveWidth) + 8 * 5
+  }px`;
+}
+
 function pageIsDebug() {
   return location.search.includes("orbitDebug");
 }
@@ -194,6 +209,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
       "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-modals",
     );
     shadowRoot.appendChild(this.iframe);
+    iframeResizeObserver.observe(this.iframe);
     addReviewAreaElement(this);
 
     // We'll wait to actually set the iframe's contents until the next frame, since the child <orbit-prompt> elements may not yet have connected.
@@ -202,13 +218,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
       if (!this.cachedMetadata) {
         throw new Error("Invariant violation: no embedded host metadata");
       }
-
-      const effectiveWidth = iframe.getBoundingClientRect().width;
-      // The extra 5 grid units are for the banner.
-      // TODO: encapsulate the banner's height in some API exported by @withorbit/app.
-      iframe.style.height = `${
-        getHeightForReviewAreaOfWidth(effectiveWidth) + 8 * 5
-      }px`;
+      setIFrameSize(iframe);
 
       const colorOverride = this.getAttribute(
         "color",
@@ -234,6 +244,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
   }
 
   disconnectedCallback() {
+    if (this.iframe) iframeResizeObserver.unobserve(this.iframe);
     removeReviewAreaElement(this);
     getSharedMetadataMonitor().removeEventListener(this.onMetadataChange);
   }
