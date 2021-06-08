@@ -118,7 +118,8 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   useKeyDown((event) => {
     if (
       Object.keys(shortcuts).includes(event.key) &&
-      !shortcuts[event.key].disabled
+      !shortcuts[event.key].disabled &&
+      !event.repeat
     ) {
       shortcuts[event.key].callback();
     }
