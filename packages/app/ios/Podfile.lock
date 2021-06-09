@@ -539,7 +539,7 @@ PODS:
     - React-cxxreact (= 0.63.4)
     - React-jsi (= 0.63.4)
   - React-jsinspector (0.63.4)
-  - react-native-leveldown (1.0.0):
+  - react-native-leveldown (1.0.1):
     - leveldb-library
     - React
   - react-native-safe-area-context (3.1.9):
@@ -916,7 +916,7 @@ SPEC CHECKSUMS:
   React-jsi: a0418934cf48f25b485631deb27c64dc40fb4c31
   React-jsiexecutor: 93bd528844ad21dc07aab1c67cb10abae6df6949
   React-jsinspector: 58aef7155bc9a9683f5b60b35eccea8722a4f53a
-  react-native-leveldown: e8cef40e5d7f0ff3ebd80d6af2a706a2c5fff7a2
+  react-native-leveldown: f8a3284bc6bc941b19edba1662c9ea7c87d290f7
   react-native-safe-area-context: b6e0e284002381d2ff29fa4fff42b4d8282e3c94
   React-RCTActionSheet: 89a0ca9f4a06c1f93c26067af074ccdce0f40336
   React-RCTAnimation: 1bde3ecc0c104c55df246eda516e0deb03c4e49b
