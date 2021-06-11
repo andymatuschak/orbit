@@ -11,12 +11,43 @@ import { colors, layout } from "../styles";
 import { ColorPalette } from "../styles/colors";
 import unreachableCaseError from "../util/unreachableCaseError";
 import Button, { ButtonPendingActivationState } from "./Button";
+import { useKeyDown } from "./hooks/useKey";
 import useLayout from "./hooks/useLayout";
 import { IconName } from "./IconShared";
 import Spacer from "./Spacer";
 
 export interface PendingMarkingInteractionState {
   pendingActionOutcome: PromptRepetitionOutcome;
+}
+
+interface Shortcuts {
+  [key: string]: {
+    callback: () => void;
+    disabled?: boolean;
+  };
+}
+
+function getShortcuts(
+  isShowingAnswer: boolean,
+  onMark: (outcome: PromptRepetitionOutcome) => void,
+  onReveal: () => void,
+): Shortcuts {
+  const actions = [
+    () => onMark(PromptRepetitionOutcome.Forgotten),
+    () => onMark(PromptRepetitionOutcome.Remembered),
+  ];
+
+  const _shortcuts: Shortcuts = {
+    // default action (Space)
+    " ": { callback: isShowingAnswer ? actions[1] : onReveal },
+  };
+
+  actions.forEach((action, i) => {
+    // list of actions (1, 2, 3, ...)
+    _shortcuts[i + 1] = { callback: action, disabled: !isShowingAnswer };
+  });
+
+  return _shortcuts;
 }
 
 function getButtonTitle(
@@ -81,6 +112,18 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
 }) {
   const { width, onLayout } = useLayout();
   const isVeryNarrow = width > 0 && width < 320;
+
+  const shortcuts = getShortcuts(isShowingAnswer, onMark, onReveal);
+
+  useKeyDown((event) => {
+    if (
+      Object.keys(shortcuts).includes(event.key) &&
+      !shortcuts[event.key].disabled &&
+      !event.repeat
+    ) {
+      shortcuts[event.key].callback();
+    }
+  });
 
   const buttonStyle = {
     flex: 1,
