@@ -60,7 +60,6 @@
 		CD82D2AB4B8944AEA650052E /* dr-italic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-italic.otf"; path = "../assets/fonts/dr-italic.otf"; sourceTree = "<group>"; };
 		DB62AFBDCFB64E00AB6FF8EB /* dr-lightitalic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-lightitalic.otf"; path = "../assets/fonts/dr-lightitalic.otf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
 		F6C5BE09A93F4B7286876094 /* dr-regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-regular.otf"; path = "../assets/fonts/dr-regular.otf"; sourceTree = "<group>"; };
 		F902A8C46D724261A52F509B /* dr-bolditalic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-bolditalic.otf"; path = "../assets/fonts/dr-bolditalic.otf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -109,7 +108,6 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				ED2971642150620600B7C4FE /* JavaScriptCore.framework */,
 				8202A75DF5E32FE07600EB5E /* libPods-Orbit.a */,
 			);
 			name = Frameworks;
@@ -263,7 +261,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "source ~/.nvm/nvm.sh\n\n../../../node_modules/react-native/scripts/react-native-xcode.sh\n../../../node_modules/expo-updates/scripts/create-manifest-ios.sh\n../../../node_modules/expo-constants/scripts/get-app-config-ios.sh\n";
+			shellScript = "source ~/.nvm/nvm.sh\n\n../node_modules/react-native/scripts/react-native-xcode.sh\n../node_modules/expo-updates/scripts/create-manifest-ios.sh\n../node_modules/expo-constants/scripts/get-app-config-ios.sh\n";
 		};
 		3003D65099E33ACA0AB1183A /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;

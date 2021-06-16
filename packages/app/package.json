@@ -173,5 +173,17 @@
     "tty": "tty-browserify",
     "vm": "vm-browserify",
     "tls": false
+  },
+  "workspaces": {
+    "nohoist": [
+      "react-native",
+      "react-native/**",
+      "expo",
+      "expo/**",
+      "expo-*",
+      "expo-*/**",
+      "react-native-unimodules",
+      "react-native-unimodules/**"
+    ]
   }
 }
