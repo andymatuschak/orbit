@@ -122,10 +122,8 @@ function onMessage(event: MessageEvent) {
       break;
 
     case EmbeddedScreenEventType.PromptStateUpdate:
-      const {
-        promptTaskID,
-        promptState,
-      } = event.data as EmbeddedScreenPromptStateUpdateEvent;
+      const { promptTaskID, promptState } =
+        event.data as EmbeddedScreenPromptStateUpdateEvent;
       // May replace this with a straight lookup table if the full iteration becomes a problem, but usually N < 100.
       for (const screenRecord of screenRecordsByReviewArea.values()) {
         for (const reviewItem of screenRecord.reviewItems) {

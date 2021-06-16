@@ -20,9 +20,8 @@ export const storeAttachment: TypedRouteHandler<
   const attachmentMimeType = request.body.file.type as AttachmentMimeType;
   const buffer = new Uint8Array(await request.body.file.arrayBuffer());
 
-  const attachmentType = getAttachmentTypeForAttachmentMimeType(
-    attachmentMimeType,
-  );
+  const attachmentType =
+    getAttachmentTypeForAttachmentMimeType(attachmentMimeType);
   const result = await backend.attachments.storeAttachment({
     mimeType: attachmentMimeType,
     contents: buffer,

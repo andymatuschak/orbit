@@ -25,9 +25,8 @@ export default function FadeView(props: FadeViewProps) {
     style,
   } = props;
 
-  const [lastCompletedVisibility, setLastCompletedVisibility] = React.useState<
-    boolean
-  >(props.isVisible);
+  const [lastCompletedVisibility, setLastCompletedVisibility] =
+    React.useState<boolean>(props.isVisible);
 
   const opacity = useTransitioningValue({
     value: isVisible ? 1 : 0,

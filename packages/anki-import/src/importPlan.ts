@@ -123,7 +123,7 @@ export async function createPlanForCard(
 }
 
 export async function createPlanForLog<
-  PT extends QAPromptTask | ClozePromptTask
+  PT extends QAPromptTask | ClozePromptTask,
 >(
   ankiLog: Anki.Log,
   cardLastActionLog: PromptActionLog<PT>,

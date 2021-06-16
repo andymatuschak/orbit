@@ -25,10 +25,10 @@ describe("_validateAttachmentResponse", () => {
   test("bad content type", () => {
     expect(
       _validateAttachmentResponse(
-        ({
+        {
           status: 200,
           headers: { get: () => null },
-        } as unknown) as Fetch.Response,
+        } as unknown as Fetch.Response,
         "http://foo.com",
       ),
     ).toBeInstanceOf(Error);
@@ -37,10 +37,10 @@ describe("_validateAttachmentResponse", () => {
   test("valid response", () => {
     expect(
       _validateAttachmentResponse(
-        ({
+        {
           status: 200,
           headers: { get: () => "image/png" },
-        } as unknown) as Fetch.Response,
+        } as unknown as Fetch.Response,
         "http://foo.com",
       ),
     ).toBe(AttachmentMimeType.PNG);

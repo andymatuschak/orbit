@@ -134,12 +134,10 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
     }),
   };
 
-  const forgottenButtonPendingState = useRef<ButtonPendingActivationState>(
-    null,
-  );
-  const rememberedButtonPendingState = useRef<ButtonPendingActivationState>(
-    null,
-  );
+  const forgottenButtonPendingState =
+    useRef<ButtonPendingActivationState>(null);
+  const rememberedButtonPendingState =
+    useRef<ButtonPendingActivationState>(null);
 
   function dispatchPendingMarkingInteraction() {
     onPendingOutcomeChange(

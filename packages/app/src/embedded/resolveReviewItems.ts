@@ -86,12 +86,9 @@ export async function resolveReviewItems(
   );
 
   const attachmentResolutionMap: AttachmentResolutionMap = new Map(
-    [
-      ...attachmentURLsToAttachmentIDReferences.entries(),
-    ].map(([url, idReference]) => [
-      idReference.id,
-      { type: idReference.type, url },
-    ]),
+    [...attachmentURLsToAttachmentIDReferences.entries()].map(
+      ([url, idReference]) => [idReference.id, { type: idReference.type, url }],
+    ),
   );
 
   const reviewItems: ReviewItem[] = [];

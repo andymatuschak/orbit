@@ -18,11 +18,11 @@ afterEach(async () => {
   await store.close();
 });
 
-const testPromptState = ({
+const testPromptState = {
   test: true,
   dueTimestampMillis: 0,
   taskMetadata: { isDeleted: false },
-} as unknown) as PromptState;
+} as unknown as PromptState;
 
 async function saveTestPromptState() {
   return await store.savePromptStates([

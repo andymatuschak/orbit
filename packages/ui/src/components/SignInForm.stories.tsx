@@ -20,9 +20,8 @@ const Template: Story<{
   colorPaletteIndex: number;
   overrideEmailAddress: string;
 }> = (args) => {
-  const [isPendingServerResponse, setPendingServerResponse] = React.useState(
-    false,
-  );
+  const [isPendingServerResponse, setPendingServerResponse] =
+    React.useState(false);
 
   const onLogin = React.useCallback(() => {
     setPendingServerResponse(true);

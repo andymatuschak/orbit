@@ -85,7 +85,8 @@ class ImportAnkiCollection extends Command {
                 {
                   ...log,
                   // TODO reenable suppressTaskStateCacheUpdate. Would have to construct prompt state caches with correct timestamps, which is a bit tricky here...
-                  serverTimestamp: firebase.firestore.FieldValue.serverTimestamp() as firebase.firestore.Timestamp,
+                  serverTimestamp:
+                    firebase.firestore.FieldValue.serverTimestamp() as firebase.firestore.Timestamp,
                 } as ActionLogDocument<firebase.firestore.Timestamp>,
               ] as const,
           ),

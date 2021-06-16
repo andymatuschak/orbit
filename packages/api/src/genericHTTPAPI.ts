@@ -10,7 +10,7 @@ export type RouteData<
   P extends URLPathParameters = any,
   C extends RequestContentType | undefined = RequestContentType,
   B extends C extends "multipart/form-data" ? RequestFormData : any = any,
-  R = any
+  R = any,
 > = {
   query?: Q;
   params?: P;

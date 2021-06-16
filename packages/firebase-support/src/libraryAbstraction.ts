@@ -9,19 +9,18 @@ export type FieldValue =
   | AdminFirestore.FieldValue;
 export type CollectionReference<
   D extends Database,
-  T
+  T,
 > = D extends ClientFirestoreNamespace.firestore.Firestore
   ? ClientFirestoreNamespace.firestore.CollectionReference<T>
   : AdminFirestore.CollectionReference<T>;
-export type TimestampOf<
-  D extends Database
-> = D extends ClientFirestoreNamespace.firestore.Firestore
-  ? ClientFirestoreNamespace.firestore.Timestamp
-  : AdminFirestore.Timestamp;
+export type TimestampOf<D extends Database> =
+  D extends ClientFirestoreNamespace.firestore.Firestore
+    ? ClientFirestoreNamespace.firestore.Timestamp
+    : AdminFirestore.Timestamp;
 
 export type DocumentReference<
   D extends Database,
-  T
+  T,
 > = D extends ClientFirestoreNamespace.firestore.Firestore
   ? ClientFirestoreNamespace.firestore.DocumentReference<T>
   : AdminFirestore.DocumentReference<T>;

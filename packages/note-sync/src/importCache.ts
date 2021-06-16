@@ -210,9 +210,7 @@ export default class SpacedEverythingImportCache {
     return entries.map((e) => e[0]);
   }
 
-  async getNoteMetadata(
-    noteID: string,
-  ): Promise<{
+  async getNoteMetadata(noteID: string): Promise<{
     metadata: CachedNoteMetadata;
     childIDs: string[];
   } | null> {

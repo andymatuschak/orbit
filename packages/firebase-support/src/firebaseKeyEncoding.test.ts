@@ -8,7 +8,8 @@ import {
 } from "./firebaseKeyEncoding";
 
 describe("prompt ID", () => {
-  const testPromptID = "z4EBG9j66Sram66kgDzn5rx2fg1UvWfYvNiSn8or7CD7LLccaaj" as PromptID;
+  const testPromptID =
+    "z4EBG9j66Sram66kgDzn5rx2fg1UvWfYvNiSn8or7CD7LLccaaj" as PromptID;
   const firebaseKey = getFirebaseKeyForCIDString(testPromptID);
   test("stability", () => {
     expect(firebaseKey).toMatchInlineSnapshot(
@@ -21,7 +22,8 @@ describe("prompt ID", () => {
 });
 
 describe("attachment ID", () => {
-  const testAttachmentID = "zb2rhXaeJ922fgKU1sHug4EhfEUQdA3oFRUV6CumZuUoZhgf3" as AttachmentID;
+  const testAttachmentID =
+    "zb2rhXaeJ922fgKU1sHug4EhfEUQdA3oFRUV6CumZuUoZhgf3" as AttachmentID;
   const firebaseKey = getFirebaseKeyForCIDString(testAttachmentID);
   test("stability", () => {
     expect(firebaseKey).toMatchInlineSnapshot(
@@ -36,7 +38,8 @@ describe("attachment ID", () => {
 });
 
 describe("action log ID", () => {
-  const testActionLogID = "z4EBG9j7zwuHzNwBcnKf2uB5dyHhdvd61VypgN7Lg9isLkZx4Fk" as ActionLogID;
+  const testActionLogID =
+    "z4EBG9j7zwuHzNwBcnKf2uB5dyHhdvd61VypgN7Lg9isLkZx4Fk" as ActionLogID;
   const firebaseKey = getFirebaseKeyForCIDString(testActionLogID);
   test("stability", () => {
     expect(firebaseKey).toMatchInlineSnapshot(

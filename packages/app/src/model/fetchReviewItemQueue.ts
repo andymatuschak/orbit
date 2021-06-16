@@ -141,9 +141,8 @@ export default async function fetchReviewItemQueue({
 
   const orderedDuePromptTasks = reviewSession.getDuePromptTasks({
     promptStates: duePromptStates,
-    thresholdTimestampMillis: reviewSession.getFuzzyDueTimestampThreshold(
-      nowTimestampMillis,
-    ),
+    thresholdTimestampMillis:
+      reviewSession.getFuzzyDueTimestampThreshold(nowTimestampMillis),
   });
 
   return await resolveReviewItems(

@@ -20,7 +20,7 @@ export type AbstractPromptTask<
   P extends Prompt,
   PromptParametersType,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  PromptTaskParametersType
+  PromptTaskParametersType,
 > = {
   promptID: PromptID;
   promptType: P["promptType"];
@@ -33,12 +33,10 @@ export type PromptOf<PT extends PromptTask> = PT extends AbstractPromptTask<
 >
   ? P
   : never;
-export type PromptParametersOf<
-  PT extends PromptTask
-> = PT extends AbstractPromptTask<any, infer PP, any> ? PP : never;
-export type PromptTaskParametersOf<
-  PT extends PromptTask
-> = PT extends AbstractPromptTask<any, any, infer PTP> ? PTP : never;
+export type PromptParametersOf<PT extends PromptTask> =
+  PT extends AbstractPromptTask<any, infer PP, any> ? PP : never;
+export type PromptTaskParametersOf<PT extends PromptTask> =
+  PT extends AbstractPromptTask<any, any, infer PTP> ? PTP : never;
 
 export type QAPromptTask = AbstractPromptTask<QAPrompt, null, null>;
 

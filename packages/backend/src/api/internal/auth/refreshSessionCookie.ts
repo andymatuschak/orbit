@@ -10,10 +10,8 @@ export async function refreshSessionCookie(
   try {
     if (idToken && typeof idToken === "string") {
       await backend.auth.validateIDToken(idToken);
-      const {
-        sessionCookie,
-        sessionCookieExpirationDate,
-      } = await backend.auth.createSessionCookie(idToken);
+      const { sessionCookie, sessionCookieExpirationDate } =
+        await backend.auth.createSessionCookie(idToken);
       response
         .cookie(
           sessionCookieName,

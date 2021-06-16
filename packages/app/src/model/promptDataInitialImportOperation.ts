@@ -14,10 +14,8 @@ export default function promptDataInitialImportOperation(
     let attachmentTotal = 0;
     console.log("Prompt data import: starting");
     while (!taskStatus.isCancelled) {
-      const promptStates: Map<
-        PromptTaskID,
-        PromptState
-      > = await promptStateStore.getAllPromptStates(latestPromptTaskID, 100);
+      const promptStates: Map<PromptTaskID, PromptState> =
+        await promptStateStore.getAllPromptStates(latestPromptTaskID, 100);
       if (taskStatus.isCancelled) return;
 
       if (promptStates.size > 0) {

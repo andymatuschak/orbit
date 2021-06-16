@@ -84,7 +84,7 @@ function canonicalizeActionLog(actionLog: ActionLog): CIDEncodable<ActionLog> {
   }
 
   function canonicalizeParentActionLogIDs<
-    T extends ActionLog & { parentActionLogIDs: ActionLogID[] }
+    T extends ActionLog & { parentActionLogIDs: ActionLogID[] },
   >(actionLog: T): CIDEncodable<ActionLogID[]> {
     return actionLog.parentActionLogIDs.map((id) => CID.parse(id));
   }

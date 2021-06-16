@@ -71,7 +71,8 @@ export default class DatabaseManager {
 
     if (this.isClosed) return;
 
-    const hasFinishedInitialImport = await this.actionLogStore.getHasFinishedInitialImport();
+    const hasFinishedInitialImport =
+      await this.actionLogStore.getHasFinishedInitialImport();
     if (this.isClosed) return;
     if (hasFinishedInitialImport) {
       this.fetchNewLogs(

@@ -19,7 +19,7 @@ export class RequestManager<API extends API.Spec> {
 
   getRequestURL<
     Path extends Extract<keyof API, string>,
-    Method extends Extract<keyof API[Path], API.HTTPMethod>
+    Method extends Extract<keyof API[Path], API.HTTPMethod>,
   >(
     path: Path,
     method: Method,
@@ -63,7 +63,7 @@ export class RequestManager<API extends API.Spec> {
 
   async request<
     Path extends Extract<keyof API, string>,
-    Method extends Extract<keyof API[Path], API.HTTPMethod>
+    Method extends Extract<keyof API[Path], API.HTTPMethod>,
   >(
     path: Path,
     method: Method,
@@ -91,9 +91,7 @@ export class RequestManager<API extends API.Spec> {
     if (response.ok) {
       if (response.status === 204) {
         // TODO validate that the response should be void
-        return (undefined as unknown) as API.RouteResponseData<
-          API[Path][Method]
-        >;
+        return undefined as unknown as API.RouteResponseData<API[Path][Method]>;
       } else {
         const json = await response.json();
 
@@ -139,7 +137,7 @@ function mergeQueryParameters(
 function getWireBody<
   API extends API.Spec,
   Path extends Extract<keyof API, string>,
-  Method extends Extract<keyof API[Path], API.HTTPMethod>
+  Method extends Extract<keyof API[Path], API.HTTPMethod>,
 >(
   requestData: API.RouteRequestData<API[Path][Method]>,
 ): { body: Network.FormData | string; contentType: string } | null {

@@ -157,8 +157,9 @@ export function Sandbox() {
       white: colors.white,
     }[accentStrokeColorSource];
 
-    backgroundColor = getPaletteByIndex(number("BG color index", 0, colorRange))
-      .backgroundColor;
+    backgroundColor = getPaletteByIndex(
+      number("BG color index", 0, colorRange),
+    ).backgroundColor;
   }
 
   const [currentEntry, setCurrentEntry] = useState(0);

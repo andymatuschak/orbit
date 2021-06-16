@@ -110,21 +110,25 @@ describe("reschedule logs", () => {
 
   test("learning card", async () => {
     expect(
-      ((await createRescheduleLogForCard(
-        { ...testCard, queue: CardQueue.Learning, due: 1e5 },
-        testCollection,
-        ingestLog,
-      )) as RescheduleActionLog).newTimestampMillis,
+      (
+        (await createRescheduleLogForCard(
+          { ...testCard, queue: CardQueue.Learning, due: 1e5 },
+          testCollection,
+          ingestLog,
+        )) as RescheduleActionLog
+      ).newTimestampMillis,
     ).toEqual(1e8);
   });
 
   test("due card", async () => {
     expect(
-      ((await createRescheduleLogForCard(
-        { ...testCard, queue: CardQueue.Due, due: 50 },
-        { ...testCollection, crt: 1000 },
-        ingestLog,
-      )) as RescheduleActionLog).newTimestampMillis,
+      (
+        (await createRescheduleLogForCard(
+          { ...testCard, queue: CardQueue.Due, due: 50 },
+          { ...testCollection, crt: 1000 },
+          ingestLog,
+        )) as RescheduleActionLog
+      ).newTimestampMillis,
     ).toEqual(1000 * 1000 + 50 * 1000 * 60 * 60 * 24);
   });
 });

@@ -38,10 +38,8 @@ export async function storeActionLogs(
   let hasReviewedOldPrompt = false;
 
   for (const [, log] of storedLogs) {
-    const {
-      oldPromptStateCache,
-      newPromptStateCache,
-    } = await updatePromptStateCacheWithLog(log, userID);
+    const { oldPromptStateCache, newPromptStateCache } =
+      await updatePromptStateCacheWithLog(log, userID);
     if (oldPromptStateCache) {
       hasReviewedOldPrompt = true;
     }

@@ -82,9 +82,8 @@ export default function SignInScreen() {
   const [formMode, setFormMode] = React.useState<
     SignInFormProps["mode"] | null
   >(!!overrideEmailAddress ? null : "signIn");
-  const [isPendingServerResponse, setPendingServerResponse] = React.useState(
-    false,
-  );
+  const [isPendingServerResponse, setPendingServerResponse] =
+    React.useState(false);
   const [automaticLoginState, setAutomaticLoginState] = React.useState<
     "requiresUserApproval" | "approved" | null
   >(null);

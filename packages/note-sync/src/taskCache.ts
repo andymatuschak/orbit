@@ -28,7 +28,8 @@ import {
 } from "./util/cstOrbitAdapters";
 
 type NotePromptTask = spacedEverything.notePrompts.PromptTask;
-type NotePromptTaskCollection = spacedEverything.notePrompts.PromptTaskCollection;
+type NotePromptTaskCollection =
+  spacedEverything.notePrompts.PromptTaskCollection;
 
 function flat<T>(lists: T[][]): T[] {
   return lists.reduce((whole, part) => whole.concat(part), []);
@@ -236,9 +237,10 @@ async function getTaskRecordForPath(
                   prompt,
                   noteData,
                 },
-                childIDs: spacedEverything.notePrompts.getClozeNoteTaskCollectionChildIDsForClozePrompt(
-                  prompt,
-                ),
+                childIDs:
+                  spacedEverything.notePrompts.getClozeNoteTaskCollectionChildIDsForClozePrompt(
+                    prompt,
+                  ),
               };
             default:
               throw unreachableCaseError(prompt);

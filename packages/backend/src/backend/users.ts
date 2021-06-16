@@ -43,9 +43,9 @@ export async function clearUserSessionNotificationState(
   const ref = getUserMetadataReference(getDatabase(), userID);
   // set() has the wrong type annotation: it should accept FieldValues. So we have to do this casting dance.
   await ref.set(
-    ({
+    {
       sessionNotificationState: admin.firestore.FieldValue.delete(),
-    } as WithFirebaseFields<Partial<UserMetadata>>) as Partial<UserMetadata>,
+    } as WithFirebaseFields<Partial<UserMetadata>> as Partial<UserMetadata>,
     { merge: true },
   );
 }

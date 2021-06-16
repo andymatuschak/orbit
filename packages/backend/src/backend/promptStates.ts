@@ -131,10 +131,8 @@ export async function listPromptStates(
   ),
 ): Promise<Map<PromptTaskID, PromptState>> {
   const db = getDatabase();
-  let ref: admin.firestore.Query<PromptStateCache> = getTaskStateCacheCollectionReference(
-    db,
-    userID,
-  );
+  let ref: admin.firestore.Query<PromptStateCache> =
+    getTaskStateCacheCollectionReference(db, userID);
   if ("dueBeforeTimestampMillis" in query) {
     ref = ref
       .where(

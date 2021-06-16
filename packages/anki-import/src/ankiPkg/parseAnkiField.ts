@@ -17,9 +17,7 @@ const processor = unified()
   .use(rehype2Remark)
   .use(remarkStringify)
   .use(stripImages);
-export default function parseAnkiField(
-  ankiField: string,
-): {
+export default function parseAnkiField(ankiField: string): {
   contentsMarkdown: string;
   attachmentReferences: AnkiAttachmentReference[];
 } {

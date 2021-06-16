@@ -68,9 +68,10 @@ describe("getUpdatesForTaskCacheChange", () => {
               },
             },
           },
-          childIDs: spacedEverything.notePrompts.getClozeNoteTaskCollectionChildIDsForClozePrompt(
-            clozeITPrompt,
-          ),
+          childIDs:
+            spacedEverything.notePrompts.getClozeNoteTaskCollectionChildIDsForClozePrompt(
+              clozeITPrompt,
+            ),
         },
         path: ["container", "id"],
       },
@@ -94,7 +95,7 @@ describe("getUpdatesForTaskCacheChange", () => {
         path: ["container", "id"],
       },
       500,
-      (mock as unknown) as SpacedEverythingImportCache,
+      mock as unknown as SpacedEverythingImportCache,
     );
 
     expect(prompts).toHaveLength(0);
@@ -122,7 +123,7 @@ describe("getUpdatesForTaskCacheChange", () => {
         path: ["container"],
       },
       500,
-      (mock as unknown) as SpacedEverythingImportCache,
+      mock as unknown as SpacedEverythingImportCache,
     );
 
     expect(prompts).toHaveLength(0);
@@ -172,7 +173,7 @@ describe("getUpdatesForTaskCacheChange", () => {
         },
       },
       500,
-      (mock as unknown) as SpacedEverythingImportCache,
+      mock as unknown as SpacedEverythingImportCache,
     );
 
     expect(prompts).toHaveLength(0);

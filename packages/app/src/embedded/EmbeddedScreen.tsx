@@ -57,8 +57,9 @@ function getEndOfTaskLabel(
 ): string {
   const promptString = starburstItems.length > 1 ? "prompts" : "prompt";
   if (hasPeerStates) {
-    const collectedCount = starburstItems.filter((state) => !!state.promptState)
-      .length;
+    const collectedCount = starburstItems.filter(
+      (state) => !!state.promptState,
+    ).length;
     return `${collectedCount} of ${starburstItems.length} prompts on page collected`;
   } else {
     return `${starburstItems.length} ${promptString} collected`;
@@ -94,15 +95,12 @@ function EmbeddedScreenRenderer({
   reviewAreaQueue,
   wasInitiallyComplete,
 }: EmbeddedScreenRendererProps) {
-  const [
-    pendingOutcome,
-    setPendingOutcome,
-  ] = useState<PromptRepetitionOutcome | null>(null);
+  const [pendingOutcome, setPendingOutcome] =
+    useState<PromptRepetitionOutcome | null>(null);
 
   const [isComplete, setComplete] = useState(false);
-  const [shouldShowOnboardingModal, setShouldShowOnboardingModal] = useState(
-    false,
-  );
+  const [shouldShowOnboardingModal, setShouldShowOnboardingModal] =
+    useState(false);
   useEffect(() => {
     if (authenticationState.status === "signedIn") {
       setShouldShowOnboardingModal(false);
@@ -153,9 +151,10 @@ function EmbeddedScreenRenderer({
     }, 750);
   }
 
-  const starburstItems = useMemo(() => getStarburstItems(sessionItems), [
-    sessionItems,
-  ]);
+  const starburstItems = useMemo(
+    () => getStarburstItems(sessionItems),
+    [sessionItems],
+  );
 
   return (
     <>
@@ -288,14 +287,14 @@ export default function EmbeddedScreen() {
   const configuration = useRef(
     getEmbeddedScreenConfigurationFromURL(window.location.href),
   ).current;
-  const colorPalette = useMemo(() => getEmbeddedColorPalette(configuration), [
-    configuration,
-  ]);
+  const colorPalette = useMemo(
+    () => getEmbeddedColorPalette(configuration),
+    [configuration],
+  );
 
   const authenticationClient = useAuthenticationClient();
-  const authenticationState = useEmbeddedAuthenticationState(
-    authenticationClient,
-  );
+  const authenticationState =
+    useEmbeddedAuthenticationState(authenticationClient);
 
   const {
     currentSessionItemIndex,
@@ -304,10 +303,8 @@ export default function EmbeddedScreen() {
     reviewAreaQueue,
     ...reviewSessionManager
   } = useReviewSessionManager();
-  const {
-    commitActionsRecord,
-    hasUncommittedActions,
-  } = useEmbeddedNetworkQueue(authenticationState.status);
+  const { commitActionsRecord, hasUncommittedActions } =
+    useEmbeddedNetworkQueue(authenticationState.status);
 
   const hostState = useEmbeddedHostState();
   const embeddedReviewItems = useResolvedReviewItems(

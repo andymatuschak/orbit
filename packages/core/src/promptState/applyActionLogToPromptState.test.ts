@@ -302,12 +302,14 @@ describe("repetition", () => {
     };
     const logID = await getIDForActionLog(getActionLogFromPromptActionLog(log));
     expect(
-      (applyActionLogToPromptState({
-        promptActionLog: log,
-        actionLogID: logID,
-        basePromptState: null,
-        schedule: testSchedule,
-      }) as PromptState).needsRetry,
+      (
+        applyActionLogToPromptState({
+          promptActionLog: log,
+          actionLogID: logID,
+          basePromptState: null,
+          schedule: testSchedule,
+        }) as PromptState
+      ).needsRetry,
     ).toBe(false);
   });
 });
@@ -332,12 +334,14 @@ describe("reschedule", () => {
       newTimestampMillis: 10000,
     };
     expect(
-      (applyActionLogToPromptState({
-        promptActionLog: log,
-        actionLogID: await getIDForActionLog(log),
-        basePromptState: newlyIngestedPromptState,
-        schedule: "default",
-      }) as PromptState).dueTimestampMillis,
+      (
+        applyActionLogToPromptState({
+          promptActionLog: log,
+          actionLogID: await getIDForActionLog(log),
+          basePromptState: newlyIngestedPromptState,
+          schedule: "default",
+        }) as PromptState
+      ).dueTimestampMillis,
     ).toEqual(10000);
   });
 });
@@ -353,11 +357,13 @@ test("update metadata", async () => {
     },
   };
   expect(
-    (applyActionLogToPromptState({
-      promptActionLog: log,
-      actionLogID: await getIDForActionLog(log),
-      basePromptState: newlyIngestedPromptState,
-      schedule: "default",
-    }) as PromptState).taskMetadata.isDeleted,
+    (
+      applyActionLogToPromptState({
+        promptActionLog: log,
+        actionLogID: await getIDForActionLog(log),
+        basePromptState: newlyIngestedPromptState,
+        schedule: "default",
+      }) as PromptState
+    ).taskMetadata.isDeleted,
   ).toBeTruthy();
 });

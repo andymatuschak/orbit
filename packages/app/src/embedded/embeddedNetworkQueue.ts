@@ -22,10 +22,8 @@ export function useEmbeddedNetworkQueue(
   commitActionsRecord: (actionRecord: EmbeddedActionsRecord) => void;
   hasUncommittedActions: boolean;
 } {
-  const [
-    pendingActionsRecord,
-    setPendingActionsRecord,
-  ] = useState<EmbeddedActionsRecord | null>(null);
+  const [pendingActionsRecord, setPendingActionsRecord] =
+    useState<EmbeddedActionsRecord | null>(null);
 
   // Attempt to drain queue when inputs change.
   useEffect(() => {

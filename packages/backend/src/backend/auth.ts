@@ -18,9 +18,7 @@ export async function validateIDToken(idToken: string): Promise<string> {
   return decodedToken.uid;
 }
 
-export async function createSessionCookie(
-  idToken: string,
-): Promise<{
+export async function createSessionCookie(idToken: string): Promise<{
   sessionCookie: string;
   sessionCookieExpirationDate: Date;
 }> {
@@ -62,13 +60,11 @@ enum AccessCodeRecordType {
   PersonalAccessToken = "personalAccessToken",
 }
 
-function getAccessCodeCollection(): firebase.firestore.CollectionReference<
-  AccessCodeRecord
-> {
+function getAccessCodeCollection(): firebase.firestore.CollectionReference<AccessCodeRecord> {
   const db = getDatabase();
-  return db.collection("accessCodes") as firebase.firestore.CollectionReference<
-    AccessCodeRecord
-  >;
+  return db.collection(
+    "accessCodes",
+  ) as firebase.firestore.CollectionReference<AccessCodeRecord>;
 }
 
 // Creates an access code which can be used once to sign in.

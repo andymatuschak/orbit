@@ -27,9 +27,8 @@ function getPromptFieldFromEmbeddedPromptField(
       contents: embeddedPromptField.contents,
       attachments:
         embeddedPromptField.attachmentURLs?.map((attachmentURL) => {
-          const attachmentIDReference = attachmentURLsToIDReferences.get(
-            attachmentURL,
-          );
+          const attachmentIDReference =
+            attachmentURLsToIDReferences.get(attachmentURL);
           if (attachmentIDReference) {
             return attachmentIDReference;
           } else {

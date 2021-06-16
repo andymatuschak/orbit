@@ -10,4 +10,4 @@ class DummyLeveldown {
   }
 }
 
-export default (DummyLeveldown as unknown) as AbstractLevelDOWNConstructor;
+export default DummyLeveldown as unknown as AbstractLevelDOWNConstructor;

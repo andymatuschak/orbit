@@ -48,10 +48,9 @@ const schedulesToIntervalsToLevels = ((): Record<
   MetabookSpacedRepetitionSchedule,
   { [key: number]: number }
 > => {
-  const cache: Partial<Record<
-    MetabookSpacedRepetitionSchedule,
-    { [key: number]: number }
-  >> = {};
+  const cache: Partial<
+    Record<MetabookSpacedRepetitionSchedule, { [key: number]: number }>
+  > = {};
   typedKeys(schedulesToIntervalSequences).forEach((schedule) => {
     const lookupCache: { [key: number]: number } = {};
     schedulesToIntervalSequences[schedule].forEach(

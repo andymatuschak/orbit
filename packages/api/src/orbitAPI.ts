@@ -132,7 +132,7 @@ export type Spec = RequiredSpec<ValidatableSpec>;
 export type ResponseList<
   ObjectTypeString extends string,
   IDType extends string,
-  DataType
+  DataType,
 > = {
   objectType: "list";
   hasMore: boolean;
@@ -142,7 +142,7 @@ export type ResponseList<
 export type ResponseObject<
   ObjectType extends string,
   IDType extends string,
-  DataType
+  DataType,
 > = {
   objectType: ObjectType;
   /**

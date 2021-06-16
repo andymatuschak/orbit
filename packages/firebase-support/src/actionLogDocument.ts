@@ -9,12 +9,11 @@ import {
 } from "./libraryAbstraction";
 import { getActionLogIDReference } from "./references";
 
-export type ActionLogDocument<
-  T extends ServerTimestamp = ServerTimestamp
-> = ActionLog & {
-  serverTimestamp: T;
-  suppressTaskStateCacheUpdate?: boolean;
-};
+export type ActionLogDocument<T extends ServerTimestamp = ServerTimestamp> =
+  ActionLog & {
+    serverTimestamp: T;
+    suppressTaskStateCacheUpdate?: boolean;
+  };
 
 export function getActionLogFromActionLogDocument(
   document: ActionLogDocument,
@@ -45,9 +44,8 @@ export async function storeLogs<D extends Database>(
       const logDocument: ActionLogDocument<TimestampOf<D>> = {
         ...log,
         // The force-cast is necessary because we often use a sentinel value ("update this server-side on write")
-        serverTimestamp: (getServerTimestampFieldValue() as unknown) as TimestampOf<
-          D
-        >,
+        serverTimestamp:
+          getServerTimestampFieldValue() as unknown as TimestampOf<D>,
         ...(suppressTaskStateCacheUpdate && {
           suppressTaskStateCacheUpdate: true,
         }),

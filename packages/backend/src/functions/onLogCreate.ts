@@ -12,19 +12,17 @@ import { sharedLoggingService } from "../logging";
 export default functions.firestore
   .document("users/{userID}/logs/{logID}")
   .onCreate(async (snapshot, context) => {
-    const actionLog = snapshot.data() as ActionLogDocument<
-      firebase.firestore.Timestamp
-    >;
+    const actionLog =
+      snapshot.data() as ActionLogDocument<firebase.firestore.Timestamp>;
 
     // TODO: I don't like that this flag is suppressing unrelated logic... probably needs to be refactored.
     if (!actionLog.suppressTaskStateCacheUpdate) {
       const userID = context.params["userID"];
-      const {
-        newPromptStateCache,
-      } = await backend.promptStates.updatePromptStateCacheWithLog(
-        actionLog,
-        userID,
-      );
+      const { newPromptStateCache } =
+        await backend.promptStates.updatePromptStateCacheWithLog(
+          actionLog,
+          userID,
+        );
 
       await sharedLoggingService.logActionLog({
         userID: userID,

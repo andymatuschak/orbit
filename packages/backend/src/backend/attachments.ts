@@ -57,9 +57,8 @@ async function _storeAttachmentFromURL(
   }
 
   const responseBuffer = await response.buffer();
-  const attachmentType = getAttachmentTypeForAttachmentMimeType(
-    attachmentMimeType,
-  );
+  const attachmentType =
+    getAttachmentTypeForAttachmentMimeType(attachmentMimeType);
 
   const { attachmentID } = await storeAttachment({
     contents: responseBuffer,
@@ -97,9 +96,7 @@ export async function storeAttachmentAtURLIfNecessary(
   }
 }
 
-export async function storeAttachment(
-  attachment: Attachment,
-): Promise<{
+export async function storeAttachment(attachment: Attachment): Promise<{
   attachmentID: AttachmentID;
   status: "stored" | "alreadyExists";
   url: string;

@@ -15,7 +15,8 @@ async function attemptLoginWithSessionCookie(
 ) {
   try {
     console.log("Attempting login with session cookie");
-    const loginToken = await authenticationClient.getLoginTokenUsingSessionCookie();
+    const loginToken =
+      await authenticationClient.getLoginTokenUsingSessionCookie();
     await authenticationClient.signInWithLoginToken(loginToken);
   } catch (error) {
     console.log("Failed login with session cookie", error);
@@ -44,7 +45,8 @@ export type EmbeddedAuthenticationState =
       onRequestStorageAccess: () => unknown;
     }
   | { status: "signedIn"; userRecord: Authentication.UserRecord };
-export type EmbeddedAuthenticationStatus = EmbeddedAuthenticationState["status"];
+export type EmbeddedAuthenticationStatus =
+  EmbeddedAuthenticationState["status"];
 
 // Watch for auth tokens broadcasted from the login popup or from peer iframes. These may come either via postMessage() to window.opener or via BroadcastChannel in supported browsers (either from the popup window or from a peer iframe).
 function useLoginTokenSubscription(
@@ -97,9 +99,11 @@ export function useEmbeddedAuthenticationState(
 ): EmbeddedAuthenticationState {
   useLoginTokenSubscription(authenticationClient);
 
-  const [authenticationState, setAuthenticationState] = React.useState<
-    EmbeddedAuthenticationState
-  >({ status: "pending", userRecord: null });
+  const [authenticationState, setAuthenticationState] =
+    React.useState<EmbeddedAuthenticationState>({
+      status: "pending",
+      userRecord: null,
+    });
 
   const [hasStorageAccess, setHasStorageAccess] = React.useState<
     boolean | null

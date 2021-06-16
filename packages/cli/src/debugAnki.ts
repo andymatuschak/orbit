@@ -64,10 +64,8 @@ import { getLogCollectionReference } from "@withorbit/firebase-support";
   )
     .orderBy("serverTimestamp", "asc")
     .limit(1000);
-  let baseServerTimestamp: admin.firestore.Timestamp | null = new firebase.firestore.Timestamp(
-    0,
-    0,
-  );
+  let baseServerTimestamp: admin.firestore.Timestamp | null =
+    new firebase.firestore.Timestamp(0, 0);
   // let baseSnapshot: any = null;
   let total = 0;
   while (true) {
@@ -83,8 +81,8 @@ import { getLogCollectionReference } from "@withorbit/firebase-support";
     // console.log(`Got ${snapshot.size} logs; ${total} total`);
     if (snapshot.size > 0) {
       // baseSnapshot = snapshot.docs[snapshot.size - 1];
-      baseServerTimestamp = snapshot.docs[snapshot.size - 1].data()
-        .serverTimestamp;
+      baseServerTimestamp =
+        snapshot.docs[snapshot.size - 1].data().serverTimestamp;
     } else {
       console.log("Done", total, (Date.now() - startTime) / 1000);
       break;

@@ -53,9 +53,8 @@ async function requestPersonalAccessToken(
 const GeneratePersonalAccessToken = () => {
   const [token, setToken] = React.useState<string | null>(null);
   const authenticationClient = useAuthenticationClient();
-  const authenticationState = useEmbeddedAuthenticationState(
-    authenticationClient,
-  );
+  const authenticationState =
+    useEmbeddedAuthenticationState(authenticationClient);
 
   React.useEffect(() => {
     if (authenticationState.status === "signedIn") {

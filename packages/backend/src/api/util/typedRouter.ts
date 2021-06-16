@@ -19,7 +19,7 @@ type TypedAPIImplementation<API extends API.Spec> = {
 
 type TypedRouteList<
   API extends API.Spec,
-  Path extends Extract<keyof API, string>
+  Path extends Extract<keyof API, string>,
 > = {
   [Method in Extract<keyof API[Path], API.HTTPMethod>]: TypedRouteHandler<
     API,
@@ -31,7 +31,7 @@ type TypedRouteList<
 export type TypedRouteHandler<
   API extends API.Spec,
   Path extends Extract<keyof API, string>,
-  Method extends Extract<keyof API[Path], API.HTTPMethod>
+  Method extends Extract<keyof API[Path], API.HTTPMethod>,
 > = (
   request: TypedRequest<API[Path][Method]>,
 ) => Promise<TypedResponse<API.RouteResponseData<API[Path][Method]>>>;
@@ -140,9 +140,7 @@ export default function createTypedRouter<API extends API.Spec>(
   }
 }
 
-function extractMultipartFormData(
-  request: express.Request,
-): Promise<{
+function extractMultipartFormData(request: express.Request): Promise<{
   fields: API.RequestFormData;
   uploads: { [fieldname: string]: Blob };
 }> {

@@ -38,10 +38,8 @@ import { useReviewSessionManager } from "../reviewSessionManager";
 export function useDatabaseManager(
   authenticationClient: AuthenticationClient,
 ): DatabaseManager | null {
-  const [
-    databaseManager,
-    setDatabaseManager,
-  ] = useState<DatabaseManager | null>(null);
+  const [databaseManager, setDatabaseManager] =
+    useState<DatabaseManager | null>(null);
 
   // Close the database on unmount.
   useEffect(() => {
@@ -182,10 +180,8 @@ export default function ReviewSession() {
   const insets = useSafeAreaInsets();
   const reviewSessionStartTimestampMillis = useRef(Date.now());
 
-  const [
-    pendingOutcome,
-    setPendingOutcome,
-  ] = useState<PromptRepetitionOutcome | null>(null);
+  const [pendingOutcome, setPendingOutcome] =
+    useState<PromptRepetitionOutcome | null>(null);
 
   const {
     sessionItems,

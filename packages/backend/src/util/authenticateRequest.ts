@@ -23,7 +23,7 @@ export async function authenticateRequest(
 export async function authenticateTypedRequest<
   API extends ApiType.Spec,
   Path extends Extract<keyof API, string>,
-  Method extends Extract<keyof API[Path], ApiType.HTTPMethod>
+  Method extends Extract<keyof API[Path], ApiType.HTTPMethod>,
 >(
   request: TypedRequest<API[Path][Method]>,
   next: (
@@ -74,7 +74,7 @@ export async function authenticateTypedRequest<
 export function authenticatedRequestHandler<
   API extends ApiType.Spec,
   Path extends Extract<keyof API, string>,
-  Method extends Extract<keyof API[Path], ApiType.HTTPMethod>
+  Method extends Extract<keyof API[Path], ApiType.HTTPMethod>,
 >(
   handler: (
     request: TypedRequest<API[Path][Method]>,

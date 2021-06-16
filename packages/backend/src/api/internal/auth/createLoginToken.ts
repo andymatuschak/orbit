@@ -12,10 +12,8 @@ export async function createLoginToken(
     let userID: string | null = null;
     if (idToken && typeof idToken === "string") {
       userID = await backend.auth.validateIDToken(idToken);
-      const {
-        sessionCookie,
-        sessionCookieExpirationDate,
-      } = await backend.auth.createSessionCookie(idToken);
+      const { sessionCookie, sessionCookieExpirationDate } =
+        await backend.auth.createSessionCookie(idToken);
       response.cookie(
         sessionCookieName,
         sessionCookie,

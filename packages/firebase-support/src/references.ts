@@ -39,7 +39,7 @@ export function getUserMetadataReference<D extends Database>(
 
 export function getDataRecordReference<
   D extends Database,
-  R extends DataRecord
+  R extends DataRecord,
 >(database: D, recordID: DataRecordID<R>): DocumentReference<D, R> {
   return getDataRecordReferenceForCID(database, recordID) as DocumentReference<
     D,

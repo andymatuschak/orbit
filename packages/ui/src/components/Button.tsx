@@ -203,9 +203,8 @@ export default React.memo(function Button(props: ButtonProps) {
 
   const isPressed = React.useRef(false);
   const isHovered = React.useRef(false);
-  const lastDispatchedPendingInteractionState = React.useRef<
-    ButtonPendingActivationState
-  >(null);
+  const lastDispatchedPendingInteractionState =
+    React.useRef<ButtonPendingActivationState>(null);
 
   function dispatchPendingInteractionState() {
     const activationState = isPressed.current

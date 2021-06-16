@@ -4,7 +4,7 @@ import type firebase from "firebase/app";
 import serviceConfig from "../../serviceConfig";
 
 export function getFirebaseFunctions(): firebase.functions.Functions {
-  return (firebaseFunctions() as unknown) as firebase.functions.Functions;
+  return firebaseFunctions() as unknown as firebase.functions.Functions;
 }
 
 export function getFirebaseAuth(): firebase.auth.Auth {
@@ -12,5 +12,5 @@ export function getFirebaseAuth(): firebase.auth.Auth {
   if (serviceConfig.shouldUseLocalBackend) {
     auth.useEmulator("http://localhost:9099");
   }
-  return (auth as unknown) as firebase.auth.Auth;
+  return auth as unknown as firebase.auth.Auth;
 }

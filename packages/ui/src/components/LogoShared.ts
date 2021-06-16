@@ -6,9 +6,10 @@ export interface LogoProps {
   tintColor: string;
 }
 
-export function getLogoSize(
-  units: LogoProps["units"],
-): { width: number; height: number } {
+export function getLogoSize(units: LogoProps["units"]): {
+  width: number;
+  height: number;
+} {
   switch (units) {
     case 2:
       return { width: 59, height: 32 };

@@ -40,13 +40,13 @@ function getQAPromptContents<PT extends QAPromptTask | ApplicationPromptTask>(
     case qaPromptType:
       return reviewItem.prompt as QAPrompt;
     case applicationPromptType:
-      const applicationReviewItem = reviewItem as ReviewAreaItem<
-        ApplicationPromptTask
-      >;
+      const applicationReviewItem =
+        reviewItem as ReviewAreaItem<ApplicationPromptTask>;
       const taskParameters = applicationReviewItem.taskParameters as {
         variantIndex: number;
       };
-      const applicationPrompt = applicationReviewItem.prompt as ApplicationPrompt;
+      const applicationPrompt =
+        applicationReviewItem.prompt as ApplicationPrompt;
 
       return applicationPrompt.variants[taskParameters.variantIndex];
     case clozePromptType:
@@ -66,9 +66,7 @@ const topAreaTranslationAnimationSpec: AnimatedTransitionTiming = {
   delay: 50,
 };
 
-function useAnimatingStyles(
-  backIsRevealed: boolean,
-): {
+function useAnimatingStyles(backIsRevealed: boolean): {
   topAreaStyle: Animated.WithAnimatedValue<StyleProp<ViewStyle>>;
   bottomFrontStyle: Animated.WithAnimatedValue<StyleProp<ViewStyle>>;
   bottomBackStyle: Animated.WithAnimatedValue<StyleProp<ViewStyle>>;
@@ -228,9 +226,10 @@ function formatClozePromptContents(
 }
 
 type PromptProportion = [topProportion: number, bottomProportion: number];
-function getProportions(
-  contents: QAPromptContents,
-): { unrevealed: PromptProportion; revealed: PromptProportion } {
+function getProportions(contents: QAPromptContents): {
+  unrevealed: PromptProportion;
+  revealed: PromptProportion;
+} {
   const questionHasAttachments = contents.question.attachments.length > 0;
   const answerHasAttachments = contents.answer.attachments.length > 0;
   if (!questionHasAttachments && !answerHasAttachments) {

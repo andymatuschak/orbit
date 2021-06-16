@@ -30,7 +30,8 @@ export class FirebaseOpaqueIDToken {
 
 export default class FirebaseAuthenticationClient
   implements
-    AuthenticationClient<FirebaseOpaqueLoginToken, FirebaseOpaqueIDToken> {
+    AuthenticationClient<FirebaseOpaqueLoginToken, FirebaseOpaqueIDToken>
+{
   private _auth: firebase.auth.Auth; // access through auth()
   private authConfigurationPromise: Promise<void>;
 
@@ -68,9 +69,8 @@ export default class FirebaseAuthenticationClient
     let unsubscribe: (() => void) | null = null;
     this.auth().then((auth) => {
       unsubscribe = auth.onAuthStateChanged((newUser) => {
-        const newUserRecord = FirebaseAuthenticationClient.getUserRecordForFirebaseUser(
-          newUser,
-        );
+        const newUserRecord =
+          FirebaseAuthenticationClient.getUserRecordForFirebaseUser(newUser);
         console.log("Current Orbit UID:", newUserRecord);
         callback(newUserRecord);
       });
