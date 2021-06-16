@@ -10,7 +10,7 @@ import {
 } from "@withorbit/firebase-support";
 import path from "path";
 import { createImportPlan, readAnkiCollectionPackage } from "../../anki-import";
-import { uploadAttachment } from "./adminApp";
+import { uploadAttachment } from "./uploadAttachment";
 
 class ImportAnkiCollection extends Command {
   static flags = {

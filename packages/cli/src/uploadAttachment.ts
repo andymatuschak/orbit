@@ -1,64 +1,25 @@
-import { Command, flags } from "@oclif/command";
-import "firebase/firestore";
-import fs from "fs";
-
+import { Attachment, AttachmentID } from "@withorbit/core";
 import {
-  getDefaultFirebaseApp,
-  MetabookFirebaseDataClient,
-} from "@withorbit/api-client";
-import {
-  getAttachmentMimeTypeForFilename,
-  getIDForAttachment,
-  imageAttachmentType,
-} from "@withorbit/core";
-import { getFirebaseKeyForCIDString } from "@withorbit/firebase-support";
-import path from "path";
-import { uploadAttachment } from "./adminApp";
+  getStorageObjectNameForAttachmentID,
+  storageBucketName,
+} from "@withorbit/firebase-support";
+import { getAdminApp } from "./adminApp";
 
-class UploadAttachment extends Command {
-  static flags = {
-    help: flags.help(),
-  };
-
-  static args = [{ name: "path", required: true }];
-
-  async run() {
-    const { args } = this.parse(UploadAttachment);
-
-    const app = getDefaultFirebaseApp();
-    const dataClient = new MetabookFirebaseDataClient(
-      app.functions(),
-      uploadAttachment,
-    );
-
-    const attachmentMimeType = getAttachmentMimeTypeForFilename(
-      path.basename(args.path),
-    );
-    if (!attachmentMimeType) {
-      console.error("Attachment is of unsupported type.");
-      return;
-    }
-
-    const fileData = await fs.promises.readFile(
-      path.resolve(__dirname, args.path),
-    );
-
-    const attachmentID = await getIDForAttachment(fileData);
-    await dataClient.recordAttachments([
-      {
-        attachment: {
-          contents: fileData,
-          mimeType: attachmentMimeType,
-          type: imageAttachmentType,
-        },
-        id: attachmentID,
-      },
-    ]);
-
-    console.log(attachmentID, getFirebaseKeyForCIDString(attachmentID));
-  }
+export async function uploadAttachment(
+  attachment: Attachment,
+  attachmentID: AttachmentID,
+): Promise<void> {
+  const ref = getAdminApp()
+    .storage()
+    .bucket(storageBucketName)
+    .file(getStorageObjectNameForAttachmentID(attachmentID));
+  const writeStream = ref.createWriteStream({
+    contentType: attachment.mimeType,
+  });
+  return new Promise((resolve, reject) => {
+    writeStream.on("finish", resolve);
+    writeStream.on("error", reject);
+    writeStream.write(attachment.contents);
+    writeStream.end();
+  });
 }
-
-(UploadAttachment.run() as Promise<unknown>).catch(
-  require("@oclif/errors/handle"), // eslint-disable-line @typescript-eslint/no-var-requires
-);

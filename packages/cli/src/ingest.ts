@@ -32,7 +32,7 @@ import {
   testClozePrompt,
 } from "@withorbit/sample-data";
 import path from "path";
-import { uploadAttachment } from "./adminApp";
+import { uploadAttachment } from "./uploadAttachment";
 
 async function getTasksFromPrompts(prompts: Prompt[]): Promise<PromptTaskID[]> {
   const taskLists: PromptTaskID[][] = await Promise.all(
