@@ -25,6 +25,8 @@ const migration: SQLMigration = {
       FOREIGN KEY (lastEventID) REFERENCES events(id)
     )
     `,
+
+    // This table (and the triggers which maintain it) exists to allow efficient querying of tasks by due timestamp.
     `
     CREATE TABLE derived_taskComponents (
       taskID TEXT NOT NULL,

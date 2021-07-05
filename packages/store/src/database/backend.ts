@@ -14,10 +14,10 @@ export interface DatabaseBackend {
   ): Promise<Map<ID, DatabaseBackendEntityRecord<E>>>;
   putEntities(entities: DatabaseBackendEntityRecord<Entity>[]): Promise<void>;
 
-  // Returns events in consistent order of local insertion.
+  // Returns events in an arbitrary order which is stable on this client (i.e. so paging using afterID is safe), but which is not guaranteed to be consistent across clients.
   listEvents(query: DatabaseEventQuery): Promise<Event[]>;
 
-  // Returns entities in consistent order of (initial) local insertion.
+  // Returns entities in an arbitrary order which is stable on this client (i.e. so paging using afterID is safe), but which is not guaranteed to be consistent across clients.
   listEntities<E extends Entity>(
     query: DatabaseEntityQuery<E>,
   ): Promise<DatabaseBackendEntityRecord<E>[]>;

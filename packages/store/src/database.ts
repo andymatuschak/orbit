@@ -56,10 +56,12 @@ export class Database {
     );
   }
 
+  // Returns events in an arbitrary order which is stable on this client (i.e. so paging using afterID is safe), but which is not guaranteed to be consistent across clients.
   listEvents(query: DatabaseEventQuery): Promise<Event[]> {
     return this._backend.listEvents(query);
   }
 
+  // Returns entities in an arbitrary order which is stable on this client (i.e. so paging using afterID is safe), but which is not guaranteed to be consistent across clients.
   async listEntities<E extends Entity>(
     query: DatabaseEntityQuery<E>,
   ): Promise<Entity[]> {
