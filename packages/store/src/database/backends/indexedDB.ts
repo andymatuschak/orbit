@@ -3,7 +3,11 @@ import { EntityType } from "../../core2/entities/entityBase";
 import { DatabaseEntityQuery, DatabaseEventQuery } from "../../database";
 import { DatabaseBackend, DatabaseBackendEntityRecord } from "../backend";
 import { DexieDatabase } from "./dexie/dexie";
-import { DexieEntityRow } from "./dexie/tables";
+import {
+  DexieEntityRow,
+  DexieEventColumn,
+  DexieEventRow,
+} from "./dexie/tables";
 
 export class IDBDatabaseBackend implements DatabaseBackend {
   db: DexieDatabase;
@@ -63,7 +67,44 @@ export class IDBDatabaseBackend implements DatabaseBackend {
   }
 
   async listEvents(query: DatabaseEventQuery): Promise<Event[]> {
-    const queriedEvents = await this.db.events.toArray();
+    let baseQuery: Dexie.Collection<DexieEventRow, number>;
+    if (query.predicate) {
+      const predicatedQuery = this.db.events.where(query.predicate[0]);
+      switch (query.predicate[1]) {
+        case "<":
+          baseQuery = predicatedQuery.below(query.predicate[2]);
+          break;
+        case "<=":
+          baseQuery = predicatedQuery.belowOrEqual(query.predicate[2]);
+          break;
+        case "=":
+          baseQuery = predicatedQuery.equals(query.predicate[2]);
+          break;
+        case ">":
+          baseQuery = predicatedQuery.above(query.predicate[2]);
+          break;
+        case ">=":
+          baseQuery = predicatedQuery.aboveOrEqual(query.predicate[2]);
+          break;
+      }
+    } else if (query.afterID) {
+      const afterSequenceNumber = await this.db.events
+        .where(DexieEventColumn.ID)
+        .equals(query.afterID)
+        .toArray();
+      baseQuery = this.db.events
+        .where(DexieEventColumn.SequenceNumber)
+        .above(afterSequenceNumber);
+    } else {
+      baseQuery = this.db.events.orderBy(DexieEventColumn.SequenceNumber);
+    }
+
+    if (query.limit) {
+      baseQuery = baseQuery.limit(query.limit);
+    }
+
+    const queriedEvents = await baseQuery.toArray();
+
     return queriedEvents.map((event) => JSON.parse(event.data));
   }
 
