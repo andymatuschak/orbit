@@ -32,6 +32,10 @@ export type DexieEntityRow = {
   [DexieEntityColumn.Data]: string;
 };
 
+export type DexieEntityRowWithPrimaryKey = DexieEntityRow & {
+  [DexieEntityColumn.RowID]: number;
+};
+
 export enum DexieDerivedTaskComponentColumn {
   TaskID = "taskID",
   ComponentID = "componentID",

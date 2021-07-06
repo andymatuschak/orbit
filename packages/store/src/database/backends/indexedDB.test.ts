@@ -4,7 +4,7 @@ import { testTask } from "../__tests__/testTasks";
 import { DatabaseBackendEntityRecord } from "../backend";
 // @ts-ignore Looks like there is no @types for this library
 import FDBFactory from "fake-indexeddb/lib/FDBFactory";
-import { EntityType } from "../../core2/entities/entityBase";
+import { EntityID, EntityType } from "../../core2/entities/entityBase";
 
 let backend: IDBDatabaseBackend;
 
@@ -73,7 +73,7 @@ describe("task components", () => {
     `);
   });
 
-  test.skip("modified on update", async () => {
+  test("modified on update", async () => {
     await backend.putEntities(testTasks);
 
     const updatedA = createTestTask({
@@ -83,7 +83,16 @@ describe("task components", () => {
     });
 
     delete updatedA.entity.componentStates["b"];
-    await backend.putEntities([updatedA]);
+
+    await backend.modifyEntities([updatedA.entity.id], (existingRows) => {
+      existingRows.set(updatedA.entity.id, {
+        rowID: existingRows.get(updatedA.entity.id)!.rowID,
+        id: updatedA.entity.id,
+        lastEventID: updatedA.lastEventID,
+        data: JSON.stringify(updatedA.entity),
+      });
+      return existingRows;
+    });
 
     const results = await fetchAllRowsForTable("derived_taskComponents");
     const filteredResults = results.filter(

@@ -1,6 +1,6 @@
 import Dexie, { IndexableType, WhereClause } from "dexie";
 import { Entity, Event, EventID, IDOfEntity, TaskID } from "../../core2";
-import { EntityType } from "../../core2/entities/entityBase";
+import { EntityID, EntityType } from "../../core2/entities/entityBase";
 import {
   DatabaseEntityQuery,
   DatabaseEventQuery,
@@ -12,6 +12,7 @@ import {
   DexieDerivedTaskComponentColumn,
   DexieEntityColumn,
   DexieEntityRow,
+  DexieEntityRowWithPrimaryKey,
   DexieEventColumn,
   DexieEventRow,
 } from "./dexie/tables";
@@ -188,6 +189,39 @@ export class IDBDatabaseBackend implements DatabaseBackend {
     return queriedEvents.map((event) => JSON.parse(event.data));
   }
 
+  async modifyEntities(
+    ids: EntityID[],
+    transformer: (
+      row: Map<EntityID, DexieEntityRowWithPrimaryKey>,
+    ) => Map<EntityID, DexieEntityRowWithPrimaryKey>,
+  ) {
+    await this.db.transaction(
+      "readwrite",
+      this.db.entities,
+      this.db.derived_taskComponents,
+      async () => {
+        const rows = await this.db.entities.where("id").anyOf(ids).toArray();
+
+        const rowMapping = rows.reduce((map, row) => {
+          map.set(row.id, row as DexieEntityRowWithPrimaryKey);
+          return map;
+        }, new Map<EntityID, DexieEntityRowWithPrimaryKey>());
+
+        const transformedEntities = transformer(rowMapping).values();
+        const transformedRows = Array<DexieEntityRowWithPrimaryKey>();
+        for (const row of transformedEntities) {
+          transformedRows.push({
+            rowID: row.rowID,
+            id: row.id,
+            lastEventID: row.lastEventID,
+            data: row.data,
+          });
+        }
+        await this.db.entities.bulkPut(transformedRows);
+      },
+    );
+  }
+
   async putEntities(
     entities: DatabaseBackendEntityRecord<Entity>[],
   ): Promise<void> {
@@ -196,36 +230,13 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       this.db.entities,
       this.db.derived_taskComponents,
       async () => {
-        const newEntities = entities.reduce((map, record) => {
-          map[record.entity.id] = {
-            id: record.entity.id,
-            lastEventID: record.lastEventID,
-            data: JSON.stringify(record.entity),
-          };
-          return map;
-        }, {} as { [id: string]: DexieEntityRow });
+        const newEntities = entities.map((record) => ({
+          id: record.entity.id,
+          lastEventID: record.lastEventID,
+          data: JSON.stringify(record.entity),
+        }));
 
-        const existingKeyMapping = new Map<string, number>();
-        await this.db.entities
-          .where("id")
-          .anyOf(Object.keys(newEntities))
-          .eachKey((key, cursor) => {
-            existingKeyMapping.set(key as string, cursor.primaryKey);
-          });
-
-        // TODO fix this logic. Right now with this logic, ALL the newEntities MUST
-        // already exist or MUST NOT all exist.
-        if (existingKeyMapping.size == 0) {
-          await this.db.entities.bulkPut(Object.values(newEntities));
-        } else {
-          const primaryKeys = Object.keys(newEntities).map(
-            (key) => existingKeyMapping.get(key)!,
-          );
-          await this.db.entities.bulkPut(
-            Object.values(newEntities),
-            primaryKeys,
-          );
-        }
+        await this.db.entities.bulkPut(newEntities);
       },
     );
   }

@@ -1,7 +1,8 @@
 import Dexie, { Transaction } from "dexie";
-import { Entity, EventID, TaskID } from "../../../core2";
+import { Entity } from "../../../core2";
 import {
   DexieDerivedTaskComponentColumn,
+  DexieDerivedTaskComponentRow,
   DexieEntityColumn,
   DexieEntityRow,
   DexieEventColumn,
@@ -11,12 +12,9 @@ import {
 
 export class DexieDatabase extends Dexie {
   [DexieTable.Events]: Dexie.Table<DexieEventRow, number>;
-  [DexieTable.Entities]: Dexie.Table<
-    { id: TaskID; lastEventID: EventID; data: string },
-    number
-  >;
+  [DexieTable.Entities]: Dexie.Table<DexieEntityRow, number>;
   [DexieTable.DerivedTaskComponents]: Dexie.Table<
-    { taskID: string; componentID: string; dueTimestampMillis: number },
+    DexieDerivedTaskComponentRow,
     string
   >;
 
@@ -75,7 +73,7 @@ export class DexieDatabase extends Dexie {
     await transaction.db
       .table(DexieTable.DerivedTaskComponents)
       .where(DexieDerivedTaskComponentColumn.TaskID)
-      .equals(primaryKey)
+      .equals(obj.id)
       .delete();
 
     insertDerivedTaskComponent({ ...obj, ...modifications }, transaction);
