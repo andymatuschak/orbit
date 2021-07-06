@@ -66,10 +66,14 @@ describe.each([
     expect((entity as any).latestTimestampMillis).toBe(100);
   });
 
-  test(`[${backend}] query events by entity ID`, async () => {
-    const events = await db.listEvents({
-      predicate: ["entityID", "=", "x"],
+  describe("querying events", () => {
+    beforeEach(() => db.putEvents(testEvents));
+
+    test(`[${backend}] by entity ID`, async () => {
+      const events = await db.listEvents({
+        predicate: ["entityID", "=", "x"],
+      });
+      expect(events).toEqual([testEvents[0], testEvents[1]]);
     });
-    expect(events).toEqual([testEvents[0], testEvents[1]]);
   });
 });
