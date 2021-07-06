@@ -1,3 +1,4 @@
+import { EntityType } from "../../../../core2/entities/entityBase";
 import { SQLMigration } from "./migrationType";
 
 const migration: SQLMigration = {
@@ -19,6 +20,7 @@ const migration: SQLMigration = {
       rowID INTEGER PRIMARY KEY AUTOINCREMENT,
       
       id TEXT UNIQUE NOT NULL,
+      entityType TEXT NOT NULL,
       lastEventID TEXT NOT NULL,
       data TEXT NOT NULL,
       
@@ -39,23 +41,24 @@ const migration: SQLMigration = {
     `
     CREATE TRIGGER entities_taskComponents_insert AFTER INSERT ON entities BEGIN
       INSERT INTO derived_taskComponents (taskID, componentID, dueTimestampMillis)
-      SELECT new.id, key, json_extract(value, "$.dueTimestampMillis") FROM json_each(json_extract(new.data, "$.componentStates"));
+      SELECT new.id, key, json_extract(value, "$.dueTimestampMillis") FROM json_each(json_extract(new.data, "$.componentStates")) WHERE new.entityType = "${EntityType.Task}";
     END
     `,
     `
     CREATE TRIGGER entities_taskComponents_update AFTER UPDATE ON entities BEGIN
-      DELETE FROM derived_taskComponents WHERE taskID = old.id;
+      DELETE FROM derived_taskComponents WHERE taskID = old.id AND old.entityType = "${EntityType.Task}";
       INSERT INTO derived_taskComponents (taskID, componentID, dueTimestampMillis)
-      SELECT new.id, key, json_extract(value, "$.dueTimestampMillis") FROM json_each(json_extract(new.data, "$.componentStates"));
+      SELECT new.id, key, json_extract(value, "$.dueTimestampMillis") FROM json_each(json_extract(new.data, "$.componentStates")) WHERE new.entityType = "${EntityType.Task}";
     END
     `,
     `
     CREATE TRIGGER entities_taskComponents_delete AFTER DELETE ON entities BEGIN
-      DELETE FROM derived_taskComponents WHERE taskID = old.id;
+      DELETE FROM derived_taskComponents WHERE taskID = old.id AND old.entityType = "${EntityType.Task}";
     END
     `,
     `CREATE INDEX derived_taskComponents_dueTimestampMillis ON derived_taskComponents (dueTimestampMillis)`,
     `CREATE INDEX events_entityID ON events (entityID)`,
+    `CREATE INDEX entities_type ON entities (entityType)`,
   ],
 };
 export default migration;

@@ -1,10 +1,12 @@
 import {
   ClozeTaskContent,
   MemoryTaskSpec,
+  Task,
   TaskContentType,
   TaskID,
   TaskSpecType,
 } from "../../core2";
+import { EntityType } from "../../core2/entities/entityBase";
 
 const testClozeSpec: MemoryTaskSpec<ClozeTaskContent> = {
   type: TaskSpecType.Memory,
@@ -37,8 +39,9 @@ const testClozeSpec: MemoryTaskSpec<ClozeTaskContent> = {
   },
 };
 
-export const testTask = {
+export const testTask: Task = {
   id: "a" as TaskID,
+  type: EntityType.Task,
   spec: testClozeSpec,
   provenance: null,
   componentStates: {

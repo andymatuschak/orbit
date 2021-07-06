@@ -17,6 +17,7 @@ export enum SQLEventTableColumn {
 
 export enum SQLEntityTableColumn {
   ID = "id",
+  EntityType = "entityType",
   LastEventID = "lastEventID",
   Data = "data",
   RowID = "rowID",

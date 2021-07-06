@@ -1,5 +1,4 @@
 import { Entity, Event, EventID, IDOfEntity } from "../../core2";
-import { EntityType } from "../../core2/entities/entityBase";
 import {
   DatabaseEntityQuery,
   DatabaseEventQuery,
@@ -77,11 +76,13 @@ export class SQLDatabaseBackend implements DatabaseBackend {
       "REPLACE",
       [
         SQLEntityTableColumn.ID,
+        SQLEntityTableColumn.EntityType,
         SQLEntityTableColumn.LastEventID,
         SQLEntityTableColumn.Data,
       ],
       entityRecords.map((record) => [
         record.entity.id,
+        record.entity.type,
         record.lastEventID,
         JSON.stringify(record.entity),
       ]),
@@ -119,11 +120,6 @@ export class SQLDatabaseBackend implements DatabaseBackend {
   async listEntities<E extends Entity>(
     query: DatabaseEntityQuery<E>,
   ): Promise<DatabaseBackendEntityRecord<E>[]> {
-    if (query.entityType !== EntityType.Task) {
-      // Haven't actually added this column to the DB; we can do that when it's needed.
-      throw new Error(`Unsupported entity type in query: ${query.entityType}`);
-    }
-
     const sqlQuery = constructEntitySQLQuery(query);
     const results = await execReadStatement(
       await this._ensureDB(),
@@ -217,6 +213,10 @@ export class SQLDatabaseBackend implements DatabaseBackend {
 export function constructEntitySQLQuery<E extends Entity>(
   query: DatabaseEntityQuery<E>,
 ): { statement: string; args: any[] } {
+  const predicates: DatabaseQueryPredicate<any, any>[] = query.predicate
+    ? [query.predicate]
+    : [];
+
   if (query.predicate?.[0] === "dueTimestampMillis") {
     // Special case using the derived_taskComponents index table.
     return constructSQLQuery({
@@ -225,7 +225,7 @@ export function constructEntitySQLQuery<E extends Entity>(
       orderKey: SQLEntityTableColumn.RowID,
       columns: [SQLEntityTableColumn.LastEventID, SQLEntityTableColumn.Data],
       options: query,
-      predicate: query.predicate,
+      predicates, // We don't need to include the entity type because derived_taskComponents only contains references to tasks.
     });
   } else {
     return constructSQLQuery({
@@ -234,7 +234,7 @@ export function constructEntitySQLQuery<E extends Entity>(
       orderKey: SQLEntityTableColumn.RowID,
       columns: [SQLEntityTableColumn.LastEventID, SQLEntityTableColumn.Data],
       options: query,
-      predicate: query.predicate,
+      predicates: [["entityType", "=", query.entityType], ...predicates],
     });
   }
 }
@@ -249,7 +249,7 @@ export function constructEventSQLQuery(query: DatabaseEventQuery): {
     orderKey: SQLEventTableColumn.SequenceNumber,
     columns: [SQLEventTableColumn.Data],
     options: query,
-    predicate: query.predicate,
+    predicates: query.predicate ? [query.predicate] : [],
   });
 }
 
@@ -259,19 +259,20 @@ export function constructSQLQuery({
   orderKey,
   columns,
   options,
-  predicate,
+  predicates,
 }: {
   tableExpression: SQLTableName | string;
   idKey: string;
   orderKey: string;
   columns: string[];
   options: DatabaseQueryOptions<any>;
-  predicate?: DatabaseQueryPredicate<any, any>;
+  predicates: DatabaseQueryPredicate<any, any>[];
 }): { statement: string; args: any[] } {
   const args: any[] = [];
 
   const whereExpressions: string[] = [];
-  if (predicate) {
+
+  for (const predicate of predicates) {
     whereExpressions.push(`${predicate[0]} ${predicate[1]} ?`);
     args.push(predicate[2]);
   }

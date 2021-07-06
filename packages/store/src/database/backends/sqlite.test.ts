@@ -1,4 +1,9 @@
+import { AttachmentMimeType } from "@withorbit/core";
 import { EventID, Task, TaskID } from "../../core2";
+import {
+  AttachmentReference,
+  AttachmentID,
+} from "../../core2/entities/attachmentReference";
 import { EntityType } from "../../core2/entities/entityBase";
 import { testTask } from "../__tests__/testTasks";
 import { DatabaseBackendEntityRecord } from "../backend";
@@ -45,22 +50,50 @@ function createTestTask({
   return { entity: newTask, lastEventID: lastEventID as EventID };
 }
 
+function createTestAttachmentReference(
+  id: string,
+  lastEventID: string,
+): DatabaseBackendEntityRecord<AttachmentReference> {
+  return {
+    lastEventID: lastEventID as EventID,
+    entity: {
+      id: id as AttachmentID,
+      type: EntityType.AttachmentReference,
+      mimeType: AttachmentMimeType.PNG,
+    },
+  };
+}
+
 const testTasks: DatabaseBackendEntityRecord<Task>[] = [
   createTestTask({ id: "a", lastEventID: "x", dueTimestampMillis: 50 }),
   createTestTask({ id: "b", lastEventID: "y", dueTimestampMillis: 100 }),
   createTestTask({ id: "c", lastEventID: "z", dueTimestampMillis: 150 }),
 ];
 
-test("round-trip entities", async () => {
-  await backend.putEntities(testTasks);
+const testAttachmentReferences: DatabaseBackendEntityRecord<AttachmentReference>[] =
+  [
+    createTestAttachmentReference("a_a", "x"),
+    createTestAttachmentReference("a_b", "y"),
+  ];
 
-  const result = await backend.getEntities(["a", "c", "z"] as TaskID[]);
-  expect(result).toEqual(
-    new Map([
-      ["a", testTasks[0]],
-      ["c", testTasks[2]],
-    ]),
-  );
+describe("round-trip entities", async () => {
+  test("tasks", async () => {
+    await backend.putEntities(testTasks);
+
+    const result = await backend.getEntities(["a", "c", "z"] as TaskID[]);
+    expect(result).toEqual(
+      new Map([
+        ["a", testTasks[0]],
+        ["c", testTasks[2]],
+      ]),
+    );
+  });
+
+  test("attachments", async () => {
+    await backend.putEntities(testAttachmentReferences);
+    const result = await backend.getEntities(["a_b", "a_z"] as TaskID[]);
+    expect(result).toEqual(new Map([["a_b", testAttachmentReferences[1]]]));
+  });
 });
 
 describe("task components", () => {
@@ -116,7 +149,9 @@ describe("task components", () => {
 });
 
 describe("querying entities", () => {
-  beforeEach(() => backend.putEntities(testTasks));
+  beforeEach(() => {
+    return backend.putEntities([...testTasks, ...testAttachmentReferences]);
+  });
   test("limit", async () => {
     const firstEntity = await backend.listEntities({
       entityType: EntityType.Task,
@@ -136,12 +171,19 @@ describe("querying entities", () => {
     expect(entities[1].entity.id).toBe("c");
   });
 
-  test("by due timestamp", async () => {
+  test("tasks by due timestamp", async () => {
     const entities = await backend.listEntities({
       entityType: EntityType.Task,
       predicate: ["dueTimestampMillis", "<=", 100],
     });
     expect(entities.map((record) => record.entity.id)).toEqual(["a", "b"]);
+  });
+
+  test("attachment references", async () => {
+    const entities = await backend.listEntities({
+      entityType: EntityType.AttachmentReference,
+    });
+    expect(entities).toEqual(testAttachmentReferences);
   });
 });
 
@@ -194,7 +236,7 @@ describe("indexing", () => {
     );
     expect(plan).toMatchInlineSnapshot(`
       Array [
-        "SEARCH TABLE entities USING INTEGER PRIMARY KEY (rowid>?)",
+        "SEARCH TABLE entities USING INDEX entities_type (entityType=? AND rowid>?)",
         "SCALAR SUBQUERY 1",
         "SEARCH TABLE entities USING COVERING INDEX sqlite_autoindex_entities_1 (id=?)",
       ]

@@ -1,3 +1,4 @@
+import { EntityType } from "../dist/core2/entityBase";
 import { Entity, Event, EventID, TaskID } from "./core2";
 import { Database } from "./database";
 import { SQLDatabaseBackend } from "./database/backends/sqlite";
@@ -10,6 +11,7 @@ beforeEach(() => {
     (entitySnapshot, event) =>
       ({
         id: event.entityID,
+        type: EntityType.Task,
         latestTimestampMillis: event.timestampMillis,
       } as unknown as Entity),
   );

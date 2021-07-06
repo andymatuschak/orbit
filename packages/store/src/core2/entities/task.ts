@@ -1,9 +1,6 @@
-import {
-  AttachmentID,
-  AttachmentMimeType,
-  ColorPaletteName,
-} from "@withorbit/core";
+import { ColorPaletteName } from "@withorbit/core";
 import { EntityID } from "../entity";
+import { AttachmentReference } from "./attachmentReference";
 import { EntityBase, EntityType } from "./entityBase";
 
 // The Task entity stores the "spec" which describes a task's behavior and content, as well as the task's ongoing state and associated metadata.
@@ -117,12 +114,7 @@ type ComponentIDsOf<TC extends TaskContent> = TC extends TaskContentBase<
 
 interface TaskContentField {
   text: string;
-  attachments: AttachmentIDReference[];
-}
-
-interface AttachmentIDReference {
-  type: AttachmentMimeType;
-  id: AttachmentID;
+  attachments: AttachmentReference[];
 }
 
 // ---
