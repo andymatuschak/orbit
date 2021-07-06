@@ -37,12 +37,11 @@ export class DexieDatabase extends Dexie {
         `&${DexieEntityColumn.ID}`,
         DexieEntityColumn.lastEventID,
         DexieEntityColumn.Data,
-        `[${DexieEntityColumn.RowID}+${DexieEntityColumn.ID}]`,
       ].join(", "),
 
       [DexieTable.DerivedTaskComponents]: [
         `&[${DexieDerivedTaskComponentColumn.TaskID}+${DexieDerivedTaskComponentColumn.ComponentID}]`,
-        `&${DexieDerivedTaskComponentColumn.ComponentID}`,
+        DexieDerivedTaskComponentColumn.ComponentID,
         DexieDerivedTaskComponentColumn.TaskID,
         DexieDerivedTaskComponentColumn.DueTimestampMillis,
       ].join(", "),

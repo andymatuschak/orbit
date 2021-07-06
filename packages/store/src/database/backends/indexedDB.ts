@@ -1,5 +1,5 @@
-import Dexie from "dexie";
-import { Entity, Event, EventID, IDOfEntity } from "../../core2";
+import Dexie, { IndexableType, WhereClause } from "dexie";
+import { Entity, Event, EventID, IDOfEntity, TaskID } from "../../core2";
 import { EntityType } from "../../core2/entities/entityBase";
 import {
   DatabaseEntityQuery,
@@ -9,6 +9,8 @@ import {
 import { DatabaseBackend, DatabaseBackendEntityRecord } from "../backend";
 import { DexieDatabase } from "./dexie/dexie";
 import {
+  DexieDerivedTaskComponentColumn,
+  DexieEntityColumn,
   DexieEntityRow,
   DexieEventColumn,
   DexieEventRow,
@@ -67,14 +69,78 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       throw new Error(`Unsupported entity type in query: ${query.entityType}`);
     }
 
-    const queriedEvents = await this.db.entities.toArray();
-    return queriedEvents.map((event) => JSON.parse(event.data));
+    let baseQuery: Dexie.Collection<DexieEntityRow, number>;
+
+    if (query.predicate) {
+      const predicatedQuery = this.db.entities.where(query.predicate[0]);
+      baseQuery = compareUsingPredicate(predicatedQuery, query.predicate);
+
+      let includedTaskIds: TaskID[];
+      // only one possible key right now, when another key is eventually defined convert this
+      // to be an if-else
+      switch (query.predicate[0]) {
+        case "dueTimestampMillis":
+          const clause = this.db.derived_taskComponents.where(
+            DexieDerivedTaskComponentColumn.DueTimestampMillis,
+          );
+          const derivedRowsPrimaryKeys = await compareUsingPredicate(
+            clause,
+            query.predicate,
+          ).primaryKeys();
+
+          includedTaskIds = derivedRowsPrimaryKeys.map(
+            ([taskID]) => taskID as TaskID,
+          );
+      }
+
+      // was the afterID specified at the same time?
+      if (query.afterID) {
+        // simulate a join across the two tables
+        const afterRowID = await this._fetchPrimaryKeyFromUniqueKey(
+          this.db.entities,
+          DexieEventColumn.ID,
+          query.afterID,
+        );
+
+        baseQuery = this.db.entities
+          .where(DexieEntityColumn.RowID)
+          .above(afterRowID)
+          .filter((row) => includedTaskIds.includes(row.id));
+      } else {
+        baseQuery = this.db.entities
+          .where(DexieEntityColumn.ID)
+          .anyOf(includedTaskIds);
+      }
+    } else if (query.afterID) {
+      const afterRowID = await this._fetchPrimaryKeyFromUniqueKey(
+        this.db.entities,
+        DexieEventColumn.ID,
+        query.afterID,
+      );
+      baseQuery = this.db.entities
+        .where(DexieEntityColumn.RowID)
+        .above(afterRowID);
+    } else {
+      baseQuery = this.db.entities.orderBy(DexieEntityColumn.RowID);
+    }
+
+    if (query.limit) {
+      baseQuery = baseQuery.limit(query.limit);
+    }
+
+    const queriedEntities = await baseQuery.toArray();
+    return queriedEntities.map((entity) => ({
+      lastEventID: entity.lastEventID,
+      entity: JSON.parse(entity.data),
+    }));
   }
 
   async listEvents(query: DatabaseEventQuery): Promise<Event[]> {
     let baseQuery: Dexie.Collection<DexieEventRow, number>;
     if (query.predicate && query.afterID) {
-      const afterSequenceNumber = await this._fetchPrimaryKeyForEvent(
+      const afterSequenceNumber = await this._fetchPrimaryKeyFromUniqueKey(
+        this.db.events,
+        DexieEventColumn.ID,
         query.afterID,
       );
 
@@ -99,25 +165,11 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       }
     } else if (query.predicate) {
       const predicatedQuery = this.db.events.where(query.predicate[0]);
-      switch (query.predicate[1]) {
-        case "<":
-          baseQuery = predicatedQuery.below(query.predicate[2]);
-          break;
-        case "<=":
-          baseQuery = predicatedQuery.belowOrEqual(query.predicate[2]);
-          break;
-        case "=":
-          baseQuery = predicatedQuery.equals(query.predicate[2]);
-          break;
-        case ">":
-          baseQuery = predicatedQuery.above(query.predicate[2]);
-          break;
-        case ">=":
-          baseQuery = predicatedQuery.aboveOrEqual(query.predicate[2]);
-          break;
-      }
+      baseQuery = compareUsingPredicate(predicatedQuery, query.predicate);
     } else if (query.afterID) {
-      const afterSequenceNumber = await this._fetchPrimaryKeyForEvent(
+      const afterSequenceNumber = await this._fetchPrimaryKeyFromUniqueKey(
+        this.db.events,
+        DexieEventColumn.ID,
         query.afterID,
       );
 
@@ -133,7 +185,6 @@ export class IDBDatabaseBackend implements DatabaseBackend {
     }
 
     const queriedEvents = await baseQuery.toArray();
-
     return queriedEvents.map((event) => JSON.parse(event.data));
   }
 
@@ -191,13 +242,37 @@ export class IDBDatabaseBackend implements DatabaseBackend {
     });
   }
 
-  async _fetchPrimaryKeyForEvent(eventId: string) {
+  async _fetchPrimaryKeyFromUniqueKey<Row, PK>(
+    table: Dexie.Table<Row, PK>,
+    key: string,
+    value: IndexableType,
+  ): Promise<PK> {
     // there will never be more then one key
-    const afterRowPrimaryKeys = await this.db.events
-      .where(DexieEventColumn.ID)
-      .equals(eventId)
+    const afterRowPrimaryKeys = await table
+      .where(key)
+      .equals(value)
       .primaryKeys();
     return afterRowPrimaryKeys[0];
+  }
+}
+
+function compareUsingPredicate<
+  Row,
+  PK,
+  Key extends string,
+  Value extends IndexableType,
+>(clause: WhereClause<Row, PK>, predicate: DatabaseQueryPredicate<Key, Value>) {
+  switch (predicate[1]) {
+    case "<":
+      return clause.below(predicate[2]);
+    case "<=":
+      return clause.belowOrEqual(predicate[2]);
+    case "=":
+      return clause.equals(predicate[2]);
+    case ">":
+      return clause.above(predicate[2]);
+    case ">=":
+      return clause.aboveOrEqual(predicate[2]);
   }
 }
 

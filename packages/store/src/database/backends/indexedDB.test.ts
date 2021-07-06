@@ -121,13 +121,22 @@ describe("querying entities", () => {
     expect(entities[0].entity.id).toBe("b");
     expect(entities[1].entity.id).toBe("c");
   });
-  // TODO Special case
-  test.skip("by due timestamp", async () => {
+
+  test("by due timestamp", async () => {
     const entities = await backend.listEntities({
       entityType: EntityType.Task,
       predicate: ["dueTimestampMillis", "<=", 100],
     });
     expect(entities.map((record) => record.entity.id)).toEqual(["a", "b"]);
+  });
+
+  test("by due timestamp and after ID", async () => {
+    const entities = await backend.listEntities({
+      entityType: EntityType.Task,
+      afterID: "a" as TaskID,
+      predicate: ["dueTimestampMillis", "<=", 100],
+    });
+    expect(entities.map((record) => record.entity.id)).toEqual(["b"]);
   });
 });
 
