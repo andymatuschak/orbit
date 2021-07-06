@@ -4,7 +4,7 @@ import { testTask } from "../__tests__/testTasks";
 import { DatabaseBackendEntityRecord } from "../backend";
 // @ts-ignore Looks like there is no @types for this library
 import FDBFactory from "fake-indexeddb/lib/FDBFactory";
-import { EntityID, EntityType } from "../../core2/entities/entityBase";
+import { EntityType } from "../../core2/entities/entityBase";
 
 let backend: IDBDatabaseBackend;
 
