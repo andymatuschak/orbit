@@ -1,6 +1,11 @@
+import Dexie from "dexie";
 import { Entity, Event, EventID, IDOfEntity } from "../../core2";
 import { EntityType } from "../../core2/entities/entityBase";
-import { DatabaseEntityQuery, DatabaseEventQuery } from "../../database";
+import {
+  DatabaseEntityQuery,
+  DatabaseEventQuery,
+  DatabaseQueryPredicate,
+} from "../../database";
 import { DatabaseBackend, DatabaseBackendEntityRecord } from "../backend";
 import { DexieDatabase } from "./dexie/dexie";
 import {
@@ -68,7 +73,31 @@ export class IDBDatabaseBackend implements DatabaseBackend {
 
   async listEvents(query: DatabaseEventQuery): Promise<Event[]> {
     let baseQuery: Dexie.Collection<DexieEventRow, number>;
-    if (query.predicate) {
+    if (query.predicate && query.afterID) {
+      const afterSequenceNumber = await this._fetchPrimaryKeyForEvent(
+        query.afterID,
+      );
+
+      // both the predicate and afterID were specificed need to do more complex querying
+      if (query.predicate[1] == "=") {
+        // can create a compound query in this case
+        baseQuery = this.db.events
+          .where(`[${query.predicate[0]}+${DexieEventColumn.SequenceNumber}]`)
+          .between(
+            [query.predicate[2], afterSequenceNumber + 1],
+            [query.predicate[2], Dexie.maxKey],
+          );
+      } else {
+        // arbitrary comparsion query
+        baseQuery = this.db.events.filter(
+          fastForward(
+            afterSequenceNumber,
+            DexieEventColumn.SequenceNumber,
+            (item) => comparseUsingPredicate(item, query.predicate!),
+          ),
+        );
+      }
+    } else if (query.predicate) {
       const predicatedQuery = this.db.events.where(query.predicate[0]);
       switch (query.predicate[1]) {
         case "<":
@@ -88,10 +117,10 @@ export class IDBDatabaseBackend implements DatabaseBackend {
           break;
       }
     } else if (query.afterID) {
-      const afterSequenceNumber = await this.db.events
-        .where(DexieEventColumn.ID)
-        .equals(query.afterID)
-        .toArray();
+      const afterSequenceNumber = await this._fetchPrimaryKeyForEvent(
+        query.afterID,
+      );
+
       baseQuery = this.db.events
         .where(DexieEventColumn.SequenceNumber)
         .above(afterSequenceNumber);
@@ -161,4 +190,47 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       );
     });
   }
+
+  async _fetchPrimaryKeyForEvent(eventId: string) {
+    // there will never be more then one key
+    const afterRowPrimaryKeys = await this.db.events
+      .where(DexieEventColumn.ID)
+      .equals(eventId)
+      .primaryKeys();
+    return afterRowPrimaryKeys[0];
+  }
+}
+
+function comparseUsingPredicate<
+  T extends Record<string, V>,
+  K extends string,
+  V,
+>(value: T, predicate: DatabaseQueryPredicate<K, V>): boolean {
+  switch (predicate[1]) {
+    case "=":
+      return value[predicate[0]] == predicate[2];
+    case "<":
+      return value[predicate[0]] < predicate[2];
+    case "<=":
+      return value[predicate[0]] <= predicate[2];
+    case ">":
+      return value[predicate[0]] > predicate[2];
+    case ">=":
+      return value[predicate[0]] >= predicate[2];
+  }
+}
+
+function fastForward<PK, Row extends Record<string, unknown>>(
+  lastRowPrimaryKey: PK,
+  primaryKeyName: string,
+  otherCriteria: (item: Row) => boolean,
+) {
+  let fastForwardComplete = false;
+  return (item: Row) => {
+    if (fastForwardComplete) return otherCriteria(item);
+    if ((item[primaryKeyName] as PK) === lastRowPrimaryKey) {
+      fastForwardComplete = true;
+    }
+    return false;
+  };
 }

@@ -75,5 +75,42 @@ describe.each([
       });
       expect(events).toEqual([testEvents[0], testEvents[1]]);
     });
+
+    test(`[${backend}] by entity ID and limit`, async () => {
+      const events = await db.listEvents({
+        predicate: ["entityID", "=", "x"],
+        limit: 1,
+      });
+      expect(events).toEqual([testEvents[0]]);
+    });
+
+    test(`[${backend}] with after ID`, async () => {
+      const events = await db.listEvents({
+        afterID: "a" as EventID,
+      });
+      expect(events).toEqual([testEvents[1], testEvents[2]]);
+    });
+
+    test(`[${backend}] by entity ID and after ID`, async () => {
+      const events = await db.listEvents({
+        afterID: "a" as EventID,
+        predicate: ["entityID", "=", "x"],
+      });
+      expect(events).toEqual([testEvents[1]]);
+    });
+
+    test(`[${backend}] by lexicographical entity ID and after ID`, async () => {
+      const eventExclusive = await db.listEvents({
+        afterID: "a" as EventID,
+        predicate: ["entityID", ">", "x"],
+      });
+      expect(eventExclusive).toEqual([testEvents[2]]);
+
+      const eventInclusive = await db.listEvents({
+        afterID: "a" as EventID,
+        predicate: ["entityID", ">=", "x"],
+      });
+      expect(eventInclusive).toEqual([testEvents[1], testEvents[2]]);
+    });
   });
 });

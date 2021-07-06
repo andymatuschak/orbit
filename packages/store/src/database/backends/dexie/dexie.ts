@@ -29,6 +29,7 @@ export class DexieDatabase extends Dexie {
         `&${DexieEventColumn.ID}`,
         DexieEventColumn.EntityID,
         DexieEventColumn.Data,
+        `[${DexieEventColumn.EntityID}+${DexieEventColumn.SequenceNumber}]`,
       ].join(", "),
 
       [DexieTable.Entities]: [
