@@ -1,9 +1,11 @@
 import { AttachmentMimeType } from "@withorbit/core";
-import { EventID, Task, TaskID } from "../../core2";
 import {
-  AttachmentReference,
   AttachmentID,
-} from "../../core2/entities/attachmentReference";
+  AttachmentReference,
+  EventID,
+  Task,
+  TaskID,
+} from "../../core2";
 import { EntityType } from "../../core2/entities/entityBase";
 import { testTask } from "../__tests__/testTasks";
 import { DatabaseBackendEntityRecord } from "../backend";
