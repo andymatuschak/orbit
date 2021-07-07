@@ -78,7 +78,7 @@ const testAttachmentReferences: DatabaseBackendEntityRecord<AttachmentReference>
     createTestAttachmentReference("a_b", "y"),
   ];
 
-describe("round-trip entities", async () => {
+describe("round-trip entities", () => {
   test("tasks", async () => {
     await backend.putEntities(testTasks);
 
