@@ -3,11 +3,10 @@ import {
   EntityID,
   Event,
   EventID,
+  eventReducer as _eventReducer,
   IDOfEntity,
   Task,
-  TaskID,
   TypeOfEntity,
-  eventReducer as _eventReducer,
 } from "./core2";
 import {
   DatabaseBackend,
@@ -69,18 +68,17 @@ export class Database {
     return records.map(({ entity }) => entity);
   }
 
-  private async _updateEntitySnapshots(entityIDs: EntityID[]): Promise<void> {
+  private async _updateEntitySnapshots(
+    entityIDs: IDOfEntity<Entity>[],
+  ): Promise<void> {
     // n.b. this method is conceivably open to races because we can't wrap the full update loop in a transaction handler, but I don't think it's an issue in practice. Worst case, the snapshot ends up behind the latest event, but it'd be corrected in the next snapshot update.
-
-    // TODO: Note the unsafe cast to TaskID below. This shouldn't be necessary, but TS has figured out that there's only one entity type right now, and therefore there's only one EntityID type, and it's TaskID, and so that's what it demands as the argument.
-    const _entityIDs = entityIDs as TaskID[];
     const batchSize = 100;
-    for (let i = 0; i < _entityIDs.length; i += batchSize) {
+    for (let i = 0; i < entityIDs.length; i += batchSize) {
       const currentEntityRecordSnapshots = await this._backend.getEntities(
-        _entityIDs,
+        entityIDs,
       );
       const newEntityRecordSnapshots = await Promise.all(
-        _entityIDs
+        entityIDs
           .slice(i, i + batchSize)
           .map(
             async (id) =>
