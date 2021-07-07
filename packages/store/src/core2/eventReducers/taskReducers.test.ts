@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { eventReducer } from "../reducer";
+import { eventReducer } from "../eventReducer";
 
 test("ingest reducer", () => {
   // TODO
