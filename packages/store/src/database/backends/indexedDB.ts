@@ -20,8 +20,11 @@ import {
 export class IDBDatabaseBackend implements DatabaseBackend {
   db: DexieDatabase;
 
-  constructor(indexDB: IDBFactory = window.indexedDB) {
-    this.db = new DexieDatabase("OrbitDatabase", indexDB);
+  constructor(
+    indexDB: IDBFactory = window.indexedDB,
+    databaseName = "OrbitDatabase",
+  ) {
+    this.db = new DexieDatabase(databaseName, indexDB);
   }
 
   async close(): Promise<void> {
@@ -32,7 +35,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
     entityIDs: ID[],
   ): Promise<Map<ID, DatabaseBackendEntityRecord<E>>> {
     const values = await this.db.entities
-      .where("id")
+      .where(DexieEntityKeys.ID)
       .anyOf(entityIDs)
       .toArray();
 
@@ -51,7 +54,10 @@ export class IDBDatabaseBackend implements DatabaseBackend {
   async getEvents<E extends Event, ID extends EventID>(
     eventIDs: EventID[],
   ): Promise<Map<ID, E>> {
-    const values = await this.db.events.where("id").anyOf(eventIDs).toArray();
+    const values = await this.db.events
+      .where(DexieEventKeys.ID)
+      .anyOf(eventIDs)
+      .toArray();
 
     const output: Map<ID, E> = new Map();
     for (const value of values) {
@@ -80,7 +86,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       // only one possible key right now, when another key is eventually defined convert this
       // to be an if-else
       switch (query.predicate[0]) {
-        case "dueTimestampMillis":
+        case DexieDerivedTaskComponentKeys.DueTimestampMillis:
           const clause = this.db.derived_taskComponents.where(
             DexieDerivedTaskComponentKeys.DueTimestampMillis,
           );
@@ -110,7 +116,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       } else {
         baseQuery = this.db.entities
           .where(DexieEntityKeys.ID)
-          .anyOf(includedTaskIds);
+          .anyOf([...includedTaskIDs]);
       }
     } else if (query.afterID) {
       const afterRowID = await this._fetchPrimaryKeyFromUniqueKey(
@@ -200,7 +206,10 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       this.db.entities,
       this.db.derived_taskComponents,
       async () => {
-        const rows = await this.db.entities.where("id").anyOf(ids).toArray();
+        const rows = await this.db.entities
+          .where(DexieEntityKeys.ID)
+          .anyOf(ids)
+          .toArray();
 
         const rowMapping = rows.reduce((map, row) => {
           map.set(row.id, row as DexieEntityRowWithPrimaryKey);
