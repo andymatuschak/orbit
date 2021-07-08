@@ -9,11 +9,11 @@ import {
 import { DatabaseBackend, DatabaseBackendEntityRecord } from "../backend";
 import { DexieDatabase } from "./dexie/dexie";
 import {
-  DexieDerivedTaskComponentColumn,
-  DexieEntityColumn,
+  DexieDerivedTaskComponentKeys,
+  DexieEntityKeys,
   DexieEntityRow,
   DexieEntityRowWithPrimaryKey,
-  DexieEventColumn,
+  DexieEventKeys,
   DexieEventRow,
 } from "./dexie/tables";
 
@@ -82,7 +82,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       switch (query.predicate[0]) {
         case "dueTimestampMillis":
           const clause = this.db.derived_taskComponents.where(
-            DexieDerivedTaskComponentColumn.DueTimestampMillis,
+            DexieDerivedTaskComponentKeys.DueTimestampMillis,
           );
           const derivedRowsPrimaryKeys = await compareUsingPredicate(
             clause,
@@ -99,30 +99,30 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         // simulate a join across the two tables
         const afterRowID = await this._fetchPrimaryKeyFromUniqueKey(
           this.db.entities,
-          DexieEventColumn.ID,
+          DexieEventKeys.ID,
           query.afterID,
         );
 
         baseQuery = this.db.entities
-          .where(DexieEntityColumn.RowID)
+          .where(DexieEntityKeys.RowID)
           .above(afterRowID)
           .filter((row) => includedTaskIds.includes(row.id));
       } else {
         baseQuery = this.db.entities
-          .where(DexieEntityColumn.ID)
+          .where(DexieEntityKeys.ID)
           .anyOf(includedTaskIds);
       }
     } else if (query.afterID) {
       const afterRowID = await this._fetchPrimaryKeyFromUniqueKey(
         this.db.entities,
-        DexieEventColumn.ID,
+        DexieEventKeys.ID,
         query.afterID,
       );
       baseQuery = this.db.entities
-        .where(DexieEntityColumn.RowID)
+        .where(DexieEntityKeys.RowID)
         .above(afterRowID);
     } else {
-      baseQuery = this.db.entities.orderBy(DexieEntityColumn.RowID);
+      baseQuery = this.db.entities.orderBy(DexieEntityKeys.RowID);
     }
 
     if (query.limit) {
@@ -141,7 +141,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
     if (query.predicate && query.afterID) {
       const afterSequenceNumber = await this._fetchPrimaryKeyFromUniqueKey(
         this.db.events,
-        DexieEventColumn.ID,
+        DexieEventKeys.ID,
         query.afterID,
       );
 
@@ -149,7 +149,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       if (query.predicate[1] == "=") {
         // can create a compound query in this case
         baseQuery = this.db.events
-          .where(`[${query.predicate[0]}+${DexieEventColumn.SequenceNumber}]`)
+          .where(`[${query.predicate[0]}+${DexieEventKeys.SequenceNumber}]`)
           .between(
             [query.predicate[2], afterSequenceNumber + 1],
             [query.predicate[2], Dexie.maxKey],
@@ -159,7 +159,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         baseQuery = this.db.events.filter(
           fastForward(
             afterSequenceNumber,
-            DexieEventColumn.SequenceNumber,
+            DexieEventKeys.SequenceNumber,
             (item) => comparseUsingPredicate(item, query.predicate!),
           ),
         );
@@ -170,15 +170,15 @@ export class IDBDatabaseBackend implements DatabaseBackend {
     } else if (query.afterID) {
       const afterSequenceNumber = await this._fetchPrimaryKeyFromUniqueKey(
         this.db.events,
-        DexieEventColumn.ID,
+        DexieEventKeys.ID,
         query.afterID,
       );
 
       baseQuery = this.db.events
-        .where(DexieEventColumn.SequenceNumber)
+        .where(DexieEventKeys.SequenceNumber)
         .above(afterSequenceNumber);
     } else {
-      baseQuery = this.db.events.orderBy(DexieEventColumn.SequenceNumber);
+      baseQuery = this.db.events.orderBy(DexieEventKeys.SequenceNumber);
     }
 
     if (query.limit) {

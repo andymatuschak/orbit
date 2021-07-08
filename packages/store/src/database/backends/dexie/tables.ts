@@ -6,7 +6,7 @@ export enum DexieTable {
   DerivedTaskComponents = "derived_taskComponents",
 }
 
-export enum DexieEventColumn {
+export enum DexieEventKeys {
   SequenceNumber = "sequenceNumber",
   ID = "id",
   EntityID = "entityID",
@@ -14,12 +14,12 @@ export enum DexieEventColumn {
 }
 
 export type DexieEventRow = {
-  [DexieEventColumn.ID]: EventID;
-  [DexieEventColumn.EntityID]: TaskID;
-  [DexieEventColumn.Data]: string;
+  [DexieEventKeys.ID]: EventID;
+  [DexieEventKeys.EntityID]: TaskID;
+  [DexieEventKeys.Data]: string;
 };
 
-export enum DexieEntityColumn {
+export enum DexieEntityKeys {
   RowID = "rowID",
   ID = "id",
   lastEventID = "lastEventID",
@@ -27,23 +27,23 @@ export enum DexieEntityColumn {
 }
 
 export type DexieEntityRow = {
-  [DexieEntityColumn.ID]: TaskID;
-  [DexieEntityColumn.lastEventID]: EventID;
-  [DexieEntityColumn.Data]: string;
+  [DexieEntityKeys.ID]: TaskID;
+  [DexieEntityKeys.lastEventID]: EventID;
+  [DexieEntityKeys.Data]: string;
 };
 
 export type DexieEntityRowWithPrimaryKey = DexieEntityRow & {
-  [DexieEntityColumn.RowID]: number;
+  [DexieEntityKeys.RowID]: number;
 };
 
-export enum DexieDerivedTaskComponentColumn {
+export enum DexieDerivedTaskComponentKeys {
   TaskID = "taskID",
   ComponentID = "componentID",
   DueTimestampMillis = "dueTimestampMillis",
 }
 
 export type DexieDerivedTaskComponentRow = {
-  [DexieDerivedTaskComponentColumn.TaskID]: string;
-  [DexieDerivedTaskComponentColumn.ComponentID]: string;
-  [DexieDerivedTaskComponentColumn.DueTimestampMillis]: number;
+  [DexieDerivedTaskComponentKeys.TaskID]: string;
+  [DexieDerivedTaskComponentKeys.ComponentID]: string;
+  [DexieDerivedTaskComponentKeys.DueTimestampMillis]: number;
 };

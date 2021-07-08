@@ -1,11 +1,11 @@
 import Dexie, { Transaction } from "dexie";
 import { Entity, TaskID } from "../../../core2";
 import {
-  DexieDerivedTaskComponentColumn,
+  DexieDerivedTaskComponentKeys,
   DexieDerivedTaskComponentRow,
-  DexieEntityColumn,
+  DexieEntityKeys,
   DexieEntityRow,
-  DexieEventColumn,
+  DexieEventKeys,
   DexieEventRow,
   DexieTable,
 } from "./tables";
@@ -23,21 +23,21 @@ export class DexieDatabase extends Dexie {
 
     this.version(1).stores({
       [DexieTable.Events]: [
-        `++${DexieEventColumn.SequenceNumber}`,
-        `&${DexieEventColumn.ID}`,
-        DexieEventColumn.EntityID,
-        `[${DexieEventColumn.EntityID}+${DexieEventColumn.SequenceNumber}]`,
+        `++${DexieEventKeys.SequenceNumber}`,
+        `&${DexieEventKeys.ID}`,
+        DexieEventKeys.EntityID,
+        `[${DexieEventKeys.EntityID}+${DexieEventKeys.SequenceNumber}]`,
       ].join(", "),
 
       [DexieTable.Entities]: [
-        `++${DexieEntityColumn.RowID}`,
-        `&${DexieEntityColumn.ID}`,
+        `++${DexieEntityKeys.RowID}`,
+        `&${DexieEntityKeys.ID}`,
       ].join(", "),
 
       [DexieTable.DerivedTaskComponents]: [
-        `&[${DexieDerivedTaskComponentColumn.TaskID}+${DexieDerivedTaskComponentColumn.ComponentID}]`,
-        DexieDerivedTaskComponentColumn.TaskID,
-        DexieDerivedTaskComponentColumn.DueTimestampMillis,
+        `&[${DexieDerivedTaskComponentKeys.TaskID}+${DexieDerivedTaskComponentKeys.ComponentID}]`,
+        DexieDerivedTaskComponentKeys.TaskID,
+        DexieDerivedTaskComponentKeys.DueTimestampMillis,
       ].join(", "),
     });
 
@@ -86,7 +86,7 @@ async function deleteAllDerivedTaskComponentsByTaskID(
 ) {
   await transaction.db
     .table(DexieTable.DerivedTaskComponents)
-    .where(DexieDerivedTaskComponentColumn.TaskID)
+    .where(DexieDerivedTaskComponentKeys.TaskID)
     .equals(taskID)
     .delete();
 }
