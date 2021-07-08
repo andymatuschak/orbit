@@ -18,6 +18,8 @@ export interface ReviewSessionManagerState {
 
   sessionItems: ReviewItem[];
   currentSessionItemIndex: number | null;
+
+  isRetryingForgottenItems: boolean;
 }
 
 export interface ReviewSessionManagerActions {
@@ -31,6 +33,7 @@ export interface ReviewSessionManagerActions {
   ): void;
 
   pushReviewAreaQueueItems(items: ReviewAreaItem[]): void;
+  pushReviewAreaQueueItemsToRetry(items: ReviewAreaItem[]): void;
 }
 
 function getPromptTaskIDForPromptAndParameters<PT extends PromptTask>(
@@ -130,6 +133,7 @@ function reviewSessionManagerMarkCurrentItem(
     currentReviewAreaQueueIndex: newReviewAreaQueueIndex,
     sessionItems: newSessionItems,
     currentSessionItemIndex: newSessionItemIndex,
+    isRetryingForgottenItems: state.isRetryingForgottenItems,
   };
 }
 
@@ -182,6 +186,7 @@ function reviewSessionManagerPushReviewAreaQueueItems(
         newReviewAreaQueue[state.currentReviewAreaQueueIndex],
         state.sessionItems,
       ),
+      isRetryingForgottenItems: state.isRetryingForgottenItems,
     };
   } else {
     return {
@@ -192,6 +197,7 @@ function reviewSessionManagerPushReviewAreaQueueItems(
         newReviewAreaQueue[0],
         state.sessionItems,
       ),
+      isRetryingForgottenItems: state.isRetryingForgottenItems,
     };
   }
 }
@@ -202,6 +208,8 @@ const initialReviewSessionManagerState: ReviewSessionManagerState = {
 
   sessionItems: [],
   currentSessionItemIndex: null,
+
+  isRetryingForgottenItems: false,
 };
 
 export function useReviewSessionManager(): ReviewSessionManagerActions &
@@ -224,10 +232,20 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
           });
         }
       },
+
       pushReviewAreaQueueItems: (queueItems) =>
         setState((state) =>
           reviewSessionManagerPushReviewAreaQueueItems(state, queueItems),
         ),
+
+      pushReviewAreaQueueItemsToRetry: (queueItems) => {
+        reviewSessionManagerActions.pushReviewAreaQueueItems(queueItems);
+
+        setState((state) => ({
+          ...state,
+          isRetryingForgottenItems: true,
+        }));
+      },
 
       updateSessionItems: (mutator) =>
         setState((state) =>

@@ -8,6 +8,7 @@ interface EmbeddedBannerMessageInputs {
   totalPromptCount: number;
   sizeClass: styles.layout.SizeClass;
   wasInitiallyComplete: boolean;
+  isRetryingForgottenItems: boolean;
 }
 
 export interface EmbeddedBannerProps extends EmbeddedBannerMessageInputs {
@@ -20,10 +21,13 @@ function getBannerMessage({
   totalPromptCount,
   sizeClass,
   wasInitiallyComplete,
+  isRetryingForgottenItems,
 }: EmbeddedBannerMessageInputs): string {
   function formatPrompts(n: number): string {
     return n === 1 ? "1 prompt" : `${n} prompts`;
   }
+
+  const suffix = isRetryingForgottenItems ? " (retry)" : "";
 
   if (!isSignedIn && completePromptCount === 0) {
     return sizeClass === "regular"
@@ -34,14 +38,16 @@ function getBannerMessage({
       return `Review complete`;
     } else if (completePromptCount === 0) {
       return sizeClass === "regular"
-        ? `Review session: ${formatPrompts(totalPromptCount)}`
-        : `Review: ${formatPrompts(totalPromptCount)}`;
+        ? `Review session${suffix}: ${formatPrompts(totalPromptCount)}`
+        : `Review${suffix}: ${formatPrompts(totalPromptCount)}`;
     } else if (completePromptCount < totalPromptCount) {
       return sizeClass === "regular"
-        ? `Review session: ${formatPrompts(
+        ? `Review session${suffix}: ${formatPrompts(
             totalPromptCount - completePromptCount,
           )} left`
-        : `${formatPrompts(totalPromptCount - completePromptCount)} left`;
+        : `Review${suffix}: ${formatPrompts(
+            totalPromptCount - completePromptCount,
+          )} left`;
     } else {
       throw new Error("Unreachable");
     }

@@ -238,7 +238,7 @@ export default function ReviewSession() {
           (item) => !!item.promptState?.needsRetry,
         );
         console.log("Pushing items to retry", itemsToRetry);
-        reviewSessionManager.pushReviewAreaQueueItems(
+        reviewSessionManager.pushReviewAreaQueueItemsToRetry(
           getReviewAreaItemsFromReviewItems(itemsToRetry),
         );
       }

@@ -94,6 +94,7 @@ function EmbeddedScreenRenderer({
   sessionItems,
   reviewAreaQueue,
   wasInitiallyComplete,
+  isRetryingForgottenItems,
 }: EmbeddedScreenRendererProps) {
   const [pendingOutcome, setPendingOutcome] =
     useState<PromptRepetitionOutcome | null>(null);
@@ -165,6 +166,7 @@ function EmbeddedScreenRenderer({
         completePromptCount={currentReviewAreaQueueIndex}
         wasInitiallyComplete={wasInitiallyComplete}
         sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
+        isRetryingForgottenItems={isRetryingForgottenItems}
       />
       <Animated.View
         onLayout={onInteriorLayout}
@@ -301,6 +303,7 @@ export default function EmbeddedScreen() {
     currentReviewAreaQueueIndex,
     sessionItems,
     reviewAreaQueue,
+    isRetryingForgottenItems,
     ...reviewSessionManager
   } = useReviewSessionManager();
   const { commitActionsRecord, hasUncommittedActions } =
@@ -422,7 +425,7 @@ export default function EmbeddedScreen() {
             hostState,
           );
           console.log("Pushing items to retry", itemsToRetry);
-          reviewSessionManager.pushReviewAreaQueueItems(
+          reviewSessionManager.pushReviewAreaQueueItemsToRetry(
             getEmbeddedReviewAreaItemsFromReviewItems(
               itemsToRetry,
               colorPalette,
@@ -463,6 +466,7 @@ export default function EmbeddedScreen() {
             hasUncommittedActions={hasUncommittedActions}
             isDebug={configuration.isDebug}
             wasInitiallyComplete={wasInitiallyComplete}
+            isRetryingForgottenItems={isRetryingForgottenItems}
           />
         )}
       </ReviewSessionContainer>
