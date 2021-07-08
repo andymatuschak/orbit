@@ -1,7 +1,6 @@
 import { IDBDatabaseBackend } from "./indexedDB";
-import { EventID, Task, TaskID } from "../../core2";
-import { testTask } from "../__tests__/testTasks";
-import { DatabaseBackendEntityRecord } from "../backend";
+import { TaskID } from "../../core2";
+import { testTasks, createTestTask } from "../__tests__/testTasks";
 // @ts-ignore Looks like there is no @types for this library
 import FDBFactory from "fake-indexeddb/lib/FDBFactory";
 import { EntityType } from "../../core2/entities/entityBase";
@@ -12,28 +11,6 @@ beforeEach(() => {
   indexedDB = new FDBFactory();
   backend = new IDBDatabaseBackend(indexedDB);
 });
-
-function createTestTask({
-  id,
-  lastEventID,
-  dueTimestampMillis,
-}: {
-  id: string;
-  lastEventID: string;
-  dueTimestampMillis: number;
-}): DatabaseBackendEntityRecord<Task> {
-  // lazy deep clone
-  const newTask = JSON.parse(JSON.stringify(testTask)) as Task;
-  newTask.id = id as TaskID;
-  newTask.componentStates["a"].dueTimestampMillis = dueTimestampMillis;
-  return { entity: newTask, lastEventID: lastEventID as EventID };
-}
-
-const testTasks: DatabaseBackendEntityRecord<Task>[] = [
-  createTestTask({ id: "a", lastEventID: "x", dueTimestampMillis: 50 }),
-  createTestTask({ id: "b", lastEventID: "y", dueTimestampMillis: 100 }),
-  createTestTask({ id: "c", lastEventID: "z", dueTimestampMillis: 150 }),
-];
 
 test("round-trip entities", async () => {
   await backend.putEntities(testTasks);
