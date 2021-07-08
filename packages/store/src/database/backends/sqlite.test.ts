@@ -1,6 +1,10 @@
 import { EventID, TaskID } from "../../core2";
 import { EntityType } from "../../core2/entities/entityBase";
-import { createTestTask, testTasks } from "../__tests__/testTasks";
+import {
+  createTestTask,
+  testAttachmentReferences,
+  testTasks,
+} from "../__tests__/testTasks";
 import {
   constructByIDSQLQuery,
   constructEntitySQLQuery,
@@ -28,8 +32,9 @@ test("DB automatically migrates", async () => {
   expect(await getSchemaVersionNumber(db)).toBe(latestSchemaVersionNumber);
 });
 
-test("round-trip entities", async () => {
-  await backend.putEntities(testTasks);
+describe("round-trip entities", () => {
+  test("tasks", async () => {
+    await backend.putEntities(testTasks);
 
     const result = await backend.getEntities(["a", "c", "z"] as TaskID[]);
     expect(result).toEqual(

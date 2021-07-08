@@ -1,4 +1,7 @@
+import { AttachmentMimeType } from "@withorbit/core";
 import {
+  AttachmentID,
+  AttachmentReference,
   ClozeTaskContent,
   EventID,
   MemoryTaskSpec,
