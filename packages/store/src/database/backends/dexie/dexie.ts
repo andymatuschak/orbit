@@ -26,20 +26,16 @@ export class DexieDatabase extends Dexie {
         `++${DexieEventColumn.SequenceNumber}`,
         `&${DexieEventColumn.ID}`,
         DexieEventColumn.EntityID,
-        DexieEventColumn.Data,
         `[${DexieEventColumn.EntityID}+${DexieEventColumn.SequenceNumber}]`,
       ].join(", "),
 
       [DexieTable.Entities]: [
         `++${DexieEntityColumn.RowID}`,
         `&${DexieEntityColumn.ID}`,
-        DexieEntityColumn.lastEventID,
-        DexieEntityColumn.Data,
       ].join(", "),
 
       [DexieTable.DerivedTaskComponents]: [
         `&[${DexieDerivedTaskComponentColumn.TaskID}+${DexieDerivedTaskComponentColumn.ComponentID}]`,
-        DexieDerivedTaskComponentColumn.ComponentID,
         DexieDerivedTaskComponentColumn.TaskID,
         DexieDerivedTaskComponentColumn.DueTimestampMillis,
       ].join(", "),
