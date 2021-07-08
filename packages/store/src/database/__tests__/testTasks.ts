@@ -1,10 +1,13 @@
 import {
   ClozeTaskContent,
+  EventID,
   MemoryTaskSpec,
+  Task,
   TaskContentType,
   TaskID,
   TaskSpecType,
 } from "../../core2";
+import { DatabaseBackendEntityRecord } from "../backend";
 
 const testClozeSpec: MemoryTaskSpec<ClozeTaskContent> = {
   type: TaskSpecType.Memory,
@@ -56,3 +59,25 @@ export const testTask = {
   isDeleted: false,
   metadata: {},
 };
+
+export function createTestTask({
+  id,
+  lastEventID,
+  dueTimestampMillis,
+}: {
+  id: string;
+  lastEventID: string;
+  dueTimestampMillis: number;
+}): DatabaseBackendEntityRecord<Task> {
+  // lazy deep clone
+  const newTask = JSON.parse(JSON.stringify(testTask)) as Task;
+  newTask.id = id as TaskID;
+  newTask.componentStates["a"].dueTimestampMillis = dueTimestampMillis;
+  return { entity: newTask, lastEventID: lastEventID as EventID };
+}
+
+export const testTasks: DatabaseBackendEntityRecord<Task>[] = [
+  createTestTask({ id: "a", lastEventID: "x", dueTimestampMillis: 50 }),
+  createTestTask({ id: "b", lastEventID: "y", dueTimestampMillis: 100 }),
+  createTestTask({ id: "c", lastEventID: "z", dueTimestampMillis: 150 }),
+];
