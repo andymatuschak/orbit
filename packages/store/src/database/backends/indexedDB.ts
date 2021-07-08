@@ -15,6 +15,7 @@ import {
   DexieEntityRowWithPrimaryKey,
   DexieEventKeys,
   DexieEventRow,
+  DexieEventRowWithPrimaryKey,
 } from "./dexie/tables";
 
 export class IDBDatabaseBackend implements DatabaseBackend {
@@ -82,7 +83,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       const predicatedQuery = this.db.entities.where(query.predicate[0]);
       baseQuery = compareUsingPredicate(predicatedQuery, query.predicate);
 
-      let includedTaskIds: TaskID[];
+      const includedTaskIDs = new Set<TaskID>();
       // only one possible key right now, when another key is eventually defined convert this
       // to be an if-else
       switch (query.predicate[0]) {
@@ -95,9 +96,9 @@ export class IDBDatabaseBackend implements DatabaseBackend {
             query.predicate,
           ).primaryKeys();
 
-          includedTaskIds = derivedRowsPrimaryKeys.map(
-            ([taskID]) => taskID as TaskID,
-          );
+          for (const [derivedPrimaryKey] of derivedRowsPrimaryKeys) {
+            includedTaskIDs.add(derivedPrimaryKey as TaskID);
+          }
       }
 
       // was the afterID specified at the same time?
@@ -109,10 +110,13 @@ export class IDBDatabaseBackend implements DatabaseBackend {
           query.afterID,
         );
 
+        // Note that our approach here involves fetching _all_ matching entity IDs, then skipping the
+        // ones before the requested row. This means pagination over N entities with a predicate has
+        // quadratic time cost.
         baseQuery = this.db.entities
           .where(DexieEntityKeys.RowID)
           .above(afterRowID)
-          .filter((row) => includedTaskIds.includes(row.id));
+          .filter((row) => includedTaskIDs.has(row.id));
       } else {
         baseQuery = this.db.entities
           .where(DexieEntityKeys.ID)
@@ -128,7 +132,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         .where(DexieEntityKeys.RowID)
         .above(afterRowID);
     } else {
-      baseQuery = this.db.entities.orderBy(DexieEntityKeys.RowID);
+      baseQuery = this.db.entities.toCollection();
     }
 
     if (query.limit) {
@@ -151,7 +155,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         query.afterID,
       );
 
-      // both the predicate and afterID were specificed need to do more complex querying
+      // both the predicate and afterID were specified need to do more complex querying
       if (query.predicate[1] == "=") {
         // can create a compound query in this case
         baseQuery = this.db.events
@@ -161,13 +165,16 @@ export class IDBDatabaseBackend implements DatabaseBackend {
             [query.predicate[2], Dexie.maxKey],
           );
       } else {
-        // arbitrary comparsion query
-        baseQuery = this.db.events.filter(
-          fastForward(
-            afterSequenceNumber,
-            DexieEventKeys.SequenceNumber,
-            (item) => comparseUsingPredicate(item, query.predicate!),
-          ),
+        // arbitrary comparison query
+        const predicatedQuery: WhereClause<
+          DexieEventRowWithPrimaryKey,
+          number
+        > = this.db.events.where(query.predicate[0]);
+        baseQuery = compareUsingPredicate(
+          predicatedQuery,
+          query.predicate,
+        ).filter(
+          (item) => item[DexieEventKeys.SequenceNumber] > afterSequenceNumber,
         );
       }
     } else if (query.predicate) {
@@ -184,7 +191,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         .where(DexieEventKeys.SequenceNumber)
         .above(afterSequenceNumber);
     } else {
-      baseQuery = this.db.events.orderBy(DexieEventKeys.SequenceNumber);
+      baseQuery = this.db.events.toCollection();
     }
 
     if (query.limit) {
@@ -294,38 +301,4 @@ function compareUsingPredicate<
     case ">=":
       return clause.aboveOrEqual(predicate[2]);
   }
-}
-
-function comparseUsingPredicate<
-  T extends Record<string, V>,
-  K extends string,
-  V,
->(value: T, predicate: DatabaseQueryPredicate<K, V>): boolean {
-  switch (predicate[1]) {
-    case "=":
-      return value[predicate[0]] == predicate[2];
-    case "<":
-      return value[predicate[0]] < predicate[2];
-    case "<=":
-      return value[predicate[0]] <= predicate[2];
-    case ">":
-      return value[predicate[0]] > predicate[2];
-    case ">=":
-      return value[predicate[0]] >= predicate[2];
-  }
-}
-
-function fastForward<PK, Row extends Record<string, unknown>>(
-  lastRowPrimaryKey: PK,
-  primaryKeyName: string,
-  otherCriteria: (item: Row) => boolean,
-) {
-  let fastForwardComplete = false;
-  return (item: Row) => {
-    if (fastForwardComplete) return otherCriteria(item);
-    if ((item[primaryKeyName] as PK) === lastRowPrimaryKey) {
-      fastForwardComplete = true;
-    }
-    return false;
-  };
 }

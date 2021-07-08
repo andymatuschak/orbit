@@ -19,6 +19,10 @@ export type DexieEventRow = {
   [DexieEventKeys.Data]: string;
 };
 
+export type DexieEventRowWithPrimaryKey = DexieEventRow & {
+  [DexieEventKeys.SequenceNumber]: number;
+};
+
 export enum DexieEntityKeys {
   RowID = "rowID",
   ID = "id",
