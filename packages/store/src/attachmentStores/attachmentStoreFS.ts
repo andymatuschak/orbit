@@ -11,7 +11,7 @@ import { AttachmentReference } from "../core2";
 const _pipeline = promisify(pipeline);
 
 // Node.js-compatible implementation
-export class NodeAttachmentStore implements AttachmentStore {
+export class AttachmentStoreFS implements AttachmentStore {
   private readonly _basePath: string;
 
   // basePath must be a path to a folder which already exists.

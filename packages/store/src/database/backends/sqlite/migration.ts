@@ -39,7 +39,7 @@ export async function performMigration(
       setMetadataKeys(tx, {
         [SQLMetadataTableKey.Version]: targetVersionNumber.toString(),
       });
-    } else {
+    } else if (currentVersion > targetVersionNumber) {
       throw new Error(
         `Attempting migration from ${currentVersion} to earlier version ${targetVersionNumber}`,
       );

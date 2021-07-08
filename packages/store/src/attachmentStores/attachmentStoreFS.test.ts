@@ -1,12 +1,13 @@
 import { AttachmentMimeType } from "@withorbit/core";
 import fs from "fs";
 import jestFetchMock from "jest-fetch-mock";
+import os from "os";
 import path from "path";
 import stream from "stream";
 import { fileURLToPath } from "url";
 import { AttachmentID, AttachmentReference } from "../core2";
 import { EntityType } from "../core2/entities/entityBase";
-import { NodeAttachmentStore } from "./nodeAttachmentStore";
+import { AttachmentStoreFS } from "./attachmentStoreFS";
 
 beforeAll(() => {
   jestFetchMock.enableMocks();
@@ -20,10 +21,12 @@ afterAll(() => {
   jestFetchMock.dontMock();
 });
 
-let store: NodeAttachmentStore;
+let store: AttachmentStoreFS;
 beforeEach(async () => {
-  const temp = await fs.promises.mkdtemp("orbit-test-");
-  store = new NodeAttachmentStore(temp);
+  const tempPath = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), "orbit-test-" + Math.random()),
+  );
+  store = new AttachmentStoreFS(tempPath);
 });
 
 const testAttachmentReference: AttachmentReference = {
