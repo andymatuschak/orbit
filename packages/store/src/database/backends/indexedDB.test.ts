@@ -1,6 +1,10 @@
 import { IDBDatabaseBackend } from "./indexedDB";
 import { EntityType, TaskID } from "../../core2";
-import { testTasks, createTestTask } from "../__tests__/testTasks";
+import {
+  testTasks,
+  createTestTask,
+  testAttachmentReferences,
+} from "../__tests__/testTasks";
 // @ts-ignore Looks like there is no @types for this library
 import FDBFactory from "fake-indexeddb/lib/FDBFactory";
 
@@ -11,16 +15,24 @@ beforeEach(() => {
   backend = new IDBDatabaseBackend(indexedDB);
 });
 
-test("round-trip entities", async () => {
-  await backend.putEntities(testTasks);
+describe("round-trip entities", () => {
+  test("tasks", async () => {
+    await backend.putEntities(testTasks);
 
-  const result = await backend.getEntities(["a", "c", "z"] as TaskID[]);
-  expect(result).toEqual(
-    new Map([
-      ["a", testTasks[0]],
-      ["c", testTasks[2]],
-    ]),
-  );
+    const result = await backend.getEntities(["a", "c", "z"] as TaskID[]);
+    expect(result).toEqual(
+      new Map([
+        ["a", testTasks[0]],
+        ["c", testTasks[2]],
+      ]),
+    );
+  });
+
+  test("attachments", async () => {
+    await backend.putEntities(testAttachmentReferences);
+    const result = await backend.getEntities(["a_b", "a_z"] as TaskID[]);
+    expect(result).toEqual(new Map([["a_b", testAttachmentReferences[1]]]));
+  });
 });
 
 describe("task components", () => {
@@ -63,6 +75,7 @@ describe("task components", () => {
     await backend.modifyEntities([updatedA.entity.id], (existingRows) => {
       existingRows.set(updatedA.entity.id, {
         rowID: existingRows.get(updatedA.entity.id)!.rowID,
+        entityType: EntityType.Task,
         id: updatedA.entity.id,
         lastEventID: updatedA.lastEventID,
         data: JSON.stringify(updatedA.entity),
@@ -87,7 +100,9 @@ describe("task components", () => {
 });
 
 describe("querying entities", () => {
-  beforeEach(() => backend.putEntities(testTasks));
+  beforeEach(() =>
+    backend.putEntities([...testTasks, ...testAttachmentReferences]),
+  );
   test("limit", async () => {
     const firstEntity = await backend.listEntities({
       entityType: EntityType.Task,
@@ -122,6 +137,13 @@ describe("querying entities", () => {
       predicate: ["dueTimestampMillis", "<=", 100],
     });
     expect(entities.map((record) => record.entity.id)).toEqual(["b"]);
+  });
+
+  test("attachment references", async () => {
+    const entities = await backend.listEntities({
+      entityType: EntityType.AttachmentReference,
+    });
+    expect(entities).toEqual(testAttachmentReferences);
   });
 });
 

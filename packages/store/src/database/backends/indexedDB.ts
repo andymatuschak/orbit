@@ -4,15 +4,7 @@ import Dexie, {
   PromiseExtended,
   WhereClause,
 } from "dexie";
-import {
-  Entity,
-  EntityID,
-  EntityType,
-  Event,
-  EventID,
-  IDOfEntity,
-  TaskID,
-} from "../../core2";
+import { Entity, EntityID, Event, EventID, IDOfEntity } from "../../core2";
 import {
   DatabaseEntityQuery,
   DatabaseEventQuery,
@@ -85,16 +77,13 @@ export class IDBDatabaseBackend implements DatabaseBackend {
   async listEntities<E extends Entity>(
     query: DatabaseEntityQuery<E>,
   ): Promise<DatabaseBackendEntityRecord<E>[]> {
-    if (query.entityType !== EntityType.Task) {
-      // Haven't actually added this column to the DB; we can do that when it's needed.
-      throw new Error(`Unsupported entity type in query: ${query.entityType}`);
-    }
-
     let request: PromiseExtended<DexieEntityRow[]>;
     if (query.predicate) {
-      const includedTaskIDs = new Set<TaskID>();
+      const includedEntityIDs = new Set<EntityID>();
       // only one possible key right now, when another key is eventually defined convert this
       // to be an if-else
+      // We don't need to filter by entityType in this case because dueTimestamp only applies
+      // to tasks. Other predicates may require filtering by entityType.
       switch (query.predicate[0]) {
         case DexieDerivedTaskComponentKeys.DueTimestampMillis:
           const clause = this.db.derived_taskComponents.where(
@@ -106,7 +95,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
           ).primaryKeys();
 
           for (const [derivedPrimaryKey] of derivedRowsPrimaryKeys) {
-            includedTaskIDs.add(derivedPrimaryKey as TaskID);
+            includedEntityIDs.add(derivedPrimaryKey as EntityID);
           }
       }
 
@@ -126,32 +115,32 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         const baseQuery = this.db.entities
           .where(DexieEntityKeys.RowID)
           .above(afterRowID)
-          .filter((row) => includedTaskIDs.has(row.id));
+          .filter((row) => includedEntityIDs.has(row.id));
         request = applyOptionalLimit(baseQuery, query.limit).toArray();
       } else {
         const baseQuery = this.db.entities
           .where(DexieEntityKeys.ID)
-          .anyOf([...includedTaskIDs]);
+          .anyOf([...includedEntityIDs]);
         request = applyOptionalLimit(baseQuery, query.limit).sortBy(
           DexieEntityKeys.RowID,
         );
       }
-    } else if (query.afterID) {
-      const afterRowID = await this._fetchPrimaryKeyFromUniqueKey(
-        this.db.entities,
-        DexieEventKeys.ID,
-        query.afterID,
-      );
-      // already sorted queried using primary key index
-      const baseQuery = this.db.entities
-        .where(DexieEntityKeys.RowID)
-        .above(afterRowID);
-      request = applyOptionalLimit(baseQuery, query.limit).toArray();
     } else {
-      request = applyOptionalLimit(
-        this.db.entities.toCollection(),
-        query.limit,
-      ).toArray();
+      const afterRowID = query.afterID
+        ? await this._fetchPrimaryKeyFromUniqueKey(
+            this.db.entities,
+            DexieEventKeys.ID,
+            query.afterID,
+          )
+        : null;
+      const baseQuery = this.db.entities
+        .where(`[${DexieEntityKeys.EntityType}+${DexieEntityKeys.RowID}]`)
+        .between(
+          [query.entityType, afterRowID === null ? 0 : afterRowID + 1],
+          [query.entityType, Dexie.maxKey],
+        );
+      // We don't need to explicitly sort the result, because rowID is the final column of this compound index.
+      request = applyOptionalLimit(baseQuery, query.limit).toArray();
     }
 
     const queriedEntities = await request;
@@ -255,6 +244,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
           transformedRows.push({
             rowID: row.rowID,
             id: row.id,
+            entityType: row.entityType,
             lastEventID: row.lastEventID,
             data: row.data,
           });
@@ -274,6 +264,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       async () => {
         const newEntities = entities.map((record) => ({
           id: record.entity.id,
+          entityType: record.entity.type,
           lastEventID: record.lastEventID,
           data: JSON.stringify(record.entity),
         }));

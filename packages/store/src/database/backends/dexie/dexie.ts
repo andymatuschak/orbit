@@ -1,5 +1,5 @@
 import Dexie, { Transaction } from "dexie";
-import { Entity, TaskID } from "../../../core2";
+import { Entity, EntityType, TaskID } from "../../../core2";
 import {
   DexieDerivedTaskComponentKeys,
   DexieDerivedTaskComponentRow,
@@ -32,6 +32,7 @@ export class DexieDatabase extends Dexie {
       [DexieTable.Entities]: [
         `++${DexieEntityKeys.RowID}`,
         `&${DexieEntityKeys.ID}`,
+        `[${DexieEntityKeys.EntityType}+${DexieEntityKeys.RowID}]`,
       ].join(", "),
 
       [DexieTable.DerivedTaskComponents]: [
@@ -67,9 +68,11 @@ async function onEntitiesUpdate(
   obj: DexieEntityRow,
   transaction: Transaction,
 ) {
-  await deleteAllDerivedTaskComponentsByTaskID(obj.id, transaction);
+  if (obj.entityType === EntityType.Task) {
+    await deleteAllDerivedTaskComponentsByTaskID(obj.id as TaskID, transaction);
 
-  insertDerivedTaskComponent({ ...obj, ...modifications }, transaction);
+    insertDerivedTaskComponent({ ...obj, ...modifications }, transaction);
+  }
 }
 
 async function onEntitiesDelete(
@@ -77,7 +80,9 @@ async function onEntitiesDelete(
   obj: DexieEntityRow,
   transaction: Transaction,
 ) {
-  await deleteAllDerivedTaskComponentsByTaskID(obj.id, transaction);
+  if (obj.entityType === EntityType.Task) {
+    await deleteAllDerivedTaskComponentsByTaskID(obj.id as TaskID, transaction);
+  }
 }
 
 async function deleteAllDerivedTaskComponentsByTaskID(
@@ -98,7 +103,7 @@ function insertDerivedTaskComponent(
   const data: Entity = JSON.parse(obj.data);
   // this should never occur in practice. Only needed to match the behaviour of SQLite
   // in database.test.ts
-  if (!data || !data.componentStates) return;
+  if (!data || data.type != EntityType.Task || !data.componentStates) return;
 
   const newComponents = Object.entries(data.componentStates).map(
     ([componentID, value]) => ({

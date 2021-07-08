@@ -1,4 +1,4 @@
-import { EventID, TaskID } from "../../../core2";
+import { EntityID, EntityType, EventID } from "../../../core2";
 
 export enum DexieTable {
   Events = "events",
@@ -15,7 +15,7 @@ export enum DexieEventKeys {
 
 export type DexieEventRow = {
   [DexieEventKeys.ID]: EventID;
-  [DexieEventKeys.EntityID]: TaskID;
+  [DexieEventKeys.EntityID]: EntityID;
   [DexieEventKeys.Data]: string;
 };
 
@@ -26,13 +26,15 @@ export type DexieEventRowWithPrimaryKey = DexieEventRow & {
 export enum DexieEntityKeys {
   RowID = "rowID",
   ID = "id",
-  lastEventID = "lastEventID",
+  EntityType = "entityType",
+  LastEventID = "lastEventID",
   Data = "data",
 }
 
 export type DexieEntityRow = {
-  [DexieEntityKeys.ID]: TaskID;
-  [DexieEntityKeys.lastEventID]: EventID;
+  [DexieEntityKeys.ID]: EntityID;
+  [DexieEntityKeys.EntityType]: EntityType;
+  [DexieEntityKeys.LastEventID]: EventID;
   [DexieEntityKeys.Data]: string;
 };
 
