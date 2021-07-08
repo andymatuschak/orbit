@@ -1,5 +1,5 @@
 import Dexie, { Transaction } from "dexie";
-import { Entity } from "../../../core2";
+import { Entity, TaskID } from "../../../core2";
 import {
   DexieDerivedTaskComponentColumn,
   DexieDerivedTaskComponentRow,
@@ -45,47 +45,50 @@ export class DexieDatabase extends Dexie {
     this.entities = this.table(DexieTable.Entities);
     this.derived_taskComponents = this.table(DexieTable.DerivedTaskComponents);
 
-    this.entities.hook("creating", this.onEntitiesInsert);
-    this.entities.hook("updating", this.onEntitiesUpdate);
-    this.entities.hook("deleting", this.onEntitiesDelete);
+    this.entities.hook("creating", onEntitiesInsert);
+    this.entities.hook("updating", onEntitiesUpdate);
+    this.entities.hook("deleting", onEntitiesDelete);
   }
+}
 
-  onEntitiesInsert(
-    primaryKey: number,
-    obj: DexieEntityRow,
-    transaction: Transaction,
-  ) {
-    insertDerivedTaskComponent(obj, transaction);
-  }
+function onEntitiesInsert(
+  primaryKey: number,
+  obj: DexieEntityRow,
+  transaction: Transaction,
+) {
+  insertDerivedTaskComponent(obj, transaction);
+}
 
-  async onEntitiesUpdate(
-    // `Object` type is needed to conform to Dexie types
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    modifications: Object,
-    primaryKey: number,
-    obj: DexieEntityRow,
-    transaction: Transaction,
-  ) {
-    await transaction.db
-      .table(DexieTable.DerivedTaskComponents)
-      .where(DexieDerivedTaskComponentColumn.TaskID)
-      .equals(obj.id)
-      .delete();
+async function onEntitiesUpdate(
+  // `Object` type is needed to conform to Dexie types
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  modifications: Object,
+  primaryKey: number,
+  obj: DexieEntityRow,
+  transaction: Transaction,
+) {
+  await deleteAllDerivedTaskComponentsByTaskID(obj.id, transaction);
 
-    insertDerivedTaskComponent({ ...obj, ...modifications }, transaction);
-  }
+  insertDerivedTaskComponent({ ...obj, ...modifications }, transaction);
+}
 
-  onEntitiesDelete(
-    primaryKey: number,
-    obj: DexieEntityRow,
-    transaction: Transaction,
-  ) {
-    transaction.db
-      .table(DexieTable.DerivedTaskComponents)
-      .where(DexieDerivedTaskComponentColumn.TaskID)
-      .equals(primaryKey)
-      .delete();
-  }
+async function onEntitiesDelete(
+  primaryKey: number,
+  obj: DexieEntityRow,
+  transaction: Transaction,
+) {
+  await deleteAllDerivedTaskComponentsByTaskID(obj.id, transaction);
+}
+
+async function deleteAllDerivedTaskComponentsByTaskID(
+  taskID: TaskID,
+  transaction: Transaction,
+) {
+  await transaction.db
+    .table(DexieTable.DerivedTaskComponents)
+    .where(DexieDerivedTaskComponentColumn.TaskID)
+    .equals(taskID)
+    .delete();
 }
 
 function insertDerivedTaskComponent(
