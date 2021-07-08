@@ -1,4 +1,9 @@
-import Dexie, { IndexableType, WhereClause } from "dexie";
+import Dexie, {
+  Collection,
+  IndexableType,
+  PromiseExtended,
+  WhereClause,
+} from "dexie";
 import { Entity, Event, EventID, IDOfEntity, TaskID } from "../../core2";
 import { EntityID, EntityType } from "../../core2/entities/entityBase";
 import {
@@ -29,6 +34,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
   }
 
   async close(): Promise<void> {
+    // Warning: we have no way to ensure that all writes have resolved before this statement completes
     this.db.close();
   }
 
@@ -77,12 +83,8 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       throw new Error(`Unsupported entity type in query: ${query.entityType}`);
     }
 
-    let baseQuery: Dexie.Collection<DexieEntityRow, number>;
-
+    let request: PromiseExtended<DexieEntityRow[]>;
     if (query.predicate) {
-      const predicatedQuery = this.db.entities.where(query.predicate[0]);
-      baseQuery = compareUsingPredicate(predicatedQuery, query.predicate);
-
       const includedTaskIDs = new Set<TaskID>();
       // only one possible key right now, when another key is eventually defined convert this
       // to be an if-else
@@ -113,14 +115,19 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         // Note that our approach here involves fetching _all_ matching entity IDs, then skipping the
         // ones before the requested row. This means pagination over N entities with a predicate has
         // quadratic time cost.
-        baseQuery = this.db.entities
+        // rows are already sorted since we are using the primary key index
+        const baseQuery = this.db.entities
           .where(DexieEntityKeys.RowID)
           .above(afterRowID)
           .filter((row) => includedTaskIDs.has(row.id));
+        request = applyOptionalLimit(baseQuery, query.limit).toArray();
       } else {
-        baseQuery = this.db.entities
+        const baseQuery = this.db.entities
           .where(DexieEntityKeys.ID)
           .anyOf([...includedTaskIDs]);
+        request = applyOptionalLimit(baseQuery, query.limit).sortBy(
+          DexieEntityKeys.RowID,
+        );
       }
     } else if (query.afterID) {
       const afterRowID = await this._fetchPrimaryKeyFromUniqueKey(
@@ -128,18 +135,19 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         DexieEventKeys.ID,
         query.afterID,
       );
-      baseQuery = this.db.entities
+      // already sorted queried using primary key index
+      const baseQuery = this.db.entities
         .where(DexieEntityKeys.RowID)
         .above(afterRowID);
+      request = applyOptionalLimit(baseQuery, query.limit).toArray();
     } else {
-      baseQuery = this.db.entities.toCollection();
+      request = applyOptionalLimit(
+        this.db.entities.toCollection(),
+        query.limit,
+      ).toArray();
     }
 
-    if (query.limit) {
-      baseQuery = baseQuery.limit(query.limit);
-    }
-
-    const queriedEntities = await baseQuery.toArray();
+    const queriedEntities = await request;
     return queriedEntities.map((entity) => ({
       lastEventID: entity.lastEventID,
       entity: JSON.parse(entity.data),
@@ -147,7 +155,8 @@ export class IDBDatabaseBackend implements DatabaseBackend {
   }
 
   async listEvents(query: DatabaseEventQuery): Promise<Event[]> {
-    let baseQuery: Dexie.Collection<DexieEventRow, number>;
+    let request: PromiseExtended<DexieEventRow[]>;
+
     if (query.predicate && query.afterID) {
       const afterSequenceNumber = await this._fetchPrimaryKeyFromUniqueKey(
         this.db.events,
@@ -157,29 +166,38 @@ export class IDBDatabaseBackend implements DatabaseBackend {
 
       // both the predicate and afterID were specified need to do more complex querying
       if (query.predicate[1] == "=") {
-        // can create a compound query in this case
-        baseQuery = this.db.events
+        // can create a compound query in this case. It is already sorted since the primary key is the final
+        // column of the index
+        const baseQuery = this.db.events
           .where(`[${query.predicate[0]}+${DexieEventKeys.SequenceNumber}]`)
           .between(
             [query.predicate[2], afterSequenceNumber + 1],
             [query.predicate[2], Dexie.maxKey],
           );
+
+        request = applyOptionalLimit(baseQuery, query.limit).toArray();
       } else {
         // arbitrary comparison query
-        const predicatedQuery: WhereClause<
-          DexieEventRowWithPrimaryKey,
-          number
-        > = this.db.events.where(query.predicate[0]);
-        baseQuery = compareUsingPredicate(
+        const predicatedQuery = this.db.events.where(
+          query.predicate[0],
+        ) as WhereClause<DexieEventRowWithPrimaryKey, number>;
+
+        const baseQuery = compareUsingPredicate(
           predicatedQuery,
           query.predicate,
         ).filter(
           (item) => item[DexieEventKeys.SequenceNumber] > afterSequenceNumber,
         );
+        request = applyOptionalLimit(baseQuery, query.limit).sortBy(
+          DexieEventKeys.SequenceNumber,
+        );
       }
     } else if (query.predicate) {
       const predicatedQuery = this.db.events.where(query.predicate[0]);
-      baseQuery = compareUsingPredicate(predicatedQuery, query.predicate);
+      request = applyOptionalLimit(
+        compareUsingPredicate(predicatedQuery, query.predicate),
+        query.limit,
+      ).sortBy(DexieEventKeys.SequenceNumber);
     } else if (query.afterID) {
       const afterSequenceNumber = await this._fetchPrimaryKeyFromUniqueKey(
         this.db.events,
@@ -187,18 +205,19 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         query.afterID,
       );
 
-      baseQuery = this.db.events
+      // already sorted since fetching using primary key;
+      const baseQuery = this.db.events
         .where(DexieEventKeys.SequenceNumber)
         .above(afterSequenceNumber);
+      request = applyOptionalLimit(baseQuery, query.limit).toArray();
     } else {
-      baseQuery = this.db.events.toCollection();
+      request = applyOptionalLimit(
+        this.db.events.toCollection(),
+        query.limit,
+      ).toArray();
     }
 
-    if (query.limit) {
-      baseQuery = baseQuery.limit(query.limit);
-    }
-
-    const queriedEvents = await baseQuery.toArray();
+    const queriedEvents: DexieEventRow[] = await request;
     return queriedEvents.map((event) => JSON.parse(event.data));
   }
 
@@ -280,6 +299,17 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       .equals(value)
       .primaryKeys();
     return afterRowPrimaryKeys[0];
+  }
+}
+
+function applyOptionalLimit<Row, PK>(
+  query: Collection<Row, PK>,
+  limit: number | undefined,
+) {
+  if (limit) {
+    return query.limit(limit);
+  } else {
+    return query;
   }
 }
 
