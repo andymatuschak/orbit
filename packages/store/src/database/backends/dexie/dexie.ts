@@ -96,6 +96,8 @@ function insertDerivedTaskComponent(
   transaction: Transaction,
 ) {
   const data: Entity = JSON.parse(obj.data);
+  // this should never occur in practice. Only needed to match the behaviour of SQLite
+  // in database.test.ts
   if (!data || !data.componentStates) return;
 
   const newComponents = Object.entries(data.componentStates).map(
