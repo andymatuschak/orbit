@@ -1,15 +1,16 @@
 import fs from "fs";
 import path from "path";
-import { AttachmentStoreFS } from "./attachmentStores/attachmentStoreFS";
-import { Database } from "./database";
-import { SQLDatabaseBackend } from "./database/backends/sqlite";
+import { AttachmentStoreFS } from "../attachmentStores/attachmentStoreFS";
+import { Database } from "../database";
+import { SQLDatabaseBackend } from "../database/backends/sqlite";
+import { OrbitStore } from "../orbitStore";
 
 /*
 An on-disk Orbit store is a folder containing both a database of event / entity data and also a folder of on-disk attachment files.
 
 This implementation is suitable for Node.js or React Native environments.
 */
-export class OrbitStoreFS {
+export class OrbitStoreFS implements OrbitStore {
   database: Database;
   attachmentStore: AttachmentStoreFS;
 
