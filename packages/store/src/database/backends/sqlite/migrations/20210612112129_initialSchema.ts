@@ -1,4 +1,4 @@
-import { EntityType } from "../../../../core2/entities/entityBase";
+import { EntityType } from "../../../../core2";
 import { SQLMigration } from "./migrationType";
 
 const migration: SQLMigration = {

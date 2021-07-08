@@ -3,10 +3,12 @@ import { AttachmentReference } from "./entities/attachmentReference";
 import { Task, TaskProvenance, TaskSpec } from "./entities/task";
 import { Entity, IDOfEntity } from "./entity";
 
+// Events are the central data type in our system. Entities are created and updated over time through a series of events.
 export type Event =
   | TaskIngestEvent
   | TaskRepetitionEvent
   | AttachmentIngestEvent;
+
 export enum EventType {
   TaskIngest = "taskIngest",
   TaskRepetition = "taskRepetition",
@@ -16,7 +18,6 @@ export enum EventType {
 
 // ===
 
-// Events are the central data type in our system. Entities are created and updated over time through a series of events.
 interface EventBase<T extends EventType, E extends Entity> {
   id: EventID;
   entityID: IDOfEntity<E>;

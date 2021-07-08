@@ -4,8 +4,15 @@ import Dexie, {
   PromiseExtended,
   WhereClause,
 } from "dexie";
-import { Entity, Event, EventID, IDOfEntity, TaskID } from "../../core2";
-import { EntityID, EntityType } from "../../core2/entities/entityBase";
+import {
+  Entity,
+  EntityID,
+  EntityType,
+  Event,
+  EventID,
+  IDOfEntity,
+  TaskID,
+} from "../../core2";
 import {
   DatabaseEntityQuery,
   DatabaseEventQuery,

@@ -2,8 +2,8 @@ import {
   getNextRepetitionInterval,
   PromptRepetitionOutcome,
 } from "@withorbit/core";
-import { EntityType } from "../entities/entityBase";
 import { mainTaskComponentID, Task } from "../entities/task";
+import { EntityType } from "../entity";
 import {
   RepetitionOutcomeType,
   TaskIngestEvent,

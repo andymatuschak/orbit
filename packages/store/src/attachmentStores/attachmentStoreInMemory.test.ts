@@ -1,7 +1,6 @@
 import { AttachmentMimeType } from "@withorbit/core";
 import jestFetchMock from "jest-fetch-mock";
-import { AttachmentID, AttachmentReference } from "../core2";
-import { EntityType } from "../core2/entities/entityBase";
+import { AttachmentID, AttachmentReference, EntityType } from "../core2";
 import { AttachmentStoreInMemory } from "./attachmentStoreInMemory";
 
 beforeAll(() => {

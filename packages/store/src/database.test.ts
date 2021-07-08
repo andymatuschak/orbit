@@ -1,5 +1,4 @@
-import { EntityType } from "../dist/core2/entityBase";
-import { Entity, Event, EventID, TaskID } from "./core2";
+import { Entity, EntityType, Event, EventID, TaskID } from "./core2";
 import { Database } from "./database";
 import { IDBDatabaseBackend } from "./database/backends/indexedDB";
 import { SQLDatabaseBackend } from "./database/backends/sqlite";
@@ -9,6 +8,7 @@ import FDBFactory from "fake-indexeddb/lib/FDBFactory";
 function mockEventReducer(entitySnapshot: Entity | null, event: Event) {
   return {
     id: event.entityID,
+    type: EntityType.Task,
     latestTimestampMillis: event.timestampMillis,
   } as unknown as Entity;
 }

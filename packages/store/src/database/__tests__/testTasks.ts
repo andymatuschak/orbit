@@ -3,6 +3,7 @@ import {
   AttachmentID,
   AttachmentReference,
   ClozeTaskContent,
+  EntityType,
   EventID,
   MemoryTaskSpec,
   Task,
@@ -11,7 +12,6 @@ import {
   TaskSpecType,
 } from "../../core2";
 import { DatabaseBackendEntityRecord } from "../backend";
-import { EntityType } from "../../core2/entities/entityBase";
 
 const testClozeSpec: MemoryTaskSpec<ClozeTaskContent> = {
   type: TaskSpecType.Memory,

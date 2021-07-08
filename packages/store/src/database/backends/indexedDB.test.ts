@@ -1,9 +1,8 @@
 import { IDBDatabaseBackend } from "./indexedDB";
-import { TaskID } from "../../core2";
+import { EntityType, TaskID } from "../../core2";
 import { testTasks, createTestTask } from "../__tests__/testTasks";
 // @ts-ignore Looks like there is no @types for this library
 import FDBFactory from "fake-indexeddb/lib/FDBFactory";
-import { EntityType } from "../../core2/entities/entityBase";
 
 let backend: IDBDatabaseBackend;
 

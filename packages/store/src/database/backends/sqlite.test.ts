@@ -1,5 +1,4 @@
-import { EventID, TaskID } from "../../core2";
-import { EntityType } from "../../core2/entities/entityBase";
+import { EntityType, EventID, TaskID } from "../../core2";
 import {
   createTestTask,
   testAttachmentReferences,

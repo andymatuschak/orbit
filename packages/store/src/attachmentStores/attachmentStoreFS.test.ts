@@ -5,8 +5,7 @@ import os from "os";
 import path from "path";
 import stream from "stream";
 import { fileURLToPath } from "url";
-import { AttachmentID, AttachmentReference } from "../core2";
-import { EntityType } from "../core2/entities/entityBase";
+import { AttachmentID, AttachmentReference, EntityType } from "../core2";
 import { AttachmentStoreFS } from "./attachmentStoreFS";
 
 beforeAll(() => {
