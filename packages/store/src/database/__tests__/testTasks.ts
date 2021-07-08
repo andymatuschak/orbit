@@ -1,11 +1,13 @@
 import {
   ClozeTaskContent,
+  EventID,
   MemoryTaskSpec,
   Task,
   TaskContentType,
   TaskID,
   TaskSpecType,
 } from "../../core2";
+import { DatabaseBackendEntityRecord } from "../backend";
 import { EntityType } from "../../core2/entities/entityBase";
 
 const testClozeSpec: MemoryTaskSpec<ClozeTaskContent> = {
@@ -59,3 +61,45 @@ export const testTask: Task = {
   isDeleted: false,
   metadata: {},
 };
+
+export function createTestTask({
+  id,
+  lastEventID,
+  dueTimestampMillis,
+}: {
+  id: string;
+  lastEventID: string;
+  dueTimestampMillis: number;
+}): DatabaseBackendEntityRecord<Task> {
+  // lazy deep clone
+  const newTask = JSON.parse(JSON.stringify(testTask)) as Task;
+  newTask.id = id as TaskID;
+  newTask.componentStates["a"].dueTimestampMillis = dueTimestampMillis;
+  return { entity: newTask, lastEventID: lastEventID as EventID };
+}
+
+export const testTasks: DatabaseBackendEntityRecord<Task>[] = [
+  createTestTask({ id: "a", lastEventID: "x", dueTimestampMillis: 50 }),
+  createTestTask({ id: "b", lastEventID: "y", dueTimestampMillis: 100 }),
+  createTestTask({ id: "c", lastEventID: "z", dueTimestampMillis: 150 }),
+];
+
+export function createTestAttachmentReference(
+  id: string,
+  lastEventID: string,
+): DatabaseBackendEntityRecord<AttachmentReference> {
+  return {
+    lastEventID: lastEventID as EventID,
+    entity: {
+      id: id as AttachmentID,
+      type: EntityType.AttachmentReference,
+      mimeType: AttachmentMimeType.PNG,
+    },
+  };
+}
+
+export const testAttachmentReferences: DatabaseBackendEntityRecord<AttachmentReference>[] =
+  [
+    createTestAttachmentReference("a_a", "x"),
+    createTestAttachmentReference("a_b", "y"),
+  ];

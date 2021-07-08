@@ -10,7 +10,8 @@
     { "path": "./firebase-support" },
     { "path": "./ui" },
     { "path": "./note-sync" },
-    { "path": "./sample-data" }
+    { "path": "./sample-data" },
+    { "path": "./store" }
   ],
   "files": []
 }

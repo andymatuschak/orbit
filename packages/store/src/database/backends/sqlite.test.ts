@@ -1,14 +1,6 @@
-import { AttachmentMimeType } from "@withorbit/core";
-import {
-  AttachmentID,
-  AttachmentReference,
-  EventID,
-  Task,
-  TaskID,
-} from "../../core2";
+import { EventID, TaskID } from "../../core2";
 import { EntityType } from "../../core2/entities/entityBase";
-import { testTask } from "../__tests__/testTasks";
-import { DatabaseBackendEntityRecord } from "../backend";
+import { createTestTask, testTasks } from "../__tests__/testTasks";
 import {
   constructByIDSQLQuery,
   constructEntitySQLQuery,
@@ -36,51 +28,8 @@ test("DB automatically migrates", async () => {
   expect(await getSchemaVersionNumber(db)).toBe(latestSchemaVersionNumber);
 });
 
-function createTestTask({
-  id,
-  lastEventID,
-  dueTimestampMillis,
-}: {
-  id: string;
-  lastEventID: string;
-  dueTimestampMillis: number;
-}): DatabaseBackendEntityRecord<Task> {
-  // lazy deep clone
-  const newTask = JSON.parse(JSON.stringify(testTask)) as Task;
-  newTask.id = id as TaskID;
-  newTask.componentStates["a"].dueTimestampMillis = dueTimestampMillis;
-  return { entity: newTask, lastEventID: lastEventID as EventID };
-}
-
-function createTestAttachmentReference(
-  id: string,
-  lastEventID: string,
-): DatabaseBackendEntityRecord<AttachmentReference> {
-  return {
-    lastEventID: lastEventID as EventID,
-    entity: {
-      id: id as AttachmentID,
-      type: EntityType.AttachmentReference,
-      mimeType: AttachmentMimeType.PNG,
-    },
-  };
-}
-
-const testTasks: DatabaseBackendEntityRecord<Task>[] = [
-  createTestTask({ id: "a", lastEventID: "x", dueTimestampMillis: 50 }),
-  createTestTask({ id: "b", lastEventID: "y", dueTimestampMillis: 100 }),
-  createTestTask({ id: "c", lastEventID: "z", dueTimestampMillis: 150 }),
-];
-
-const testAttachmentReferences: DatabaseBackendEntityRecord<AttachmentReference>[] =
-  [
-    createTestAttachmentReference("a_a", "x"),
-    createTestAttachmentReference("a_b", "y"),
-  ];
-
-describe("round-trip entities", () => {
-  test("tasks", async () => {
-    await backend.putEntities(testTasks);
+test("round-trip entities", async () => {
+  await backend.putEntities(testTasks);
 
     const result = await backend.getEntities(["a", "c", "z"] as TaskID[]);
     expect(result).toEqual(
