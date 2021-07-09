@@ -21,7 +21,7 @@ export function eventReducer<E extends Event>(
   entitySnapshot: EntityOfEvent<E> | null,
   event: E,
 ): EntityOfEvent<E> {
-  const reducer = reducers[event.type];
+  const reducer = reducers[event.type as TypeOfEvent<E>];
   if (reducer) {
     // Not sure why TS can't figure this one out...
     const typedReducer = reducer as unknown as (
