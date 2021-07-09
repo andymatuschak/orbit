@@ -5,9 +5,9 @@ import {
   testTasks,
 } from "../__tests__/testTasks";
 import {
-  constructByIDSQLQuery,
-  constructEntitySQLQuery,
-  constructEventSQLQuery,
+  constructGetByIDSQLQuery,
+  constructListEntitySQLQuery,
+  constructListEventSQLQuery,
   SQLDatabaseBackend,
 } from "./sqlite";
 import { getSchemaVersionNumber } from "./sqlite/migration";
@@ -148,7 +148,7 @@ describe("indexing", () => {
   test("get entities by ID", async () => {
     const plan = await getQueryPlan(
       await backend.__accessDBForTesting(),
-      constructByIDSQLQuery(
+      constructGetByIDSQLQuery(
         SQLTableName.Entities,
         SQLEntityTableColumn.ID,
         [SQLEntityTableColumn.Data],
@@ -165,7 +165,7 @@ describe("indexing", () => {
   test("get events by ID", async () => {
     const plan = await getQueryPlan(
       await backend.__accessDBForTesting(),
-      constructByIDSQLQuery(
+      constructGetByIDSQLQuery(
         SQLTableName.Events,
         SQLEventTableColumn.ID,
         [SQLEventTableColumn.Data],
@@ -180,7 +180,7 @@ describe("indexing", () => {
   });
 
   test("list entities", async () => {
-    const query = constructEntitySQLQuery({
+    const query = constructListEntitySQLQuery({
       entityType: EntityType.Task,
       afterID: "x" as TaskID,
     });
@@ -200,7 +200,7 @@ describe("indexing", () => {
   });
 
   test("list tasks by due timestamp", async () => {
-    const query = constructEntitySQLQuery({
+    const query = constructListEntitySQLQuery({
       entityType: EntityType.Task,
       predicate: ["dueTimestampMillis", "<", 100],
     });
@@ -217,7 +217,7 @@ describe("indexing", () => {
       ]
     `);
 
-    const queryWithSeek = constructEntitySQLQuery({
+    const queryWithSeek = constructListEntitySQLQuery({
       entityType: EntityType.Task,
       predicate: ["dueTimestampMillis", "<", 100],
       afterID: "x" as TaskID,
@@ -240,7 +240,7 @@ describe("indexing", () => {
   });
 
   test("list events by entity ID", async () => {
-    const query = constructEventSQLQuery({
+    const query = constructListEventSQLQuery({
       predicate: ["entityID", "=", "x"],
       afterID: "d" as EventID,
     });

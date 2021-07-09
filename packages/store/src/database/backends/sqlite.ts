@@ -86,24 +86,31 @@ export class SQLDatabaseBackend implements DatabaseBackend {
   putEntities(
     entityRecords: DatabaseBackendEntityRecord<Entity>[],
   ): Promise<void> {
-    return this._put(
-      SQLTableName.Entities,
-      "REPLACE",
-      [
+    return this._put({
+      tableName: SQLTableName.Entities,
+      orderedColumnNames: [
         SQLEntityTableColumn.ID,
         SQLEntityTableColumn.EntityType,
         SQLEntityTableColumn.LastEventID,
         SQLEntityTableColumn.LastEventTimestampMillis,
         SQLEntityTableColumn.Data,
       ],
-      entityRecords.map((record) => [
+      rows: entityRecords.map((record) => [
         record.entity.id,
         record.entity.type,
         record.lastEventID,
         record.lastEventTimestampMillis,
         JSON.stringify(record.entity),
       ]),
-    );
+      upsertSpec: {
+        uniqueColumnName: SQLEntityTableColumn.ID,
+        updateColumnNames: [
+          SQLEntityTableColumn.LastEventID,
+          SQLEntityTableColumn.LastEventTimestampMillis,
+          SQLEntityTableColumn.Data,
+        ],
+      },
+    });
   }
 
   getEvents<E extends Event, ID extends EventID>(
@@ -122,22 +129,25 @@ export class SQLDatabaseBackend implements DatabaseBackend {
   }
 
   putEvents(events: Event[]): Promise<void> {
-    return this._put(
-      SQLTableName.Events,
-      "INSERT",
-      [
+    return this._put({
+      tableName: SQLTableName.Events,
+      orderedColumnNames: [
         SQLEventTableColumn.ID,
         SQLEventTableColumn.EntityID,
         SQLEventTableColumn.Data,
       ],
-      events.map((event) => [event.id, event.entityID, JSON.stringify(event)]),
-    );
+      rows: events.map((event) => [
+        event.id,
+        event.entityID,
+        JSON.stringify(event),
+      ]),
+    });
   }
 
   async listEntities<E extends Entity>(
     query: DatabaseEntityQuery<E>,
   ): Promise<DatabaseBackendEntityRecord<E>[]> {
-    const sqlQuery = constructEntitySQLQuery(query);
+    const sqlQuery = constructListEntitySQLQuery(query);
     const results = await execReadStatement(
       await this._ensureDB(),
       sqlQuery.statement,
@@ -157,7 +167,7 @@ export class SQLDatabaseBackend implements DatabaseBackend {
   }
 
   async listEvents(query: DatabaseEventQuery): Promise<Event[]> {
-    const sqlQuery = constructEventSQLQuery(query);
+    const sqlQuery = constructListEventSQLQuery(query);
     const results = await execReadStatement(
       await this._ensureDB(),
       sqlQuery.statement,
@@ -172,23 +182,39 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     return output;
   }
 
-  private async _put(
-    tableName: SQLTableName,
-    verb: "REPLACE" | "INSERT",
-    columnNames: string[],
-    rows: unknown[][],
-  ): Promise<void> {
+  private async _put({
+    tableName,
+    orderedColumnNames,
+    rows,
+    upsertSpec,
+  }: {
+    tableName: SQLTableName;
+    orderedColumnNames: string[];
+    rows: unknown[][];
+    // When provided, if a uniqueness constraint fails for uniqueColumnName, the existing row will be updated to the new row's values for the columns specified in updateColumnNames (i.e. an upsert).
+    upsertSpec?: {
+      uniqueColumnName: string;
+      updateColumnNames: string[];
+    };
+  }): Promise<void> {
     const db = await this._ensureDB();
     await execTransaction(db, (tx) => {
       const placeholderString = rows
         .map((row) => `(${row.map(() => "?").join(",")})`)
         .join(",");
-      tx.executeSql(
-        `${verb} INTO ${tableName} (${columnNames.join(
-          ",",
-        )}) VALUES ${placeholderString}`,
-        rows.flat(),
-      );
+      let insertSQLStatement = `INSERT INTO ${tableName} (${orderedColumnNames.join(
+        ",",
+      )}) VALUES ${placeholderString}`;
+
+      if (upsertSpec) {
+        insertSQLStatement += `ON CONFLICT(${
+          upsertSpec.uniqueColumnName
+        }) DO UPDATE SET ${upsertSpec.updateColumnNames
+          .map((name) => `${name} = excluded.${name}`)
+          .join(", ")}`;
+      }
+
+      tx.executeSql(insertSQLStatement, rows.flat());
     });
   }
 
@@ -202,7 +228,7 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     const db = await this._ensureDB();
     const resultSet = await execReadStatement(
       db,
-      constructByIDSQLQuery(tableName, idColumnName, columnNames, ids),
+      constructGetByIDSQLQuery(tableName, idColumnName, columnNames, ids),
       ids,
     );
     const { rows } = resultSet;
@@ -229,7 +255,7 @@ export class SQLDatabaseBackend implements DatabaseBackend {
   }
 }
 
-export function constructEntitySQLQuery<E extends Entity>(
+export function constructListEntitySQLQuery<E extends Entity>(
   query: DatabaseEntityQuery<E>,
 ): { statement: string; args: any[] } {
   const predicates: DatabaseQueryPredicate<any, any>[] = query.predicate
@@ -243,7 +269,7 @@ export function constructEntitySQLQuery<E extends Entity>(
   ];
   if (query.predicate?.[0] === "dueTimestampMillis") {
     // Special case using the derived_taskComponents index table.
-    return constructSQLQuery({
+    return constructListSQLQuery({
       tableExpression: `derived_taskComponents AS dt JOIN ${SQLTableName.Entities} AS e ON (dt.taskID = e.${SQLEntityTableColumn.ID})`,
       idKey: SQLEntityTableColumn.ID,
       orderKey: SQLEntityTableColumn.RowID,
@@ -252,7 +278,7 @@ export function constructEntitySQLQuery<E extends Entity>(
       predicates, // We don't need to include the entity type because derived_taskComponents only contains references to tasks.
     });
   } else {
-    return constructSQLQuery({
+    return constructListSQLQuery({
       tableExpression: SQLTableName.Entities,
       idKey: SQLEntityTableColumn.ID,
       orderKey: SQLEntityTableColumn.RowID,
@@ -263,11 +289,11 @@ export function constructEntitySQLQuery<E extends Entity>(
   }
 }
 
-export function constructEventSQLQuery(query: DatabaseEventQuery): {
+export function constructListEventSQLQuery(query: DatabaseEventQuery): {
   statement: string;
   args: any[];
 } {
-  return constructSQLQuery({
+  return constructListSQLQuery({
     tableExpression: SQLTableName.Events,
     idKey: SQLEventTableColumn.ID,
     orderKey: SQLEventTableColumn.SequenceNumber,
@@ -277,7 +303,7 @@ export function constructEventSQLQuery(query: DatabaseEventQuery): {
   });
 }
 
-export function constructSQLQuery({
+function constructListSQLQuery({
   tableExpression,
   idKey,
   orderKey,
@@ -321,7 +347,7 @@ export function constructSQLQuery({
   return { statement: query, args };
 }
 
-export function constructByIDSQLQuery<Column, ID>(
+export function constructGetByIDSQLQuery<Column, ID>(
   tableName: SQLTableName,
   idColumnName: string,
   columnNames: Column[],
