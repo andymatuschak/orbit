@@ -85,6 +85,23 @@ describe.each([
     expect((entity as any).eventIDs).toEqual(["b", "z", "a", "q"]);
   });
 
+  test(`[${backend}] maintains entity ordering`, async () => {
+    await db.putEvents(testEvents);
+    const initialEntities = await db.listEntities({
+      entityType: EntityType.Task,
+    });
+
+    await db.putEvents([
+      { id: "z", entityID: "x", timestampMillis: 94 } as Event,
+    ]);
+    const modifiedEntities = await db.listEntities({
+      entityType: EntityType.Task,
+    });
+    expect(modifiedEntities.map(({ id }) => id)).toEqual(
+      initialEntities.map(({ id }) => id),
+    );
+  });
+
   describe("querying events", () => {
     beforeEach(() => db.putEvents(testEvents));
 
