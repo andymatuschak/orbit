@@ -1,5 +1,5 @@
 import { ColorPaletteName } from "@withorbit/core";
-import { EntityBase, EntityID, EntityType } from "../entity";
+import { EntityBase, EntityType } from "../entity";
 import { AttachmentReference } from "./attachmentReference";
 
 // The Task entity stores the "spec" which describes a task's behavior and content, as well as the task's ongoing state and associated metadata.
@@ -30,7 +30,7 @@ export interface TaskComponentState {
 /**
  * @TJS-type string
  */
-export type TaskID = EntityID & { __taskIDOpaqueType: never };
+export type TaskID = string & { __taskIDOpaqueType: never };
 
 // ---
 

@@ -35,9 +35,7 @@ export class Database {
 
   async putEvents(events: Event[]): Promise<void> {
     await this._backend.putEvents(events);
-
-    const affectedEntityIDs = new Set(events.map(({ entityID }) => entityID));
-    await this._updateEntitySnapshots([...affectedEntityIDs]);
+    await this._mergeEventsIntoEntitySnapshots(events);
   }
 
   getEvents<E extends Event, ID extends EventID>(
@@ -68,54 +66,97 @@ export class Database {
     return records.map(({ entity }) => entity);
   }
 
-  private async _updateEntitySnapshots(
-    entityIDs: IDOfEntity<Entity>[],
+  // n.b. this method is conceivably open to races because we can't wrap the full update loop in a transaction handler, but I don't think it's an issue in practice. Worst case, the snapshot ends up behind the latest event, but it'd be corrected in the next snapshot update.
+  private async _mergeEventsIntoEntitySnapshots(
+    events: Event[],
   ): Promise<void> {
-    // n.b. this method is conceivably open to races because we can't wrap the full update loop in a transaction handler, but I don't think it's an issue in practice. Worst case, the snapshot ends up behind the latest event, but it'd be corrected in the next snapshot update.
+    const eventsByEntityID = new Map<EntityID, Event[]>();
+    for (const event of events) {
+      eventsByEntityID.set(event.entityID, [
+        ...(eventsByEntityID.get(event.entityID) ?? []),
+        event,
+      ]);
+    }
+    const eventsByEntityIDEntries = [...eventsByEntityID.entries()];
+
     const batchSize = 100;
-    for (let i = 0; i < entityIDs.length; i += batchSize) {
-      const currentEntityRecordSnapshots = await this._backend.getEntities(
-        entityIDs,
-      );
-      const newEntityRecordSnapshots = await Promise.all(
-        entityIDs
-          .slice(i, i + batchSize)
-          .map(
-            async (id) =>
-              await this._computeUpdatedEntitySnapshot(
+    for (let i = 0; i < eventsByEntityIDEntries.length; i += batchSize) {
+      const batchEntries = eventsByEntityIDEntries.slice(i, i + batchSize);
+      await this._backend.modifyEntities(
+        batchEntries.map(([id]) => id),
+        async (currentEntityRecordMap) => {
+          const newSnapshotPromises: Promise<
+            DatabaseBackendEntityRecord<Entity>
+          >[] = [];
+          for (const [id, events] of batchEntries) {
+            newSnapshotPromises.push(
+              this._computeUpdatedEntitySnapshot(
                 id,
-                currentEntityRecordSnapshots.get(id) ?? null,
+                currentEntityRecordMap.get(id) ?? null,
+                events,
               ),
-          ),
+            );
+          }
+
+          const newSnapshots = await Promise.all(newSnapshotPromises);
+          return new Map(
+            newSnapshots.map((snapshot) => [snapshot.entity.id, snapshot]),
+          );
+        },
       );
-      await this._backend.putEntities(newEntityRecordSnapshots);
     }
   }
 
   private async _computeUpdatedEntitySnapshot(
     entityID: EntityID,
-    currentRecordSnapshot: DatabaseBackendEntityRecord<Entity> | null,
+    currentRecord: DatabaseBackendEntityRecord<Entity> | null,
+    newEvents: Event[],
   ): Promise<DatabaseBackendEntityRecord<Entity>> {
-    // TODO: attempt to fast-forward by applying events incrementally on the snapshot if possible (i.e. if all the new events' client timestamps are greater than the greatest previous client timestamp)
-    const events = await this._backend.listEvents({
-      predicate: ["entityID", "=", entityID],
-    });
-    const lastEventID = events[events.length - 1];
-    if (events.length > 0) {
+    newEvents.sort((a, b) => a.timestampMillis - b.timestampMillis);
+
+    // Most of the time, new events will be ordered after old events (in terms of local client time), which means we can apply them directly on top of our existing snapshot.
+    if (
+      currentRecord &&
+      newEvents.length > 0 &&
+      newEvents[0].timestampMillis > currentRecord.lastEventTimestampMillis
+    ) {
+      // Apply the new events on top of the pre-existing snapshot.
+      const entity = newEvents.reduce(
+        (snapshot, event) => this._eventReducer(snapshot, event),
+        currentRecord.entity,
+      )!;
+      const lastEvent = newEvents[newEvents.length - 1];
+      return {
+        entity,
+        lastEventID: lastEvent.id,
+        lastEventTimestampMillis: lastEvent.timestampMillis,
+      };
+    } else {
+      // We've got an out-of-order event (or no prior snapshot). We'll recompute the snapshot from scratch.
+      const events = await this._backend.listEvents({
+        predicate: ["entityID", "=", entityID],
+      });
+      if (events.length === 0) {
+        throw new Error(
+          `Attempting to update snapshot for entity ${entityID}, but no events are present.`,
+        );
+      }
+
       events.sort((a, b) => a.timestampMillis - b.timestampMillis);
+      const lastEvent = events[events.length - 1];
       const newEntitySnapshot = events.reduce(
         (snapshot, event) => this._eventReducer(snapshot, event),
-        currentRecordSnapshot?.entity ?? null,
+        null as Entity | null,
       );
-      // TS can't reason about array parity.
+      // TS can't reason about array parity. Because events.length > 0, and the reduce() accumulator returns Entity, this is guaranteed to be non-null.
       if (!newEntitySnapshot) {
         throw new Error("unreachable");
       }
-      return { entity: newEntitySnapshot, lastEventID: lastEventID.id };
-    } else {
-      throw new Error(
-        `Attempting to update snapshot for entity ${entityID}, but no events are present.`,
-      );
+      return {
+        entity: newEntitySnapshot,
+        lastEventID: lastEvent.id,
+        lastEventTimestampMillis: lastEvent.timestampMillis,
+      };
     }
   }
 }

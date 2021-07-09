@@ -82,6 +82,7 @@ describe("task components", () => {
     const updatedA = createTestTask({
       id: "a",
       lastEventID: "y",
+      lastEventTimestampMillis: 20,
       dueTimestampMillis: 300,
     });
     delete updatedA.entity.componentStates["b"];
@@ -131,7 +132,7 @@ describe("querying entities", () => {
       entityType: EntityType.Task,
       predicate: ["dueTimestampMillis", "<=", 100],
     });
-    expect(entities.map((record) => record.entity.id)).toEqual(["a", "b"]);
+    expect(entities).toEqual(testTasks.slice(0, 2));
   });
 
   test("attachment references", async () => {

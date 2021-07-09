@@ -67,20 +67,16 @@ describe("task components", () => {
     const updatedA = createTestTask({
       id: "a",
       lastEventID: "y",
+      lastEventTimestampMillis: 50,
       dueTimestampMillis: 300,
     });
 
     delete updatedA.entity.componentStates["b"];
 
-    await backend.modifyEntities([updatedA.entity.id], (existingRows) => {
-      existingRows.set(updatedA.entity.id, {
-        rowID: existingRows.get(updatedA.entity.id)!.rowID,
-        entityType: EntityType.Task,
-        id: updatedA.entity.id,
-        lastEventID: updatedA.lastEventID,
-        data: JSON.stringify(updatedA.entity),
-      });
-      return existingRows;
+    await backend.modifyEntities([updatedA.entity.id], async (entityMap) => {
+      const output = new Map(entityMap);
+      output.set(updatedA.entity.id, updatedA);
+      return output;
     });
 
     const results = await fetchAllRowsForTable("derived_taskComponents");

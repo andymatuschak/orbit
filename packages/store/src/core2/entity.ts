@@ -11,7 +11,7 @@ export enum EntityType {
 
 // ===
 
-export interface EntityBase<ET extends EntityType, ID extends EntityID> {
+export interface EntityBase<ET extends EntityType, ID extends string> {
   id: ID;
   type: ET;
 }
@@ -19,7 +19,7 @@ export interface EntityBase<ET extends EntityType, ID extends EntityID> {
 /**
  * @TJS-type string
  */
-export type EntityID = string & { __entityIDOpaqueType: never };
+export type EntityID = IDOfEntity<Entity>;
 
 export type TypeOfEntity<E extends EntityBase<EntityType, EntityID>> =
   E extends EntityBase<infer Type, any> ? Type : never;
