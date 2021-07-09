@@ -11,9 +11,9 @@
   "dependencies": {
     "base64-js": "^1.5.1",
     "dexie": "^3.0.3",
-    "expo-file-system": "^11.1.3",
     "expo-sqlite": "^9.1.0",
     "node-fetch": "^2.6.1",
+    "react-native-unimodules": "^0.14.4",
     "websql": "^2.0.2"
   },
   "scripts": {
