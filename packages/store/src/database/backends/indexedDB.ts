@@ -220,12 +220,12 @@ export class IDBDatabaseBackend implements DatabaseBackend {
     return queriedEvents.map((event) => JSON.parse(event.data));
   }
 
-  async modifyEntities(
-    ids: EntityID[],
+  async modifyEntities<E extends Entity, ID extends IDOfEntity<E>>(
+    ids: ID[],
     transformer: (
-      row: Map<EntityID, DatabaseBackendEntityRecord<Entity>>,
-    ) => Promise<Map<EntityID, DatabaseBackendEntityRecord<Entity>>>,
-  ) {
+      entityRecordMap: Map<ID, DatabaseBackendEntityRecord<E>>,
+    ) => Promise<Map<ID, DatabaseBackendEntityRecord<E>>>,
+  ): Promise<void> {
     await this.db.transaction(
       "readwrite",
       this.db.entities,
@@ -241,7 +241,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
           entityIDsToRowIDs.set(id, rowID);
         }
 
-        const oldEntityRecordMap = extractEntityRecordMapFromRows(rows);
+        const oldEntityRecordMap = extractEntityRecordMapFromRows<E, ID>(rows);
         const transformedEntityRecordMap = await transformer(
           oldEntityRecordMap,
         );

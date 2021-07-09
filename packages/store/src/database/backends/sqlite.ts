@@ -28,6 +28,8 @@ Running list of implementation problems / gotchas:
 
 2. Our transaction primitives don't give us enough control to safely isolate schema migration. Simultaneous migrations could occur in the context of multiple processes accessing the same database, or multiple instances in the same process reading the same database. In practice, this probably won't cause corruption: most likely the migration transaction will simply fail in one process. But in the future complex migrations could partially succeed. At some point we should consider flock()ing during migration.
 
+3. modifyEntities() isn't atomic/transactional; see comment in that method for more.
+
 [1] https://github.com/expo/expo/issues/2278
  */
 
@@ -67,6 +69,18 @@ export class SQLDatabaseBackend implements DatabaseBackend {
         return [id, { lastEventID, lastEventTimestampMillis, entity }];
       },
     );
+  }
+
+  // TODO: This implementation doesn't yet provide transactional guarantees. We can't use SQL transactions directly here (because we have to return control to the caller), but we should implement atomicity anyway (e.g. by rolling back and retrying when the updated entity IDs have the same lastEventID as the initial ones; this isn't straightforward, so I'm deferring this work for now).
+  async modifyEntities<E extends Entity, ID extends IDOfEntity<E>>(
+    ids: ID[],
+    transformer: (
+      row: Map<ID, DatabaseBackendEntityRecord<E>>,
+    ) => Promise<Map<ID, DatabaseBackendEntityRecord<E>>>,
+  ): Promise<void> {
+    const entityRecordMap = await this.getEntities<E, ID>(ids);
+    const transformedEntityRecordMap = await transformer(entityRecordMap);
+    await this.putEntities([...transformedEntityRecordMap.values()]);
   }
 
   putEntities(

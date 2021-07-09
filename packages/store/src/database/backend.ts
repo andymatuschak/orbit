@@ -1,4 +1,4 @@
-import { Entity, EntityID, Event, EventID, IDOfEntity } from "../core2";
+import { Entity, Event, EventID, IDOfEntity } from "../core2";
 import { DatabaseEntityQuery, DatabaseEventQuery } from "../database";
 
 export interface DatabaseBackend {
@@ -13,11 +13,11 @@ export interface DatabaseBackend {
     entityIDs: ID[],
   ): Promise<Map<ID, DatabaseBackendEntityRecord<E>>>;
   putEntities(entities: DatabaseBackendEntityRecord<Entity>[]): Promise<void>;
-  modifyEntities(
-    ids: EntityID[],
+  modifyEntities<E extends Entity, ID extends IDOfEntity<E>>(
+    ids: ID[],
     transformer: (
-      row: Map<EntityID, DatabaseBackendEntityRecord<Entity>>,
-    ) => Promise<Map<EntityID, DatabaseBackendEntityRecord<Entity>>>,
+      entityRecordMap: Map<ID, DatabaseBackendEntityRecord<E>>,
+    ) => Promise<Map<ID, DatabaseBackendEntityRecord<E>>>,
   ): Promise<void>;
 
   // Returns events in an arbitrary order which is stable on this client (i.e. so paging using afterID is safe), but which is not guaranteed to be consistent across clients.
