@@ -1,14 +1,7 @@
-import {
-  getNextRepetitionInterval,
-  PromptRepetitionOutcome,
-} from "@withorbit/core";
 import { mainTaskComponentID, Task } from "../entities/task";
 import { EntityType } from "../entity";
-import {
-  RepetitionOutcomeType,
-  TaskIngestEvent,
-  TaskRepetitionEvent,
-} from "../event";
+import { TaskIngestEvent, TaskRepetitionEvent } from "../event";
+import { defaultSpacedRepetitionScheduler } from "../schedulers/spacedRepetitionScheduler";
 
 export function taskIngestEventReducer(
   oldSnapshot: Task | null,
@@ -60,41 +53,16 @@ export function taskRepetitionEventReducer(
     throw new Error(`Repetition on unknown component ${event.componentID}`);
   }
 
-  const currentReviewInterval = Math.max(
-    0,
-    event.timestampMillis -
-      (componentState.lastRepetitionTimestampMillis ??
-        componentState.dueTimestampMillis),
-  );
-
-  const newIntervalMillis = getNextRepetitionInterval({
-    schedule: "default",
-    reviewIntervalMillis: currentReviewInterval,
-    scheduledIntervalMillis: componentState.intervalMillis,
-    outcome: event.outcome as unknown as PromptRepetitionOutcome, // TODO: remove this hacky cast when rebasing underlying function to core2
-    supportsRetry: true,
-    currentlyNeedsRetry: false, // TODO: not tracking this state anymore; think we can get away without it. But I need to implement the retry special-case elsewhere...
-  });
-
-  // We'll generate a small offset, so that cards don't always end up in the same order. Here the maximum jitter is 10 minutes.
-  const jitter = (event.timestampMillis % 1000) * (60 * 10);
-  let newDueTimestampMillis: number;
-  if (event.outcome === RepetitionOutcomeType.Forgotten) {
-    // Assign it to be due in 10 minutes or so.
-    newDueTimestampMillis = event.timestampMillis + 300 + jitter;
-  } else {
-    newDueTimestampMillis = event.timestampMillis + newIntervalMillis + jitter;
-  }
-
   return {
     ...oldSnapshot,
     componentStates: {
       ...oldSnapshot.componentStates,
-      [event.componentID]: {
-        dueTimestampMillis: newDueTimestampMillis,
-        lastRepetitionTimestampMillis: event.timestampMillis,
-        intervalMillis: newIntervalMillis,
-      },
+      [event.componentID]:
+        defaultSpacedRepetitionScheduler.applyRepetitionToComponentState(
+          componentState,
+          event.timestampMillis,
+          event.outcome,
+        ),
     },
   };
 }
