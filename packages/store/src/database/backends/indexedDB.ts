@@ -22,18 +22,6 @@ import {
   DexieEventRowWithPrimaryKey,
 } from "./dexie/tables";
 
-function getEntityRowForEntityRecord(
-  record: DatabaseBackendEntityRecord<Entity>,
-) {
-  return {
-    id: record.entity.id,
-    entityType: record.entity.type,
-    lastEventID: record.lastEventID,
-    lastEventTimestampMillis: record.lastEventTimestampMillis,
-    data: JSON.stringify(record.entity),
-  };
-}
-
 export class IDBDatabaseBackend implements DatabaseBackend {
   db: DexieDatabase;
 
@@ -351,4 +339,16 @@ function extractEntityRecordMapFromRows<
     });
   }
   return output;
+}
+
+function getEntityRowForEntityRecord(
+  record: DatabaseBackendEntityRecord<Entity>,
+): DexieEntityRow {
+  return {
+    id: record.entity.id,
+    entityType: record.entity.type,
+    lastEventID: record.lastEventID,
+    lastEventTimestampMillis: record.lastEventTimestampMillis,
+    data: JSON.stringify(record.entity),
+  };
 }

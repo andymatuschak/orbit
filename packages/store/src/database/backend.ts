@@ -33,7 +33,7 @@ export interface DatabaseBackend {
 export interface DatabaseBackendEntityRecord<E extends Entity> {
   entity: E;
 
-  // Here, "last" refers to the local logical clock (i.e. sequence number), rather than client-local time.
+  // For these two fields, "last" is determined by the local logical clock (i.e. sequence number), rather than client-local time.
   lastEventID: EventID;
   lastEventTimestampMillis: number; // Denormalizing this here lets us determine if new events can be applied directly without fetching the last event.
 }
