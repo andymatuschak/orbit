@@ -1,4 +1,4 @@
-import { Entity, Event, EventID, IDOfEntity } from "../core2";
+import { Entity, EntityID, Event, EventID, IDOfEntity } from "../core2";
 import { DatabaseEntityQuery, DatabaseEventQuery } from "../database";
 
 export interface DatabaseBackend {
@@ -13,6 +13,12 @@ export interface DatabaseBackend {
     entityIDs: ID[],
   ): Promise<Map<ID, DatabaseBackendEntityRecord<E>>>;
   putEntities(entities: DatabaseBackendEntityRecord<Entity>[]): Promise<void>;
+  modifyEntities(
+    ids: EntityID[],
+    transformer: (
+      row: Map<EntityID, DatabaseBackendEntityRecord<Entity>>,
+    ) => Promise<Map<EntityID, DatabaseBackendEntityRecord<Entity>>>,
+  ): Promise<void>;
 
   // Returns events in an arbitrary order which is stable on this client (i.e. so paging using afterID is safe), but which is not guaranteed to be consistent across clients.
   listEvents(query: DatabaseEventQuery): Promise<Event[]>;
@@ -25,6 +31,9 @@ export interface DatabaseBackend {
 
 // We persist entities wrapped with extra metadata used for updating snapshots.
 export interface DatabaseBackendEntityRecord<E extends Entity> {
-  lastEventID: EventID; // i.e. last in the order as returned by the backend, following logical time, rather than client-local time
   entity: E;
+
+  // For these two fields, "last" is determined by the local logical clock (i.e. sequence number), rather than client-local time.
+  lastEventID: EventID;
+  lastEventTimestampMillis: number; // Denormalizing this here lets us determine if new events can be applied directly without fetching the last event.
 }

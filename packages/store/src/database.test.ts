@@ -9,7 +9,9 @@ function mockEventReducer(entitySnapshot: Entity | null, event: Event) {
   return {
     id: event.entityID,
     type: EntityType.Task,
-    latestTimestampMillis: event.timestampMillis,
+    eventIDs: entitySnapshot
+      ? [...(entitySnapshot as any).eventIDs, event.id]
+      : [event.id],
   } as unknown as Entity;
 }
 
@@ -20,8 +22,8 @@ enum Backends {
 
 const testEvents: Event[] = [
   { id: "a", entityID: "x", timestampMillis: 100 },
-  { id: "b", entityID: "x", timestampMillis: 99 },
-  { id: "c", entityID: "y", timestampMillis: 98 },
+  { id: "b", entityID: "x", timestampMillis: 90 },
+  { id: "c", entityID: "y", timestampMillis: 95 },
 ] as Event[];
 
 describe.each([
@@ -62,9 +64,25 @@ describe.each([
   test(`[${backend}] updates entities`, async () => {
     await db.putEvents(testEvents);
     const entityID = "x" as TaskID;
-    const results = await db.getEntities([entityID]);
-    const entity = results.get(entityID);
-    expect((entity as any).latestTimestampMillis).toBe(100);
+    let results = await db.getEntities([entityID]);
+    let entity = results.get(entityID);
+    expect((entity as any).eventIDs).toEqual(["b", "a"]);
+
+    // Out-of-order event:
+    await db.putEvents([
+      { id: "z", entityID: "x", timestampMillis: 94 } as Event,
+    ]);
+    results = await db.getEntities([entityID]);
+    entity = results.get(entityID);
+    expect((entity as any).eventIDs).toEqual(["b", "z", "a"]);
+
+    // Fast-forward event:
+    await db.putEvents([
+      { id: "q", entityID: "x", timestampMillis: 110 } as Event,
+    ]);
+    results = await db.getEntities([entityID]);
+    entity = results.get(entityID);
+    expect((entity as any).eventIDs).toEqual(["b", "z", "a", "q"]);
   });
 
   describe("querying events", () => {

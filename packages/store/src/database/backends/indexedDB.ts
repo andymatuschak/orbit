@@ -40,21 +40,11 @@ export class IDBDatabaseBackend implements DatabaseBackend {
   async getEntities<E extends Entity, ID extends IDOfEntity<E>>(
     entityIDs: ID[],
   ): Promise<Map<ID, DatabaseBackendEntityRecord<E>>> {
-    const values = await this.db.entities
+    const rows = await this.db.entities
       .where(DexieEntityKeys.ID)
       .anyOf(entityIDs)
       .toArray();
-
-    const output: Map<ID, DatabaseBackendEntityRecord<E>> = new Map();
-    for (const value of values) {
-      if (!value) continue;
-      const entity: E = JSON.parse(value.data);
-      output.set(value.id as ID, {
-        lastEventID: value.lastEventID as EventID,
-        entity,
-      });
-    }
-    return output;
+    return extractEntityRecordMapFromRows(rows);
   }
 
   async getEvents<E extends Event, ID extends EventID>(
@@ -146,6 +136,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
     const queriedEntities = await request;
     return queriedEntities.map((entity) => ({
       lastEventID: entity.lastEventID,
+      lastEventTimestampMillis: entity.lastEventTimestampMillis,
       entity: JSON.parse(entity.data),
     }));
   }
@@ -220,33 +211,39 @@ export class IDBDatabaseBackend implements DatabaseBackend {
   async modifyEntities(
     ids: EntityID[],
     transformer: (
-      row: Map<EntityID, DexieEntityRowWithPrimaryKey>,
-    ) => Map<EntityID, DexieEntityRowWithPrimaryKey>,
+      row: Map<EntityID, DatabaseBackendEntityRecord<Entity>>,
+    ) => Promise<Map<EntityID, DatabaseBackendEntityRecord<Entity>>>,
   ) {
     await this.db.transaction(
       "readwrite",
       this.db.entities,
+      this.db.events,
       this.db.derived_taskComponents,
       async () => {
         const rows = await this.db.entities
           .where(DexieEntityKeys.ID)
           .anyOf(ids)
           .toArray();
+        const entityIDsToRowIDs = new Map<EntityID, number>();
+        for (const { rowID, id } of rows as DexieEntityRowWithPrimaryKey[]) {
+          entityIDsToRowIDs.set(id, rowID);
+        }
 
-        const rowMapping = rows.reduce((map, row) => {
-          map.set(row.id, row as DexieEntityRowWithPrimaryKey);
-          return map;
-        }, new Map<EntityID, DexieEntityRowWithPrimaryKey>());
+        const oldEntityRecordMap = extractEntityRecordMapFromRows(rows);
+        const transformedEntityRecordMap = await transformer(
+          oldEntityRecordMap,
+        );
 
-        const transformedEntities = transformer(rowMapping).values();
-        const transformedRows = Array<DexieEntityRowWithPrimaryKey>();
-        for (const row of transformedEntities) {
+        const transformedRows = Array<
+          // We may or may not have a rowID.
+          DexieEntityRow & { [DexieEntityKeys.RowID]?: number }
+        >();
+        for (const [id, record] of transformedEntityRecordMap) {
+          const rowID = entityIDsToRowIDs.get(id);
           transformedRows.push({
-            rowID: row.rowID,
-            id: row.id,
-            entityType: row.entityType,
-            lastEventID: row.lastEventID,
-            data: row.data,
+            ...getEntityRowForEntityRecord(record),
+            // We include the old row ID if we had a record for this row before; otherwise, it's a new entity, and the DB will assign it a row ID.
+            ...(rowID !== undefined && { rowID }),
           });
         }
         await this.db.entities.bulkPut(transformedRows);
@@ -262,14 +259,9 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       this.db.entities,
       this.db.derived_taskComponents,
       async () => {
-        const newEntities = entities.map((record) => ({
-          id: record.entity.id,
-          entityType: record.entity.type,
-          lastEventID: record.lastEventID,
-          data: JSON.stringify(record.entity),
-        }));
-
-        await this.db.entities.bulkPut(newEntities);
+        await this.db.entities.bulkPut(
+          entities.map((entity) => getEntityRowForEntityRecord(entity)),
+        );
       },
     );
   }
@@ -329,4 +321,34 @@ function compareUsingPredicate<
     case ">=":
       return clause.aboveOrEqual(predicate[2]);
   }
+}
+
+// It's the responsibility of the caller to ensure that the IDs in the listed rows correspond to those of the ID type.
+function extractEntityRecordMapFromRows<
+  E extends Entity,
+  ID extends IDOfEntity<E>,
+>(rows: Array<DexieEntityRow>): Map<ID, DatabaseBackendEntityRecord<E>> {
+  const output: Map<ID, DatabaseBackendEntityRecord<E>> = new Map();
+  for (const value of rows) {
+    if (!value) continue;
+    const entity: E = JSON.parse(value.data);
+    output.set(value.id as ID, {
+      lastEventID: value.lastEventID as EventID,
+      lastEventTimestampMillis: value.lastEventTimestampMillis,
+      entity,
+    });
+  }
+  return output;
+}
+
+function getEntityRowForEntityRecord(
+  record: DatabaseBackendEntityRecord<Entity>,
+): DexieEntityRow {
+  return {
+    id: record.entity.id,
+    entityType: record.entity.type,
+    lastEventID: record.lastEventID,
+    lastEventTimestampMillis: record.lastEventTimestampMillis,
+    data: JSON.stringify(record.entity),
+  };
 }

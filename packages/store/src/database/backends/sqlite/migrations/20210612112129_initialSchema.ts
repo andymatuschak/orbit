@@ -22,6 +22,7 @@ const migration: SQLMigration = {
       id TEXT UNIQUE NOT NULL,
       entityType TEXT NOT NULL,
       lastEventID TEXT NOT NULL,
+      lastEventTimestampMillis INTEGER NOT NULL,
       data TEXT NOT NULL,
       
       FOREIGN KEY (lastEventID) REFERENCES events(id)

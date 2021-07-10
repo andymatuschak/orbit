@@ -28,6 +28,7 @@ export enum DexieEntityKeys {
   ID = "id",
   EntityType = "entityType",
   LastEventID = "lastEventID",
+  LastEventTimestampMillis = "lastEventTimestampMillis",
   Data = "data",
 }
 
@@ -35,6 +36,7 @@ export type DexieEntityRow = {
   [DexieEntityKeys.ID]: EntityID;
   [DexieEntityKeys.EntityType]: EntityType;
   [DexieEntityKeys.LastEventID]: EventID;
+  [DexieEntityKeys.LastEventTimestampMillis]: number;
   [DexieEntityKeys.Data]: string;
 };
 

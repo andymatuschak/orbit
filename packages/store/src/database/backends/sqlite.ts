@@ -58,12 +58,13 @@ export class SQLDatabaseBackend implements DatabaseBackend {
       [
         SQLEntityTableColumn.ID,
         SQLEntityTableColumn.LastEventID,
+        SQLEntityTableColumn.LastEventTimestampMillis,
         SQLEntityTableColumn.Data,
       ],
       entityIDs,
-      ({ id, lastEventID, data }) => {
+      ({ id, lastEventID, lastEventTimestampMillis, data }) => {
         const entity: E = JSON.parse(data);
-        return [id, { lastEventID, entity }];
+        return [id, { lastEventID, lastEventTimestampMillis, entity }];
       },
     );
   }
@@ -78,12 +79,14 @@ export class SQLDatabaseBackend implements DatabaseBackend {
         SQLEntityTableColumn.ID,
         SQLEntityTableColumn.EntityType,
         SQLEntityTableColumn.LastEventID,
+        SQLEntityTableColumn.LastEventTimestampMillis,
         SQLEntityTableColumn.Data,
       ],
       entityRecords.map((record) => [
         record.entity.id,
         record.entity.type,
         record.lastEventID,
+        record.lastEventTimestampMillis,
         JSON.stringify(record.entity),
       ]),
     );
@@ -130,8 +133,10 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     for (let i = 0; i < results.rows.length; i++) {
       const row = results.rows.item(i);
       output.push({
-        lastEventID: row[SQLEntityTableColumn.LastEventID],
         entity: JSON.parse(row[SQLEntityTableColumn.Data]),
+        lastEventID: row[SQLEntityTableColumn.LastEventID],
+        lastEventTimestampMillis:
+          row[SQLEntityTableColumn.LastEventTimestampMillis],
       });
     }
     return output;
@@ -217,13 +222,18 @@ export function constructEntitySQLQuery<E extends Entity>(
     ? [query.predicate]
     : [];
 
+  const columns = [
+    SQLEntityTableColumn.LastEventID,
+    SQLEntityTableColumn.LastEventTimestampMillis,
+    SQLEntityTableColumn.Data,
+  ];
   if (query.predicate?.[0] === "dueTimestampMillis") {
     // Special case using the derived_taskComponents index table.
     return constructSQLQuery({
       tableExpression: `derived_taskComponents AS dt JOIN ${SQLTableName.Entities} AS e ON (dt.taskID = e.${SQLEntityTableColumn.ID})`,
       idKey: SQLEntityTableColumn.ID,
       orderKey: SQLEntityTableColumn.RowID,
-      columns: [SQLEntityTableColumn.LastEventID, SQLEntityTableColumn.Data],
+      columns,
       options: query,
       predicates, // We don't need to include the entity type because derived_taskComponents only contains references to tasks.
     });
@@ -232,7 +242,7 @@ export function constructEntitySQLQuery<E extends Entity>(
       tableExpression: SQLTableName.Entities,
       idKey: SQLEntityTableColumn.ID,
       orderKey: SQLEntityTableColumn.RowID,
-      columns: [SQLEntityTableColumn.LastEventID, SQLEntityTableColumn.Data],
+      columns,
       options: query,
       predicates: [["entityType", "=", query.entityType], ...predicates],
     });

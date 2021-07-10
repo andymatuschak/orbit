@@ -68,23 +68,44 @@ export const testTask: Task = {
 export function createTestTask({
   id,
   lastEventID,
+  lastEventTimestampMillis,
   dueTimestampMillis,
 }: {
   id: string;
   lastEventID: string;
+  lastEventTimestampMillis: number;
   dueTimestampMillis: number;
 }): DatabaseBackendEntityRecord<Task> {
   // lazy deep clone
   const newTask = JSON.parse(JSON.stringify(testTask)) as Task;
   newTask.id = id as TaskID;
   newTask.componentStates["a"].dueTimestampMillis = dueTimestampMillis;
-  return { entity: newTask, lastEventID: lastEventID as EventID };
+  return {
+    entity: newTask,
+    lastEventID: lastEventID as EventID,
+    lastEventTimestampMillis,
+  };
 }
 
 export const testTasks: DatabaseBackendEntityRecord<Task>[] = [
-  createTestTask({ id: "a", lastEventID: "x", dueTimestampMillis: 50 }),
-  createTestTask({ id: "b", lastEventID: "y", dueTimestampMillis: 100 }),
-  createTestTask({ id: "c", lastEventID: "z", dueTimestampMillis: 150 }),
+  createTestTask({
+    id: "a",
+    lastEventID: "x",
+    lastEventTimestampMillis: 5,
+    dueTimestampMillis: 50,
+  }),
+  createTestTask({
+    id: "b",
+    lastEventID: "y",
+    lastEventTimestampMillis: 4,
+    dueTimestampMillis: 100,
+  }),
+  createTestTask({
+    id: "c",
+    lastEventID: "z",
+    lastEventTimestampMillis: 3,
+    dueTimestampMillis: 150,
+  }),
 ];
 
 export function createTestAttachmentReference(
@@ -93,6 +114,7 @@ export function createTestAttachmentReference(
 ): DatabaseBackendEntityRecord<AttachmentReference> {
   return {
     lastEventID: lastEventID as EventID,
+    lastEventTimestampMillis: 1000,
     entity: {
       id: id as AttachmentID,
       type: EntityType.AttachmentReference,
