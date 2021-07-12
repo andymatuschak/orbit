@@ -109,3 +109,6 @@ dist
 # TernJS port file
 .tern-port
 
+# Test notes
+packages/note-sync/testNotes
+packages/note-sync/cache.db
