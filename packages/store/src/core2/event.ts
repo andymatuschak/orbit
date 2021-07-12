@@ -54,10 +54,10 @@ export interface TaskRepetitionEvent
   extends EventBase<EventType.TaskRepetition, Task> {
   componentID: string;
   reviewSessionID: string; // a unique identifier shared by repetitions in the same logical review session
-  outcome: RepetitionOutcomeType;
+  outcome: TaskRepetitionOutcome;
 }
 
-export enum RepetitionOutcomeType {
+export enum TaskRepetitionOutcome {
   Remembered = "remembered",
   Forgotten = "forgotten",
 }
