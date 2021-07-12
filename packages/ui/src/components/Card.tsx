@@ -31,6 +31,7 @@ import {
   AnimatedTransitionTiming,
   useTransitioningValue,
 } from "./hooks/useTransitioningValue";
+import { IconName } from "./IconShared";
 import CardField, { clozeBlankSentinel } from "./PromptFieldRenderer";
 
 function getQAPromptContents<PT extends QAPromptTask | ApplicationPromptTask>(
@@ -156,6 +157,7 @@ function PromptContextLabel({
 
   const color = accentColor ?? colors.ink;
   const numberOfLines = size === "regular" ? 3 : 1;
+
   return (
     promptContext && (
       <View style={style}>
@@ -164,6 +166,9 @@ function PromptContextLabel({
             size={size}
             href={promptContext.url}
             title={promptContext.title}
+            iconName={IconName.ArrowRight}
+            iconLeftOfTitle={true}
+            accentColor={accentColor}
             color={color}
             numberOfLines={numberOfLines}
             ellipsizeMode="tail"

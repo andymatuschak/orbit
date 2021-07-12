@@ -25,6 +25,7 @@ export type ButtonPendingActivationState = "hover" | "pressed" | null;
 type ButtonContents =
   | { title: string; iconName?: IconName }
   | { iconName: IconName; accessibilityLabel: string };
+
 type ButtonAction =
   | {
       onPress: () => void;
@@ -42,6 +43,7 @@ export type ButtonProps = ButtonContents &
     hitSlop?: PressableProps["hitSlop"];
 
     style?: StyleProp<FlexStyle>;
+    iconLeftOfTitle?: boolean;
 
     onPendingInteractionStateDidChange?: (
       pendingActivationState: ButtonPendingActivationState,
@@ -67,6 +69,7 @@ const ButtonInterior = function ButtonImpl(
     iconName,
     isHovered,
     isPressed,
+    iconLeftOfTitle,
     ...rest
   } = props;
   const opacity = React.useRef(new Animated.Value(1)).current;
@@ -156,32 +159,34 @@ const ButtonInterior = function ButtonImpl(
             },
         ]}
       >
-        {iconName && (
-          <Icon
-            name={iconName}
-            position={isSoloIcon ? IconPosition.Center : IconPosition.TopLeft}
-            // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's color becomes the icon's accent color. It's intentional, though, to produce an inversion.
-            tintColor={iconColor ?? defaultButtonColor}
-            accentColor={color ?? defaultButtonColor}
-          />
-        )}
-        {"title" in props && (
-          <Text
-            {...rest}
-            style={[
-              (size ?? "regular") === "regular"
-                ? type.label.layoutStyle
-                : type.labelTiny.layoutStyle,
-              {
-                color: titleColor,
-              },
-            ]}
-            selectable={false}
-            suppressHighlighting={true}
-          >
-            {props.title}
-          </Text>
-        )}
+        <div style={iconLeftOfTitle ? { display: "flex" } : {}}>
+          {iconName && (
+            <Icon
+              name={iconName}
+              position={isSoloIcon ? IconPosition.Center : IconPosition.TopLeft}
+              // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's color becomes the icon's accent color. It's intentional, though, to produce an inversion.
+              tintColor={iconColor ?? defaultButtonColor}
+              accentColor={color ?? defaultButtonColor}
+            />
+          )}
+          {"title" in props && (
+            <Text
+              {...rest}
+              style={[
+                (size ?? "regular") === "regular"
+                  ? type.label.layoutStyle
+                  : type.labelTiny.layoutStyle,
+                {
+                  color: titleColor,
+                },
+              ]}
+              selectable={false}
+              suppressHighlighting={true}
+            >
+              {props.title}
+            </Text>
+          )}
+        </div>
       </Animated.View>
     </View>
   );
