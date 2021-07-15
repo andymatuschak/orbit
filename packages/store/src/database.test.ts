@@ -29,7 +29,7 @@ const testEvents: Event[] = [
 describe.each([
   { backend: Backends.IDBDatabaseBackend },
   { backend: Backends.SQLDatabaseBackend },
-])("test implementations", ({ backend }) => {
+])("$backend: test implementation", ({ backend }) => {
   let db: Database;
 
   beforeEach(() => {
@@ -49,7 +49,7 @@ describe.each([
     }
   });
 
-  test(`[${backend}] round-trip events`, async () => {
+  test(`round-trip events`, async () => {
     await db.putEvents(testEvents);
 
     const result = await db.getEvents(["a", "c"] as EventID[]);
@@ -61,7 +61,7 @@ describe.each([
     );
   });
 
-  test(`[${backend}] updates entities`, async () => {
+  test(`updates entities`, async () => {
     await db.putEvents(testEvents);
     const entityID = "x" as TaskID;
     let results = await db.getEntities([entityID]);
@@ -85,7 +85,7 @@ describe.each([
     expect((entity as any).eventIDs).toEqual(["b", "z", "a", "q"]);
   });
 
-  test(`[${backend}] maintains entity ordering`, async () => {
+  test(`maintains entity ordering`, async () => {
     await db.putEvents(testEvents);
     const initialEntities = await db.listEntities({
       entityType: EntityType.Task,
@@ -105,14 +105,14 @@ describe.each([
   describe("querying events", () => {
     beforeEach(() => db.putEvents(testEvents));
 
-    test(`[${backend}] by entity ID`, async () => {
+    test(`by entity ID`, async () => {
       const events = await db.listEvents({
         predicate: ["entityID", "=", "x"],
       });
       expect(events).toEqual([testEvents[0], testEvents[1]]);
     });
 
-    test(`[${backend}] by entity ID and limit`, async () => {
+    test(`by entity ID and limit`, async () => {
       const events = await db.listEvents({
         predicate: ["entityID", "=", "x"],
         limit: 1,
@@ -120,14 +120,14 @@ describe.each([
       expect(events).toEqual([testEvents[0]]);
     });
 
-    test(`[${backend}] with after ID`, async () => {
+    test(`with after ID`, async () => {
       const events = await db.listEvents({
         afterID: "a" as EventID,
       });
       expect(events).toEqual([testEvents[1], testEvents[2]]);
     });
 
-    test(`[${backend}] by entity ID and after ID`, async () => {
+    test(`by entity ID and after ID`, async () => {
       const events = await db.listEvents({
         afterID: "a" as EventID,
         predicate: ["entityID", "=", "x"],
@@ -135,7 +135,7 @@ describe.each([
       expect(events).toEqual([testEvents[1]]);
     });
 
-    test(`[${backend}] by lexicographical entity ID and after ID`, async () => {
+    test(`by lexicographical entity ID and after ID`, async () => {
       const eventExclusive = await db.listEvents({
         afterID: "a" as EventID,
         predicate: ["entityID", ">", "x"],
