@@ -30,6 +30,7 @@ beforeEach(async () => {
 
 const testAttachmentReference: AttachmentReference = {
   id: "x" as AttachmentID,
+  createdAtTimestampMillis: 1000,
   type: EntityType.AttachmentReference,
   mimeType: AttachmentMimeType.PNG,
 };

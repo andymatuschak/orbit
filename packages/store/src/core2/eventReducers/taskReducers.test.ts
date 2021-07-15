@@ -6,6 +6,7 @@ import {
   TaskIngestEvent,
   TaskRepetitionEvent,
   TaskRepetitionOutcome,
+  TaskRescheduleEvent,
 } from "../event";
 import { eventReducer } from "../eventReducer";
 
@@ -17,6 +18,11 @@ const testIngestEvent = {
   timestampMillis: 100,
   provenance: null,
 } as TaskIngestEvent;
+const initialTask = eventReducer(null, testIngestEvent);
+
+const firstComponentID = Object.keys(
+  testIngestEvent.spec.content.components!,
+)[0];
 
 describe("ingest reducer", () => {
   test("ingests without a base state", () => {
@@ -54,9 +60,6 @@ describe("ingest reducer", () => {
 });
 
 describe("repetition reducer", () => {
-  const firstComponentID = Object.keys(
-    testIngestEvent.spec.content.components!,
-  )[0];
   const testRepetitionEvent: TaskRepetitionEvent = {
     id: "y" as EventID,
     type: EventType.TaskRepetition,
@@ -67,7 +70,6 @@ describe("repetition reducer", () => {
     reviewSessionID: "testSession",
   };
 
-  const initialTask = eventReducer(null, testIngestEvent);
   test("fails without a base state", () => {
     expect(() => eventReducer(null, testRepetitionEvent)).toThrow();
   });
@@ -87,6 +89,37 @@ describe("repetition reducer", () => {
     for (const [id, componentState] of Object.entries(task.componentStates)) {
       if (id === firstComponentID) {
         expect(componentState).not.toEqual(initialTask.componentStates[id]);
+      } else {
+        expect(componentState).toEqual(initialTask.componentStates[id]);
+      }
+    }
+  });
+});
+
+describe("reschedule reducer", () => {
+  const testRescheduleEvent: TaskRescheduleEvent = {
+    id: "y" as EventID,
+    type: EventType.TaskReschedule,
+    entityID: testIngestEvent.entityID,
+    timestampMillis: 1000,
+    componentID: firstComponentID,
+    newDueTimestampMillis: 5000,
+  };
+
+  test("fails without a base state", () => {
+    expect(() => eventReducer(null, testRescheduleEvent)).toThrow();
+  });
+
+  test("reschedules", () => {
+    const task = eventReducer(initialTask, testRescheduleEvent);
+    for (const [id, componentState] of Object.entries(task.componentStates)) {
+      if (id === firstComponentID) {
+        expect(componentState.dueTimestampMillis).toBe(
+          testRescheduleEvent.newDueTimestampMillis,
+        );
+        expect(componentState.intervalMillis).toBe(
+          initialTask.componentStates[id].intervalMillis,
+        );
       } else {
         expect(componentState).toEqual(initialTask.componentStates[id]);
       }

@@ -48,14 +48,17 @@ export const testTask: Task = {
   id: "a" as TaskID,
   type: EntityType.Task,
   spec: testClozeSpec,
+  createdAtTimestampMillis: 1000,
   provenance: null,
   componentStates: {
     a: {
+      createdAtTimestampMillis: 1000,
       lastRepetitionTimestampMillis: null,
       dueTimestampMillis: 100,
       intervalMillis: 1000,
     },
     b: {
+      createdAtTimestampMillis: 1000,
       lastRepetitionTimestampMillis: null,
       dueTimestampMillis: 200,
       intervalMillis: 2000,
@@ -117,6 +120,7 @@ export function createTestAttachmentReference(
     lastEventTimestampMillis: 1000,
     entity: {
       id: id as AttachmentID,
+      createdAtTimestampMillis: 1000,
       type: EntityType.AttachmentReference,
       mimeType: AttachmentMimeType.PNG,
     },

@@ -7,11 +7,13 @@ import { Entity, IDOfEntity } from "./entity";
 export type Event =
   | TaskIngestEvent
   | TaskRepetitionEvent
+  | TaskRescheduleEvent
   | AttachmentIngestEvent;
 
 export enum EventType {
   TaskIngest = "taskIngest",
   TaskRepetition = "taskRepetition",
+  TaskReschedule = "taskReschedule",
 
   AttachmentIngest = "attachmentIngest",
 }
@@ -55,6 +57,12 @@ export interface TaskRepetitionEvent
   componentID: string;
   reviewSessionID: string; // a unique identifier shared by repetitions in the same logical review session
   outcome: TaskRepetitionOutcome;
+}
+
+export interface TaskRescheduleEvent
+  extends EventBase<EventType.TaskReschedule, Task> {
+  componentID: string;
+  newDueTimestampMillis: number;
 }
 
 export enum TaskRepetitionOutcome {

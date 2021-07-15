@@ -3,6 +3,7 @@ import { attachmentIngestEventReducer } from "./eventReducers/attachmentReducers
 import {
   taskIngestEventReducer,
   taskRepetitionEventReducer,
+  taskRescheduleEventReducer,
 } from "./eventReducers/taskReducers";
 
 const reducers: {
@@ -13,6 +14,7 @@ const reducers: {
 } = {
   [EventType.TaskIngest]: taskIngestEventReducer,
   [EventType.TaskRepetition]: taskRepetitionEventReducer,
+  [EventType.TaskReschedule]: taskRescheduleEventReducer,
 
   [EventType.AttachmentIngest]: attachmentIngestEventReducer,
 };

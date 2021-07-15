@@ -1,6 +1,15 @@
-import { mainTaskComponentID, Task } from "../entities/task";
+import {
+  mainTaskComponentID,
+  Task,
+  TaskComponentState,
+} from "../entities/task";
 import { EntityType } from "../entity";
-import { TaskIngestEvent, TaskRepetitionEvent } from "../event";
+import {
+  EventType,
+  TaskIngestEvent,
+  TaskRepetitionEvent,
+  TaskRescheduleEvent,
+} from "../event";
 import { createSpacedRepetitionScheduler } from "../schedulers/spacedRepetitionScheduler";
 
 export function taskIngestEventReducer(
@@ -43,32 +52,64 @@ export function taskIngestEventReducer(
 }
 
 const scheduler = createSpacedRepetitionScheduler();
-
 export function taskRepetitionEventReducer(
   oldSnapshot: Task | null,
   event: TaskRepetitionEvent,
 ): Task {
-  if (!oldSnapshot) {
-    throw new Error(`Can't apply repetition event to a non-existent task`);
-  }
+  assertTaskExists(oldSnapshot, event.type);
 
   const componentState = oldSnapshot.componentStates[event.componentID];
   if (!componentState) {
     throw new Error(`Repetition on unknown component ${event.componentID}`);
   }
 
+  return modifyTaskComponent(oldSnapshot, event.componentID, (oldState) => ({
+    ...oldState,
+    ...scheduler.computeNextDueIntervalMillisForRepetition(
+      componentState,
+      event.timestampMillis,
+      event.outcome,
+    ),
+  }));
+}
+
+export function taskRescheduleEventReducer(
+  oldSnapshot: Task | null,
+  event: TaskRescheduleEvent,
+): Task {
+  assertTaskExists(oldSnapshot, event.type);
+  return modifyTaskComponent(oldSnapshot, event.componentID, (oldState) => ({
+    ...oldState,
+    dueTimestampMillis: event.newDueTimestampMillis,
+  }));
+}
+
+function modifyTaskComponent(
+  oldSnapshot: Task,
+  componentID: string,
+  transformer: (oldState: TaskComponentState) => TaskComponentState,
+): Task {
+  const componentState = oldSnapshot.componentStates[componentID];
+  if (!componentState) {
+    throw new Error(`Repetition on unknown component ${componentID}`);
+  }
+
   return {
     ...oldSnapshot,
     componentStates: {
       ...oldSnapshot.componentStates,
-      [event.componentID]: {
-        ...oldSnapshot.componentStates[event.componentID],
-        ...scheduler.computeNextDueIntervalMillisForRepetition(
-          componentState,
-          event.timestampMillis,
-          event.outcome,
-        ),
-      },
+      [componentID]: transformer(oldSnapshot.componentStates[componentID]),
     },
   };
+}
+
+function assertTaskExists(
+  snapshot: Task | null,
+  eventType: EventType,
+): asserts snapshot is Task {
+  if (snapshot === null) {
+    throw new Error(
+      `Can't apply an event of type ${eventType} to a task without a prior snapshot`,
+    );
+  }
 }
