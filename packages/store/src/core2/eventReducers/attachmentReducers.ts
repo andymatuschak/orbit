@@ -11,6 +11,7 @@ export function attachmentIngestEventReducer(
   } else {
     return {
       id: event.entityID,
+      createdAtTimestampMillis: event.timestampMillis,
       type: EntityType.AttachmentReference,
       mimeType: event.mimeType,
     };

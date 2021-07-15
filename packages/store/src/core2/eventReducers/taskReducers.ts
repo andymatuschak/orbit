@@ -22,6 +22,7 @@ export function taskIngestEventReducer(
     return {
       id: event.entityID,
       type: EntityType.Task,
+      createdAtTimestampMillis: event.timestampMillis,
       spec: event.spec,
       provenance: event.provenance,
       metadata: event.metadata ?? {},

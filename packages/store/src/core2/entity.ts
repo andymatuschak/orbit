@@ -14,6 +14,7 @@ export enum EntityType {
 export interface EntityBase<ET extends EntityType, ID extends string> {
   id: ID;
   type: ET;
+  createdAtTimestampMillis: number;
 }
 
 /**

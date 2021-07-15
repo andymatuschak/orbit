@@ -10,10 +10,10 @@
   "sideEffects": false,
   "dependencies": {
     "@ipld/dag-json": "^4.0.0",
+    "@withorbit/core": "0.0.1",
     "fastestsmallesttextencoderdecoder": "^1.0.22",
     "firebase": "^8.2.9",
     "firebase-admin": "^9.4.2",
-    "@withorbit/core": "0.0.1",
     "multiformats": "^4.3.1"
   },
   "scripts": {
@@ -25,10 +25,10 @@
     "@babel/preset-env": "^7.12.1",
     "@babel/preset-typescript": "^7.12.1",
     "@firebase/rules-unit-testing": "^1.1.1",
-    "@types/jest": "^26.0.15",
+    "@types/jest": "^26.0.24",
     "@types/sha.js": "^2.4.0",
     "babel-jest": "^26.6.3",
-    "jest": "~26.6.3",
+    "jest": "~27.0.6",
     "typescript": "^4.2.4"
   }
 }
