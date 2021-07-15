@@ -9,6 +9,7 @@ import {
   TaskIngestEvent,
   TaskRepetitionEvent,
   TaskRescheduleEvent,
+  TaskUpdateDeletedEvent,
 } from "../event";
 import { createSpacedRepetitionScheduler } from "../schedulers/spacedRepetitionScheduler";
 
@@ -82,6 +83,14 @@ export function taskRescheduleEventReducer(
     ...oldState,
     dueTimestampMillis: event.newDueTimestampMillis,
   }));
+}
+
+export function taskUpdateDeletedEventReducer(
+  oldSnapshot: Task | null,
+  event: TaskUpdateDeletedEvent,
+): Task {
+  assertTaskExists(oldSnapshot, event.type);
+  return { ...oldSnapshot, isDeleted: event.isDeleted };
 }
 
 function modifyTaskComponent(

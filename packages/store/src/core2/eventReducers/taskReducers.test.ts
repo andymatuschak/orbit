@@ -7,6 +7,7 @@ import {
   TaskRepetitionEvent,
   TaskRepetitionOutcome,
   TaskRescheduleEvent,
+  TaskUpdateDeletedEvent,
 } from "../event";
 import { eventReducer } from "../eventReducer";
 
@@ -124,5 +125,24 @@ describe("reschedule reducer", () => {
         expect(componentState).toEqual(initialTask.componentStates[id]);
       }
     }
+  });
+});
+
+describe("updateDeleted reducer", () => {
+  const testEvent: TaskUpdateDeletedEvent = {
+    id: "y" as EventID,
+    type: EventType.TaskUpdateDeleted,
+    entityID: testIngestEvent.entityID,
+    timestampMillis: 1500,
+    isDeleted: true,
+  };
+
+  test("fails without a base state", () => {
+    expect(() => eventReducer(null, testEvent)).toThrow();
+  });
+
+  test("reschedules", () => {
+    const task = eventReducer(initialTask, testEvent);
+    expect(task.isDeleted).toBe(true);
   });
 });
