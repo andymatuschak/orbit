@@ -26,7 +26,6 @@ While everything is written in Typescript, components of Orbit must run in Node,
 | `ui` | Shared styles and UI components | | ✅ | ✅ | APL2 |
 | _Secondary packages:_ |
 | `anki-import` | Implements Anki .apkg import | ✅ | | | APL2 |
-| `cli` | Miscellaneous administrative scripts | ✅ | | | APL2 |
 | `docs` | Orbit's documentation site | | ✅ | | APL2 |
 | `embedded-support` | Implementations shared by `app` and `web-component` | | ✅ | ✅ | APL2 |
 | `note-sync` | Syncs Orbit prompts from Markdown notes | ✅ | | | APL2 |
