@@ -4,3 +4,7 @@ export * as actionLogs from "./actionLogs";
 export * as prompts from "./prompts";
 export * as promptStates from "./promptStates";
 export * as users from "./users";
+export { getAttachmentURL } from "./attachments";
+export { getStorageObjectNameForAttachmentID } from "./attachments";
+export { storageAttachmentsPathComponent } from "./attachments";
+export { storageBucketName } from "./attachments";

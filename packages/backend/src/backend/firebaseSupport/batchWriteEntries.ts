@@ -1,11 +1,11 @@
-import { Database, DocumentReference } from "./libraryAbstraction";
+import { firestore } from "firebase-admin";
 
 const batchSize = 250;
 
-export default async function batchWriteEntries<D extends Database, Value>(
+export default async function batchWriteEntries<Value>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  logEntries: (readonly [DocumentReference<D, Value>, Value])[],
-  db: D,
+  logEntries: (readonly [firestore.DocumentReference<Value>, Value])[],
+  db: firestore.Firestore,
 ) {
   for (
     let batchBaseIndex = 0;

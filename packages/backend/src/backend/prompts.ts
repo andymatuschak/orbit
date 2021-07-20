@@ -1,7 +1,7 @@
 import * as admin from "firebase-admin";
 import { getIDForPrompt, Prompt, PromptID } from "@withorbit/core";
 import {
-  getDataRecordReference,
+  getPromptReference,
   getPromptIDForFirebaseKey,
 } from "./firebaseSupport";
 import { getDatabase } from "./firebase";
@@ -11,7 +11,7 @@ export async function getPrompts(
 ): Promise<Map<PromptID, Prompt>> {
   const db = getDatabase();
   const snapshots = (await getDatabase().getAll(
-    ...promptIDs.map((promptID) => getDataRecordReference(db, promptID)),
+    ...promptIDs.map((promptID) => getPromptReference(db, promptID)),
   )) as admin.firestore.DocumentSnapshot<Prompt>[];
 
   const output: Map<PromptID, Prompt> = new Map();
@@ -30,7 +30,7 @@ export function storePrompts(prompts: Prompt[]): Promise<PromptID[]> {
   return Promise.all(
     prompts.map(async (promptData) => {
       const promptID = await getIDForPrompt(promptData);
-      const dataRef = getDataRecordReference(getDatabase(), promptID);
+      const dataRef = getPromptReference(getDatabase(), promptID);
       await dataRef
         .create(promptData)
         .then(() => {

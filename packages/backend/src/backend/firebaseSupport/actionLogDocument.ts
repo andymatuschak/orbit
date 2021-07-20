@@ -1,19 +1,12 @@
 import { ActionLog, getIDForActionLog } from "@withorbit/core";
+import firebase, { firestore as AdminFirestore } from "firebase-admin";
 import batchWriteEntries from "./batchWriteEntries";
-import {
-  Database,
-  DocumentReference,
-  FieldValue,
-  ServerTimestamp,
-  TimestampOf,
-} from "./libraryAbstraction";
 import { getActionLogIDReference } from "./references";
 
-export type ActionLogDocument<T extends ServerTimestamp = ServerTimestamp> =
-  ActionLog & {
-    serverTimestamp: T;
-    suppressTaskStateCacheUpdate?: boolean;
-  };
+export type ActionLogDocument = ActionLog & {
+  serverTimestamp: firebase.firestore.Timestamp;
+  suppressTaskStateCacheUpdate?: boolean;
+};
 
 export function getActionLogFromActionLogDocument(
   document: ActionLogDocument,
@@ -26,26 +19,23 @@ export function getActionLogFromActionLogDocument(
   return actionLog;
 }
 
-// TODO: move into backend
-export async function storeLogs<D extends Database>(
+// TODO: integrate into backend/actionLogs: this doesn't belong here.
+export async function storeLogs<D extends AdminFirestore.Firestore>(
   logs: ActionLog[],
   userID: string,
   database: D,
-  getServerTimestampFieldValue: () => FieldValue,
+  getServerTimestampFieldValue: () => AdminFirestore.FieldValue,
   suppressTaskStateCacheUpdate = false,
 ): Promise<
-  [
-    DocumentReference<D, ActionLogDocument<TimestampOf<D>>>,
-    ActionLogDocument<TimestampOf<D>>,
-  ][]
+  [AdminFirestore.DocumentReference<ActionLogDocument>, ActionLogDocument][]
 > {
   const refs = await Promise.all(
     logs.map(async (log) => {
-      const logDocument: ActionLogDocument<TimestampOf<D>> = {
+      const logDocument: ActionLogDocument = {
         ...log,
         // The force-cast is necessary because we often use a sentinel value ("update this server-side on write")
         serverTimestamp:
-          getServerTimestampFieldValue() as unknown as TimestampOf<D>,
+          getServerTimestampFieldValue() as unknown as AdminFirestore.Timestamp,
         ...(suppressTaskStateCacheUpdate && {
           suppressTaskStateCacheUpdate: true,
         }),
@@ -55,11 +45,11 @@ export async function storeLogs<D extends Database>(
         database,
         userID,
         await getIDForActionLog(log),
-      ) as DocumentReference<D, ActionLogDocument<ServerTimestamp>>;
+      ) as AdminFirestore.DocumentReference<ActionLogDocument>;
 
       return [ref, logDocument] as [
-        DocumentReference<D, ActionLogDocument<TimestampOf<D>>>,
-        ActionLogDocument<TimestampOf<D>>,
+        AdminFirestore.DocumentReference<ActionLogDocument>,
+        ActionLogDocument,
       ];
     }),
   );

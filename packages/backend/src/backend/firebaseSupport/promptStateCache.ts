@@ -1,10 +1,10 @@
 import { PromptState, PromptTaskID } from "@withorbit/core";
-import { ServerTimestamp } from "./libraryAbstraction";
+import firebase from "firebase-admin";
 
 export interface PromptStateCache extends PromptState {
   taskID: PromptTaskID;
-  creationServerTimestamp: ServerTimestamp;
-  latestLogServerTimestamp: ServerTimestamp;
+  creationServerTimestamp: firebase.firestore.Timestamp;
+  latestLogServerTimestamp: firebase.firestore.Timestamp;
 }
 
 export function getPromptStateFromPromptStateCache(

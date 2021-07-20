@@ -1,19 +1,16 @@
 import {
   ActionLogID,
-  qaPromptType,
   getIDForPrompt,
   getIDForPromptTask,
   PromptRepetitionOutcome,
   PromptTaskID,
+  qaPromptType,
   repetitionActionLogType,
 } from "@withorbit/core";
-import {
-  ActionLogDocument,
-  PromptStateCache,
-  ServerTimestamp,
-} from "./backend/firebaseSupport";
 import { testQAPrompt } from "@withorbit/sample-data";
+import firebase from "firebase-admin";
 import applyPromptActionLogToPromptStateCache from "./applyPromptActionLogToPromptStateCache";
+import { ActionLogDocument, PromptStateCache } from "./backend/firebaseSupport";
 
 let promptTaskID: PromptTaskID;
 beforeAll(async () => {
@@ -26,8 +23,8 @@ beforeAll(async () => {
 
 function createRepetitionLog(
   parentActionLogIDs: ActionLogID[],
-  serverTimestamp: ServerTimestamp,
-): ActionLogDocument<ServerTimestamp> {
+  serverTimestamp: firebase.firestore.Timestamp,
+): ActionLogDocument {
   return {
     actionLogType: repetitionActionLogType,
     timestampMillis: 100,
@@ -41,13 +38,13 @@ function createRepetitionLog(
 }
 
 describe("timestamps", () => {
-  let firstRepetition: ActionLogDocument<ServerTimestamp>;
+  let firstRepetition: ActionLogDocument;
   let initialPromptState: PromptStateCache;
   beforeAll(async () => {
-    firstRepetition = createRepetitionLog([], {
-      seconds: 1000,
-      nanoseconds: 0,
-    });
+    firstRepetition = createRepetitionLog(
+      [],
+      new firebase.firestore.Timestamp(1000, 0),
+    );
 
     initialPromptState = (await applyPromptActionLogToPromptStateCache({
       actionLogDocument: firstRepetition,
@@ -58,10 +55,10 @@ describe("timestamps", () => {
 
   test("updates to newer timestamp", async () => {
     const newPromptState = (await applyPromptActionLogToPromptStateCache({
-      actionLogDocument: createRepetitionLog([], {
-        seconds: 2000,
-        nanoseconds: 0,
-      }),
+      actionLogDocument: createRepetitionLog(
+        [],
+        new firebase.firestore.Timestamp(2000, 0),
+      ),
       basePromptStateCache: initialPromptState,
       fetchAllActionLogDocumentsForTask: jest.fn(),
     })) as PromptStateCache;
@@ -70,10 +67,10 @@ describe("timestamps", () => {
 
   test("doesn't update for older timestamps", async () => {
     const newPromptState = (await applyPromptActionLogToPromptStateCache({
-      actionLogDocument: createRepetitionLog([], {
-        seconds: 500,
-        nanoseconds: 0,
-      }),
+      actionLogDocument: createRepetitionLog(
+        [],
+        new firebase.firestore.Timestamp(500, 0),
+      ),
       basePromptStateCache: initialPromptState,
       fetchAllActionLogDocumentsForTask: jest.fn(),
     })) as PromptStateCache;

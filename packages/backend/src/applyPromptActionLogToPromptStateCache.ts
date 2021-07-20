@@ -8,11 +8,11 @@ import {
   promptActionLogCanBeAppliedToPromptState,
   PromptTaskID,
 } from "@withorbit/core";
+import firebase from "firebase-admin";
 import {
   ActionLogDocument,
   maxServerTimestamp,
   PromptStateCache,
-  ServerTimestamp,
 } from "./backend/firebaseSupport";
 
 export default async function applyActionLogDocumentToPromptStateCache({
@@ -23,7 +23,7 @@ export default async function applyActionLogDocumentToPromptStateCache({
   actionLogDocument: ActionLogDocument;
   basePromptStateCache: PromptStateCache | null;
   fetchAllActionLogDocumentsForTask: () => Promise<
-    { id: ActionLogID; log: ActionLogDocument<ServerTimestamp> }[]
+    { id: ActionLogID; log: ActionLogDocument }[]
   >;
 }): Promise<PromptStateCache | Error> {
   const promptActionLog = getPromptActionLogFromActionLog(actionLogDocument);
@@ -72,10 +72,14 @@ export default async function applyActionLogDocumentToPromptStateCache({
       const latestLogServerTimestamp = allActionLogDocuments.reduce(
         (max, { log }) => {
           const timestamp = log.serverTimestamp;
-          return maxServerTimestamp(timestamp, max);
+          if (max) {
+            return maxServerTimestamp(timestamp, max);
+          } else {
+            return timestamp;
+          }
         },
-        { seconds: 0, nanoseconds: 0 },
-      );
+        null as firebase.firestore.Timestamp | null,
+      )!;
       return {
         ...mergedPromptState,
         taskID: actionLogDocument.taskID as PromptTaskID,

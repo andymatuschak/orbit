@@ -8,15 +8,22 @@ import {
   getAttachmentTypeForAttachmentMimeType,
   getIDForAttachment,
 } from "@withorbit/core";
-import {
-  getAttachmentURL as _getAttachmentURL,
-  getStorageObjectNameForAttachmentID,
-  storageBucketName,
-} from "./firebaseSupport";
 import fetch, * as Fetch from "node-fetch";
 import { getApp, getDatabase } from "./firebase";
+import { getFirebaseKeyForCIDString } from "./firebaseSupport";
 
 const attachmentSizeLimitBytes = 10 * 1024 * 1024;
+
+export const storageBucketName = "metabook-system.appspot.com";
+export const storageAttachmentsPathComponent = "attachments";
+
+export function getStorageObjectNameForAttachmentID(
+  attachmentID: AttachmentID,
+): string {
+  return `${storageAttachmentsPathComponent}/${getFirebaseKeyForCIDString(
+    attachmentID,
+  )}`;
+}
 
 function _getFileReferenceForAttachmentID(attachmentID: AttachmentID): GCSFile {
   return getApp()
@@ -127,5 +134,7 @@ export async function storeAttachment(attachment: Attachment): Promise<{
 }
 
 export function getAttachmentURL(attachmentID: AttachmentID): string {
-  return _getAttachmentURL(attachmentID);
+  return `https://storage.googleapis.com/${storageBucketName}/${storageAttachmentsPathComponent}/${getFirebaseKeyForCIDString(
+    attachmentID,
+  )}`;
 }

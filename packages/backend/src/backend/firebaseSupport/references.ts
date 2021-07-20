@@ -1,87 +1,72 @@
-import { ActionLogID } from "@withorbit/core";
+import { ActionLogID, Prompt, PromptID } from "@withorbit/core";
+import { firestore } from "firebase-admin";
 import { ActionLogDocument } from "./actionLogDocument";
-import { DataRecord, DataRecordID } from "./dataRecord";
 import {
   getFirebaseKeyForCIDString,
   getFirebaseKeyForTaskID,
 } from "./firebaseKeyEncoding";
-import {
-  CollectionReference,
-  Database,
-  DocumentReference,
-  TimestampOf,
-} from "./libraryAbstraction";
 import { PromptStateCache } from "./promptStateCache";
 import { UserMetadata } from "./userMetadata";
 
-function getDataCollectionReference<D extends Database>(
-  database: D,
-): CollectionReference<D, DataRecord> {
-  return database.collection("data") as CollectionReference<D, DataRecord>;
+function getPromptCollectionReference(
+  database: firestore.Firestore,
+): firestore.CollectionReference<Prompt> {
+  return database.collection("data") as firestore.CollectionReference<Prompt>;
 }
 
-function getDataRecordReferenceForCID<D extends Database>(
-  database: D,
-  cidString: string,
-): DocumentReference<D, DataRecord> {
-  const dataReference = getDataCollectionReference(database);
+export function getUserMetadataReference(
+  database: firestore.Firestore,
+  userID: string,
+): firestore.DocumentReference<UserMetadata> {
+  return database.doc(
+    `users/${userID}`,
+  ) as firestore.DocumentReference<UserMetadata>;
+}
+
+export function getPromptReference(
+  database: firestore.Firestore,
+  promptID: PromptID,
+): firestore.DocumentReference<Prompt> {
+  const dataReference = getPromptCollectionReference(database);
   return dataReference.doc(
-    getFirebaseKeyForCIDString(cidString),
-  ) as DocumentReference<D, DataRecord>;
+    getFirebaseKeyForCIDString(promptID),
+  ) as firestore.DocumentReference<Prompt>;
 }
 
-export function getUserMetadataReference<D extends Database>(
-  database: D,
+export function getLogCollectionReference(
+  database: firestore.Firestore,
   userID: string,
-): DocumentReference<D, UserMetadata> {
-  return database.doc(`users/${userID}`) as DocumentReference<D, UserMetadata>;
+): firestore.CollectionReference<ActionLogDocument> {
+  return database.collection(
+    `users/${userID}/logs`,
+  ) as firestore.CollectionReference<ActionLogDocument>;
 }
 
-export function getDataRecordReference<
-  D extends Database,
-  R extends DataRecord,
->(database: D, recordID: DataRecordID<R>): DocumentReference<D, R> {
-  return getDataRecordReferenceForCID(database, recordID) as DocumentReference<
-    D,
-    R
-  >;
-}
-
-export function getLogCollectionReference<D extends Database>(
-  database: D,
+export function getTaskStateCacheCollectionReference(
+  database: firestore.Firestore,
   userID: string,
-): CollectionReference<D, ActionLogDocument<TimestampOf<D>>> {
-  return database.collection(`users/${userID}/logs`) as CollectionReference<
-    D,
-    ActionLogDocument<TimestampOf<D>>
-  >;
-}
-
-export function getTaskStateCacheCollectionReference<D extends Database>(
-  database: D,
-  userID: string,
-): CollectionReference<D, PromptStateCache> {
+): firestore.CollectionReference<PromptStateCache> {
   return database.collection(
     `users/${userID}/taskStates`,
-  ) as CollectionReference<D, PromptStateCache>;
+  ) as firestore.CollectionReference<PromptStateCache>;
 }
 
-export async function getTaskStateCacheReference<D extends Database>(
-  database: D,
+export async function getTaskStateCacheReference(
+  database: firestore.Firestore,
   userID: string,
   taskID: string,
-): Promise<DocumentReference<D, PromptStateCache>> {
+): Promise<firestore.DocumentReference<PromptStateCache>> {
   return getTaskStateCacheCollectionReference(database, userID).doc(
     await getFirebaseKeyForTaskID(taskID),
-  ) as DocumentReference<D, PromptStateCache>;
+  ) as firestore.DocumentReference<PromptStateCache>;
 }
 
-export function getActionLogIDReference<D extends Database>(
-  database: D,
+export function getActionLogIDReference(
+  database: firestore.Firestore,
   userID: string,
   actionLogID: ActionLogID,
-): DocumentReference<D, ActionLogDocument<TimestampOf<D>>> {
+): firestore.DocumentReference<ActionLogDocument> {
   return getLogCollectionReference(database, userID).doc(
     getFirebaseKeyForCIDString(actionLogID),
-  ) as DocumentReference<D, ActionLogDocument<TimestampOf<D>>>;
+  ) as firestore.DocumentReference<ActionLogDocument>;
 }

@@ -1,5 +1,4 @@
 export * from "./references";
-export * from "./dataRecord";
 export { default as batchWriteEntries } from "./batchWriteEntries";
 
 export { getPromptStateFromPromptStateCache } from "./promptStateCache";
@@ -14,15 +13,12 @@ export type { ActionLogDocument } from "./actionLogDocument";
 export type { UserMetadata, SessionNotificationState } from "./userMetadata";
 
 export {
-  compareServerTimestamps,
   maxServerTimestamp,
   serverTimestampToTimestampMillis,
-} from "./libraryAbstraction";
-export type { ServerTimestamp } from "./libraryAbstraction";
+} from "./timestamps";
 export {
   getActionLogIDForFirebaseKey,
   getAttachmentIDForFirebaseKey,
   getPromptIDForFirebaseKey,
   getFirebaseKeyForCIDString,
 } from "./firebaseKeyEncoding";
-export * from "./storage";
