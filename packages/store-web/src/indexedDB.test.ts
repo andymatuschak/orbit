@@ -1,7 +1,11 @@
-import { DatabaseBackendEntityRecord } from "@withorbit/store-shared";
+import {
+  DatabaseBackend,
+  DatabaseBackendEntityRecord,
+} from "@withorbit/store-shared";
 import { IDBDatabaseBackend } from "./indexedDB";
 import {
   AttachmentReference,
+  Entity,
   EntityType,
   EventID,
   Task,
@@ -61,9 +65,19 @@ beforeEach(() => {
   backend = new IDBDatabaseBackend("OrbitDatabase", indexedDB);
 });
 
+async function putEntities(
+  backend: DatabaseBackend,
+  entities: DatabaseBackendEntityRecord<Entity>[],
+) {
+  await backend.modifyEntities(
+    [],
+    async () => new Map(entities.map((e) => [e.entity.id, e])),
+  );
+}
+
 describe("round-trip entities", () => {
   test("tasks", async () => {
-    await backend.putEntities(testTasks);
+    await putEntities(backend, testTasks);
 
     const result = await backend.getEntities(["a", "c", "z"] as TaskID[]);
     expect(result).toEqual(
@@ -75,7 +89,7 @@ describe("round-trip entities", () => {
   });
 
   test("attachments", async () => {
-    await backend.putEntities(testAttachmentReferences);
+    await putEntities(backend, testAttachmentReferences);
     const result = await backend.getEntities(["a_b", "a_z"] as TaskID[]);
     expect(result).toEqual(new Map([["a_b", testAttachmentReferences[1]]]));
   });
@@ -83,7 +97,7 @@ describe("round-trip entities", () => {
 
 describe("task components", () => {
   test("created on insert", async () => {
-    await backend.putEntities(testTasks);
+    await putEntities(backend, testTasks);
 
     const results = await fetchAllRowsForTable("derived_taskComponents");
     const filteredResults = results.filter(
@@ -108,7 +122,7 @@ describe("task components", () => {
   });
 
   test("modified on update", async () => {
-    await backend.putEntities(testTasks);
+    await putEntities(backend, testTasks);
 
     const updatedTask = createTestTask({
       id: "a",
@@ -144,7 +158,7 @@ describe("task components", () => {
 
 describe("querying entities", () => {
   beforeEach(() =>
-    backend.putEntities([...testTasks, ...testAttachmentReferences]),
+    putEntities(backend, [...testTasks, ...testAttachmentReferences]),
   );
   test("limit", async () => {
     const firstEntity = await backend.listEntities({

@@ -1,12 +1,16 @@
 import {
   AttachmentReference,
+  Entity,
   EntityType,
   EventID,
   Task,
   TaskID,
 } from "@withorbit/core2";
 import { core2 as testFixtures } from "@withorbit/sample-data";
-import { DatabaseBackendEntityRecord } from "@withorbit/store-shared";
+import {
+  DatabaseBackend,
+  DatabaseBackendEntityRecord,
+} from "@withorbit/store-shared";
 import {
   constructGetByIDSQLQuery,
   constructListEntitySQLQuery,
@@ -77,9 +81,19 @@ test("DB automatically migrates", async () => {
   expect(await getSchemaVersionNumber(db)).toBe(latestSchemaVersionNumber);
 });
 
+async function putEntities(
+  backend: DatabaseBackend,
+  entities: DatabaseBackendEntityRecord<Entity>[],
+) {
+  await backend.modifyEntities(
+    [],
+    async () => new Map(entities.map((e) => [e.entity.id, e])),
+  );
+}
+
 describe("round-trip entities", () => {
   test("tasks", async () => {
-    await backend.putEntities(testTasks);
+    await putEntities(backend, testTasks);
 
     const result = await backend.getEntities(["a", "c", "z"] as TaskID[]);
     expect(result).toEqual(
@@ -91,7 +105,7 @@ describe("round-trip entities", () => {
   });
 
   test("attachments", async () => {
-    await backend.putEntities(testAttachmentReferences);
+    await putEntities(backend, testAttachmentReferences);
     const result = await backend.getEntities(["a_b", "a_z"] as TaskID[]);
     expect(result).toEqual(new Map([["a_b", testAttachmentReferences[1]]]));
   });
@@ -99,7 +113,7 @@ describe("round-trip entities", () => {
 
 describe("task components", () => {
   test("created on insert", async () => {
-    await backend.putEntities(testTasks);
+    await putEntities(backend, testTasks);
     const results = await execReadStatement(
       await backend.__accessDBForTesting(),
       `SELECT * FROM derived_taskComponents WHERE taskID=? ORDER BY componentID`,
@@ -123,7 +137,7 @@ describe("task components", () => {
   });
 
   test("modified on update", async () => {
-    await backend.putEntities(testTasks);
+    await putEntities(backend, testTasks);
 
     const updatedTask = createTestTask({
       id: "a",
@@ -135,7 +149,7 @@ describe("task components", () => {
       lastEventID: "y" as EventID,
       lastEventTimestampMillis: 20,
     };
-    await backend.putEntities([updatedRecord]);
+    await putEntities(backend, [updatedRecord]);
 
     const results = await execReadStatement(
       await backend.__accessDBForTesting(),
@@ -155,7 +169,7 @@ describe("task components", () => {
 
 describe("querying entities", () => {
   beforeEach(() => {
-    return backend.putEntities([...testTasks, ...testAttachmentReferences]);
+    return putEntities(backend, [...testTasks, ...testAttachmentReferences]);
   });
   test("limit", async () => {
     const firstEntity = await backend.listEntities({

@@ -41,6 +41,10 @@ export class IDBDatabaseBackend implements DatabaseBackend {
   async getEntities<E extends Entity, ID extends IDOfEntity<E>>(
     entityIDs: ID[],
   ): Promise<Map<ID, DatabaseBackendEntityRecord<E>>> {
+    if (entityIDs.length === 0) {
+      return new Map();
+    }
+
     const rows = await this.db.entities
       .where(DexieEntityKeys.ID)
       .anyOf(entityIDs)
@@ -248,21 +252,6 @@ export class IDBDatabaseBackend implements DatabaseBackend {
           });
         }
         await this.db.entities.bulkPut(transformedRows);
-      },
-    );
-  }
-
-  async putEntities(
-    entities: DatabaseBackendEntityRecord<Entity>[],
-  ): Promise<void> {
-    await this.db.transaction(
-      "readwrite",
-      this.db.entities,
-      this.db.derived_taskComponents,
-      async () => {
-        await this.db.entities.bulkPut(
-          entities.map((entity) => getEntityRowForEntityRecord(entity)),
-        );
       },
     );
   }

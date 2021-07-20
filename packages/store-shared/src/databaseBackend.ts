@@ -12,7 +12,6 @@ export interface DatabaseBackend {
   getEntities<E extends Entity, ID extends IDOfEntity<E>>(
     entityIDs: ID[],
   ): Promise<Map<ID, DatabaseBackendEntityRecord<E>>>;
-  putEntities(entities: DatabaseBackendEntityRecord<Entity>[]): Promise<void>;
   modifyEntities<E extends Entity, ID extends IDOfEntity<E>>(
     ids: ID[],
     transformer: (

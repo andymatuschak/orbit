@@ -52,10 +52,14 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     return Promise.resolve();
   }
 
-  getEntities<E extends Entity, ID extends IDOfEntity<E>>(
+  async getEntities<E extends Entity, ID extends IDOfEntity<E>>(
     entityIDs: ID[],
   ): Promise<Map<ID, DatabaseBackendEntityRecord<E>>> {
-    return this._getByID(
+    if (entityIDs.length === 0) {
+      return new Map();
+    }
+
+    return await this._getByID(
       SQLTableName.Entities,
       SQLEntityTableColumn.ID,
       [
@@ -81,13 +85,18 @@ export class SQLDatabaseBackend implements DatabaseBackend {
   ): Promise<void> {
     const entityRecordMap = await this.getEntities<E, ID>(ids);
     const transformedEntityRecordMap = await transformer(entityRecordMap);
-    await this.putEntities([...transformedEntityRecordMap.values()]);
-  }
 
-  putEntities(
-    entityRecords: DatabaseBackendEntityRecord<Entity>[],
-  ): Promise<void> {
-    return this._put({
+    const rows: unknown[][] = [];
+    for (const [, record] of transformedEntityRecordMap) {
+      rows.push([
+        record.entity.id,
+        record.entity.type,
+        record.lastEventID,
+        record.lastEventTimestampMillis,
+        JSON.stringify(record.entity),
+      ]);
+    }
+    await this._put({
       tableName: SQLTableName.Entities,
       orderedColumnNames: [
         SQLEntityTableColumn.ID,
@@ -96,13 +105,7 @@ export class SQLDatabaseBackend implements DatabaseBackend {
         SQLEntityTableColumn.LastEventTimestampMillis,
         SQLEntityTableColumn.Data,
       ],
-      rows: entityRecords.map((record) => [
-        record.entity.id,
-        record.entity.type,
-        record.lastEventID,
-        record.lastEventTimestampMillis,
-        JSON.stringify(record.entity),
-      ]),
+      rows,
       upsertSpec: {
         uniqueColumnName: SQLEntityTableColumn.ID,
         updateColumnNames: [
