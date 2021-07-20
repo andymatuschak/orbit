@@ -1,10 +1,17 @@
-import * as admin from "firebase-admin";
 import {
   ActionLogID,
+  applyActionLogToPromptState,
+  getActionLogFromPromptActionLog,
+  getIDForActionLog,
+  getPromptActionLogFromActionLog,
+  mergeActionLogs,
+  promptActionLogCanBeAppliedToPromptState,
   PromptState,
   PromptTaskID,
   reviewSession,
 } from "@withorbit/core";
+import firebase, * as admin from "firebase-admin";
+import { getDatabase } from "./firebase";
 import {
   ActionLogDocument,
   getActionLogIDForFirebaseKey,
@@ -13,10 +20,9 @@ import {
   getTaskStateCacheCollectionReference,
   getTaskStateCacheReference,
   getUserMetadataReference,
+  maxServerTimestamp,
   PromptStateCache,
 } from "./firebaseSupport";
-import applyPromptActionLogToPromptStateCache from "../applyPromptActionLogToPromptStateCache";
-import { getDatabase } from "./firebase";
 
 function taskIsActive(promptStateCache: PromptStateCache | null): boolean {
   return !!promptStateCache && !promptStateCache.taskMetadata.isDeleted;
@@ -57,6 +63,81 @@ async function fetchAllActionLogDocumentsForTask(
   });
 }
 
+export async function _applyActionLogDocumentToPromptStateCache({
+  actionLogDocument,
+  basePromptStateCache,
+  fetchAllActionLogDocumentsForTask,
+}: {
+  actionLogDocument: ActionLogDocument;
+  basePromptStateCache: PromptStateCache | null;
+  fetchAllActionLogDocumentsForTask: () => Promise<
+    { id: ActionLogID; log: ActionLogDocument }[]
+  >;
+}): Promise<PromptStateCache | Error> {
+  const promptActionLog = getPromptActionLogFromActionLog(actionLogDocument);
+  const creationServerTimestamp =
+    basePromptStateCache?.creationServerTimestamp ??
+    actionLogDocument.serverTimestamp;
+  if (
+    promptActionLogCanBeAppliedToPromptState(
+      promptActionLog,
+      basePromptStateCache,
+    )
+  ) {
+    const newPromptState = applyActionLogToPromptState({
+      basePromptState: basePromptStateCache,
+      actionLogID: await getIDForActionLog(
+        getActionLogFromPromptActionLog(promptActionLog),
+      ),
+      promptActionLog,
+      schedule: "default",
+    });
+    if (newPromptState instanceof Error) {
+      return newPromptState;
+    } else {
+      return {
+        ...newPromptState,
+        latestLogServerTimestamp: maxServerTimestamp(
+          actionLogDocument.serverTimestamp,
+          basePromptStateCache?.latestLogServerTimestamp ?? null,
+        ),
+        creationServerTimestamp,
+        taskID: promptActionLog.taskID,
+      };
+    }
+  } else {
+    console.log("Log does not apply cleanly. Doing full merge.");
+    const allActionLogDocuments = await fetchAllActionLogDocumentsForTask();
+    const mergedPromptState = mergeActionLogs(
+      allActionLogDocuments.map(({ id, log }) => ({
+        id,
+        log: getPromptActionLogFromActionLog(log),
+      })),
+    );
+    if (mergedPromptState instanceof Error) {
+      return mergedPromptState;
+    } else {
+      const latestLogServerTimestamp = allActionLogDocuments.reduce(
+        (max, { log }) => {
+          const timestamp = log.serverTimestamp;
+          if (max) {
+            return maxServerTimestamp(timestamp, max);
+          } else {
+            return timestamp;
+          }
+        },
+        null as firebase.firestore.Timestamp | null,
+      )!;
+      return {
+        ...mergedPromptState,
+        taskID: actionLogDocument.taskID as PromptTaskID,
+        latestLogServerTimestamp,
+        creationServerTimestamp,
+      };
+    }
+  }
+}
+
 export async function updatePromptStateCacheWithLog(
   actionLogDocument: ActionLogDocument,
   userID: string,
@@ -78,17 +159,19 @@ export async function updatePromptStateCacheWithLog(
     const oldPromptStateCache =
       (promptStateCacheSnapshot.data() as PromptStateCache) ?? null;
 
-    const newPromptStateCache = await applyPromptActionLogToPromptStateCache({
-      actionLogDocument,
-      basePromptStateCache: oldPromptStateCache,
-      fetchAllActionLogDocumentsForTask: () =>
-        fetchAllActionLogDocumentsForTask(
-          db,
-          transaction,
-          userID,
-          actionLogDocument.taskID,
-        ),
-    });
+    const newPromptStateCache = await _applyActionLogDocumentToPromptStateCache(
+      {
+        actionLogDocument,
+        basePromptStateCache: oldPromptStateCache,
+        fetchAllActionLogDocumentsForTask: () =>
+          fetchAllActionLogDocumentsForTask(
+            db,
+            transaction,
+            userID,
+            actionLogDocument.taskID,
+          ),
+      },
+    );
 
     if (newPromptStateCache instanceof Error) {
       throw new Error(
