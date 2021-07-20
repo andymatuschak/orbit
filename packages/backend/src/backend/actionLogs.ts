@@ -1,15 +1,21 @@
-import { ActionLog, ActionLogID, PromptState } from "@withorbit/core";
 import {
+  ActionLog,
+  ActionLogID,
+  getIDForActionLogSync,
+  PromptState,
+} from "@withorbit/core";
+import * as firebase from "firebase-admin";
+import { getDatabase } from "./firebase";
+import {
+  ActionLogDocument,
   getActionLogFromActionLogDocument,
   getActionLogIDForFirebaseKey,
   getActionLogIDReference,
   getLogCollectionReference,
   getPromptStateFromPromptStateCache,
   serverTimestampToTimestampMillis,
-  storeLogs as _storeLogs,
 } from "./firebaseSupport";
-import * as firebase from "firebase-admin";
-import { getDatabase } from "./firebase";
+import batchWriteEntries from "./firebaseSupport/batchWriteEntries";
 import { updatePromptStateCacheWithLog } from "./promptStates";
 import { clearUserSessionNotificationState } from "./users";
 
@@ -24,20 +30,33 @@ export async function storeActionLogs(
   userID: string,
   logs: ActionLog[],
 ): Promise<StoreActionLogResults> {
-  // These logs will all end up with the same server timestamp, which create a lot of flailing in onLogCreate, since execution order is not guaranteed. We'll go ahead and compute the new prompt states right here.
-  const storedLogs = await _storeLogs(
-    logs,
-    userID,
-    getDatabase(),
-    () => firebase.firestore.Timestamp.now(),
-    true,
-  );
+  const database = getDatabase();
+  const newDocuments = logs.map((log) => {
+    const logDocument: ActionLogDocument = {
+      ...log,
+      serverTimestamp: firebase.firestore.Timestamp.now(),
+      // These logs will all end up with the same server timestamp, which create a lot of flailing in onLogCreate, since execution order is not guaranteed. We'll go ahead and compute the new prompt states right here.
+      suppressTaskStateCacheUpdate: true,
+    };
 
-  // Apply each log sequentially, with a separate transaction for each. This is a bit wasteful.
+    const ref = getActionLogIDReference(
+      database,
+      userID,
+      getIDForActionLogSync(log),
+    ) as firebase.firestore.DocumentReference<ActionLogDocument>;
+
+    return [ref, logDocument] as [
+      firebase.firestore.DocumentReference<ActionLogDocument>,
+      ActionLogDocument,
+    ];
+  });
+  await batchWriteEntries(newDocuments, database);
+
+  // Update the prompt state for each log sequentially, using a separate transaction for each. This is a bit wasteful.
   const results: StoreActionLogResults = [];
   let hasReviewedOldPrompt = false;
 
-  for (const [, log] of storedLogs) {
+  for (const [, log] of newDocuments) {
     const { oldPromptStateCache, newPromptStateCache } =
       await updatePromptStateCacheWithLog(log, userID);
     if (oldPromptStateCache) {
