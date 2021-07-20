@@ -10,7 +10,7 @@ import {
   TaskContentType,
   TaskID,
   TaskSpecType,
-} from "../../core2";
+} from "@withorbit/core2";
 import { DatabaseBackendEntityRecord } from "../backend";
 
 const testClozeSpec: MemoryTaskSpec<ClozeTaskContent> = {

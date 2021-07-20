@@ -3,13 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": ["dom", "es2020"],
     "types": ["jest", "node"]
   },
   "include": ["./src/**/*.ts", "./@types/**/*.d.ts"],
-  "references": [
-    {
-      "path": "../core2"
-    }
-  ]
+  "references": []
 }

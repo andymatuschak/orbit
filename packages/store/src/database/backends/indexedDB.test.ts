@@ -1,5 +1,5 @@
 import { IDBDatabaseBackend } from "./indexedDB";
-import { EntityType, TaskID } from "../../core2";
+import { EntityType, TaskID } from "@withorbit/core2";
 import {
   testTasks,
   createTestTask,

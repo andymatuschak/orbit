@@ -1,4 +1,4 @@
-import { EntityType, EventID, TaskID } from "../../core2";
+import { EntityType, EventID, TaskID } from "@withorbit/core2";
 import {
   createTestTask,
   testAttachmentReferences,

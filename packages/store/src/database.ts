@@ -7,7 +7,7 @@ import {
   IDOfEntity,
   Task,
   TypeOfEntity,
-} from "./core2";
+} from "@withorbit/core2";
 import {
   DatabaseBackend,
   DatabaseBackendEntityRecord,

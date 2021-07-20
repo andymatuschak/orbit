@@ -4,7 +4,7 @@ import Dexie, {
   PromiseExtended,
   WhereClause,
 } from "dexie";
-import { Entity, EntityID, Event, EventID, IDOfEntity } from "../../core2";
+import { Entity, EntityID, Event, EventID, IDOfEntity } from "@withorbit/core2";
 import {
   DatabaseEntityQuery,
   DatabaseEventQuery,

@@ -1,4 +1,9 @@
-import { testTask } from "../../database/__tests__/testTasks";
+import {
+  ClozeTaskContent,
+  MemoryTaskSpec,
+  TaskContentType,
+  TaskSpecType,
+} from "../entities/task";
 import { EntityID } from "../entity";
 import {
   EventID,
@@ -11,11 +16,43 @@ import {
 } from "../event";
 import { eventReducer } from "../eventReducer";
 
+// TODO extract, share with @withorbit/store/src/database/__tests__/testTasks.ts
+const testClozeSpec: MemoryTaskSpec<ClozeTaskContent> = {
+  type: TaskSpecType.Memory,
+  content: {
+    type: TaskContentType.Cloze,
+    body: {
+      text: "This is a test cloze prompt.",
+      attachments: [],
+    },
+    components: {
+      a: {
+        ranges: [
+          {
+            startIndex: 5,
+            endIndex: 10,
+            hint: null,
+          },
+        ],
+      },
+      b: {
+        ranges: [
+          {
+            startIndex: 2,
+            endIndex: 4,
+            hint: null,
+          },
+        ],
+      },
+    },
+  },
+};
+
 const testIngestEvent = {
   id: "x" as EventID,
   type: EventType.TaskIngest,
   entityID: "a" as EntityID,
-  spec: testTask.spec,
+  spec: testClozeSpec,
   timestampMillis: 100,
   provenance: null,
 } as TaskIngestEvent;
@@ -30,7 +67,7 @@ describe("ingest reducer", () => {
     const task = eventReducer(null, testIngestEvent);
     expect(task.id).toBe(testIngestEvent.entityID);
     expect(task.isDeleted).toBe(false);
-    expect(task.spec).toEqual(testTask.spec);
+    expect(task.spec).toEqual(testClozeSpec);
     expect(task.componentStates).toMatchInlineSnapshot(`
       Object {
         "a": Object {

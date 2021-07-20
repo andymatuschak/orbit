@@ -5,7 +5,7 @@ import { pipeline } from "stream";
 import { pathToFileURL } from "url";
 import { promisify } from "util";
 import { AttachmentStore } from "../attachmentStore";
-import { AttachmentReference } from "../core2";
+import { AttachmentReference } from "@withorbit/core2";
 import { AttachmentDownloadError } from "./attachmentDownloadError";
 import { getPathForAttachment } from "./getPathForAttachment";
 

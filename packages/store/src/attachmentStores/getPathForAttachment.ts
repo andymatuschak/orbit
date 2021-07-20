@@ -1,6 +1,6 @@
 import { getFileExtensionForAttachmentMimeType } from "@withorbit/core";
 import path from "path";
-import { AttachmentReference } from "../core2";
+import { AttachmentReference } from "@withorbit/core2";
 
 export function getPathForAttachment(
   basePath: string,

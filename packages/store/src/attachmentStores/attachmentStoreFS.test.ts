@@ -5,7 +5,11 @@ import os from "os";
 import path from "path";
 import stream from "stream";
 import { fileURLToPath } from "url";
-import { AttachmentID, AttachmentReference, EntityType } from "../core2";
+import {
+  AttachmentID,
+  AttachmentReference,
+  EntityType,
+} from "@withorbit/core2";
 import { AttachmentStoreFS } from "./attachmentStoreFS";
 
 beforeAll(() => {

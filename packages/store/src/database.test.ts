@@ -1,4 +1,4 @@
-import { Entity, EntityType, Event, EventID, TaskID } from "./core2";
+import { Entity, EntityType, Event, EventID, TaskID } from "@withorbit/core2";
 import { Database } from "./database";
 import { IDBDatabaseBackend } from "./database/backends/indexedDB";
 import { SQLDatabaseBackend } from "./database/backends/sqlite";

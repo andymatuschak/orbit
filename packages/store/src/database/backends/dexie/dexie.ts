@@ -1,5 +1,5 @@
 import Dexie, { Transaction } from "dexie";
-import { Entity, EntityType, TaskID } from "../../../core2";
+import { Entity, EntityType, TaskID } from "@withorbit/core2";
 import {
   DexieDerivedTaskComponentKeys,
   DexieDerivedTaskComponentRow,

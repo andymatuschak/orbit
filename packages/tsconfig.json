@@ -6,6 +6,7 @@
     { "path": "./app" },
     { "path": "./backend" },
     { "path": "./core" },
+    { "path": "./core2" },
     { "path": "./embedded-support" },
     { "path": "./ui" },
     { "path": "./note-sync" },

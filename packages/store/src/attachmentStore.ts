@@ -1,4 +1,4 @@
-import { AttachmentReference } from "./core2";
+import { AttachmentReference } from "@withorbit/core2";
 
 export interface AttachmentStore {
   storeAttachmentFromURL(

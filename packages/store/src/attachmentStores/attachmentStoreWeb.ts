@@ -1,5 +1,5 @@
 import { AttachmentStore } from "../attachmentStore";
-import { AttachmentID, AttachmentReference } from "../core2";
+import { AttachmentID, AttachmentReference } from "@withorbit/core2";
 
 /*
 This is a stub implementation of AttachmentStore for web clients. Rather than actually download the attachments, we just keep track of the remote URL we were given for each attachment ID, then return that when the attachment ID is subsequently requested. So this won't produce a store which will actually work offline.

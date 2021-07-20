@@ -1,6 +1,6 @@
 import { AttachmentMimeType } from "@withorbit/core";
 import { AttachmentStore } from "../attachmentStore";
-import { AttachmentID, AttachmentReference } from "../core2";
+import { AttachmentID, AttachmentReference } from "@withorbit/core2";
 import { AttachmentDownloadError } from "./attachmentDownloadError";
 import base64 from "base64-js";
 

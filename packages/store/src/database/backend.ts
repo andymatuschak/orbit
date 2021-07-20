@@ -1,4 +1,4 @@
-import { Entity, Event, EventID, IDOfEntity } from "../core2";
+import { Entity, Event, EventID, IDOfEntity } from "@withorbit/core2";
 import { DatabaseEntityQuery, DatabaseEventQuery } from "../database";
 
 export interface DatabaseBackend {
