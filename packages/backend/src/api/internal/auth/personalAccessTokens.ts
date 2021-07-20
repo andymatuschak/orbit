@@ -1,6 +1,6 @@
 import express from "express";
 import * as backend from "../../../backend";
-import { authenticateRequest } from "../../../util/authenticateRequest";
+import { authenticateRequest } from "../../util/authenticateRequest";
 
 interface CreatePersonalAccessTokenResponse {
   token: string;

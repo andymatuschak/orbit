@@ -1,7 +1,7 @@
 import { OrbitAPI } from "@withorbit/api";
 import { getIDForPrompt, Prompt, PromptID } from "@withorbit/core";
 import * as backend from "../backend";
-import { authenticatedRequestHandler } from "../util/authenticateRequest";
+import { authenticatedRequestHandler } from "./util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";
 
 export const listTaskData: TypedRouteHandler<

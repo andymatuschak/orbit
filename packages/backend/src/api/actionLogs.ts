@@ -2,7 +2,7 @@ import { OrbitAPI } from "@withorbit/api";
 import { ActionLog, ActionLogID, getIDForActionLog } from "@withorbit/core";
 import * as backend from "../backend";
 import { sharedLoggingService } from "../logging";
-import { authenticatedRequestHandler } from "../util/authenticateRequest";
+import { authenticatedRequestHandler } from "./util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";
 
 export const listActionLogs: TypedRouteHandler<

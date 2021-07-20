@@ -33,7 +33,7 @@ export function createAPIApp(): express.Application {
   app.use(corsHandler);
   app.use(cookieParser());
 
-  // When the Firebase function is routed through the hosting interface (i.e. https://withorbit.com/api), there'll be an extra /api prefix which won't be present when the function is invoked directly.
+  // HACK: When the Firebase cloud function running this Express app is routed through its Firebase Hosting mount point (i.e. https://withorbit.com/api), there'll be an extra /api prefix which won't be present when the function is invoked directly. So we remove it here.
   app.use((request, _, next) => {
     if (request.headers["x-forwarded-host"] && request.url.startsWith("/api")) {
       request.url = request.url.slice("/api".length);

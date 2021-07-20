@@ -4,7 +4,7 @@ import * as functions from "firebase-functions";
 import { UserMetadata } from "../backend/firebaseSupport";
 import * as backend from "../backend";
 import serviceConfig from "../serviceConfig";
-import { authenticateRequest } from "../util/authenticateRequest";
+import { authenticateRequest } from "../api/util/authenticateRequest";
 
 export type UpdateNotificationSettingsAction = "unsubscribe" | "snooze1Week";
 

@@ -5,7 +5,7 @@ import {
   getAttachmentTypeForAttachmentMimeType,
 } from "@withorbit/core";
 import * as backend from "../backend";
-import { authenticatedRequestHandler } from "../util/authenticateRequest";
+import { authenticatedRequestHandler } from "./util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";
 
 export const storeAttachment: TypedRouteHandler<

@@ -5,8 +5,8 @@ import {
   TypedRequest,
   TypedResponse,
   TypedRouteHandler,
-} from "../api/util/typedRouter";
-import * as backend from "../backend";
+} from "./typedRouter";
+import * as backend from "../../backend";
 
 export async function authenticateRequest(
   request: express.Request,
