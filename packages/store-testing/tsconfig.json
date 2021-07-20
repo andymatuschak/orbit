@@ -1,0 +1,22 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "lib": ["dom", "es2020"],
+    "types": ["jest", "node"],
+    "skipLibCheck": true
+  },
+  "include": ["./src/**/*.ts", "./@types/**/*.d.ts"],
+  "references": [
+    {
+      "path": "../core2"
+    },
+    {
+      "path": "../store-fs"
+    },
+    {
+      "path": "../store-web"
+    }
+  ]
+}

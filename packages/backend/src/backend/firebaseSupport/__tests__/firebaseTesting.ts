@@ -79,7 +79,9 @@ export function createTestAdminFirebaseApp(): {
   const testApp = firebaseTesting.initializeAdminApp({
     projectId: projectID,
   });
-  return { firestore: testApp.firestore() as firebase.firestore.Firestore };
+  return {
+    firestore: testApp.firestore() as unknown as firebase.firestore.Firestore,
+  };
 }
 
 export async function resetTestFirestore(

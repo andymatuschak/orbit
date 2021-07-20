@@ -11,7 +11,9 @@
     { "path": "./ui" },
     { "path": "./note-sync" },
     { "path": "./sample-data" },
-    { "path": "./store" }
+    { "path": "./store-fs" },
+    { "path": "./store-shared" },
+    { "path": "./store-web" }
   ],
   "files": []
 }

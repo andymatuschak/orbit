@@ -3,7 +3,7 @@
   "scripts": {
     "build": "tsc -b packages/tsconfig.json",
     "watch": "tsc -b -w packages/tsconfig.json",
-    "test": "cd packages; npx jest --projects anki-import api-client backend core core2 web-component note-sync api store --runInBand",
+    "test": "cd packages; npx jest --projects anki-import api-client backend core core2 web-component note-sync api store-fs store-web store-testing --runInBand",
     "test:watch": "yarn run test --watch",
     "lint": "cd packages; eslint .",
     "lint:fix": "cd packages; eslint --fix ."
