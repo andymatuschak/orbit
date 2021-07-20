@@ -1,9 +1,9 @@
 import dateFns from "date-fns";
 import { PromptState, PromptTaskID } from "@withorbit/core";
-import {
+import type {
   SessionNotificationState,
   UserMetadata,
-} from "@withorbit/firebase-support";
+} from "../backend/firebaseSupport";
 import * as backend from "../backend";
 import getDefaultEmailService from "../email";
 import { EmailSpec } from "../email/types";

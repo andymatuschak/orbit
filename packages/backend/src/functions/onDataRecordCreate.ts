@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import { getIDForPrompt, Prompt } from "@withorbit/core";
-import { getPromptIDForFirebaseKey } from "@withorbit/firebase-support";
+import { getPromptIDForFirebaseKey } from "../backend/firebaseSupport";
 import { sharedLoggingService } from "../logging";
 
 export const onDataRecordCreate = functions.firestore

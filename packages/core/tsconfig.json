@@ -3,10 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["jest", "long", "node"],
-    "lib": [
-      "dom"
-    ]
+    "types": ["jest", "node"],
+    "lib": ["dom"]
   },
   "include": ["./src/**/*.ts"]
 }

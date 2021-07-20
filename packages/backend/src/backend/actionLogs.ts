@@ -7,7 +7,7 @@ import {
   getPromptStateFromPromptStateCache,
   serverTimestampToTimestampMillis,
   storeLogs as _storeLogs,
-} from "@withorbit/firebase-support";
+} from "./firebaseSupport";
 import * as firebase from "firebase-admin";
 import { getDatabase } from "./firebase";
 import { updatePromptStateCacheWithLog } from "./promptStates";

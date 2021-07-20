@@ -13,7 +13,7 @@ import {
   maxServerTimestamp,
   PromptStateCache,
   ServerTimestamp,
-} from "@withorbit/firebase-support";
+} from "./backend/firebaseSupport";
 
 export default async function applyActionLogDocumentToPromptStateCache({
   actionLogDocument,

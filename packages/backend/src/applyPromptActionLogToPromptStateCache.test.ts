@@ -11,7 +11,7 @@ import {
   ActionLogDocument,
   PromptStateCache,
   ServerTimestamp,
-} from "@withorbit/firebase-support";
+} from "./backend/firebaseSupport";
 import { testQAPrompt } from "@withorbit/sample-data";
 import applyPromptActionLogToPromptStateCache from "./applyPromptActionLogToPromptStateCache";
 

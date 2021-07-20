@@ -12,7 +12,7 @@ import {
   getAttachmentURL as _getAttachmentURL,
   getStorageObjectNameForAttachmentID,
   storageBucketName,
-} from "@withorbit/firebase-support";
+} from "./firebaseSupport";
 import fetch, * as Fetch from "node-fetch";
 import { getApp, getDatabase } from "./firebase";
 

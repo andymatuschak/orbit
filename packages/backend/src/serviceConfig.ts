@@ -1,8 +1,8 @@
-import * as functions from "firebase-functions";
 import { isRunningInEmulator } from "./util/isRunningInEmulator";
 import { isRunningInTest } from "./util/isRunningInTest";
 
 const shouldMockValue = isRunningInEmulator || isRunningInTest;
+const functions = shouldMockValue ? null : require("firebase-functions");
 
 const serviceConfig = {
   notificationEmails: {

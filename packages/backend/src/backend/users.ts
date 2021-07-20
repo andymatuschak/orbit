@@ -1,9 +1,6 @@
 import admin from "firebase-admin";
 
-import {
-  getUserMetadataReference,
-  UserMetadata,
-} from "@withorbit/firebase-support";
+import { getUserMetadataReference, UserMetadata } from "./firebaseSupport";
 import { getDatabase } from "./firebase";
 
 export async function getUserMetadata(

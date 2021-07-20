@@ -1,4 +1,4 @@
-import * as FileSystem from "expo-file-system";
+import { FileSystem } from "react-native-unimodules";
 import {
   AttachmentID,
   AttachmentMimeType,

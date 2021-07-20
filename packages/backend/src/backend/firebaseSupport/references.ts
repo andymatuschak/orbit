@@ -4,7 +4,7 @@ import { DataRecord, DataRecordID } from "./dataRecord";
 import {
   getFirebaseKeyForCIDString,
   getFirebaseKeyForTaskID,
-} from "./firebaseKeyEncoding.js";
+} from "./firebaseKeyEncoding";
 import {
   CollectionReference,
   Database,

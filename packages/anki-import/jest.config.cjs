@@ -1,5 +1,8 @@
 module.exports = {
-  testEnvironment: "jest-environment-uint8array",
+  testEnvironment: "node",
+  globals: {
+    Uint8Array: Uint8Array, // use Node's implementation; https://github.com/facebook/jest/issues/4422
+  },
   testMatch: ["**/?(*.)+(spec|test).ts?(x)"],
   testPathIgnorePatterns: ["dist", "node_modules"],
   // Jest struggles to read these mappings from the multiformats packages, which seem to be specifying them just fine as far as I can tell.

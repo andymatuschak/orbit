@@ -3,7 +3,7 @@ import { getIDForPrompt, Prompt, PromptID } from "@withorbit/core";
 import {
   getDataRecordReference,
   getPromptIDForFirebaseKey,
-} from "@withorbit/firebase-support";
+} from "./firebaseSupport";
 import { getDatabase } from "./firebase";
 
 export async function getPrompts(

@@ -1,7 +1,7 @@
 import * as firebaseTesting from "@firebase/rules-unit-testing";
 import childProcess, { ChildProcess } from "child_process";
 import events from "events";
-import firebase from "firebase";
+import firebase from "firebase/app";
 import path from "path";
 
 const projectID = "metabook-system";

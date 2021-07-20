@@ -1,4 +1,4 @@
-import { PromptStateCache } from "@withorbit/firebase-support";
+import { PromptStateCache } from "./firebaseSupport";
 import { _getActiveTaskCountDelta } from "./promptStates";
 
 describe("_getActiveTaskCountDelta", () => {

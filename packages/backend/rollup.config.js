@@ -30,10 +30,6 @@ export default {
           find: "@withorbit/core",
           replacement: path.resolve(__dirname, "../core/dist"),
         },
-        {
-          find: "@withorbit/firebase-support",
-          replacement: path.resolve(__dirname, "../firebase-support/dist"),
-        },
       ],
     }),
     json(),

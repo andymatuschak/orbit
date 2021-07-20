@@ -2,7 +2,7 @@ import {
   ActionLogDocument,
   getPromptStateFromPromptStateCache,
   serverTimestampToTimestampMillis,
-} from "@withorbit/firebase-support";
+} from "../backend/firebaseSupport";
 import firebase from "firebase-admin";
 import * as functions from "firebase-functions";
 import * as backend from "../backend";

@@ -24,5 +24,5 @@ export {
   getAttachmentIDForFirebaseKey,
   getPromptIDForFirebaseKey,
   getFirebaseKeyForCIDString,
-} from "./firebaseKeyEncoding.js";
+} from "./firebaseKeyEncoding";
 export * from "./storage";

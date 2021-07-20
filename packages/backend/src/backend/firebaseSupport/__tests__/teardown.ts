@@ -1,4 +1,4 @@
-import * as FirebaseTesting from "../firebaseTesting";
+import * as FirebaseTesting from "./firebaseTesting";
 
 export default function () {
   return FirebaseTesting.stopFirebaseTestingEmulator();

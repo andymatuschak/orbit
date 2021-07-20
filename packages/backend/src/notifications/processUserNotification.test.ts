@@ -1,5 +1,5 @@
 import * as dateFns from "date-fns";
-import { UserMetadata } from "@withorbit/firebase-support";
+import type { UserMetadata } from "../backend/firebaseSupport";
 import { generateDuePromptStates } from "./__fixtures__/generateDuePromptStates";
 import {
   _getUserNotificationAction,

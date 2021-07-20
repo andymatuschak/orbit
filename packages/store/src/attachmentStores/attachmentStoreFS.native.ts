@@ -4,7 +4,7 @@ Implements an attachment store by writing files to a folder on disk.
 This implementation is for React Native clients.
  */
 import { getFileExtensionForAttachmentMimeType } from "@withorbit/core";
-import FileSystem from "expo-file-system";
+import { FileSystem } from "react-native-unimodules";
 import path from "path";
 import { pathToFileURL } from "url";
 import { AttachmentStore } from "../attachmentStore";
