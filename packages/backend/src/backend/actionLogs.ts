@@ -35,8 +35,6 @@ export async function storeActionLogs(
     const logDocument: ActionLogDocument = {
       ...log,
       serverTimestamp: firebase.firestore.Timestamp.now(),
-      // These logs will all end up with the same server timestamp, which create a lot of flailing in onLogCreate, since execution order is not guaranteed. We'll go ahead and compute the new prompt states right here.
-      suppressTaskStateCacheUpdate: true,
     };
 
     const ref = getActionLogIDReference(
