@@ -101,7 +101,7 @@ describe("task components", () => {
     expect(filteredResults[1]).toMatchInlineSnapshot(`
       Object {
         "componentID": "b",
-        "dueTimestampMillis": 200,
+        "dueTimestampMillis": 50,
         "taskID": "a",
       }
     `);

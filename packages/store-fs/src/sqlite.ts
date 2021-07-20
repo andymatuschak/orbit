@@ -274,7 +274,7 @@ export function constructListEntitySQLQuery<E extends Entity>(
       tableExpression: `derived_taskComponents AS dt JOIN ${SQLTableName.Entities} AS e ON (dt.taskID = e.${SQLEntityTableColumn.ID})`,
       idKey: SQLEntityTableColumn.ID,
       orderKey: SQLEntityTableColumn.RowID,
-      columns,
+      columns: [`DISTINCT ${SQLEntityTableColumn.ID}`, ...columns],
       options: query,
       predicates, // We don't need to include the entity type because derived_taskComponents only contains references to tasks.
     });

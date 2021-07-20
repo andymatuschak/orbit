@@ -116,7 +116,7 @@ describe("task components", () => {
     expect(results.rows.item(1)).toMatchInlineSnapshot(`
       Object {
         "componentID": "b",
-        "dueTimestampMillis": 200,
+        "dueTimestampMillis": 50,
         "taskID": "a",
       }
     `);
@@ -260,11 +260,12 @@ describe("indexing", () => {
       query.args,
     );
     expect(plan).toMatchInlineSnapshot(`
-      Array [
-        "SEARCH TABLE derived_taskComponents AS dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
-        "SEARCH TABLE entities AS e USING INDEX sqlite_autoindex_entities_1 (id=?)",
-      ]
-    `);
+Array [
+  "SEARCH TABLE derived_taskComponents AS dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
+  "SEARCH TABLE entities AS e USING INDEX sqlite_autoindex_entities_1 (id=?)",
+  "USE TEMP B-TREE FOR DISTINCT",
+]
+`);
 
     const queryWithSeek = constructListEntitySQLQuery({
       entityType: EntityType.Task,
@@ -278,14 +279,15 @@ describe("indexing", () => {
       queryWithSeek.args,
     );
     expect(planWithSeek).toMatchInlineSnapshot(`
-      Array [
-        "SEARCH TABLE derived_taskComponents AS dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
-        "SEARCH TABLE entities AS e USING INDEX sqlite_autoindex_entities_1 (id=? AND rowid>?)",
-        "SCALAR SUBQUERY 1",
-        "SEARCH TABLE entities AS e USING COVERING INDEX sqlite_autoindex_entities_1 (id=?)",
-        "SEARCH TABLE derived_taskComponents AS dt USING COVERING INDEX sqlite_autoindex_derived_taskComponents_1 (taskID=?)",
-      ]
-    `);
+Array [
+  "SEARCH TABLE derived_taskComponents AS dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
+  "SEARCH TABLE entities AS e USING INDEX sqlite_autoindex_entities_1 (id=? AND rowid>?)",
+  "SCALAR SUBQUERY 1",
+  "SEARCH TABLE entities AS e USING COVERING INDEX sqlite_autoindex_entities_1 (id=?)",
+  "SEARCH TABLE derived_taskComponents AS dt USING COVERING INDEX sqlite_autoindex_derived_taskComponents_1 (taskID=?)",
+  "USE TEMP B-TREE FOR DISTINCT",
+]
+`);
   });
 
   test("list events by entity ID", async () => {
