@@ -11,6 +11,9 @@
       "path": "../core2"
     },
     {
+      "path": "../sample-data"
+    },
+    {
       "path": "../store-shared"
     }
   ]

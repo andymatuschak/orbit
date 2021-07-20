@@ -4,14 +4,12 @@ import {
   AttachmentReference,
   ClozeTaskContent,
   EntityType,
-  EventID,
   MemoryTaskSpec,
   Task,
   TaskContentType,
   TaskID,
   TaskSpecType,
 } from "@withorbit/core2";
-import { DatabaseBackendEntityRecord } from "@withorbit/store-shared";
 
 const testClozeSpec: MemoryTaskSpec<ClozeTaskContent> = {
   type: TaskSpecType.Memory,
@@ -70,65 +68,23 @@ export const testTask: Task = {
 
 export function createTestTask({
   id,
-  lastEventID,
-  lastEventTimestampMillis,
   dueTimestampMillis,
 }: {
   id: string;
-  lastEventID: string;
-  lastEventTimestampMillis: number;
   dueTimestampMillis: number;
-}): DatabaseBackendEntityRecord<Task> {
+}): Task {
   // lazy deep clone
   const newTask = JSON.parse(JSON.stringify(testTask)) as Task;
   newTask.id = id as TaskID;
   newTask.componentStates["a"].dueTimestampMillis = dueTimestampMillis;
-  return {
-    entity: newTask,
-    lastEventID: lastEventID as EventID,
-    lastEventTimestampMillis,
-  };
+  return newTask;
 }
 
-export const testTasks: DatabaseBackendEntityRecord<Task>[] = [
-  createTestTask({
-    id: "a",
-    lastEventID: "x",
-    lastEventTimestampMillis: 5,
-    dueTimestampMillis: 50,
-  }),
-  createTestTask({
-    id: "b",
-    lastEventID: "y",
-    lastEventTimestampMillis: 4,
-    dueTimestampMillis: 100,
-  }),
-  createTestTask({
-    id: "c",
-    lastEventID: "z",
-    lastEventTimestampMillis: 3,
-    dueTimestampMillis: 150,
-  }),
-];
-
-export function createTestAttachmentReference(
-  id: string,
-  lastEventID: string,
-): DatabaseBackendEntityRecord<AttachmentReference> {
+export function createTestAttachmentReference(id: string): AttachmentReference {
   return {
-    lastEventID: lastEventID as EventID,
-    lastEventTimestampMillis: 1000,
-    entity: {
-      id: id as AttachmentID,
-      createdAtTimestampMillis: 1000,
-      type: EntityType.AttachmentReference,
-      mimeType: AttachmentMimeType.PNG,
-    },
+    id: id as AttachmentID,
+    createdAtTimestampMillis: 1000,
+    type: EntityType.AttachmentReference,
+    mimeType: AttachmentMimeType.PNG,
   };
 }
-
-export const testAttachmentReferences: DatabaseBackendEntityRecord<AttachmentReference>[] =
-  [
-    createTestAttachmentReference("a_a", "x"),
-    createTestAttachmentReference("a_b", "y"),
-  ];

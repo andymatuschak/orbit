@@ -1,5 +1,12 @@
-import { EntityType, EventID, TaskID } from "@withorbit/core2";
+import {
+  AttachmentReference,
+  EntityType,
+  EventID,
+  Task,
+  TaskID,
+} from "@withorbit/core2";
 import { core2 as testFixtures } from "@withorbit/sample-data";
+import { DatabaseBackendEntityRecord } from "@withorbit/store-shared";
 import {
   constructGetByIDSQLQuery,
   constructListEntitySQLQuery,
@@ -16,7 +23,48 @@ import {
 import { execReadStatement } from "./sqlite/transactionUtils";
 import { SQLDatabase } from "./sqlite/types";
 
-const { testTasks, testAttachmentReferences, createTestTask } = testFixtures;
+const { createTestTask, createTestAttachmentReference } = testFixtures;
+
+const testTasks: DatabaseBackendEntityRecord<Task>[] = [
+  {
+    entity: createTestTask({
+      id: "a",
+      dueTimestampMillis: 50,
+    }),
+    lastEventID: "x" as EventID,
+    lastEventTimestampMillis: 5,
+  },
+  {
+    entity: createTestTask({
+      id: "b",
+      dueTimestampMillis: 100,
+    }),
+    lastEventID: "y" as EventID,
+    lastEventTimestampMillis: 4,
+  },
+  {
+    entity: createTestTask({
+      id: "c",
+      dueTimestampMillis: 150,
+    }),
+    lastEventID: "z" as EventID,
+    lastEventTimestampMillis: 3,
+  },
+];
+
+const testAttachmentReferences: DatabaseBackendEntityRecord<AttachmentReference>[] =
+  [
+    {
+      entity: createTestAttachmentReference("a_a"),
+      lastEventID: "x" as EventID,
+      lastEventTimestampMillis: 1000,
+    },
+    {
+      entity: createTestAttachmentReference("a_b"),
+      lastEventID: "y" as EventID,
+      lastEventTimestampMillis: 1000,
+    },
+  ];
 
 let backend: SQLDatabaseBackend;
 
@@ -77,14 +125,17 @@ describe("task components", () => {
   test("modified on update", async () => {
     await backend.putEntities(testTasks);
 
-    const updatedA = createTestTask({
+    const updatedTask = createTestTask({
       id: "a",
-      lastEventID: "y",
-      lastEventTimestampMillis: 20,
       dueTimestampMillis: 300,
     });
-    delete updatedA.entity.componentStates["b"];
-    await backend.putEntities([updatedA]);
+    delete updatedTask.componentStates["b"];
+    const updatedRecord: DatabaseBackendEntityRecord<Task> = {
+      entity: updatedTask,
+      lastEventID: "y" as EventID,
+      lastEventTimestampMillis: 20,
+    };
+    await backend.putEntities([updatedRecord]);
 
     const results = await execReadStatement(
       await backend.__accessDBForTesting(),

@@ -1,12 +1,60 @@
+import { DatabaseBackendEntityRecord } from "@withorbit/store-shared";
 import { IDBDatabaseBackend } from "./indexedDB";
-import { EntityType, TaskID } from "@withorbit/core2";
+import {
+  AttachmentReference,
+  EntityType,
+  EventID,
+  Task,
+  TaskID,
+} from "@withorbit/core2";
 import { core2 as testFixtures } from "@withorbit/sample-data";
 // @ts-ignore Looks like there is no @types for this library
 import FDBFactory from "fake-indexeddb/lib/FDBFactory";
 
-const { testTasks, testAttachmentReferences, createTestTask } = testFixtures;
+const { createTestTask, createTestAttachmentReference } = testFixtures;
 
 let backend: IDBDatabaseBackend;
+
+const testTasks: DatabaseBackendEntityRecord<Task>[] = [
+  {
+    entity: createTestTask({
+      id: "a",
+      dueTimestampMillis: 50,
+    }),
+    lastEventID: "x" as EventID,
+    lastEventTimestampMillis: 5,
+  },
+  {
+    entity: createTestTask({
+      id: "b",
+      dueTimestampMillis: 100,
+    }),
+    lastEventID: "y" as EventID,
+    lastEventTimestampMillis: 4,
+  },
+  {
+    entity: createTestTask({
+      id: "c",
+      dueTimestampMillis: 150,
+    }),
+    lastEventID: "z" as EventID,
+    lastEventTimestampMillis: 3,
+  },
+];
+
+const testAttachmentReferences: DatabaseBackendEntityRecord<AttachmentReference>[] =
+  [
+    {
+      entity: createTestAttachmentReference("a_a"),
+      lastEventID: "x" as EventID,
+      lastEventTimestampMillis: 1000,
+    },
+    {
+      entity: createTestAttachmentReference("a_b"),
+      lastEventID: "y" as EventID,
+      lastEventTimestampMillis: 1000,
+    },
+  ];
 
 beforeEach(() => {
   indexedDB = new FDBFactory();
@@ -62,18 +110,19 @@ describe("task components", () => {
   test("modified on update", async () => {
     await backend.putEntities(testTasks);
 
-    const updatedA = createTestTask({
+    const updatedTask = createTestTask({
       id: "a",
-      lastEventID: "y",
-      lastEventTimestampMillis: 50,
       dueTimestampMillis: 300,
     });
-
-    delete updatedA.entity.componentStates["b"];
-
-    await backend.modifyEntities([updatedA.entity.id], async (entityMap) => {
+    delete updatedTask.componentStates["b"];
+    const updatedRecord: DatabaseBackendEntityRecord<Task> = {
+      entity: updatedTask,
+      lastEventID: "y" as EventID,
+      lastEventTimestampMillis: 20,
+    };
+    await backend.modifyEntities([updatedTask.id], async (entityMap) => {
       const output = new Map(entityMap);
-      output.set(updatedA.entity.id, updatedA);
+      output.set(updatedTask.id, updatedRecord);
       return output;
     });
 
