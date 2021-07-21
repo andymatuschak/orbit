@@ -229,7 +229,7 @@ export async function listPromptStates(
   } else {
     ref = ref.orderBy("creationServerTimestamp");
     if (query.createdAfterID) {
-      const baseRef = await getTaskStateCacheReference(
+      const baseRef = getTaskStateCacheReference(
         db,
         userID,
         query.createdAfterID,

@@ -28,7 +28,6 @@
     "detect-browser": "^5.2.0",
     "eslint-plugin-react": "^7.21.5",
     "eslint-plugin-react-hooks": "^4.2.0",
-    "fastestsmallesttextencoderdecoder": "^1.0.22",
     "fetch-blob": "^2.1.1",
     "firebase-admin": "^9.4.2",
     "firebase-functions": "^3.14.1",

@@ -30,6 +30,14 @@ export default {
           find: "@withorbit/core",
           replacement: path.resolve(__dirname, "../core/dist"),
         },
+        {
+          find: "@withorbit/core2",
+          replacement: path.resolve(__dirname, "../core2/dist"),
+        },
+        {
+          find: "@withorbit/store-shared",
+          replacement: path.resolve(__dirname, "../store-shared/dist"),
+        },
       ],
     }),
     json(),

@@ -5,7 +5,7 @@ export interface DatabaseBackend {
   close(): Promise<void>;
 
   getEvents<E extends Event, ID extends EventID>(
-    eventIDs: EventID[],
+    eventIDs: ID[],
   ): Promise<Map<ID, E>>;
   putEvents(events: Event[]): Promise<void>;
 

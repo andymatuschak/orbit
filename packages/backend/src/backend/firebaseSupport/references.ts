@@ -3,7 +3,7 @@ import { firestore } from "firebase-admin";
 import { ActionLogDocument } from "./actionLogDocument";
 import {
   getFirebaseKeyForCIDString,
-  getFirebaseKeyForTaskID,
+  getFirebaseKeyFromStringHash,
 } from "./firebaseKeyEncoding";
 import { PromptStateCache } from "./promptStateCache";
 import { UserMetadata } from "./userMetadata";
@@ -51,13 +51,13 @@ export function getTaskStateCacheCollectionReference(
   ) as firestore.CollectionReference<PromptStateCache>;
 }
 
-export async function getTaskStateCacheReference(
+export function getTaskStateCacheReference(
   database: firestore.Firestore,
   userID: string,
   taskID: string,
-): Promise<firestore.DocumentReference<PromptStateCache>> {
+): firestore.DocumentReference<PromptStateCache> {
   return getTaskStateCacheCollectionReference(database, userID).doc(
-    await getFirebaseKeyForTaskID(taskID),
+    getFirebaseKeyFromStringHash(taskID),
   ) as firestore.DocumentReference<PromptStateCache>;
 }
 

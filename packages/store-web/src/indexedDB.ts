@@ -53,7 +53,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
   }
 
   async getEvents<E extends Event, ID extends EventID>(
-    eventIDs: EventID[],
+    eventIDs: ID[],
   ): Promise<Map<ID, E>> {
     const values = await this.db.events
       .where(DexieEventKeys.ID)

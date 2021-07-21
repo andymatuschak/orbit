@@ -1,4 +1,3 @@
-import * as fastestsmallesttextencoderdecoder from "fastestsmallesttextencoderdecoder";
 import { ActionLogID, AttachmentID, PromptID } from "@withorbit/core";
 import { base58btc } from "multiformats/bases/base58";
 import CID from "multiformats/cid";
@@ -6,6 +5,7 @@ import raw from "multiformats/codecs/raw";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as digest from "multiformats/hashes/digest";
 import * as dagJSON from "@ipld/dag-json";
+import * as crypto from "crypto";
 
 const firebaseKeyBaseEncoding = base58btc;
 
@@ -55,9 +55,10 @@ export function getAttachmentIDForFirebaseKey(
   return cid.toString(outputCIDStringBaseEncoding) as AttachmentID;
 }
 
-export async function getFirebaseKeyForTaskID(taskID: string): Promise<string> {
-  // The taskID is not sharding-friendly (since it starts with a CID); we hash it to get a Firebase key with a uniformly-distributed prefix.
-  const taskIDBuffer = fastestsmallesttextencoderdecoder.encode(taskID);
-  const hashBuffer = await sha256.digest(taskIDBuffer);
-  return outputCIDStringBaseEncoding.baseEncode(hashBuffer.digest);
+// Firebase keys are supposed to be sharding-friendly--i.e. distributed uniformly by lexicographic sort. This function lets us use an arbitrary identifier which might have a common prefix or not be uniformly distributed (e.g. a taskID) as a Firebase key by hashing it.
+export function getFirebaseKeyFromStringHash(input: string): string {
+  const hashObject = crypto.createHash("sha256");
+  hashObject.update(input);
+  const hashDigestBuffer = hashObject.digest();
+  return outputCIDStringBaseEncoding.baseEncode(hashDigestBuffer);
 }

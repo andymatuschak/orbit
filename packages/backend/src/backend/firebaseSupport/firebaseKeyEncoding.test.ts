@@ -3,7 +3,7 @@ import {
   getActionLogIDForFirebaseKey,
   getAttachmentIDForFirebaseKey,
   getFirebaseKeyForCIDString,
-  getFirebaseKeyForTaskID,
+  getFirebaseKeyFromStringHash,
   getPromptIDForFirebaseKey,
 } from "./firebaseKeyEncoding";
 
@@ -51,9 +51,9 @@ describe("action log ID", () => {
   });
 });
 
-test("task ID encoding stability", async () => {
+test("task ID encoding stability", () => {
   expect(
-    await getFirebaseKeyForTaskID(
+    getFirebaseKeyFromStringHash(
       "zdj7WbzHECp4HhW2uaxptud5n5QBnP3mEPTQVTW1zvNSLQDiw/basic",
     ),
   ).toEqual("1dPL56CjD6vn8WmC64akhatX7EXQXJgWkzMrGMwFpoR");

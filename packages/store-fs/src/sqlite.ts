@@ -118,7 +118,7 @@ export class SQLDatabaseBackend implements DatabaseBackend {
   }
 
   getEvents<E extends Event, ID extends EventID>(
-    eventIDs: EventID[],
+    eventIDs: ID[],
   ): Promise<Map<ID, E>> {
     return this._getByID(
       SQLTableName.Events,
