@@ -38,7 +38,7 @@ export class Database {
   }
 
   getEvents<E extends Event, ID extends EventID>(
-    eventIDs: EventID[],
+    eventIDs: ID[],
   ): Promise<Map<ID, E>> {
     return this._backend.getEvents(eventIDs);
   }
