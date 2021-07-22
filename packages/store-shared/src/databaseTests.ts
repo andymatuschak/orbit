@@ -29,6 +29,10 @@ export function runDatabaseTests(
     db = await databaseFactory(mockEventReducer);
   });
 
+  afterEach(async () => {
+    await db.close();
+  });
+
   describe(`${name} database tests`, () => {
     test(`round-trip events`, async () => {
       await db.putEvents(testEvents);
