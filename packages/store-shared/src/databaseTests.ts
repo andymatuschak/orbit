@@ -1,16 +1,17 @@
 import { Entity, EntityType, Event, EventID, TaskID } from "@withorbit/core2";
 import { Database, EventReducer } from "./database";
+import { core2 as fixtures } from "@withorbit/sample-data";
 
 // n.b. these tests are not actually run as part of this package: they're run in the implementation packages.
 
-function mockEventReducer(entitySnapshot: Entity | null, event: Event) {
+function mockEventReducer(entitySnapshot: Entity | null, event: Event): Entity {
   return {
+    ...fixtures.testTask,
     id: event.entityID,
-    type: EntityType.Task,
     eventIDs: entitySnapshot
       ? [...(entitySnapshot as any).eventIDs, event.id]
       : [event.id],
-  } as unknown as Entity;
+  } as Entity;
 }
 
 const testEvents: Event[] = [
@@ -21,11 +22,11 @@ const testEvents: Event[] = [
 
 export function runDatabaseTests(
   name: string,
-  databaseFactory: (eventReducer: EventReducer) => Database,
+  databaseFactory: (eventReducer: EventReducer) => Promise<Database>,
 ) {
   let db: Database;
-  beforeEach(() => {
-    db = databaseFactory(mockEventReducer);
+  beforeEach(async () => {
+    db = await databaseFactory(mockEventReducer);
   });
 
   describe(`${name} database tests`, () => {

@@ -1,8 +1,11 @@
-import { runDatabaseTests } from "@withorbit/store-shared/dist/databaseTests.test";
-import { OrbitStoreInMemory } from "./inMemory/orbitStoreInMemory";
+import { Database, runDatabaseTests } from "@withorbit/store-shared";
+import { SQLDatabaseBackend } from "./sqlite";
 
 describe("database tests", () => {
-  runDatabaseTests("SQLite", (eventReducer) => {
-    return new OrbitStoreInMemory(eventReducer).database;
+  runDatabaseTests("SQLite", async (eventReducer) => {
+    return new Database(
+      new SQLDatabaseBackend(SQLDatabaseBackend.inMemoryDBSubpath),
+      eventReducer,
+    );
   });
 });

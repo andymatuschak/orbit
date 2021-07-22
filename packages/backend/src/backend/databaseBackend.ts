@@ -18,14 +18,17 @@ import {
 import { firestore } from "firebase-admin";
 import { getDatabase } from "./firebase";
 import { getFirebaseKeyFromStringHash } from "./firebaseSupport/firebaseKeyEncoding";
+import { OrderedID, OrderedIDGenerator } from "./orderedID";
 
 export class FirestoreDatabaseBackend implements DatabaseBackend {
-  private _userID: string;
-  private _database: firestore.Firestore;
+  private readonly _userID: string;
+  private readonly _database: firestore.Firestore;
+  private readonly _orderedIDGenerator: OrderedIDGenerator;
 
   constructor(userID: string, database: firestore.Firestore = getDatabase()) {
     this._userID = userID;
     this._database = database;
+    this._orderedIDGenerator = new OrderedIDGenerator();
   }
 
   async close(): Promise<void> {
@@ -68,7 +71,7 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
       `${EntityDocumentKeys.Entity}.type` as const;
 
     let firestoreQuery = this._getEntityCollectionRef()
-      .orderBy(EntityDocumentKeys.CreatedAtServerTimestamp)
+      .orderBy(EntityDocumentKeys.OrderedID)
       .where(entityTypeKeyPath, "==", query.entityType);
     if (query.limit !== undefined) {
       firestoreQuery = firestoreQuery.limit(query.limit);
@@ -108,8 +111,9 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
   }
 
   async listEvents(query: DatabaseEventQuery): Promise<Event[]> {
+    const { predicate } = query;
     let firestoreQuery = this._getEventCollectionRef().orderBy(
-      EventDocumentKeys.ServerTimestamp,
+      EventDocumentKeys.OrderedID,
     );
     if (query.limit !== undefined) {
       firestoreQuery = firestoreQuery.limit(query.limit);
@@ -120,7 +124,6 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
       const afterEventSnapshot = await this._getEventRef(query.afterID).get();
       firestoreQuery = firestoreQuery.startAfter(afterEventSnapshot);
 
-      const { predicate } = query;
       // We can't use native queries for both the predicate and the afterID. So if there's both, we'll have to filter after the fact, alas.
       if (predicate) {
         docs = await fetchDocumentsWithPostQueryFilter(
@@ -132,17 +135,17 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
         docs = (await firestoreQuery.get()).docs;
       }
     } else {
-      if (query.predicate) {
+      if (predicate) {
         const keyPathMapping: {
-          [K in typeof query.predicate[0]]: `${EventDocumentKeys.Event}.${keyof Event}`;
+          [K in typeof predicate[0]]: `${EventDocumentKeys.Event}.${keyof Event}`;
         } = {
           entityID: `${EventDocumentKeys.Event}.entityID`,
         } as const;
-        const documentKey = keyPathMapping[query.predicate[0]];
+        const documentKey = keyPathMapping[predicate[0]];
         firestoreQuery = firestoreQuery.where(
           documentKey,
-          mapQueryPredicateToFirestoreOp(query.predicate),
-          query.predicate[2],
+          mapQueryPredicateToFirestoreOp(predicate),
+          predicate[2],
         );
       }
       docs = (await firestoreQuery.get()).docs;
@@ -173,13 +176,10 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
 
       // Save the new entity records.
       const entityCollectionRef = this._getEntityCollectionRef();
-      const creationTimestampsByID = new Map<ID, firestore.Timestamp>();
+      const orderedIDsByEntityID = new Map<ID, OrderedID>();
       for (const doc of entityDocs) {
         if (doc) {
-          creationTimestampsByID.set(
-            doc.entity.id as ID,
-            doc.createdAtServerTimestamp,
-          );
+          orderedIDsByEntityID.set(doc.entity.id as ID, doc.orderedID);
         }
       }
       for (const [id, newRecord] of newEntityRecordMap) {
@@ -188,7 +188,8 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
           ref,
           getEntityDocumentFromRecord(
             newRecord,
-            creationTimestampsByID.get(id) ?? firestore.Timestamp.now(),
+            orderedIDsByEntityID.get(id) ??
+              this._orderedIDGenerator.getOrderedID(),
           ),
         );
       }
@@ -208,7 +209,7 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
         const snapshot = eventSnapshots[i];
         if (!snapshot.exists) {
           tx.create(snapshot.ref, {
-            serverTimestamp: firestore.Timestamp.now(),
+            orderedID: this._orderedIDGenerator.getOrderedID(),
             event: events[i],
           });
         }
@@ -272,24 +273,24 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
 }
 
 enum EventDocumentKeys {
-  ServerTimestamp = "serverTimestamp",
+  OrderedID = "orderedID",
   Event = "event",
 }
 
 interface EventDocument<E extends Event = Event> {
-  [EventDocumentKeys.ServerTimestamp]: firestore.Timestamp;
+  [EventDocumentKeys.OrderedID]: OrderedID;
   [EventDocumentKeys.Event]: E;
 }
 
 type EntityDocument = TaskDocument | EntityDocumentBase<AttachmentReference>;
 
 enum EntityDocumentKeys {
-  CreatedAtServerTimestamp = "createdAtServerTimestamp",
+  OrderedID = "orderedID",
   Entity = "entity",
 }
 interface EntityDocumentBase<E extends Entity = Entity>
   extends DatabaseBackendEntityRecord<E> {
-  [EntityDocumentKeys.CreatedAtServerTimestamp]: firestore.Timestamp;
+  [EntityDocumentKeys.OrderedID]: OrderedID;
   [EntityDocumentKeys.Entity]: E;
 }
 
@@ -324,19 +325,16 @@ function getEntityRecordMapFromFirestoreDocs<
   return output;
 }
 
-function getEntityDocumentFromRecord<
-  E extends Entity,
-  ID extends IDOfEntity<E>,
->(
-  newRecord: [ID, DatabaseBackendEntityRecord<E>][1],
-  createdAtServerTimestamp: firestore.Timestamp,
+function getEntityDocumentFromRecord<E extends Entity>(
+  newRecord: DatabaseBackendEntityRecord<E>,
+  orderedID: OrderedID,
 ) {
   const entity: Entity = newRecord.entity;
   const entityDocumentBase: EntityDocumentBase = {
     entity: entity,
     lastEventID: newRecord.lastEventID,
     lastEventTimestampMillis: newRecord.lastEventTimestampMillis,
-    createdAtServerTimestamp,
+    orderedID,
   };
 
   let newDocument: EntityDocument;

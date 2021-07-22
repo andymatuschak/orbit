@@ -18,3 +18,5 @@ export type {
 } from "./databaseQuery";
 
 export type { OrbitStore } from "./orbitStore";
+
+export { runDatabaseTests } from "./databaseTests";

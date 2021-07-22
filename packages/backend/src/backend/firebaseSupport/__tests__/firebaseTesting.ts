@@ -1,8 +1,8 @@
 import * as firebaseTesting from "@firebase/rules-unit-testing";
 import childProcess, { ChildProcess } from "child_process";
 import events from "events";
-import firebase from "firebase/app";
 import path from "path";
+import firebase from "firebase-admin";
 
 const projectID = "metabook-system";
 
@@ -23,18 +23,20 @@ export function startFirebaseTestingEmulator() {
   );
   emulatorProcess = localEmulatorProcess;
 
+  process.env["FIRESTORE_EMULATOR_HOST"] = "localhost:8080";
+
   return new Promise((resolve) => {
-    localEmulatorProcess.stdout.on("data", (data) => {
+    localEmulatorProcess.stdout.on("data", async (data) => {
       console.log(data.toString());
       if (/All emulators ready/.test(data.toString())) {
+        // Clear any data that may have been left over from prior runs (e.g. if they didn't terminate cleanly).
+        await firebaseTesting.clearFirestoreData({ projectId: projectID });
         resolve(undefined);
       }
     });
 
     localEmulatorProcess.stderr.on("data", (data) => {
       console.error(`stderr: ${data}`);
-      // fail("Couldn't start Firebase emulator");
-      // reject();
     });
   });
 }
@@ -48,46 +50,14 @@ export async function stopFirebaseTestingEmulator() {
   }
 }
 
-let sharedFunctionsInstance: firebase.functions.Functions | null = null;
-export function createTestFirebaseApp(
-  uid = "testUserID",
-  email = "test@test.com",
-): {
-  firestore: firebase.firestore.Firestore;
-  functions: firebase.functions.Functions;
-} {
-  process.env["FIRESTORE_EMULATOR_HOST"] = "localhost:8080";
-  const testApp = firebaseTesting.initializeTestApp({
-    projectId: projectID,
-    auth: { uid, email },
-  });
-
-  if (!sharedFunctionsInstance) {
-    const app = firebase.initializeApp({ projectId: projectID });
-    sharedFunctionsInstance = app.functions();
-    sharedFunctionsInstance.useEmulator("localhost", 5001);
-  }
-  return {
-    firestore: testApp.firestore() as firebase.firestore.Firestore,
-    functions: sharedFunctionsInstance,
-  };
-}
-
-export function createTestAdminFirebaseApp(): {
-  firestore: firebase.firestore.Firestore;
-} {
-  const testApp = firebaseTesting.initializeAdminApp({
+export function createTestAdminFirebaseApp(): firebase.app.App {
+  return firebaseTesting.initializeAdminApp({
     projectId: projectID,
   });
-  return {
-    firestore: testApp.firestore() as unknown as firebase.firestore.Firestore,
-  };
 }
 
-export async function resetTestFirestore(
-  firestore: firebase.firestore.Firestore,
-) {
-  await firestore.terminate();
-  await firestore.clearPersistence();
+export async function resetTestFirebaseApp(app: firebase.app.App) {
+  await app.firestore().terminate();
+  await app.delete();
   await firebaseTesting.clearFirestoreData({ projectId: projectID });
 }
