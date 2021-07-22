@@ -1,5 +1,5 @@
 import { Database, runDatabaseTests } from "@withorbit/store-shared";
-import { FirestoreDatabaseBackend } from "./databaseBackend";
+import { FirestoreDatabaseBackend } from "./firestoreDatabaseBackend";
 import {
   createTestAdminFirebaseApp,
   resetTestFirebaseApp,
