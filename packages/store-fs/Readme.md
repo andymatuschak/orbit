@@ -4,26 +4,6 @@
 
 This library is compatible with Node.js and React Native environments.
 
-The `store-*` dependency graph:
-
-```
-       ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─        
-          store-testing   │       
-       └ ─ ─ ─ ─ ─ ─ ─ ─ ─        
-                │ │               
-       ┌────────┘ └───────┐       
-       ▼                  ▼       
-┌─────────────┐    ┌─────────────┐
-│  store-fs   │    │  store-web  │
-└─────────────┘    └─────────────┘
-       │                  │       
-       └─────────┬────────┘       
-                 ▼                
-        ┌─────────────────┐       
-        │  store-shared   │       
-        └─────────────────┘       
-```
-
 ```
 Copyright 2021 Andy Matuschak
 SPDX-License-Identifier: Apache-2.0

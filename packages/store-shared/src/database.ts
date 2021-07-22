@@ -12,7 +12,7 @@ import {
 } from "./databaseBackend";
 import { DatabaseEntityQuery, DatabaseEventQuery } from "./databaseQuery";
 
-// The Database offers interfaces for storing and querying events and the entities generated from those events. n.b. tests are in @withorbit/store-testing, because they depend on the implementations.
+// The Database offers interfaces for storing and querying events and the entities generated from those events.
 export class Database {
   // DatabaseBackend does most of the work here; Database wraps that interface with the entity-generation logic.
   private readonly _backend: DatabaseBackend;

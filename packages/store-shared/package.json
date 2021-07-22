@@ -9,18 +9,10 @@
   "exports": "./dist/index.js",
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -b",
-    "test": "jest"
+    "build": "tsc -b"
   },
   "devDependencies": {
-    "@babel/core": "^7.14.6",
-    "@babel/preset-env": "^7.14.7",
-    "@babel/preset-typescript": "^7.14.5",
     "@types/jest": "^26.0.24",
-    "@types/node": "^14.14.7",
-    "babel-jest": "^27.0.6",
-    "jest": "~27.0.6",
-    "multiformats": "^9.1.0",
     "typescript": "^4.2.4"
   }
 }
