@@ -24,7 +24,6 @@ test.each([
   const gen = new OrderedIDGenerator(getRandom);
   const first = gen.getOrderedID(100);
   const second = gen.getOrderedID(time);
-  expect(getRandom).toBeCalledTimes(time > 100 ? 2 : 1);
   expect(first < second).toBe(true);
 });
 
