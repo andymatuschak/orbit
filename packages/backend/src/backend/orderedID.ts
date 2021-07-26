@@ -12,6 +12,8 @@
  * 4. They're monotonically increasing.  Even if you generate more than one in the same timestamp, the
  *    latter ones will sort after the former ones.  We do this by using the previous random bits
  *    but "incrementing" them by 1 (only in the case of a timestamp collision).
+ *
+ * n.b. We're relying on the cloud functions' clocks to be usually mostly monotonic. If you give it timestamp 5000 and then give it timestamp 1000, it will treat the latter as timestamp 5000, which will mostly work (due to the incrementing behavior), though it will lower the between-server entropy.
  */
 
 export class OrderedIDGenerator {
@@ -23,19 +25,24 @@ export class OrderedIDGenerator {
   // generated because in the event of a collision, we'll use those same characters except
   // "incremented" by one.
   private _lastRandomCharacterCodes: number[] = [];
+  private _getRandom: () => number;
 
-  constructor() {
+  constructor(getRandom = Math.random) {
+    this._getRandom = getRandom;
     this._lastTimestampMillis = 0;
     this._lastRandomCharacterCodes = [];
   }
 
   getOrderedID(nowTimestampMillis: number = Date.now()): OrderedID {
-    const isDuplicateTime = nowTimestampMillis === this._lastTimestampMillis;
-    this._lastTimestampMillis = nowTimestampMillis;
+    const timeHasIncreased = nowTimestampMillis > this._lastTimestampMillis;
+    this._lastTimestampMillis = Math.max(
+      nowTimestampMillis,
+      this._lastTimestampMillis ?? 0,
+    );
 
     // We'll encode the timestamp value into our ASCII-sorted base64:
     const timeStampChars = new Array<string>(8);
-    let workingTimestampValue = nowTimestampMillis;
+    let workingTimestampValue = this._lastTimestampMillis;
     for (let i = 7; i >= 0; i--) {
       timeStampChars[i] = characterSet.charAt(workingTimestampValue % 64);
       // NOTE: Can't use << here because javascript will convert to int and lose the upper bits.
@@ -46,12 +53,12 @@ export class OrderedIDGenerator {
     }
 
     // Generate the random component of the ID.
-    if (!isDuplicateTime) {
+    if (timeHasIncreased) {
       for (let i = 0; i < 12; i++) {
-        this._lastRandomCharacterCodes[i] = Math.floor(Math.random() * 64);
+        this._lastRandomCharacterCodes[i] = Math.floor(this._getRandom() * 64);
       }
     } else {
-      // If the timestamp hasn't changed since last push, use the same random number, except incremented by 1.
+      // If the timestamp hasn't increased since last push, use the same random number, except incremented by 1.
       let i = 11;
       // Implement "place value": if any trailing codes are already at 63, roll them over to 0.
       for (; i >= 0 && this._lastRandomCharacterCodes[i] === 63; i--) {
