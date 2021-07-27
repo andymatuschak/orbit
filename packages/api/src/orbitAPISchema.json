@@ -994,6 +994,76 @@
         "/2/events": {
             "additionalProperties": false,
             "properties": {
+                "GET": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "query": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "afterID": {
+                                    "description": "Events are returned in an arbitrary stable order. When `afterID` is set, only events after that event's ID in the stable order will be returned. You can combine this parameter with `limit` to page through results.",
+                                    "type": "string"
+                                },
+                                "entityID": {
+                                    "description": "When set, only events with matching `entityID` will be returned.",
+                                    "type": "string"
+                                },
+                                "limit": {
+                                    "default": 100,
+                                    "minimum": 1,
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "response": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "hasMore": {
+                                    "type": "boolean"
+                                },
+                                "items": {
+                                    "items": {
+                                        "anyOf": [
+                                            {
+                                                "$ref": "#/definitions/TaskIngestEvent"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/TaskRepetitionEvent"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/TaskRescheduleEvent"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/TaskUpdateDeletedEvent"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/AttachmentIngestEvent"
+                                            }
+                                        ]
+                                    },
+                                    "type": "array"
+                                },
+                                "type": {
+                                    "enum": [
+                                        "list"
+                                    ],
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "hasMore",
+                                "items",
+                                "type"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "query"
+                    ],
+                    "type": "object"
+                },
                 "PATCH": {
                     "additionalProperties": false,
                     "properties": {
@@ -1024,6 +1094,9 @@
                                 "application/json"
                             ],
                             "type": "string"
+                        },
+                        "response": {
+                            "type": "null"
                         }
                     },
                     "required": [
