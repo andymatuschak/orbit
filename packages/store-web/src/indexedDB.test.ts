@@ -1,21 +1,14 @@
+import { Entity, EventID, Task } from "@withorbit/core2";
+import { core2 as testFixtures } from "@withorbit/sample-data";
 import {
   DatabaseBackend,
   DatabaseBackendEntityRecord,
 } from "@withorbit/store-shared";
-import { IDBDatabaseBackend } from "./indexedDB";
-import {
-  AttachmentReference,
-  Entity,
-  EntityType,
-  EventID,
-  Task,
-  TaskID,
-} from "@withorbit/core2";
-import { core2 as testFixtures } from "@withorbit/sample-data";
 // @ts-ignore Looks like there is no @types for this library
 import FDBFactory from "fake-indexeddb/lib/FDBFactory";
+import { IDBDatabaseBackend } from "./indexedDB";
 
-const { createTestTask, createTestAttachmentReference } = testFixtures;
+const { createTestTask } = testFixtures;
 
 let backend: IDBDatabaseBackend;
 
@@ -46,20 +39,6 @@ const testTasks: DatabaseBackendEntityRecord<Task>[] = [
   },
 ];
 
-const testAttachmentReferences: DatabaseBackendEntityRecord<AttachmentReference>[] =
-  [
-    {
-      entity: createTestAttachmentReference("a_a"),
-      lastEventID: "x" as EventID,
-      lastEventTimestampMillis: 1000,
-    },
-    {
-      entity: createTestAttachmentReference("a_b"),
-      lastEventID: "y" as EventID,
-      lastEventTimestampMillis: 1000,
-    },
-  ];
-
 beforeEach(() => {
   indexedDB = new FDBFactory();
   backend = new IDBDatabaseBackend("OrbitDatabase", indexedDB);
@@ -74,26 +53,6 @@ async function putEntities(
     async () => new Map(entities.map((e) => [e.entity.id, e])),
   );
 }
-
-describe("round-trip entities", () => {
-  test("tasks", async () => {
-    await putEntities(backend, testTasks);
-
-    const result = await backend.getEntities(["a", "c", "z"] as TaskID[]);
-    expect(result).toEqual(
-      new Map([
-        ["a", testTasks[0]],
-        ["c", testTasks[2]],
-      ]),
-    );
-  });
-
-  test("attachments", async () => {
-    await putEntities(backend, testAttachmentReferences);
-    const result = await backend.getEntities(["a_b", "a_z"] as TaskID[]);
-    expect(result).toEqual(new Map([["a_b", testAttachmentReferences[1]]]));
-  });
-});
 
 describe("task components", () => {
   test("created on insert", async () => {
@@ -156,54 +115,6 @@ describe("task components", () => {
   });
 });
 
-describe("querying entities", () => {
-  beforeEach(() =>
-    putEntities(backend, [...testTasks, ...testAttachmentReferences]),
-  );
-  test("limit", async () => {
-    const firstEntity = await backend.listEntities({
-      entityType: EntityType.Task,
-      limit: 1,
-    });
-    expect(firstEntity.length).toBe(1);
-    expect(firstEntity[0].entity.id).toBe("a");
-  });
-
-  test("after", async () => {
-    const entities = await backend.listEntities({
-      entityType: EntityType.Task,
-      afterID: "a" as TaskID,
-    });
-    expect(entities.length).toBe(2);
-    expect(entities[0].entity.id).toBe("b");
-    expect(entities[1].entity.id).toBe("c");
-  });
-
-  test("by due timestamp", async () => {
-    const entities = await backend.listEntities({
-      entityType: EntityType.Task,
-      predicate: ["dueTimestampMillis", "<=", 100],
-    });
-    expect(entities.map((record) => record.entity.id)).toEqual(["a", "b"]);
-  });
-
-  test("by due timestamp and after ID", async () => {
-    const entities = await backend.listEntities({
-      entityType: EntityType.Task,
-      afterID: "a" as TaskID,
-      predicate: ["dueTimestampMillis", "<=", 100],
-    });
-    expect(entities.map((record) => record.entity.id)).toEqual(["b"]);
-  });
-
-  test("attachment references", async () => {
-    const entities = await backend.listEntities({
-      entityType: EntityType.AttachmentReference,
-    });
-    expect(entities).toEqual(testAttachmentReferences);
-  });
-});
-
 async function createIndexedDBConnection(): Promise<IDBDatabase> {
   const DBOpenRequest = indexedDB.open("OrbitDatabase");
   return new Promise((resolve) => {
@@ -218,8 +129,7 @@ async function fetchAllRowsForTable(table: string): Promise<any[]> {
   const transaction = db.transaction(table, "readonly");
   const store = transaction.objectStore(table);
   const request = store.getAll();
-  const result = await new Promise<any[]>((resolve) => {
+  return await new Promise<any[]>((resolve) => {
     request.onsuccess = () => resolve(request.result);
   });
-  return result;
 }

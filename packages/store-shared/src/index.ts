@@ -14,6 +14,7 @@ export type {
   DatabaseEventQuery,
   DatabaseQueryOptions,
   DatabaseQueryPredicate,
+  DatabaseQueryPredicateRelation,
   DatabaseTaskQueryPredicate,
 } from "./databaseQuery";
 

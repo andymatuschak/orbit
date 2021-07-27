@@ -7,7 +7,7 @@ import {
 } from "@withorbit/core2";
 
 export interface DatabaseEventQuery extends DatabaseQueryOptions<EventID> {
-  predicate?: DatabaseQueryPredicate<"entityID", string>;
+  predicate?: DatabaseQueryPredicate<"entityID", "=", string>;
 }
 
 export type DatabaseEntityQuery<E extends Entity> = DatabaseQueryOptions<
@@ -18,13 +18,18 @@ export type DatabaseEntityQuery<E extends Entity> = DatabaseQueryOptions<
 };
 export type DatabaseTaskQueryPredicate = DatabaseQueryPredicate<
   "dueTimestampMillis",
+  "<=",
   number
 >;
-export type DatabaseQueryPredicate<Key extends string, Value> = readonly [
-  key: Key,
-  relation: "=" | "<" | "<=" | ">" | ">=",
-  value: Value,
-];
+
+export type DatabaseQueryPredicate<
+  Key extends string,
+  Relation extends DatabaseQueryPredicateRelation,
+  Value,
+> = readonly [key: Key, relation: Relation, value: Value];
+
+export type DatabaseQueryPredicateRelation = "=" | "<" | "<=" | ">" | ">=";
+
 export type DatabaseQueryOptions<ID extends string> = {
   afterID?: ID;
   limit?: number;

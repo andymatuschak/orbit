@@ -83,3 +83,13 @@ export type OrderedID = string & { __orderedIDOpaqueType: never };
 // Modeled after base64 web-safe chars, but ordered by ASCII.
 const characterSet =
   "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
+
+export function compareOrderedIDs(a: OrderedID, b: OrderedID): number {
+  if (a < b) {
+    return -1;
+  } else if (a === b) {
+    return 0;
+  } else {
+    return 1;
+  }
+}

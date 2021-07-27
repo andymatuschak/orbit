@@ -18,7 +18,7 @@ import {
 import { firestore } from "firebase-admin";
 import { getDatabase } from "./firebase";
 import { getFirebaseKeyFromStringHash } from "./firebaseSupport/firebaseKeyEncoding";
-import { OrderedID, OrderedIDGenerator } from "./orderedID";
+import { compareOrderedIDs, OrderedID, OrderedIDGenerator } from "./orderedID";
 
 export class FirestoreDatabaseBackend implements DatabaseBackend {
   private readonly _userID: string;
@@ -38,12 +38,12 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
   async getEntities<E extends Entity, ID extends IDOfEntity<E>>(
     entityIDs: ID[],
   ): Promise<Map<ID, DatabaseBackendEntityRecord<E>>> {
-    const docs = await this._getByID(
-      this._getEntityCollectionRef<EntityDocument>(),
+    const docs = await this._getByID<EntityDocumentBase<E>>(
+      this._getEntityCollectionRef<EntityDocumentBase<E>>(),
       entityIDs,
       (ids) => this._database.getAll(...ids),
     );
-    return getEntityRecordMapFromFirestoreDocs(docs);
+    return getEntityRecordMapFromFirestoreDocs<E, ID>(docs);
   }
 
   async getEvents<E extends Event, ID extends EventID>(
@@ -67,91 +67,153 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
     query: DatabaseEntityQuery<E>,
   ): Promise<DatabaseBackendEntityRecord<E>[]> {
     // Using the template string type here just to enforce that the key path I'm using here is indeed a valid key path into the Entity type. Though I can't enforce that the value at that key is actually an EntityType.
-    const entityTypeKeyPath: `${EntityDocumentKeys.Entity}.${keyof Entity}` =
-      `${EntityDocumentKeys.Entity}.type` as const;
+    const entityTypeKeyPath: `${EntityDocumentKey.Entity}.${keyof Entity}` =
+      `${EntityDocumentKey.Entity}.type` as const;
 
-    let firestoreQuery = this._getEntityCollectionRef()
-      .orderBy(EntityDocumentKeys.OrderedID)
-      .where(entityTypeKeyPath, "==", query.entityType);
-    if (query.limit !== undefined) {
-      firestoreQuery = firestoreQuery.limit(query.limit);
-    }
-
-    let docs: firestore.DocumentSnapshot<EntityDocument>[];
-    if (query.afterID) {
-      const afterEntitySnapshot = await this._getEntityRef(query.afterID).get();
-      firestoreQuery = firestoreQuery.startAfter(afterEntitySnapshot);
-
-      const { predicate } = query;
-      // We can't use native queries for both the predicate and the afterID. So if there's both, we'll have to filter after the fact, alas.
-      if (predicate) {
-        docs = await fetchDocumentsWithPostQueryFilter(
-          firestoreQuery,
-          (doc) => evaluateQueryPredicate(doc.entity, predicate),
-          query.limit ?? null,
-        );
-      } else {
-        docs = (await firestoreQuery.get()).docs;
-      }
-    } else {
-      if (query.predicate) {
-        const documentKey: TaskDocumentKey = {
+    const docs = await this._listDocuments<
+      EntityDocumentBase<E>,
+      EntityDocumentKey | TaskDocumentKey,
+      DatabaseEntityQuery<E>,
+      IDOfEntity<E>
+    >({
+      query,
+      baseFirestoreQuery: this._getEntityCollectionRef().where(
+        entityTypeKeyPath,
+        "==",
+        query.entityType,
+      ) as firestore.Query<EntityDocumentBase<E>>,
+      getDocRefByObjectID: (id) =>
+        this._getEntityRef<EntityDocumentBase<E>>(id),
+      orderedIDKey: EntityDocumentKey.OrderedID,
+      getDocKeyForQueryPredicate: (predicate) =>
+        ({
           dueTimestampMillis: TaskDocumentKey.MinimumDueTimestampMillis,
-        }[query.predicate[0]];
-        firestoreQuery = firestoreQuery.where(
-          documentKey,
-          mapQueryPredicateToFirestoreOp(query.predicate),
-          query.predicate[2],
-        );
-      }
-      docs = (await firestoreQuery.get()).docs;
-    }
-
-    return docs.map((doc) => getEntityRecordFromFirestoreDoc(doc.data()!));
+        }[predicate[0]]),
+      getDocOrderedID: (doc) => doc.orderedID,
+      getDocObjectID: (doc) =>
+        doc[EntityDocumentKey.Entity].id as IDOfEntity<E>,
+    });
+    return docs.map((doc) => getEntityRecordFromFirestoreDoc(doc));
   }
 
   async listEvents(query: DatabaseEventQuery): Promise<Event[]> {
-    const { predicate } = query;
-    let firestoreQuery = this._getEventCollectionRef().orderBy(
-      EventDocumentKeys.OrderedID,
-    );
-    if (query.limit !== undefined) {
-      firestoreQuery = firestoreQuery.limit(query.limit);
+    const docs = await this._listDocuments<
+      EventDocument,
+      EventDocumentKeyPath,
+      DatabaseEventQuery,
+      EventID
+    >({
+      query,
+      baseFirestoreQuery: this._getEventCollectionRef(),
+      getDocRefByObjectID: (id) => this._getEventRef(id),
+      orderedIDKey: EventDocumentKey.OrderedID,
+      getDocKeyForQueryPredicate: (predicate) =>
+        ((
+          {
+            entityID: `${EventDocumentKey.Event}.entityID`,
+          } as const
+        )[predicate[0]]),
+      getDocOrderedID: (doc) => doc.orderedID,
+      getDocObjectID: (doc) => doc[EventDocumentKey.Event].id,
+    });
+    return docs.map((doc) => doc.event);
+  }
+
+  private async _listDocuments<
+    D extends EntityDocumentBase | EventDocument,
+    DK extends D extends EntityDocumentBase<any>
+      ? EntityDocumentKey | TaskDocumentKey
+      : EventDocumentKeyPath,
+    Q extends D extends EntityDocumentBase<infer ET>
+      ? DatabaseEntityQuery<ET>
+      : DatabaseEventQuery,
+    OID extends D extends EntityDocumentBase<infer ET>
+      ? IDOfEntity<ET>
+      : EventID,
+  >({
+    query,
+    orderedIDKey,
+    baseFirestoreQuery,
+    getDocRefByObjectID,
+    getDocKeyForQueryPredicate,
+    getDocOrderedID,
+    getDocObjectID,
+  }: {
+    query: Q;
+    orderedIDKey: DK;
+    baseFirestoreQuery: firestore.Query<D>;
+    getDocRefByObjectID: (id: OID) => firestore.DocumentReference<D>;
+    getDocKeyForQueryPredicate: (
+      predicate: Exclude<Q["predicate"], undefined>,
+    ) => DK;
+    getDocOrderedID: (doc: D) => OrderedID;
+    getDocObjectID: (doc: D) => OID;
+  }): Promise<D[]> {
+    const afterDocumentSnapshot = query.afterID
+      ? await getDocRefByObjectID(query.afterID as OID).get()
+      : null;
+    if (afterDocumentSnapshot && !afterDocumentSnapshot.exists) {
+      throw new Error(`Unknown afterID ${query.afterID}`);
     }
 
-    let docs: firestore.DocumentSnapshot<EventDocument>[];
-    if (query.afterID) {
-      const afterEventSnapshot = await this._getEventRef(query.afterID).get();
-      firestoreQuery = firestoreQuery.startAfter(afterEventSnapshot);
+    if (query.predicate) {
+      baseFirestoreQuery = baseFirestoreQuery.where(
+        getDocKeyForQueryPredicate(
+          query.predicate as Exclude<Q["predicate"], undefined>,
+        ),
+        mapQueryPredicateToFirestoreOp(query.predicate),
+        query.predicate[2],
+      );
+    }
 
-      // We can't use native queries for both the predicate and the afterID. So if there's both, we'll have to filter after the fact, alas.
-      if (predicate) {
-        docs = await fetchDocumentsWithPostQueryFilter(
-          firestoreQuery,
-          (doc) => evaluateQueryPredicate(doc.event, predicate),
-          query.limit ?? null,
+    let docs: firestore.DocumentSnapshot<D>[];
+    // So long as there's no predicate, or the predicate is simple equality, we can arrange our indexes to support efficient query and ordering by OrderedID. But if it's a range predicate, we have to use an index based just on the predicate key, then do an in-memory sort, offset, and limit on the OrderedID. This makes paging quadratic in time cost.
+    if (!query.predicate || query.predicate[1] === "=") {
+      baseFirestoreQuery = baseFirestoreQuery.orderBy(orderedIDKey);
+      if (query.afterID) {
+        baseFirestoreQuery = baseFirestoreQuery.startAfter(
+          afterDocumentSnapshot,
         );
-      } else {
-        docs = (await firestoreQuery.get()).docs;
       }
+      if (query.limit !== undefined) {
+        baseFirestoreQuery = baseFirestoreQuery.limit(query.limit);
+      }
+      docs = (await baseFirestoreQuery.get()).docs;
     } else {
-      if (predicate) {
-        const keyPathMapping: {
-          [K in typeof predicate[0]]: `${EventDocumentKeys.Event}.${keyof Event}`;
-        } = {
-          entityID: `${EventDocumentKeys.Event}.entityID`,
-        } as const;
-        const documentKey = keyPathMapping[predicate[0]];
-        firestoreQuery = firestoreQuery.where(
-          documentKey,
-          mapQueryPredicateToFirestoreOp(predicate),
-          predicate[2],
+      baseFirestoreQuery = baseFirestoreQuery.orderBy(
+        getDocKeyForQueryPredicate(
+          query.predicate as Exclude<Q["predicate"], undefined>,
+        ),
+      );
+
+      const allDocsMatchingPredicate = (await baseFirestoreQuery.get()).docs;
+
+      allDocsMatchingPredicate.sort((a, b) =>
+        compareOrderedIDs(getDocOrderedID(a.data()), getDocOrderedID(b.data())),
+      );
+      if (afterDocumentSnapshot) {
+        const afterDocIndex = allDocsMatchingPredicate.findIndex(
+          (doc) => getDocObjectID(doc.data()) === query.afterID,
         );
+        if (afterDocIndex === -1) {
+          throw new Error(
+            `afterID document unexpectedly disappeared: ${query.afterID}`,
+          );
+        }
+        docs = allDocsMatchingPredicate.slice(
+          afterDocIndex + 1,
+          query.limit === undefined
+            ? undefined
+            : afterDocIndex + 1 + query.limit,
+        );
+      } else if (query.limit === undefined) {
+        docs = allDocsMatchingPredicate;
+      } else {
+        docs = allDocsMatchingPredicate.slice(0, query.limit);
       }
-      docs = (await firestoreQuery.get()).docs;
     }
 
-    return docs.map((doc) => doc.data()!.event);
+    return docs.map((doc) => doc.data()!);
   }
 
   async modifyEntities<E extends Entity, ID extends IDOfEntity<E>>(
@@ -160,10 +222,9 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
       entityRecordMap: Map<ID, DatabaseBackendEntityRecord<E>>,
     ) => Promise<Map<ID, DatabaseBackendEntityRecord<E>>>,
   ): Promise<void> {
-    // TODO: think carefully about possible races which could occur if multiple cloud functions are trying to update an entity snapshot at once. The transactions for putting the events and subsequently modifying the entities are separate. What's the failure mode, specifically? Is it worth guarding against?
     await this._database.runTransaction(async (tx) => {
       // Get the old entity records.
-      const entityDocs = await this._getByID(
+      const entityDocs = await this._getByID<EntityDocumentBase<E>>(
         this._getEntityCollectionRef(),
         ids,
         (ids) => tx.getAll(...ids),
@@ -217,7 +278,7 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
     });
   }
 
-  private async _getByID<D extends EntityDocument | EventDocument>(
+  private async _getByID<D extends EntityDocumentBase | EventDocument>(
     collectionRef: firestore.CollectionReference<D>,
     ids: string[],
     getAllImpl: (
@@ -246,7 +307,7 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
   }
 
   private _getEntityCollectionRef<
-    D extends EntityDocument,
+    D extends EntityDocumentBase,
   >(): firestore.CollectionReference<D> {
     return this._getUserDocumentRef().collection(
       "entities",
@@ -262,7 +323,7 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
     ) as firestore.DocumentReference<EventDocument<E>>;
   }
 
-  private _getEntityRef<D extends EntityDocument>(
+  private _getEntityRef<D extends EntityDocumentBase>(
     entityID: EntityID,
     collection = this._getEntityCollectionRef(),
   ): firestore.DocumentReference<D> {
@@ -272,26 +333,30 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
   }
 }
 
-enum EventDocumentKeys {
+enum EventDocumentKey {
   OrderedID = "orderedID",
   Event = "event",
 }
 
+type EventDocumentKeyPath =
+  | EventDocumentKey
+  | `${EventDocumentKey.Event}.${keyof Event}`;
+
 interface EventDocument<E extends Event = Event> {
-  [EventDocumentKeys.OrderedID]: OrderedID;
-  [EventDocumentKeys.Event]: E;
+  [EventDocumentKey.OrderedID]: OrderedID;
+  [EventDocumentKey.Event]: E;
 }
 
 type EntityDocument = TaskDocument | EntityDocumentBase<AttachmentReference>;
 
-enum EntityDocumentKeys {
+enum EntityDocumentKey {
   OrderedID = "orderedID",
   Entity = "entity",
 }
 interface EntityDocumentBase<E extends Entity = Entity>
   extends DatabaseBackendEntityRecord<E> {
-  [EntityDocumentKeys.OrderedID]: OrderedID;
-  [EntityDocumentKeys.Entity]: E;
+  [EntityDocumentKey.OrderedID]: OrderedID;
+  [EntityDocumentKey.Entity]: E;
 }
 
 enum TaskDocumentKey {
@@ -303,7 +368,7 @@ interface TaskDocument extends EntityDocumentBase<Task> {
 }
 
 function getEntityRecordFromFirestoreDoc<E extends Entity>(
-  doc: TaskDocument | EntityDocumentBase<AttachmentReference>,
+  doc: EntityDocumentBase<E>,
 ): DatabaseBackendEntityRecord<E> {
   return {
     entity: doc.entity as E,
@@ -315,7 +380,9 @@ function getEntityRecordFromFirestoreDoc<E extends Entity>(
 function getEntityRecordMapFromFirestoreDocs<
   E extends Entity,
   ID extends IDOfEntity<E>,
->(docs: (EntityDocument | null)[]): Map<ID, DatabaseBackendEntityRecord<E>> {
+>(
+  docs: (EntityDocumentBase<E> | null)[],
+): Map<ID, DatabaseBackendEntityRecord<E>> {
   const output = new Map<ID, DatabaseBackendEntityRecord<E>>();
   for (const doc of docs) {
     if (doc) {
@@ -328,7 +395,7 @@ function getEntityRecordMapFromFirestoreDocs<
 function getEntityDocumentFromRecord<E extends Entity>(
   newRecord: DatabaseBackendEntityRecord<E>,
   orderedID: OrderedID,
-) {
+): EntityDocument {
   const entity: Entity = newRecord.entity;
   const entityDocumentBase: EntityDocumentBase = {
     entity: entity,
@@ -364,68 +431,7 @@ function getEntityDocumentFromRecord<E extends Entity>(
 }
 
 function mapQueryPredicateToFirestoreOp(
-  predicate: DatabaseQueryPredicate<any, any>,
+  predicate: DatabaseQueryPredicate<any, any, any>,
 ): FirebaseFirestore.WhereFilterOp {
   return predicate[1] === "=" ? "==" : predicate[1];
-}
-
-// This function's used when we can't have Firestore do all the heavy lifting on the filtering itself. So we fetch results in pages, applying a predicate in memory and accumulating results until we hit the desired limit or run out of data.
-async function fetchDocumentsWithPostQueryFilter<
-  D extends EntityDocument | EventDocument,
->(
-  baseQuery: firestore.Query<D>,
-  filter: (document: D) => boolean,
-  limit: number | null,
-): Promise<firestore.DocumentSnapshot<D>[]> {
-  const outputs: firestore.DocumentSnapshot<D>[] = [];
-  let currentQuery = baseQuery.limit(Math.min(100, limit ?? Number.MAX_VALUE)); // We'll fetch small batches to avoid accumulating too many filtered-out results in memory.
-  do {
-    const batchSnapshots = await currentQuery.get();
-    if (batchSnapshots.size > 0) {
-      currentQuery = currentQuery.startAfter(
-        batchSnapshots.docs[batchSnapshots.size - 1],
-      );
-      outputs.push(...batchSnapshots.docs.filter((doc) => filter(doc.data())));
-    } else {
-      break;
-    }
-  } while (limit === null || outputs.length < limit);
-  return outputs;
-}
-
-function evaluateQueryPredicate<T extends Entity | Event>(
-  object: T,
-  predicate: T extends Entity
-    ? NonNullable<DatabaseEntityQuery<T>["predicate"]>
-    : T extends Event
-    ? NonNullable<DatabaseEventQuery["predicate"]>
-    : never,
-): boolean {
-  // @ts-ignore I can't convince TS that this is OK. But we're doing runtime checks here, so I'm not worried about it.
-  const value = object[predicate[0]];
-  if (value === undefined) {
-    return false;
-  }
-  if (typeof value !== typeof predicate[2]) {
-    throw new Error(
-      `Object with ID ${object.id} and type ${
-        object.type
-      } has mistyped value for key ${
-        predicate[0]
-      }. Expected: ${typeof predicate[2]}. Actual: ${typeof value} (${value})`,
-    );
-  }
-
-  switch (predicate[1]) {
-    case "=":
-      return value === predicate[2];
-    case "<":
-      return value < predicate[2];
-    case "<=":
-      return value <= predicate[2];
-    case ">":
-      return value > predicate[2];
-    case ">=":
-      return value >= predicate[2];
-  }
 }

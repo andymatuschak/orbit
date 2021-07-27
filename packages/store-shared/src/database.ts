@@ -111,18 +111,18 @@ export class Database {
     currentRecord: DatabaseBackendEntityRecord<Entity> | null,
     newEvents: Event[],
   ): Promise<DatabaseBackendEntityRecord<Entity>> {
-    newEvents.sort((a, b) => a.timestampMillis - b.timestampMillis);
+    newEvents.sort(compareEvents);
 
     // Most of the time, new events will be ordered after old events (in terms of local client time), which means we can apply them directly on top of our existing snapshot.
     if (
-      currentRecord &&
       newEvents.length > 0 &&
-      newEvents[0].timestampMillis > currentRecord.lastEventTimestampMillis
+      (!currentRecord ||
+        newEvents[0].timestampMillis > currentRecord.lastEventTimestampMillis)
     ) {
       // Apply the new events on top of the pre-existing snapshot.
       const entity = newEvents.reduce(
         (snapshot, event) => this._eventReducer(snapshot, event),
-        currentRecord.entity,
+        currentRecord?.entity ?? null,
       )!;
       const lastEvent = newEvents[newEvents.length - 1];
       return {
@@ -141,7 +141,7 @@ export class Database {
         );
       }
 
-      events.sort((a, b) => a.timestampMillis - b.timestampMillis);
+      events.sort(compareEvents);
       const lastEvent = events[events.length - 1];
       const newEntitySnapshot = events.reduce(
         (snapshot, event) => this._eventReducer(snapshot, event),
@@ -164,3 +164,12 @@ export type EventReducer = (
   entitySnapshot: Entity | null,
   event: Event,
 ) => Entity;
+
+// Stable sorting functions for events
+function compareEvents(a: Event, b: Event): number {
+  if (a.timestampMillis === b.timestampMillis) {
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  } else {
+    return a.timestampMillis - b.timestampMillis;
+  }
+}
