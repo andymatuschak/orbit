@@ -9,6 +9,7 @@ import {
   PromptState,
   PromptTaskID,
 } from "@withorbit/core";
+import { EntityID, Event, EventID } from "@withorbit/core2";
 import { BlobLike } from "./genericHTTPAPI";
 import { RequiredSpec } from "./util/requiredSpec";
 
@@ -111,6 +112,34 @@ export type ValidatableSpec = {
       response?: null;
     };
   };
+
+  "/2/events"?: {
+    GET?: {
+      query: {
+        /**
+         * @minimum 1
+         * @default 100
+         * @TJS-type integer
+         */
+        limit?: number;
+        /**
+         * Events are returned in an arbitrary stable order. When `afterID` is set, only events after that event's ID in the stable order will be returned. You can combine this parameter with `limit` to page through results.
+         */
+        afterID?: EventID;
+        /**
+         * When set, only events with matching `entityID` will be returned.
+         */
+        entityID?: EntityID;
+      };
+      response?: ResponseList2<Event>;
+    };
+
+    PATCH?: {
+      contentType: "application/json";
+      body: Event[];
+      response?: null;
+    };
+  };
 };
 
 /**
@@ -137,6 +166,12 @@ export type ResponseList<
   objectType: "list";
   hasMore: boolean;
   data: ResponseObject<ObjectTypeString, IDType, DataType>[];
+};
+
+export type ResponseList2<ItemType> = {
+  type: "list";
+  hasMore: boolean;
+  items: ItemType[];
 };
 
 export type ResponseObject<

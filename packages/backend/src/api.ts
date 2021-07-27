@@ -1,6 +1,7 @@
 import { OrbitAPI, OrbitAPIValidator } from "@withorbit/api";
 import cookieParser from "cookie-parser";
 import express from "express";
+import { storeEvents } from "./api/2/events";
 import { listActionLogs, storeActionLogs } from "./api/actionLogs";
 import { getAttachment, storeAttachment } from "./api/attachments";
 import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode";
@@ -59,6 +60,9 @@ export function createAPIApp(): express.Application {
     },
     "/attachments/:id": {
       GET: getAttachment,
+    },
+    "/2/events": {
+      PATCH: storeEvents,
     },
   });
 

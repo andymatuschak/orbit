@@ -81,6 +81,37 @@
             ],
             "type": "object"
         },
+        "AttachmentIngestEvent": {
+            "additionalProperties": false,
+            "properties": {
+                "entityID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mimeType": {
+                    "$ref": "#/definitions/AttachmentMimeType"
+                },
+                "timestampMillis": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "attachmentIngest"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "entityID",
+                "id",
+                "mimeType",
+                "timestampMillis",
+                "type"
+            ],
+            "type": "object"
+        },
         "AttachmentMimeType": {
             "enum": [
                 "image/jpeg",
@@ -88,6 +119,33 @@
                 "image/svg+xml"
             ],
             "type": "string"
+        },
+        "AttachmentReference": {
+            "additionalProperties": false,
+            "properties": {
+                "createdAtTimestampMillis": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mimeType": {
+                    "$ref": "#/definitions/AttachmentMimeType"
+                },
+                "type": {
+                    "enum": [
+                        "attachmentReference"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "createdAtTimestampMillis",
+                "id",
+                "mimeType",
+                "type"
+            ],
+            "type": "object"
         },
         "ClozePrompt": {
             "additionalProperties": false,
@@ -105,6 +163,29 @@
             "required": [
                 "body",
                 "promptType"
+            ],
+            "type": "object"
+        },
+        "ClozeTaskContent<string>": {
+            "additionalProperties": false,
+            "properties": {
+                "body": {
+                    "$ref": "#/definitions/TaskContentField"
+                },
+                "components": {
+                    "$ref": "#/definitions/{[x:string]:{ranges:{startIndex:number;endIndex:number;hint:string|null;}[];};}"
+                },
+                "type": {
+                    "enum": [
+                        "cloze"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "body",
+                "components",
+                "type"
             ],
             "type": "object"
         },
@@ -212,6 +293,28 @@
                     ]
                 }
             },
+            "type": "object"
+        },
+        "PlainTaskContent": {
+            "additionalProperties": false,
+            "properties": {
+                "body": {
+                    "$ref": "#/definitions/TaskContentField"
+                },
+                "components": {
+                    "$ref": "#/definitions/{main:unknown;}"
+                },
+                "type": {
+                    "enum": [
+                        "plain"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "body",
+                "type"
+            ],
             "type": "object"
         },
         "PromptField": {
@@ -369,6 +472,32 @@
             ],
             "type": "object"
         },
+        "QATaskContent": {
+            "additionalProperties": false,
+            "properties": {
+                "answer": {
+                    "$ref": "#/definitions/TaskContentField"
+                },
+                "body": {
+                    "$ref": "#/definitions/TaskContentField"
+                },
+                "components": {
+                    "$ref": "#/definitions/{main:unknown;}"
+                },
+                "type": {
+                    "enum": [
+                        "qa"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "answer",
+                "body",
+                "type"
+            ],
+            "type": "object"
+        },
         "RepetitionActionLog": {
             "additionalProperties": false,
             "properties": {
@@ -462,6 +591,73 @@
             ],
             "type": "object"
         },
+        "TaskContentField": {
+            "additionalProperties": false,
+            "properties": {
+                "attachments": {
+                    "items": {
+                        "$ref": "#/definitions/AttachmentReference"
+                    },
+                    "type": "array"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "attachments",
+                "text"
+            ],
+            "type": "object"
+        },
+        "TaskIngestEvent": {
+            "additionalProperties": false,
+            "properties": {
+                "entityID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/TaskProvenance_1"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "spec": {
+                    "$ref": "#/definitions/TaskSpec<TaskContent>"
+                },
+                "timestampMillis": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "taskIngest"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "entityID",
+                "id",
+                "provenance",
+                "spec",
+                "timestampMillis",
+                "type"
+            ],
+            "type": "object"
+        },
         "TaskProvenance": {
             "additionalProperties": false,
             "properties": {
@@ -496,6 +692,185 @@
                 "provenanceType",
                 "title",
                 "url"
+            ],
+            "type": "object"
+        },
+        "TaskProvenance_1": {
+            "additionalProperties": false,
+            "properties": {
+                "colorPaletteName": {
+                    "enum": [
+                        "blue",
+                        "brown",
+                        "cyan",
+                        "green",
+                        "lime",
+                        "orange",
+                        "pink",
+                        "purple",
+                        "red",
+                        "turquoise",
+                        "violet",
+                        "yellow"
+                    ],
+                    "type": "string"
+                },
+                "containerTitle": {
+                    "type": "string"
+                },
+                "identifier": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "identifier"
+            ],
+            "type": "object"
+        },
+        "TaskRepetitionEvent": {
+            "additionalProperties": false,
+            "properties": {
+                "componentID": {
+                    "type": "string"
+                },
+                "entityID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "outcome": {
+                    "$ref": "#/definitions/TaskRepetitionOutcome"
+                },
+                "reviewSessionID": {
+                    "type": "string"
+                },
+                "timestampMillis": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "taskRepetition"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "componentID",
+                "entityID",
+                "id",
+                "outcome",
+                "reviewSessionID",
+                "timestampMillis",
+                "type"
+            ],
+            "type": "object"
+        },
+        "TaskRepetitionOutcome": {
+            "enum": [
+                "forgotten",
+                "remembered"
+            ],
+            "type": "string"
+        },
+        "TaskRescheduleEvent": {
+            "additionalProperties": false,
+            "properties": {
+                "componentID": {
+                    "type": "string"
+                },
+                "entityID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "newDueTimestampMillis": {
+                    "type": "number"
+                },
+                "timestampMillis": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "taskReschedule"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "componentID",
+                "entityID",
+                "id",
+                "newDueTimestampMillis",
+                "timestampMillis",
+                "type"
+            ],
+            "type": "object"
+        },
+        "TaskSpec<TaskContent>": {
+            "additionalProperties": false,
+            "properties": {
+                "content": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/QATaskContent"
+                        },
+                        {
+                            "$ref": "#/definitions/ClozeTaskContent<string>"
+                        },
+                        {
+                            "$ref": "#/definitions/PlainTaskContent"
+                        }
+                    ]
+                },
+                "type": {
+                    "enum": [
+                        "memory"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "content",
+                "type"
+            ],
+            "type": "object"
+        },
+        "TaskUpdateDeletedEvent": {
+            "additionalProperties": false,
+            "properties": {
+                "entityID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isDeleted": {
+                    "type": "boolean"
+                },
+                "timestampMillis": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "taskUpdatedDeleted"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "entityID",
+                "id",
+                "isDeleted",
+                "timestampMillis",
+                "type"
             ],
             "type": "object"
         },
@@ -598,9 +973,68 @@
                 "url"
             ],
             "type": "object"
+        },
+        "{[x:string]:{ranges:{startIndex:number;endIndex:number;hint:string|null;}[];};}": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "{main:unknown;}": {
+            "additionalProperties": false,
+            "properties": {
+                "main": {
+                }
+            },
+            "required": [
+                "main"
+            ],
+            "type": "object"
         }
     },
     "properties": {
+        "/2/events": {
+            "additionalProperties": false,
+            "properties": {
+                "PATCH": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "body": {
+                            "items": {
+                                "anyOf": [
+                                    {
+                                        "$ref": "#/definitions/TaskIngestEvent"
+                                    },
+                                    {
+                                        "$ref": "#/definitions/TaskRepetitionEvent"
+                                    },
+                                    {
+                                        "$ref": "#/definitions/TaskRescheduleEvent"
+                                    },
+                                    {
+                                        "$ref": "#/definitions/TaskUpdateDeletedEvent"
+                                    },
+                                    {
+                                        "$ref": "#/definitions/AttachmentIngestEvent"
+                                    }
+                                ]
+                            },
+                            "type": "array"
+                        },
+                        "contentType": {
+                            "enum": [
+                                "application/json"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "body",
+                        "contentType"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
         "/actionLogs": {
             "additionalProperties": false,
             "properties": {
