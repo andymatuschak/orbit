@@ -431,7 +431,7 @@ function getEntityDocumentFromRecord<E extends Entity>(
 }
 
 function mapQueryPredicateToFirestoreOp(
-  predicate: DatabaseQueryPredicate<any, any, any>,
+  predicate: DatabaseQueryPredicate,
 ): FirebaseFirestore.WhereFilterOp {
   return predicate[1] === "=" ? "==" : predicate[1];
 }

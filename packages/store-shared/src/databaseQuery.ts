@@ -23,9 +23,9 @@ export type DatabaseTaskQueryPredicate = DatabaseQueryPredicate<
 >;
 
 export type DatabaseQueryPredicate<
-  Key extends string,
-  Relation extends DatabaseQueryPredicateRelation,
-  Value,
+  Key extends string = string,
+  Relation extends DatabaseQueryPredicateRelation = DatabaseQueryPredicateRelation,
+  Value = string | number,
 > = readonly [key: Key, relation: Relation, value: Value];
 
 export type DatabaseQueryPredicateRelation = "=" | "<" | "<=" | ">" | ">=";

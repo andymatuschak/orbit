@@ -262,7 +262,7 @@ export class SQLDatabaseBackend implements DatabaseBackend {
 export function constructListEntitySQLQuery<E extends Entity>(
   query: DatabaseEntityQuery<E>,
 ): { statement: string; args: any[] } {
-  const predicates: DatabaseQueryPredicate<any, any>[] = query.predicate
+  const predicates: DatabaseQueryPredicate[] = query.predicate
     ? [query.predicate]
     : [];
 
@@ -320,7 +320,7 @@ function constructListSQLQuery({
   orderKey: string;
   columns: string[];
   options: DatabaseQueryOptions<any>;
-  predicates: DatabaseQueryPredicate<any, any>[];
+  predicates: DatabaseQueryPredicate[];
 }): { statement: string; args: any[] } {
   const args: any[] = [];
 

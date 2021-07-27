@@ -11,6 +11,7 @@ import {
   DatabaseQueryPredicate,
   DatabaseBackend,
   DatabaseBackendEntityRecord,
+  DatabaseQueryPredicateRelation,
 } from "@withorbit/store-shared";
 import { DexieDatabase } from "./dexie/dexie";
 import {
@@ -298,7 +299,10 @@ function compareUsingPredicate<
   PK,
   Key extends string,
   Value extends IndexableType,
->(clause: WhereClause<Row, PK>, predicate: DatabaseQueryPredicate<Key, Value>) {
+>(
+  clause: WhereClause<Row, PK>,
+  predicate: DatabaseQueryPredicate<Key, DatabaseQueryPredicateRelation, Value>,
+) {
   switch (predicate[1]) {
     case "<":
       return clause.below(predicate[2]);
