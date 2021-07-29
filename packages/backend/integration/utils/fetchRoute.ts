@@ -1,9 +1,6 @@
 import "isomorphic-fetch";
 
-const HOST: string = process.env.HOST!;
-if (!HOST) {
-  throw new Error("HOST must be specified");
-}
+const HOST = "http://localhost:5001/metabook-system/us-central1";
 
 type Args = { authorization?: { token: string } } & (
   | { method: "GET" }

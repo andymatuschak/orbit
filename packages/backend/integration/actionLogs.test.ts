@@ -1,4 +1,5 @@
 import { fetchRoute } from "./utils/fetchRoute";
+import { setupAuthToken } from "./utils/setupAuthToken";
 
 const VALID_ACTION_LOG = [
   {
@@ -13,22 +14,24 @@ const VALID_ACTION_LOG = [
 ];
 
 it("round-trip request", async () => {
+  await setupAuthToken("patch-action-log-round-trip");
   const { status: patchStatus, body: patchBody } = await fetchRoute(
     `/api/actionLogs`,
     {
       method: "PATCH",
       json: VALID_ACTION_LOG,
-      authorization: { token: "TEST" },
+      authorization: { token: "patch-action-log-round-trip" },
     },
   );
   expect(patchStatus).toBe(204);
   expect(patchBody).toBeUndefined();
 
+  await setupAuthToken("get-action-log-round-trip");
   const { status: getStatus, body: getBody } = await fetchRoute(
     `/api/actionLogs`,
     {
       method: "GET",
-      authorization: { token: "TEST" },
+      authorization: { token: "get-action-log-round-trip" },
     },
   );
   expect(getStatus).toBe(200);
