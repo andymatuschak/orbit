@@ -61,6 +61,17 @@ export function runDatabaseTests(
       );
     });
 
+    test("put duplicate events", async () => {
+      await db.putEvents(testEvents);
+      await db.putEvents([
+        ...testEvents,
+        { id: "d", entityID: "y", timestampMillis: 90 } as Event,
+      ]);
+
+      const allEvents = await db.listEvents({});
+      expect(allEvents.length).toEqual(testEvents.length + 1);
+    });
+
     test(`updates entities`, async () => {
       await db.putEvents(testEvents);
       const entityID = "x" as TaskID;
