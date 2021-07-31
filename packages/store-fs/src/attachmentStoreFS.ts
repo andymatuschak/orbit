@@ -1,4 +1,4 @@
-import { AttachmentReference } from "@withorbit/core2";
+import { AttachmentID, AttachmentMIMEType } from "@withorbit/core2";
 import {
   AttachmentDownloadError,
   AttachmentStore,
@@ -28,7 +28,8 @@ export class AttachmentStoreFS implements AttachmentStore {
 
   async storeAttachmentFromURL(
     url: string,
-    attachmentReference: AttachmentReference,
+    id: AttachmentID,
+    type: AttachmentMIMEType,
   ): Promise<void> {
     const response = await fetch(url);
     if (!response.ok || !response.body) {
@@ -40,20 +41,16 @@ export class AttachmentStoreFS implements AttachmentStore {
 
     await _pipeline(
       response.body,
-      fs.createWriteStream(
-        getPathForAttachment(this._basePath, attachmentReference),
-      ),
+      fs.createWriteStream(getPathForAttachment(this._basePath, id, type)),
     );
   }
 
   // If the attachment has already been stored, resolves to its local URL; otherwise resolves to null.
   async getURLForStoredAttachment(
-    attachmentReference: AttachmentReference,
+    id: AttachmentID,
+    type: AttachmentMIMEType,
   ): Promise<string | null> {
-    const attachmentPath = getPathForAttachment(
-      this._basePath,
-      attachmentReference,
-    );
+    const attachmentPath = getPathForAttachment(this._basePath, id, type);
     const exists = await fs.promises
       .access(attachmentPath)
       .then(() => true)

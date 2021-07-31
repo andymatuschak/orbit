@@ -1,5 +1,7 @@
-import { AttachmentMimeType } from "@withorbit/core";
-import { AttachmentReference } from "./entities/attachmentReference";
+import {
+  AttachmentMIMEType,
+  AttachmentReference,
+} from "./entities/attachmentReference";
 import { Task, TaskProvenance, TaskSpec } from "./entities/task";
 import { Entity, IDOfEntity } from "./entity";
 
@@ -84,5 +86,5 @@ export enum TaskRepetitionOutcome {
 
 export interface AttachmentIngestEvent
   extends EventBase<EventType.AttachmentIngest, AttachmentReference> {
-  mimeType: AttachmentMimeType;
+  mimeType: AttachmentMIMEType;
 }

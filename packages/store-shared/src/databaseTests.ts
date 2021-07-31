@@ -1,7 +1,7 @@
-import { AttachmentMimeType } from "@withorbit/core";
 import {
   AttachmentID,
   AttachmentIngestEvent,
+  AttachmentMIMEType,
   Entity,
   EntityType,
   Event,
@@ -290,13 +290,13 @@ const testAttachmentEvents: AttachmentIngestEvent[] = [
     entityID: "a_a" as AttachmentID,
     type: EventType.AttachmentIngest,
     timestampMillis: 1000,
-    mimeType: AttachmentMimeType.PNG,
+    mimeType: AttachmentMIMEType.PNG,
   },
   {
     id: "b_a_ingest" as EventID,
     entityID: "b_a" as AttachmentID,
     type: EventType.AttachmentIngest,
     timestampMillis: 5000,
-    mimeType: AttachmentMimeType.PNG,
+    mimeType: AttachmentMIMEType.PNG,
   },
 ];

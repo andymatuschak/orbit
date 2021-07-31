@@ -1,15 +1,17 @@
-import { getFileExtensionForAttachmentMimeType } from "@withorbit/core";
 import path from "path";
-import { AttachmentReference } from "@withorbit/core2";
+import {
+  AttachmentID,
+  AttachmentMIMEType,
+  getFileExtensionForAttachmentMIMEType,
+} from "@withorbit/core2";
 
 export function getPathForAttachment(
   basePath: string,
-  attachmentReference: AttachmentReference,
+  id: AttachmentID,
+  type: AttachmentMIMEType,
 ) {
   return path.join(
     basePath,
-    `${attachmentReference.id}.${getFileExtensionForAttachmentMimeType(
-      attachmentReference.mimeType,
-    )}`,
+    `${id}.${getFileExtensionForAttachmentMIMEType(type)}`,
   );
 }

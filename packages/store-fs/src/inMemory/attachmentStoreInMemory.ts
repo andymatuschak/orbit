@@ -1,5 +1,4 @@
-import { AttachmentMimeType } from "@withorbit/core";
-import { AttachmentID, AttachmentReference } from "@withorbit/core2";
+import { AttachmentID, AttachmentMIMEType } from "@withorbit/core2";
 import {
   AttachmentDownloadError,
   AttachmentStore,
@@ -18,13 +17,14 @@ export class AttachmentStoreInMemory implements AttachmentStore {
 
   async storeAttachmentFromURL(
     sourceURL: string,
-    attachmentReference: AttachmentReference,
+    id: AttachmentID,
+    type: AttachmentMIMEType,
   ): Promise<void> {
     const response = await fetch(sourceURL);
     if (response.ok) {
-      this._store.set(attachmentReference.id, {
+      this._store.set(id, {
         data: await response.arrayBuffer(),
-        type: attachmentReference.mimeType,
+        type,
       });
     } else {
       throw new AttachmentDownloadError({
@@ -35,12 +35,13 @@ export class AttachmentStoreInMemory implements AttachmentStore {
   }
 
   async getURLForStoredAttachment(
-    attachmentReference: AttachmentReference,
+    id: AttachmentID,
+    type: AttachmentMIMEType,
   ): Promise<string | null> {
-    const record = this._store.get(attachmentReference.id);
+    const record = this._store.get(id);
     if (record) {
       const b64String = base64.fromByteArray(new Uint8Array(record.data));
-      return `data:${attachmentReference.mimeType};base64,${b64String}`;
+      return `data:${type};base64,${b64String}`;
     } else {
       return null;
     }
@@ -49,5 +50,5 @@ export class AttachmentStoreInMemory implements AttachmentStore {
 
 interface StoredAttachmentRecord {
   data: ArrayBuffer;
-  type: AttachmentMimeType;
+  type: AttachmentMIMEType;
 }

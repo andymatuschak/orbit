@@ -1,6 +1,6 @@
-import { AttachmentMimeType } from "@withorbit/core";
 import {
   AttachmentID,
+  AttachmentMIMEType,
   AttachmentReference,
   ClozeTaskContent,
   EntityType,
@@ -88,6 +88,6 @@ export function createTestAttachmentReference(id: string): AttachmentReference {
     id: id as AttachmentID,
     createdAtTimestampMillis: 1000,
     type: EntityType.AttachmentReference,
-    mimeType: AttachmentMimeType.PNG,
+    mimeType: AttachmentMIMEType.PNG,
   };
 }

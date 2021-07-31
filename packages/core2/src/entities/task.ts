@@ -1,4 +1,4 @@
-import { ColorPaletteName } from "@withorbit/core";
+import { ColorPaletteName } from "../colorPaletteName";
 import { EntityBase, EntityType } from "../entity";
 import { AttachmentReference } from "./attachmentReference";
 

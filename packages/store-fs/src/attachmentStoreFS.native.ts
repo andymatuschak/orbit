@@ -3,8 +3,11 @@ Implements an attachment store by writing files to a folder on disk.
 
 This implementation is for React Native clients.
  */
-import { getFileExtensionForAttachmentMimeType } from "@withorbit/core";
-import { AttachmentReference } from "@withorbit/core2";
+import {
+  AttachmentID,
+  AttachmentMIMEType,
+  getFileExtensionForAttachmentMIMEType,
+} from "@withorbit/core2";
 import {
   AttachmentDownloadError,
   AttachmentStore,
@@ -24,16 +27,15 @@ export class AttachmentStoreFS implements AttachmentStore {
 
   async storeAttachmentFromURL(
     sourceURL: string,
-    attachmentReference: AttachmentReference,
+    id: AttachmentID,
+    type: AttachmentMIMEType,
   ): Promise<void> {
     const tempDownloadURL = FileSystem.cacheDirectory + Date.now().toString();
     const result = await FileSystem.downloadAsync(sourceURL, tempDownloadURL);
     if (result.status >= 200 && result.status < 300) {
       const attachmentPath = path.join(
         this._basePath,
-        `${attachmentReference.id}.${getFileExtensionForAttachmentMimeType(
-          attachmentReference.mimeType,
-        )}`,
+        `${id}.${getFileExtensionForAttachmentMIMEType(type)}`,
       );
 
       await FileSystem.moveAsync({ from: tempDownloadURL, to: attachmentPath });
@@ -45,10 +47,11 @@ export class AttachmentStoreFS implements AttachmentStore {
 
   // If the attachment has already been stored, resolves to its local URL; otherwise resolves to null.
   async getURLForStoredAttachment(
-    attachmentReference: AttachmentReference,
+    id: AttachmentID,
+    type: AttachmentMIMEType,
   ): Promise<string | null> {
     const attachmentURL = pathToFileURL(
-      getPathForAttachment(this._basePath, attachmentReference),
+      getPathForAttachment(this._basePath, id, type),
     ).href;
     const exists = await FileSystem.getInfoAsync(attachmentURL)
       .then(({ exists }) => exists)

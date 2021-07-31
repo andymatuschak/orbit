@@ -1,5 +1,5 @@
+import { AttachmentID } from "@withorbit/core2";
 import { AttachmentStore } from "@withorbit/store-shared";
-import { AttachmentID, AttachmentReference } from "@withorbit/core2";
 
 /*
 This is a stub implementation of AttachmentStore for web clients. Rather than actually download the attachments, we just keep track of the remote URL we were given for each attachment ID, then return that when the attachment ID is subsequently requested. So this won't produce a store which will actually work offline.
@@ -16,16 +16,11 @@ export class AttachmentStoreWeb implements AttachmentStore {
     this._attachmentIDsToURLs = new Map();
   }
 
-  async storeAttachmentFromURL(
-    url: string,
-    attachmentReference: AttachmentReference,
-  ): Promise<void> {
-    this._attachmentIDsToURLs.set(attachmentReference.id, url);
+  async storeAttachmentFromURL(url: string, id: AttachmentID): Promise<void> {
+    this._attachmentIDsToURLs.set(id, url);
   }
 
-  async getURLForStoredAttachment(
-    attachmentReference: AttachmentReference,
-  ): Promise<string | null> {
-    return this._attachmentIDsToURLs.get(attachmentReference.id) ?? null;
+  async getURLForStoredAttachment(id: AttachmentID): Promise<string | null> {
+    return this._attachmentIDsToURLs.get(id) ?? null;
   }
 }

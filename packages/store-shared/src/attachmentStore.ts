@@ -1,13 +1,15 @@
-import { AttachmentReference } from "@withorbit/core2";
+import { AttachmentID, AttachmentMIMEType } from "@withorbit/core2";
 
 export interface AttachmentStore {
   storeAttachmentFromURL(
     url: string,
-    attachmentReference: AttachmentReference,
+    id: AttachmentID,
+    type: AttachmentMIMEType,
   ): Promise<void>;
 
   // If the attachment has already been stored, resolves to its local URL; otherwise resolves to null.
   getURLForStoredAttachment(
-    attachmentReference: AttachmentReference,
+    id: AttachmentID,
+    type: AttachmentMIMEType,
   ): Promise<string | null>;
 }
