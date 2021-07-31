@@ -91,7 +91,7 @@
                     "type": "string"
                 },
                 "mimeType": {
-                    "$ref": "#/definitions/AttachmentMimeType"
+                    "$ref": "#/definitions/AttachmentMIMEType"
                 },
                 "timestampMillis": {
                     "type": "number"
@@ -112,6 +112,14 @@
             ],
             "type": "object"
         },
+        "AttachmentMIMEType": {
+            "enum": [
+                "image/jpeg",
+                "image/png",
+                "image/svg+xml"
+            ],
+            "type": "string"
+        },
         "AttachmentMimeType": {
             "enum": [
                 "image/jpeg",
@@ -130,7 +138,7 @@
                     "type": "string"
                 },
                 "mimeType": {
-                    "$ref": "#/definitions/AttachmentMimeType"
+                    "$ref": "#/definitions/AttachmentMIMEType"
                 },
                 "type": {
                     "enum": [
