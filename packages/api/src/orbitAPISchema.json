@@ -181,7 +181,42 @@
                     "$ref": "#/definitions/TaskContentField"
                 },
                 "components": {
-                    "$ref": "#/definitions/{[x:string]:{ranges:{startIndex:number;endIndex:number;hint:string|null;}[];};}"
+                    "additionalProperties": {
+                        "additionalProperties": false,
+                        "properties": {
+                            "ranges": {
+                                "items": {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "endIndex": {
+                                            "type": "number"
+                                        },
+                                        "hint": {
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        "startIndex": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "endIndex",
+                                        "hint",
+                                        "startIndex"
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        "required": [
+                            "ranges"
+                        ],
+                        "type": "object"
+                    },
+                    "type": "object"
                 },
                 "type": {
                     "enum": [
@@ -980,10 +1015,6 @@
                 "title",
                 "url"
             ],
-            "type": "object"
-        },
-        "{[x:string]:{ranges:{startIndex:number;endIndex:number;hint:string|null;}[];};}": {
-            "additionalProperties": false,
             "type": "object"
         },
         "{main:unknown;}": {

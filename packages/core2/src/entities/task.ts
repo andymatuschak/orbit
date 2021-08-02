@@ -73,15 +73,17 @@ export interface ClozeTaskContent<ClozeIDs extends string = string>
   extends TaskContentBase<TaskContentType.Cloze, ClozeIDs> {
   body: TaskContentField;
   components: {
-    [ClozeID in ClozeIDs]: {
-      ranges: {
-        startIndex: number;
-        endIndex: number;
-        hint: string | null;
-      }[];
-    };
+    [ClozeID in ClozeIDs]: ClozeTaskContentComponent;
   };
 }
+
+export type ClozeTaskContentComponent = {
+  ranges: {
+    startIndex: number;
+    endIndex: number;
+    hint: string | null;
+  }[];
+};
 
 export interface PlainTaskContent
   extends TaskContentBase<TaskContentType.Plain, MainTaskComponentID> {
