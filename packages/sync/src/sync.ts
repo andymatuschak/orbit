@@ -10,7 +10,6 @@ import { SyncAdapter } from "./syncAdapter";
 
 export async function syncOrbitStore(
   sourceStore: OrbitStore,
-
   destination: SyncAdapter,
 ): Promise<{ sentEventCount: number; receivedEventCount: number }> {
   const sourceSyncInterface = new OrbitStoreSyncAdapter(sourceStore, "local");
