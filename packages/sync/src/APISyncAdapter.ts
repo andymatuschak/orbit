@@ -5,9 +5,9 @@ import {
   Event,
   EventID,
 } from "@withorbit/core2";
-import { SyncInterface } from "./syncInterface";
+import { SyncAdapter } from "./syncAdapter";
 
-export class APISyncInterface implements SyncInterface {
+export class APISyncAdapter implements SyncAdapter {
   id: string;
   private readonly _apiClient: OrbitAPIClient;
   private readonly _readLocalAttachmentURL: (

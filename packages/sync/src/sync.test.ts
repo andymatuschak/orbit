@@ -15,7 +15,7 @@ import jestFetchMock from "jest-fetch-mock";
 import os from "os";
 import path from "path";
 import stream from "stream";
-import { OrbitStoreSyncInterface } from "./orbitStoreSyncInterface";
+import { OrbitStoreSyncAdapter } from "./orbitStoreSyncAdapter";
 import { syncOrbitStore } from "./sync";
 
 function createTestTaskIngestEvents(
@@ -78,10 +78,7 @@ test("bidi transmission", async () => {
     createTestTaskIngestEvents(2000, "store2"),
   );
 
-  await syncOrbitStore(
-    store1,
-    new OrbitStoreSyncInterface(store2, "testServer"),
-  );
+  await syncOrbitStore(store1, new OrbitStoreSyncAdapter(store2, "testServer"));
 
   const finalEvents1 = await store1.database.listEvents({});
   const finalEvents2 = await store2.database.listEvents({});
@@ -114,10 +111,7 @@ test("attachments synced", async () => {
     addEvents("store2"),
   );
 
-  await syncOrbitStore(
-    store1,
-    new OrbitStoreSyncInterface(store2, "testServer"),
-  );
+  await syncOrbitStore(store1, new OrbitStoreSyncAdapter(store2, "testServer"));
 
   // All attachments on both sides should now be stored on both sides.
   for (const { entityID, mimeType } of [

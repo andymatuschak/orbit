@@ -5,9 +5,9 @@ import {
   Event,
   EventID,
 } from "@withorbit/core2";
-import { SyncInterface } from "./syncInterface";
+import { SyncAdapter } from "./syncAdapter";
 
-export class OrbitStoreSyncInterface implements SyncInterface {
+export class OrbitStoreSyncAdapter implements SyncAdapter {
   id: string;
   private readonly _orbitStore: OrbitStore;
 

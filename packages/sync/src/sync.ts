@@ -5,19 +5,19 @@ import {
   EventType,
 } from "@withorbit/core2";
 import { OrbitStore } from "@withorbit/store-shared";
-import { OrbitStoreSyncInterface } from "./orbitStoreSyncInterface";
-import { SyncInterface } from "./syncInterface";
+import { OrbitStoreSyncAdapter } from "./orbitStoreSyncAdapter";
+import { SyncAdapter } from "./syncAdapter";
 
 export async function syncOrbitStore(
   sourceStore: OrbitStore,
-  destination: SyncInterface,
+  destination: SyncAdapter,
 ): Promise<void> {
-  const sourceInterface = new OrbitStoreSyncInterface(sourceStore, "local");
+  const sourceSyncAdapter = new OrbitStoreSyncAdapter(sourceStore, "local");
 
   // We use the same implementation for both sending and receiving events, switching the source/dest arguments appropriately.
   // In the future there's an opportunity here to track which events originated locally vs. remotely, so that we don't end up telling the server about events it's already told us about, but in practice it's not a big deal: it'll just ignore them.
   const sendPromise = sendNewEvents({
-    source: sourceInterface,
+    source: sourceSyncAdapter,
     destination: destination,
     latestSentEventID: null,
     setLatestSentEventID: () => Promise.resolve(),
@@ -25,7 +25,7 @@ export async function syncOrbitStore(
   });
   const receivePromise = sendNewEvents({
     source: destination,
-    destination: sourceInterface,
+    destination: sourceSyncAdapter,
     latestSentEventID: null,
     setLatestSentEventID: () => Promise.resolve(),
     batchSize: receiveBatchSize,
@@ -41,8 +41,8 @@ async function sendNewEvents({
   setLatestSentEventID,
   batchSize,
 }: {
-  source: SyncInterface;
-  destination: SyncInterface;
+  source: SyncAdapter;
+  destination: SyncAdapter;
   latestSentEventID: EventID | null;
   setLatestSentEventID: (id: EventID) => Promise<void>;
   batchSize: number;
