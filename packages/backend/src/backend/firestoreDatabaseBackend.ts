@@ -278,6 +278,14 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
     });
   }
 
+  getMetadataValues<Key extends string>(): Promise<Map<Key, string>> {
+    throw new Error("Unimplemented; should not be called.");
+  }
+
+  setMetadataValues(): Promise<void> {
+    throw new Error("Unimplemented; should not be called.");
+  }
+
   private async _getByID<D extends EntityDocumentBase | EventDocument>(
     collectionRef: firestore.CollectionReference<D>,
     ids: string[],

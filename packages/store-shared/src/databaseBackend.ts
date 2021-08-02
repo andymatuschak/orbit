@@ -26,6 +26,12 @@ export interface DatabaseBackend {
   listEntities<E extends Entity>(
     query: DatabaseEntityQuery<E>,
   ): Promise<DatabaseBackendEntityRecord<E>[]>;
+
+  // Reads a small, top-level value, useful for configuration and lightweight state tracking.
+  getMetadataValues<Key extends string>(keys: Key[]): Promise<Map<Key, string>>;
+
+  // Writes a small, top-level value, useful for configuration and lightweight state tracking.
+  setMetadataValues(values: Map<string, string | null>): Promise<void>;
 }
 
 // We persist entities wrapped with extra metadata used for updating snapshots.

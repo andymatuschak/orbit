@@ -65,6 +65,18 @@ export class Database {
     return records.map(({ entity }) => entity);
   }
 
+  // Reads a small, top-level value, useful for configuration and lightweight state tracking.
+  async getMetadataValues<Key extends string>(
+    keys: Key[],
+  ): Promise<Map<Key, string>> {
+    return await this._backend.getMetadataValues(keys);
+  }
+
+  // Writes a small, top-level value, useful for configuration and lightweight state tracking.
+  async setMetadataValues(values: Map<string, string | null>): Promise<void> {
+    await this._backend.setMetadataValues(values);
+  }
+
   // n.b. this method is conceivably open to races because we can't wrap the full update loop in a transaction handler, but I don't think it's an issue in practice. Worst case, the snapshot ends up behind the latest event, but it'd be corrected in the next snapshot update.
   private async _mergeEventsIntoEntitySnapshots(
     events: Event[],

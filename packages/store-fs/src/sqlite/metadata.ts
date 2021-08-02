@@ -7,11 +7,10 @@ import {
   SQLTransaction,
 } from "./types";
 
-export async function getMetadataKeys<Key extends SQLMetadataTableKey>(
-  db: SQLDatabase,
-  keys: Key[],
-): Promise<Partial<Record<Key, string>>> {
-  const results: Partial<Record<Key, string>> = {};
+export async function getMetadataValues<
+  Key extends SQLMetadataTableKey | string,
+>(db: SQLDatabase, keys: Key[]): Promise<Map<Key, string>> {
+  const results: Map<Key, string> = new Map();
   await execReadTransaction(db, (tx) => {
     for (const key of keys) {
       tx.executeSql(
@@ -19,7 +18,10 @@ export async function getMetadataKeys<Key extends SQLMetadataTableKey>(
         [key],
         (transaction, resultSet) => {
           if (resultSet.rows.length > 0) {
-            results[key] = resultSet.rows.item(0)["value"];
+            const value = resultSet.rows.item(0)["value"];
+            if (value !== null) {
+              results.set(key, value);
+            }
           }
         },
         (transaction, error) => {
@@ -31,13 +33,13 @@ export async function getMetadataKeys<Key extends SQLMetadataTableKey>(
   return results;
 }
 
-export function setMetadataKeys<Key extends SQLMetadataTableKey>(
+export function setMetadataValues<Key extends SQLMetadataTableKey | string>(
   tx: SQLTransaction,
-  keys: Record<Key, string>,
+  keys: Map<Key, string | null>,
   successCallback?: SQLStatementCallback,
   errorCallback?: SQLStatementErrorCallback,
 ): void {
-  const entries = Object.entries(keys);
+  const entries = [...keys.entries()];
   const placeholderString = entries.map(() => `(?,?)`).join(",");
 
   tx.executeSql(

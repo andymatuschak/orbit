@@ -1,4 +1,4 @@
-import { getMetadataKeys, setMetadataKeys } from "./metadata";
+import { getMetadataValues, setMetadataValues } from "./metadata";
 import { latestSchemaVersionNumber, migrations } from "./migrations";
 import { SQLMetadataTableKey, SQLTableName } from "./tables";
 import { execReadStatement, execTransaction } from "./transactionUtils";
@@ -36,9 +36,12 @@ export async function performMigration(
           `Attempting migration to ${targetVersionNumber} but only reached ${lastVersionNumber}`,
         );
       }
-      setMetadataKeys(tx, {
-        [SQLMetadataTableKey.Version]: targetVersionNumber.toString(),
-      });
+      setMetadataValues(
+        tx,
+        new Map([
+          [SQLMetadataTableKey.Version, targetVersionNumber.toString()],
+        ]),
+      );
     } else if (currentVersion > targetVersionNumber) {
       throw new Error(
         `Attempting migration from ${currentVersion} to earlier version ${targetVersionNumber}`,
@@ -57,8 +60,8 @@ export async function getSchemaVersionNumber(db: SQLDatabase): Promise<number> {
   // If it does, we read the version number out of it.
   if (tableCheckResults.rows.length > 0) {
     const dbVersionString = (
-      await getMetadataKeys(db, [SQLMetadataTableKey.Version])
-    )[SQLMetadataTableKey.Version];
+      await getMetadataValues(db, [SQLMetadataTableKey.Version])
+    ).get(SQLMetadataTableKey.Version);
     const dbVersion = Number.parseInt(dbVersionString ?? "");
     if (Number.isNaN(dbVersion)) {
       throw new Error("Can't read database version");

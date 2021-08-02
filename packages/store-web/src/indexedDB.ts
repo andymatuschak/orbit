@@ -302,6 +302,26 @@ export class IDBDatabaseBackend implements DatabaseBackend {
       });
   }
 
+  async getMetadataValues<Key extends string>(
+    keys: Key[],
+  ): Promise<Map<Key, string>> {
+    const results = await this.db.metadata.bulkGet(keys);
+    const output = new Map<Key, string>();
+    for (let i = 0; i < keys.length; i++) {
+      const value = results[i]?.value;
+      if (value) {
+        output.set(keys[i], value);
+      }
+    }
+    return output;
+  }
+
+  async setMetadataValues(values: Map<string, string | null>): Promise<void> {
+    await this.db.metadata.bulkPut(
+      [...values.entries()].map(([key, value]) => ({ key, value })),
+    );
+  }
+
   async _fetchPrimaryKeyFromUniqueKey<Row, PK>(
     table: Dexie.Table<Row, PK>,
     key: string,

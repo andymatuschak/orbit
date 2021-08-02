@@ -4,6 +4,7 @@ export enum DexieTable {
   Events = "events",
   Entities = "entities",
   DerivedTaskComponents = "derived_taskComponents",
+  Metadata = "metadata",
 }
 
 export enum DexieEventKeys {
@@ -54,4 +55,14 @@ export type DexieDerivedTaskComponentRow = {
   [DexieDerivedTaskComponentKeys.TaskID]: string;
   [DexieDerivedTaskComponentKeys.ComponentID]: string;
   [DexieDerivedTaskComponentKeys.DueTimestampMillis]: number;
+};
+
+export enum DexieMetadataKeys {
+  Key = "key",
+  Value = "value",
+}
+
+export type DexieMetadataRow = {
+  [DexieMetadataKeys.Key]: string;
+  [DexieMetadataKeys.Value]: string | null;
 };
