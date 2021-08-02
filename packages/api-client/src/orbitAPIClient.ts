@@ -106,4 +106,21 @@ export class OrbitAPIClient {
       params: { id: attachmentID },
     });
   }
+
+  listEvents2(
+    query: OrbitAPI.Spec["/2/events"]["GET"]["query"] = {},
+  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/2/events"]["GET"]>> {
+    return this.requestManager.request("/2/events", "GET", {
+      query,
+    });
+  }
+
+  putEvents2(
+    events: OrbitAPI.Spec["/2/events"]["PATCH"]["body"],
+  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/2/events"]["PATCH"]>> {
+    return this.requestManager.request("/2/events", "PATCH", {
+      contentType: "application/json",
+      body: events,
+    });
+  }
 }

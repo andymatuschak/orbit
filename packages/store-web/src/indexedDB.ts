@@ -1,4 +1,5 @@
 import Dexie, {
+  BulkError,
   Collection,
   IndexableType,
   PromiseExtended,
@@ -258,15 +259,47 @@ export class IDBDatabaseBackend implements DatabaseBackend {
   }
 
   async putEvents(events: Event[]): Promise<void> {
-    this.db.transaction("rw", this.db.events, async () => {
-      await this.db.events.bulkAdd(
-        events.map((event) => ({
-          entityID: event.entityID,
-          id: event.id,
-          data: JSON.stringify(event),
-        })),
-      );
-    });
+    await this.db
+      .transaction("rw", this.db.events, async () => {
+        await this.db.events
+          .bulkAdd(
+            events.map((event) => ({
+              entityID: event.entityID,
+              id: event.id,
+              data: JSON.stringify(event),
+            })),
+          )
+          .catch("BulkError", (error: BulkError) => {
+            // We'll ignore attempts to add duplicate events.
+            // If there are any errors which aren't duplicates, though, we'll just fail.
+            if (
+              Object.values(error.failures).some(
+                (failure) => failure.name !== Dexie.errnames.Constraint,
+              )
+            ) {
+              throw error;
+            }
+
+            // We'll find all events which *aren't* duplicate, then attempt to write those.
+            const duplicateIndices = new Set(
+              Object.keys(error.failures).map((key) => Number.parseInt(key)),
+            );
+            // We have to wait until the transaction finishes aborting, then attempt another.
+            throw {
+              name: "__retry",
+              validEvents: events.filter((e, i) => !duplicateIndices.has(i)),
+            };
+          });
+      })
+      .catch(async (error) => {
+        if (error.name === "__retry") {
+          if (error.validEvents) {
+            await this.putEvents(error.validEvents);
+          }
+        } else {
+          throw error;
+        }
+      });
   }
 
   async _fetchPrimaryKeyFromUniqueKey<Row, PK>(

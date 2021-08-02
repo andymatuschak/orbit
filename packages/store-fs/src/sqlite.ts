@@ -106,7 +106,8 @@ export class SQLDatabaseBackend implements DatabaseBackend {
         SQLEntityTableColumn.Data,
       ],
       rows,
-      upsertSpec: {
+      conflictSpec: {
+        policy: "replace",
         uniqueColumnName: SQLEntityTableColumn.ID,
         updateColumnNames: [
           SQLEntityTableColumn.LastEventID,
@@ -145,6 +146,11 @@ export class SQLDatabaseBackend implements DatabaseBackend {
         event.entityID,
         JSON.stringify(event),
       ]),
+      // Duplicate events are ignored.
+      conflictSpec: {
+        policy: "ignore",
+        uniqueColumnName: SQLEventTableColumn.ID,
+      },
     });
   }
 
@@ -190,16 +196,19 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     tableName,
     orderedColumnNames,
     rows,
-    upsertSpec,
+    conflictSpec,
   }: {
     tableName: SQLTableName;
     orderedColumnNames: string[];
     rows: unknown[][];
     // When provided, if a uniqueness constraint fails for uniqueColumnName, the existing row will be updated to the new row's values for the columns specified in updateColumnNames (i.e. an upsert).
-    upsertSpec?: {
-      uniqueColumnName: string;
-      updateColumnNames: string[];
-    };
+    conflictSpec?:
+      | {
+          policy: "replace";
+          uniqueColumnName: string;
+          updateColumnNames: string[];
+        }
+      | { policy: "ignore"; uniqueColumnName: string };
   }): Promise<void> {
     const db = await this._ensureDB();
     await execTransaction(db, (tx) => {
@@ -210,12 +219,19 @@ export class SQLDatabaseBackend implements DatabaseBackend {
         ",",
       )}) VALUES ${placeholderString}`;
 
-      if (upsertSpec) {
-        insertSQLStatement += `ON CONFLICT(${
-          upsertSpec.uniqueColumnName
-        }) DO UPDATE SET ${upsertSpec.updateColumnNames
-          .map((name) => `${name} = excluded.${name}`)
-          .join(", ")}`;
+      if (conflictSpec) {
+        switch (conflictSpec.policy) {
+          case "replace":
+            insertSQLStatement += `ON CONFLICT(${
+              conflictSpec.uniqueColumnName
+            }) DO UPDATE SET ${conflictSpec.updateColumnNames
+              .map((name) => `${name} = excluded.${name}`)
+              .join(", ")}`;
+            break;
+          case "ignore":
+            insertSQLStatement += `ON CONFLICT(${conflictSpec.uniqueColumnName}) DO NOTHING`;
+            break;
+        }
       }
 
       tx.executeSql(insertSQLStatement, rows.flat());

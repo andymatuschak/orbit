@@ -1,0 +1,23 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["jest", "node"]
+  },
+  "include": ["./src/**/*.ts", "./@types/**/*.d.ts"],
+  "references": [
+    {
+      "path": "../core2"
+    },
+    {
+      "path": "../sample-data"
+    },
+    {
+      "path": "../store-fs"
+    },
+    {
+      "path": "../store-shared"
+    }
+  ]
+}
