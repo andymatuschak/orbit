@@ -1,13 +1,17 @@
 import {
   AttachmentID,
+  AttachmentIngestEvent,
   AttachmentMIMEType,
   AttachmentReference,
   ClozeTaskContent,
   EntityType,
+  EventID,
+  EventType,
   MemoryTaskSpec,
   Task,
   TaskContentType,
   TaskID,
+  TaskIngestEvent,
   TaskSpecType,
 } from "@withorbit/core2";
 
@@ -90,4 +94,31 @@ export function createTestAttachmentReference(id: string): AttachmentReference {
     type: EntityType.AttachmentReference,
     mimeType: AttachmentMIMEType.PNG,
   };
+}
+
+export function createTestTaskIngestEvents(
+  count: number,
+  prefix: string,
+): TaskIngestEvent[] {
+  return Array.from(new Array(count)).map((_, i) => ({
+    id: `event_${prefix}_${i}` as EventID,
+    type: EventType.TaskIngest,
+    spec: testClozeSpec,
+    entityID: `entity_${prefix}_${i}` as TaskID,
+    timestampMillis: i * 5000 + 10000,
+    provenance: null,
+  }));
+}
+
+export function createTestAttachmentIngestEvents(
+  count: number,
+  prefix: string,
+): AttachmentIngestEvent[] {
+  return Array.from(new Array(count)).map((_, i) => ({
+    id: `event_${prefix}_${i}` as EventID,
+    type: EventType.AttachmentIngest,
+    entityID: `entity_${prefix}_${i}` as AttachmentID,
+    timestampMillis: i * 5000 + 10000,
+    mimeType: AttachmentMIMEType.PNG,
+  }));
 }

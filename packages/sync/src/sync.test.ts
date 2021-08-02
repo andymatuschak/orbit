@@ -1,13 +1,4 @@
-import {
-  AttachmentID,
-  AttachmentIngestEvent,
-  AttachmentMIMEType,
-  Event,
-  EventID,
-  EventType,
-  TaskID,
-  TaskIngestEvent,
-} from "@withorbit/core2";
+import { AttachmentIngestEvent, Event } from "@withorbit/core2";
 import { core2 as fixtures } from "@withorbit/sample-data";
 import OrbitStoreFS from "@withorbit/store-fs";
 import { OrbitStore } from "@withorbit/store-shared";
@@ -17,33 +8,6 @@ import path from "path";
 import stream from "stream";
 import { OrbitStoreSyncAdapter } from "./orbitStoreSyncAdapter";
 import { syncOrbitStore } from "./sync";
-
-function createTestTaskIngestEvents(
-  count: number,
-  prefix: string,
-): TaskIngestEvent[] {
-  return Array.from(new Array(count)).map((_, i) => ({
-    id: `event_${prefix}_${i}` as EventID,
-    type: EventType.TaskIngest,
-    spec: fixtures.testTask.spec,
-    entityID: `entity_${prefix}_${i}` as TaskID,
-    timestampMillis: i * 5000 + 10000,
-    provenance: null,
-  }));
-}
-
-function createTestAttachmentIngestEvents(
-  count: number,
-  prefix: string,
-): AttachmentIngestEvent[] {
-  return Array.from(new Array(count)).map((_, i) => ({
-    id: `event_${prefix}_${i}` as EventID,
-    type: EventType.AttachmentIngest,
-    entityID: `entity_${prefix}_${i}` as AttachmentID,
-    timestampMillis: i * 5000 + 10000,
-    mimeType: AttachmentMIMEType.PNG,
-  }));
-}
 
 async function prepTestStore(
   prepFn: (store: OrbitStore) => Promise<Event[]>,
@@ -72,10 +36,10 @@ afterAll(() => {
 
 test("bidi transmission", async () => {
   const { store: store1, events: events1 } = await prepTestStore(async () =>
-    createTestTaskIngestEvents(2000, "store1"),
+    fixtures.createTestTaskIngestEvents(2000, "store1"),
   );
   const { store: store2, events: events2 } = await prepTestStore(async () =>
-    createTestTaskIngestEvents(2000, "store2"),
+    fixtures.createTestTaskIngestEvents(2000, "store2"),
   );
 
   const store2SyncAdapter = new OrbitStoreSyncAdapter(store2, "testServer");
@@ -103,7 +67,7 @@ test("bidi transmission", async () => {
   expect(receivedEventCount2).toEqual(0);
 
   // If we add some more events to just the destination, they should appear on the source as expected.
-  const extraEvents = createTestTaskIngestEvents(100, "store2_extra");
+  const extraEvents = fixtures.createTestTaskIngestEvents(100, "store2_extra");
   await store2.database.putEvents(extraEvents);
   const {
     sentEventCount: sentEventCount3,
@@ -122,9 +86,9 @@ test("attachments synced", async () => {
 
   function addEvents(prefix: string) {
     return async (store: OrbitStore) => {
-      const events = createTestAttachmentIngestEvents(100, prefix);
+      const events = fixtures.createTestAttachmentIngestEvents(100, prefix);
       for (const { entityID, mimeType } of events) {
-        store.attachmentStore.storeAttachmentFromURL(
+        await store.attachmentStore.storeAttachmentFromURL(
           "https://dummy.com",
           entityID,
           mimeType,
