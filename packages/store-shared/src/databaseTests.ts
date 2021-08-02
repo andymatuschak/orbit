@@ -38,6 +38,7 @@ const testEvents: Event[] = [
 export function runDatabaseTests(
   name: string,
   databaseFactory: (eventReducer: EventReducer) => Promise<Database>,
+  runMetadataTests = true, // We don't implement this DB backend feature for Firebase.
 ) {
   let db: Database;
   beforeEach(async () => {
@@ -112,6 +113,41 @@ export function runDatabaseTests(
         initialEntities.map(({ id }) => id),
       );
     });
+
+    if (runMetadataTests) {
+      describe("metadata", () => {
+        test("round-trips", async () => {
+          const testValues = new Map([
+            ["foo", "bar"],
+            ["baz", "bat"],
+          ]);
+          await db.setMetadataValues(testValues);
+          const result = await db.getMetadataValues(["foo", "baz", "quux"]);
+          expect(result.size).toEqual(2);
+          expect(result).toMatchObject(testValues);
+        });
+
+        test("overwrites old values", async () => {
+          await db.setMetadataValues(new Map([["foo", "bar"]]));
+          await db.setMetadataValues(new Map([["foo", "baz"]]));
+          const result = await db.getMetadataValues(["foo"]);
+          expect(result.size).toEqual(1);
+          expect(result.get("foo")).toEqual("baz");
+        });
+
+        test("missing values are null", async () => {
+          const result = await db.getMetadataValues(["test"]);
+          expect(result.size).toEqual(0);
+        });
+
+        test("deleting value", async () => {
+          await db.setMetadataValues(new Map([["foo", "bar"]]));
+          await db.setMetadataValues(new Map([["foo", null]]));
+          const result = await db.getMetadataValues(["foo"]);
+          expect(result.size).toEqual(0);
+        });
+      });
+    }
 
     describe("querying events", () => {
       beforeEach(() => db.putEvents(testEvents));

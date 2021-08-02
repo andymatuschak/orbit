@@ -7,6 +7,8 @@ import {
   DexieEntityRow,
   DexieEventKeys,
   DexieEventRow,
+  DexieMetadataKeys,
+  DexieMetadataRow,
   DexieTable,
 } from "./tables";
 
@@ -17,6 +19,7 @@ export class DexieDatabase extends Dexie {
     DexieDerivedTaskComponentRow,
     string
   >;
+  [DexieTable.Metadata]: Dexie.Table<DexieMetadataRow, string>;
 
   constructor(name: string, indexedDB: IDBFactory) {
     super(name, { indexedDB });
@@ -40,11 +43,14 @@ export class DexieDatabase extends Dexie {
         DexieDerivedTaskComponentKeys.TaskID,
         DexieDerivedTaskComponentKeys.DueTimestampMillis,
       ].join(", "),
+
+      [DexieTable.Metadata]: `&${DexieMetadataKeys.Key}`,
     });
 
     this.events = this.table(DexieTable.Events);
     this.entities = this.table(DexieTable.Entities);
     this.derived_taskComponents = this.table(DexieTable.DerivedTaskComponents);
+    this.metadata = this.table(DexieTable.Metadata);
 
     this.entities.hook("creating", onEntitiesInsert);
     this.entities.hook("updating", onEntitiesUpdate);

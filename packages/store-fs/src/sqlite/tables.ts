@@ -5,7 +5,7 @@ export enum SQLTableName {
 }
 
 export enum SQLMetadataTableKey {
-  Version = "version",
+  Version = "__db_version",
 }
 
 export enum SQLEventTableColumn {

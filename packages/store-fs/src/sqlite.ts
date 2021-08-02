@@ -8,6 +8,7 @@ import {
   DatabaseBackendEntityRecord,
 } from "@withorbit/store-shared";
 import { openDatabase } from "./sqlite/binding";
+import { getMetadataValues, setMetadataValues } from "./sqlite/metadata";
 import { performMigration } from "./sqlite/migration";
 import {
   SQLEntityTableColumn,
@@ -190,6 +191,20 @@ export class SQLDatabaseBackend implements DatabaseBackend {
       output.push(JSON.parse(row[SQLEventTableColumn.Data]));
     }
     return output;
+  }
+
+  async getMetadataValues<Key extends string>(
+    keys: Key[],
+  ): Promise<Map<Key, string>> {
+    const db = await this._ensureDB();
+    return await getMetadataValues(db, keys);
+  }
+
+  async setMetadataValues(values: Map<string, string | null>): Promise<void> {
+    const db = await this._ensureDB();
+    await execTransaction(db, async (tx) => {
+      await setMetadataValues(tx, values);
+    });
   }
 
   private async _put({
