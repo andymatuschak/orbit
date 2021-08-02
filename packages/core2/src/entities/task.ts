@@ -64,20 +64,18 @@ export const mainTaskComponentID = "main";
 export type MainTaskComponentID = typeof mainTaskComponentID;
 
 export interface QATaskContent
-  extends TaskContentBase<TaskContentType.QA, MainTaskComponentID> {
+  extends TaskContentBase<TaskContentType.QA, MainTaskComponentID, undefined> {
   body: TaskContentField;
   answer: TaskContentField;
 }
 
-export interface ClozeTaskContent<ClozeIDs extends string = string>
-  extends TaskContentBase<TaskContentType.Cloze, ClozeIDs> {
+export interface ClozeTaskContent
+  extends TaskContentBase<
+    TaskContentType.Cloze,
+    string,
+    { [ClozeID: string]: ClozeTaskContentComponent }
+  > {
   body: TaskContentField;
-  components: {
-    /**
-     * @TJS-type {[clozeID: string]: ClozeTaskContentComponent}
-     */
-    [ClozeID: string]: ClozeTaskContentComponent;
-  };
 }
 
 export type ClozeTaskContentComponent = {
@@ -89,20 +87,22 @@ export type ClozeTaskContentComponent = {
 };
 
 export interface PlainTaskContent
-  extends TaskContentBase<TaskContentType.Plain, MainTaskComponentID> {
+  extends TaskContentBase<
+    TaskContentType.Plain,
+    MainTaskComponentID,
+    undefined
+  > {
   type: TaskContentType.Plain;
   body: TaskContentField;
 }
 
-interface TaskContentBase<
+type TaskContentBase<
   TCT extends TaskContentType,
   ComponentIDs extends string,
-> {
+  ComponentData extends { [ComponentID in ComponentIDs]: unknown } | undefined,
+> = {
   type: TCT;
-  components?: {
-    [ComponentID in ComponentIDs]: unknown;
-  };
-}
+} & (ComponentData extends undefined ? unknown : { components: ComponentData });
 
 export enum TaskContentType {
   QA = "qa",
@@ -112,7 +112,8 @@ export enum TaskContentType {
 
 type ComponentIDsOf<TC extends TaskContent> = TC extends TaskContentBase<
   any,
-  infer ComponentIDs
+  infer ComponentIDs,
+  any
 >
   ? ComponentIDs
   : never;

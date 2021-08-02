@@ -25,7 +25,8 @@ export function taskIngestEventReducer(
       metadata: { ...oldSnapshot.metadata, ...event.metadata },
     };
   } else {
-    const specComponents = event.spec.content.components;
+    const specComponents =
+      "components" in event.spec.content ? event.spec.content.components : null;
     const componentIDs = specComponents
       ? Object.keys(specComponents)
       : [mainTaskComponentID];

@@ -174,7 +174,7 @@
             ],
             "type": "object"
         },
-        "ClozeTaskContent<string>": {
+        "ClozeTaskContent": {
             "additionalProperties": false,
             "properties": {
                 "body": {
@@ -343,9 +343,6 @@
             "properties": {
                 "body": {
                     "$ref": "#/definitions/TaskContentField"
-                },
-                "components": {
-                    "$ref": "#/definitions/{main:unknown;}"
                 },
                 "type": {
                     "enum": [
@@ -523,9 +520,6 @@
                 },
                 "body": {
                     "$ref": "#/definitions/TaskContentField"
-                },
-                "components": {
-                    "$ref": "#/definitions/{main:unknown;}"
                 },
                 "type": {
                     "enum": [
@@ -866,7 +860,7 @@
                             "$ref": "#/definitions/QATaskContent"
                         },
                         {
-                            "$ref": "#/definitions/ClozeTaskContent<string>"
+                            "$ref": "#/definitions/ClozeTaskContent"
                         },
                         {
                             "$ref": "#/definitions/PlainTaskContent"
@@ -1014,17 +1008,6 @@
                 "siteName",
                 "title",
                 "url"
-            ],
-            "type": "object"
-        },
-        "{main:unknown;}": {
-            "additionalProperties": false,
-            "properties": {
-                "main": {
-                }
-            },
-            "required": [
-                "main"
             ],
             "type": "object"
         }

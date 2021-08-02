@@ -58,9 +58,7 @@ const testIngestEvent = {
 } as TaskIngestEvent;
 const initialTask = eventReducer(null, testIngestEvent);
 
-const firstComponentID = Object.keys(
-  testIngestEvent.spec.content.components!,
-)[0];
+const firstComponentID = Object.keys(testClozeSpec.content.components)[0];
 
 describe("ingest reducer", () => {
   test("ingests without a base state", () => {
