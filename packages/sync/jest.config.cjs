@@ -8,7 +8,4 @@ module.exports = {
     "^multiformats/(.+)$": "multiformats/cjs/src/$1.js",
     "^@ipld/dag-json": "@ipld/dag-json/cjs/index.js",
   },
-  setupFiles: [
-    "./src/__tests__/setup.ts"
-  ],
 };
