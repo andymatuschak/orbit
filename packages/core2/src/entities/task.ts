@@ -73,7 +73,10 @@ export interface ClozeTaskContent<ClozeIDs extends string = string>
   extends TaskContentBase<TaskContentType.Cloze, ClozeIDs> {
   body: TaskContentField;
   components: {
-    [ClozeID in ClozeIDs]: ClozeTaskContentComponent;
+    /**
+     * @TJS-type {[clozeID: string]: ClozeTaskContentComponent}
+     */
+    [ClozeID: string]: ClozeTaskContentComponent;
   };
 }
 
