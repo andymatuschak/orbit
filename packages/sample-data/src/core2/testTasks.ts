@@ -25,19 +25,21 @@ const testClozeSpec: MemoryTaskSpec<ClozeTaskContent> = {
     },
     components: {
       a: {
+        order: 0,
         ranges: [
           {
             startIndex: 5,
-            endIndex: 10,
+            length: 5,
             hint: null,
           },
         ],
       },
       b: {
+        order: 1,
         ranges: [
           {
             startIndex: 2,
-            endIndex: 4,
+            length: 2,
             hint: null,
           },
         ],

@@ -6,5 +6,9 @@
     "types": ["jest", "node"]
   },
   "include": ["./src/**/*.ts", "./@types/**/*.d.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../core"
+    }
+  ]
 }

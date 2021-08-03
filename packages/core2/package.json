@@ -8,7 +8,9 @@
   "types": "./dist/index.d.ts",
   "exports": "./dist/index.js",
   "sideEffects": false,
-  "dependencies": {},
+  "dependencies": {
+    "@withorbit/core": "0.0.1"
+  },
   "scripts": {
     "build": "tsc -b",
     "test": "jest"

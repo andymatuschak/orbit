@@ -1,6 +1,7 @@
 import { ColorPaletteName } from "../colorPaletteName";
 import { EntityBase, EntityType } from "../entity";
 import { AttachmentID } from "./attachmentReference";
+export { parseSingleCurlyBraceClozePromptMarkup } from "./task/parseClozeMarkup";
 
 // The Task entity stores the "spec" which describes a task's behavior and content, as well as the task's ongoing state and associated metadata.
 export interface Task<TC extends TaskContent = TaskContent>
@@ -79,9 +80,10 @@ export interface ClozeTaskContent
 }
 
 export type ClozeTaskContentComponent = {
+  order: number;
   ranges: {
     startIndex: number;
-    endIndex: number;
+    length: number;
     hint: string | null;
   }[];
 };
