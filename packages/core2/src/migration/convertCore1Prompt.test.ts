@@ -7,7 +7,7 @@ import {
 import { ClozeTaskContent, TaskContentType, TaskSpec } from "../entities/task";
 import { convertCore1Prompt } from "./convertCore1Prompt";
 
-const testQAPrompt: QAPrompt = {
+export const testQAPrompt: QAPrompt = {
   promptType: qaPromptType,
   question: {
     contents:
@@ -20,7 +20,7 @@ const testQAPrompt: QAPrompt = {
   },
 };
 
-const testClozePrompt: ClozePrompt = {
+export const testClozePrompt: ClozePrompt = {
   promptType: clozePromptType,
   body: {
     contents:
