@@ -107,21 +107,15 @@ test("attachments synced", async () => {
   await syncOrbitStore(store1, new OrbitStoreSyncAdapter(store2, "testServer"));
 
   // All attachments on both sides should now be stored on both sides.
-  for (const { entityID, mimeType } of [
+  for (const { entityID } of [
     ...events1,
     ...events2,
   ] as AttachmentIngestEvent[]) {
     expect(
-      await store1.attachmentStore.getURLForStoredAttachment(
-        entityID,
-        mimeType,
-      ),
+      await store1.attachmentStore.getURLForStoredAttachment(entityID),
     ).not.toBeNull();
     expect(
-      await store2.attachmentStore.getURLForStoredAttachment(
-        entityID,
-        mimeType,
-      ),
+      await store2.attachmentStore.getURLForStoredAttachment(entityID),
     ).not.toBeNull();
   }
 });

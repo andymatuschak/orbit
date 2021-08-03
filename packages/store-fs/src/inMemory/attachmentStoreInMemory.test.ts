@@ -33,10 +33,7 @@ const testAttachmentReference: AttachmentReference = {
 
 test("non-existent ID URL resolves to null", async () => {
   expect(
-    await store.getURLForStoredAttachment(
-      testAttachmentReference.id,
-      testAttachmentReference.mimeType,
-    ),
+    await store.getURLForStoredAttachment(testAttachmentReference.id),
   ).toBeNull();
 });
 
@@ -49,9 +46,6 @@ test("after downloading URL resolves", async () => {
     testAttachmentReference.mimeType,
   );
 
-  const url = await store.getURLForStoredAttachment(
-    testAttachmentReference.id,
-    testAttachmentReference.mimeType,
-  );
+  const url = await store.getURLForStoredAttachment(testAttachmentReference.id);
   expect(url).toMatchInlineSnapshot(`"data:image/png;base64,VGVzdA=="`);
 });

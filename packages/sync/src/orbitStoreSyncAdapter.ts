@@ -42,15 +42,9 @@ export class OrbitStoreSyncAdapter implements SyncAdapter {
     );
   }
 
-  async getURLForAttachment(
-    id: AttachmentID,
-    type: AttachmentMIMEType,
-  ): Promise<string> {
+  async getURLForAttachment(id: AttachmentID): Promise<string> {
     const url =
-      await this._orbitStore.attachmentStore.getURLForStoredAttachment(
-        id,
-        type,
-      );
+      await this._orbitStore.attachmentStore.getURLForStoredAttachment(id);
     if (!url) {
       throw new Error(`Orbit store has no URL for attachment with ID ${id}`);
     }

@@ -92,7 +92,7 @@ async function sendNewEvents({
           event.type === EventType.AttachmentIngest,
       );
       for (const { entityID, mimeType } of attachmentIngestEvents) {
-        const sourceURL = await source.getURLForAttachment(entityID, mimeType);
+        const sourceURL = await source.getURLForAttachment(entityID);
         if (!sourceURL) {
           throw new Error(`Source store has no URL for attachment ${entityID}`);
         }

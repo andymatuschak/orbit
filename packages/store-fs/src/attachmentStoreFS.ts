@@ -20,10 +20,17 @@ This implementation is for Node.js clients.
  */
 export class AttachmentStoreFS implements AttachmentStore {
   private readonly _basePath: string;
+  private readonly _getAttachmentType: (
+    id: AttachmentID,
+  ) => Promise<AttachmentMIMEType | null>;
 
   // basePath must be a path to a folder which already exists.
-  constructor(basePath: string) {
+  constructor(
+    basePath: string,
+    getAttachmentType: (id: AttachmentID) => Promise<AttachmentMIMEType | null>,
+  ) {
     this._basePath = path.normalize(basePath);
+    this._getAttachmentType = getAttachmentType;
   }
 
   async storeAttachmentFromURL(
@@ -38,6 +45,7 @@ export class AttachmentStoreFS implements AttachmentStore {
         bodyText: await response.text(),
       });
     }
+    // TODO: validate that the response's content type matches the specified type.
 
     await _pipeline(
       response.body,
@@ -46,10 +54,12 @@ export class AttachmentStoreFS implements AttachmentStore {
   }
 
   // If the attachment has already been stored, resolves to its local URL; otherwise resolves to null.
-  async getURLForStoredAttachment(
-    id: AttachmentID,
-    type: AttachmentMIMEType,
-  ): Promise<string | null> {
+  async getURLForStoredAttachment(id: AttachmentID): Promise<string | null> {
+    const type = await this._getAttachmentType(id);
+    if (!type) {
+      return null;
+    }
+
     const attachmentPath = getPathForAttachment(this._basePath, id, type);
     const exists = await fs.promises
       .access(attachmentPath)

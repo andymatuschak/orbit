@@ -1,9 +1,10 @@
+import { EntityType } from "@withorbit/core2";
+import { Database } from "@withorbit/store-shared/dist/database";
+import { OrbitStore } from "@withorbit/store-shared/dist/orbitStore";
 import fs from "fs";
 import path from "path";
 import { AttachmentStoreFS } from "./attachmentStoreFS";
-import { Database } from "@withorbit/store-shared/dist/database";
 import { SQLDatabaseBackend } from "./sqlite";
-import { OrbitStore } from "@withorbit/store-shared/dist/orbitStore";
 
 /*
 An on-disk Orbit store is a folder containing both a database of event / entity data and also a folder of on-disk attachment files.
@@ -53,7 +54,17 @@ export class OrbitStoreFS implements OrbitStore {
 
   private constructor(databaseSubpath: string, attachmentsSubpath: string) {
     this.database = new Database(new SQLDatabaseBackend(databaseSubpath));
-    this.attachmentStore = new AttachmentStoreFS(attachmentsSubpath);
+    this.attachmentStore = new AttachmentStoreFS(
+      attachmentsSubpath,
+      async (id) => {
+        const reference = (await this.database.getEntities([id])).get(id);
+        return (
+          (reference?.type === EntityType.AttachmentReference &&
+            reference.mimeType) ||
+          null
+        );
+      },
+    );
   }
 }
 

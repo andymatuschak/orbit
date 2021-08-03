@@ -20,8 +20,5 @@ export interface SyncAdapter {
     type: AttachmentMIMEType,
   ): Promise<void>;
 
-  getURLForAttachment(
-    id: AttachmentID,
-    type: AttachmentMIMEType,
-  ): Promise<string>;
+  getURLForAttachment(id: AttachmentID): Promise<string>;
 }

@@ -1,6 +1,6 @@
 import { ColorPaletteName } from "../colorPaletteName";
 import { EntityBase, EntityType } from "../entity";
-import { AttachmentReference } from "./attachmentReference";
+import { AttachmentID } from "./attachmentReference";
 
 // The Task entity stores the "spec" which describes a task's behavior and content, as well as the task's ongoing state and associated metadata.
 export interface Task<TC extends TaskContent = TaskContent>
@@ -118,9 +118,9 @@ type ComponentIDsOf<TC extends TaskContent> = TC extends TaskContentBase<
   ? ComponentIDs
   : never;
 
-interface TaskContentField {
+export interface TaskContentField {
   text: string;
-  attachments: AttachmentReference[];
+  attachments: AttachmentID[];
 }
 
 // ---

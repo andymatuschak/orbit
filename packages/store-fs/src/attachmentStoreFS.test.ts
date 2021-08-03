@@ -29,7 +29,7 @@ beforeEach(async () => {
   const tempPath = await fs.promises.mkdtemp(
     path.join(os.tmpdir(), "orbit-test-" + Math.random()),
   );
-  store = new AttachmentStoreFS(tempPath);
+  store = new AttachmentStoreFS(tempPath, async () => AttachmentMIMEType.PNG);
 });
 
 const testAttachmentReference: AttachmentReference = {
@@ -41,10 +41,7 @@ const testAttachmentReference: AttachmentReference = {
 
 test("non-existent ID URL resolves to null", async () => {
   expect(
-    await store.getURLForStoredAttachment(
-      testAttachmentReference.id,
-      testAttachmentReference.mimeType,
-    ),
+    await store.getURLForStoredAttachment(testAttachmentReference.id),
   ).toBeNull();
 });
 
@@ -57,10 +54,7 @@ test("after downloading URL resolves", async () => {
     testAttachmentReference.mimeType,
   );
 
-  const url = await store.getURLForStoredAttachment(
-    testAttachmentReference.id,
-    testAttachmentReference.mimeType,
-  );
+  const url = await store.getURLForStoredAttachment(testAttachmentReference.id);
   expect(path.basename(url!)).toBe("x.png");
 
   const filePath = fileURLToPath(url!);

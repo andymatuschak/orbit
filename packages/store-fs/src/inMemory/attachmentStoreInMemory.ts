@@ -34,14 +34,11 @@ export class AttachmentStoreInMemory implements AttachmentStore {
     }
   }
 
-  async getURLForStoredAttachment(
-    id: AttachmentID,
-    type: AttachmentMIMEType,
-  ): Promise<string | null> {
+  async getURLForStoredAttachment(id: AttachmentID): Promise<string | null> {
     const record = this._store.get(id);
     if (record) {
       const b64String = base64.fromByteArray(new Uint8Array(record.data));
-      return `data:${type};base64,${b64String}`;
+      return `data:${record.type};base64,${b64String}`;
     } else {
       return null;
     }
