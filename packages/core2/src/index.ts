@@ -4,3 +4,5 @@ export * from "./event";
 export * from "./entities/task";
 export * from "./entities/attachmentReference";
 export * from "./eventReducer";
+
+export * as migration from "./migration";

@@ -1,17 +1,29 @@
+import { getIDForPromptSync, getIDForPromptTask } from "@withorbit/core";
+import { testQAPrompt } from "@withorbit/sample-data";
+import { clearAllFirestoreData } from "../src/backend/firebaseSupport/__tests__/firebaseTesting";
 import { fetchRoute } from "./utils/fetchRoute";
 import { setupAuthToken } from "./utils/setupAuthToken";
 
+const testPromptID = getIDForPromptSync(testQAPrompt);
 const VALID_ACTION_LOG = [
   {
-    id: "z4EBG9jDqv5AQS3ivFTqFZcKomf2uSa3oZKbPv4k4U8AjVwp4CG",
+    id: "z4EBG9j9vzxH39N5Phi4DvKjPPHPATM6GayreCvmvXGrPA3gzAg",
     data: {
       timestampMillis: 15,
-      taskID: "12",
+      taskID: getIDForPromptTask({
+        promptID: testPromptID,
+        promptType: testQAPrompt.promptType,
+        promptParameters: null,
+      }),
       actionLogType: "ingest",
       provenance: null,
     },
   },
 ];
+
+afterEach(async () => {
+  await clearAllFirestoreData();
+});
 
 it("round-trip request", async () => {
   await setupAuthToken("patch-action-log-round-trip");
@@ -117,5 +129,37 @@ describe("[PATCH] validation", () => {
         message: "body/0/data must match a schema in anyOf",
       },
     ]);
+  });
+
+  it("also writes core2 events", async () => {
+    await setupAuthToken("migrate-action-log");
+    const { status: taskDataPatchStatus, body: taskDataPatchBody } =
+      await fetchRoute(`/api/taskData`, {
+        method: "PATCH",
+        json: [{ id: testPromptID, data: testQAPrompt }],
+        authorization: { token: "migrate-action-log" },
+      });
+    expect(taskDataPatchStatus).toBe(204);
+    expect(taskDataPatchBody).toBeUndefined();
+
+    const { status: actionLogPatchStatus, body: actionLogPatchBody } =
+      await fetchRoute(`/api/actionLogs`, {
+        method: "PATCH",
+        json: VALID_ACTION_LOG,
+        authorization: { token: "migrate-action-log" },
+      });
+    expect(actionLogPatchStatus).toBe(204);
+    expect(actionLogPatchBody).toBeUndefined();
+
+    const { status: eventsGetStatus, body: eventsGetBody } = await fetchRoute(
+      "/api/2/events",
+      {
+        method: "GET",
+        authorization: { token: "migrate-action-log" },
+      },
+    );
+    expect(eventsGetStatus).toBe(200);
+    expect(eventsGetBody.items.length).toBe(1);
+    expect(eventsGetBody.items[0].entityID).toEqual(testPromptID);
   });
 });

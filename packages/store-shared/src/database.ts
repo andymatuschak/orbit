@@ -33,8 +33,10 @@ export class Database {
   }
 
   async putEvents(events: Event[]): Promise<void> {
-    await this._backend.putEvents(events);
-    await this._mergeEventsIntoEntitySnapshots(events);
+    if (events.length > 0) {
+      await this._backend.putEvents(events);
+      await this._mergeEventsIntoEntitySnapshots(events);
+    }
   }
 
   getEvents<E extends Event, ID extends EventID>(

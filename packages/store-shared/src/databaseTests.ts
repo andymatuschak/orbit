@@ -62,6 +62,10 @@ export function runDatabaseTests(
       );
     });
 
+    test("empty event list doesn't explode", async () => {
+      await db.putEvents([]);
+    });
+
     test("put duplicate events", async () => {
       await db.putEvents(testEvents);
       await db.putEvents([

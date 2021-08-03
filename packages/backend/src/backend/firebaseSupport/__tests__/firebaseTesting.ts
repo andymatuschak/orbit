@@ -59,5 +59,9 @@ export function createTestAdminFirebaseApp(): firebase.app.App {
 export async function resetTestFirebaseApp(app: firebase.app.App) {
   await app.firestore().terminate();
   await app.delete();
+  await clearAllFirestoreData();
+}
+
+export async function clearAllFirestoreData() {
   await firebaseTesting.clearFirestoreData({ projectId: projectID });
 }

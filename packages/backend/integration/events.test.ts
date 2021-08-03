@@ -1,6 +1,11 @@
+import { clearAllFirestoreData } from "../src/backend/firebaseSupport/__tests__/firebaseTesting";
 import { fetchRoute } from "./utils/fetchRoute";
 import { setupAuthToken } from "./utils/setupAuthToken";
 import { core2 as fixtures } from "@withorbit/sample-data";
+
+afterEach(async () => {
+  await clearAllFirestoreData();
+});
 
 test("round-trip request", async () => {
   await setupAuthToken("patch-events-round-trip");

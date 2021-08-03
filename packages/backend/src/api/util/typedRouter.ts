@@ -88,6 +88,7 @@ export default function createTypedRouter<API extends API.Spec>(
         contentType: request.headers["content-type"],
       });
       if (validationResult !== true) {
+        console.error("Validation failed: ", validationResult.errors);
         response.status(400).send(validationResult);
         return;
       }
@@ -114,7 +115,10 @@ export default function createTypedRouter<API extends API.Spec>(
             response.send();
           }
         })
-        .catch((err) => next(err));
+        .catch((err) => {
+          console.error("Error executing handler: ", err.name, err.message);
+          next(err);
+        });
     });
   }
 
