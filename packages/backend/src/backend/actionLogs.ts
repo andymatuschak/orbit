@@ -5,7 +5,7 @@ import {
   PromptState,
 } from "@withorbit/core";
 import * as firebase from "firebase-admin";
-import { getDatabase } from "./firebase";
+import { getDatabase } from "./firebaseSupport/firebase";
 import {
   ActionLogDocument,
   getActionLogFromActionLogDocument,

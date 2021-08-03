@@ -2,7 +2,7 @@ import { Database, runDatabaseTests } from "@withorbit/store-shared";
 import {
   createTestAdminFirebaseApp,
   resetTestFirebaseApp,
-} from "./firebaseSupport/__tests__/firebaseTesting";
+} from "../firebaseSupport/__tests__/firebaseTesting";
 import { FirestoreDatabaseBackend } from "./firestoreDatabaseBackend";
 import firebase from "firebase-admin";
 

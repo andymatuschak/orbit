@@ -9,7 +9,7 @@ import {
   getIDForAttachment,
 } from "@withorbit/core";
 import fetch, * as Fetch from "node-fetch";
-import { getApp, getDatabase } from "./firebase";
+import { getApp, getDatabase } from "./firebaseSupport/firebase";
 import { getFirebaseKeyForCIDString } from "./firebaseSupport";
 
 const attachmentSizeLimitBytes = 10 * 1024 * 1024;

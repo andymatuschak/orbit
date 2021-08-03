@@ -1,6 +1,6 @@
 import * as dateFns from "date-fns";
 import * as firebase from "firebase-admin";
-import { getApp, getDatabase } from "./firebase";
+import { getApp, getDatabase } from "./firebaseSupport/firebase";
 
 let _auth: firebase.auth.Auth | null = null;
 

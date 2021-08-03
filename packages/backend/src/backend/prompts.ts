@@ -4,7 +4,7 @@ import {
   getPromptReference,
   getPromptIDForFirebaseKey,
 } from "./firebaseSupport";
-import { getDatabase } from "./firebase";
+import { getDatabase } from "./firebaseSupport/firebase";
 
 export async function getPrompts(
   promptIDs: PromptID[],

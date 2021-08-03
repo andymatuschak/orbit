@@ -2,7 +2,7 @@ import { OrbitAPI } from "@withorbit/api";
 import { Event } from "@withorbit/core2";
 import { ResponseList2 } from "@withorbit/api/dist/orbitAPI";
 import { Database } from "@withorbit/store-shared";
-import { FirestoreDatabaseBackend } from "../../backend/firestoreDatabaseBackend";
+import { FirestoreDatabaseBackend } from "../../backend/2/firestoreDatabaseBackend";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "../util/typedRouter";
 

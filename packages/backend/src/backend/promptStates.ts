@@ -11,7 +11,7 @@ import {
   reviewSession,
 } from "@withorbit/core";
 import firebase, * as admin from "firebase-admin";
-import { getDatabase } from "./firebase";
+import { getDatabase } from "./firebaseSupport/firebase";
 import {
   ActionLogDocument,
   getActionLogIDForFirebaseKey,

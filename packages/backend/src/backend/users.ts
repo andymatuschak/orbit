@@ -1,7 +1,7 @@
 import admin from "firebase-admin";
 
 import { getUserMetadataReference, UserMetadata } from "./firebaseSupport";
-import { getDatabase } from "./firebase";
+import { getDatabase } from "./firebaseSupport/firebase";
 
 export async function getUserMetadata(
   userID: string,
