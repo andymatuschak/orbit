@@ -128,33 +128,6 @@
             ],
             "type": "string"
         },
-        "AttachmentReference": {
-            "additionalProperties": false,
-            "properties": {
-                "createdAtTimestampMillis": {
-                    "type": "number"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "mimeType": {
-                    "$ref": "#/definitions/AttachmentMIMEType"
-                },
-                "type": {
-                    "enum": [
-                        "attachmentReference"
-                    ],
-                    "type": "string"
-                }
-            },
-            "required": [
-                "createdAtTimestampMillis",
-                "id",
-                "mimeType",
-                "type"
-            ],
-            "type": "object"
-        },
         "ClozePrompt": {
             "additionalProperties": false,
             "properties": {
@@ -184,26 +157,29 @@
                     "additionalProperties": {
                         "additionalProperties": false,
                         "properties": {
+                            "order": {
+                                "type": "number"
+                            },
                             "ranges": {
                                 "items": {
                                     "additionalProperties": false,
                                     "properties": {
-                                        "endIndex": {
-                                            "type": "number"
-                                        },
                                         "hint": {
                                             "type": [
                                                 "null",
                                                 "string"
                                             ]
                                         },
+                                        "length": {
+                                            "type": "number"
+                                        },
                                         "startIndex": {
                                             "type": "number"
                                         }
                                     },
                                     "required": [
-                                        "endIndex",
                                         "hint",
+                                        "length",
                                         "startIndex"
                                     ],
                                     "type": "object"
@@ -212,6 +188,7 @@
                             }
                         },
                         "required": [
+                            "order",
                             "ranges"
                         ],
                         "type": "object"
@@ -633,7 +610,7 @@
             "properties": {
                 "attachments": {
                     "items": {
-                        "$ref": "#/definitions/AttachmentReference"
+                        "type": "string"
                     },
                     "type": "array"
                 },
