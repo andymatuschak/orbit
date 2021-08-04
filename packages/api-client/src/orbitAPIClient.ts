@@ -6,6 +6,7 @@ import {
   PromptID,
   PromptTaskID,
 } from "@withorbit/core";
+import * as core2 from "@withorbit/core2";
 import { APIConfig, defaultAPIConfig } from "./apiConfig";
 import { AuthenticationConfig, RequestManager } from "./requestManager";
 import { Blob } from "./util/fetch";
@@ -121,6 +122,13 @@ export class OrbitAPIClient {
     return this.requestManager.request("/2/events", "PATCH", {
       contentType: "application/json",
       body: events,
+    });
+  }
+
+  getAttachmentURL2(attachmentID: core2.AttachmentID): string {
+    return this.requestManager.getRequestURL("/2/attachments/:id", "GET", {
+      query: {},
+      params: { id: attachmentID },
     });
   }
 }

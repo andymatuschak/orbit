@@ -93,7 +93,9 @@ export class RequestManager<API extends API.Spec> {
         // TODO validate that the response should be void
         return undefined as unknown as API.RouteResponseData<API[Path][Method]>;
       } else {
-        const json = await response.json();
+        const responseText = await response.text();
+        const json =
+          responseText.length > 0 ? await JSON.parse(responseText) : null;
 
         const validationResult = this.validator.validateResponse(
           { path, method, ...requestData },

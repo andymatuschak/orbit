@@ -4,6 +4,7 @@ import express from "express";
 import { listEvents, storeEvents } from "./api/2/events";
 import { listActionLogs, storeActionLogs } from "./api/actionLogs";
 import { getAttachment, storeAttachment } from "./api/attachments";
+import { getAttachment as getAttachment2 } from "./api/2/attachments";
 import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode";
 import { createLoginToken } from "./api/internal/auth/createLoginToken";
 import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens";
@@ -65,6 +66,9 @@ export function createAPIApp(): express.Application {
     "/2/events": {
       PATCH: storeEvents,
       GET: listEvents,
+    },
+    "/2/attachments/:id": {
+      GET: getAttachment2,
     },
   });
 

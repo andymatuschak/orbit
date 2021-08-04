@@ -156,3 +156,23 @@ export function getAttachmentURL(
     getFileStorageSubpathForAttachmentID(attachmentID, userID, version),
   );
 }
+
+export async function migrateAttachmentIDs(
+  attachmentIDs: AttachmentID[],
+  userID: string,
+) {
+  const fileStorageService = sharedFileStorageService();
+  for (const attachmentID of attachmentIDs) {
+    const newSubpath = getFileStorageSubpathForAttachmentID(
+      attachmentID,
+      userID,
+      "core2",
+    );
+    if (!(await fileStorageService.fileExists(newSubpath))) {
+      await fileStorageService.copyFile(
+        getFileStorageSubpathForAttachmentID(attachmentID, null, "core"),
+        newSubpath,
+      );
+    }
+  }
+}

@@ -9,7 +9,7 @@ import {
   PromptState,
   PromptTaskID,
 } from "@withorbit/core";
-import { EntityID, Event, EventID } from "@withorbit/core2";
+import * as core2 from "@withorbit/core2";
 import { BlobLike } from "./genericHTTPAPI";
 import { RequiredSpec } from "./util/requiredSpec";
 
@@ -125,18 +125,31 @@ export type ValidatableSpec = {
         /**
          * Events are returned in an arbitrary stable order. When `afterID` is set, only events after that event's ID in the stable order will be returned. You can combine this parameter with `limit` to page through results.
          */
-        afterID?: EventID;
+        afterID?: core2.EventID;
         /**
          * When set, only events with matching `entityID` will be returned.
          */
-        entityID?: EntityID;
+        entityID?: core2.EntityID;
       };
-      response?: ResponseList2<Event>;
+      response?: ResponseList2<core2.Event>;
     };
 
     PATCH?: {
       contentType: "application/json";
-      body: Event[];
+      body: core2.Event[];
+      response?: null;
+    };
+  };
+
+  "/2/attachments/:id"?: {
+    GET?: {
+      // allow empty to indicate it takes no query values
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      query: {};
+      params: {
+        id: core2.AttachmentID;
+      };
+      // Issues a redirect to the attachment contents.
       response?: null;
     };
   };

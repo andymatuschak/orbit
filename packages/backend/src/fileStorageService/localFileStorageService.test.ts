@@ -19,7 +19,7 @@ beforeEach(async () => {
 });
 
 describe("file storage", () => {
-  const subpath = "bar.txt";
+  const subpath = "foo/bar.txt";
   const contents = Buffer.from("Test");
   beforeEach(async () => {
     await service.storeFile(subpath, contents, "plain/text");
@@ -46,6 +46,7 @@ describe("file storage", () => {
         fileURLToPath(service.formatURL("another.txt")),
       ),
     ).toEqual(contents);
+    expect(await service.getMIMEType(subpath)).toEqual("plain/text");
   });
 });
 

@@ -1,4 +1,5 @@
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { pathToFileURL } from "url";
 import { FileStorageService } from "./fileStorageService";
@@ -7,8 +8,16 @@ import { FileStorageService } from "./fileStorageService";
 export class LocalFileStorageService implements FileStorageService {
   readonly basePath: string;
 
-  constructor(basePath: string) {
+  static getTestStorageLocation(): string {
+    return path.join(os.tmpdir(), "orbit-test-file-storage");
+  }
+
+  constructor(
+    basePath: string = LocalFileStorageService.getTestStorageLocation(),
+  ) {
     this.basePath = basePath;
+    // This is awfully rude, but because this is just used for testing, I don't mind the blocking call.
+    fs.mkdirSync(basePath, { recursive: true });
   }
 
   async fileExists(subpath: string): Promise<boolean> {
@@ -40,6 +49,10 @@ export class LocalFileStorageService implements FileStorageService {
       this._getStorePath(fromSubpath),
       this._getStorePath(toSubpath),
     );
+    await this._writeMIMETypeMapping(
+      toSubpath,
+      (await this._getMIMETypeMapping(fromSubpath))!,
+    );
   }
 
   async getMIMEType(subpath: string): Promise<string | null> {
@@ -51,7 +64,7 @@ export class LocalFileStorageService implements FileStorageService {
     if (process.env["NODE_ENV"] !== "test") {
       throw new Error("This implementation is only valid in test environments");
     }
-    return path.join(this.basePath, subpath);
+    return path.join(this.basePath, subpath.replace("/", "_"));
   }
 
   private _getMIMETypeMappingPath(): string {
