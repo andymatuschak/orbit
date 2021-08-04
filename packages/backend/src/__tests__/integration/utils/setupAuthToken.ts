@@ -1,4 +1,4 @@
-import { createTestAdminFirebaseApp } from "../../src/backend/firebaseSupport/__tests__/firebaseTesting";
+import { createTestAdminFirebaseApp } from "../../firebaseTesting";
 
 export async function setupAuthToken(name: string) {
   const firebase = createTestAdminFirebaseApp();

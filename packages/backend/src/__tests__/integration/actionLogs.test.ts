@@ -1,6 +1,6 @@
 import { getIDForPromptSync, getIDForPromptTask } from "@withorbit/core";
 import { testQAPrompt } from "@withorbit/sample-data";
-import { clearAllFirestoreData } from "../src/backend/firebaseSupport/__tests__/firebaseTesting";
+import { clearAllFirestoreData } from "../firebaseTesting";
 import { fetchRoute } from "./utils/fetchRoute";
 import { setupAuthToken } from "./utils/setupAuthToken";
 

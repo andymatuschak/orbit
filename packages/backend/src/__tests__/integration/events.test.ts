@@ -1,4 +1,4 @@
-import { clearAllFirestoreData } from "../src/backend/firebaseSupport/__tests__/firebaseTesting";
+import { clearAllFirestoreData } from "../firebaseTesting";
 import { fetchRoute } from "./utils/fetchRoute";
 import { setupAuthToken } from "./utils/setupAuthToken";
 import { core2 as fixtures } from "@withorbit/sample-data";
