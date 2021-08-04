@@ -2,7 +2,7 @@ import {
   AttachmentID,
   AttachmentIngestEvent,
   AttachmentMIMEType,
-  Entity,
+  Entity, EntityID,
   EntityType,
   Event,
   EventID,
@@ -29,7 +29,7 @@ function mockEventReducer(entitySnapshot: Entity | null, event: Event): Entity {
   } as Entity;
 }
 
-const testEvents: Event[] = [
+const testEvents = [
   { id: "a", entityID: "x", timestampMillis: 100 },
   { id: "b", entityID: "x", timestampMillis: 90 },
   { id: "c", entityID: "y", timestampMillis: 95 },
@@ -100,6 +100,17 @@ export function runDatabaseTests(
       entity = results.get(entityID);
       expect((entity as any).eventIDs).toEqual(["b", "z", "a", "q"]);
     });
+
+    test("events with same timestamp are combined with original order", async () => {
+      const entityID = "x" as EntityID;
+      await db.putEvents([
+        {id: "b", entityID, timestampMillis: 100},
+        {id: "a", entityID, timestampMillis: 100},
+      ] as Event[]);
+      const resultMap = await db.getEntities([entityID]);
+      const entity = resultMap.get(entityID)!;
+      expect((entity as any).eventIDs).toEqual(["b", "a"]);
+    })
 
     test(`maintains entity ordering`, async () => {
       await db.putEvents(testEvents);

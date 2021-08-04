@@ -101,17 +101,19 @@ function convertCore1Outcome(
 }
 
 function convertCore1Provenance(provenance: PromptProvenance): TaskProvenance {
+  const colorPaletteName =
+    (provenance.provenanceType === PromptProvenanceType.Web &&
+      provenance.colorPaletteName) ||
+    null;
+  const containerTitle =
+    (provenance.provenanceType === PromptProvenanceType.Web &&
+      provenance.siteName) ||
+    null;
   return {
     identifier: provenance.externalID,
     title: provenance.title ?? undefined,
     url: provenance.url ?? undefined,
-    colorPaletteName:
-      provenance.provenanceType === PromptProvenanceType.Web
-        ? provenance.colorPaletteName ?? undefined
-        : undefined,
-    containerTitle:
-      provenance.provenanceType === PromptProvenanceType.Web
-        ? provenance.siteName ?? undefined
-        : undefined,
+    ...(colorPaletteName !== null && { colorPaletteName }),
+    ...(containerTitle !== null && { containerTitle }),
   };
 }

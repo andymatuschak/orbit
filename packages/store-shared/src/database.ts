@@ -107,7 +107,15 @@ export class Database {
                 id,
                 currentEntityRecordMap.get(id) ?? null,
                 events,
-              ),
+              ).catch((error) => {
+                throw new Error(
+                  `Error updating snapshot of entity ${id}: ${error}; new events: ${JSON.stringify(
+                    events,
+                    null,
+                    "\t",
+                  )}`,
+                );
+              }),
             );
           }
 
@@ -182,7 +190,7 @@ export type EventReducer = (
 // Stable sorting functions for events
 function compareEvents(a: Event, b: Event): number {
   if (a.timestampMillis === b.timestampMillis) {
-    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    return 0; // Preserve original event sequence when timestamp match.
   } else {
     return a.timestampMillis - b.timestampMillis;
   }
