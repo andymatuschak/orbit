@@ -1001,6 +1001,43 @@
         }
     },
     "properties": {
+        "/2/attachments/:id": {
+            "additionalProperties": false,
+            "properties": {
+                "GET": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "params": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "id": {
+                                    "pattern": "[A-Za-z0-9]+",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id"
+                            ],
+                            "type": "object"
+                        },
+                        "query": {
+                            "properties": {
+                            },
+                            "type": "object"
+                        },
+                        "response": {
+                            "type": "null"
+                        }
+                    },
+                    "required": [
+                        "params",
+                        "query"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
         "/2/events": {
             "additionalProperties": false,
             "properties": {
