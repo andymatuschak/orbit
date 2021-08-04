@@ -10,7 +10,7 @@ export async function personalAccessTokens(
   request: express.Request,
   response: express.Response,
 ) {
-  authenticateRequest(request, response, async (userID) => {
+  await authenticateRequest(request, response, async (userID) => {
     const token = await backend.auth.createPersonalAccessToken(userID);
 
     const responseJSON: CreatePersonalAccessTokenResponse = {

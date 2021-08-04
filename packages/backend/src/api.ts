@@ -8,6 +8,7 @@ import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode";
 import { createLoginToken } from "./api/internal/auth/createLoginToken";
 import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens";
 import { refreshSessionCookie } from "./api/internal/auth/refreshSessionCookie";
+import { recordEmbeddedActions } from "./api/internal/recordEmbeddedActions";
 import { recordPageView } from "./api/internal/recordPageView";
 import { resolveAttachmentIDs } from "./api/internal/resolveAttachmentIDs";
 import { listTaskData, storeTaskData } from "./api/taskData";
@@ -66,6 +67,8 @@ export function createAPIApp(): express.Application {
       GET: listEvents,
     },
   });
+
+  app.post("/internal/recordEmbeddedActions", recordEmbeddedActions);
 
   app.post("/internal/auth/personalAccessTokens", personalAccessTokens);
 

@@ -13,7 +13,7 @@ export async function authenticateRequest(
   response: express.Response,
   next: (userID: string) => void,
 ): Promise<void> {
-  authenticateTypedRequest(request, async (userID) => {
+  await authenticateTypedRequest(request, async (userID) => {
     next(userID);
     // HACK Not actually used:
     return { status: 200, json: undefined, cachePolicy: CachePolicy.NoStore };

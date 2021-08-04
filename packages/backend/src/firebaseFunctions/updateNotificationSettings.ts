@@ -43,8 +43,8 @@ function getAction(
 }
 
 const app = express();
-app.use((request, response) => {
-  authenticateRequest(request, response, async (userID) => {
+app.use(async (request, response) => {
+  await authenticateRequest(request, response, async (userID) => {
     const action = getAction(request);
     if (action) {
       const metadataUpdate = actionTable[action](Date.now());

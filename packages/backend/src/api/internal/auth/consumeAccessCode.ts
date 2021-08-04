@@ -6,7 +6,7 @@ export async function consumeAccessCode(
   request: express.Request,
   response: express.Response,
 ) {
-  authenticateRequest(request, response, async (userID) => {
+  await authenticateRequest(request, response, async (userID) => {
     const loginToken = await backend.auth.createCustomLoginToken(userID);
     response.send(loginToken);
   });
