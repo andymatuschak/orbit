@@ -3,6 +3,7 @@ import os from "os";
 import path from "path";
 import { pathToFileURL } from "url";
 import { isRunningInEmulator } from "../util/isRunningInEmulator";
+import { isRunningInTest } from "../util/isRunningInTest";
 import { FileStorageService } from "./fileStorageService";
 
 // n.b. not suitable for use in production; used only in testing
@@ -62,7 +63,7 @@ export class LocalFileStorageService implements FileStorageService {
 
   private _getStorePath(subpath: string): string {
     // n.b. not a safe operation in production, since subpath is in part user-supplied. This is fine in a testing environment, but I want to make sure we don't accidentally deploy this without thinking about this more carefully.
-    if (!isRunningInEmulator) {
+    if (!(isRunningInEmulator || isRunningInTest)) {
       throw new Error("This implementation is only valid in test environments");
     }
     return path.join(this.basePath, subpath.replace("/", "_"));

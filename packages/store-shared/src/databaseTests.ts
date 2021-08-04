@@ -2,7 +2,8 @@ import {
   AttachmentID,
   AttachmentIngestEvent,
   AttachmentMIMEType,
-  Entity, EntityID,
+  Entity,
+  EntityID,
   EntityType,
   Event,
   EventID,
@@ -104,13 +105,13 @@ export function runDatabaseTests(
     test("events with same timestamp are combined with original order", async () => {
       const entityID = "x" as EntityID;
       await db.putEvents([
-        {id: "b", entityID, timestampMillis: 100},
-        {id: "a", entityID, timestampMillis: 100},
+        { id: "b", entityID, timestampMillis: 100 },
+        { id: "a", entityID, timestampMillis: 100 },
       ] as Event[]);
       const resultMap = await db.getEntities([entityID]);
       const entity = resultMap.get(entityID)!;
       expect((entity as any).eventIDs).toEqual(["b", "a"]);
-    })
+    });
 
     test(`maintains entity ordering`, async () => {
       await db.putEvents(testEvents);
