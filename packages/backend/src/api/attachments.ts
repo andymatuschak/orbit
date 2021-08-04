@@ -12,7 +12,7 @@ export const storeAttachment: TypedRouteHandler<
   OrbitAPI.Spec,
   "/attachments",
   "POST"
-> = authenticatedRequestHandler(async (request) => {
+> = authenticatedRequestHandler(async (request, userID) => {
   // TODO: rate limit storage...
   // TODO: attribute storage to users...
 
@@ -22,11 +22,15 @@ export const storeAttachment: TypedRouteHandler<
 
   const attachmentType =
     getAttachmentTypeForAttachmentMimeType(attachmentMimeType);
-  const result = await backend.attachments.storeAttachment({
-    mimeType: attachmentMimeType,
-    contents: buffer,
-    type: attachmentType,
-  });
+  const result = await backend.attachments.storeAttachment(
+    {
+      mimeType: attachmentMimeType,
+      contents: buffer,
+      type: attachmentType,
+    },
+    userID,
+    "core",
+  );
 
   const reference: AttachmentIDReference = {
     type: attachmentType,

@@ -1,4 +1,3 @@
-import { File as GCSFile } from "@google-cloud/storage";
 import {
   Attachment,
   AttachmentID,
@@ -9,27 +8,32 @@ import {
   getIDForAttachment,
 } from "@withorbit/core";
 import fetch, * as Fetch from "node-fetch";
-import { getApp, getDatabase } from "./firebaseSupport/firebase";
 import { getFirebaseKeyForCIDString } from "./firebaseSupport";
+import { getApp, getDatabase } from "./firebaseSupport/firebase";
 
 const attachmentSizeLimitBytes = 10 * 1024 * 1024;
+
+export type AttachmentAPIVersion = "core" | "core2";
 
 export const storageBucketName = "metabook-system.appspot.com";
 export const storageAttachmentsPathComponent = "attachments";
 
 export function getStorageObjectNameForAttachmentID(
   attachmentID: AttachmentID,
+  userID: string | null,
+  version: AttachmentAPIVersion,
 ): string {
-  return `${storageAttachmentsPathComponent}/${getFirebaseKeyForCIDString(
-    attachmentID,
-  )}`;
-}
-
-function _getFileReferenceForAttachmentID(attachmentID: AttachmentID): GCSFile {
-  return getApp()
-    .storage()
-    .bucket(storageBucketName)
-    .file(getStorageObjectNameForAttachmentID(attachmentID));
+  switch (version) {
+    case "core":
+      return `${storageAttachmentsPathComponent}/${getFirebaseKeyForCIDString(
+        attachmentID,
+      )}`;
+    case "core2":
+      if (userID === null) {
+        throw new Error(`userID is required in core2 attachment API`);
+      }
+      return `${storageAttachmentsPathComponent}/${userID}/${attachmentID}`;
+  }
 }
 
 export function _validateAttachmentResponse(
@@ -55,6 +59,8 @@ export function _validateAttachmentResponse(
 
 async function _storeAttachmentFromURL(
   url: string,
+  userID: string | null,
+  version: AttachmentAPIVersion,
 ): Promise<AttachmentIDReference> {
   const response = await fetch(url);
 
@@ -67,11 +73,15 @@ async function _storeAttachmentFromURL(
   const attachmentType =
     getAttachmentTypeForAttachmentMimeType(attachmentMimeType);
 
-  const { attachmentID } = await storeAttachment({
-    contents: responseBuffer,
-    type: attachmentType,
-    mimeType: attachmentMimeType,
-  });
+  const { attachmentID } = await storeAttachment(
+    {
+      contents: responseBuffer,
+      type: attachmentType,
+      mimeType: attachmentMimeType,
+    },
+    userID,
+    version,
+  );
 
   return {
     id: attachmentID,
@@ -82,6 +92,8 @@ async function _storeAttachmentFromURL(
 
 export async function storeAttachmentAtURLIfNecessary(
   url: string,
+  userID: string | null,
+  version: AttachmentAPIVersion,
 ): Promise<AttachmentIDReference> {
   const attachmentLookupRef = getDatabase().collection("attachmentsIDsByURL");
 
@@ -89,7 +101,7 @@ export async function storeAttachmentAtURLIfNecessary(
   if (records.size === 1) {
     return records.docs[0].data().idReference;
   } else if (records.size === 0) {
-    const idReference = await _storeAttachmentFromURL(url);
+    const idReference = await _storeAttachmentFromURL(url, userID, version);
     await attachmentLookupRef.add({ url, idReference, createdAt: Date.now() });
     return idReference;
   } else {
@@ -103,7 +115,11 @@ export async function storeAttachmentAtURLIfNecessary(
   }
 }
 
-export async function storeAttachment(attachment: Attachment): Promise<{
+export async function storeAttachment(
+  attachment: Attachment,
+  userID: string | null,
+  version: AttachmentAPIVersion,
+): Promise<{
   attachmentID: AttachmentID;
   status: "stored" | "alreadyExists";
   url: string;
@@ -117,7 +133,10 @@ export async function storeAttachment(attachment: Attachment): Promise<{
   const attachmentID = await getIDForAttachment(attachment.contents);
   const url = getAttachmentURL(attachmentID);
 
-  const fileRef = _getFileReferenceForAttachmentID(attachmentID);
+  const fileRef = getApp()
+    .storage()
+    .bucket(storageBucketName)
+    .file(getStorageObjectNameForAttachmentID(attachmentID, userID, version));
   const [exists] = await fileRef.exists();
   if (exists) {
     return { attachmentID, status: "alreadyExists", url };

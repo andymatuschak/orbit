@@ -24,7 +24,7 @@ export async function resolveAttachmentIDs(
   const attachmentIDs = await Promise.all(
     attachmentURLs.map(async (url) => [
       url,
-      await storeAttachmentAtURLIfNecessary(url)
+      await storeAttachmentAtURLIfNecessary(url, null, "core")
         .then((idReference) => ({ idReference }))
         .catch((error: Error) => ({
           error: { name: error.name, message: error.message },
