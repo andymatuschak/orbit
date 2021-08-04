@@ -1,8 +1,9 @@
 import * as firebaseTesting from "@firebase/rules-unit-testing";
 import childProcess, { ChildProcess } from "child_process";
 import events from "events";
-import path from "path";
 import firebase from "firebase-admin";
+import path from "path";
+import { resetLocalEmulators } from "./emulators";
 
 const projectID = "metabook-system";
 
@@ -56,12 +57,12 @@ export function createTestAdminFirebaseApp(): firebase.app.App {
   });
 }
 
-export async function resetTestFirebaseApp(app: firebase.app.App) {
+export async function terminateTestFirebaseApp(app: firebase.app.App) {
   await app.firestore().terminate();
   await app.delete();
-  await clearAllFirestoreData();
+  await resetLocalEmulators();
 }
 
-export async function clearAllFirestoreData() {
+export async function clearFirestoreData() {
   await firebaseTesting.clearFirestoreData({ projectId: projectID });
 }

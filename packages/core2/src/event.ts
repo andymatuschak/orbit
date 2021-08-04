@@ -44,6 +44,7 @@ export type EntityOfEvent<E extends Event> = E extends EventBase<any, infer EN>
 
 /**
  * @TJS-type string
+ * @TJS-pattern [A-Za-z0-9]+
  */
 export type EventID = string & { __eventIDOpaqueType: never };
 

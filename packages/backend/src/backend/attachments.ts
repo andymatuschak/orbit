@@ -8,31 +8,27 @@ import {
   getIDForAttachment,
 } from "@withorbit/core";
 import fetch, * as Fetch from "node-fetch";
+import { sharedFileStorageService } from "../fileStorageService";
 import { getFirebaseKeyForCIDString } from "./firebaseSupport";
-import { getApp, getDatabase } from "./firebaseSupport/firebase";
+import { getDatabase } from "./firebaseSupport/firebase";
 
 const attachmentSizeLimitBytes = 10 * 1024 * 1024;
 
 export type AttachmentAPIVersion = "core" | "core2";
 
-export const storageBucketName = "metabook-system.appspot.com";
-export const storageAttachmentsPathComponent = "attachments";
-
-export function getStorageObjectNameForAttachmentID(
+function getFileStorageSubpathForAttachmentID(
   attachmentID: AttachmentID,
   userID: string | null,
   version: AttachmentAPIVersion,
 ): string {
   switch (version) {
     case "core":
-      return `${storageAttachmentsPathComponent}/${getFirebaseKeyForCIDString(
-        attachmentID,
-      )}`;
+      return `${getFirebaseKeyForCIDString(attachmentID)}`;
     case "core2":
       if (userID === null) {
         throw new Error(`userID is required in core2 attachment API`);
       }
-      return `${storageAttachmentsPathComponent}/${userID}/${attachmentID}`;
+      return `${userID}/${attachmentID}`;
   }
 }
 
@@ -131,29 +127,32 @@ export async function storeAttachment(
   }
 
   const attachmentID = await getIDForAttachment(attachment.contents);
-  const url = getAttachmentURL(attachmentID);
 
-  const fileRef = getApp()
-    .storage()
-    .bucket(storageBucketName)
-    .file(getStorageObjectNameForAttachmentID(attachmentID, userID, version));
-  const [exists] = await fileRef.exists();
-  if (exists) {
+  const fileStorageService = sharedFileStorageService();
+  const attachmentSubpath = getFileStorageSubpathForAttachmentID(
+    attachmentID,
+    userID,
+    version,
+  );
+  const url = fileStorageService.formatURL(attachmentSubpath);
+  if (await fileStorageService.fileExists(attachmentSubpath)) {
     return { attachmentID, status: "alreadyExists", url };
   } else {
-    await fileRef.save(attachment, {
-      contentType: undefined,
-      public: true,
-    });
-    await fileRef.setMetadata({
-      cacheControl: "public, max-age=604800, immutable",
-    });
+    await fileStorageService.storeFile(
+      attachmentSubpath,
+      attachment.contents,
+      attachment.mimeType,
+    );
     return { attachmentID, status: "stored", url };
   }
 }
 
-export function getAttachmentURL(attachmentID: AttachmentID): string {
-  return `https://storage.googleapis.com/${storageBucketName}/${storageAttachmentsPathComponent}/${getFirebaseKeyForCIDString(
-    attachmentID,
-  )}`;
+export function getAttachmentURL(
+  attachmentID: AttachmentID,
+  userID: string | null,
+  version: AttachmentAPIVersion,
+): string {
+  return sharedFileStorageService().formatURL(
+    getFileStorageSubpathForAttachmentID(attachmentID, userID, version),
+  );
 }

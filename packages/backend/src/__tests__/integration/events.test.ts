@@ -1,10 +1,10 @@
-import { clearAllFirestoreData } from "../firebaseTesting";
+import { resetLocalEmulators } from "../emulators";
 import { fetchRoute } from "./utils/fetchRoute";
 import { setupAuthToken } from "./utils/setupAuthToken";
 import { core2 as fixtures } from "@withorbit/sample-data";
 
 afterEach(async () => {
-  await clearAllFirestoreData();
+  await resetLocalEmulators();
 });
 
 test("round-trip request", async () => {

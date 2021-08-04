@@ -4,7 +4,7 @@ import {
   getIDForPromptTask,
 } from "@withorbit/core";
 import { testQAPrompt } from "@withorbit/sample-data";
-import { clearAllFirestoreData } from "../firebaseTesting";
+import { resetLocalEmulators } from "../emulators";
 import { fetchRoute } from "./utils/fetchRoute";
 import { setupAuthToken } from "./utils/setupAuthToken";
 
@@ -21,7 +21,7 @@ const testActionLog: ActionLog = {
 };
 
 afterEach(async () => {
-  await clearAllFirestoreData();
+  await resetLocalEmulators();
 });
 
 describe("core2 migration", () => {

@@ -85,9 +85,11 @@
             "additionalProperties": false,
             "properties": {
                 "entityID": {
+                    "pattern": "[A-Za-z0-9]+",
                     "type": "string"
                 },
                 "id": {
+                    "pattern": "[A-Za-z0-9]+",
                     "type": "string"
                 },
                 "mimeType": {
@@ -610,6 +612,7 @@
             "properties": {
                 "attachments": {
                     "items": {
+                        "pattern": "[A-Za-z0-9]+",
                         "type": "string"
                     },
                     "type": "array"
@@ -628,9 +631,11 @@
             "additionalProperties": false,
             "properties": {
                 "entityID": {
+                    "pattern": "[A-Za-z0-9]+",
                     "type": "string"
                 },
                 "id": {
+                    "pattern": "[A-Za-z0-9]+",
                     "type": "string"
                 },
                 "metadata": {
@@ -754,9 +759,11 @@
                     "type": "string"
                 },
                 "entityID": {
+                    "pattern": "[A-Za-z0-9]+",
                     "type": "string"
                 },
                 "id": {
+                    "pattern": "[A-Za-z0-9]+",
                     "type": "string"
                 },
                 "outcome": {
@@ -800,9 +807,11 @@
                     "type": "string"
                 },
                 "entityID": {
+                    "pattern": "[A-Za-z0-9]+",
                     "type": "string"
                 },
                 "id": {
+                    "pattern": "[A-Za-z0-9]+",
                     "type": "string"
                 },
                 "newDueTimestampMillis": {
@@ -861,9 +870,11 @@
             "additionalProperties": false,
             "properties": {
                 "entityID": {
+                    "pattern": "[A-Za-z0-9]+",
                     "type": "string"
                 },
                 "id": {
+                    "pattern": "[A-Za-z0-9]+",
                     "type": "string"
                 },
                 "isDeleted": {
@@ -1001,6 +1012,7 @@
                             "properties": {
                                 "afterID": {
                                     "description": "Events are returned in an arbitrary stable order. When `afterID` is set, only events after that event's ID in the stable order will be returned. You can combine this parameter with `limit` to page through results.",
+                                    "pattern": "[A-Za-z0-9]+",
                                     "type": "string"
                                 },
                                 "entityID": {

@@ -57,7 +57,11 @@ export const getAttachment: TypedRouteHandler<
 > = async (request) => {
   return {
     status: 302,
-    redirectURL: backend.attachments.getAttachmentURL(request.params.id),
+    redirectURL: backend.attachments.getAttachmentURL(
+      request.params.id,
+      null,
+      "core",
+    ),
     cachePolicy: CachePolicy.Immutable,
   };
 };

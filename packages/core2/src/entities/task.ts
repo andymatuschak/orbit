@@ -31,6 +31,7 @@ export interface TaskComponentState {
 
 /**
  * @TJS-type string
+ * @TJS-pattern [A-Za-z0-9]+
  */
 export type TaskID = string & { __taskIDOpaqueType: never };
 

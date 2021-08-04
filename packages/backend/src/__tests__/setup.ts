@@ -1,5 +1,5 @@
-import * as FirebaseTesting from "./firebaseTesting";
+import { startLocalEmulators } from "./emulators";
 
-export default function () {
-  return FirebaseTesting.startFirebaseTestingEmulator();
+export default async function () {
+  await startLocalEmulators();
 }

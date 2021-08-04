@@ -1,7 +1,7 @@
 import { Database, runDatabaseTests } from "@withorbit/store-shared";
 import {
   createTestAdminFirebaseApp,
-  resetTestFirebaseApp,
+  terminateTestFirebaseApp,
 } from "../../__tests__/firebaseTesting";
 import { FirestoreDatabaseBackend } from "./firestoreDatabaseBackend";
 import firebase from "firebase-admin";
@@ -15,7 +15,7 @@ class TestFirestoreDatabaseBackend extends FirestoreDatabaseBackend {
 
   async close() {
     await super.close();
-    await resetTestFirebaseApp(this._app);
+    await terminateTestFirebaseApp(this._app);
   }
 }
 

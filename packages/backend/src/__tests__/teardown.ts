@@ -1,5 +1,5 @@
-import * as FirebaseTesting from "./firebaseTesting";
+import { stopLocalEmulators } from "./emulators";
 
-export default function () {
-  return FirebaseTesting.stopFirebaseTestingEmulator();
+export default async function () {
+  await stopLocalEmulators();
 }
