@@ -7,6 +7,7 @@ import {
   getAttachmentTypeForAttachmentMimeType,
   getIDForAttachment,
 } from "@withorbit/core";
+import { AttachmentMIMEType } from "@withorbit/core2";
 import fetch, * as Fetch from "node-fetch";
 import { sharedFileStorageService } from "../fileStorageService";
 import { getFirebaseKeyForCIDString } from "./firebaseSupport";
@@ -175,4 +176,11 @@ export async function migrateAttachmentIDs(
       );
     }
   }
+}
+
+export async function getAttachmentMIMEType(attachmentID: AttachmentID, userID: string, version: AttachmentAPIVersion): Promise<AttachmentMIMEType | null> {
+  const fileStorageService = sharedFileStorageService();
+  const mimeTypeString = await fileStorageService.getMIMEType(getFileStorageSubpathForAttachmentID(attachmentID, userID, version));
+  // TODO: validate attachment MIME type
+  return mimeTypeString as AttachmentMIMEType | null;
 }

@@ -9,6 +9,7 @@ import {
   imageAttachmentType,
   QAPrompt,
 } from "@withorbit/core";
+import { EventType } from "@withorbit/core2";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { testQAPrompt } from "@withorbit/sample-data";
@@ -80,8 +81,9 @@ describe("core2 migration", () => {
       },
     );
     expect(eventsGetStatus).toBe(200);
-    expect(eventsGetBody.items.length).toBe(1);
-    expect(eventsGetBody.items[0].entityID).toEqual(testPromptID);
+    expect(eventsGetBody.items.length).toBe(2);
+    expect(eventsGetBody.items[0].type).toEqual(EventType.AttachmentIngest);
+    expect(eventsGetBody.items[1].type).toEqual(EventType.TaskIngest);
 
     // Ensure that the attachment is migrated to core2 storage.
     const { status: attachmentGetStatus, headers: attachmentGetHeaders } =

@@ -11,7 +11,13 @@ import {
   PromptID,
   qaPromptType,
 } from "@withorbit/core";
-import { Event, migration } from "@withorbit/core2";
+import {
+  AttachmentIngestEvent,
+  Event,
+  EventID,
+  EventType,
+  migration,
+} from "@withorbit/core2";
 import { Database } from "@withorbit/store-shared";
 import * as backend from "../../backend";
 import { FirestoreDatabaseBackend } from "../../backend/2/firestoreDatabaseBackend";
@@ -64,6 +70,25 @@ export async function writeConvertedLogsToCore2Storage(
           throw new Error("Unsupported migration of application prompt");
       }
       await backend.attachments.migrateAttachmentIDs(attachmentIDs, userID);
+
+      for (const attachmentID of attachmentIDs) {
+        const mimeType = await backend.attachments.getAttachmentMIMEType(
+          attachmentID,
+          userID,
+          "core",
+        );
+        if (!mimeType) {
+          throw new Error(`Unexpected missing attachment: ${attachmentID}`);
+        }
+        const attachmentIngestEvent: AttachmentIngestEvent = {
+          type: EventType.AttachmentIngest,
+          id: attachmentID as string as EventID,
+          entityID: attachmentID,
+          timestampMillis: log.timestampMillis,
+          mimeType,
+        };
+        migratedEvents.push(attachmentIngestEvent);
+      }
     }
 
     migratedEvents.push(...migration.convertCore1ActionLog(log, id, prompt));
