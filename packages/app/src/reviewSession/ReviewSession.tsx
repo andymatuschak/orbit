@@ -1,15 +1,12 @@
 import OrbitAPIClient from "@withorbit/api-client";
 import {
   ActionLogID,
-  getIDForActionLogSync,
-  getIDForPromptSync,
-  getIDForPromptTask,
   getActionLogFromPromptActionLog,
+  getIDForActionLogSync,
   getNextTaskParameters,
   PromptActionLog,
   PromptProvenanceType,
   PromptRepetitionOutcome,
-  PromptTask,
   promptTypeSupportsRetry,
   repetitionActionLogType,
 } from "@withorbit/core";
@@ -32,6 +29,7 @@ import {
   useCurrentUserRecord,
 } from "../authentication/authContext";
 import DatabaseManager from "../model/databaseManager";
+import { DatabaseManager as DatabaseManager2 } from "../model2/databaseManager";
 import { ReviewSessionContainer } from "../ReviewSessionContainer";
 import { useReviewSessionManager } from "../reviewSessionManager";
 
@@ -60,7 +58,14 @@ export function useDatabaseManager(
         }),
         { baseURL: serviceConfig.httpsAPIBaseURLString },
       );
-      setDatabaseManager(new DatabaseManager(apiClient));
+
+      if (__DEV__) {
+        setDatabaseManager(
+          new DatabaseManager2(apiClient) as unknown as DatabaseManager,
+        );
+      } else {
+        setDatabaseManager(new DatabaseManager(apiClient));
+      }
     }
   }, [userRecord, authenticationClient]);
 
@@ -83,11 +88,7 @@ function persistMarking({
   const promptActionLog = {
     actionLogType: repetitionActionLogType,
     parentActionLogIDs: reviewItem.promptState?.headActionLogIDs ?? [],
-    taskID: getIDForPromptTask({
-      promptID: getIDForPromptSync(reviewItem.prompt),
-      promptType: reviewItem.prompt.promptType,
-      promptParameters: reviewItem.promptParameters,
-    } as PromptTask),
+    taskID: reviewItem.promptTaskID,
     outcome: outcome,
     context: `review/${Platform.OS}/${reviewSessionStartTimestampMillis}`,
     timestampMillis: Date.now(),
