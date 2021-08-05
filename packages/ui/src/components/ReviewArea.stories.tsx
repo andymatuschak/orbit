@@ -1,16 +1,4 @@
 import { boolean, number, text, withKnobs } from "@storybook/addon-knobs";
-import {
-  applyActionLogToPromptState,
-  getActionLogFromPromptActionLog,
-  getIDForActionLog,
-  getIDForPromptTask,
-  PromptID,
-  PromptRepetitionActionLog,
-  PromptState,
-  QAPromptTask,
-  qaPromptType,
-  repetitionActionLogType,
-} from "@withorbit/core";
 import React, { useCallback, useMemo, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem";
@@ -19,6 +7,7 @@ import { generateReviewItem } from "./__fixtures__/generateReviewItem";
 import DebugGrid from "./DebugGrid";
 import { useTransitioningColorValue } from "./hooks/useTransitioningValue";
 import ReviewArea from "./ReviewArea";
+import { AttachmentID } from "@withorbit/core2";
 
 // noinspection JSUnusedGlobalSymbols
 export default {
@@ -32,6 +21,7 @@ type ReviewAreaTemplateProps = {
   questionOverrideText: string;
   answerOverrideText: string;
   sourceContext: string;
+  getURLForAttachmentID: (id: AttachmentID) => string;
 };
 
 function ReviewAreaTemplate({
@@ -39,6 +29,7 @@ function ReviewAreaTemplate({
   questionOverrideText,
   answerOverrideText,
   sourceContext,
+  getURLForAttachmentID,
 }: ReviewAreaTemplateProps) {
   const items = useMemo<ReviewAreaItem[]>(
     () =>
@@ -54,9 +45,6 @@ function ReviewAreaTemplate({
       ),
     [questionOverrideText, answerOverrideText, sourceContext, colorKnobOffset],
   );
-  const [localPromptStates, setLocalPromptStates] = React.useState<
-    PromptState[]
-  >([]);
 
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const backgroundColor = useTransitioningColorValue({
@@ -75,16 +63,6 @@ function ReviewAreaTemplate({
     },
   });
 
-  const mergedItems = React.useMemo(
-    () =>
-      items?.map((item, index) =>
-        localPromptStates[index]
-          ? { ...item, promptState: localPromptStates[index] }
-          : item,
-      ),
-    [items, localPromptStates],
-  );
-
   return (
     <Animated.View
       style={{
@@ -95,42 +73,17 @@ function ReviewAreaTemplate({
       <View style={{ flex: 1 }}>
         {boolean("Show debug grid", false) && <DebugGrid />}
         <ReviewArea
-          items={mergedItems}
+          items={items}
           insetBottom={number("Bottom safe inset", 0)}
-          onPendingOutcomeChange={() => {
+          onPendingOutcomeChange={useCallback(() => {
             return;
-          }}
-          onMark={useCallback(async ({ outcome }) => {
-            const log: PromptRepetitionActionLog<QAPromptTask> = {
-              actionLogType: repetitionActionLogType,
-              context: null,
-              outcome,
-              parentActionLogIDs: [],
-              taskID: getIDForPromptTask({
-                promptType: qaPromptType,
-                promptID: "testID" as PromptID,
-                promptParameters: null,
-              }),
-              taskParameters: null,
-              timestampMillis: Date.now(),
-            };
-            const actionLogID = await getIDForActionLog(
-              getActionLogFromPromptActionLog(log),
-            );
-            setLocalPromptStates((states) => {
-              return [
-                ...states,
-                applyActionLogToPromptState({
-                  promptActionLog: log,
-                  actionLogID,
-                  schedule: "default",
-                  basePromptState: null,
-                }) as PromptState,
-              ];
-            });
-
-            setCurrentItemIndex((currentItemIndex) => currentItemIndex + 1);
           }, [])}
+          getURLForAttachmentID={getURLForAttachmentID}
+          onMark={useCallback(
+            () =>
+              setCurrentItemIndex((currentItemIndex) => currentItemIndex + 1),
+            [],
+          )}
           currentItemIndex={currentItemIndex}
         />
       </View>
@@ -152,6 +105,7 @@ export function Basic() {
 
   return (
     <ReviewAreaTemplate
+      getURLForAttachmentID={useCallback(() => "", [])}
       colorKnobOffset={colorKnobOffset}
       questionOverrideText={questionOverrideText}
       answerOverrideText={answerOverrideText}
@@ -187,6 +141,7 @@ export function OverflowingPrompt() {
 
   return (
     <ReviewAreaTemplate
+      getURLForAttachmentID={useCallback(() => "", [])}
       colorKnobOffset={colorKnobOffset}
       questionOverrideText={questionOverrideText}
       answerOverrideText={answerOverrideText}
