@@ -1,18 +1,11 @@
 import {
-  ApplicationPrompt,
-  ApplicationPromptTask,
-  applicationPromptType,
-  ClozePrompt,
-  ClozePromptTask,
-  clozePromptType,
-  createClozeMarkupRegexp,
-  PromptProvenance,
-  PromptProvenanceType,
-  QAPrompt,
-  QAPromptContents,
-  QAPromptTask,
-  qaPromptType,
-} from "@withorbit/core";
+  AttachmentID,
+  ClozeTaskContent,
+  ClozeTaskContentComponent,
+  QATaskContent,
+  TaskContentType,
+  TaskProvenance,
+} from "@withorbit/core2";
 import React from "react";
 import {
   Animated,
@@ -33,23 +26,17 @@ import {
 } from "./hooks/useTransitioningValue";
 import CardField, { clozeBlankSentinel } from "./PromptFieldRenderer";
 
-function getQAPromptContents<PT extends QAPromptTask | ApplicationPromptTask>(
-  reviewItem: ReviewAreaItem<PT>,
-): QAPromptContents {
-  switch (reviewItem.prompt.promptType) {
-    case qaPromptType:
-      return reviewItem.prompt as QAPrompt;
-    case applicationPromptType:
-      const applicationReviewItem =
-        reviewItem as ReviewAreaItem<ApplicationPromptTask>;
-      const taskParameters = applicationReviewItem.taskParameters as {
-        variantIndex: number;
-      };
-      const applicationPrompt =
-        applicationReviewItem.prompt as ApplicationPrompt;
-
-      return applicationPrompt.variants[taskParameters.variantIndex];
-    case clozePromptType:
+function getQAPromptContents<TC extends QATaskContent | ClozeTaskContent>(
+  reviewItem: ReviewAreaItem<TC>,
+): QATaskContent {
+  switch (reviewItem.spec.content.type) {
+    case TaskContentType.QA:
+      // This cast should not be needed... My IDE does not throw any error
+      // without the cast, but TSC throws:
+      // `Type 'TC' is not assignable to type 'QATaskContent'`.
+      // casting resolves the type issue...
+      return reviewItem.spec.content as QATaskContent;
+    case TaskContentType.Cloze:
       throw new Error("cloze prompt is not a QA prompt");
   }
 }
@@ -122,115 +109,80 @@ function useAnimatingStyles(backIsRevealed: boolean): {
   }, [bottomAreaTranslateAnimation, topAreaTranslateAnimation]);
 }
 
-interface PromptContext {
-  title: string;
-  url: string | null;
-}
-
-function getPromptContext(provenance: PromptProvenance): PromptContext | null {
-  switch (provenance.provenanceType) {
-    case PromptProvenanceType.Anki:
-      return null;
-    case PromptProvenanceType.Note:
-      return { title: provenance.title, url: provenance.url };
-    case PromptProvenanceType.Web:
-      return {
-        title: provenance.title ?? provenance.siteName ?? provenance.url,
-        url: provenance.url,
-      };
-  }
-}
-
 function PromptContextLabel({
   provenance,
   size,
   style,
   accentColor,
 }: {
-  provenance: PromptProvenance | null;
+  provenance: TaskProvenance | null;
   size: "regular" | "small";
   style?: FlexStyle;
   accentColor?: string;
 }) {
-  const promptContext = provenance ? getPromptContext(provenance) : null;
-
   const color = accentColor ?? colors.ink;
   const numberOfLines = size === "regular" ? 3 : 1;
-  return (
-    promptContext && (
-      <View style={style}>
-        {promptContext.url ? (
-          <Button
-            size={size}
-            href={promptContext.url}
-            title={promptContext.title}
-            color={color}
-            numberOfLines={numberOfLines}
-            ellipsizeMode="tail"
-          />
-        ) : (
-          <Text
-            style={[
-              size === "regular"
-                ? type.label.layoutStyle
-                : type.labelTiny.layoutStyle,
-              {
-                color,
-              },
-            ]}
-            numberOfLines={numberOfLines}
-            ellipsizeMode="tail"
-          >
-            {promptContext.title}
-          </Text>
-        )}
-      </View>
-    )
-  );
+  return provenance?.title ? (
+    <View style={style}>
+      {provenance.url ? (
+        <Button
+          size={size}
+          href={provenance.url}
+          title={provenance.title}
+          color={color}
+          numberOfLines={numberOfLines}
+          ellipsizeMode="tail"
+        />
+      ) : (
+        <Text
+          style={[
+            size === "regular"
+              ? type.label.layoutStyle
+              : type.labelTiny.layoutStyle,
+            {
+              color,
+            },
+          ]}
+          numberOfLines={numberOfLines}
+          ellipsizeMode="tail"
+        >
+          {provenance.title}
+        </Text>
+      )}
+    </View>
+  ) : null;
 }
 
 function formatClozePromptContents(
-  clozeContents: string,
+  text: string,
+  component: ClozeTaskContentComponent,
   isRevealed: boolean,
-  clozeIndex: number,
 ) {
-  let matchIndex = 0;
-  let match: RegExpExecArray | null;
-
-  let output = "";
-  let previousMatchStartIndex = 0;
-  let foundSelectedClozeDeletion = false;
-  const clozeRegexp = createClozeMarkupRegexp();
-  for (; (match = clozeRegexp.exec(clozeContents)); matchIndex++) {
-    output += clozeContents.slice(previousMatchStartIndex, match.index);
-    if (matchIndex === clozeIndex) {
-      foundSelectedClozeDeletion = true;
-      if (isRevealed) {
-        // We emit the original delimeted string (i.e. "{cloze}"), which is styled in CardField.
-        output += clozeContents.slice(match.index, clozeRegexp.lastIndex);
-      } else {
-        output += clozeBlankSentinel;
-      }
+  let mutatingText: string = text;
+  for (const range of component.ranges) {
+    if (isRevealed) {
+      mutatingText =
+        mutatingText.slice(0, range.startIndex) +
+        "{" +
+        mutatingText.slice(range.startIndex, range.startIndex + range.length) +
+        "}" +
+        mutatingText.slice(range.startIndex + range.length);
     } else {
-      output += match[1]; // strip the braces
+      mutatingText =
+        mutatingText.slice(0, range.startIndex) +
+        clozeBlankSentinel +
+        mutatingText.slice(range.startIndex + range.length);
     }
-    previousMatchStartIndex = clozeRegexp.lastIndex;
   }
-  output += clozeContents.slice(previousMatchStartIndex);
-
-  if (foundSelectedClozeDeletion) {
-    return output;
-  } else {
-    return `(invalid cloze: couldn't find cloze deletion with index ${clozeIndex})`;
-  }
+  return mutatingText;
 }
 
 type PromptProportion = [topProportion: number, bottomProportion: number];
-function getProportions(contents: QAPromptContents): {
+function getProportions(contents: QATaskContent): {
   unrevealed: PromptProportion;
   revealed: PromptProportion;
 } {
-  const questionHasAttachments = contents.question.attachments.length > 0;
+  const questionHasAttachments = contents.body.attachments.length > 0;
   const answerHasAttachments = contents.answer.attachments.length > 0;
   if (!questionHasAttachments && !answerHasAttachments) {
     return { unrevealed: [2, 3], revealed: [2, 3] };
@@ -246,17 +198,20 @@ function getProportions(contents: QAPromptContents): {
 export interface CardProps {
   reviewItem: ReviewAreaItem;
   backIsRevealed: boolean;
+  getURLForAttachmentID: (id: AttachmentID) => string;
 
   accentColor?: string;
 }
 
 type QAPromptRendererType = CardProps & {
-  reviewItem: ReviewAreaItem<QAPromptTask | ApplicationPromptTask>;
+  reviewItem: ReviewAreaItem<QATaskContent | ClozeTaskContent>;
 };
+
 function QAPromptRenderer({
   backIsRevealed,
   accentColor,
   reviewItem,
+  getURLForAttachmentID,
 }: QAPromptRendererType) {
   const animatingStyles = useAnimatingStyles(backIsRevealed);
   const contents = getQAPromptContents(reviewItem);
@@ -291,8 +246,8 @@ function QAPromptRenderer({
           }}
         >
           <CardField
-            promptField={contents.question}
-            attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+            promptField={contents.body}
+            getURLForAttachmentID={getURLForAttachmentID}
             largestSizeVariantIndex={
               frontSizeVariantIndex === undefined
                 ? undefined
@@ -313,7 +268,7 @@ function QAPromptRenderer({
         >
           <CardField
             promptField={contents.answer}
-            attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+            getURLForAttachmentID={getURLForAttachmentID}
           />
         </FadeView>
       </FadeView>
@@ -338,8 +293,8 @@ function QAPromptRenderer({
         </View>
         <View style={{ flex: proportions.unrevealed[1] }}>
           <CardField
-            promptField={contents.question}
-            attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+            promptField={contents.body}
+            getURLForAttachmentID={getURLForAttachmentID}
             onLayout={setFrontSizeVariantIndex}
           />
         </View>
@@ -349,27 +304,30 @@ function QAPromptRenderer({
 }
 
 type ClozePromptRendererProps = CardProps & {
-  reviewItem: ReviewAreaItem<ClozePromptTask>;
+  reviewItem: ReviewAreaItem<ClozeTaskContent>;
 };
 
 function ClozePromptRenderer({
   backIsRevealed,
   accentColor,
   reviewItem,
+  getURLForAttachmentID,
 }: ClozePromptRendererProps) {
   const {
-    prompt,
-    promptParameters: { clozeIndex },
+    componentID,
+    spec: {
+      content: { body, components },
+    },
   } = reviewItem;
-  const { body } = prompt as ClozePrompt;
   const front = {
     ...body,
-    contents: formatClozePromptContents(body.contents, false, clozeIndex),
+    text: formatClozePromptContents(body.text, components[componentID], false),
   };
   const back = {
     ...body,
-    contents: formatClozePromptContents(body.contents, true, clozeIndex),
+    text: formatClozePromptContents(body.text, components[componentID], true),
   };
+
   return (
     <View style={{ flex: 1 }}>
       <View
@@ -394,7 +352,7 @@ function ClozePromptRenderer({
         >
           <CardField
             promptField={back}
-            attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+            getURLForAttachmentID={getURLForAttachmentID}
             colorPalette={reviewItem.colorPalette}
           />
         </FadeView>
@@ -405,7 +363,7 @@ function ClozePromptRenderer({
         >
           <CardField
             promptField={front}
-            attachmentResolutionMap={reviewItem.attachmentResolutionMap}
+            getURLForAttachmentID={getURLForAttachmentID}
             colorPalette={reviewItem.colorPalette}
           />
         </FadeView>
@@ -415,14 +373,22 @@ function ClozePromptRenderer({
 }
 
 export default React.memo(function Card(props: CardProps) {
-  const {
-    reviewItem: { prompt },
-  } = props;
-  switch (prompt.promptType) {
-    case qaPromptType:
-    case applicationPromptType:
-      return <QAPromptRenderer {...props} reviewItem={props.reviewItem} />;
-    case clozePromptType:
-      return <ClozePromptRenderer {...props} reviewItem={props.reviewItem} />;
+  switch (props.reviewItem.spec.content.type) {
+    case TaskContentType.QA:
+      return (
+        <QAPromptRenderer
+          {...props}
+          reviewItem={props.reviewItem as ReviewAreaItem<QATaskContent>}
+        />
+      );
+    case TaskContentType.Cloze:
+      return (
+        <ClozePromptRenderer
+          {...props}
+          reviewItem={props.reviewItem as ReviewAreaItem<ClozeTaskContent>}
+        />
+      );
+    case TaskContentType.Plain:
+      throw new Error("A plain task content type renderer does not exist yet");
   }
 });
