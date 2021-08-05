@@ -62,7 +62,7 @@ export class Database {
   // Returns entities in an arbitrary order which is stable on this client (i.e. so paging using afterID is safe), but which is not guaranteed to be consistent across clients.
   async listEntities<E extends Entity>(
     query: DatabaseEntityQuery<E>,
-  ): Promise<Entity[]> {
+  ): Promise<E[]> {
     const records = await this._backend.listEntities(query);
     return records.map(({ entity }) => entity);
   }
