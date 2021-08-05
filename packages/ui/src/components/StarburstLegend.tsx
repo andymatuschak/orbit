@@ -1,4 +1,4 @@
-import { getIntervalSequenceForSchedule } from "@withorbit/core";
+import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core2";
 import React, { useMemo } from "react";
 import { Animated, View } from "react-native";
 import { layout, type } from "../styles";
@@ -85,6 +85,7 @@ const StarburstLegendEntry = React.memo(function StarburstLegendEntry({
 });
 
 export interface StarburstLegendProps {
+  config: SpacedRepetitionSchedulerConfiguration;
   activeInterval: number; // [0, 1], same as StarburstEntry.length
   starburstThickness: number;
   starburstRadius: number;
@@ -97,7 +98,23 @@ export interface StarburstLegendProps {
   backgroundColor: string;
 }
 
+function generateIntervalSequence(
+  config: SpacedRepetitionSchedulerConfiguration,
+  maxIntervals: number,
+) {
+  const sequence = [{ interval: config.initialReviewInterval, label: "tmp" }];
+  for (let i = 0; i < maxIntervals; i++) {
+    sequence.push({
+      interval:
+        sequence[sequence.length - 1].interval * config.intervalGrowthFactor,
+      label: "tmp",
+    });
+  }
+  return sequence;
+}
+
 export default React.memo(function StarburstLegend({
+  config,
   activeInterval,
   starburstQuillOuterRadius,
   starburstRadius,
@@ -108,7 +125,7 @@ export default React.memo(function StarburstLegend({
   futureTickColor,
   backgroundColor,
 }: StarburstLegendProps) {
-  const sequence = getIntervalSequenceForSchedule("default").slice(1);
+  const sequence = generateIntervalSequence(config, 7).slice(1);
   const nextSequenceIndex = sequence.findIndex(
     ({ interval }) => interval > activeInterval * 1.1,
   );
@@ -124,7 +141,7 @@ export default React.memo(function StarburstLegend({
           key={index}
           rayLength={Math.round(
             getStarburstRayLength(
-              getStarburstRayValueForInterval(interval),
+              getStarburstRayValueForInterval(interval, config),
               starburstQuillOuterRadius,
               starburstRadius,
             ),

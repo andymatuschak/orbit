@@ -1,5 +1,9 @@
 import { Story } from "@storybook/react";
-import { getIntervalSequenceForSchedule, PromptState } from "@withorbit/core";
+import {
+  defaultSpacedRepetitionSchedulerConfiguration,
+  SpacedRepetitionSchedulerConfiguration,
+  TaskComponentState,
+} from "@withorbit/core2";
 import React from "react";
 import { View } from "react-native";
 import { colors } from "../styles";
@@ -20,34 +24,31 @@ interface StoryArgs {
   hasSeenItems: boolean;
 }
 
-const intervalSequence = getIntervalSequenceForSchedule("default");
-
-function generatePromptState(): PromptState {
+function generatePromptState(
+  config: SpacedRepetitionSchedulerConfiguration,
+): TaskComponentState {
+  const arbitraryMaxSequenceLength = 7;
   const intervalMillis =
-    intervalSequence[Math.floor(Math.random() * (intervalSequence.length - 1))]
-      .interval;
+    config.initialReviewInterval *
+    config.intervalGrowthFactor *
+    Math.floor(Math.random() * arbitraryMaxSequenceLength);
   return {
-    dueTimestampMillis: 0,
-    headActionLogIDs: [],
+    createdAtTimestampMillis: 0,
+    lastRepetitionTimestampMillis: Date.now() - intervalMillis,
     intervalMillis,
-    bestIntervalMillis: null,
-    lastReviewTaskParameters: null,
-    lastReviewTimestampMillis: Date.now() - intervalMillis,
-    needsRetry: false,
-    taskMetadata: {
-      isDeleted: false,
-      provenance: null,
-    },
+    dueTimestampMillis: 0,
   };
 }
 
 const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
   const { width, height, onLayout } = useLayout();
   const itemStates = Array.from(new Array(itemCount).keys()).map(() =>
-    hasSeenItems ? generatePromptState() : null,
+    hasSeenItems
+      ? generatePromptState(defaultSpacedRepetitionSchedulerConfiguration)
+      : null,
   );
-  const items: ReviewStarburstItem[] = itemStates.map((promptState) => ({
-    promptState,
+  const items: ReviewStarburstItem[] = itemStates.map((component) => ({
+    component,
     supportsRetry: false,
     isPendingForSession: true,
   }));
@@ -67,6 +68,7 @@ const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
     >
       {width && (
         <ReviewStarburst
+          config={defaultSpacedRepetitionSchedulerConfiguration}
           containerWidth={width}
           containerHeight={height}
           items={items}
