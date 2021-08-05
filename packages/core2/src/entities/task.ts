@@ -80,14 +80,13 @@ export interface ClozeTaskContent
   body: TaskContentField;
 }
 
-export type ClozeTaskContentComponent = {
-  order: number;
+export interface ClozeTaskContentComponent extends TaskContentComponent {
   ranges: {
     startIndex: number;
     length: number;
     hint: string | null;
   }[];
-};
+}
 
 export interface PlainTaskContent
   extends TaskContentBase<
@@ -102,7 +101,9 @@ export interface PlainTaskContent
 type TaskContentBase<
   TCT extends TaskContentType,
   ComponentIDs extends string,
-  ComponentData extends { [ComponentID in ComponentIDs]: unknown } | undefined,
+  ComponentData extends
+    | { [ComponentID in ComponentIDs]: TaskContentComponent }
+    | undefined,
 > = {
   type: TCT;
 } & (ComponentData extends undefined ? unknown : { components: ComponentData });
@@ -111,6 +112,10 @@ export enum TaskContentType {
   QA = "qa",
   Cloze = "cloze",
   Plain = "plain",
+}
+
+export interface TaskContentComponent {
+  order: number;
 }
 
 type ComponentIDsOf<TC extends TaskContent> = TC extends TaskContentBase<

@@ -157,43 +157,7 @@
                 },
                 "components": {
                     "additionalProperties": {
-                        "additionalProperties": false,
-                        "properties": {
-                            "order": {
-                                "type": "number"
-                            },
-                            "ranges": {
-                                "items": {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                        "hint": {
-                                            "type": [
-                                                "null",
-                                                "string"
-                                            ]
-                                        },
-                                        "length": {
-                                            "type": "number"
-                                        },
-                                        "startIndex": {
-                                            "type": "number"
-                                        }
-                                    },
-                                    "required": [
-                                        "hint",
-                                        "length",
-                                        "startIndex"
-                                    ],
-                                    "type": "object"
-                                },
-                                "type": "array"
-                            }
-                        },
-                        "required": [
-                            "order",
-                            "ranges"
-                        ],
-                        "type": "object"
+                        "$ref": "#/definitions/ClozeTaskContentComponent"
                     },
                     "type": "object"
                 },
@@ -208,6 +172,45 @@
                 "body",
                 "components",
                 "type"
+            ],
+            "type": "object"
+        },
+        "ClozeTaskContentComponent": {
+            "additionalProperties": false,
+            "properties": {
+                "order": {
+                    "type": "number"
+                },
+                "ranges": {
+                    "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                            "hint": {
+                                "type": [
+                                    "null",
+                                    "string"
+                                ]
+                            },
+                            "length": {
+                                "type": "number"
+                            },
+                            "startIndex": {
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "hint",
+                            "length",
+                            "startIndex"
+                        ],
+                        "type": "object"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "order",
+                "ranges"
             ],
             "type": "object"
         },
