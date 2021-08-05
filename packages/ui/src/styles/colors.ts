@@ -1,4 +1,4 @@
-import { typedKeys, ColorPaletteName } from "@withorbit/core";
+import { ColorPaletteName } from "@withorbit/core2";
 
 export const ink = "rgba(0,0,0,0.8)";
 export const white = "rgba(255,255,255,1)";
@@ -100,5 +100,6 @@ const _palettes = {
   },
 };
 
+const typedKeys = Object.keys as <T>(o: T) => Extract<keyof T, string>[];
 export const orderedPaletteNames: ColorPaletteName[] = typedKeys(_palettes);
 export const palettes: Record<ColorPaletteName, ColorPalette> = _palettes;
