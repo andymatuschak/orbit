@@ -1,19 +1,25 @@
+import {
+  Entity,
+  EntityID,
+  EntityType,
+  Event,
+  EventID,
+  IDOfEntity,
+} from "@withorbit/core2";
+import {
+  DatabaseBackend,
+  DatabaseBackendEntityRecord,
+  DatabaseEntityQuery,
+  DatabaseEventQuery,
+  DatabaseQueryPredicate,
+  DatabaseQueryPredicateRelation,
+} from "@withorbit/store-shared";
 import Dexie, {
-  BulkError,
   Collection,
   IndexableType,
   PromiseExtended,
   WhereClause,
 } from "dexie";
-import { Entity, EntityID, Event, EventID, IDOfEntity } from "@withorbit/core2";
-import {
-  DatabaseEntityQuery,
-  DatabaseEventQuery,
-  DatabaseQueryPredicate,
-  DatabaseBackend,
-  DatabaseBackendEntityRecord,
-  DatabaseQueryPredicateRelation,
-} from "@withorbit/store-shared";
 import { DexieDatabase } from "./dexie/dexie";
 import {
   DexieDerivedTaskComponentKeys,
@@ -23,6 +29,7 @@ import {
   DexieEventKeys,
   DexieEventRow,
   DexieEventRowWithPrimaryKey,
+  DexieTable,
 } from "./dexie/tables";
 
 export class IDBDatabaseBackend implements DatabaseBackend {
@@ -252,10 +259,36 @@ export class IDBDatabaseBackend implements DatabaseBackend {
             // We include the old row ID if we had a record for this row before; otherwise, it's a new entity, and the DB will assign it a row ID.
             ...(rowID !== undefined && { rowID }),
           });
+
+          this._onEntityUpdate(
+            oldEntityRecordMap.get(id)?.entity ?? null,
+            record.entity,
+          );
         }
         await this.db.entities.bulkPut(transformedRows);
       },
     );
+  }
+
+  private async _onEntityUpdate(oldEntity: Entity | null, newEntity: Entity) {
+    if (newEntity.type !== EntityType.Task) {
+      return;
+    }
+
+    if (oldEntity) {
+      await this.db[DexieTable.DerivedTaskComponents]
+        .where(DexieDerivedTaskComponentKeys.TaskID)
+        .equals(oldEntity.id)
+        .delete();
+    }
+    const newComponents = Object.entries(newEntity.componentStates).map(
+      ([componentID, value]) => ({
+        taskID: newEntity.id,
+        componentID,
+        dueTimestampMillis: value.dueTimestampMillis,
+      }),
+    );
+    await this.db[DexieTable.DerivedTaskComponents].bulkPut(newComponents);
   }
 
   async putEvents(events: Event[]): Promise<void> {
