@@ -178,9 +178,15 @@ export async function migrateAttachmentIDs(
   }
 }
 
-export async function getAttachmentMIMEType(attachmentID: AttachmentID, userID: string, version: AttachmentAPIVersion): Promise<AttachmentMIMEType | null> {
+export async function getAttachmentMIMEType(
+  attachmentID: AttachmentID,
+  userID: string,
+  version: AttachmentAPIVersion,
+): Promise<AttachmentMIMEType | null> {
   const fileStorageService = sharedFileStorageService();
-  const mimeTypeString = await fileStorageService.getMIMEType(getFileStorageSubpathForAttachmentID(attachmentID, userID, version));
+  const mimeTypeString = await fileStorageService.getMIMEType(
+    getFileStorageSubpathForAttachmentID(attachmentID, userID, version),
+  );
   // TODO: validate attachment MIME type
   return mimeTypeString as AttachmentMIMEType | null;
 }
