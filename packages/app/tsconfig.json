@@ -28,10 +28,25 @@
       "path": "../core"
     },
     {
+      "path": "../core2"
+    },
+    {
       "path": "../embedded-support"
     },
     {
       "path": "../sample-data"
+    },
+    {
+      "path": "../store-shared"
+    },
+    {
+      "path": "../store-fs"
+    },
+    {
+      "path": "../store-web"
+    },
+    {
+      "path": "../sync"
     },
     {
       "path": "../ui"
