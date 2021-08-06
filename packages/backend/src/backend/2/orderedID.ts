@@ -1,6 +1,8 @@
 /**
  Our syncing and listing API guarantees depend on our server being able to return documents in consistent order of insertion. This is a bit tricky to achieve in a distributed system, where multiple server processes may be writing to the database without locking coordination. So we use "ordered ID" strings, which are effectively a [hybrid logical clock](https://cse.buffalo.edu/tech-reports/2014-04.pdf), salted with random bits so that two servers generating IDs at exactly the same millisecond won't collide.
 
+ This is a fairly common approach in distributed stores; see [the proposed UUIDv6-8](https://www.ietf.org/id/draft-peabody-dispatch-new-uuid-format-01.html) for a draft formalization and links to many other prior implementations.
+
  This approach (practically) guarantees that there will be no collisions, but in the rare event that two servers generating IDs at the very same millisecond, there's a chance that the IDs will violate monotonicity: i.e. a client may see a write to ID tx_2 (from server 2) but miss a write at ID tx_1 (from server 1). In practice, I'm not worried about this. But we can always make this ID transactional later if it turns out to be a real issue.
 
  This implementation inspired by https://gist.github.com/mikelehen/3596a30bd69384624c11.
