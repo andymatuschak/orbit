@@ -82,7 +82,7 @@ export async function writeConvertedLogsToCore2Storage(
         }
         const attachmentIngestEvent: AttachmentIngestEvent = {
           type: EventType.AttachmentIngest,
-          id: attachmentID as string as EventID,
+          id: `${id}_${attachmentID}` as string as EventID,
           entityID: attachmentID,
           timestampMillis: log.timestampMillis,
           mimeType,
