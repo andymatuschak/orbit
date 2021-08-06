@@ -19,6 +19,9 @@ export class OrbitStoreWeb implements OrbitStore {
       new IDBDatabaseBackend(databaseName, indexedDB),
       eventReducer,
     );
-    this.attachmentStore = new AttachmentStoreWeb(databaseName);
+    this.attachmentStore = new AttachmentStoreWeb(
+      `${databaseName}-attachments`,
+      indexedDB,
+    );
   }
 }

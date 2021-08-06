@@ -31,23 +31,14 @@ export class OrbitStoreSyncAdapter implements SyncAdapter {
   }
 
   async putAttachment(
-    sourceURL: string,
+    contents: Uint8Array,
     id: AttachmentID,
     type: AttachmentMIMEType,
   ): Promise<void> {
-    await this._orbitStore.attachmentStore.storeAttachmentFromURL(
-      sourceURL,
-      id,
-      type,
-    );
+    await this._orbitStore.attachmentStore.storeAttachment(contents, id, type);
   }
 
-  async getURLForAttachment(id: AttachmentID): Promise<string> {
-    const url =
-      await this._orbitStore.attachmentStore.getURLForStoredAttachment(id);
-    if (!url) {
-      throw new Error(`Orbit store has no URL for attachment with ID ${id}`);
-    }
-    return url;
+  async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
+    return await this._orbitStore.attachmentStore.getAttachmentContents(id);
   }
 }

@@ -271,6 +271,7 @@ function getEmbeddedReviewAreaItemsFromReviewItems(
   colorPalette: styles.colors.ColorPalette,
 ): ReviewAreaItem[] {
   return reviewItems.map((item) => ({
+    promptTaskID: item.promptTaskID,
     prompt: item.prompt,
     promptParameters: item.promptParameters,
     taskParameters: getNextTaskParameters(

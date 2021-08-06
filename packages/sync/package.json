@@ -9,6 +9,7 @@
   "exports": "./dist/index.js",
   "sideEffects": false,
   "dependencies": {
+    "@withorbit/api-client": "0.0.1",
     "@withorbit/core2": "0.0.1",
     "@withorbit/store-shared": "0.0.1"
   },
@@ -26,7 +27,6 @@
     "@withorbit/store-shared": "0.0.1",
     "babel-jest": "^27.0.6",
     "jest": "~27.0.6",
-    "jest-fetch-mock": "^3.0.3",
     "multiformats": "^9.1.0",
     "typescript": "^4.2.4"
   }

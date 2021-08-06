@@ -2,10 +2,8 @@ import { AttachmentIngestEvent, Event } from "@withorbit/core2";
 import { core2 as fixtures } from "@withorbit/sample-data";
 import OrbitStoreFS from "@withorbit/store-fs";
 import { OrbitStore } from "@withorbit/store-shared";
-import jestFetchMock from "jest-fetch-mock";
 import os from "os";
 import path from "path";
-import stream from "stream";
 import { OrbitStoreSyncAdapter } from "./orbitStoreSyncAdapter";
 import { syncOrbitStore } from "./sync";
 
@@ -21,18 +19,6 @@ async function prepTestStore(
   await store.database.putEvents(events);
   return { store, events };
 }
-
-beforeAll(() => {
-  jestFetchMock.enableMocks();
-});
-
-beforeEach(() => {
-  jestFetchMock.resetMocks();
-});
-
-afterAll(() => {
-  jestFetchMock.dontMock();
-});
 
 test("bidi transmission", async () => {
   const { store: store1, events: events1 } = await prepTestStore(async () =>
@@ -81,15 +67,12 @@ test("bidi transmission", async () => {
 });
 
 test("attachments synced", async () => {
-  // @ts-ignore jest-fetch-mock supports stream arguments to its mockResponse, but the argument type erroneously doesn't include it.
-  jestFetchMock.mockResponse(stream.Readable.from("Test"));
-
   function addEvents(prefix: string) {
     return async (store: OrbitStore) => {
       const events = fixtures.createTestAttachmentIngestEvents(100, prefix);
       for (const { entityID, mimeType } of events) {
-        await store.attachmentStore.storeAttachmentFromURL(
-          "https://dummy.com",
+        await store.attachmentStore.storeAttachment(
+          Buffer.from("Test"),
           entityID,
           mimeType,
         );

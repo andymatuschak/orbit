@@ -16,6 +16,11 @@ import { getActionsRecordForMarking } from "./markingActions";
 
 test("clozes ingest all deletions", () => {
   const promptParameters = { clozeIndex: 0 };
+  const promptTaskID = getIDForPromptTask({
+    promptID: getIDForPromptSync(testClozePrompt),
+    promptParameters,
+    promptType: testClozePrompt.promptType,
+  });
   const actionsRecord = getActionsRecordForMarking({
     hostMetadata: {} as EmbeddedHostMetadata,
     reviewItem: {
@@ -23,14 +28,11 @@ test("clozes ingest all deletions", () => {
       promptParameters,
       promptState: null,
       attachmentResolutionMap: null,
-      promptTaskID: getIDForPromptTask({
-        promptID: getIDForPromptSync(testClozePrompt),
-        promptParameters,
-        promptType: testClozePrompt.promptType,
-      }),
+      promptTaskID,
     },
     markingRecord: {
       reviewAreaItem: {
+        promptTaskID,
         prompt: testClozePrompt,
         promptParameters,
         taskParameters: null,

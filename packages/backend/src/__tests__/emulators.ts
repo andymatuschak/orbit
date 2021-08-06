@@ -23,7 +23,10 @@ export async function resetLocalEmulators() {
 
 async function deleteLocalFileServiceData() {
   await fs.promises
-    .rmdir(LocalFileStorageService.getTestStorageLocation())
+    .rm(LocalFileStorageService.getTestStorageLocation(), {
+      recursive: true,
+      force: true,
+    })
     .catch(() => {
       return;
     }); // it's OK if this fails: it might not exist yet.

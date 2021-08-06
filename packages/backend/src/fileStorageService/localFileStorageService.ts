@@ -4,20 +4,26 @@ import path from "path";
 import { pathToFileURL } from "url";
 import { isRunningInEmulator } from "../util/isRunningInEmulator";
 import { isRunningInTest } from "../util/isRunningInTest";
-import { FileStorageService } from "./fileStorageService";
+import {
+  FileStorageResolution,
+  FileStorageService,
+} from "./fileStorageService";
 
-// n.b. not suitable for use in production; used only in testing
+// n.b. not suitable for use in production; used only in testing and as an emulator for Google Cloud Storage in development.
 export class LocalFileStorageService implements FileStorageService {
   readonly basePath: string;
 
   static getTestStorageLocation(): string {
-    return path.join(os.tmpdir(), "orbit-test-file-storage");
+    return path.join(os.tmpdir(), "orbit-file-storage-emulator");
   }
 
   constructor(
     basePath: string = LocalFileStorageService.getTestStorageLocation(),
   ) {
     this.basePath = basePath;
+    console.log(
+      `[File storage service]: Initializing with base path ${basePath}`,
+    );
     // This is awfully rude, but because this is just used for testing, I don't mind the blocking call.
     fs.mkdirSync(basePath, { recursive: true });
   }
@@ -59,6 +65,17 @@ export class LocalFileStorageService implements FileStorageService {
 
   async getMIMEType(subpath: string): Promise<string | null> {
     return await this._getMIMETypeMapping(subpath);
+  }
+
+  async resolveFile(subpath: string): Promise<FileStorageResolution | null> {
+    const mimeType = await this.getMIMEType(subpath);
+    if (mimeType) {
+      const filePath = this._getStorePath(subpath);
+      const data = await fs.promises.readFile(filePath);
+      return { data, mimeType };
+    } else {
+      return null;
+    }
   }
 
   private _getStorePath(subpath: string): string {

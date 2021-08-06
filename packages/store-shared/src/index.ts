@@ -1,4 +1,3 @@
-export { AttachmentDownloadError } from "./attachmentDownloadError";
 export type { AttachmentStore } from "./attachmentStore";
 
 export { Database } from "./database";
@@ -17,6 +16,8 @@ export type {
   DatabaseQueryPredicateRelation,
   DatabaseTaskQueryPredicate,
 } from "./databaseQuery";
+
+export { encodeDataURL } from "./encodeDataURL";
 
 export type { OrbitStore } from "./orbitStore";
 

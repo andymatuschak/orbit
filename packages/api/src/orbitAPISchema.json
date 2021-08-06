@@ -122,13 +122,10 @@
             ],
             "type": "string"
         },
-        "AttachmentMimeType": {
-            "enum": [
-                "image/jpeg",
-                "image/png",
-                "image/svg+xml"
-            ],
-            "type": "string"
+        "BlobLike<AttachmentMimeType>": {
+            "additionalProperties": true,
+            "description": "i.e. a DOM Blob or a fetch-blob Blob",
+            "type": "object"
         },
         "ClozePrompt": {
             "additionalProperties": false,
@@ -211,25 +208,6 @@
             "required": [
                 "order",
                 "ranges"
-            ],
-            "type": "object"
-        },
-        "FileUploadBlob": {
-            "additionalProperties": true,
-            "properties": {
-                "size": {
-                    "description": "File must be less than 10mb in size",
-                    "maximum": 10000000,
-                    "minimum": 0,
-                    "type": "integer"
-                },
-                "type": {
-                    "$ref": "#/definitions/AttachmentMimeType"
-                }
-            },
-            "required": [
-                "size",
-                "type"
             ],
             "type": "object"
         },
@@ -1029,7 +1007,9 @@
                             "type": "object"
                         },
                         "response": {
-                            "type": "null"
+                            "additionalProperties": true,
+                            "description": "i.e. a DOM Blob or a fetch-blob Blob",
+                            "type": "object"
                         }
                     },
                     "required": [
@@ -1309,7 +1289,7 @@
                             "additionalProperties": false,
                             "properties": {
                                 "file": {
-                                    "$ref": "#/definitions/FileUploadBlob"
+                                    "$ref": "#/definitions/BlobLike<AttachmentMimeType>"
                                 }
                             },
                             "required": [

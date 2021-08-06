@@ -1,12 +1,7 @@
 import {
   ActionLogID,
   applyActionLogToPromptState,
-  getIDForPromptSync,
-  getIDForPromptTask,
   PromptActionLog,
-  PromptOf,
-  PromptParametersOf,
-  PromptTask,
 } from "@withorbit/core";
 import { ReviewItem } from "@withorbit/embedded-support";
 import { ReviewAreaItem } from "@withorbit/ui";
@@ -33,27 +28,12 @@ export interface ReviewSessionManagerActions {
   pushReviewAreaQueueItems(items: ReviewAreaItem[]): void;
 }
 
-function getPromptTaskIDForPromptAndParameters<PT extends PromptTask>(
-  prompt: PromptOf<PT>,
-  promptParameters: PromptParametersOf<PT>,
-): string {
-  return getIDForPromptTask({
-    promptID: getIDForPromptSync(prompt),
-    promptType: prompt.promptType,
-    promptParameters: promptParameters,
-  } as PromptTask);
-}
-
 function findSessionItemIndex(
   reviewAreaItem: ReviewAreaItem,
   sessionItems: ReviewItem[],
 ): number {
-  const reviewAreaItemPromptTaskID = getPromptTaskIDForPromptAndParameters(
-    reviewAreaItem.prompt,
-    reviewAreaItem.promptParameters,
-  );
   const index = sessionItems.findIndex(
-    (sessionItem) => sessionItem.promptTaskID === reviewAreaItemPromptTaskID,
+    (sessionItem) => sessionItem.promptTaskID === reviewAreaItem.promptTaskID,
   );
 
   if (index === -1) {

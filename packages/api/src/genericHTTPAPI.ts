@@ -32,7 +32,7 @@ export type RouteData<
 
 export type RequestContentType = "application/json" | "multipart/form-data";
 export type RequestFormData = {
-  [name: string]: number | string | boolean | Uint8Array | BlobLike;
+  [name: string]: number | string | boolean | Uint8Array | BlobLike<any>;
 };
 
 export type QueryParameters = {
@@ -58,9 +58,19 @@ export type HTTPMethod =
   | "DELETE"
   | "OPTIONS";
 
-// i.e. a DOM Blob or a fetch-blob Blob
-export interface BlobLike {
-  type: string;
+/**
+ * i.e. a DOM Blob or a fetch-blob Blob
+ * @additionalProperties true
+ * @TJS-type object
+ */
+export interface BlobLike<T> {
+  type: T;
+  /**
+   * File must be less than 10mb in size
+   * @minimum 0
+   * @maximum 10000000
+   * @TJS-type integer
+   */
   size: number;
   arrayBuffer(): Promise<ArrayBuffer>;
   stream(): any;

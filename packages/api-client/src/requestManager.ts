@@ -1,4 +1,5 @@
 import { API, APIValidator } from "@withorbit/api";
+import { APIValidatorError } from "@withorbit/api/dist/validation/apiValidator";
 import { APIConfig } from "./apiConfig";
 import * as Network from "./util/fetch";
 
@@ -89,27 +90,39 @@ export class RequestManager<API extends API.Spec> {
       body: wireBody?.body as any,
     });
     if (response.ok) {
+      let validationResult: APIValidatorError | true;
+      let output: API.RouteResponseData<API[Path][Method]>;
       if (response.status === 204) {
-        // TODO validate that the response should be void
-        return undefined as unknown as API.RouteResponseData<API[Path][Method]>;
-      } else {
-        const responseText = await response.text();
-        const json =
-          responseText.length > 0 ? await JSON.parse(responseText) : null;
-
-        const validationResult = this.validator.validateResponse(
+        validationResult = this.validator.validateResponse(
           { path, method, ...requestData },
-          json,
+          null,
         );
-        if (validationResult !== true) {
-          console.warn(
-            `Validation Error: (${method}) ${path} did not match the expected value for this route`,
-          );
-          console.warn(validationResult);
+        output = undefined as unknown as API.RouteResponseData<
+          API[Path][Method]
+        >;
+      } else {
+        const responseContentType = response.headers.get("Content-Type");
+        if (responseContentType?.startsWith("application/json")) {
+          const responseText = await response.text();
+          output =
+            responseText.length > 0 ? await JSON.parse(responseText) : null;
+        } else {
+          output = (await response.blob()) as API.RouteResponseData<
+            API[Path][Method]
+          >;
         }
-
-        return json as API.RouteResponseData<API[Path][Method]>;
+        validationResult = this.validator.validateResponse(
+          { path, method, ...requestData },
+          output,
+        );
       }
+      if (validationResult !== true) {
+        console.warn(
+          `Validation Error: (${method}) ${path} did not match the expected value for this route`,
+        );
+        console.warn(validationResult);
+      }
+      return output;
     } else {
       // TODO probably also include body information about the error
       throw new Error(

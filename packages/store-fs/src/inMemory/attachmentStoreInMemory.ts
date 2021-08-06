@@ -1,9 +1,5 @@
 import { AttachmentID, AttachmentMIMEType } from "@withorbit/core2";
-import {
-  AttachmentDownloadError,
-  AttachmentStore,
-} from "@withorbit/store-shared";
-import base64 from "base64-js";
+import { AttachmentStore, encodeDataURL } from "@withorbit/store-shared";
 
 /*
 Implements an attachment store by retaining file data in memory. Probably mostly useful for testing and simple scripts.
@@ -15,33 +11,32 @@ export class AttachmentStoreInMemory implements AttachmentStore {
     this._store = new Map();
   }
 
-  async storeAttachmentFromURL(
-    sourceURL: string,
-    id: AttachmentID,
-    type: AttachmentMIMEType,
-  ): Promise<void> {
-    const response = await fetch(sourceURL);
-    if (response.ok) {
-      this._store.set(id, {
-        data: await response.arrayBuffer(),
-        type,
-      });
-    } else {
-      throw new AttachmentDownloadError({
-        statusCode: response.status,
-        bodyText: await response.text(),
-      });
-    }
-  }
-
   async getURLForStoredAttachment(id: AttachmentID): Promise<string | null> {
     const record = this._store.get(id);
     if (record) {
-      const b64String = base64.fromByteArray(new Uint8Array(record.data));
-      return `data:${record.type};base64,${b64String}`;
+      return encodeDataURL(record.data, record.type);
     } else {
       return null;
     }
+  }
+
+  async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
+    const record = this._store.get(id);
+    if (!record) {
+      throw new Error(`Missing attachment ${id}`);
+    }
+    return new Uint8Array(record.data);
+  }
+
+  async storeAttachment(
+    contents: Uint8Array,
+    id: AttachmentID,
+    type: AttachmentMIMEType,
+  ): Promise<void> {
+    this._store.set(id, {
+      data: contents,
+      type,
+    });
   }
 }
 

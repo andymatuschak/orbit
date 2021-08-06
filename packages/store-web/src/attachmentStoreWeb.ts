@@ -1,26 +1,55 @@
-import { AttachmentID } from "@withorbit/core2";
-import { AttachmentStore } from "@withorbit/store-shared";
+import { AttachmentID, AttachmentMIMEType } from "@withorbit/core2";
+import { AttachmentStore, encodeDataURL } from "@withorbit/store-shared";
+import Dexie from "dexie";
 
 /*
-This is a stub implementation of AttachmentStore for web clients. Rather than actually download the attachments, we just keep track of the remote URL we were given for each attachment ID, then return that when the attachment ID is subsequently requested. So this won't produce a store which will actually work offline.
-
-A proper implementation of this class for web will require a service worker which uses CacheStorage and an onfetch handler to store and replay the data for the attachments.
-
-A simpler apprach, which wouldn't require a service worker, could store the attachments as Blobs in localStorage or IDB, then vend URLs using URL.createObjectURL. The downside of this approach is that computing the URL requires reading the attachment into memory and storing it there so long as the URL is in use. We'd also need to somehow call URL.revokeObjectURL when it's no longer in use, which will require extra complexity at client sites.
+This is a simplistic implementation of AttachmentStore for web clients. It stores attachment data in IndexedDB. The downside of this approach is that attachments are displayed using base64 URLs, which are of course quite inefficient. It would be better to use a service worker and CacheStorage, but that would be dramatically more complex. This will do for now.
  */
 export class AttachmentStoreWeb implements AttachmentStore {
-  private _attachmentIDsToURLs: Map<AttachmentID, string>;
+  private readonly _db: Dexie;
+  private readonly _table: Dexie.Table<AttachmentStoreTableRow, AttachmentID>;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  constructor(storeName = "OrbitAttachmentStore") {
-    this._attachmentIDsToURLs = new Map();
+  constructor(name: string, indexedDB: IDBFactory = window.indexedDB) {
+    this._db = new Dexie(name, { indexedDB });
+    this._db.version(1).stores({
+      attachments: "&id",
+    });
+    this._table = this._db.table("attachments");
   }
 
-  async storeAttachmentFromURL(url: string, id: AttachmentID): Promise<void> {
-    this._attachmentIDsToURLs.set(id, url);
+  async storeAttachment(
+    contents: Uint8Array,
+    id: AttachmentID,
+    type: AttachmentMIMEType,
+  ): Promise<void> {
+    await this._table.put({
+      id,
+      data: contents,
+      type,
+    });
   }
 
   async getURLForStoredAttachment(id: AttachmentID): Promise<string | null> {
-    return this._attachmentIDsToURLs.get(id) ?? null;
+    const row = await this._table.get(id);
+    if (row) {
+      return encodeDataURL(row.data, row.type);
+    } else {
+      return null;
+    }
   }
+
+  async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
+    const row = await this._table.get(id);
+    if (row) {
+      return row.data;
+    } else {
+      throw new Error(`Missing attachment ${id}`);
+    }
+  }
+}
+
+interface AttachmentStoreTableRow {
+  id: AttachmentID;
+  data: Uint8Array;
+  type: AttachmentMIMEType;
 }

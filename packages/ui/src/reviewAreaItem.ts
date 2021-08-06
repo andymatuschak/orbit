@@ -12,6 +12,7 @@ import {
 import { colors } from "./styles";
 
 export interface ReviewAreaItem<PT extends PromptTask = PromptTask> {
+  promptTaskID: PromptTaskID;
   prompt: PromptOf<PT>;
   promptParameters: PromptParametersOf<PT>;
   taskParameters: PromptTaskParametersOf<PT>;

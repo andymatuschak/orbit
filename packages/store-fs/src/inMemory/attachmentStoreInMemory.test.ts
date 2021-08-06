@@ -1,4 +1,3 @@
-import jestFetchMock from "jest-fetch-mock";
 import {
   AttachmentID,
   AttachmentMIMEType,
@@ -6,18 +5,6 @@ import {
   EntityType,
 } from "@withorbit/core2";
 import { AttachmentStoreInMemory } from "./attachmentStoreInMemory";
-
-beforeAll(() => {
-  jestFetchMock.enableMocks();
-});
-
-beforeEach(() => {
-  jestFetchMock.resetMocks();
-});
-
-afterAll(() => {
-  jestFetchMock.dontMock();
-});
 
 let store: AttachmentStoreInMemory;
 beforeEach(async () => {
@@ -39,9 +26,8 @@ test("non-existent ID URL resolves to null", async () => {
 
 test("after downloading URL resolves", async () => {
   // @ts-ignore
-  jestFetchMock.mockResponse("Test");
-  await store.storeAttachmentFromURL(
-    "http://foo.com",
+  await store.storeAttachment(
+    Buffer.from("Test"),
     testAttachmentReference.id,
     testAttachmentReference.mimeType,
   );

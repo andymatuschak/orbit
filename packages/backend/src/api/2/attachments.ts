@@ -8,13 +8,31 @@ export const getAttachment: TypedRouteHandler<
   "/2/attachments/:id",
   "GET"
 > = authenticatedRequestHandler(async (request, userID) => {
-  return {
-    status: 302,
-    redirectURL: backend.attachments.getAttachmentURL(
-      request.params.id,
-      userID,
-      "core2",
-    ),
-    cachePolicy: CachePolicy.Immutable,
-  };
+  // When running against Google Cloud Storage, we'll redirect to their URLs; when running against the emulator, we'll just vend the data directly.
+  const result = await backend.attachments.resolveAttachment(
+    request.params.id,
+    userID,
+    "core2",
+  );
+
+  if (result) {
+    if ("url" in result) {
+      return {
+        status: 302,
+        redirectURL: result.url,
+        cachePolicy: CachePolicy.Immutable,
+      };
+    } else {
+      return {
+        status: 200,
+        data: result.data,
+        mimeType: result.mimeType,
+        cachePolicy: CachePolicy.Immutable,
+      };
+    }
+  } else {
+    return {
+      status: 404,
+    };
+  }
 });

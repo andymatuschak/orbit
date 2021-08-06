@@ -38,9 +38,15 @@ export type TypedRouteHandler<
 
 export type TypedResponse<Data> = (
   | { status: 200 | 201; json: Data; cachePolicy: CachePolicy }
+  | {
+      status: 200 | 201;
+      data: Uint8Array;
+      mimeType: string;
+      cachePolicy: CachePolicy;
+    }
   | { status: 204 }
   | { status: 301 | 302; redirectURL: string; cachePolicy: CachePolicy }
-  | { status: 400 | 401 }
+  | { status: 400 | 401 | 404 }
 ) & { headers?: { [name: string]: string } };
 
 // We use a simplified set of caching policies.
@@ -110,7 +116,12 @@ export default function createTypedRouter<API extends API.Spec>(
           }
 
           if (result.status === 200) {
-            response.json(result.json);
+            if ("json" in result) {
+              response.json(result.json);
+            } else {
+              response.contentType(result.mimeType);
+              response.send(result.data);
+            }
           } else {
             response.send();
           }

@@ -15,10 +15,10 @@ export interface SyncAdapter {
   putEvents(events: Event[]): Promise<void>;
 
   putAttachment(
-    sourceURL: string,
+    contents: Uint8Array,
     id: AttachmentID,
     type: AttachmentMIMEType,
   ): Promise<void>;
 
-  getURLForAttachment(id: AttachmentID): Promise<string>;
+  getAttachmentContents(id: AttachmentID): Promise<Uint8Array>;
 }

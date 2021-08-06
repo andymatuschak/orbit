@@ -1,17 +1,9 @@
 import { AttachmentID, AttachmentMIMEType } from "@withorbit/core2";
-import {
-  AttachmentDownloadError,
-  AttachmentStore,
-} from "@withorbit/store-shared";
+import { AttachmentStore } from "@withorbit/store-shared";
 import fs from "fs";
-import fetch from "node-fetch";
 import path from "path";
-import { pipeline } from "stream";
-import { pathToFileURL } from "url";
-import { promisify } from "util";
+import { fileURLToPath, pathToFileURL } from "url";
 import { getPathForAttachment } from "./util/getPathForAttachment";
-
-const _pipeline = promisify(pipeline);
 
 /*
 Implements an attachment store by writing files to a folder on disk.
@@ -33,23 +25,14 @@ export class AttachmentStoreFS implements AttachmentStore {
     this._getAttachmentType = getAttachmentType;
   }
 
-  async storeAttachmentFromURL(
-    url: string,
+  async storeAttachment(
+    contents: Uint8Array,
     id: AttachmentID,
     type: AttachmentMIMEType,
   ): Promise<void> {
-    const response = await fetch(url);
-    if (!response.ok || !response.body) {
-      throw new AttachmentDownloadError({
-        statusCode: response.status,
-        bodyText: await response.text(),
-      });
-    }
-    // TODO: validate that the response's content type matches the specified type.
-
-    await _pipeline(
-      response.body,
-      fs.createWriteStream(getPathForAttachment(this._basePath, id, type)),
+    await fs.promises.writeFile(
+      getPathForAttachment(this._basePath, id, type),
+      contents,
     );
   }
 
@@ -66,5 +49,14 @@ export class AttachmentStoreFS implements AttachmentStore {
       .then(() => true)
       .catch(() => false);
     return exists ? pathToFileURL(attachmentPath).href : null;
+  }
+
+  async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
+    const url = await this.getURLForStoredAttachment(id);
+    if (!url) {
+      throw new Error(`Missing data for attachment ${id}`);
+    }
+    const path = fileURLToPath(url);
+    return await fs.promises.readFile(path);
   }
 }

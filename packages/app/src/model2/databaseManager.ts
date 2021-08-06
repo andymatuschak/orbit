@@ -25,11 +25,7 @@ export class DatabaseManager {
   constructor(apiClient: OrbitAPIClient) {
     this._apiClient = apiClient;
     this._storePromise = createOrbitStore("shared.orbitStore"); // TODO: namespace the store by user ID
-    this._apiSyncAdapter = new APISyncAdapter(
-      this._apiClient,
-      "server",
-      readLocalAttachment,
-    );
+    this._apiSyncAdapter = new APISyncAdapter(this._apiClient, "server");
 
     this._startSync();
   }
@@ -100,9 +96,4 @@ export class DatabaseManager {
       );
     }
   }
-}
-
-function readLocalAttachment(): Promise<Uint8Array> {
-  // TODO Implement... but we don't actually need this until we're syncing prompts with locally-added attachments. Probably should just implement this on AttachmentStore.
-  throw new Error("Unimplemented");
 }

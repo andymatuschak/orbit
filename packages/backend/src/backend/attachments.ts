@@ -10,6 +10,7 @@ import {
 import { AttachmentMIMEType } from "@withorbit/core2";
 import fetch, * as Fetch from "node-fetch";
 import { sharedFileStorageService } from "../fileStorageService";
+import { FileStorageResolution } from "../fileStorageService/fileStorageService";
 import { getFirebaseKeyForCIDString } from "./firebaseSupport";
 import { getDatabase } from "./firebaseSupport/firebase";
 
@@ -154,6 +155,16 @@ export function getAttachmentURL(
   version: AttachmentAPIVersion,
 ): string {
   return sharedFileStorageService().formatURL(
+    getFileStorageSubpathForAttachmentID(attachmentID, userID, version),
+  );
+}
+
+export function resolveAttachment(
+  attachmentID: AttachmentID,
+  userID: string | null,
+  version: AttachmentAPIVersion,
+): Promise<FileStorageResolution | null> {
+  return sharedFileStorageService().resolveFile(
     getFileStorageSubpathForAttachmentID(attachmentID, userID, version),
   );
 }

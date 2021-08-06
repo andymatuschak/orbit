@@ -10,8 +10,6 @@ import {
   QAPrompt,
 } from "@withorbit/core";
 import { EventType } from "@withorbit/core2";
-import fs from "fs";
-import { fileURLToPath } from "url";
 import { testQAPrompt } from "@withorbit/sample-data";
 import { resetLocalEmulators } from "../emulators";
 import { fetchRoute } from "./utils/fetchRoute";
@@ -86,18 +84,12 @@ describe("core2 migration", () => {
     expect(eventsGetBody.items[1].type).toEqual(EventType.TaskIngest);
 
     // Ensure that the attachment is migrated to core2 storage.
-    const { status: attachmentGetStatus, headers: attachmentGetHeaders } =
-      await fetchRoute(`/api/2/attachments/${testAttachmentID}`, {
-        method: "GET",
-        authorization: { token: "migrate-actions" },
-        followRedirects: false,
-      });
-    expect(attachmentGetStatus).toBe(302);
-    const storedURL = attachmentGetHeaders.get("Location")!;
-    expect(storedURL).not.toBeNull();
-    const storedLocalPath = fileURLToPath(storedURL);
-    const storedData = await fs.promises.readFile(storedLocalPath, "base64");
-    expect(storedData).toEqual(testAttachmentBase64Data);
+    const attachmentBlob = await apiClient.getAttachment2(testAttachmentID);
+    expect(attachmentBlob.type).toEqual(testAttachment.mimeType);
+    const attachmentBuffer = await attachmentBlob.arrayBuffer();
+    expect(Buffer.from(attachmentBuffer).toString("base64")).toEqual(
+      testAttachmentBase64Data,
+    );
   });
 });
 

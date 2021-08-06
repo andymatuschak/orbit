@@ -1,11 +1,14 @@
 import { OrbitAPI, API, OrbitAPIValidator } from "@withorbit/api";
+import { BlobLike } from "@withorbit/api/dist/genericHTTPAPI";
 import {
   Attachment,
   AttachmentID,
   AttachmentIDReference,
+  AttachmentMimeType,
   PromptID,
   PromptTaskID,
 } from "@withorbit/core";
+import { AttachmentMIMEType } from "@withorbit/core2";
 import * as core2 from "@withorbit/core2";
 import { APIConfig, defaultAPIConfig } from "./apiConfig";
 import { AuthenticationConfig, RequestManager } from "./requestManager";
@@ -97,7 +100,7 @@ export class OrbitAPIClient {
     const blob = new Blob([attachment.contents], { type: attachment.mimeType });
     return this.requestManager.request("/attachments", "POST", {
       contentType: "multipart/form-data",
-      body: { file: blob as OrbitAPI.FileUploadBlob },
+      body: { file: blob as BlobLike<AttachmentMimeType> },
     });
   }
 
@@ -125,8 +128,10 @@ export class OrbitAPIClient {
     });
   }
 
-  getAttachmentURL2(attachmentID: core2.AttachmentID): string {
-    return this.requestManager.getRequestURL("/2/attachments/:id", "GET", {
+  getAttachment2(
+    attachmentID: core2.AttachmentID,
+  ): Promise<BlobLike<AttachmentMIMEType>> {
+    return this.requestManager.request("/2/attachments/:id", "GET", {
       query: {},
       params: { id: attachmentID },
     });

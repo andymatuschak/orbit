@@ -10,21 +10,10 @@ import { SyncAdapter } from "./syncAdapter";
 export class APISyncAdapter implements SyncAdapter {
   id: string;
   private readonly _apiClient: OrbitAPIClient;
-  private readonly _readLocalAttachmentURL: (
-    storedAttachmentURL: string,
-  ) => Promise<Uint8Array>;
 
-  constructor(
-    apiClient: OrbitAPIClient,
-    syncID: string,
-    // Our different platforms (web, RN, Node) will need to implement this differently. It's unfortunate that this API approach involves loading the entire attachment into memory--it'd be better to stream--but this is much more straightforward to make work across platforms.
-    readLocalAttachmentURL: (
-      storedAttachmentURL: string,
-    ) => Promise<Uint8Array>,
-  ) {
+  constructor(apiClient: OrbitAPIClient, syncID: string) {
     this.id = syncID;
     this._apiClient = apiClient;
-    this._readLocalAttachmentURL = readLocalAttachmentURL;
   }
 
   async listEvents(
@@ -43,12 +32,11 @@ export class APISyncAdapter implements SyncAdapter {
   }
 
   async putAttachment(
-    sourceURL: string,
+    contents: Uint8Array,
     id: AttachmentID,
     type: AttachmentMIMEType,
   ): Promise<void> {
     // TODO: Implement v2 API for storing an attachment
-    const contents = await this._readLocalAttachmentURL(sourceURL);
     await this._apiClient.storeAttachment({
       type: "image", // HACK
       // @ts-ignore TODO HACK: duck-casting core2 to core MIME types
@@ -57,8 +45,8 @@ export class APISyncAdapter implements SyncAdapter {
     });
   }
 
-  async getURLForAttachment(id: AttachmentID): Promise<string> {
-    // TODO: Possibly a different v2 API route?
-    return this._apiClient.getAttachmentURL(id);
+  async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
+    const blobLike = await this._apiClient.getAttachment2(id);
+    return new Uint8Array(await blobLike.arrayBuffer());
   }
 }

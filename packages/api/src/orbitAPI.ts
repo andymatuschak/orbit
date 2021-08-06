@@ -9,6 +9,7 @@ import {
   PromptState,
   PromptTaskID,
 } from "@withorbit/core";
+import { AttachmentMIMEType } from "@withorbit/core2";
 import * as core2 from "@withorbit/core2";
 import { BlobLike } from "./genericHTTPAPI";
 import { RequiredSpec } from "./util/requiredSpec";
@@ -91,7 +92,7 @@ export type ValidatableSpec = {
        */
       contentType: "multipart/form-data";
       body: {
-        file: FileUploadBlob;
+        file: BlobLike<AttachmentMimeType>;
       };
       response?: ResponseObject<
         "attachmentIDReference",
@@ -149,25 +150,10 @@ export type ValidatableSpec = {
       params: {
         id: core2.AttachmentID;
       };
-      // Issues a redirect to the attachment contents.
-      response?: null;
+      response?: BlobLike<AttachmentMIMEType>;
     };
   };
 };
-
-/**
- * @additionalProperties true
- */
-export interface FileUploadBlob extends BlobLike {
-  type: AttachmentMimeType;
-  /**
-   * File must be less than 10mb in size
-   * @minimum 0
-   * @maximum 10000000
-   * @TJS-type integer
-   */
-  size: number;
-}
 
 export type Spec = RequiredSpec<ValidatableSpec>;
 
