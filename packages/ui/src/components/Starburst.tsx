@@ -2,6 +2,7 @@ import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core2";
 import React, { useRef } from "react";
 import { Animated } from "react-native";
 import Svg, { ClipPath, G, Path } from "react-native-svg";
+import { generateIntervalSequence } from "../util/generateIntervalSequence";
 import clamp from "../util/clamp";
 import lerp from "../util/lerp";
 import usePrevious from "./hooks/usePrevious";
@@ -68,11 +69,8 @@ export function getStarburstRayValueForInterval(
 
   // TODO: these constants will need to move somewhere to avoid coupling with StarburstLegend.
   const firstInterval = config.initialReviewInterval;
-  const arbitraryMaxInterval = 7;
-  const maxInterval =
-    config.initialReviewInterval *
-    config.intervalGrowthFactor *
-    arbitraryMaxInterval;
+  const sequence = generateIntervalSequence(config);
+  const maxInterval = sequence[sequence.length - 1].interval;
 
   const firstIntervalRayValue = 0.1;
   return lerp(

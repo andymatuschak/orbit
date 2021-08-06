@@ -1,6 +1,7 @@
 import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core2";
 import React, { useMemo } from "react";
 import { Animated, View } from "react-native";
+import { generateIntervalSequence } from "../util/generateIntervalSequence";
 import { layout, type } from "../styles";
 import { useTransitioningValue } from "./hooks/useTransitioningValue";
 import {
@@ -98,21 +99,6 @@ export interface StarburstLegendProps {
   backgroundColor: string;
 }
 
-function generateIntervalSequence(
-  config: SpacedRepetitionSchedulerConfiguration,
-  maxIntervals: number,
-) {
-  const sequence = [{ interval: config.initialReviewInterval, label: "tmp" }];
-  for (let i = 0; i < maxIntervals; i++) {
-    sequence.push({
-      interval:
-        sequence[sequence.length - 1].interval * config.intervalGrowthFactor,
-      label: "tmp",
-    });
-  }
-  return sequence;
-}
-
 export default React.memo(function StarburstLegend({
   config,
   activeInterval,
@@ -125,7 +111,7 @@ export default React.memo(function StarburstLegend({
   futureTickColor,
   backgroundColor,
 }: StarburstLegendProps) {
-  const sequence = generateIntervalSequence(config, 7).slice(1);
+  const sequence = generateIntervalSequence(config).slice(1);
   const nextSequenceIndex = sequence.findIndex(
     ({ interval }) => interval > activeInterval * 1.1,
   );

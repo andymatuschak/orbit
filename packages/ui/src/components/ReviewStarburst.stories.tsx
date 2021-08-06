@@ -6,6 +6,7 @@ import {
 } from "@withorbit/core2";
 import React from "react";
 import { View } from "react-native";
+import { generateIntervalSequence } from "../util/generateIntervalSequence";
 import { colors } from "../styles";
 import useLayout from "./hooks/useLayout";
 import ReviewStarburst, { ReviewStarburstItem } from "./ReviewStarburst";
@@ -27,11 +28,9 @@ interface StoryArgs {
 function generatePromptState(
   config: SpacedRepetitionSchedulerConfiguration,
 ): TaskComponentState {
-  const arbitraryMaxSequenceLength = 7;
+  const sequence = generateIntervalSequence(config);
   const intervalMillis =
-    config.initialReviewInterval *
-    config.intervalGrowthFactor *
-    Math.floor(Math.random() * arbitraryMaxSequenceLength);
+    sequence[Math.floor(Math.random() * (sequence.length - 1))].interval;
   return {
     createdAtTimestampMillis: 0,
     lastRepetitionTimestampMillis: Date.now() - intervalMillis,
