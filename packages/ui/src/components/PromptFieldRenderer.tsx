@@ -1,10 +1,4 @@
 import isEqual from "lodash.isequal";
-import {
-  AttachmentResolutionMap,
-  AttachmentURLReference,
-  imageAttachmentType,
-  PromptField,
-} from "@withorbit/core";
 import React, {
   useCallback,
   useEffect,
@@ -36,6 +30,7 @@ import {
   renderInlineMath,
 } from "./PromptFieldRenderer/markdownLatexSupport";
 import { SawtoothPattern } from "./SawtoothPattern";
+import { AttachmentID, TaskContentField } from "@withorbit/core2";
 
 const sizeVariantCount = 5;
 const defaultSmallestSizeVariant = 4;
@@ -286,8 +281,8 @@ function useImageSize(
 }
 
 export default React.memo(function PromptFieldRenderer(props: {
-  promptField: PromptField;
-  attachmentResolutionMap: AttachmentResolutionMap | null;
+  promptField: TaskContentField;
+  getURLForAttachmentID: (id: AttachmentID) => string;
 
   colorPalette?: colors.ColorPalette;
   clipContent?: boolean;
@@ -298,7 +293,7 @@ export default React.memo(function PromptFieldRenderer(props: {
 }) {
   const {
     promptField,
-    attachmentResolutionMap,
+    getURLForAttachmentID,
     colorPalette,
     onLayout,
     largestSizeVariantIndex,
@@ -311,15 +306,10 @@ export default React.memo(function PromptFieldRenderer(props: {
   );
 
   let imageURL: string | null = null;
-  if (promptField.attachments.length > 0 && attachmentResolutionMap) {
-    const images = promptField.attachments.filter(
-      (reference) => reference.type === imageAttachmentType,
-    );
-    const imageURLReferences = images
-      .map((reference) => attachmentResolutionMap.get(reference.id))
-      .filter<AttachmentURLReference>((r): r is AttachmentURLReference => !!r);
-    if (imageURLReferences.length > 0) {
-      imageURL = imageURLReferences[0].url;
+  if (promptField.attachments.length > 0) {
+    const images = promptField.attachments.map(getURLForAttachmentID);
+    if (images.length > 0) {
+      imageURL = images[0];
     }
   }
 
@@ -434,7 +424,7 @@ export default React.memo(function PromptFieldRenderer(props: {
           mergeStyle={false}
           markdownit={markdownItInstance}
         >
-          {promptField.contents}
+          {promptField.text}
         </Markdown>
       </View>
       {shouldClipContent && (

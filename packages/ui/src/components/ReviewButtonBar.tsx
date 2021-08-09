@@ -1,15 +1,8 @@
-import {
-  applicationPromptType,
-  qaPromptType,
-  clozePromptType,
-  PromptRepetitionOutcome,
-  PromptType,
-} from "@withorbit/core";
+import { TaskContentType, TaskRepetitionOutcome } from "@withorbit/core2";
 import React, { useRef } from "react";
 import { View } from "react-native";
 import { colors, layout } from "../styles";
 import { ColorPalette } from "../styles/colors";
-import unreachableCaseError from "../util/unreachableCaseError";
 import Button, { ButtonPendingActivationState } from "./Button";
 import { useKeyDown } from "./hooks/useKey";
 import useLayout from "./hooks/useLayout";
@@ -17,7 +10,7 @@ import { IconName } from "./IconShared";
 import Spacer from "./Spacer";
 
 export interface PendingMarkingInteractionState {
-  pendingActionOutcome: PromptRepetitionOutcome;
+  pendingActionOutcome: TaskRepetitionOutcome;
 }
 
 interface Shortcuts {
@@ -29,12 +22,12 @@ interface Shortcuts {
 
 function getShortcuts(
   isShowingAnswer: boolean,
-  onMark: (outcome: PromptRepetitionOutcome) => void,
+  onMark: (outcome: TaskRepetitionOutcome) => void,
   onReveal: () => void,
 ): Shortcuts {
   const actions = [
-    () => onMark(PromptRepetitionOutcome.Forgotten),
-    () => onMark(PromptRepetitionOutcome.Remembered),
+    () => onMark(TaskRepetitionOutcome.Forgotten),
+    () => onMark(TaskRepetitionOutcome.Remembered),
   ];
 
   const _shortcuts: Shortcuts = {
@@ -51,28 +44,25 @@ function getShortcuts(
 }
 
 function getButtonTitle(
-  promptType: PromptType | null,
-  outcome: PromptRepetitionOutcome,
+  promptType: TaskContentType,
+  outcome: TaskRepetitionOutcome,
   isVeryNarrow: boolean,
 ) {
   switch (outcome) {
-    case PromptRepetitionOutcome.Remembered:
+    case TaskRepetitionOutcome.Remembered:
       switch (promptType) {
-        case qaPromptType:
-        case clozePromptType:
-        case null:
+        case TaskContentType.QA:
+        case TaskContentType.Cloze:
           return "Remembered";
-        case applicationPromptType:
+        case TaskContentType.Plain:
           return "Answered";
       }
-      throw unreachableCaseError(promptType);
-    case PromptRepetitionOutcome.Forgotten:
+    case TaskRepetitionOutcome.Forgotten:
       switch (promptType) {
-        case qaPromptType:
-        case clozePromptType:
-        case null:
+        case TaskContentType.QA:
+        case TaskContentType.Cloze:
           return isVeryNarrow ? "Forgot" : "Forgotten";
-        case applicationPromptType:
+        case TaskContentType.Plain:
           return "Missed";
       }
   }
@@ -101,11 +91,11 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   insetBottom,
 }: {
   colorPalette: ColorPalette | null;
-  promptType: PromptType | null;
-  onMark: (outcome: PromptRepetitionOutcome) => void;
+  promptType: TaskContentType;
+  onMark: (outcome: TaskRepetitionOutcome) => void;
   onReveal: () => void;
   onPendingOutcomeChange: (
-    pendingOutcome: PromptRepetitionOutcome | null,
+    pendingOutcome: TaskRepetitionOutcome | null,
   ) => void;
   isShowingAnswer: boolean;
   insetBottom?: number;
@@ -142,9 +132,9 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   function dispatchPendingMarkingInteraction() {
     onPendingOutcomeChange(
       forgottenButtonPendingState.current === "pressed"
-        ? PromptRepetitionOutcome.Forgotten
+        ? TaskRepetitionOutcome.Forgotten
         : rememberedButtonPendingState.current === "pressed"
-        ? PromptRepetitionOutcome.Remembered
+        ? TaskRepetitionOutcome.Remembered
         : null,
     );
   }
@@ -166,11 +156,11 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
           <Button
             {...sharedButtonProps}
             key={"Forgotten"}
-            onPress={() => onMark(PromptRepetitionOutcome.Forgotten)}
+            onPress={() => onMark(TaskRepetitionOutcome.Forgotten)}
             iconName={IconName.Cross}
             title={getButtonTitle(
               promptType,
-              PromptRepetitionOutcome.Forgotten,
+              TaskRepetitionOutcome.Forgotten,
               isVeryNarrow,
             )}
             onPendingInteractionStateDidChange={(pendingActivationState) => {
@@ -184,11 +174,11 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             {...sharedButtonProps}
             style={[buttonStyle, { minWidth: 176 }]}
             key={"Remembered"}
-            onPress={() => onMark(PromptRepetitionOutcome.Remembered)}
+            onPress={() => onMark(TaskRepetitionOutcome.Remembered)}
             iconName={IconName.Check}
             title={getButtonTitle(
               promptType,
-              PromptRepetitionOutcome.Remembered,
+              TaskRepetitionOutcome.Remembered,
               isVeryNarrow,
             )}
             onPendingInteractionStateDidChange={(pendingActivationState) => {

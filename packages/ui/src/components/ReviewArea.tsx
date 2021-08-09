@@ -1,4 +1,4 @@
-import { PromptRepetitionOutcome } from "@withorbit/core";
+import { AttachmentID, TaskRepetitionOutcome } from "@withorbit/core2";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem";
@@ -13,7 +13,7 @@ import ReviewButtonBar from "./ReviewButtonBar";
 
 export type ReviewAreaMarkingRecord = {
   reviewAreaItem: ReviewAreaItem;
-  outcome: PromptRepetitionOutcome;
+  outcome: TaskRepetitionOutcome;
 };
 
 type PromptContainerState = "displayed" | "disappearing" | "hidden";
@@ -24,6 +24,7 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
   onDidDisappear,
   reviewItem,
   backIsRevealed,
+  getURLForAttachmentID,
 }: {
   size: Size;
   displayState: PromptContainerState;
@@ -78,6 +79,7 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
     >
       {reviewItem && (
         <Card
+          getURLForAttachmentID={getURLForAttachmentID}
           reviewItem={reviewItem}
           accentColor={reviewItem.colorPalette.accentColor}
           backIsRevealed={backIsRevealed}
@@ -91,12 +93,14 @@ interface PromptStackProps {
   items: ReviewAreaItem[];
   currentItemIndex: number;
   isShowingAnswer: boolean;
+  getURLForAttachmentID: (id: AttachmentID) => string;
 }
 
 function PromptStack({
   items,
   currentItemIndex,
   isShowingAnswer,
+  getURLForAttachmentID,
 }: PromptStackProps) {
   const [departedCardCount, setDepartedCardCount] = useState(0);
   const departingPromptItems = useRef<ReviewAreaItem[]>([]);
@@ -162,6 +166,7 @@ function PromptStack({
               <PromptLayoutContainer
                 key={renderNodeIndex}
                 displayState={displayState}
+                getURLForAttachmentID={getURLForAttachmentID}
                 reviewItem={renderedItems[renderedItemIndex] || null}
                 onDidDisappear={onPromptDidDisappear}
                 size={containerSize}
@@ -182,8 +187,9 @@ export interface ReviewAreaProps {
   currentItemIndex: number;
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
   onPendingOutcomeChange: (
-    pendingOutcome: PromptRepetitionOutcome | null,
+    pendingOutcome: TaskRepetitionOutcome | null,
   ) => void;
+  getURLForAttachmentID: (id: AttachmentID) => string;
 
   insetBottom?: number;
 
@@ -197,6 +203,7 @@ export default React.memo(function ReviewArea({
   onMark,
   forceShowAnswer,
   onPendingOutcomeChange,
+  getURLForAttachmentID,
   insetBottom = 0,
 }: ReviewAreaProps) {
   // console.debug("[Performance - ReviewArea] Render", Date.now() / 1000.0);
@@ -211,8 +218,22 @@ export default React.memo(function ReviewArea({
     setShowingAnswer(false);
   }
 
+  const handleReveal = useCallback(() => {
+    setShowingAnswer(true);
+  }, []);
+
   const currentItem =
     currentItemIndex < items.length ? items[currentItemIndex] : null;
+
+  const handleMark = useCallback(
+    (outcome: TaskRepetitionOutcome) => {
+      if (!currentItem) {
+        throw new Error("Marking without a topmost item");
+      }
+      onMark({ reviewAreaItem: currentItem, outcome });
+    },
+    [currentItem, onMark],
+  );
 
   const currentColorPalette =
     items.length > 0
@@ -222,30 +243,22 @@ export default React.memo(function ReviewArea({
   return (
     <View style={{ flex: 1 }}>
       <PromptStack
+        getURLForAttachmentID={getURLForAttachmentID}
         currentItemIndex={currentItemIndex}
         isShowingAnswer={isShowingAnswer}
         items={items}
       />
-
-      <ReviewButtonBar
-        colorPalette={currentColorPalette}
-        onMark={useCallback(
-          (outcome: PromptRepetitionOutcome) => {
-            if (!currentItem) {
-              throw new Error("Marking without a topmost item");
-            }
-            onMark({ reviewAreaItem: currentItem, outcome });
-          },
-          [currentItem, onMark],
-        )}
-        onReveal={useCallback(() => {
-          setShowingAnswer(true);
-        }, [])}
-        onPendingOutcomeChange={onPendingOutcomeChange}
-        promptType={currentItem?.prompt.promptType ?? null}
-        isShowingAnswer={isShowingAnswer}
-        insetBottom={insetBottom}
-      />
+      {currentItem && (
+        <ReviewButtonBar
+          colorPalette={currentColorPalette}
+          onMark={handleMark}
+          onReveal={handleReveal}
+          onPendingOutcomeChange={onPendingOutcomeChange}
+          promptType={currentItem.spec.content.type}
+          isShowingAnswer={isShowingAnswer}
+          insetBottom={insetBottom}
+        />
+      )}
     </View>
   );
 });

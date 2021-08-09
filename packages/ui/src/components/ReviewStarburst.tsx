@@ -1,8 +1,9 @@
 import {
-  getNextRepetitionInterval,
-  PromptRepetitionOutcome,
-  PromptState,
-} from "@withorbit/core";
+  createSpacedRepetitionScheduler,
+  SpacedRepetitionSchedulerConfiguration,
+  TaskComponentState,
+  TaskRepetitionOutcome,
+} from "@withorbit/core2";
 import React, { useMemo } from "react";
 import { Animated, Easing, View } from "react-native";
 import { colors, layout } from "../styles";
@@ -14,11 +15,12 @@ import Starburst, {
 import StarburstLegend from "./StarburstLegend";
 
 export interface ReviewStarburstProps {
+  config: SpacedRepetitionSchedulerConfiguration;
   containerWidth: number;
   containerHeight: number;
   items: ReviewStarburstItem[];
   currentItemIndex: number;
-  pendingOutcome: PromptRepetitionOutcome | null;
+  pendingOutcome: TaskRepetitionOutcome | null;
   position: "left" | "center";
   showLegend: boolean;
   colorMode: "accent" | "bicolor";
@@ -26,12 +28,13 @@ export interface ReviewStarburstProps {
 }
 
 export interface ReviewStarburstItem {
-  promptState: PromptState | null;
+  component: TaskComponentState | null;
   isPendingForSession: boolean; // true when item is not yet "done" for the current session
   supportsRetry: boolean;
 }
 
 const ReviewStarburst = React.memo(function ReviewStarburst({
+  config,
   containerWidth,
   containerHeight,
   items,
@@ -61,29 +64,28 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
   }
   const currentItem =
     currentItemIndex < items.length ? items[currentItemIndex] : null;
-  const currentPromptState = currentItem?.promptState;
+  const currentComponent = currentItem?.component;
 
   const currentItemEffectiveInterval = useMemo(() => {
-    if (currentItem && pendingOutcome) {
-      return getNextRepetitionInterval({
-        schedule: "default",
-        currentlyNeedsRetry: currentPromptState?.needsRetry ?? false,
-        outcome: pendingOutcome,
-        reviewIntervalMillis: currentPromptState
-          ? Date.now() - currentPromptState.lastReviewTimestampMillis
+    const scheduler = createSpacedRepetitionScheduler(config);
+    if (currentComponent && pendingOutcome) {
+      const nextInterval = scheduler.computeNextDueIntervalMillisForRepetition(
+        currentComponent,
+        currentComponent?.lastRepetitionTimestampMillis
+          ? Date.now() - currentComponent.lastRepetitionTimestampMillis
           : 0,
-        scheduledIntervalMillis: currentPromptState?.intervalMillis ?? null,
-        supportsRetry: currentItem?.supportsRetry,
-      });
+        pendingOutcome,
+      );
+      return nextInterval.dueTimestampMillis;
     } else {
-      return currentPromptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time https://github.com/andymatuschak/metabook/issues/117
+      return currentComponent?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time https://github.com/andymatuschak/metabook/issues/117
     }
-  }, [currentItem, currentPromptState, pendingOutcome]);
+  }, [currentComponent, pendingOutcome, config]);
 
   const starburstEntries = useMemo(
     () =>
       items.map((item, index) => {
-        const effectiveInterval = item.promptState?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time https://github.com/andymatuschak/metabook/issues/117
+        const effectiveInterval = item.component?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time https://github.com/andymatuschak/metabook/issues/117
         let color: string;
         // In the review session: prompts are due or needs retry
         // In the embedded context: no prompt state or needs retry
@@ -100,11 +102,13 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
             index === currentItemIndex
               ? currentItemEffectiveInterval
               : effectiveInterval,
+            config,
           ),
           color,
         };
       }),
     [
+      config,
       items,
       currentItemIndex,
       currentItemEffectiveInterval,
@@ -176,6 +180,7 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
         }}
       >
         <StarburstLegend
+          config={config}
           activeInterval={currentItemEffectiveInterval}
           starburstThickness={3}
           starburstRadius={starburstRadius}
