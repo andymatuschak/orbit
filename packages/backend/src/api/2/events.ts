@@ -4,16 +4,14 @@ import { Database } from "@withorbit/store-shared";
 import { FirestoreDatabaseBackend } from "../../backend/2/firestoreDatabaseBackend";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "../util/typedRouter";
+import { putAndLogEvents } from "./util/putAndLogEvents";
 
 export const storeEvents: TypedRouteHandler<
   OrbitAPI.Spec,
   "/2/events",
   "PATCH"
 > = authenticatedRequestHandler(async (request, userID) => {
-  const events = request.body;
-  const db = new Database(new FirestoreDatabaseBackend(userID));
-  await db.putEvents(events);
-  // TODO: log to BigQuery
+  await putAndLogEvents(userID, request.body);
   return { status: 204 };
 });
 

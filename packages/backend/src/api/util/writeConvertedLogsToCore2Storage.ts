@@ -20,6 +20,7 @@ import {
 import { Database } from "@withorbit/store-shared";
 import * as backend from "../../backend";
 import { FirestoreDatabaseBackend } from "../../backend/2/firestoreDatabaseBackend";
+import { putAndLogEvents } from "../2/util/putAndLogEvents";
 
 export async function writeConvertedLogsToCore2Storage(
   logs: { id: ActionLogID; data: ActionLog }[],
@@ -90,6 +91,6 @@ export async function writeConvertedLogsToCore2Storage(
 
     migratedEvents.push(...migration.convertCore1ActionLog(log, id, prompt));
   }
-  const db = new Database(new FirestoreDatabaseBackend(userID));
-  await db.putEvents(migratedEvents);
+
+  await putAndLogEvents(userID, migratedEvents);
 }

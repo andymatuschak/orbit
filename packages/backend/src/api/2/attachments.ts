@@ -9,6 +9,7 @@ import * as attachments2 from "../../backend/2/attachments";
 import { FirestoreDatabaseBackend } from "../../backend/2/firestoreDatabaseBackend";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "../util/typedRouter";
+import { putAndLogEvents } from "./util/putAndLogEvents";
 
 export const getAttachment: TypedRouteHandler<
   OrbitAPI.Spec,
@@ -66,8 +67,8 @@ export const ingestAttachmentsFromURLs: TypedRouteHandler<
     }
   }
 
-  const db = new Database(new FirestoreDatabaseBackend(userID));
-  await db.putEvents(ingestEvents);
+  await putAndLogEvents(userID, ingestEvents);
+
   return {
     status: 204,
   };
