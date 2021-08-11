@@ -4,7 +4,7 @@ import {
   getIDForActionLogSync,
   PromptState,
 } from "@withorbit/core";
-import * as firebase from "firebase-admin";
+import firebase from "firebase-admin";
 import { getDatabase } from "./firebaseSupport/firebase";
 import {
   ActionLogDocument,

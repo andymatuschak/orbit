@@ -14,7 +14,7 @@ afterEach(async () => {
 
 test("round-trip request", async () => {
   await setupAuthToken("patch-events-round-trip");
-  const testEvents = fixtures.createTestTaskIngestEvents(500);
+  const testEvents = fixtures.createTestTaskIngestEvents(100);
   const { status: patchStatus, body: patchBody } = await fetchRoute(
     `/api/2/events`,
     {
@@ -28,7 +28,7 @@ test("round-trip request", async () => {
 
   await setupAuthToken("get-events-round-trip");
   const { status: getStatus, body: getBody } = await fetchRoute(
-    `/api/2/events?limit=500`,
+    `/api/2/events?limit=100`,
     {
       method: "GET",
       authorization: { token: "get-events-round-trip" },

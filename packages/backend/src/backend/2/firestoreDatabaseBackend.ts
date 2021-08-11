@@ -15,16 +15,16 @@ import {
   DatabaseEventQuery,
   DatabaseQueryPredicate,
 } from "@withorbit/store-shared";
-import { firestore } from "firebase-admin";
+import firebase from "firebase-admin";
 import { getDatabase } from "../firebaseSupport/firebase";
 import { compareOrderedIDs, OrderedID, OrderedIDGenerator } from "./orderedID";
 
 export class FirestoreDatabaseBackend implements DatabaseBackend {
   private readonly _userID: string;
-  private readonly _database: firestore.Firestore;
+  private readonly _database: firebase.firestore.Firestore;
   private readonly _orderedIDGenerator: OrderedIDGenerator;
 
-  constructor(userID: string, database: firestore.Firestore = getDatabase()) {
+  constructor(userID: string, database: firebase.firestore.Firestore = getDatabase()) {
     this._userID = userID;
     this._database = database;
     this._orderedIDGenerator = new OrderedIDGenerator();
@@ -80,7 +80,7 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
         entityTypeKeyPath,
         "==",
         query.entityType,
-      ) as firestore.Query<EntityDocumentBase<E>>,
+      ) as firebase.firestore.Query<EntityDocumentBase<E>>,
       getDocRefByObjectID: (id) =>
         this._getEntityRef<EntityDocumentBase<E>>(id),
       orderedIDKey: EntityDocumentKey.OrderedID,
@@ -140,8 +140,8 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
   }: {
     query: Q;
     orderedIDKey: DK;
-    baseFirestoreQuery: firestore.Query<D>;
-    getDocRefByObjectID: (id: OID) => firestore.DocumentReference<D>;
+    baseFirestoreQuery: firebase.firestore.Query<D>;
+    getDocRefByObjectID: (id: OID) => firebase.firestore.DocumentReference<D>;
     getDocKeyForQueryPredicate: (
       predicate: Exclude<Q["predicate"], undefined>,
     ) => DK;
@@ -165,7 +165,7 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
       );
     }
 
-    let docs: firestore.DocumentSnapshot<D>[];
+    let docs: firebase.firestore.DocumentSnapshot<D>[];
     // So long as there's no predicate, or the predicate is simple equality, we can arrange our indexes to support efficient query and ordering by OrderedID. But if it's a range predicate, we have to use an index based just on the predicate key, then do an in-memory sort, offset, and limit on the OrderedID. This makes paging quadratic in time cost.
     if (!query.predicate || query.predicate[1] === "=") {
       baseFirestoreQuery = baseFirestoreQuery.orderBy(orderedIDKey);
@@ -286,11 +286,11 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
   }
 
   private async _getByID<D extends EntityDocumentBase | EventDocument>(
-    collectionRef: firestore.CollectionReference<D>,
+    collectionRef: firebase.firestore.CollectionReference<D>,
     ids: string[],
     getAllImpl: (
-      refs: firestore.DocumentReference[],
-    ) => Promise<firestore.DocumentSnapshot[]>,
+      refs: firebase.firestore.DocumentReference[],
+    ) => Promise<firebase.firestore.DocumentSnapshot[]>,
   ): Promise<(D | null)[]> {
     const refs = ids.map((id) => collectionRef.doc(id));
     const eventSnapshots = await getAllImpl(refs);
@@ -305,25 +305,25 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
 
   private _getEventCollectionRef<
     E extends Event = Event,
-  >(): firestore.CollectionReference<EventDocument<E>> {
+  >(): firebase.firestore.CollectionReference<EventDocument<E>> {
     return this._getUserDocumentRef().collection(
       "events",
-    ) as firestore.CollectionReference<EventDocument<E>>;
+    ) as firebase.firestore.CollectionReference<EventDocument<E>>;
   }
 
   private _getEntityCollectionRef<
     D extends EntityDocumentBase,
-  >(): firestore.CollectionReference<D> {
+  >(): firebase.firestore.CollectionReference<D> {
     return this._getUserDocumentRef().collection(
       "entities",
-    ) as firestore.CollectionReference<D>;
+    ) as firebase.firestore.CollectionReference<D>;
   }
 
   private _getEventRef<E extends Event = Event>(
     eventID: EventID,
     collection = this._getEventCollectionRef(),
-  ): firestore.DocumentReference<EventDocument<E>> {
-    return collection.doc(eventID) as firestore.DocumentReference<
+  ): firebase.firestore.DocumentReference<EventDocument<E>> {
+    return collection.doc(eventID) as firebase.firestore.DocumentReference<
       EventDocument<E>
     >;
   }
@@ -331,8 +331,8 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
   private _getEntityRef<D extends EntityDocumentBase>(
     entityID: EntityID,
     collection = this._getEntityCollectionRef(),
-  ): firestore.DocumentReference<D> {
-    return collection.doc(entityID) as firestore.DocumentReference<D>;
+  ): firebase.firestore.DocumentReference<D> {
+    return collection.doc(entityID) as firebase.firestore.DocumentReference<D>;
   }
 }
 

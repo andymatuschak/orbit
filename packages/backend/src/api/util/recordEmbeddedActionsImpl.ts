@@ -4,12 +4,12 @@ import {
   Prompt,
   PromptID,
 } from "@withorbit/core";
-import * as functions from "firebase-functions";
+import functions from "firebase-functions";
 import * as backend from "../../backend";
 import { sharedLoggingService } from "../../logging";
 import { writeConvertedLogsToCore2Storage } from "./writeConvertedLogsToCore2Storage";
 
-interface RecordEmbeddedActionsArguments {
+export interface RecordEmbeddedActionsArguments {
   logs: ActionLog[];
   promptsByID: { [key: string]: Prompt };
 }

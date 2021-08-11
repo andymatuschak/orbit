@@ -1,4 +1,4 @@
-import * as mailjet from "node-mailjet";
+import mailjet from "node-mailjet";
 import serviceConfig from "../serviceConfig";
 import { EmailService, EmailSpec } from "./types";
 

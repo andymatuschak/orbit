@@ -10,7 +10,7 @@ import {
   PromptTaskID,
   reviewSession,
 } from "@withorbit/core";
-import firebase, * as admin from "firebase-admin";
+import firebase from "firebase-admin";
 import { getDatabase } from "./firebaseSupport/firebase";
 import {
   ActionLogDocument,
@@ -44,8 +44,8 @@ export function _getActiveTaskCountDelta(
 }
 
 async function fetchAllActionLogDocumentsForTask(
-  database: admin.firestore.Firestore,
-  transaction: admin.firestore.Transaction,
+  database: firebase.firestore.Firestore,
+  transaction: firebase.firestore.Transaction,
   userID: string,
   taskID: string,
 ): Promise<{ id: ActionLogID; log: ActionLogDocument }[]> {
@@ -193,7 +193,7 @@ export async function updatePromptStateCacheWithLog(
 
   // n.b. this active task count update operation is outside the transaction because the increment operation is itself transactional; we don't need to make the transaction retry if there's contention on the user metadata document.
   await getUserMetadataReference(db, userID).update({
-    activeTaskCount: admin.firestore.FieldValue.increment(
+    activeTaskCount: firebase.firestore.FieldValue.increment(
       _getActiveTaskCountDelta(
         result.oldPromptStateCache,
         result.newPromptStateCache,
@@ -214,7 +214,7 @@ export async function listPromptStates(
   ),
 ): Promise<Map<PromptTaskID, PromptState>> {
   const db = getDatabase();
-  let ref: admin.firestore.Query<PromptStateCache> =
+  let ref: firebase.firestore.Query<PromptStateCache> =
     getTaskStateCacheCollectionReference(db, userID);
   if ("dueBeforeTimestampMillis" in query) {
     ref = ref

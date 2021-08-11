@@ -1,4 +1,4 @@
-import * as firebase from "firebase-admin";
+import firebase from "firebase-admin";
 
 let _app: firebase.app.App | null = null;
 export function getApp(): firebase.app.App {

@@ -8,7 +8,7 @@ export default {
   input: "dist/index.js",
   output: {
     file: "dist/bundle.js",
-    format: "cjs",
+    format: "esm",
   },
   context: "this",
   moduleContext: "this",

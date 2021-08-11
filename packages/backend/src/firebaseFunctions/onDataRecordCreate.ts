@@ -1,4 +1,4 @@
-import * as functions from "firebase-functions";
+import functions from "firebase-functions";
 import { getIDForPrompt, Prompt } from "@withorbit/core";
 import { getPromptIDForFirebaseKey } from "../backend/firebaseSupport";
 import { sharedLoggingService } from "../logging";

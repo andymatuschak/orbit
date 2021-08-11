@@ -23,7 +23,7 @@ test("ingests URLs", async () => {
   ]);
 
   const blob = await client.getAttachment2(testID);
-  const savedBase64Data = new Buffer(await blob.arrayBuffer()).toString(
+  const savedBase64Data = Buffer.from(await blob.arrayBuffer()).toString(
     "base64",
   );
   expect(blob.type).toEqual(AttachmentMIMEType.PNG);
@@ -42,7 +42,7 @@ test("round-trips attachments", async () => {
     Buffer.from(testAttachmentBase64Data, "base64"),
   );
   const blob = await client.getAttachment2(testID);
-  const savedBase64Data = new Buffer(await blob.arrayBuffer()).toString(
+  const savedBase64Data = Buffer.from(await blob.arrayBuffer()).toString(
     "base64",
   );
   expect(blob.type).toEqual(AttachmentMIMEType.PNG);

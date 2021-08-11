@@ -1,4 +1,4 @@
-import * as admin from "firebase-admin";
+import admin from "firebase-admin";
 import { getIDForPrompt, Prompt, PromptID } from "@withorbit/core";
 import {
   getPromptReference,

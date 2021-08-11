@@ -1,6 +1,6 @@
 import * as dateFns from "date-fns";
 import express from "express";
-import * as functions from "firebase-functions";
+import functions from "firebase-functions";
 import { UserMetadata } from "../backend/firebaseSupport";
 import * as backend from "../backend";
 import serviceConfig from "../serviceConfig";

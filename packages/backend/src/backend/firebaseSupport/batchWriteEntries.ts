@@ -1,11 +1,11 @@
-import { firestore } from "firebase-admin";
+import firebase from "firebase-admin";
 
 const batchSize = 250;
 
 export default async function batchWriteEntries<Value>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  logEntries: (readonly [firestore.DocumentReference<Value>, Value])[],
-  db: firestore.Firestore,
+  logEntries: (readonly [firebase.firestore.DocumentReference<Value>, Value])[],
+  db: firebase.firestore.Firestore,
 ) {
   for (
     let batchBaseIndex = 0;

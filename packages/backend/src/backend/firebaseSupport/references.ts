@@ -1,5 +1,5 @@
 import { ActionLogID, Prompt, PromptID } from "@withorbit/core";
-import { firestore } from "firebase-admin";
+import firebase from "firebase-admin";
 import { ActionLogDocument } from "./actionLogDocument";
 import {
   getFirebaseKeyForCIDString,
@@ -9,64 +9,64 @@ import { PromptStateCache } from "./promptStateCache";
 import { UserMetadata } from "./userMetadata";
 
 function getPromptCollectionReference(
-  database: firestore.Firestore,
-): firestore.CollectionReference<Prompt> {
-  return database.collection("data") as firestore.CollectionReference<Prompt>;
+  database: firebase.firestore.Firestore,
+): firebase.firestore.CollectionReference<Prompt> {
+  return database.collection("data") as firebase.firestore.CollectionReference<Prompt>;
 }
 
 export function getUserMetadataReference(
-  database: firestore.Firestore,
+  database: firebase.firestore.Firestore,
   userID: string,
-): firestore.DocumentReference<UserMetadata> {
+): firebase.firestore.DocumentReference<UserMetadata> {
   return database.doc(
     `users/${userID}`,
-  ) as firestore.DocumentReference<UserMetadata>;
+  ) as firebase.firestore.DocumentReference<UserMetadata>;
 }
 
 export function getPromptReference(
-  database: firestore.Firestore,
+  database: firebase.firestore.Firestore,
   promptID: PromptID,
-): firestore.DocumentReference<Prompt> {
+): firebase.firestore.DocumentReference<Prompt> {
   const dataReference = getPromptCollectionReference(database);
   return dataReference.doc(
     getFirebaseKeyForCIDString(promptID),
-  ) as firestore.DocumentReference<Prompt>;
+  ) as firebase.firestore.DocumentReference<Prompt>;
 }
 
 export function getLogCollectionReference(
-  database: firestore.Firestore,
+  database: firebase.firestore.Firestore,
   userID: string,
-): firestore.CollectionReference<ActionLogDocument> {
+): firebase.firestore.CollectionReference<ActionLogDocument> {
   return database.collection(
     `users/${userID}/logs`,
-  ) as firestore.CollectionReference<ActionLogDocument>;
+  ) as firebase.firestore.CollectionReference<ActionLogDocument>;
 }
 
 export function getTaskStateCacheCollectionReference(
-  database: firestore.Firestore,
+  database: firebase.firestore.Firestore,
   userID: string,
-): firestore.CollectionReference<PromptStateCache> {
+): firebase.firestore.CollectionReference<PromptStateCache> {
   return database.collection(
     `users/${userID}/taskStates`,
-  ) as firestore.CollectionReference<PromptStateCache>;
+  ) as firebase.firestore.CollectionReference<PromptStateCache>;
 }
 
 export function getTaskStateCacheReference(
-  database: firestore.Firestore,
+  database: firebase.firestore.Firestore,
   userID: string,
   taskID: string,
-): firestore.DocumentReference<PromptStateCache> {
+): firebase.firestore.DocumentReference<PromptStateCache> {
   return getTaskStateCacheCollectionReference(database, userID).doc(
     getFirebaseKeyFromStringHash(taskID),
-  ) as firestore.DocumentReference<PromptStateCache>;
+  ) as firebase.firestore.DocumentReference<PromptStateCache>;
 }
 
 export function getActionLogIDReference(
-  database: firestore.Firestore,
+  database: firebase.firestore.Firestore,
   userID: string,
   actionLogID: ActionLogID,
-): firestore.DocumentReference<ActionLogDocument> {
+): firebase.firestore.DocumentReference<ActionLogDocument> {
   return getLogCollectionReference(database, userID).doc(
     getFirebaseKeyForCIDString(actionLogID),
-  ) as firestore.DocumentReference<ActionLogDocument>;
+  ) as firebase.firestore.DocumentReference<ActionLogDocument>;
 }
