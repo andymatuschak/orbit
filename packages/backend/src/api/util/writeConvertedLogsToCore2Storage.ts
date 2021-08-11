@@ -17,9 +17,7 @@ import {
   EventType,
   migration,
 } from "@withorbit/core2";
-import { Database } from "@withorbit/store-shared";
 import * as backend from "../../backend";
-import { FirestoreDatabaseBackend } from "../../backend/2/firestoreDatabaseBackend";
 import { putAndLogEvents } from "../2/util/putAndLogEvents";
 
 export async function writeConvertedLogsToCore2Storage(

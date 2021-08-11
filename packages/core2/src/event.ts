@@ -79,7 +79,8 @@ export interface TaskUpdateDeletedEvent
   isDeleted: boolean;
 }
 
-export interface TaskUpdateProvenanceEvent extends EventBase<EventType.TaskUpdateProvenanceEvent, Task> {
+export interface TaskUpdateProvenanceEvent
+  extends EventBase<EventType.TaskUpdateProvenanceEvent, Task> {
   provenance: TaskProvenance | null;
 }
 

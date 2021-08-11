@@ -4,9 +4,7 @@ import {
   EventType,
   generateUniqueID,
 } from "@withorbit/core2";
-import { Database } from "@withorbit/store-shared";
 import * as attachments2 from "../../backend/2/attachments";
-import { FirestoreDatabaseBackend } from "../../backend/2/firestoreDatabaseBackend";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "../util/typedRouter";
 import { putAndLogEvents } from "./util/putAndLogEvents";

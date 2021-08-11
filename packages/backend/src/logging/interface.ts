@@ -61,4 +61,4 @@ export type EventLog = {
   userID: string;
   event: Event;
   entity: Entity;
-}
+};

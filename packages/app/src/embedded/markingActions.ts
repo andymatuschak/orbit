@@ -6,7 +6,6 @@ import {
   Task,
   TaskContent,
   TaskContentType,
-  TaskIngestEvent,
   TaskProvenance,
   TaskRepetitionOutcome,
 } from "@withorbit/core2";

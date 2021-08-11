@@ -89,7 +89,7 @@ export function convertCore1ActionLog(
             };
           } else if (typeof newValue === "object") {
             return {
-            ...base,
+              ...base,
               type: EventType.TaskUpdateProvenanceEvent,
               provenance: convertCore1Provenance(newValue),
             };

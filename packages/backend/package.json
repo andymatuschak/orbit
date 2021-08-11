@@ -17,6 +17,7 @@
   },
   "license": "AGPL-3.0-or-later OR BUSL-1.1",
   "dependencies": {
+    "@aws-crypto/sha256-js": "^1.1.0",
     "@google-cloud/bigquery": "^5.5.0",
     "@google-cloud/pubsub": "^2.6.0",
     "@ipld/dag-json": "^4.0.0",
