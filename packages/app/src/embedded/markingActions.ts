@@ -8,7 +8,6 @@ import {
   TaskContentType,
   TaskIngestEvent,
   TaskProvenance,
-  TaskRepetitionEvent,
   TaskRepetitionOutcome,
 } from "@withorbit/core2";
 import { EmbeddedHostMetadata, ReviewItem } from "@withorbit/embedded-support";
@@ -48,34 +47,35 @@ export function getActionsRecordForMarking({
   const attachmentIDs = getAttachmentsInTaskContent(
     reviewItem.task.spec.content,
   );
-  // HACK: We don't emit ingest events for these attachments here, because we don't know their MIME types. Instead, /attachments/ingestFromURLs will store those events after it stores the corresponding attachments.
+  // HACK: We don't emit AttachmentIngestEvent attachments here, because we don't know their MIME types. Instead, /attachments/ingestFromURLs will store those events after it stores the corresponding attachments.
 
-  const isFirstReview =
-    reviewItem.task.componentStates[reviewItem.componentID]
-      .lastRepetitionTimestampMillis === null;
-  const ingestEvent: TaskIngestEvent | null = isFirstReview
-    ? {
+  return {
+    events: [
+      /*
+       We emit task ingest events even when emitting markings for retry events to avoid a potential race condition in this case:
+       1. User completes a review area, forgetting at least one prompt, but doesn't sign in.
+       2. User retries forgotten prompt in subsequent review area.
+       3. User signs in.
+       4. Events from review area #2 arrive at server before those of #1. (now we have a repetition before an ingest: no good)
+       */
+      {
         type: EventType.TaskIngest,
         id: generateUniqueID(),
         entityID: reviewItem.task.id,
         timestampMillis: markingTimestampMillis,
         provenance: createProvenance(hostMetadata),
         spec: reviewItem.task.spec,
-      }
-    : null;
-
-  const repetitionEvent: TaskRepetitionEvent = {
-    type: EventType.TaskRepetition,
-    id: generateUniqueID(),
-    entityID: reviewItem.task.id,
-    timestampMillis: markingTimestampMillis,
-    componentID: reviewItem.componentID,
-    outcome,
-    reviewSessionID: `embedded/${sessionStartTimestampMillis}`,
-  };
-
-  return {
-    events: ingestEvent ? [ingestEvent, repetitionEvent] : [repetitionEvent],
+      },
+      {
+        type: EventType.TaskRepetition,
+        id: generateUniqueID(),
+        entityID: reviewItem.task.id,
+        timestampMillis: markingTimestampMillis,
+        componentID: reviewItem.componentID,
+        outcome,
+        reviewSessionID: `embedded/${sessionStartTimestampMillis}`,
+      },
+    ],
     ingestedAttachmentEntries: attachmentIDs.map((id) => {
       const url = getURLForAttachmentID(id);
       if (!url) {
