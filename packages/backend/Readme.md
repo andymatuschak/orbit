@@ -6,7 +6,7 @@ It's currently built for deployment on Firebase Cloud Functions. The entry point
 
 To that end, most of the important elements are implemented as a normal REST API, routed via Express, in `/api`. Those endpoint implementations don't know about Firebase or GCP and call into service objects which encapsulate the cloud provider API calls.
 
-## Development
+## Usage
 
 * To build the backend: `yarn build`
 * To run the local backend emulator: `yarn dev`
@@ -36,6 +36,13 @@ Once you've set your configuration parameters, it's convenient to store them loc
 
 ```
 firebase functions:config:get > .runtimeconfig.json
+```
+
+## Development
+
+Exporting a BigQuery table's schema:
+```
+bq show --schema --format=prettyjson logs.TABLE_NAME > bigQuerySchemas/TABLE_NAME.json
 ```
 
 ---

@@ -1,9 +1,20 @@
-import {Event} from "@withorbit/core2";
+import { Event } from "@withorbit/core2";
 import { Database } from "@withorbit/store-shared";
 import { FirestoreDatabaseBackend } from "../../../backend/2/firestoreDatabaseBackend";
+import { sharedLoggingService } from "../../../logging";
 
-export async function putAndLogEvents(userID: string, events: Event[]): Promise<void> {
+export async function putAndLogEvents(
+  userID: string,
+  events: Event[],
+): Promise<void> {
   const db = new Database(new FirestoreDatabaseBackend(userID));
-  await db.putEvents(events);
-  // TODO: log to BigQuery
+  const eventRecords = await db.putEvents(events);
+
+  for (const { event, entity } of eventRecords) {
+    sharedLoggingService.logEvent({
+      userID,
+      event,
+      entity,
+    });
+  }
 }

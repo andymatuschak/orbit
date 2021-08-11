@@ -1,0 +1,37 @@
+[
+  {
+    "mode": "REQUIRED",
+    "name": "userID",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "id",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "entityID",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "type",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "timestamp",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "dataJSON",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "entityJSON",
+    "type": "STRING"
+  }
+]

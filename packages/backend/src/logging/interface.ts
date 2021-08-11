@@ -1,4 +1,5 @@
 import { ActionLog, Prompt, PromptID, PromptState } from "@withorbit/core";
+import { Entity, Event } from "@withorbit/core2";
 import { EmailSpec } from "../email/types";
 
 export interface LoggingService {
@@ -7,6 +8,7 @@ export interface LoggingService {
   logPageView(log: PageViewLog): Promise<unknown>;
   logSessionNotification(log: SessionNotificationLog): Promise<unknown>;
   logUserEvent(log: UserEventLog): Promise<unknown>;
+  logEvent(log: EventLog): Promise<unknown>;
 }
 
 export type UserEventLogBase = {
@@ -54,3 +56,9 @@ export type ActionLogLog = {
   actionLog: ActionLog;
   newTaskState: PromptState;
 };
+
+export type EventLog = {
+  userID: string;
+  event: Event;
+  entity: Entity;
+}

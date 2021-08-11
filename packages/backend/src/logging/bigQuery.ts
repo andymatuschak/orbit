@@ -6,12 +6,14 @@ import serviceConfig from "../serviceConfig";
 import {
   ActionLogLog,
   DataRecordLog,
+  EventLog,
   LoggingService,
   PageViewLog,
   SessionNotificationLog,
   UserEventLog,
   UserEventName,
 } from "./interface";
+import { EntityID, EventID, EventType } from "@withorbit/core2";
 
 let _bigQuery: BigQuery.BigQuery | null = null;
 let _logsDataset: BigQuery.Dataset | null = null;
@@ -87,6 +89,18 @@ async function logEvent(
   tableName: "dataRecords",
   data: Omit<WithBigQueryTimestamp<DataRecordLog>, "record"> & {
     dataJSON: string;
+  },
+): Promise<unknown>;
+async function logEvent(
+  tableName: "events",
+  data: {
+    dataJSON: string;
+    entityJSON: string;
+    entityID: EntityID;
+    type: EventType;
+    id: EventID;
+    timestamp: BigQueryTimestamp;
+    userID: string;
   },
 ): Promise<unknown>;
 async function logEvent<T>(tableName: string, data: T): Promise<unknown> {
@@ -179,6 +193,19 @@ export const bigQueryLoggingService: LoggingService = {
       ...rest,
       timestamp: createBigQueryTimestamp(log.timestamp),
       dataJSON: JSON.stringify(record),
+    });
+  },
+
+  async logEvent({ userID, event, entity }: EventLog): Promise<unknown> {
+    const { timestampMillis, entityID, id, type, ...rest } = event;
+    return logEvent("events", {
+      userID,
+      entityJSON: JSON.stringify(entity),
+      dataJSON: JSON.stringify(rest),
+      timestamp: createBigQueryTimestamp(timestampMillis),
+      entityID,
+      id,
+      type,
     });
   },
 };
