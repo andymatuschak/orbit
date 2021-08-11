@@ -1,4 +1,4 @@
-import "isomorphic-fetch";
+import fetch from "node-fetch";
 
 const HOST = "http://localhost:5001/metabook-system/us-central1";
 
