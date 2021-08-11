@@ -135,3 +135,36 @@ test("convert delete log", () => {
     isDeleted: true,
   });
 });
+
+test("convert provenance update log", () => {
+  const log: PromptUpdateMetadataActionLog = {
+    actionLogType: updateMetadataActionLogType,
+    timestampMillis: 500,
+    taskID: testPromptTaskID,
+    parentActionLogIDs: [],
+    updates: {
+      provenance: {
+        provenanceType: PromptProvenanceType.Web,
+        siteName: "site name",
+        url: "https://test.com",
+        colorPaletteName: "yellow",
+        externalID: "test id",
+        modificationTimestampMillis: null,
+        title: "test title",
+      },
+    },
+  };
+  const outputLogs = convertCore1ActionLog(
+    log,
+    "logID" as ActionLogID,
+    testClozePrompt,
+  );
+  expect(outputLogs.length).toEqual(1);
+  expect(outputLogs[0]).toMatchObject({
+    type: EventType.TaskUpdateProvenanceEvent,
+    provenance: {
+      title: "test title",
+      identifier: "test id",
+    },
+  });
+});

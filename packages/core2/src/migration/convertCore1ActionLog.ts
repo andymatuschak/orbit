@@ -80,6 +80,22 @@ export function convertCore1ActionLog(
             type: EventType.TaskUpdateDeleted,
             isDeleted: newValue,
           };
+        } else if (key === "provenance") {
+          if (newValue === null) {
+            return {
+              ...base,
+              type: EventType.TaskUpdateProvenanceEvent,
+              provenance: null,
+            };
+          } else if (typeof newValue === "object") {
+            return {
+            ...base,
+              type: EventType.TaskUpdateProvenanceEvent,
+              provenance: convertCore1Provenance(newValue),
+            };
+          } else {
+            throw new Error(`Unexpected promptProvenance value ${newValue}`);
+          }
         } else {
           // TODO: implement log type and migration for changes to provenance (or just hack around it--I'm the only user with such logs)
           throw new Error(

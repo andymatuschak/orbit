@@ -11,6 +11,7 @@ export type Event =
   | TaskRepetitionEvent
   | TaskRescheduleEvent
   | TaskUpdateDeletedEvent
+  | TaskUpdateProvenanceEvent
   | AttachmentIngestEvent;
 
 export enum EventType {
@@ -18,6 +19,7 @@ export enum EventType {
   TaskRepetition = "taskRepetition",
   TaskReschedule = "taskReschedule",
   TaskUpdateDeleted = "taskUpdatedDeleted",
+  TaskUpdateProvenanceEvent = "taskUpdateProvenanceEvent",
 
   AttachmentIngest = "attachmentIngest",
 }
@@ -77,12 +79,16 @@ export interface TaskUpdateDeletedEvent
   isDeleted: boolean;
 }
 
+export interface TaskUpdateProvenanceEvent extends EventBase<EventType.TaskUpdateProvenanceEvent, Task> {
+  provenance: TaskProvenance | null;
+}
+
 export enum TaskRepetitionOutcome {
   Remembered = "remembered",
   Forgotten = "forgotten",
 }
 
-// TODO: update provenance, update metadata
+// TODO: update metadata
 
 // Attachment events
 // =================

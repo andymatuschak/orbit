@@ -945,6 +945,46 @@
             ],
             "type": "object"
         },
+        "TaskUpdateProvenanceEvent": {
+            "additionalProperties": false,
+            "properties": {
+                "entityID": {
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                    "type": "string"
+                },
+                "id": {
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                    "type": "string"
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/TaskProvenance_1"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "timestampMillis": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "taskUpdateProvenanceEvent"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "entityID",
+                "id",
+                "provenance",
+                "timestampMillis",
+                "type"
+            ],
+            "type": "object"
+        },
         "UpdateMetadataActionLog": {
             "additionalProperties": false,
             "properties": {
@@ -1224,6 +1264,9 @@
                                                 "$ref": "#/definitions/TaskUpdateDeletedEvent"
                                             },
                                             {
+                                                "$ref": "#/definitions/TaskUpdateProvenanceEvent"
+                                            },
+                                            {
                                                 "$ref": "#/definitions/AttachmentIngestEvent"
                                             }
                                         ]
@@ -1267,6 +1310,9 @@
                                     },
                                     {
                                         "$ref": "#/definitions/TaskUpdateDeletedEvent"
+                                    },
+                                    {
+                                        "$ref": "#/definitions/TaskUpdateProvenanceEvent"
                                     },
                                     {
                                         "$ref": "#/definitions/AttachmentIngestEvent"

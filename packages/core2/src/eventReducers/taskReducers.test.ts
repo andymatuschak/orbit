@@ -13,6 +13,7 @@ import {
   TaskRepetitionOutcome,
   TaskRescheduleEvent,
   TaskUpdateDeletedEvent,
+  TaskUpdateProvenanceEvent,
 } from "../event";
 import { eventReducer } from "../eventReducer";
 
@@ -183,5 +184,27 @@ describe("updateDeleted reducer", () => {
   test("reschedules", () => {
     const task = eventReducer(initialTask, testEvent);
     expect(task.isDeleted).toBe(true);
+  });
+});
+
+describe("updateProvenance reducer", () => {
+  const testEvent: TaskUpdateProvenanceEvent = {
+    id: "y" as EventID,
+    type: EventType.TaskUpdateProvenanceEvent,
+    entityID: testIngestEvent.entityID,
+    timestampMillis: 1500,
+    provenance: {
+      identifier: "source ID",
+      colorPaletteName: "orange",
+    },
+  };
+
+  test("fails without a base state", () => {
+    expect(() => eventReducer(null, testEvent)).toThrow();
+  });
+
+  test("updates provenance", () => {
+    const task = eventReducer(initialTask, testEvent);
+    expect(task.provenance).toEqual(testEvent.provenance);
   });
 });
