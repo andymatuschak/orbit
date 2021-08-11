@@ -1,5 +1,4 @@
-import { API, APIValidator } from "@withorbit/api";
-import { APIValidatorError } from "@withorbit/api/dist/validation/apiValidator";
+import { API, APIValidator, APIValidatorError } from "@withorbit/api";
 import { APIConfig } from "./apiConfig";
 import * as Network from "./util/fetch";
 

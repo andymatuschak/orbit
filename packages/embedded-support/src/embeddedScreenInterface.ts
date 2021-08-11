@@ -1,29 +1,10 @@
-import {
-  clozePromptType,
-  ColorPaletteName,
-  qaPromptType,
-} from "@withorbit/core";
-
-export interface EmbeddedPromptField {
-  contents: string;
-  attachmentURLs?: string[];
-}
-
-export interface EmbeddedQAPrompt {
-  type: typeof qaPromptType;
-  question: EmbeddedPromptField;
-  answer: EmbeddedPromptField;
-}
-
-export interface EmbeddedClozePrompt {
-  type: typeof clozePromptType;
-  body: EmbeddedPromptField;
-}
-
-export type EmbeddedItem = EmbeddedQAPrompt | EmbeddedClozePrompt;
+import { ColorPaletteName } from "@withorbit/core";
+import { ReviewItem } from "./reviewItem";
 
 export interface EmbeddedScreenConfiguration {
-  embeddedItems: EmbeddedItem[];
+  reviewItems: ReviewItem[];
+  // Less than ideal: here AttachmentIDs are keys of a plain old object, but we can't express that in the type (TypeScript will only allow strings and numbers to be keys of indexed types). Normally we'd deal with this by using a Map, but this structure needs to be serialized to/from JSON.
+  attachmentIDsToURLs: { [AttachmentID: string]: string };
   embeddedHostMetadata: EmbeddedHostMetadata;
   sessionStartTimestampMillis: number;
   isDebug?: boolean;

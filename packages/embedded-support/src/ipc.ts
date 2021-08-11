@@ -1,4 +1,4 @@
-import { PromptState, PromptTaskID } from "@withorbit/core";
+import { Task } from "@withorbit/core2";
 import { ReviewItem } from "./reviewItem";
 
 // Messages from host to embedded:
@@ -20,24 +20,18 @@ export interface EmbeddedHostState {
 
 export interface EmbeddedScreenRecord {
   reviewItems: ReviewItem[];
+  // Less than ideal: here AttachmentIDs are keys of a plain old object, but we can't express that in the type (TypeScript will only allow strings and numbers to be keys of indexed types). Normally we'd deal with this by using a Map, but this structure needs to be serialized to/from JSON.
+  attachmentIDsToURLs: { [AttachmentID: string]: string };
 }
 
 // Messages from embedded to host:
 //================================
 
 export enum EmbeddedScreenEventType {
-  ScreenRecordResolved = "screenRecordResolved",
-  PromptStateUpdate = "promptStateUpdate",
+  TaskUpdate = "taskUpdate",
 }
 
-// This message is sent to the host when the embedded screen resolves all its review items.
-export interface EmbeddedScreenRecordResolvedEvent {
-  type: typeof EmbeddedScreenEventType.ScreenRecordResolved;
-  record: EmbeddedScreenRecord;
-}
-
-export interface EmbeddedScreenPromptStateUpdateEvent {
-  type: typeof EmbeddedScreenEventType.PromptStateUpdate;
-  promptTaskID: PromptTaskID;
-  promptState: PromptState;
+export interface EmbeddedScreenTaskUpdateEvent {
+  type: typeof EmbeddedScreenEventType.TaskUpdate;
+  task: Task;
 }

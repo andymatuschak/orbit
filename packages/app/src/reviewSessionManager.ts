@@ -1,8 +1,4 @@
-import {
-  ActionLogID,
-  applyActionLogToPromptState,
-  PromptActionLog,
-} from "@withorbit/core";
+import { EventForEntity, eventReducer, Task } from "@withorbit/core2";
 import { ReviewItem } from "@withorbit/embedded-support";
 import { ReviewAreaItem } from "@withorbit/ui";
 import { useMemo, useState } from "react";
@@ -17,7 +13,7 @@ export interface ReviewSessionManagerState {
 
 export interface ReviewSessionManagerActions {
   markCurrentItem(
-    logEntries: { log: PromptActionLog; id: ActionLogID }[],
+    events: EventForEntity<Task>[],
     continuation?: (newState: ReviewSessionManagerState) => void,
   ): void;
 
@@ -33,7 +29,7 @@ function findSessionItemIndex(
   sessionItems: ReviewItem[],
 ): number {
   const index = sessionItems.findIndex(
-    (sessionItem) => sessionItem.promptTaskID === reviewAreaItem.promptTaskID,
+    (sessionItem) => sessionItem.task.id === reviewAreaItem.taskID,
   );
 
   if (index === -1) {
@@ -51,7 +47,7 @@ function findSessionItemIndex(
 
 function reviewSessionManagerMarkCurrentItem(
   state: ReviewSessionManagerState,
-  logEntries: { log: PromptActionLog; id: ActionLogID }[],
+  events: EventForEntity<Task>[],
 ): ReviewSessionManagerState {
   if (
     state.currentSessionItemIndex === null ||
@@ -62,38 +58,17 @@ function reviewSessionManagerMarkCurrentItem(
     );
   }
 
-  const currentReviewItem = state.sessionItems[state.currentSessionItemIndex];
-
-  let promptState = currentReviewItem.promptState;
-  for (const { log, id } of logEntries) {
-    if (log.taskID !== currentReviewItem.promptTaskID) {
-      throw new Error(
-        `Attempting to record log for ${log.taskID}, but current prompt is ${currentReviewItem.promptTaskID}!`,
-      );
-    }
-
-    const newPromptState = applyActionLogToPromptState({
-      promptActionLog: log,
-      actionLogID: id,
-      basePromptState: promptState,
-      schedule: "default",
-    });
-    if (newPromptState instanceof Error) {
-      throw new Error(
-        `Error applying ${JSON.stringify(log, null, "\t")} to ${JSON.stringify(
-          promptState,
-        )}: ${newPromptState}`,
-      );
-    }
-    promptState = newPromptState;
-  }
-
+  // Update the Task in our session items list with the events.
   const newSessionItems = [...state.sessionItems];
   newSessionItems[state.currentSessionItemIndex] = {
     ...newSessionItems[state.currentSessionItemIndex],
-    promptState,
+    task: events.reduce(
+      (task, event) => eventReducer(task, event),
+      state.sessionItems[state.currentSessionItemIndex].task,
+    ),
   };
 
+  // Advance to the item in the review area queue.
   let newSessionItemIndex: number;
   const newReviewAreaQueueIndex = state.currentReviewAreaQueueIndex + 1;
   if (newReviewAreaQueueIndex < state.reviewAreaQueue.length) {
@@ -192,10 +167,8 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
 
   const reviewSessionManagerActions: ReviewSessionManagerActions = useMemo(
     () => ({
-      markCurrentItem: (logEntries, continuation) => {
-        setState((state) =>
-          reviewSessionManagerMarkCurrentItem(state, logEntries),
-        );
+      markCurrentItem: (events, continuation) => {
+        setState((state) => reviewSessionManagerMarkCurrentItem(state, events));
         // This is a pretty heinous abuse. Clients need to access the new state, so we invoke the reducer again but return its input (making it a no-op) to call the continuation with the correct context.
         if (continuation) {
           setState((newState) => {

@@ -1,5 +1,9 @@
-import { ColorPaletteName, mainTaskComponentID } from "@withorbit/core2";
-import { testQASpec } from "@withorbit/sample-data/src/core2";
+import {
+  ColorPaletteName,
+  generateUniqueID,
+  mainTaskComponentID,
+} from "@withorbit/core2";
+import { core2 as fixtures } from "@withorbit/sample-data";
 import { ReviewAreaItem } from "../../reviewAreaItem";
 import * as styles from "../../styles";
 
@@ -10,6 +14,7 @@ export function generateReviewItem(
   colorPaletteName: ColorPaletteName,
 ): ReviewAreaItem {
   return {
+    taskID: generateUniqueID(),
     colorPalette: styles.colors.palettes[colorPaletteName],
     provenance: {
       identifier: "Web",
@@ -18,8 +23,7 @@ export function generateReviewItem(
     },
     componentID: mainTaskComponentID,
     spec: {
-      ...testQASpec,
-      },
+      ...fixtures.testQASpec,
     },
   };
 }

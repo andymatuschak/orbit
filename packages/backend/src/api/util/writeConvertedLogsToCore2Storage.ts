@@ -14,7 +14,6 @@ import {
 import {
   AttachmentIngestEvent,
   Event,
-  EventID,
   EventType,
   migration,
 } from "@withorbit/core2";
@@ -69,21 +68,19 @@ export async function writeConvertedLogsToCore2Storage(
         case applicationPromptType:
           throw new Error("Unsupported migration of application prompt");
       }
-      await backend.attachments.migrateAttachmentIDs(attachmentIDs, userID);
+      await backend.attachments.migrateAttachmentIDs(userID, attachmentIDs);
 
       for (const attachmentID of attachmentIDs) {
         const mimeType = await backend.attachments.getAttachmentMIMEType(
           attachmentID,
-          userID,
-          "core",
         );
         if (!mimeType) {
           throw new Error(`Unexpected missing attachment: ${attachmentID}`);
         }
         const attachmentIngestEvent: AttachmentIngestEvent = {
           type: EventType.AttachmentIngest,
-          id: `${id}_${attachmentID}` as string as EventID,
-          entityID: attachmentID,
+          id: migration.convertCore1ID(`${id}_${attachmentID}`),
+          entityID: migration.convertCore1ID(attachmentID),
           timestampMillis: log.timestampMillis,
           mimeType,
         };

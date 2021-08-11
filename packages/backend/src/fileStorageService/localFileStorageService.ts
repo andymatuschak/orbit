@@ -83,11 +83,11 @@ export class LocalFileStorageService implements FileStorageService {
     if (!(isRunningInEmulator || isRunningInTest)) {
       throw new Error("This implementation is only valid in test environments");
     }
-    return path.join(this.basePath, subpath.replace("/", "_"));
+    return path.join(this.basePath, subpath.replace("/", "+"));
   }
 
   private _getMIMETypeMappingPath(): string {
-    return this._getStorePath(".mimeTypeMapping");
+    return this._getStorePath("+mimeTypeMapping");
   }
 
   private async _writeMIMETypeMapping(

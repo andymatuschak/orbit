@@ -126,6 +126,9 @@ describe("repetition reducer", () => {
     for (const [id, componentState] of Object.entries(task.componentStates)) {
       if (id === firstComponentID) {
         expect(componentState).not.toEqual(initialTask.componentStates[id]);
+        expect(componentState.lastRepetitionTimestampMillis).toEqual(
+          repetitionEvent.timestampMillis,
+        );
       } else {
         expect(componentState).toEqual(initialTask.componentStates[id]);
       }

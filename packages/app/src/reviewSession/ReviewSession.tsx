@@ -1,15 +1,13 @@
-import OrbitAPIClient from "@withorbit/api-client";
+import { reviewSession } from "@withorbit/core";
 import {
-  ActionLogID,
-  getActionLogFromPromptActionLog,
-  getIDForActionLogSync,
-  getNextTaskParameters,
-  PromptActionLog,
-  PromptProvenanceType,
-  PromptRepetitionOutcome,
-  promptTypeSupportsRetry,
-  repetitionActionLogType,
-} from "@withorbit/core";
+  defaultSpacedRepetitionSchedulerConfiguration,
+  EventForEntity,
+  EventType,
+  generateUniqueID,
+  Task,
+  TaskRepetitionEvent,
+  TaskRepetitionOutcome,
+} from "@withorbit/core2";
 import { ReviewItem } from "@withorbit/embedded-support";
 import {
   ReviewArea,
@@ -22,22 +20,21 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import serviceConfig from "../../serviceConfig";
 import { AuthenticationClient } from "../authentication";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
 } from "../authentication/authContext";
-import DatabaseManager from "../model/databaseManager";
 import { DatabaseManager as DatabaseManager2 } from "../model2/databaseManager";
 import { ReviewSessionContainer } from "../ReviewSessionContainer";
 import { useReviewSessionManager } from "../reviewSessionManager";
+import { useAPIClient } from "../util/useAPIClient";
 
 export function useDatabaseManager(
   authenticationClient: AuthenticationClient,
-): DatabaseManager | null {
+): DatabaseManager2 | null {
   const [databaseManager, setDatabaseManager] =
-    useState<DatabaseManager | null>(null);
+    useState<DatabaseManager2 | null>(null);
 
   // Close the database on unmount.
   useEffect(() => {
@@ -49,25 +46,12 @@ export function useDatabaseManager(
   // Once we're signed in, create the database manager.
   // TODO handle switching users etc
   const userRecord = useCurrentUserRecord(authenticationClient);
+  const apiClient = useAPIClient(authenticationClient);
   useEffect(() => {
     if (userRecord) {
-      // TODO: extract, share with EmbeddedSession
-      const apiClient = new OrbitAPIClient(
-        async () => ({
-          idToken: (await authenticationClient.getCurrentIDToken()) as string,
-        }),
-        { baseURL: serviceConfig.httpsAPIBaseURLString },
-      );
-
-      if (__DEV__) {
-        setDatabaseManager(
-          new DatabaseManager2(apiClient) as unknown as DatabaseManager,
-        );
-      } else {
-        setDatabaseManager(new DatabaseManager(apiClient));
-      }
+      setDatabaseManager(new DatabaseManager2(apiClient));
     }
-  }, [userRecord, authenticationClient]);
+  }, [userRecord, apiClient]);
 
   return databaseManager;
 }
@@ -78,47 +62,37 @@ function persistMarking({
   outcome,
   reviewSessionStartTimestampMillis,
 }: {
-  databaseManager: DatabaseManager;
+  databaseManager: DatabaseManager2;
   reviewItem: ReviewItem;
-  outcome: PromptRepetitionOutcome;
+  outcome: TaskRepetitionOutcome;
   reviewSessionStartTimestampMillis: number;
-}): { log: PromptActionLog; id: ActionLogID }[] {
+}): EventForEntity<Task>[] {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
-  const promptActionLog = {
-    actionLogType: repetitionActionLogType,
-    parentActionLogIDs: reviewItem.promptState?.headActionLogIDs ?? [],
-    taskID: reviewItem.promptTaskID,
+  const event: TaskRepetitionEvent = {
+    type: EventType.TaskRepetition,
+    id: generateUniqueID(),
+    entityID: reviewItem.task.id,
+    reviewSessionID: `review/${Platform.OS}/${reviewSessionStartTimestampMillis}`,
+    componentID: reviewItem.componentID,
     outcome: outcome,
-    context: `review/${Platform.OS}/${reviewSessionStartTimestampMillis}`,
     timestampMillis: Date.now(),
-    taskParameters: getNextTaskParameters(
-      reviewItem.prompt,
-      reviewItem.promptState?.lastReviewTaskParameters ?? null,
-    ),
   } as const;
 
   databaseManager
-    .recordPromptActionLogs([promptActionLog])
+    .recordEvents([event])
     .then(() => {
-      console.log("[Performance] Log committed to server", Date.now() / 1000.0);
+      console.log("[Performance] Log written", Date.now() / 1000.0);
     })
     .catch((error) => {
-      console.error("Couldn't commit", reviewItem.prompt, error);
+      console.error("Couldn't commit", reviewItem.task.id, error);
     });
 
-  return [
-    {
-      log: promptActionLog,
-      id: getIDForActionLogSync(
-        getActionLogFromPromptActionLog(promptActionLog),
-      ),
-    },
-  ];
+  return [event];
 }
 
 function useReviewItemQueue(
-  databaseManager: DatabaseManager | null,
+  databaseManager: DatabaseManager2 | null,
 ): ReviewItem[] | null {
   const [queue, setQueue] = useState<ReviewItem[] | null>(null);
   useEffect(() => {
@@ -140,40 +114,32 @@ function useReviewItemQueue(
 export function getColorPaletteForReviewItem(
   reviewItem: ReviewItem,
 ): styles.colors.ColorPalette {
-  if (reviewItem.promptState) {
-    const provenance = reviewItem.promptState.taskMetadata.provenance;
-    if (
-      provenance &&
-      provenance.provenanceType === PromptProvenanceType.Web &&
-      provenance.colorPaletteName &&
-      styles.colors.palettes[provenance.colorPaletteName]
-    ) {
-      return styles.colors.palettes[provenance.colorPaletteName];
-    }
+  const { provenance } = reviewItem.task;
+  if (
+    provenance?.colorPaletteName &&
+    styles.colors.palettes[provenance.colorPaletteName]
+  ) {
+    return styles.colors.palettes[provenance.colorPaletteName];
+  } else {
+    const taskComponentState =
+      reviewItem.task.componentStates[reviewItem.componentID];
+    const colorNames = styles.colors.orderedPaletteNames;
+    const colorName =
+      colorNames[
+        taskComponentState.createdAtTimestampMillis % colorNames.length
+      ];
+    return styles.colors.palettes[colorName];
   }
-
-  const colorNames = styles.colors.orderedPaletteNames;
-  const colorName =
-    colorNames[
-      (reviewItem.promptState?.lastReviewTimestampMillis ?? 0) %
-        colorNames.length
-    ];
-  return styles.colors.palettes[colorName];
 }
 
 function getReviewAreaItemsFromReviewItems(
   reviewItems: ReviewItem[],
 ): ReviewAreaItem[] {
   return reviewItems.map((item) => ({
-    promptTaskID: item.promptTaskID,
-    prompt: item.prompt,
-    promptParameters: item.promptParameters,
-    taskParameters: getNextTaskParameters(
-      item.prompt,
-      item.promptState?.lastReviewTaskParameters ?? null,
-    ),
-    provenance: item.promptState?.taskMetadata.provenance ?? null,
-    attachmentResolutionMap: item.attachmentResolutionMap,
+    taskID: item.task.id,
+    spec: item.task.spec,
+    componentID: item.componentID,
+    provenance: item.task.provenance,
     colorPalette: getColorPaletteForReviewItem(item),
   }));
 }
@@ -183,7 +149,7 @@ export default function ReviewSession() {
   const reviewSessionStartTimestampMillis = useRef(Date.now());
 
   const [pendingOutcome, setPendingOutcome] =
-    useState<PromptRepetitionOutcome | null>(null);
+    useState<TaskRepetitionOutcome | null>(null);
 
   const {
     sessionItems,
@@ -223,21 +189,26 @@ export default function ReviewSession() {
     if (currentSessionItemIndex === null) {
       throw new Error("onMark called with no valid current item index");
     }
-    const logs = persistMarking({
+    const events = persistMarking({
       databaseManager: databaseManager!,
       reviewItem: sessionItems[currentSessionItemIndex],
       outcome: markingRecord.outcome,
       reviewSessionStartTimestampMillis:
         reviewSessionStartTimestampMillis.current,
     });
-    reviewSessionManager.markCurrentItem(logs, (newState) => {
+    reviewSessionManager.markCurrentItem(events, (newState) => {
       // Refill queue with items to retry if we're at the end.
       if (
         newState.currentReviewAreaQueueIndex !== null &&
         newState.currentReviewAreaQueueIndex >= newState.reviewAreaQueue.length
       ) {
+        const nowDueThreshold = reviewSession.getFuzzyDueTimestampThreshold(
+          Date.now(),
+        );
         const itemsToRetry = newState.sessionItems.filter(
-          (item) => !!item.promptState?.needsRetry,
+          (item) =>
+            item.task.componentStates[item.componentID].dueTimestampMillis <=
+            nowDueThreshold,
         );
         console.log("Pushing items to retry", itemsToRetry);
         reviewSessionManager.pushReviewAreaQueueItems(
@@ -254,6 +225,7 @@ export default function ReviewSession() {
     >
       {({ containerSize }) => {
         if (
+          databaseManager &&
           currentReviewAreaQueueIndex !== null &&
           currentSessionItemIndex !== null &&
           currentReviewAreaQueueIndex < reviewAreaQueue.length
@@ -264,13 +236,10 @@ export default function ReviewSession() {
                 containerWidth={containerSize.width}
                 containerHeight={containerSize.height}
                 items={sessionItems.map((item, index) => ({
-                  promptState: item.promptState,
+                  component: item.task.componentStates[item.componentID],
                   isPendingForSession:
                     index >= currentReviewAreaQueueIndex ||
-                    !!item.promptState?.needsRetry,
-                  supportsRetry: promptTypeSupportsRetry(
-                    item.prompt.promptType,
-                  ),
+                    itemIsStillDue(item),
                 }))}
                 currentItemIndex={currentSessionItemIndex}
                 pendingOutcome={pendingOutcome}
@@ -278,12 +247,16 @@ export default function ReviewSession() {
                 showLegend={true}
                 colorMode="bicolor"
                 colorPalette={currentColorPalette}
+                config={defaultSpacedRepetitionSchedulerConfiguration}
               />
               <ReviewArea
                 items={reviewAreaQueue}
                 currentItemIndex={currentReviewAreaQueueIndex}
                 onMark={(markingRecord) => onMark(markingRecord)}
                 onPendingOutcomeChange={setPendingOutcome}
+                getURLForAttachmentID={(id) =>
+                  databaseManager.getURLForAttachmentID(id)
+                }
                 insetBottom={
                   // So long as the container isn't tall enough to be centered, we consume the bottom insets in the button bar's padding, extending the background down through the safe area.
                   containerSize.height === styles.layout.maximumContentHeight
@@ -311,5 +284,15 @@ export default function ReviewSession() {
         }
       }}
     </ReviewSessionContainer>
+  );
+}
+
+function itemIsStillDue(item: ReviewItem): boolean {
+  const nowDueThreshold = reviewSession.getFuzzyDueTimestampThreshold(
+    Date.now(),
+  );
+  return (
+    item.task.componentStates[item.componentID].dueTimestampMillis <=
+    nowDueThreshold
   );
 }

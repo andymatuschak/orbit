@@ -22,6 +22,7 @@ import {
   TaskRepetitionOutcome,
 } from "../event";
 import { convertCore1ActionLog } from "./convertCore1ActionLog";
+import { convertCore1ID } from "./convertCore1ID";
 import { convertCore1Prompt } from "./convertCore1Prompt";
 import { testClozePrompt } from "./convertCore1Prompt.test";
 
@@ -53,8 +54,8 @@ test("convert ingest log", () => {
   );
   expect(outputLogs.length).toEqual(1);
   const outputLog = outputLogs[0] as TaskIngestEvent;
-  expect(outputLog.entityID).toEqual("testPromptID");
-  expect(outputLog.id).toEqual("logID");
+  expect(outputLog.entityID).toEqual(convertCore1ID("testPromptID"));
+  expect(outputLog.id).toEqual(convertCore1ID("logID"));
   expect(outputLog.type).toEqual(EventType.TaskIngest);
   expect(outputLog.provenance).toMatchInlineSnapshot(`
 Object {

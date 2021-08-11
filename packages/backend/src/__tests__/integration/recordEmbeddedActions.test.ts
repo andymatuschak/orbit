@@ -1,4 +1,3 @@
-import OrbitAPIClient, { emulatorAPIConfig } from "@withorbit/api-client";
 import {
   ActionLog,
   Attachment,
@@ -9,11 +8,14 @@ import {
   imageAttachmentType,
   QAPrompt,
 } from "@withorbit/core";
-import { EventType } from "@withorbit/core2";
+import { AttachmentIngestEvent, EventType, migration } from "@withorbit/core2";
 import { testQAPrompt } from "@withorbit/sample-data";
 import { resetLocalEmulators } from "../emulators";
 import { fetchRoute } from "./utils/fetchRoute";
-import { setupAuthToken } from "./utils/setupAuthToken";
+import {
+  setupAuthToken,
+  setupTestOrbitAPIClient,
+} from "./utils/setupAuthToken";
 
 afterEach(async () => {
   await resetLocalEmulators();
@@ -51,10 +53,7 @@ describe("core2 migration", () => {
     await setupAuthToken("migrate-actions");
 
     // Upload the attachment.
-    const apiClient = new OrbitAPIClient(
-      async () => ({ personalAccessToken: "migrate-actions" }),
-      emulatorAPIConfig,
-    );
+    const apiClient = await setupTestOrbitAPIClient();
     await apiClient.storeAttachment(testAttachment);
 
     // Ingest the prompt.
@@ -81,10 +80,17 @@ describe("core2 migration", () => {
     expect(eventsGetStatus).toBe(200);
     expect(eventsGetBody.items.length).toBe(2);
     expect(eventsGetBody.items[0].type).toEqual(EventType.AttachmentIngest);
+    const attachmentIngestEvent = eventsGetBody
+      .items[0] as AttachmentIngestEvent;
+    expect(attachmentIngestEvent.entityID).toEqual(
+      migration.convertCore1ID(testAttachmentID),
+    );
     expect(eventsGetBody.items[1].type).toEqual(EventType.TaskIngest);
 
     // Ensure that the attachment is migrated to core2 storage.
-    const attachmentBlob = await apiClient.getAttachment2(testAttachmentID);
+    const attachmentBlob = await apiClient.getAttachment2(
+      attachmentIngestEvent.entityID,
+    );
     expect(attachmentBlob.type).toEqual(testAttachment.mimeType);
     const attachmentBuffer = await attachmentBlob.arrayBuffer();
     expect(Buffer.from(attachmentBuffer).toString("base64")).toEqual(

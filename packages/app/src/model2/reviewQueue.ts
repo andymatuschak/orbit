@@ -1,4 +1,5 @@
 import { Task } from "@withorbit/core2";
+import { ReviewItem } from "@withorbit/embedded-support";
 
 // TODO: probably all this should move to core2.
 
@@ -11,7 +12,7 @@ export function createReviewQueue(
 ) {
   const activeTasks = dueTasks.filter((task) => !task.isDeleted);
 
-  const reviewItems: ReviewItem2[] = activeTasks.map((task) =>
+  const reviewItems: ReviewItem[] = activeTasks.map((task) =>
     extractReviewItemFromDueTask(task, thresholdTimestampMillis),
   );
 
@@ -26,15 +27,10 @@ export function createReviewQueue(
   return reviewItems.slice(0, maxTaskCount);
 }
 
-export interface ReviewItem2 {
-  task: Task;
-  componentID: string;
-}
-
 function extractReviewItemFromDueTask(
   dueTask: Task,
   thresholdTimestampMillis: number,
-): ReviewItem2 {
+): ReviewItem {
   const dueComponentEntries = Object.entries(dueTask.componentStates).filter(
     ([, componentState]) =>
       componentState.dueTimestampMillis <= thresholdTimestampMillis,

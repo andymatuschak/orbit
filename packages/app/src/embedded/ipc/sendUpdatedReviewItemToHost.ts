@@ -1,17 +1,13 @@
-import { PromptState, PromptTaskID } from "@withorbit/core";
+import { Task } from "@withorbit/core2";
 import {
   EmbeddedScreenEventType,
-  EmbeddedScreenPromptStateUpdateEvent,
+  EmbeddedScreenTaskUpdateEvent,
 } from "@withorbit/embedded-support";
 
-export function sendUpdatedReviewItemToHost(
-  promptTaskID: PromptTaskID,
-  newPromptState: PromptState,
-) {
-  const event: EmbeddedScreenPromptStateUpdateEvent = {
-    type: EmbeddedScreenEventType.PromptStateUpdate,
-    promptTaskID,
-    promptState: newPromptState,
+export function sendUpdatedReviewItemToHost(task: Task) {
+  const event: EmbeddedScreenTaskUpdateEvent = {
+    type: EmbeddedScreenEventType.TaskUpdate,
+    task,
   };
   parent.postMessage(event, "*");
 }

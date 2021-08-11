@@ -1,17 +1,6 @@
-import {
-  AttachmentResolutionMap,
-  PromptOf,
-  PromptParametersOf,
-  PromptState,
-  PromptTask,
-  PromptTaskID,
-} from "@withorbit/core";
+import { ComponentIDsOf, Task, TaskContent } from "@withorbit/core2";
 
-export interface ReviewItem<PT extends PromptTask = PromptTask> {
-  prompt: PromptOf<PT>;
-  promptParameters: PromptParametersOf<PT>;
-  promptState: PromptState<PT> | null;
-  attachmentResolutionMap: AttachmentResolutionMap | null;
-
-  promptTaskID: PromptTaskID; // cached but computable from above properties
+export interface ReviewItem<TC extends TaskContent = TaskContent> {
+  task: Task<TC>;
+  componentID: ComponentIDsOf<TC>;
 }

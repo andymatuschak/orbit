@@ -17,7 +17,6 @@ import {
 } from "@withorbit/store-shared";
 import { firestore } from "firebase-admin";
 import { getDatabase } from "../firebaseSupport/firebase";
-import { getFirebaseKeyFromStringHash } from "../firebaseSupport/firebaseKeyEncoding";
 import { compareOrderedIDs, OrderedID, OrderedIDGenerator } from "./orderedID";
 
 export class FirestoreDatabaseBackend implements DatabaseBackend {
@@ -293,9 +292,7 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
       refs: firestore.DocumentReference[],
     ) => Promise<firestore.DocumentSnapshot[]>,
   ): Promise<(D | null)[]> {
-    const refs = ids.map((id) =>
-      collectionRef.doc(getFirebaseKeyFromStringHash(id)),
-    );
+    const refs = ids.map((id) => collectionRef.doc(id));
     const eventSnapshots = await getAllImpl(refs);
     return eventSnapshots.map((snapshot) =>
       snapshot.exists ? (snapshot.data()! as D) : null,
@@ -326,18 +323,16 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
     eventID: EventID,
     collection = this._getEventCollectionRef(),
   ): firestore.DocumentReference<EventDocument<E>> {
-    return collection.doc(
-      getFirebaseKeyFromStringHash(eventID),
-    ) as firestore.DocumentReference<EventDocument<E>>;
+    return collection.doc(eventID) as firestore.DocumentReference<
+      EventDocument<E>
+    >;
   }
 
   private _getEntityRef<D extends EntityDocumentBase>(
     entityID: EntityID,
     collection = this._getEntityCollectionRef(),
   ): firestore.DocumentReference<D> {
-    return collection.doc(
-      getFirebaseKeyFromStringHash(entityID),
-    ) as firestore.DocumentReference<D>;
+    return collection.doc(entityID) as firestore.DocumentReference<D>;
   }
 }
 

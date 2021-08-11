@@ -93,7 +93,7 @@ interface PromptStackProps {
   items: ReviewAreaItem[];
   currentItemIndex: number;
   isShowingAnswer: boolean;
-  getURLForAttachmentID: (id: AttachmentID) => string;
+  getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
 }
 
 function PromptStack({
@@ -189,7 +189,7 @@ export interface ReviewAreaProps {
   onPendingOutcomeChange: (
     pendingOutcome: TaskRepetitionOutcome | null,
   ) => void;
-  getURLForAttachmentID: (id: AttachmentID) => string;
+  getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
 
   insetBottom?: number;
 

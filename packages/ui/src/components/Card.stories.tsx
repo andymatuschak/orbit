@@ -12,6 +12,7 @@ import {
   AttachmentMIMEType,
   AttachmentReference,
   EntityType,
+  generateUniqueID,
   QATaskContent,
   Task,
 } from "@withorbit/core2";
@@ -54,7 +55,7 @@ function WithReviewState(props: {
 
 const CardTemplate: Story<{
   reviewItem: ReviewAreaItem;
-  getURLForAttachmentID: (id: AttachmentID) => string;
+  getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
 }> = ({ reviewItem, getURLForAttachmentID }) => {
   return (
     <View>
@@ -94,6 +95,7 @@ const CardTemplate: Story<{
 };
 
 const defaultReviewAreaItem: ReviewAreaItem = {
+  taskID: generateUniqueID(),
   provenance: {
     title:
       "Example note with extremely long title which will get truncated eventually like perhaps in the middle of this line",
@@ -107,7 +109,7 @@ const defaultReviewAreaItem: ReviewAreaItem = {
 
 CardTemplate.args = {
   reviewItem: defaultReviewAreaItem,
-  getURLForAttachmentID: () => "",
+  getURLForAttachmentID: async () => "",
 };
 
 function makeTestQASpec(
@@ -260,7 +262,7 @@ ImageQuestion.args = {
       },
     },
   },
-  getURLForAttachmentID: () => "https://picsum.photos/id/200/539/323",
+  getURLForAttachmentID: async () => "https://picsum.photos/id/200/539/323",
 };
 
 export const ImageAnswer = CardTemplate.bind({});
@@ -279,7 +281,7 @@ ImageAnswer.args = {
       },
     },
   },
-  getURLForAttachmentID: () => "https://picsum.photos/id/200/539/323",
+  getURLForAttachmentID: async () => "https://picsum.photos/id/200/539/323",
 };
 
 export const ImageBothSides = CardTemplate.bind({});
@@ -302,5 +304,5 @@ ImageBothSides.args = {
       },
     },
   },
-  getURLForAttachmentID: () => "https://picsum.photos/id/200/539/323",
+  getURLForAttachmentID: async () => "https://picsum.photos/id/200/539/323",
 };

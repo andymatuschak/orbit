@@ -19,10 +19,6 @@ config.resolver.extraNodeModules["vm"] = require.resolve("vm-browserify");
 
 config.resolver.extraNodeModules["@react-native-firebase/app"] =
   require.resolve("@react-native-firebase/app");
-config.resolver.extraNodeModules["@react-native-firebase/firestore"] =
-  require.resolve("@react-native-firebase/firestore");
-config.resolver.extraNodeModules["@react-native-firebase/functions"] =
-  require.resolve("@react-native-firebase/functions");
 
 // The multiformats package.json is malformed, so we have to help out resolution here.
 config.resolver.resolveRequest = (

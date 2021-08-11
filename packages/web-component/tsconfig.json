@@ -1,17 +1,16 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "target": "es6",
-    "lib": ["dom", "es6"],
+    "lib": ["dom", "es2020"],
     "types": ["jest"],
-    "composite": false,
+    "composite": true,
     "outDir": "./dist",
     "rootDir": "./src"
   },
   "include": ["./src/**/*.ts"],
   "references": [
     {
-      "path": "../core"
+      "path": "../core2"
     },
     {
       "path": "../embedded-support"

@@ -1,168 +1,88 @@
 import {
-  ActionLogID,
-  applicationPromptType,
-  ClozePromptParameters,
-  clozePromptType,
-  getActionLogFromPromptActionLog,
-  getClozeDeletionCount,
-  getIDForActionLogSync,
-  getIDForPromptTask,
-  getPromptTaskForID,
-  ingestActionLogType,
-  Prompt,
-  PromptActionLog,
-  PromptID,
-  PromptProvenanceType,
-  PromptTaskID,
-  qaPromptType,
-  repetitionActionLogType,
-  WebPromptProvenance,
-} from "@withorbit/core";
+  AttachmentID,
+  EventForEntity,
+  EventType,
+  generateUniqueID,
+  Task,
+  TaskContent,
+  TaskContentType,
+  TaskIngestEvent,
+  TaskProvenance,
+  TaskRepetitionEvent,
+  TaskRepetitionOutcome,
+} from "@withorbit/core2";
 import { EmbeddedHostMetadata, ReviewItem } from "@withorbit/embedded-support";
-import { ReviewAreaMarkingRecord } from "@withorbit/ui";
-
-type PromptActionLogEntry = { log: PromptActionLog; id: ActionLogID };
 
 export interface EmbeddedActionsRecord {
-  logEntries: PromptActionLogEntry[];
-  promptsByID: { [key: string]: Prompt };
+  events: EventForEntity<Task>[];
+  ingestedAttachmentEntries: { id: AttachmentID; url: string }[];
 }
 
-function createProvenance(
-  hostMetadata: EmbeddedHostMetadata,
-): WebPromptProvenance {
+function createProvenance(hostMetadata: EmbeddedHostMetadata): TaskProvenance {
   return {
-    provenanceType: PromptProvenanceType.Web,
-    title: hostMetadata.title,
+    identifier: hostMetadata.url,
     url: hostMetadata.url,
-    externalID: hostMetadata.url,
-    modificationTimestampMillis: null,
-    colorPaletteName: hostMetadata.colorPaletteName,
-    siteName: hostMetadata.siteName,
+    ...(hostMetadata.title && { title: hostMetadata.title }),
+    ...(hostMetadata.siteName && { containerTitle: hostMetadata.siteName }),
+    ...(hostMetadata.colorPaletteName && {
+      colorPaletteName: hostMetadata.colorPaletteName,
+    }),
   };
-}
-
-function createIngestLogEntry(
-  provenance: WebPromptProvenance,
-  taskID: PromptTaskID,
-  timestampMillis: number,
-): PromptActionLogEntry {
-  const ingestLog: PromptActionLog = {
-    actionLogType: ingestActionLogType,
-    taskID,
-    timestampMillis: timestampMillis,
-    provenance,
-  };
-  return { log: ingestLog, id: getIDForActionLogSync(ingestLog) };
-}
-
-function createIngestLogEntries(
-  hostMetadata: EmbeddedHostMetadata,
-  reviewItem: ReviewItem,
-  reviewedPromptID: PromptID,
-  timestampMillis: number,
-): {
-  logEntries: PromptActionLogEntry[];
-  reviewItemLogEntry: PromptActionLogEntry;
-} {
-  const logEntries: PromptActionLogEntry[] = [];
-  const provenance = createProvenance(hostMetadata);
-  const reviewItemLogEntry = createIngestLogEntry(
-    provenance,
-    reviewItem.promptTaskID,
-    timestampMillis,
-  );
-  logEntries.push(reviewItemLogEntry);
-
-  switch (reviewItem.prompt.promptType) {
-    case clozePromptType:
-      // Also ingest tasks for all the other cloze deletions.
-      for (
-        let clozeIndex = 0;
-        clozeIndex < getClozeDeletionCount(reviewItem.prompt);
-        clozeIndex++
-      ) {
-        // Alas, TypeScript's refinements aren't quite deep enough to make this inference correctly.
-        if (
-          clozeIndex ===
-          (reviewItem.promptParameters as ClozePromptParameters).clozeIndex
-        ) {
-          continue;
-        }
-
-        logEntries.push(
-          createIngestLogEntry(
-            provenance,
-            getIDForPromptTask({
-              promptType: clozePromptType,
-              promptID: reviewedPromptID,
-              promptParameters: { clozeIndex },
-            }),
-            timestampMillis,
-          ),
-        );
-      }
-      break;
-    case qaPromptType:
-    case applicationPromptType:
-      break;
-  }
-  return { logEntries, reviewItemLogEntry };
 }
 
 export function getActionsRecordForMarking({
-  markingRecord,
+  outcome,
   reviewItem,
   hostMetadata,
   sessionStartTimestampMillis,
+  getURLForAttachmentID,
   markingTimestampMillis = Date.now(),
 }: {
-  markingRecord: ReviewAreaMarkingRecord;
+  outcome: TaskRepetitionOutcome;
   reviewItem: ReviewItem;
   hostMetadata: EmbeddedHostMetadata;
   sessionStartTimestampMillis: number;
+  getURLForAttachmentID: (id: AttachmentID) => string | null;
   markingTimestampMillis?: number;
 }): EmbeddedActionsRecord {
-  const promptTask = getPromptTaskForID(reviewItem.promptTaskID);
-  if (promptTask instanceof Error) {
-    throw promptTask;
-  }
-  const promptID = promptTask.promptID;
+  const attachmentIDs = getAttachmentsInTaskContent(
+    reviewItem.task.spec.content,
+  );
+  // HACK: We don't emit ingest events for these attachments here, because we don't know their MIME types. Instead, /attachments/ingestFromURLs will store those events after it stores the corresponding attachments.
 
-  let repetitionParentActionLogIDs: ActionLogID[];
-  let ingestLogEntries: PromptActionLogEntry[];
-  if (reviewItem.promptState) {
-    ingestLogEntries = [];
-    repetitionParentActionLogIDs =
-      reviewItem.promptState.headActionLogIDs ?? [];
-  } else {
-    const { logEntries, reviewItemLogEntry } = createIngestLogEntries(
-      hostMetadata,
-      reviewItem,
-      promptID,
-      markingTimestampMillis,
-    );
-    ingestLogEntries = logEntries;
-    repetitionParentActionLogIDs = [reviewItemLogEntry.id];
-  }
+  const isFirstReview =
+    reviewItem.task.componentStates[reviewItem.componentID]
+      .lastRepetitionTimestampMillis === null;
+  const ingestEvent: TaskIngestEvent | null = isFirstReview
+    ? {
+        type: EventType.TaskIngest,
+        id: generateUniqueID(),
+        entityID: reviewItem.task.id,
+        timestampMillis: markingTimestampMillis,
+        provenance: createProvenance(hostMetadata),
+        spec: reviewItem.task.spec,
+      }
+    : null;
 
-  const repetitionLog: PromptActionLog = {
-    actionLogType: repetitionActionLogType,
-    taskID: reviewItem.promptTaskID,
-    parentActionLogIDs: repetitionParentActionLogIDs,
-    taskParameters: markingRecord.reviewAreaItem.taskParameters,
-    outcome: markingRecord.outcome,
-    context: `embedded/${sessionStartTimestampMillis}`,
+  const repetitionEvent: TaskRepetitionEvent = {
+    type: EventType.TaskRepetition,
+    id: generateUniqueID(),
+    entityID: reviewItem.task.id,
     timestampMillis: markingTimestampMillis,
-  };
-  const repetitionLogEntry = {
-    log: repetitionLog,
-    id: getIDForActionLogSync(getActionLogFromPromptActionLog(repetitionLog)),
+    componentID: reviewItem.componentID,
+    outcome,
+    reviewSessionID: `embedded/${sessionStartTimestampMillis}`,
   };
 
   return {
-    logEntries: [...ingestLogEntries, repetitionLogEntry],
-    promptsByID: { [promptID]: reviewItem.prompt },
+    events: ingestEvent ? [ingestEvent, repetitionEvent] : [repetitionEvent],
+    ingestedAttachmentEntries: attachmentIDs.map((id) => {
+      const url = getURLForAttachmentID(id);
+      if (!url) {
+        throw new Error(`Inconsistent: no URL for attachemnt ${id}`);
+      }
+      return { id, url };
+    }),
   };
 }
 
@@ -171,7 +91,20 @@ export function mergePendingActionsRecords(
   b: EmbeddedActionsRecord,
 ): EmbeddedActionsRecord {
   return {
-    logEntries: [...a.logEntries, ...b.logEntries],
-    promptsByID: { ...a.promptsByID, ...b.promptsByID },
+    events: [...a.events, ...b.events],
+    ingestedAttachmentEntries: [
+      ...a.ingestedAttachmentEntries,
+      ...b.ingestedAttachmentEntries,
+    ],
   };
+}
+
+function getAttachmentsInTaskContent(content: TaskContent): AttachmentID[] {
+  switch (content.type) {
+    case TaskContentType.QA:
+      return [...content.body.attachments, ...content.answer.attachments];
+    case TaskContentType.Plain:
+    case TaskContentType.Cloze:
+      return content.body.attachments;
+  }
 }

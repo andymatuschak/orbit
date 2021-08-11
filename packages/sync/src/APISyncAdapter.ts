@@ -36,13 +36,7 @@ export class APISyncAdapter implements SyncAdapter {
     id: AttachmentID,
     type: AttachmentMIMEType,
   ): Promise<void> {
-    // TODO: Implement v2 API for storing an attachment
-    await this._apiClient.storeAttachment({
-      type: "image", // HACK
-      // @ts-ignore TODO HACK: duck-casting core2 to core MIME types
-      mimeType: type,
-      contents,
-    });
+    await this._apiClient.putAttachment2(id, type, contents);
   }
 
   async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {

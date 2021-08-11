@@ -198,13 +198,13 @@ function getProportions(contents: QATaskContent): {
 export interface CardProps {
   reviewItem: ReviewAreaItem;
   backIsRevealed: boolean;
-  getURLForAttachmentID: (id: AttachmentID) => string;
+  getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
 
   accentColor?: string;
 }
 
-type QAPromptRendererType = CardProps & {
-  reviewItem: ReviewAreaItem<QATaskContent | ClozeTaskContent>;
+type QAPromptRendererType = Omit<CardProps, "reviewItem"> & {
+  reviewItem: ReviewAreaItem<QATaskContent>;
 };
 
 function QAPromptRenderer({
@@ -303,7 +303,7 @@ function QAPromptRenderer({
   );
 }
 
-type ClozePromptRendererProps = CardProps & {
+type ClozePromptRendererProps = Omit<CardProps, "reviewItem"> & {
   reviewItem: ReviewAreaItem<ClozeTaskContent>;
 };
 

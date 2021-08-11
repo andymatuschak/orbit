@@ -85,11 +85,11 @@
             "additionalProperties": false,
             "properties": {
                 "entityID": {
-                    "pattern": "[A-Za-z0-9]+",
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                     "type": "string"
                 },
                 "id": {
-                    "pattern": "[A-Za-z0-9]+",
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                     "type": "string"
                 },
                 "mimeType": {
@@ -121,6 +121,11 @@
                 "image/svg+xml"
             ],
             "type": "string"
+        },
+        "BlobLike<AttachmentMIMEType>": {
+            "additionalProperties": true,
+            "description": "i.e. a DOM Blob or a fetch-blob Blob",
+            "type": "object"
         },
         "BlobLike<AttachmentMimeType>": {
             "additionalProperties": true,
@@ -588,12 +593,72 @@
             ],
             "type": "object"
         },
+        "Task<TaskContent>": {
+            "additionalProperties": false,
+            "properties": {
+                "componentStates": {
+                    "$ref": "#/definitions/TaskComponentStates<TaskContent>",
+                    "description": "Tasks may have several \"components\", each of which has its scheduling state separately tracked. For instance, cloze tasks have one component for each deletion. QA prompts just have one \"main\" component for now, but if we ever support double-sided flashcards, they'd have two, and so on."
+                },
+                "createdAtTimestampMillis": {
+                    "type": "number"
+                },
+                "id": {
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                    "type": "string"
+                },
+                "isDeleted": {
+                    "type": "boolean"
+                },
+                "metadata": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/TaskProvenance_1"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "spec": {
+                    "$ref": "#/definitions/TaskSpec<TaskContent>"
+                },
+                "type": {
+                    "enum": [
+                        "task"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "componentStates",
+                "createdAtTimestampMillis",
+                "id",
+                "isDeleted",
+                "metadata",
+                "provenance",
+                "spec",
+                "type"
+            ],
+            "type": "object"
+        },
+        "TaskComponentStates<TaskContent>": {
+            "additionalProperties": true,
+            "description": "There will be one key in this structure for each key in the corresponding task content's `components` field.",
+            "type": "object"
+        },
         "TaskContentField": {
             "additionalProperties": false,
             "properties": {
                 "attachments": {
                     "items": {
-                        "pattern": "[A-Za-z0-9]+",
+                        "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                         "type": "string"
                     },
                     "type": "array"
@@ -612,11 +677,11 @@
             "additionalProperties": false,
             "properties": {
                 "entityID": {
-                    "pattern": "[A-Za-z0-9]+",
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                     "type": "string"
                 },
                 "id": {
-                    "pattern": "[A-Za-z0-9]+",
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                     "type": "string"
                 },
                 "metadata": {
@@ -740,11 +805,11 @@
                     "type": "string"
                 },
                 "entityID": {
-                    "pattern": "[A-Za-z0-9]+",
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                     "type": "string"
                 },
                 "id": {
-                    "pattern": "[A-Za-z0-9]+",
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                     "type": "string"
                 },
                 "outcome": {
@@ -788,11 +853,11 @@
                     "type": "string"
                 },
                 "entityID": {
-                    "pattern": "[A-Za-z0-9]+",
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                     "type": "string"
                 },
                 "id": {
-                    "pattern": "[A-Za-z0-9]+",
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                     "type": "string"
                 },
                 "newDueTimestampMillis": {
@@ -851,11 +916,11 @@
             "additionalProperties": false,
             "properties": {
                 "entityID": {
-                    "pattern": "[A-Za-z0-9]+",
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                     "type": "string"
                 },
                 "id": {
-                    "pattern": "[A-Za-z0-9]+",
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                     "type": "string"
                 },
                 "isDeleted": {
@@ -992,7 +1057,7 @@
                             "additionalProperties": false,
                             "properties": {
                                 "id": {
-                                    "pattern": "[A-Za-z0-9]+",
+                                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                                     "type": "string"
                                 }
                             },
@@ -1017,6 +1082,96 @@
                         "query"
                     ],
                     "type": "object"
+                },
+                "POST": {
+                    "additionalProperties": false,
+                    "description": "encode with multipart/form-data, with the file in part named \"file\"\nmake sure to include Content-Type heading for your attachment\nreturns application/json encoded ResponseObject<\"attachmentIDReference\", AttachmentID, AttachmentIDReference>",
+                    "properties": {
+                        "body": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "file": {
+                                    "$ref": "#/definitions/BlobLike<AttachmentMIMEType>"
+                                }
+                            },
+                            "required": [
+                                "file"
+                            ],
+                            "type": "object"
+                        },
+                        "contentType": {
+                            "pattern": "^multipart/form-data",
+                            "type": "string"
+                        },
+                        "params": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "id": {
+                                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id"
+                            ],
+                            "type": "object"
+                        },
+                        "response": {
+                            "type": "null"
+                        }
+                    },
+                    "required": [
+                        "body",
+                        "contentType",
+                        "params"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "/2/attachments/ingestFromURLs": {
+            "additionalProperties": false,
+            "description": "This API adds attachments to a user's collection by downloading them from URLs. It also adds corresponding AttachmentIngestEvents to the user's store using the metadata from the downloaded resources. It's used in the embedded interface.",
+            "properties": {
+                "POST": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "body": {
+                            "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                    "id": {
+                                        "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                                        "type": "string"
+                                    },
+                                    "url": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "id",
+                                    "url"
+                                ],
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        "contentType": {
+                            "enum": [
+                                "application/json"
+                            ],
+                            "type": "string"
+                        },
+                        "response": {
+                            "type": "null"
+                        }
+                    },
+                    "required": [
+                        "body",
+                        "contentType"
+                    ],
+                    "type": "object"
                 }
             },
             "type": "object"
@@ -1032,7 +1187,7 @@
                             "properties": {
                                 "afterID": {
                                     "description": "Events are returned in an arbitrary stable order. When `afterID` is set, only events after that event's ID in the stable order will be returned. You can combine this parameter with `limit` to page through results.",
-                                    "pattern": "[A-Za-z0-9]+",
+                                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                                     "type": "string"
                                 },
                                 "entityID": {
@@ -1128,6 +1283,61 @@
                         },
                         "response": {
                             "type": "null"
+                        }
+                    },
+                    "required": [
+                        "body",
+                        "contentType"
+                    ],
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "/2/tasks/bulkGet": {
+            "additionalProperties": false,
+            "properties": {
+                "POST": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "body": {
+                            "items": {
+                                "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "contentType": {
+                            "enum": [
+                                "application/json"
+                            ],
+                            "type": "string"
+                        },
+                        "response": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "hasMore": {
+                                    "type": "boolean"
+                                },
+                                "items": {
+                                    "items": {
+                                        "$ref": "#/definitions/Task<TaskContent>"
+                                    },
+                                    "type": "array"
+                                },
+                                "type": {
+                                    "enum": [
+                                        "list"
+                                    ],
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "hasMore",
+                                "items",
+                                "type"
+                            ],
+                            "type": "object"
                         }
                     },
                     "required": [

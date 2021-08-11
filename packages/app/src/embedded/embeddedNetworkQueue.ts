@@ -1,5 +1,6 @@
+import OrbitAPIClient from "@withorbit/api-client";
 import { useCallback, useEffect, useState } from "react";
-import { getFirebaseFunctions } from "../util/firebase";
+import useByrefCallback from "../util/useByrefCallback";
 import {
   EmbeddedActionsRecord,
   mergePendingActionsRecords,
@@ -8,16 +9,19 @@ import { EmbeddedAuthenticationStatus } from "./useEmbeddedAuthenticationState";
 
 async function submitPendingActionsRecord(
   actionsRecord: EmbeddedActionsRecord,
-): Promise<unknown> {
-  // TODO replace with traditional HTTP API call
-  return getFirebaseFunctions().httpsCallable("recordEmbeddedActions")({
-    logs: actionsRecord.logEntries.map(({ log }) => log),
-    promptsByID: actionsRecord.promptsByID,
-  });
+  apiClient: OrbitAPIClient,
+): Promise<void> {
+  if (actionsRecord.ingestedAttachmentEntries) {
+    await apiClient.ingestAttachmentsFromURLs2(
+      actionsRecord.ingestedAttachmentEntries,
+    );
+  }
+  await apiClient.putEvents2(actionsRecord.events);
 }
 
 export function useEmbeddedNetworkQueue(
   authenticationStatus: EmbeddedAuthenticationStatus,
+  apiClient: OrbitAPIClient,
 ): {
   commitActionsRecord: (actionRecord: EmbeddedActionsRecord) => void;
   hasUncommittedActions: boolean;
@@ -25,18 +29,16 @@ export function useEmbeddedNetworkQueue(
   const [pendingActionsRecord, setPendingActionsRecord] =
     useState<EmbeddedActionsRecord | null>(null);
 
-  // Attempt to drain queue when inputs change.
-  useEffect(() => {
-    if (!pendingActionsRecord) {
-      return;
-    }
+  const drainQueue = useByrefCallback((record: EmbeddedActionsRecord) => {
     if (authenticationStatus === "signedIn") {
-      submitPendingActionsRecord(pendingActionsRecord)
+      submitPendingActionsRecord(record, apiClient)
         .then(() => {
           console.log("Saved actions to server", pendingActionsRecord);
           setPendingActionsRecord(null);
         })
         .catch((error) => {
+          // TODO: Propagate into UI.
+          // TODO: If error is a network error, retry when online.
           console.error(
             `Failed to save record: ${error.message}`,
             pendingActionsRecord,
@@ -48,7 +50,12 @@ export function useEmbeddedNetworkQueue(
         pendingActionsRecord,
       );
     }
-  }, [pendingActionsRecord, authenticationStatus]);
+  });
+
+  // Attempt to drain queue when inputs change.
+  useEffect(() => {
+    if (pendingActionsRecord) drainQueue(pendingActionsRecord);
+  }, [pendingActionsRecord, authenticationStatus, drainQueue]);
 
   return {
     commitActionsRecord: useCallback(

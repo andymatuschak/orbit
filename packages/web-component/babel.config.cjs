@@ -8,8 +8,10 @@ module.exports = {
         },
       },
     ],
-    "@babel/preset-react",
     "@babel/preset-typescript",
   ],
-  plugins: ["babel-plugin-add-import-extension"],
+  plugins:
+    process.env["NODE_ENV"] === "test"
+      ? []
+      : ["babel-plugin-add-import-extension"],
 };

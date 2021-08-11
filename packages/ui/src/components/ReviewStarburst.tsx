@@ -30,7 +30,6 @@ export interface ReviewStarburstProps {
 export interface ReviewStarburstItem {
   component: TaskComponentState | null;
   isPendingForSession: boolean; // true when item is not yet "done" for the current session
-  supportsRetry: boolean;
 }
 
 const ReviewStarburst = React.memo(function ReviewStarburst({

@@ -1,3 +1,4 @@
+import OrbitAPIClient, { emulatorAPIConfig } from "@withorbit/api-client";
 import { createTestAdminFirebaseApp } from "../../firebaseTesting";
 
 export async function setupAuthToken(name: string) {
@@ -11,4 +12,12 @@ export async function setupAuthToken(name: string) {
     type: "personalAccessToken",
     userID: "WvLvv9uDtFha1jVTyxObVl00gPFN",
   });
+}
+
+export async function setupTestOrbitAPIClient(): Promise<OrbitAPIClient> {
+  await setupAuthToken("auth");
+  return new OrbitAPIClient(
+    async () => ({ personalAccessToken: "auth" }),
+    emulatorAPIConfig,
+  );
 }

@@ -25,7 +25,14 @@ export function findItemsToRetry(
               baseSessionItemOffset,
               baseSessionItemOffset + record.reviewItems.length,
             )
-            .filter((item) => item.promptState?.needsRetry ?? false),
+            .filter((item) => {
+              const componentState =
+                item.task.componentStates[item.componentID];
+              return (
+                componentState.lastRepetitionTimestampMillis !== null &&
+                componentState.intervalMillis === 0
+              );
+            }),
         );
       }
       baseSessionItemOffset += record.reviewItems.length;

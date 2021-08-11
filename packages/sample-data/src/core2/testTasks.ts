@@ -4,8 +4,8 @@ import {
   AttachmentMIMEType,
   AttachmentReference,
   EntityType,
-  EventID,
   EventType,
+  generateUniqueID,
   Task,
   TaskID,
   TaskIngestEvent,
@@ -62,15 +62,12 @@ export function createTestAttachmentReference(id: string): AttachmentReference {
   };
 }
 
-export function createTestTaskIngestEvents(
-  count: number,
-  prefix: string,
-): TaskIngestEvent[] {
+export function createTestTaskIngestEvents(count: number): TaskIngestEvent[] {
   return Array.from(new Array(count)).map((_, i) => ({
-    id: `event_${prefix}_${i}` as EventID,
+    id: generateUniqueID(),
     type: EventType.TaskIngest,
     spec: testClozeSpec,
-    entityID: `entity_${prefix}_${i}` as TaskID,
+    entityID: generateUniqueID(),
     timestampMillis: i * 5000 + 10000,
     provenance: null,
   }));
@@ -78,12 +75,11 @@ export function createTestTaskIngestEvents(
 
 export function createTestAttachmentIngestEvents(
   count: number,
-  prefix: string,
 ): AttachmentIngestEvent[] {
   return Array.from(new Array(count)).map((_, i) => ({
-    id: `event_${prefix}_${i}` as EventID,
+    id: generateUniqueID(),
     type: EventType.AttachmentIngest,
-    entityID: `entity_${prefix}_${i}` as AttachmentID,
+    entityID: generateUniqueID(),
     timestampMillis: i * 5000 + 10000,
     mimeType: AttachmentMIMEType.PNG,
   }));

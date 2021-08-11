@@ -22,6 +22,8 @@ export enum EventType {
   AttachmentIngest = "attachmentIngest",
 }
 
+export type EventForEntity<E extends Entity> = Event & EventBase<EventType, E>;
+
 // ===
 
 interface EventBase<T extends EventType, E extends Entity> {
@@ -44,7 +46,7 @@ export type EntityOfEvent<E extends Event> = E extends EventBase<any, infer EN>
 
 /**
  * @TJS-type string
- * @TJS-pattern [A-Za-z0-9]+
+ * @TJS-pattern ^[0-9a-zA-Z_\-]{22}$
  */
 export type EventID = string & { __eventIDOpaqueType: never };
 
@@ -80,7 +82,7 @@ export enum TaskRepetitionOutcome {
   Forgotten = "forgotten",
 }
 
-// TODO: update metadata, update isDeleted
+// TODO: update provenance, update metadata
 
 // Attachment events
 // =================

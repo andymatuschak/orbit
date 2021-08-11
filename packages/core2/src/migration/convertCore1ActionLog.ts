@@ -13,6 +13,7 @@ import {
 } from "@withorbit/core";
 import { mainTaskComponentID, TaskID, TaskProvenance } from "../entities/task";
 import { Event, EventID, EventType, TaskRepetitionOutcome } from "../event";
+import { convertCore1ID } from "./convertCore1ID";
 import { convertCore1Prompt } from "./convertCore1Prompt";
 
 // n.b. does *not* emit core2 attachment ingest events; clients must do this separately for migrated attachments
@@ -27,8 +28,8 @@ export function convertCore1ActionLog(
   }
 
   const base = {
-    id: actionLogID as string as EventID,
-    entityID: promptTask.promptID as string as TaskID,
+    id: convertCore1ID<EventID>(actionLogID),
+    entityID: convertCore1ID<TaskID>(promptTask.promptID),
     timestampMillis: promptActionLog.timestampMillis,
   };
   const componentID =

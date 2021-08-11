@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -280,9 +281,47 @@ function useImageSize(
   }, [containerSize, size]);
 }
 
+function useImageURL(
+  contentField: TaskContentField,
+  getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>,
+): string | null {
+  const [imageURL, setImageURL] = useState<string | null>(null);
+  const pendingContentField = useRef<TaskContentField | null>(null);
+
+  const _getURLForAttachmentID = useWeakRef(getURLForAttachmentID);
+  useEffect(() => {
+    setImageURL(null);
+    pendingContentField.current = contentField;
+    const attachmentID = contentField.attachments[0];
+    if (attachmentID) {
+      _getURLForAttachmentID.current(attachmentID).then((url) => {
+        if (
+          pendingContentField.current === null ||
+          contentField !== pendingContentField.current
+        ) {
+          return;
+        }
+
+        if (!url) {
+          // TODO: recover more gracefully, show UI indicating it's missing...
+          throw new Error(`Missing attachment ${attachmentID}`);
+        }
+
+        setImageURL(url);
+      });
+    }
+
+    return () => {
+      pendingContentField.current = null;
+    };
+  }, [_getURLForAttachmentID, contentField]);
+
+  return imageURL;
+}
+
 export default React.memo(function PromptFieldRenderer(props: {
   promptField: TaskContentField;
-  getURLForAttachmentID: (id: AttachmentID) => string;
+  getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
 
   colorPalette?: colors.ColorPalette;
   clipContent?: boolean;
@@ -304,14 +343,6 @@ export default React.memo(function PromptFieldRenderer(props: {
     largestSizeVariantIndex ?? 0,
     sizeVariantCount - 1,
   );
-
-  let imageURL: string | null = null;
-  if (promptField.attachments.length > 0) {
-    const images = promptField.attachments.map(getURLForAttachmentID);
-    if (images.length > 0) {
-      imageURL = images[0];
-    }
-  }
 
   const [sizeVariantIndex, setSizeVariantIndex] = useState(
     effectiveLargestSizeVariantIndex,
@@ -340,6 +371,7 @@ export default React.memo(function PromptFieldRenderer(props: {
     );
   }, [effectiveLargestSizeVariantIndex]);
 
+  const imageURL = useImageURL(promptField, getURLForAttachmentID);
   const imageSize = useImageSize(imageURL, containerSize);
   useLayoutEffect(() => {
     if (
@@ -443,7 +475,7 @@ export default React.memo(function PromptFieldRenderer(props: {
               width: "100%",
               backgroundColor: effectiveOverflowColor,
             }}
-          ></View>
+          />
         </View>
       )}
       {imageURL && imageSize && (

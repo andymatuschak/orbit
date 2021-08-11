@@ -1,10 +1,16 @@
 import { OrbitAPI, OrbitAPIValidator } from "@withorbit/api";
 import cookieParser from "cookie-parser";
 import express from "express";
+import morganBody from "morgan-body";
 import { listEvents, storeEvents } from "./api/2/events";
+import { bulkGetTasks } from "./api/2/tasks";
 import { listActionLogs, storeActionLogs } from "./api/actionLogs";
 import { getAttachment, storeAttachment } from "./api/attachments";
-import { getAttachment as getAttachment2 } from "./api/2/attachments";
+import {
+  getAttachment as getAttachment2,
+  ingestAttachmentsFromURLs,
+  storeAttachment2,
+} from "./api/2/attachments";
 import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode";
 import { createLoginToken } from "./api/internal/auth/createLoginToken";
 import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens";
@@ -16,15 +22,6 @@ import { listTaskData, storeTaskData } from "./api/taskData";
 import { listTaskStates } from "./api/taskStates";
 import corsHandler from "./api/util/corsHandler";
 import createTypedRouter from "./api/util/typedRouter";
-
-const traceAPICall: express.RequestHandler = (request, _, next) => {
-  console.log(
-    `${request.method}: ${request.path}`,
-    request.query,
-    request.body,
-  );
-  next();
-};
 
 const routeValidator = new OrbitAPIValidator({
   allowUnsupportedRoute: true,
@@ -43,7 +40,11 @@ export function createAPIApp(): express.Application {
     }
     next();
   });
-  app.use(traceAPICall);
+
+  morganBody(app, {
+    maxBodyLength: 10000,
+    noColors: true,
+  }); // Log request and response data.
 
   createTypedRouter<OrbitAPI.Spec>(app, routeValidator, {
     "/actionLogs": {
@@ -63,12 +64,19 @@ export function createAPIApp(): express.Application {
     "/attachments/:id": {
       GET: getAttachment,
     },
+    "/2/attachments/ingestFromURLs": {
+      POST: ingestAttachmentsFromURLs,
+    },
+    "/2/attachments/:id": {
+      GET: getAttachment2,
+      POST: storeAttachment2,
+    },
     "/2/events": {
       PATCH: storeEvents,
       GET: listEvents,
     },
-    "/2/attachments/:id": {
-      GET: getAttachment2,
+    "/2/tasks/bulkGet": {
+      POST: bulkGetTasks,
     },
   });
 

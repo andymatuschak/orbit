@@ -7,10 +7,10 @@ import {
   getAttachmentTypeForAttachmentMimeType,
   getIDForAttachment,
 } from "@withorbit/core";
-import { AttachmentMIMEType } from "@withorbit/core2";
+import * as core2 from "@withorbit/core2";
 import fetch, * as Fetch from "node-fetch";
 import { sharedFileStorageService } from "../fileStorageService";
-import { FileStorageResolution } from "../fileStorageService/fileStorageService";
+import * as attachments2 from "./2/attachments";
 import { getFirebaseKeyForCIDString } from "./firebaseSupport";
 import { getDatabase } from "./firebaseSupport/firebase";
 
@@ -20,18 +20,8 @@ export type AttachmentAPIVersion = "core" | "core2";
 
 function getFileStorageSubpathForAttachmentID(
   attachmentID: AttachmentID,
-  userID: string | null,
-  version: AttachmentAPIVersion,
 ): string {
-  switch (version) {
-    case "core":
-      return `${getFirebaseKeyForCIDString(attachmentID)}`;
-    case "core2":
-      if (userID === null) {
-        throw new Error(`userID is required in core2 attachment API`);
-      }
-      return `${userID}/${attachmentID}`;
-  }
+  return `${getFirebaseKeyForCIDString(attachmentID)}`;
 }
 
 export function _validateAttachmentResponse(
@@ -57,8 +47,6 @@ export function _validateAttachmentResponse(
 
 async function _storeAttachmentFromURL(
   url: string,
-  userID: string | null,
-  version: AttachmentAPIVersion,
 ): Promise<AttachmentIDReference> {
   const response = await fetch(url);
 
@@ -71,15 +59,11 @@ async function _storeAttachmentFromURL(
   const attachmentType =
     getAttachmentTypeForAttachmentMimeType(attachmentMimeType);
 
-  const { attachmentID } = await storeAttachment(
-    {
-      contents: responseBuffer,
-      type: attachmentType,
-      mimeType: attachmentMimeType,
-    },
-    userID,
-    version,
-  );
+  const { attachmentID } = await storeAttachment({
+    contents: responseBuffer,
+    type: attachmentType,
+    mimeType: attachmentMimeType,
+  });
 
   return {
     id: attachmentID,
@@ -90,8 +74,6 @@ async function _storeAttachmentFromURL(
 
 export async function storeAttachmentAtURLIfNecessary(
   url: string,
-  userID: string | null,
-  version: AttachmentAPIVersion,
 ): Promise<AttachmentIDReference> {
   const attachmentLookupRef = getDatabase().collection("attachmentsIDsByURL");
 
@@ -99,7 +81,7 @@ export async function storeAttachmentAtURLIfNecessary(
   if (records.size === 1) {
     return records.docs[0].data().idReference;
   } else if (records.size === 0) {
-    const idReference = await _storeAttachmentFromURL(url, userID, version);
+    const idReference = await _storeAttachmentFromURL(url);
     await attachmentLookupRef.add({ url, idReference, createdAt: Date.now() });
     return idReference;
   } else {
@@ -113,11 +95,7 @@ export async function storeAttachmentAtURLIfNecessary(
   }
 }
 
-export async function storeAttachment(
-  attachment: Attachment,
-  userID: string | null,
-  version: AttachmentAPIVersion,
-): Promise<{
+export async function storeAttachment(attachment: Attachment): Promise<{
   attachmentID: AttachmentID;
   status: "stored" | "alreadyExists";
   url: string;
@@ -131,11 +109,7 @@ export async function storeAttachment(
   const attachmentID = await getIDForAttachment(attachment.contents);
 
   const fileStorageService = sharedFileStorageService();
-  const attachmentSubpath = getFileStorageSubpathForAttachmentID(
-    attachmentID,
-    userID,
-    version,
-  );
+  const attachmentSubpath = getFileStorageSubpathForAttachmentID(attachmentID);
   const url = fileStorageService.formatURL(attachmentSubpath);
   if (await fileStorageService.fileExists(attachmentSubpath)) {
     return { attachmentID, status: "alreadyExists", url };
@@ -149,40 +123,25 @@ export async function storeAttachment(
   }
 }
 
-export function getAttachmentURL(
-  attachmentID: AttachmentID,
-  userID: string | null,
-  version: AttachmentAPIVersion,
-): string {
+export function getAttachmentURL(attachmentID: AttachmentID): string {
   return sharedFileStorageService().formatURL(
-    getFileStorageSubpathForAttachmentID(attachmentID, userID, version),
-  );
-}
-
-export function resolveAttachment(
-  attachmentID: AttachmentID,
-  userID: string | null,
-  version: AttachmentAPIVersion,
-): Promise<FileStorageResolution | null> {
-  return sharedFileStorageService().resolveFile(
-    getFileStorageSubpathForAttachmentID(attachmentID, userID, version),
+    getFileStorageSubpathForAttachmentID(attachmentID),
   );
 }
 
 export async function migrateAttachmentIDs(
-  attachmentIDs: AttachmentID[],
   userID: string,
+  oldAttachmentIDs: AttachmentID[],
 ) {
   const fileStorageService = sharedFileStorageService();
-  for (const attachmentID of attachmentIDs) {
-    const newSubpath = getFileStorageSubpathForAttachmentID(
-      attachmentID,
+  for (const attachmentID of oldAttachmentIDs) {
+    const newSubpath = attachments2.getFileStorageSubpathForAttachmentID(
       userID,
-      "core2",
+      core2.migration.convertCore1ID(attachmentID),
     );
     if (!(await fileStorageService.fileExists(newSubpath))) {
       await fileStorageService.copyFile(
-        getFileStorageSubpathForAttachmentID(attachmentID, null, "core"),
+        getFileStorageSubpathForAttachmentID(attachmentID),
         newSubpath,
       );
     }
@@ -191,13 +150,11 @@ export async function migrateAttachmentIDs(
 
 export async function getAttachmentMIMEType(
   attachmentID: AttachmentID,
-  userID: string,
-  version: AttachmentAPIVersion,
-): Promise<AttachmentMIMEType | null> {
+): Promise<core2.AttachmentMIMEType | null> {
   const fileStorageService = sharedFileStorageService();
   const mimeTypeString = await fileStorageService.getMIMEType(
-    getFileStorageSubpathForAttachmentID(attachmentID, userID, version),
+    getFileStorageSubpathForAttachmentID(attachmentID),
   );
   // TODO: validate attachment MIME type
-  return mimeTypeString as AttachmentMIMEType | null;
+  return mimeTypeString as core2.AttachmentMIMEType | null;
 }

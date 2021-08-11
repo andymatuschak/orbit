@@ -8,7 +8,7 @@ export interface AttachmentReference
 
 /**
  * @TJS-type string
- * @TJS-pattern [A-Za-z0-9]+
+ * @TJS-pattern ^[0-9a-zA-Z_\-]{22}$
  */
 export type AttachmentID = string & { __attachmentIDOpaqueType: never };
 

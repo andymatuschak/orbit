@@ -6,7 +6,7 @@
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "firebase emulators:start --import emulator-data",
+    "dev": "rm -rf \"$TMPDIR/orbit-file-storage-emulator\"; firebase emulators:start --import emulator-data",
     "build": "tsc -b && rollup -c rollup.config.js",
     "predeploy": "yarn run build",
     "deploy": "firebase deploy --only functions",
@@ -33,11 +33,13 @@
     "firebase-functions": "^3.14.1",
     "isbot-fast": "^1.2.0",
     "isomorphic-fetch": "^3.0.0",
+    "morgan-body": "^2.6.6",
     "multiformats": "^4.3.1",
     "node-fetch": "next",
     "node-mailjet": "^3.3.1",
     "prettier": "^2.3.1",
-    "request-ip": "^2.1.3"
+    "request-ip": "^2.1.3",
+    "uuid": "^8.3.2"
   },
   "engines": {
     "node": "14"

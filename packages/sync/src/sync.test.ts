@@ -22,10 +22,10 @@ async function prepTestStore(
 
 test("bidi transmission", async () => {
   const { store: store1, events: events1 } = await prepTestStore(async () =>
-    fixtures.createTestTaskIngestEvents(2000, "store1"),
+    fixtures.createTestTaskIngestEvents(2000),
   );
   const { store: store2, events: events2 } = await prepTestStore(async () =>
-    fixtures.createTestTaskIngestEvents(2000, "store2"),
+    fixtures.createTestTaskIngestEvents(2000),
   );
 
   const store2SyncAdapter = new OrbitStoreSyncAdapter(store2, "testServer");
@@ -53,7 +53,7 @@ test("bidi transmission", async () => {
   expect(receivedEventCount2).toEqual(0);
 
   // If we add some more events to just the destination, they should appear on the source as expected.
-  const extraEvents = fixtures.createTestTaskIngestEvents(100, "store2_extra");
+  const extraEvents = fixtures.createTestTaskIngestEvents(100);
   await store2.database.putEvents(extraEvents);
   const {
     sentEventCount: sentEventCount3,
@@ -67,25 +67,19 @@ test("bidi transmission", async () => {
 });
 
 test("attachments synced", async () => {
-  function addEvents(prefix: string) {
-    return async (store: OrbitStore) => {
-      const events = fixtures.createTestAttachmentIngestEvents(100, prefix);
-      for (const { entityID, mimeType } of events) {
-        await store.attachmentStore.storeAttachment(
-          Buffer.from("Test"),
-          entityID,
-          mimeType,
-        );
-      }
-      return events;
-    };
+  async function addEvents(store: OrbitStore) {
+    const events = fixtures.createTestAttachmentIngestEvents(100);
+    for (const { entityID, mimeType } of events) {
+      await store.attachmentStore.storeAttachment(
+        Buffer.from("Test"),
+        entityID,
+        mimeType,
+      );
+    }
+    return events;
   }
-  const { store: store1, events: events1 } = await prepTestStore(
-    addEvents("store1"),
-  );
-  const { store: store2, events: events2 } = await prepTestStore(
-    addEvents("store2"),
-  );
+  const { store: store1, events: events1 } = await prepTestStore(addEvents);
+  const { store: store2, events: events2 } = await prepTestStore(addEvents);
 
   await syncOrbitStore(store1, new OrbitStoreSyncAdapter(store2, "testServer"));
 

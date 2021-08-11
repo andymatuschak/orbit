@@ -1,6 +1,5 @@
 import { EntityType } from "@withorbit/core2";
-import { Database } from "@withorbit/store-shared/dist/database";
-import { OrbitStore } from "@withorbit/store-shared/dist/orbitStore";
+import { Database, OrbitStore } from "@withorbit/store-shared";
 import fs from "fs";
 import path from "path";
 import { AttachmentStoreFS } from "./attachmentStoreFS";

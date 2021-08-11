@@ -1,7 +1,7 @@
 import { ColorPaletteName } from "../colorPaletteName";
 import { EntityBase, EntityType } from "../entity";
 import { AttachmentID } from "./attachmentReference";
-export { parseSingleCurlyBraceClozePromptMarkup } from "./task/parseClozeMarkup";
+export { parseSingleCurlyBraceClozePromptMarkup } from "./util/parseClozeMarkup";
 
 // The Task entity stores the "spec" which describes a task's behavior and content, as well as the task's ongoing state and associated metadata.
 export interface Task<TC extends TaskContent = TaskContent>
@@ -11,13 +11,23 @@ export interface Task<TC extends TaskContent = TaskContent>
   spec: TaskSpec<TC>;
   provenance: TaskProvenance | null;
 
-  // Tasks may have several "components", each of which has its scheduling state separately tracked. For instance, cloze tasks have one component for each deletion. QA prompts just have one "main" component for now, but if we ever support double-sided flashcards, they'd have two, and so on.
-  componentStates: { [ComponentID in ComponentIDsOf<TC>]: TaskComponentState };
+  /**
+   * Tasks may have several "components", each of which has its scheduling state separately tracked. For instance, cloze tasks have one component for each deletion. QA prompts just have one "main" component for now, but if we ever support double-sided flashcards, they'd have two, and so on.
+   */
+  componentStates: TaskComponentStates<TC>;
   isDeleted: boolean;
 
   // Arbitrary key/value store for use by applications in the Orbit ecosystem.
   metadata: { [key: string]: string };
 }
+
+/**
+ * There will be one key in this structure for each key in the corresponding task content's `components` field.
+ * @additionalProperties true
+ */
+export type TaskComponentStates<TC extends TaskContent> = {
+  [ComponentID in ComponentIDsOf<TC>]: TaskComponentState;
+};
 
 export interface TaskComponentState {
   createdAtTimestampMillis: number;
@@ -31,7 +41,7 @@ export interface TaskComponentState {
 
 /**
  * @TJS-type string
- * @TJS-pattern [A-Za-z0-9]+
+ * @TJS-pattern ^[0-9a-zA-Z_\-]{22}$
  */
 export type TaskID = string & { __taskIDOpaqueType: never };
 
@@ -48,13 +58,13 @@ export type MemoryTaskSpec<TC extends TaskContent> = TaskSpecBase<
 interface TaskSpecBase<TST extends TaskSpecType, TC extends TaskContent> {
   // The type of a task spec describes its default scheduling behavior and interaction language. For instance, "memory" tasks use UI language around "remembering" and a scheduler tuned to support retention.
   type: TST;
-  // TODO: future options here around scheduling parameters, etc
+  // In the future: options here around scheduling parameters, etc
   content: TC;
 }
 
 export enum TaskSpecType {
   Memory = "memory",
-  // TODO: Generic, Custom, etc
+  // In the future: Generic, Custom, etc
 }
 
 // ---
@@ -118,7 +128,7 @@ export interface TaskContentComponent {
   order: number;
 }
 
-type ComponentIDsOf<TC extends TaskContent> = TC extends TaskContentBase<
+export type ComponentIDsOf<TC extends TaskContent> = TC extends TaskContentBase<
   any,
   infer ComponentIDs,
   any

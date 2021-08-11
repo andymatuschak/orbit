@@ -1,9 +1,16 @@
-import { Task, TaskContent, TaskProvenance } from "@withorbit/core2";
+import {
+  ComponentIDsOf,
+  Task,
+  TaskContent,
+  TaskID,
+  TaskProvenance,
+} from "@withorbit/core2";
 import { colors } from "./styles";
 
 export interface ReviewAreaItem<TC extends TaskContent = TaskContent> {
-  componentID: string;
+  taskID: TaskID;
   spec: Task<TC>["spec"];
+  componentID: ComponentIDsOf<TC>;
 
   provenance: TaskProvenance | null;
   colorPalette: colors.ColorPalette;

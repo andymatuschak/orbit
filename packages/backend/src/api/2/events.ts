@@ -1,6 +1,5 @@
 import { OrbitAPI } from "@withorbit/api";
 import { Event } from "@withorbit/core2";
-import { ResponseList2 } from "@withorbit/api/dist/orbitAPI";
 import { Database } from "@withorbit/store-shared";
 import { FirestoreDatabaseBackend } from "../../backend/2/firestoreDatabaseBackend";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";
@@ -32,7 +31,7 @@ export const listEvents: TypedRouteHandler<OrbitAPI.Spec, "/2/events", "GET"> =
       predicate: query.entityID ? ["entityID", "=", query.entityID] : undefined,
     });
 
-    let results: ResponseList2<Event>;
+    let results: OrbitAPI.ResponseList2<Event>;
     if (query.limit === undefined) {
       results = {
         type: "list",

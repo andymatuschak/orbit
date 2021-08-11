@@ -1,24 +1,16 @@
 import OrbitAPIClient from "@withorbit/api-client";
-import {
-  getActionLogFromPromptActionLog,
-  getIDForActionLogSync,
-  Prompt,
-  PromptActionLog,
-  reviewSession,
-} from "@withorbit/core";
-import { EntityType, Event, migration, Task } from "@withorbit/core2";
+import { reviewSession } from "@withorbit/core";
+import { AttachmentID, EntityType, Event, Task } from "@withorbit/core2";
 import { ReviewItem } from "@withorbit/embedded-support";
 import { OrbitStore } from "@withorbit/store-shared";
 import { APISyncAdapter, syncOrbitStore } from "@withorbit/sync";
-import { backportReviewItem } from "./backportCore2";
 import { createOrbitStore } from "./orbitStoreFactory";
 import { createReviewQueue } from "./reviewQueue";
 
-// core2 implementation of DatabaseManager intended to be a drop-in replacement for the core1 DatabaseManager.
-// TODO: Once ui uses core2 types, migrate the outward-facing API here to core2 types too.
 export class DatabaseManager {
-  private readonly _apiClient: OrbitAPIClient;
   private readonly _storePromise: Promise<OrbitStore>;
+
+  private readonly _apiClient: OrbitAPIClient;
   private readonly _apiSyncAdapter: APISyncAdapter;
   private _syncPromise: Promise<void> | null = null;
 
@@ -43,12 +35,7 @@ export class DatabaseManager {
       limit: 500,
       predicate: ["dueTimestampMillis", "<=", thresholdTimestampMillis],
     });
-    const reviewItems = createReviewQueue(dueTasks, thresholdTimestampMillis);
-    return await Promise.all(
-      reviewItems.map((item) =>
-        backportReviewItem(item, store.attachmentStore),
-      ),
-    );
+    return createReviewQueue(dueTasks, thresholdTimestampMillis);
   }
 
   async close(): Promise<void> {
@@ -58,24 +45,18 @@ export class DatabaseManager {
     await store.database.close();
   }
 
-  async recordPromptActionLogs(
-    entries: Iterable<PromptActionLog>,
-  ): Promise<void> {
-    const events: Event[] = [];
-    for (const entry of entries) {
-      events.push(
-        ...migration.convertCore1ActionLog(
-          entry,
-          getIDForActionLogSync(getActionLogFromPromptActionLog(entry)),
-          // HACK: We never ingest new events in the app at the moment, so we don't actually need to provide a prompt. Normally I'd go to great lengths to avoid this kind of entangled assumption, but we're going to be removing this migration shim shortly.
-          {} as Prompt,
-        ),
-      );
-    }
+  async recordEvents(events: Event[]): Promise<void> {
     const store = await this._storePromise;
     await store.database.putEvents(events);
 
     this._startSync();
+  }
+
+  async getURLForAttachmentID(
+    attachmentID: AttachmentID,
+  ): Promise<string | null> {
+    const store = await this._storePromise;
+    return store.attachmentStore.getURLForStoredAttachment(attachmentID);
   }
 
   private _startSync() {

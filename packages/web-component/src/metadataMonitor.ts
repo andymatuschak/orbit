@@ -1,4 +1,4 @@
-import { ColorPaletteName } from "@withorbit/core";
+import { ColorPaletteName } from "@withorbit/core2";
 import { EmbeddedHostMetadata } from "@withorbit/embedded-support";
 
 let hasWarnedAboutTitle = false;
@@ -44,7 +44,7 @@ function readMetadata(): EmbeddedHostMetadata {
     title: openGraphTitle ?? title,
     siteName,
     // Validation of the color palette name will happen in the embedded environment to avoid loading the strings here.
-    colorPaletteName: colorName as ColorPaletteName | null,
+    colorPaletteName: (colorName as ColorPaletteName) ?? null,
   };
 }
 

@@ -1,14 +1,12 @@
-import { ColorPaletteName } from "@withorbit/core";
+import { ColorPaletteName } from "@withorbit/core2";
 import {
   EmbeddedHostEventType,
   EmbeddedHostMetadata,
   EmbeddedHostUpdateEvent,
-  EmbeddedItem,
   EmbeddedScreenConfiguration,
   EmbeddedScreenEventType,
-  EmbeddedScreenPromptStateUpdateEvent,
   EmbeddedScreenRecord,
-  EmbeddedScreenRecordResolvedEvent,
+  EmbeddedScreenTaskUpdateEvent,
 } from "@withorbit/embedded-support";
 import { extractItems } from "./extractItems";
 import { getSharedMetadataMonitor } from "./metadataMonitor";
@@ -29,7 +27,6 @@ function getHeightForReviewAreaOfWidth(width: number) {
   return promptHeight + (7 + 11) * gridUnit;
 }
 
-const _activeReviewAreaElements: Set<OrbitReviewAreaElement> = new Set();
 const screenRecordsByReviewArea: Map<
   OrbitReviewAreaElement,
   EmbeddedScreenRecord
@@ -39,24 +36,26 @@ const screenRecordsByReviewArea: Map<
 let _orderedReviewAreaElements: OrbitReviewAreaElement[] | null = [];
 function getOrderedReviewAreaElements() {
   if (_orderedReviewAreaElements === null) {
-    _orderedReviewAreaElements = [..._activeReviewAreaElements].sort((a, b) => {
-      const comparison = a.compareDocumentPosition(b);
-      if (
-        (comparison & Node.DOCUMENT_POSITION_PRECEDING) ===
-        Node.DOCUMENT_POSITION_PRECEDING
-      ) {
-        return 1;
-      } else if (
-        (comparison & Node.DOCUMENT_POSITION_FOLLOWING) ===
-        Node.DOCUMENT_POSITION_FOLLOWING
-      ) {
-        return -1;
-      } else {
-        throw new Error(
-          `Unexpected compareDocumentPosition return value ${comparison} for ${a} and ${b}`,
-        );
-      }
-    });
+    _orderedReviewAreaElements = [...screenRecordsByReviewArea.keys()].sort(
+      (a, b) => {
+        const comparison = a.compareDocumentPosition(b);
+        if (
+          (comparison & Node.DOCUMENT_POSITION_PRECEDING) ===
+          Node.DOCUMENT_POSITION_PRECEDING
+        ) {
+          return 1;
+        } else if (
+          (comparison & Node.DOCUMENT_POSITION_FOLLOWING) ===
+          Node.DOCUMENT_POSITION_FOLLOWING
+        ) {
+          return -1;
+        } else {
+          throw new Error(
+            `Unexpected compareDocumentPosition return value ${comparison} for ${a} and ${b}`,
+          );
+        }
+      },
+    );
   }
   return _orderedReviewAreaElements;
 }
@@ -88,50 +87,29 @@ function markEmbeddedHostStateDirty() {
   }
 }
 
-function addReviewAreaElement(element: OrbitReviewAreaElement) {
-  _activeReviewAreaElements.add(element);
-  _orderedReviewAreaElements = null;
-  markEmbeddedHostStateDirty();
-}
-function removeReviewAreaElement(element: OrbitReviewAreaElement) {
-  _activeReviewAreaElements.delete(element);
-  _orderedReviewAreaElements = null;
-  markEmbeddedHostStateDirty();
-}
-
 function onMessage(event: MessageEvent) {
   if (!EMBED_API_BASE_URL.startsWith(event.origin) || !event.data) {
     return;
   }
 
   switch (event.data.type) {
-    case EmbeddedScreenEventType.ScreenRecordResolved:
-      const recordUpdate = event.data as EmbeddedScreenRecordResolvedEvent;
-      const reviewArea = [..._activeReviewAreaElements].find(
-        (element) => element.iframe?.contentWindow === event.source,
-      );
-      if (reviewArea) {
-        // console.log("Got state update from embedded screen", reviewArea, recordUpdate);
-        screenRecordsByReviewArea.set(reviewArea, recordUpdate.record);
-        markEmbeddedHostStateDirty();
-      } else {
-        console.warn(
-          "Ignoring state update from embedded screen with unknown review area",
-        );
-      }
-      break;
-
-    case EmbeddedScreenEventType.PromptStateUpdate:
-      const { promptTaskID, promptState } =
-        event.data as EmbeddedScreenPromptStateUpdateEvent;
+    case EmbeddedScreenEventType.TaskUpdate:
+      const { task } = event.data as EmbeddedScreenTaskUpdateEvent;
       // May replace this with a straight lookup table if the full iteration becomes a problem, but usually N < 100.
-      for (const screenRecord of screenRecordsByReviewArea.values()) {
-        for (const reviewItem of screenRecord.reviewItems) {
-          if (reviewItem.promptTaskID === promptTaskID) {
-            reviewItem.promptState = promptState;
-          }
-        }
+      const reviewAreaEntry = [...screenRecordsByReviewArea.entries()].find(
+        ([element]) => element.iframe?.contentWindow === event.source,
+      );
+      if (!reviewAreaEntry) {
+        throw new Error(`Update from unknown review area ${event.source}`);
       }
+
+      // Replace our record of that task with the new state.
+      screenRecordsByReviewArea.set(reviewAreaEntry[0], {
+        ...reviewAreaEntry[1],
+        reviewItems: reviewAreaEntry[1].reviewItems.map((item) =>
+          item.task.id === task.id ? { ...item, task } : item,
+        ),
+      });
       markEmbeddedHostStateDirty();
       break;
   }
@@ -155,7 +133,7 @@ const iframeResizeObserver = new ResizeObserver((entries) => {
 function setIFrameSize(iframe: HTMLIFrameElement) {
   const effectiveWidth = iframe.getBoundingClientRect().width;
   // The extra 5 grid units are for the banner.
-  // TODO: encapsulate the banner's height in some API exported by @withorbit/app.
+  // TODO: encapsulate the banner's height in some API shared with @withorbit/app.
   iframe.style.height = `${
     getHeightForReviewAreaOfWidth(effectiveWidth) + 8 * 5
   }px`;
@@ -169,7 +147,7 @@ const sessionStartTimestampMillis = Date.now();
 
 export class OrbitReviewAreaElement extends HTMLElement {
   private cachedMetadata: EmbeddedHostMetadata | null = null;
-  private cachedItems: EmbeddedItem[] | null = null;
+  private cachedRecord: EmbeddedScreenRecord | null = null;
   iframe: HTMLIFrameElement | null = null;
 
   onMetadataChange = (metadata: EmbeddedHostMetadata) => {
@@ -178,15 +156,17 @@ export class OrbitReviewAreaElement extends HTMLElement {
   };
 
   onChildPromptChange() {
-    this.cachedItems = null;
+    this.cachedRecord = null;
     // TODO: notify child
   }
 
   getEmbeddedItems() {
-    if (this.cachedItems === null) {
-      this.cachedItems = extractItems(this);
+    if (this.cachedRecord === null) {
+      this.cachedRecord = extractItems(this);
+      screenRecordsByReviewArea.set(this, this.cachedRecord);
+      markEmbeddedHostStateDirty();
     }
-    return this.cachedItems;
+    return this.cachedRecord;
   }
 
   connectedCallback() {
@@ -208,7 +188,6 @@ export class OrbitReviewAreaElement extends HTMLElement {
     );
     shadowRoot.appendChild(this.iframe);
     iframeResizeObserver.observe(this.iframe);
-    addReviewAreaElement(this);
 
     // We'll wait to actually set the iframe's contents until the next frame, since the child <orbit-prompt> elements may not yet have connected.
     const iframe = this.iframe;
@@ -223,7 +202,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
       ) as ColorPaletteName | null;
 
       const configuration: EmbeddedScreenConfiguration = {
-        embeddedItems: this.getEmbeddedItems(),
+        ...this.getEmbeddedItems(),
         embeddedHostMetadata: {
           ...this.cachedMetadata,
           ...(colorOverride && { colorPaletteName: colorOverride }),
@@ -243,7 +222,10 @@ export class OrbitReviewAreaElement extends HTMLElement {
 
   disconnectedCallback() {
     if (this.iframe) iframeResizeObserver.unobserve(this.iframe);
-    removeReviewAreaElement(this);
+
+    screenRecordsByReviewArea.delete(this);
+    markEmbeddedHostStateDirty();
+
     getSharedMetadataMonitor().removeEventListener(this.onMetadataChange);
   }
 }

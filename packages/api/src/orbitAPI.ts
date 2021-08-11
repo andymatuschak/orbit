@@ -9,8 +9,8 @@ import {
   PromptState,
   PromptTaskID,
 } from "@withorbit/core";
-import { AttachmentMIMEType } from "@withorbit/core2";
 import * as core2 from "@withorbit/core2";
+import { AttachmentMIMEType, Task, TaskID } from "@withorbit/core2";
 import { BlobLike } from "./genericHTTPAPI";
 import { RequiredSpec } from "./util/requiredSpec";
 
@@ -151,6 +151,50 @@ export type ValidatableSpec = {
         id: core2.AttachmentID;
       };
       response?: BlobLike<AttachmentMIMEType>;
+    };
+
+    /**
+     * encode with multipart/form-data, with the file in part named "file"
+     * make sure to include Content-Type heading for your attachment
+     * returns application/json encoded ResponseObject<"attachmentIDReference", AttachmentID, AttachmentIDReference>
+     */
+    POST?: {
+      // NOTE: Content-type must use regex to be validated since additional data,
+      // like the form-data length, is usually appended to the MIME type
+      /**
+       * @TJS-type string
+       * @TJS-pattern ^multipart/form-data
+       */
+      contentType: "multipart/form-data";
+      params: {
+        id: core2.AttachmentID;
+      };
+      body: {
+        file: BlobLike<AttachmentMIMEType>;
+      };
+      response?: null;
+    };
+  };
+
+  /**
+   * This API adds attachments to a user's collection by downloading them from URLs. It also adds corresponding AttachmentIngestEvents to the user's store using the metadata from the downloaded resources. It's used in the embedded interface.
+   */
+  "/2/attachments/ingestFromURLs"?: {
+    POST?: {
+      contentType: "application/json";
+      body: {
+        id: core2.AttachmentID;
+        url: string;
+      }[];
+      response?: null;
+    };
+  };
+
+  "/2/tasks/bulkGet"?: {
+    POST?: {
+      contentType: "application/json";
+      body: TaskID[];
+      response?: ResponseList2<Task>;
     };
   };
 };

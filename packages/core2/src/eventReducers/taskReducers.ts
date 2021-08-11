@@ -66,7 +66,8 @@ export function taskRepetitionEventReducer(
   }
 
   return modifyTaskComponent(oldSnapshot, event.componentID, (oldState) => ({
-    ...oldState,
+    createdAtTimestampMillis: oldState.createdAtTimestampMillis,
+    lastRepetitionTimestampMillis: event.timestampMillis,
     ...scheduler.computeNextDueIntervalMillisForRepetition(
       componentState,
       event.timestampMillis,

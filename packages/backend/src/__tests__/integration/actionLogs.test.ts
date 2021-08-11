@@ -1,4 +1,5 @@
 import { getIDForPromptSync, getIDForPromptTask } from "@withorbit/core";
+import { migration } from "@withorbit/core2";
 import { testQAPrompt } from "@withorbit/sample-data";
 import { resetLocalEmulators } from "../emulators";
 import { fetchRoute } from "./utils/fetchRoute";
@@ -160,6 +161,8 @@ describe("[PATCH] validation", () => {
     );
     expect(eventsGetStatus).toBe(200);
     expect(eventsGetBody.items.length).toBe(1);
-    expect(eventsGetBody.items[0].entityID).toEqual(testPromptID);
+    expect(eventsGetBody.items[0].entityID).toEqual(
+      migration.convertCore1ID(testPromptID),
+    );
   });
 });

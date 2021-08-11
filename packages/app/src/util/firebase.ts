@@ -21,17 +21,6 @@ export function getDefaultFirebaseApp(): firebase.app.App {
   return _app;
 }
 
-let _functions: firebase.functions.Functions | null = null;
-export function getFirebaseFunctions(): firebase.functions.Functions {
-  if (!_functions) {
-    _functions = getDefaultFirebaseApp().functions();
-    if (serviceConfig.shouldUseLocalBackend) {
-      _functions.useEmulator("localhost", 5001);
-    }
-  }
-  return _functions;
-}
-
 let _auth: firebase.auth.Auth | null = null;
 export function getFirebaseAuth(): firebase.auth.Auth {
   if (!_auth) {

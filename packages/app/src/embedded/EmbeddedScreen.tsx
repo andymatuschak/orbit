@@ -1,8 +1,11 @@
 import {
-  getNextTaskParameters,
-  PromptRepetitionOutcome,
-  promptTypeSupportsRetry,
-} from "@withorbit/core";
+  AttachmentID,
+  defaultSpacedRepetitionSchedulerConfiguration,
+  EventForEntity,
+  Task,
+  TaskID,
+  TaskRepetitionOutcome,
+} from "@withorbit/core2";
 import { EmbeddedHostState, ReviewItem } from "@withorbit/embedded-support";
 import {
   FadeView,
@@ -25,10 +28,12 @@ import {
   ReviewSessionManagerState,
   useReviewSessionManager,
 } from "../reviewSessionManager";
+import { useAPIClient } from "../util/useAPIClient";
 import useByrefCallback from "../util/useByrefCallback";
 import EmbeddedBanner from "./EmbeddedBanner";
 import { useEmbeddedNetworkQueue } from "./embeddedNetworkQueue";
 import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost";
+import { useEmbeddedHostState } from "./ipc/useEmbeddedHostState";
 import { getActionsRecordForMarking } from "./markingActions";
 import OnboardingModalWeb from "./OnboardingModal.web";
 import { TestModeBanner } from "./TestModeBanner";
@@ -36,19 +41,20 @@ import {
   EmbeddedAuthenticationState,
   useEmbeddedAuthenticationState,
 } from "./useEmbeddedAuthenticationState";
-import { useEmbeddedHostState } from "./ipc/useEmbeddedHostState";
-import { useInitialPromptStates } from "./useInitialPromptStates";
-import useResolvedReviewItems from "./useResolvedReviewItems";
+import { useRemoteTaskStates } from "./useRemoteTaskStates";
 import { findItemsToRetry } from "./util/findItemsToRetry";
 import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
 import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL";
 
 function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
-  return sessionItems.map((item) => ({
-    isPendingForSession: !item.promptState, // TODO for retry
-    promptState: item.promptState,
-    supportsRetry: promptTypeSupportsRetry(item.prompt.promptType),
-  }));
+  return sessionItems.map((item) => {
+    const componentState = item.task.componentStates[item.componentID];
+    return {
+      component: componentState,
+      isPendingForSession:
+        componentState.lastRepetitionTimestampMillis === null,
+    };
+  });
 }
 
 function getEndOfTaskLabel(
@@ -58,7 +64,7 @@ function getEndOfTaskLabel(
   const promptString = starburstItems.length > 1 ? "prompts" : "prompt";
   if (hasPeerStates) {
     const collectedCount = starburstItems.filter(
-      (state) => !!state.promptState,
+      (state) => !state.isPendingForSession,
     ).length;
     return `${collectedCount} of ${starburstItems.length} prompts on page collected`;
   } else {
@@ -74,6 +80,7 @@ interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
   hostState: EmbeddedHostState | null;
   hasUncommittedActions: boolean;
   isDebug?: boolean;
+  getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
 
   // these review session manager fields can't be null
   currentReviewAreaQueueIndex: number;
@@ -89,6 +96,7 @@ function EmbeddedScreenRenderer({
   hostState,
   hasUncommittedActions,
   isDebug,
+  getURLForAttachmentID,
   currentSessionItemIndex,
   currentReviewAreaQueueIndex,
   sessionItems,
@@ -96,7 +104,7 @@ function EmbeddedScreenRenderer({
   wasInitiallyComplete,
 }: EmbeddedScreenRendererProps) {
   const [pendingOutcome, setPendingOutcome] =
-    useState<PromptRepetitionOutcome | null>(null);
+    useState<TaskRepetitionOutcome | null>(null);
 
   const [isComplete, setComplete] = useState(false);
   const [shouldShowOnboardingModal, setShouldShowOnboardingModal] =
@@ -183,6 +191,7 @@ function EmbeddedScreenRenderer({
           }
           colorMode={isComplete ? "accent" : "bicolor"}
           colorPalette={colorPalette}
+          config={defaultSpacedRepetitionSchedulerConfiguration}
         />
         <FadeView
           isVisible={isComplete}
@@ -233,6 +242,7 @@ function EmbeddedScreenRenderer({
             setPendingOutcome(newPendingOutcome);
           }}
           insetBottom={0}
+          getURLForAttachmentID={getURLForAttachmentID}
         />
       )}
       {isComplete && (
@@ -271,15 +281,10 @@ function getEmbeddedReviewAreaItemsFromReviewItems(
   colorPalette: styles.colors.ColorPalette,
 ): ReviewAreaItem[] {
   return reviewItems.map((item) => ({
-    promptTaskID: item.promptTaskID,
-    prompt: item.prompt,
-    promptParameters: item.promptParameters,
-    taskParameters: getNextTaskParameters(
-      item.prompt,
-      item.promptState?.lastReviewTaskParameters ?? null,
-    ),
+    taskID: item.task.id,
+    spec: item.task.spec,
+    componentID: item.componentID,
     provenance: null, // We don't show provenance in the embedded UI.
-    attachmentResolutionMap: item.attachmentResolutionMap,
     colorPalette,
   }));
 }
@@ -296,6 +301,7 @@ export default function EmbeddedScreen() {
   const authenticationClient = useAuthenticationClient();
   const authenticationState =
     useEmbeddedAuthenticationState(authenticationClient);
+  const apiClient = useAPIClient(authenticationClient);
 
   const {
     currentSessionItemIndex,
@@ -304,23 +310,11 @@ export default function EmbeddedScreen() {
     reviewAreaQueue,
     ...reviewSessionManager
   } = useReviewSessionManager();
-  const { commitActionsRecord, hasUncommittedActions } =
-    useEmbeddedNetworkQueue(authenticationState.status);
 
-  const hostState = useEmbeddedHostState();
-  const embeddedReviewItems = useResolvedReviewItems(
-    configuration.embeddedItems,
-    document.referrer,
-  );
-
-  // When the initial queue becomes available, add it to the review session manager.
+  // Add the initial queue to the review session manager.
   const enqueueInitialItems = useByrefCallback(
     (embeddedReviewItems: ReviewItem[]) => {
-      reviewSessionManager.updateSessionItems(() =>
-        hostState && hostState.orderedScreenRecords[hostState.receiverIndex]
-          ? getSessionReviewItemsFromHostState(hostState)
-          : embeddedReviewItems,
-      );
+      reviewSessionManager.updateSessionItems(() => embeddedReviewItems);
       reviewSessionManager.pushReviewAreaQueueItems(
         getEmbeddedReviewAreaItemsFromReviewItems(
           embeddedReviewItems,
@@ -330,12 +324,11 @@ export default function EmbeddedScreen() {
     },
   );
   useEffect(() => {
-    if (embeddedReviewItems) {
-      enqueueInitialItems(embeddedReviewItems);
-    }
-  }, [embeddedReviewItems, enqueueInitialItems]);
+    enqueueInitialItems(configuration.reviewItems);
+  }, [configuration.reviewItems, enqueueInitialItems]);
 
   // Update the review session manager when we get a new set of items from the host.
+  const hostState = useEmbeddedHostState();
   const updateSessionItemsFromHostState = useByrefCallback(
     (hostState: EmbeddedHostState) => {
       reviewSessionManager.updateSessionItems(() =>
@@ -349,38 +342,56 @@ export default function EmbeddedScreen() {
     }
   }, [hostState, updateSessionItemsFromHostState]);
 
-  const initialPromptStates = useInitialPromptStates({
-    authenticationClient: authenticationClient,
-    authenticationState: authenticationState,
-    embeddedReviewItems: embeddedReviewItems,
-    shouldRequestInitialPrompts: currentReviewAreaQueueIndex === 0,
+  // Load the states for these tasks as they exist on the server and merge into our local session state.
+  const remoteTaskStates = useRemoteTaskStates({
+    apiClient,
+    authenticationState,
+    embeddedReviewItems: configuration.reviewItems,
   });
-  const [wasInitiallyComplete, setWasInitiallyComplete] = useState(false);
-  const updateSessionItemsFromInitialPromptStates = useByrefCallback(() => {
-    if (initialPromptStates && embeddedReviewItems) {
+
+  // TODO: account for tasks which need retry
+  const wasInitiallyComplete = useMemo(
+    () =>
+      remoteTaskStates
+        ? configuration.reviewItems.every((item) =>
+            remoteTaskStates.has(item.task.id),
+          )
+        : false,
+    [remoteTaskStates, configuration.reviewItems],
+  );
+
+  const updateSessionItemsFromRemoteTaskStates = useByrefCallback(
+    (remoteTaskStates: Map<TaskID, Task>) => {
       // Potential races abound here, but in practice I don't think they actually matter.
       reviewSessionManager.updateSessionItems((sessionItems) =>
         sessionItems.map((item) => {
-          const initialPromptState = initialPromptStates.get(item.promptTaskID);
-          return initialPromptState
-            ? {
-                ...item,
-                promptState: initialPromptState,
-              }
-            : item;
+          const initialTaskState = remoteTaskStates.get(item.task.id);
+          return initialTaskState ? { ...item, task: initialTaskState } : item;
         }),
       );
-
-      setWasInitiallyComplete(
-        embeddedReviewItems.every((item) =>
-          initialPromptStates.has(item.promptTaskID),
-        ),
-      );
-    }
-  });
+    },
+  );
   useEffect(() => {
-    updateSessionItemsFromInitialPromptStates();
-  }, [initialPromptStates, updateSessionItemsFromInitialPromptStates]);
+    if (remoteTaskStates) {
+      updateSessionItemsFromRemoteTaskStates(remoteTaskStates);
+    }
+  }, [remoteTaskStates, updateSessionItemsFromRemoteTaskStates]);
+
+  const getURLForAttachmentID = useByrefCallback((id: AttachmentID) => {
+    let url: string | undefined = configuration.attachmentIDsToURLs[id];
+    if (url) return url;
+    for (const record of hostState?.orderedScreenRecords ?? []) {
+      url = record?.attachmentIDsToURLs[id];
+      if (url) return url;
+    }
+    return null;
+  });
+  const getURLForAttachmentIDAsync = useByrefCallback(
+    async (id: AttachmentID) => getURLForAttachmentID(id),
+  );
+
+  const { commitActionsRecord, hasUncommittedActions } =
+    useEmbeddedNetworkQueue(authenticationState.status, apiClient);
 
   function onMark(markingRecord: ReviewAreaMarkingRecord) {
     if (currentSessionItemIndex === null) {
@@ -388,27 +399,22 @@ export default function EmbeddedScreen() {
     }
     const actionsRecord = getActionsRecordForMarking({
       hostMetadata: configuration.embeddedHostMetadata,
-      markingRecord: markingRecord,
+      outcome: markingRecord.outcome,
       reviewItem: sessionItems[currentSessionItemIndex],
       sessionStartTimestampMillis: configuration.sessionStartTimestampMillis,
+      getURLForAttachmentID,
     });
 
     // Update our local records for this item.
     reviewSessionManager.markCurrentItem(
-      // When marking some embedded prompts (e.g. clozes), logs for multiple task IDs are generated, but the review session manager expects only to receive logs for the current item, so we filter others out.
-      actionsRecord.logEntries.filter(
-        ({ log }) =>
-          log.taskID === sessionItems[currentSessionItemIndex].promptTaskID,
+      actionsRecord.events.filter(
+        (e): e is EventForEntity<Task> =>
+          e.entityID === markingRecord.reviewAreaItem.taskID,
       ),
       (newState) => {
         // Propagate those updates to peer embedded screens.
-        const updatedReviewItem =
-          newState.sessionItems[currentSessionItemIndex];
-        if (!updatedReviewItem.promptState)
-          throw new Error("Item should have prompt state after marking");
         sendUpdatedReviewItemToHost(
-          updatedReviewItem.promptTaskID,
-          updatedReviewItem.promptState,
+          newState.sessionItems[currentSessionItemIndex].task,
         );
 
         // If we were at the end of our queue, refill it with items needing retry.
@@ -440,11 +446,10 @@ export default function EmbeddedScreen() {
   }
 
   if (
-    embeddedReviewItems === null ||
     currentReviewAreaQueueIndex === null ||
     currentSessionItemIndex === null
   ) {
-    return null; // TODO show loading screen: we may be resolving attachments.
+    return null;
   }
 
   return (
@@ -464,6 +469,7 @@ export default function EmbeddedScreen() {
             hasUncommittedActions={hasUncommittedActions}
             isDebug={configuration.isDebug}
             wasInitiallyComplete={wasInitiallyComplete}
+            getURLForAttachmentID={getURLForAttachmentIDAsync}
           />
         )}
       </ReviewSessionContainer>

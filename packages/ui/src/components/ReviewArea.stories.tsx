@@ -21,7 +21,7 @@ type ReviewAreaTemplateProps = {
   questionOverrideText: string;
   answerOverrideText: string;
   sourceContext: string;
-  getURLForAttachmentID: (id: AttachmentID) => string;
+  getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
 };
 
 function ReviewAreaTemplate({
@@ -105,7 +105,7 @@ export function Basic() {
 
   return (
     <ReviewAreaTemplate
-      getURLForAttachmentID={useCallback(() => "", [])}
+      getURLForAttachmentID={useCallback(async () => "", [])}
       colorKnobOffset={colorKnobOffset}
       questionOverrideText={questionOverrideText}
       answerOverrideText={answerOverrideText}
@@ -141,7 +141,7 @@ export function OverflowingPrompt() {
 
   return (
     <ReviewAreaTemplate
-      getURLForAttachmentID={useCallback(() => "", [])}
+      getURLForAttachmentID={useCallback(async () => "", [])}
       colorKnobOffset={colorKnobOffset}
       questionOverrideText={questionOverrideText}
       answerOverrideText={answerOverrideText}

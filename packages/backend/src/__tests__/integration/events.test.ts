@@ -9,7 +9,7 @@ afterEach(async () => {
 
 test("round-trip request", async () => {
   await setupAuthToken("patch-events-round-trip");
-  const testEvents = fixtures.createTestTaskIngestEvents(500, "test");
+  const testEvents = fixtures.createTestTaskIngestEvents(500);
   const { status: patchStatus, body: patchBody } = await fetchRoute(
     `/api/2/events`,
     {

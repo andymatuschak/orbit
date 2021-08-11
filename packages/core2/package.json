@@ -9,7 +9,9 @@
   "exports": "./dist/index.js",
   "sideEffects": false,
   "dependencies": {
-    "@withorbit/core": "0.0.1"
+    "@withorbit/core": "0.0.1",
+    "base64-js": "^1.5.1",
+    "uuid": "^8.3.2"
   },
   "scripts": {
     "build": "tsc -b",
@@ -21,6 +23,7 @@
     "@babel/preset-typescript": "^7.14.5",
     "@types/jest": "^26.0.24",
     "@types/node": "^14.14.7",
+    "@types/uuid": "^8.3.1",
     "babel-jest": "^27.0.6",
     "jest": "~27.0.6",
     "multiformats": "^9.1.0",

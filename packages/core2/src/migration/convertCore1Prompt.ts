@@ -11,7 +11,7 @@ import {
   TaskSpec,
   TaskSpecType,
 } from "../entities/task";
-import { parseSingleCurlyBraceClozePromptMarkup } from "../entities/task/parseClozeMarkup";
+import { parseSingleCurlyBraceClozePromptMarkup } from "../entities/util/parseClozeMarkup";
 
 export function convertCore1Prompt(prompt: Prompt): TaskSpec {
   switch (prompt.promptType) {
