@@ -55,15 +55,7 @@ export class Database {
               id,
               currentEntityRecordMap.get(id) ?? null,
               events,
-            ).catch((error) => {
-              throw new Error(
-                `Error updating snapshot of entity ${id}: ${error}; new events: ${JSON.stringify(
-                  events,
-                  null,
-                  "\t",
-                )}`,
-              );
-            }),
+            ),
           ),
         );
 
@@ -145,9 +137,19 @@ export class Database {
       const output: { event: Event; entity: Entity }[] = [];
       let currentEntity: Entity | null = snapshot;
       for (const event of events) {
-        const entity = this._eventReducer(currentEntity, event);
-        output.push({ event, entity });
-        currentEntity = entity;
+        try {
+          const entity = this._eventReducer(currentEntity, event);
+          output.push({ event, entity });
+          currentEntity = entity;
+        } catch (error) {
+          throw new Error(
+            `Error updating entity ${entityID}: ${error}; snapshot: ${JSON.stringify(
+              snapshot,
+              null,
+              "\t",
+            )}; new events: ${JSON.stringify(events, null, "\t")}`,
+          );
+        }
       }
       return output;
     };
@@ -166,9 +168,11 @@ export class Database {
       );
     } else {
       // We've got an out-of-order event (or no prior snapshot). We'll recompute the snapshot from scratch.
-      const events = (await this._backend.listEvents({
-        predicate: ["entityID", "=", entityID],
-      })).concat(newEvents);
+      const events = (
+        await this._backend.listEvents({
+          predicate: ["entityID", "=", entityID],
+        })
+      ).concat(newEvents);
       if (events.length === 0) {
         throw new Error(
           `Attempting to update snapshot for entity ${entityID}, but no events are present.`,
