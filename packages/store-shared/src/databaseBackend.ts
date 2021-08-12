@@ -1,4 +1,10 @@
-import { Entity, Event, EventID, IDOfEntity } from "@withorbit/core2";
+import {
+  Entity,
+  Event,
+  EventForEntity,
+  EventID,
+  IDOfEntity
+} from "@withorbit/core2";
 import { DatabaseEntityQuery, DatabaseEventQuery } from "./databaseQuery";
 
 export interface DatabaseBackend {
@@ -7,16 +13,15 @@ export interface DatabaseBackend {
   getEvents<E extends Event, ID extends EventID>(
     eventIDs: ID[],
   ): Promise<Map<ID, E>>;
-  putEvents(events: Event[]): Promise<void>;
 
   getEntities<E extends Entity, ID extends IDOfEntity<E>>(
     entityIDs: ID[],
   ): Promise<Map<ID, DatabaseBackendEntityRecord<E>>>;
-  modifyEntities<E extends Entity, ID extends IDOfEntity<E>>(
-    ids: ID[],
+  updateEntities<E extends Entity>(
+    newEvents: EventForEntity<E>[],
     transformer: (
-      entityRecordMap: Map<ID, DatabaseBackendEntityRecord<E>>,
-    ) => Promise<Map<ID, DatabaseBackendEntityRecord<E>>>,
+      entityRecordMap: Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>,
+    ) => Promise<Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>>,
   ): Promise<void>;
 
   // Returns events in an arbitrary order which is stable on this client (i.e. so paging using afterID is safe), but which is not guaranteed to be consistent across clients.

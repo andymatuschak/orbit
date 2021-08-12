@@ -70,12 +70,13 @@ export function runDatabaseTests(
     test("put duplicate events", async () => {
       await db.putEvents(testEvents);
       await db.putEvents([
+        { id: "e", entityID: "y", timestampMillis: 105 } as Event,
         ...testEvents,
         { id: "d", entityID: "y", timestampMillis: 90 } as Event,
       ]);
 
       const allEvents = await db.listEvents({});
-      expect(allEvents.length).toEqual(testEvents.length + 1);
+      expect(allEvents.length).toEqual(testEvents.length + 2);
     });
 
     test(`updates entities`, async () => {
@@ -100,6 +101,24 @@ export function runDatabaseTests(
       results = await db.getEntities([entityID]);
       entity = results.get(entityID);
       expect((entity as any).eventIDs).toEqual(["b", "z", "a", "q"]);
+    });
+
+    test("doesn't write events which fail to apply", async () => {
+      const db = await databaseFactory(eventReducer);
+      await expect(
+        db.putEvents([
+          {
+            type: EventType.TaskUpdateDeleted,
+            entityID: "zz" as TaskID,
+            id: "fail" as EventID,
+            timestampMillis: 100,
+            isDeleted: true,
+          },
+        ]),
+      ).rejects.toBeInstanceOf(Error);
+
+      const events = await db.getEvents(["fail" as EventID]);
+      expect(events.size).toBe(0);
     });
 
     test("events with same timestamp are combined with original order", async () => {

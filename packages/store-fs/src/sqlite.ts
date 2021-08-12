@@ -1,11 +1,17 @@
-import { Entity, Event, EventID, IDOfEntity } from "@withorbit/core2";
 import {
+  Entity,
+  Event,
+  EventForEntity,
+  EventID,
+  IDOfEntity,
+} from "@withorbit/core2";
+import {
+  DatabaseBackend,
+  DatabaseBackendEntityRecord,
   DatabaseEntityQuery,
   DatabaseEventQuery,
   DatabaseQueryOptions,
   DatabaseQueryPredicate,
-  DatabaseBackend,
-  DatabaseBackendEntityRecord,
 } from "@withorbit/store-shared";
 import { openDatabase } from "./sqlite/binding";
 import { getMetadataValues, setMetadataValues } from "./sqlite/metadata";
@@ -16,7 +22,7 @@ import {
   SQLTableName,
 } from "./sqlite/tables";
 import { execReadStatement, execTransaction } from "./sqlite/transactionUtils";
-import { SQLDatabase } from "./sqlite/types";
+import { SQLDatabase, SQLTransaction } from "./sqlite/types";
 
 /*
 
@@ -29,8 +35,6 @@ Running list of implementation problems / gotchas:
   c. the database must be run in WAL mode at all times to avoid iOS killing us for holding a database lock while suspended
 
 2. Our transaction primitives don't give us enough control to safely isolate schema migration. Simultaneous migrations could occur in the context of multiple processes accessing the same database, or multiple instances in the same process reading the same database. In practice, this probably won't cause corruption: most likely the migration transaction will simply fail in one process. But in the future complex migrations could partially succeed. At some point we should consider flock()ing during migration.
-
-3. modifyEntities() isn't atomic/transactional; see comment in that method for more.
 
 [1] https://github.com/expo/expo/issues/2278
  */
@@ -77,14 +81,16 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     );
   }
 
-  // TODO: This implementation doesn't yet provide transactional guarantees. We can't use SQL transactions directly here (because we have to return control to the caller), but we should implement atomicity anyway (e.g. by rolling back and retrying when the updated entity IDs have the same lastEventID as the initial ones; this isn't straightforward, so I'm deferring this work for now).
-  async modifyEntities<E extends Entity, ID extends IDOfEntity<E>>(
-    ids: ID[],
+  async updateEntities<E extends Entity>(
+    events: EventForEntity<E>[],
     transformer: (
-      row: Map<ID, DatabaseBackendEntityRecord<E>>,
-    ) => Promise<Map<ID, DatabaseBackendEntityRecord<E>>>,
+      entityRecordMap: Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>,
+    ) => Promise<Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>>,
   ): Promise<void> {
-    const entityRecordMap = await this.getEntities<E, ID>(ids);
+    const entityIDs = new Set(events.map(({ entityID }) => entityID));
+    const entityRecordMap = await this.getEntities<E, IDOfEntity<E>>([
+      ...entityIDs,
+    ]);
     const transformedEntityRecordMap = await transformer(entityRecordMap);
 
     const rows: unknown[][] = [];
@@ -97,25 +103,49 @@ export class SQLDatabaseBackend implements DatabaseBackend {
         JSON.stringify(record.entity),
       ]);
     }
-    await this._put({
-      tableName: SQLTableName.Entities,
-      orderedColumnNames: [
-        SQLEntityTableColumn.ID,
-        SQLEntityTableColumn.EntityType,
-        SQLEntityTableColumn.LastEventID,
-        SQLEntityTableColumn.LastEventTimestampMillis,
-        SQLEntityTableColumn.Data,
-      ],
-      rows,
-      conflictSpec: {
-        policy: "replace",
-        uniqueColumnName: SQLEntityTableColumn.ID,
-        updateColumnNames: [
+
+    await execTransaction(await this._ensureDB(), (transaction) => {
+      SQLDatabaseBackend._put({
+        transaction,
+        tableName: SQLTableName.Events,
+        orderedColumnNames: [
+          SQLEventTableColumn.ID,
+          SQLEventTableColumn.EntityID,
+          SQLEventTableColumn.Data,
+        ],
+        rows: events.map((event) => [
+          event.id,
+          event.entityID,
+          JSON.stringify(event),
+        ]),
+        // Duplicate events are ignored.
+        conflictSpec: {
+          policy: "ignore",
+          uniqueColumnName: SQLEventTableColumn.ID,
+        },
+      });
+
+      SQLDatabaseBackend._put({
+        transaction,
+        tableName: SQLTableName.Entities,
+        orderedColumnNames: [
+          SQLEntityTableColumn.ID,
+          SQLEntityTableColumn.EntityType,
           SQLEntityTableColumn.LastEventID,
           SQLEntityTableColumn.LastEventTimestampMillis,
           SQLEntityTableColumn.Data,
         ],
-      },
+        rows,
+        conflictSpec: {
+          policy: "replace",
+          uniqueColumnName: SQLEntityTableColumn.ID,
+          updateColumnNames: [
+            SQLEntityTableColumn.LastEventID,
+            SQLEntityTableColumn.LastEventTimestampMillis,
+            SQLEntityTableColumn.Data,
+          ],
+        },
+      });
     });
   }
 
@@ -133,28 +163,6 @@ export class SQLDatabaseBackend implements DatabaseBackend {
       },
     );
   }
-
-  putEvents(events: Event[]): Promise<void> {
-    return this._put({
-      tableName: SQLTableName.Events,
-      orderedColumnNames: [
-        SQLEventTableColumn.ID,
-        SQLEventTableColumn.EntityID,
-        SQLEventTableColumn.Data,
-      ],
-      rows: events.map((event) => [
-        event.id,
-        event.entityID,
-        JSON.stringify(event),
-      ]),
-      // Duplicate events are ignored.
-      conflictSpec: {
-        policy: "ignore",
-        uniqueColumnName: SQLEventTableColumn.ID,
-      },
-    });
-  }
-
   async listEntities<E extends Entity>(
     query: DatabaseEntityQuery<E>,
   ): Promise<DatabaseBackendEntityRecord<E>[]> {
@@ -207,12 +215,14 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     });
   }
 
-  private async _put({
+  private static _put({
+    transaction,
     tableName,
     orderedColumnNames,
     rows,
     conflictSpec,
   }: {
+    transaction: SQLTransaction;
     tableName: SQLTableName;
     orderedColumnNames: string[];
     rows: unknown[][];
@@ -224,33 +234,29 @@ export class SQLDatabaseBackend implements DatabaseBackend {
           updateColumnNames: string[];
         }
       | { policy: "ignore"; uniqueColumnName: string };
-  }): Promise<void> {
-    const db = await this._ensureDB();
-    await execTransaction(db, (tx) => {
-      const placeholderString = rows
-        .map((row) => `(${row.map(() => "?").join(",")})`)
-        .join(",");
-      let insertSQLStatement = `INSERT INTO ${tableName} (${orderedColumnNames.join(
-        ",",
-      )}) VALUES ${placeholderString}`;
+  }): void {
+    const placeholderString = rows
+      .map((row) => `(${row.map(() => "?").join(",")})`)
+      .join(",");
+    let insertSQLStatement = `INSERT INTO ${tableName} (${orderedColumnNames.join(
+      ",",
+    )}) VALUES ${placeholderString} `;
 
-      if (conflictSpec) {
-        switch (conflictSpec.policy) {
-          case "replace":
-            insertSQLStatement += `ON CONFLICT(${
-              conflictSpec.uniqueColumnName
-            }) DO UPDATE SET ${conflictSpec.updateColumnNames
-              .map((name) => `${name} = excluded.${name}`)
-              .join(", ")}`;
-            break;
-          case "ignore":
-            insertSQLStatement += `ON CONFLICT(${conflictSpec.uniqueColumnName}) DO NOTHING`;
-            break;
-        }
+    if (conflictSpec) {
+      switch (conflictSpec.policy) {
+        case "replace":
+          insertSQLStatement += `ON CONFLICT(${
+            conflictSpec.uniqueColumnName
+          }) DO UPDATE SET ${conflictSpec.updateColumnNames
+            .map((name) => `${name} = excluded.${name}`)
+            .join(", ")}`;
+          break;
+        case "ignore":
+          insertSQLStatement += `ON CONFLICT(${conflictSpec.uniqueColumnName}) DO NOTHING`;
+          break;
       }
-
-      tx.executeSql(insertSQLStatement, rows.flat());
-    });
+    }
+    transaction.executeSql(insertSQLStatement, rows.flat());
   }
 
   private async _getByID<ID extends string, Column extends string, Output>(

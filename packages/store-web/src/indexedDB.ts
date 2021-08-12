@@ -3,6 +3,7 @@ import {
   EntityID,
   EntityType,
   Event,
+  EventForEntity,
   EventID,
   IDOfEntity,
 } from "@withorbit/core2";
@@ -222,39 +223,44 @@ export class IDBDatabaseBackend implements DatabaseBackend {
     return queriedEvents.map((event) => JSON.parse(event.data));
   }
 
-  async modifyEntities<E extends Entity, ID extends IDOfEntity<E>>(
-    ids: ID[],
+  async updateEntities<E extends Entity>(
+    events: EventForEntity<E>[],
     transformer: (
-      entityRecordMap: Map<ID, DatabaseBackendEntityRecord<E>>,
-    ) => Promise<Map<ID, DatabaseBackendEntityRecord<E>>>,
+      entityRecordMap: Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>,
+    ) => Promise<Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>>,
   ): Promise<void> {
+    // Attempt to write the events and entities. If some events are duplicates, we'll re-run this function with only the new events.
     await this.db.transaction(
       "readwrite",
       this.db.entities,
       this.db.events,
       this.db.derived_taskComponents,
       async () => {
-        const rows = await this.db.entities
+        // Fetch the old entities.
+        const entityIDs = new Set(events.map(({ entityID }) => entityID));
+        const oldEntityRows = (await this.db.entities
           .where(DexieEntityKeys.ID)
-          .anyOf(ids)
-          .toArray();
-        const entityIDsToRowIDs = new Map<EntityID, number>();
-        for (const { rowID, id } of rows as DexieEntityRowWithPrimaryKey[]) {
-          entityIDsToRowIDs.set(id, rowID);
-        }
-
-        const oldEntityRecordMap = extractEntityRecordMapFromRows<E, ID>(rows);
-        const transformedEntityRecordMap = await transformer(
-          oldEntityRecordMap,
+          .anyOf([...entityIDs])
+          .toArray()) as DexieEntityRowWithPrimaryKey[];
+        const entityIDsToRowIDs = new Map(
+          oldEntityRows.map(({ rowID, id }) => [id, rowID]),
         );
+        const oldEntityRecordMap = extractEntityRecordMapFromRows<
+          E,
+          IDOfEntity<E>
+        >(oldEntityRows);
 
-        const transformedRows = Array<
-          // We may or may not have a rowID.
+        // Compute the new entities.
+        const newEntityRecordMap = await transformer(oldEntityRecordMap);
+
+        // Write the new entities.
+        const newEntityRows = Array<
+          // We may or may not have a rowID: we will if it's an existing row, and not otherwise.
           DexieEntityRow & { [DexieEntityKeys.RowID]?: number }
         >();
-        for (const [id, record] of transformedEntityRecordMap) {
+        for (const [id, record] of newEntityRecordMap) {
           const rowID = entityIDsToRowIDs.get(id);
-          transformedRows.push({
+          newEntityRows.push({
             ...getEntityRowForEntityRecord(record),
             // We include the old row ID if we had a record for this row before; otherwise, it's a new entity, and the DB will assign it a row ID.
             ...(rowID !== undefined && { rowID }),
@@ -265,12 +271,28 @@ export class IDBDatabaseBackend implements DatabaseBackend {
             record.entity,
           );
         }
-        await this.db.entities.bulkPut(transformedRows);
+
+        await this.db.entities.bulkPut(newEntityRows);
+
+        // Determine which events are new--unfortunately, there's no "cheap" way for us to only insert events which we were missing.
+        const oldEvents = await this.getEvents(events.map(({ id }) => id));
+        const eventsToAdd = events.filter(({ id }) => !oldEvents.has(id));
+
+        await this.db.events.bulkAdd(
+          eventsToAdd.map((event) => ({
+            entityID: event.entityID,
+            id: event.id,
+            data: JSON.stringify(event),
+          })),
+        );
       },
     );
   }
 
-  private async _onEntityUpdate(oldEntity: Entity | null, newEntity: Entity) {
+  private async _onEntityUpdate(
+    oldEntity: Entity | null,
+    newEntity: Entity,
+  ): Promise<void> {
     if (newEntity.type !== EntityType.Task) {
       return;
     }
@@ -281,57 +303,13 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         .equals(oldEntity.id)
         .delete();
     }
-    const newComponents = Object.entries(newEntity.componentStates).map(
-      ([componentID, value]) => ({
+    await this.db[DexieTable.DerivedTaskComponents].bulkPut(
+      Object.entries(newEntity.componentStates).map(([componentID, value]) => ({
         taskID: newEntity.id,
         componentID,
         dueTimestampMillis: value.dueTimestampMillis,
-      }),
+      })),
     );
-    await this.db[DexieTable.DerivedTaskComponents].bulkPut(newComponents);
-  }
-
-  async putEvents(events: Event[]): Promise<void> {
-    if (events.length === 0) {
-      return;
-    }
-
-    const eventsToRetry: Event[] = await this.db
-      .transaction("rw", this.db.events, async () => {
-        await this.db.events.bulkAdd(
-          events.map((event) => ({
-            entityID: event.entityID,
-            id: event.id,
-            data: JSON.stringify(event),
-          })),
-        );
-        return []; // No need to retry any events.
-      })
-      .catch(async (error) => {
-        if (error instanceof Dexie.BulkError) {
-          // We'll ignore attempts to add duplicate events.
-          // If there are any errors which aren't duplicates, though, we'll just fail.
-          if (
-            Object.values(error.failures).some(
-              (failure) => failure.name !== Dexie.errnames.Constraint,
-            )
-          ) {
-            throw error;
-          }
-
-          // We'll find all events which *aren't* duplicate, then attempt to write those.
-          const duplicateIndices = new Set(
-            Object.keys(error.failures).map((key) => Number.parseInt(key)),
-          );
-          return events.filter((e, i) => !duplicateIndices.has(i));
-        } else {
-          throw error;
-        }
-      });
-
-    if (eventsToRetry.length > 0) {
-      await this.putEvents(eventsToRetry);
-    }
   }
 
   async getMetadataValues<Key extends string>(

@@ -4,6 +4,7 @@ import {
   EntityID,
   EntityType,
   Event,
+  EventForEntity,
   EventID,
   IDOfEntity,
   Task,
@@ -218,31 +219,39 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
     return docs.map((doc) => doc.data()!);
   }
 
-  async modifyEntities<E extends Entity, ID extends IDOfEntity<E>>(
-    ids: ID[],
+  async updateEntities<E extends Entity>(
+    events: EventForEntity<E>[],
     transformer: (
-      entityRecordMap: Map<ID, DatabaseBackendEntityRecord<E>>,
-    ) => Promise<Map<ID, DatabaseBackendEntityRecord<E>>>,
+      entityRecordMap: Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>,
+    ) => Promise<Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>>,
   ): Promise<void> {
     await this._database.runTransaction(async (tx) => {
       // Get the old entity records.
+      const entityIDs = new Set(events.map(({ entityID }) => entityID));
       const entityDocs = await this._getByID<EntityDocumentBase<E>>(
         this._getEntityCollectionRef(),
-        ids,
+        [...entityIDs],
         (ids) => tx.getAll(...ids),
+      );
+
+      // We only want to insert events that don't exist, so we fetch just the metadata for all the IDs specified.
+      const eventCollectionRef = this._getEventCollectionRef();
+      const eventSnapshots = await tx.getAll(
+        ...events.map(({ id }) => this._getEventRef(id, eventCollectionRef)),
+        { fieldMask: [] },
       );
 
       // Call the transformer.
       const newEntityRecordMap = await transformer(
-        getEntityRecordMapFromFirestoreDocs<E, ID>(entityDocs),
+        getEntityRecordMapFromFirestoreDocs<E, IDOfEntity<E>>(entityDocs),
       );
 
       // Save the new entity records.
       const entityCollectionRef = this._getEntityCollectionRef();
-      const orderedIDsByEntityID = new Map<ID, OrderedID>();
+      const orderedIDsByEntityID = new Map<IDOfEntity<E>, OrderedID>();
       for (const doc of entityDocs) {
         if (doc) {
-          orderedIDsByEntityID.set(doc.entity.id as ID, doc.orderedID);
+          orderedIDsByEntityID.set(doc.entity.id as IDOfEntity<E>, doc.orderedID);
         }
       }
       for (const [id, newRecord] of newEntityRecordMap) {
@@ -256,17 +265,6 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
           ),
         );
       }
-    });
-  }
-
-  async putEvents(events: Event[]): Promise<void> {
-    const eventCollectionRef = this._getEventCollectionRef();
-    await this._database.runTransaction(async (tx) => {
-      // We only want to insert events that don't exist, so we fetch just the metadata for all the IDs specified.
-      const eventSnapshots = await tx.getAll(
-        ...events.map(({ id }) => this._getEventRef(id, eventCollectionRef)),
-        { fieldMask: [] },
-      );
 
       for (let i = 0; i < events.length; i++) {
         const snapshot = eventSnapshots[i];

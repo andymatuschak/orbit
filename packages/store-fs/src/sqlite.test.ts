@@ -64,7 +64,7 @@ async function putEntities(
   backend: DatabaseBackend,
   entities: DatabaseBackendEntityRecord<Entity>[],
 ) {
-  await backend.modifyEntities(
+  await backend.updateEntities(
     [],
     async () => new Map(entities.map((e) => [e.entity.id, e])),
   );

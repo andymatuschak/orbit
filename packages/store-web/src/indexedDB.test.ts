@@ -1,4 +1,4 @@
-import { Entity, EventID, Task } from "@withorbit/core2";
+import { Entity, EventID, EventType, Task, TaskID } from "@withorbit/core2";
 import { core2 as testFixtures } from "@withorbit/sample-data";
 import {
   DatabaseBackend,
@@ -48,7 +48,7 @@ async function putEntities(
   backend: DatabaseBackend,
   entities: DatabaseBackendEntityRecord<Entity>[],
 ) {
-  await backend.modifyEntities(
+  await backend.updateEntities(
     [],
     async () => new Map(entities.map((e) => [e.entity.id, e])),
   );
@@ -88,16 +88,28 @@ describe("task components", () => {
       dueTimestampMillis: 300,
     });
     delete updatedTask.componentStates["b"];
-    const updatedRecord: DatabaseBackendEntityRecord<Task> = {
-      entity: updatedTask,
-      lastEventID: "y" as EventID,
-      lastEventTimestampMillis: 20,
-    };
-    await backend.modifyEntities([updatedTask.id], async (entityMap) => {
-      const output = new Map(entityMap);
-      output.set(updatedTask.id, updatedRecord);
-      return output;
-    });
+    await backend.updateEntities(
+      [
+        {
+          type: EventType.TaskUpdateDeleted,
+          entityID: "a" as TaskID,
+          id: "y" as EventID,
+          isDeleted: false,
+          timestampMillis: 20,
+        },
+      ],
+      async () =>
+        new Map([
+          [
+            "a" as TaskID,
+            {
+              entity: updatedTask,
+              lastEventID: "y" as EventID,
+              lastEventTimestampMillis: 20,
+            },
+          ],
+        ]),
+    );
 
     const results = await fetchAllRowsForTable("derived_taskComponents");
     const filteredResults = results.filter(

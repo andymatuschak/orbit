@@ -35,12 +35,62 @@ export class Database {
   async putEvents(
     events: Event[],
   ): Promise<{ event: Event; entity: Entity }[]> {
-    if (events.length > 0) {
-      await this._backend.putEvents(events);
-      return await this._mergeEventsIntoEntitySnapshots(events);
-    } else {
-      return [];
+    if (events.length === 0) return [];
+
+    const eventsByEntityID = new Map<EntityID, Event[]>();
+    for (const event of events) {
+      eventsByEntityID.set(event.entityID, [
+        ...(eventsByEntityID.get(event.entityID) ?? []),
+        event,
+      ]);
     }
+
+    let output: { event: Event; entity: Entity }[] | undefined;
+    await this._backend.updateEntities<Entity>(
+      events,
+      async (currentEntityRecordMap) => {
+        const entityUpdates = await Promise.all(
+          [...eventsByEntityID.entries()].map(([id, events]) =>
+            this._computeUpdatedEntitySnapshot(
+              id,
+              currentEntityRecordMap.get(id) ?? null,
+              events,
+            ).catch((error) => {
+              throw new Error(
+                `Error updating snapshot of entity ${id}: ${error}; new events: ${JSON.stringify(
+                  events,
+                  null,
+                  "\t",
+                )}`,
+              );
+            }),
+          ),
+        );
+
+        output = entityUpdates.flat();
+        return new Map(
+          entityUpdates.map((updates) => {
+            const lastUpdate = updates[updates.length - 1];
+            return [
+              lastUpdate.entity.id,
+              {
+                entity: lastUpdate.entity,
+                lastEventID: lastUpdate.event.id,
+                lastEventTimestampMillis: lastUpdate.event.timestampMillis,
+              },
+            ] as const;
+          }),
+        );
+      },
+    );
+
+    if (output === undefined) {
+      throw new Error(`Inconsistent: output didn't get set in updateEntities`);
+    }
+
+    // Only return entries corresponding to the new events.
+    const eventIDs = new Set(events.map(({ id }) => id));
+    return output.filter(({ event: { id } }) => eventIDs.has(id));
   }
 
   getEvents<E extends Event, ID extends EventID>(
@@ -83,68 +133,6 @@ export class Database {
     await this._backend.setMetadataValues(values);
   }
 
-  // n.b. this method is conceivably open to races because we can't wrap the full update loop in a transaction handler, but I don't think it's an issue in practice. Worst case, the snapshot ends up behind the latest event, but it'd be corrected in the next snapshot update.
-  private async _mergeEventsIntoEntitySnapshots(
-    events: Event[],
-  ): Promise<{ event: Event; entity: Entity }[]> {
-    const eventsByEntityID = new Map<EntityID, Event[]>();
-    for (const event of events) {
-      eventsByEntityID.set(event.entityID, [
-        ...(eventsByEntityID.get(event.entityID) ?? []),
-        event,
-      ]);
-    }
-    const eventsByEntityIDEntries = [...eventsByEntityID.entries()];
-
-    const output: { event: Event; entity: Entity }[] = [];
-    const batchSize = 100;
-    for (let i = 0; i < eventsByEntityIDEntries.length; i += batchSize) {
-      const batchEntries = eventsByEntityIDEntries.slice(i, i + batchSize);
-      await this._backend.modifyEntities(
-        batchEntries.map(([id]) => id),
-        async (currentEntityRecordMap) => {
-          const entityUpdatePromises: Promise<
-            { event: Event; entity: Entity }[]
-          >[] = [];
-          for (const [id, events] of batchEntries) {
-            entityUpdatePromises.push(
-              this._computeUpdatedEntitySnapshot(
-                id,
-                currentEntityRecordMap.get(id) ?? null,
-                events,
-              ).catch((error) => {
-                throw new Error(
-                  `Error updating snapshot of entity ${id}: ${error}; new events: ${JSON.stringify(
-                    events,
-                    null,
-                    "\t",
-                  )}`,
-                );
-              }),
-            );
-          }
-
-          const entityUpdates = await Promise.all(entityUpdatePromises);
-          output.push(...entityUpdates.flat());
-          return new Map(
-            entityUpdates.map((updates) => {
-              const lastUpdate = updates[updates.length - 1];
-              return [
-                lastUpdate.entity.id,
-                {
-                  entity: lastUpdate.entity,
-                  lastEventID: lastUpdate.event.id,
-                  lastEventTimestampMillis: lastUpdate.event.timestampMillis,
-                },
-              ] as const;
-            }),
-          );
-        },
-      );
-    }
-    return output;
-  }
-
   private async _computeUpdatedEntitySnapshot(
     entityID: EntityID,
     currentRecord: DatabaseBackendEntityRecord<Entity> | null,
@@ -178,9 +166,9 @@ export class Database {
       );
     } else {
       // We've got an out-of-order event (or no prior snapshot). We'll recompute the snapshot from scratch.
-      const events = await this._backend.listEvents({
+      const events = (await this._backend.listEvents({
         predicate: ["entityID", "=", entityID],
-      });
+      })).concat(newEvents);
       if (events.length === 0) {
         throw new Error(
           `Attempting to update snapshot for entity ${entityID}, but no events are present.`,
