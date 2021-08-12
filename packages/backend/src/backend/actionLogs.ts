@@ -86,7 +86,7 @@ export async function listActionLogs(
   },
 ): Promise<Map<ActionLogID, ActionLog>> {
   const db = getDatabase();
-  let ref = getLogCollectionReference(db, userID).orderBy("serverTimestamp");
+  let ref = getLogCollectionReference(db, userID).orderBy("timestampMillis");
   if (query.createdAfterID) {
     const baseRef = await getActionLogIDReference(
       db,
