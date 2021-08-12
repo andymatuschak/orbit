@@ -24,7 +24,7 @@ export async function migrateUserImpl(userID: string) {
     console.log(`Fetching logs after ${afterID}`);
     const logs: Map<ActionLogID, ActionLog> =
       await backend.actionLogs.listActionLogs(userID, {
-        limit: 1000,
+        limit: 100,
         createdAfterID: afterID,
       });
 
