@@ -63,7 +63,9 @@ export function taskRepetitionEventReducer(
 
   const componentState = oldSnapshot.componentStates[event.componentID];
   if (!componentState) {
-    throw new Error(`Repetition on unknown component ${event.componentID}`);
+    // TODO: Consider making this a hard failure. I'm leaving it as a soft failure for now because it sometimes occurs during migrations from Anki, in which cloze content can change over time and "leave behind" some components.
+    console.error(`Repetition on unknown component ${event.componentID}`);
+    return oldSnapshot;
   }
 
   return modifyTaskComponent(oldSnapshot, event.componentID, (oldState) => ({
@@ -111,7 +113,9 @@ function modifyTaskComponent(
 ): Task {
   const componentState = oldSnapshot.componentStates[componentID];
   if (!componentState) {
-    throw new Error(`Repetition on unknown component ${componentID}`);
+    // TODO: Consider making this a hard failure. I'm leaving it as a soft failure for now because it sometimes occurs during migrations from Anki, in which cloze content can change over time and "leave behind" some components.
+    console.error(`Repetition on unknown component ${componentID}`);
+    return oldSnapshot;
   }
 
   return {
