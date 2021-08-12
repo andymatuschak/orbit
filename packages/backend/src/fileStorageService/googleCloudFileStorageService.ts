@@ -39,7 +39,7 @@ export class GoogleCloudFileStorageService implements FileStorageService {
 
   formatURL(subpath: string): string {
     // I'd normally be frightened of simply splatting subpath in here, since it's user-provided, but a) our attachment ID validator ensures it's alphanumeric; b) Google Storage paths aren't really paths; they're just strings with conventions around slashes. So people can't cause trouble by making attachment IDs like "../../../owned": that'll just result in an attachment literally named "userID/../../../owned".
-    return `https://storage.googleapis.com/${this._bucketName}/${storageAttachmentsPathComponent}/${subpath}`;
+    return `https://storage.googleapis.com/${this._bucketName}/${subpath}`;
   }
 
   async resolveFile(subpath: string): Promise<FileStorageResolution | null> {

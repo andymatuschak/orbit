@@ -16,12 +16,10 @@ import { getDatabase } from "./firebaseSupport/firebase";
 
 const attachmentSizeLimitBytes = 10 * 1024 * 1024;
 
-export type AttachmentAPIVersion = "core" | "core2";
-
 function getFileStorageSubpathForAttachmentID(
   attachmentID: AttachmentID,
 ): string {
-  return `${getFirebaseKeyForCIDString(attachmentID)}`;
+  return `attachments/${getFirebaseKeyForCIDString(attachmentID)}`;
 }
 
 export function _validateAttachmentResponse(

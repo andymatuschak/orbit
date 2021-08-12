@@ -10,7 +10,7 @@ export function getFileStorageSubpathForAttachmentID(
   userID: string,
   attachmentID: AttachmentID,
 ): string {
-  return `${userID}/${attachmentID}`;
+  return `attachments/${userID}/${attachmentID}`;
 }
 
 export function _validateAttachmentResponse(

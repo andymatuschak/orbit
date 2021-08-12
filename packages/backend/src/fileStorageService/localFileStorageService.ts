@@ -83,7 +83,7 @@ export class LocalFileStorageService implements FileStorageService {
     if (!(isRunningInEmulator || isRunningInTest)) {
       throw new Error("This implementation is only valid in test environments");
     }
-    return path.join(this.basePath, subpath.replace("/", "+"));
+    return path.join(this.basePath, subpath.replace(/\//g, "+"));
   }
 
   private _getMIMETypeMappingPath(): string {

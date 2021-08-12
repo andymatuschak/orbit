@@ -24,7 +24,10 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
   private readonly _database: firebase.firestore.Firestore;
   private readonly _orderedIDGenerator: OrderedIDGenerator;
 
-  constructor(userID: string, database: firebase.firestore.Firestore = getDatabase()) {
+  constructor(
+    userID: string,
+    database: firebase.firestore.Firestore = getDatabase(),
+  ) {
     this._userID = userID;
     this._database = database;
     this._orderedIDGenerator = new OrderedIDGenerator();
