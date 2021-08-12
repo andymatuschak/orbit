@@ -59,9 +59,15 @@ export const storeActionLogs: TypedRouteHandler<
   );
 
   // Double-write new logs in core2 storage.
-  await writeConvertedLogsToCore2Storage(logs, userID, (promptIDs) =>
-    backend.prompts.getPrompts(promptIDs),
-  );
+  const metadata = await backend.users.getUserMetadata(userID);
+  if (
+    metadata &&
+    (metadata.core2MigrationTimestampMillis)
+  ) {
+    await writeConvertedLogsToCore2Storage(logs, userID, (promptIDs) =>
+      backend.prompts.getPrompts(promptIDs),
+    );
+  }
 
   return { status: 204 };
 });

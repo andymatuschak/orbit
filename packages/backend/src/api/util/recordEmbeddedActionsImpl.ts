@@ -63,14 +63,17 @@ export async function recordEmbeddedActions(
     // Store logs
     await storeLogs(userID, args.logs);
 
-    await writeConvertedLogsToCore2Storage(
-      args.logs.map((log) => ({ id: getIDForActionLogSync(log), data: log })),
-      userID,
-      async () =>
-        new Map(Object.entries(args.promptsByID)) as Map<PromptID, Prompt>,
-    );
+    const metadata = await backend.users.getUserMetadata(userID);
+    if (metadata && metadata.core2MigrationTimestampMillis) {
+      await writeConvertedLogsToCore2Storage(
+        args.logs.map((log) => ({ id: getIDForActionLogSync(log), data: log })),
+        userID,
+        async () =>
+          new Map(Object.entries(args.promptsByID)) as Map<PromptID, Prompt>,
+      );
+    }
   } catch (error) {
     console.error(error.message);
-    throw new functions.https.HttpsError("internal", error.message);
+    throw new Error(`internal error: ${error.message}`);
   }
 }
