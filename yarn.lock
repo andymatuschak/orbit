@@ -8066,6 +8066,11 @@
   dependencies:
     "@types/express" "*"
 
+"@types/cors@^2.8.5":
+  version "2.8.12"
+  resolved "https://registry.yarnpkg.com/@types/cors/-/cors-2.8.12.tgz#6b2c510a7ad7039e98e7b8d3d6598f4359e5c080"
+  integrity sha512-vt+kDhq/M2ayberEtJcIN/hxXy1Pk+59g2FV/ZQceeaTyCtCucjL2Q7FXlFjtWn4n15KCr1NE2lNNFhp0lEThw==
+
 "@types/cors@^2.8.8":
   version "2.8.8"
   resolved "https://registry.yarnpkg.com/@types/cors/-/cors-2.8.8.tgz#317a8d8561995c60e35b9e0fcaa8d36660c98092"
@@ -9350,7 +9355,7 @@ ajv-keywords@^3.1.0, ajv-keywords@^3.4.1, ajv-keywords@^3.5.2:
   resolved "https://registry.yarnpkg.com/ajv-keywords/-/ajv-keywords-3.5.2.tgz#31f29da5ab6e00d1c2d329acf7b5929614d5014d"
   integrity sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==
 
-ajv@^6.1.0, ajv@^6.10.0, ajv@^6.10.2, ajv@^6.12.4, ajv@^6.12.5:
+ajv@^6.1.0, ajv@^6.10.0, ajv@^6.10.2, ajv@^6.12.4, ajv@^6.12.5, ajv@^6.12.6:
   version "6.12.6"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.12.6.tgz#baf5a62e802b07d977034586f8c3baf5adf26df4"
   integrity sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==
@@ -15616,25 +15621,27 @@ firebase-admin@^9.4.2:
     "@google-cloud/firestore" "^4.5.0"
     "@google-cloud/storage" "^5.3.0"
 
-firebase-functions@^3.14.1:
-  version "3.14.1"
-  resolved "https://registry.yarnpkg.com/firebase-functions/-/firebase-functions-3.14.1.tgz#3ac5bc70989365874f41d06bca3b42a233dd6039"
-  integrity sha512-hL/qm+i5i1qKYmAFMlQ4mwRngDkP+3YT3F4E4Nd5Hj2QKeawBdZiMGgEt6zqTx08Zq04vHiSnSM0z75UJRSg6Q==
+firebase-functions@^3.15.1:
+  version "3.15.1"
+  resolved "https://registry.yarnpkg.com/firebase-functions/-/firebase-functions-3.15.1.tgz#a6cb87a40e5ddc347365687155f700d59fd63b72"
+  integrity sha512-6vRmZJd7FaixB5cD1JNNw9u3o4QBTaJJJ2WMB9H3ptnAtsaBCwR7/faRCSt0MdX2j2N4XhmxnQ4GyWlFAJTZgg==
   dependencies:
+    "@types/cors" "^2.8.5"
     "@types/express" "4.17.3"
     cors "^2.8.5"
     express "^4.17.1"
     lodash "^4.17.14"
 
-firebase-tools@^9.12.0:
-  version "9.12.0"
-  resolved "https://registry.yarnpkg.com/firebase-tools/-/firebase-tools-9.12.0.tgz#7774ee52c69418f1a4fca235fe3e4186b3512c32"
-  integrity sha512-rPk4JyzPaSHyHQDGCh0/U63MW2nXgnZ4h0IRE2EjFHRz+KyNl/hakGX7EQKVej5HpMKFhWRjGOvDHn1PXooQgw==
+firebase-tools@^9.16.2:
+  version "9.16.2"
+  resolved "https://registry.yarnpkg.com/firebase-tools/-/firebase-tools-9.16.2.tgz#d01fe4b9368161e3f01d509c46dd47d95a3aeba9"
+  integrity sha512-XaXhGsRwXXx44dN5xv1D9McWdnGryv4q99sJJHn2sezoDSN4BoZkrQh6XEMtjRAmtC2iagBhL2luAm6fC7R/Qg==
   dependencies:
     "@google-cloud/pubsub" "^2.7.0"
     "@types/archiver" "^5.1.0"
     JSONStream "^1.2.1"
     abort-controller "^3.0.0"
+    ajv "^6.12.6"
     archiver "^5.0.0"
     body-parser "^1.19.0"
     chokidar "^3.0.2"
@@ -18371,14 +18378,6 @@ isomorphic-fetch@^2.1.1, isomorphic-fetch@^2.2.1:
   dependencies:
     node-fetch "^1.0.1"
     whatwg-fetch ">=0.10.0"
-
-isomorphic-fetch@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/isomorphic-fetch/-/isomorphic-fetch-3.0.0.tgz#0267b005049046d2421207215d45d6a262b8b8b4"
-  integrity sha512-qvUtwJ3j6qwsF3jLxkZ72qCgjMysPzDfeV240JHiGZsANBYd+EEuu35v7dfrJ9Up0Ak07D7GGSkGhCHTqg/5wA==
-  dependencies:
-    node-fetch "^2.6.1"
-    whatwg-fetch "^3.4.1"
 
 isstream@~0.1.2:
   version "0.1.2"
@@ -29359,11 +29358,6 @@ whatwg-fetch@>=0.10.0, whatwg-fetch@^3.0.0:
   version "3.4.1"
   resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-3.4.1.tgz#e5f871572d6879663fa5674c8f833f15a8425ab3"
   integrity sha512-sofZVzE1wKwO+EYPbWfiwzaKovWiZXf4coEzjGP9b2GBVgQRLQUZ2QcuPpQExGDAW5GItpEm6Tl4OU5mywnAoQ==
-
-whatwg-fetch@^3.4.1:
-  version "3.6.2"
-  resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-3.6.2.tgz#dced24f37f2624ed0281725d51d0e2e3fe677f8c"
-  integrity sha512-bJlen0FcuU/0EMLrdbJ7zOnW6ITZLrZMIarMUVmdKtsGvZna8vxKYaexICWPfZ8qwf9fzNq+UEIZrnSaApt6RA==
 
 whatwg-mimetype@^2.2.0, whatwg-mimetype@^2.3.0:
   version "2.3.0"
