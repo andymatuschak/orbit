@@ -10,13 +10,13 @@ import express from "express";
 import * as backend from "../../backend";
 import { writeConvertedLogsToCore2Storage } from "../util/writeConvertedLogsToCore2Storage";
 
-export async function migrateUser(
-  request: express.Request,
-  response: express.Response,
-) {
-  const userID = request.query.userID as string;
-
+export async function migrateUserImpl(userID: string) {
   console.log(`Migrating ${userID}`);
+  const metadata = await backend.users.getUserMetadata(userID);
+  if (metadata?.core2MigrationTimestampMillis) {
+    console.warn(`Skipping ${userID} because they have already been migrated`);
+    return;
+  }
 
   let afterID: ActionLogID | undefined = undefined;
   const promptCache = new Map<PromptID, Prompt>();
@@ -72,6 +72,18 @@ export async function migrateUser(
       break;
     }
   } while (afterID !== undefined);
+
+  await backend.users.updateUserMetadata(userID, {
+    core2MigrationTimestampMillis: Date.now()
+  })
+}
+
+export async function migrateUser(
+  request: express.Request,
+  response: express.Response,
+) {
+  const userID = request.query.userID as string;
+  await migrateUserImpl(userID);
 
   response.sendStatus(200);
 }

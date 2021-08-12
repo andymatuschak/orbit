@@ -5,6 +5,8 @@ export interface UserMetadata {
   sessionNotificationState?: SessionNotificationState;
   isUnsubscribedFromSessionNotifications?: boolean;
   snoozeSessionNotificationsUntilTimestampMillis?: number;
+
+  core2MigrationTimestampMillis?: number;
 }
 
 export interface SessionNotificationState {
