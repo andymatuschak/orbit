@@ -86,7 +86,7 @@ export async function listActionLogs(
   },
 ): Promise<Map<ActionLogID, ActionLog>> {
   const db = getDatabase();
-  const ref = getLogCollectionReference(db, userID).orderBy("serverTimestamp");
+  let ref = getLogCollectionReference(db, userID).orderBy("serverTimestamp");
   if (query.createdAfterID) {
     const baseRef = await getActionLogIDReference(
       db,
@@ -97,9 +97,9 @@ export async function listActionLogs(
     if (!baseSnapshot.exists) {
       throw new Error(`afterID ${query.createdAfterID} does not exist`);
     }
-    ref.startAfter(baseSnapshot);
+    ref = ref.startAfter(baseSnapshot);
   }
-  ref.limit(query.limit);
+  ref = ref.limit(query.limit);
 
   const snapshot = await ref.get();
   return new Map(
