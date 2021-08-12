@@ -128,9 +128,9 @@ function convertCore1Provenance(provenance: PromptProvenance): TaskProvenance {
     null;
   return {
     identifier: provenance.externalID,
-    title: provenance.title ?? undefined,
-    url: provenance.url ?? undefined,
     ...(colorPaletteName !== null && { colorPaletteName }),
     ...(containerTitle !== null && { containerTitle }),
+    ...(provenance.title !== null && { title: provenance.title }),
+    ...(provenance.url !== null && { title: provenance.url }),
   };
 }
