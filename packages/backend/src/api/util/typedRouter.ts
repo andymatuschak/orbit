@@ -80,7 +80,8 @@ export default function createTypedRouter<API extends API.Spec>(
       const urlPathParametersValidation = validateURLPathParams(path, request);
       if (urlPathParametersValidation.status === "failure") {
         console.error(urlPathParametersValidation.error);
-        response.sendStatus(400);
+        response.status(400);
+        response.send(urlPathParametersValidation.error)
         return;
       }
       const validationResult = validator.validateRequest({
