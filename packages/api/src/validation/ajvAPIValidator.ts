@@ -29,6 +29,7 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
       // ex: let ids be defined as an array in the schema
       // a value of { ids: "idA" } will be coerced to { ids: ["idA"] }
       coerceTypes: "array",
+      verbose: true,
     });
     this.validator = ajv.compile<T>(schema);
   }
@@ -98,7 +99,9 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
       .join("/");
 
     return {
-      message: `${isolatedInstancePath} ${error.message}`,
+      message: `${isolatedInstancePath} ${
+        error.message
+      }. Data: ${JSON.stringify(error.data)}`,
     };
   }
 }
