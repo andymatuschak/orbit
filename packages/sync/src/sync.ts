@@ -128,5 +128,5 @@ async function sendNewEvents({
   return { sentEventCount, latestSentEventID: afterEventID };
 }
 
-const receiveBatchSize = 100;
-const sendBatchSize = 100;
+const receiveBatchSize = 1000;
+const sendBatchSize = 200;
