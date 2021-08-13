@@ -2,6 +2,13 @@ import { API, APIValidator, APIValidatorError } from "@withorbit/api";
 import { APIConfig } from "./apiConfig";
 import * as Network from "./util/fetch";
 
+const enableDebugTrace = !!process.env["ORBIT_REQUEST_DEBUG"];
+function debugTrace(...args: any[]) {
+  if (enableDebugTrace) {
+    console.debug(`[Request manager] `, ...args);
+  }
+}
+
 export class RequestManager<API extends API.Spec> {
   private readonly config: APIConfig;
   private readonly authorizeRequest?: () => Promise<AuthenticationConfig>;
@@ -72,22 +79,26 @@ export class RequestManager<API extends API.Spec> {
     const url = this.getRequestURL(path, method, requestData);
     const authorizationConfig = await this.authorizeRequest?.();
     const wireBody = getWireBody(requestData);
+    const headers = {
+      ...defaultHTTPHeaders,
+      ...(authorizationConfig && {
+        Authorization: getHeaderForAuthenticationConfig(authorizationConfig),
+      }),
+      ...(wireBody?.contentType &&
+        // When using multipart/form-data, we allow fetch() to set the content type header for us, since it includes the multipart boundary ID.
+        wireBody.contentType !== "multipart/form-data" && {
+          "Content-Type": wireBody.contentType,
+        }),
+    };
 
+    debugTrace("Requesting", url, method, headers, wireBody?.body);
     const response = await (this.config.fetch ?? Network.fetch)(url, {
       method,
-      headers: {
-        ...defaultHTTPHeaders,
-        ...(authorizationConfig && {
-          Authorization: getHeaderForAuthenticationConfig(authorizationConfig),
-        }),
-        ...(wireBody?.contentType &&
-          // When using multipart/form-data, we allow fetch() to set the content type header for us, since it includes the multipart boundary ID.
-          wireBody.contentType !== "multipart/form-data" && {
-            "Content-Type": wireBody.contentType,
-          }),
-      },
+      headers,
       body: wireBody?.body as any,
     });
+    debugTrace("Got response", url, method, response.status, [...response.headers.entries()]);
+
     if (response.ok) {
       let validationResult: APIValidatorError | true;
       let output: API.RouteResponseData<API[Path][Method]>;
@@ -105,6 +116,7 @@ export class RequestManager<API extends API.Spec> {
           const responseText = await response.text();
           output =
             responseText.length > 0 ? await JSON.parse(responseText) : null;
+          debugTrace("Response JSON", JSON.stringify(output, null, "\t"));
         } else {
           output = (await response.blob()) as API.RouteResponseData<
             API[Path][Method]
