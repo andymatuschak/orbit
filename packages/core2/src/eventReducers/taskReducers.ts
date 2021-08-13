@@ -5,6 +5,7 @@ import {
 } from "../entities/task";
 import { EntityType } from "../entity";
 import {
+  EventID,
   EventType,
   TaskIngestEvent,
   TaskRepetitionEvent,
@@ -61,22 +62,20 @@ export function taskRepetitionEventReducer(
 ): Task {
   assertTaskExists(oldSnapshot, event.type);
 
-  const componentState = oldSnapshot.componentStates[event.componentID];
-  if (!componentState) {
-    // TODO: Consider making this a hard failure. I'm leaving it as a soft failure for now because it sometimes occurs during migrations from Anki, in which cloze content can change over time and "leave behind" some components.
-    console.error(`Repetition on unknown component ${event.componentID}`);
-    return oldSnapshot;
-  }
-
-  return modifyTaskComponent(oldSnapshot, event.componentID, (oldState) => ({
-    createdAtTimestampMillis: oldState.createdAtTimestampMillis,
-    lastRepetitionTimestampMillis: event.timestampMillis,
-    ...scheduler.computeNextDueIntervalMillisForRepetition(
-      componentState,
-      event.timestampMillis,
-      event.outcome,
-    ),
-  }));
+  return modifyTaskComponent(
+    oldSnapshot,
+    event.componentID,
+    event.id,
+    (oldState) => ({
+      createdAtTimestampMillis: oldState.createdAtTimestampMillis,
+      lastRepetitionTimestampMillis: event.timestampMillis,
+      ...scheduler.computeNextDueIntervalMillisForRepetition(
+        oldState,
+        event.timestampMillis,
+        event.outcome,
+      ),
+    }),
+  );
 }
 
 export function taskRescheduleEventReducer(
@@ -84,10 +83,15 @@ export function taskRescheduleEventReducer(
   event: TaskRescheduleEvent,
 ): Task {
   assertTaskExists(oldSnapshot, event.type);
-  return modifyTaskComponent(oldSnapshot, event.componentID, (oldState) => ({
-    ...oldState,
-    dueTimestampMillis: event.newDueTimestampMillis,
-  }));
+  return modifyTaskComponent(
+    oldSnapshot,
+    event.componentID,
+    event.id,
+    (oldState) => ({
+      ...oldState,
+      dueTimestampMillis: event.newDueTimestampMillis,
+    }),
+  );
 }
 
 export function taskUpdateDeletedEventReducer(
@@ -109,12 +113,15 @@ export function taskUpdateProvenanceEventReducer(
 function modifyTaskComponent(
   oldSnapshot: Task,
   componentID: string,
+  eventID: EventID,
   transformer: (oldState: TaskComponentState) => TaskComponentState,
 ): Task {
   const componentState = oldSnapshot.componentStates[componentID];
   if (!componentState) {
     // TODO: Consider making this a hard failure. I'm leaving it as a soft failure for now because it sometimes occurs during migrations from Anki, in which cloze content can change over time and "leave behind" some components.
-    console.error(`Repetition on unknown component ${componentID}`);
+    console.error(
+      `Repetition on unknown component ${componentID} in event ${eventID} on ${oldSnapshot.id}`,
+    );
     return oldSnapshot;
   }
 
