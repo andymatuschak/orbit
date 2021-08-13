@@ -99,9 +99,8 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
       .join("/");
 
     return {
-      message: `${isolatedInstancePath} ${
-        error.message
-      }. Data: ${JSON.stringify(error.data)}`,
+      message: `${isolatedInstancePath} ${error.message}`,
+      data: error.data,
     };
   }
 }

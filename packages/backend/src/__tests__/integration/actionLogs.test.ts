@@ -66,7 +66,7 @@ describe("[GET] validation", () => {
   it("it does not allow limit to be a negative integer", async () => {
     const request = await fetchRoute(`/api/actionLogs?limit=-5`);
     expect(request.status).toBe(400);
-    expect(request.body.errors).toEqual([
+    expect(request.body.errors).toMatchObject([
       {
         message: "query/limit must be >= 1",
       },
@@ -76,7 +76,7 @@ describe("[GET] validation", () => {
   it("it does not allow limit to be a floating point", async () => {
     const request = await fetchRoute(`/api/actionLogs?limit=-5`);
     expect(request.status).toBe(400);
-    expect(request.body.errors).toEqual([
+    expect(request.body.errors).toMatchObject([
       {
         message: "query/limit must be >= 1",
       },
@@ -91,7 +91,7 @@ describe("[PATCH] validation", () => {
       json: [{ ...VALID_ACTION_LOG[0], someExtraProperty: true }],
     });
     expect(status).toBe(400);
-    expect(body.errors).toEqual([
+    expect(body.errors).toMatchObject([
       {
         message: "body/0 must NOT have additional properties",
       },
@@ -112,7 +112,7 @@ describe("[PATCH] validation", () => {
       ],
     });
     expect(status).toBe(400);
-    expect(body.errors).toEqual([
+    expect(body.errors).toMatchObject([
       {
         message:
           "body/0/data/actionLogType must be equal to one of the allowed values",
