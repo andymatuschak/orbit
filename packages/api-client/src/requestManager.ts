@@ -155,9 +155,10 @@ export class RequestManager<API extends API.Spec> {
         }
         return output;
       } else {
-        // TODO probably also include body information about the error
+        const text = await response.text();
+        debugTrace("Response text", text);
         throw new Error(
-          `Request failed (${response.status} ${response.statusText}): ${method} ${url}`,
+          `Request failed (${response.status} ${response.statusText}): ${method} ${url} ${text}`,
         );
       }
     }
