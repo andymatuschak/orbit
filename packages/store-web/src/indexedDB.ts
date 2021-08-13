@@ -226,6 +226,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
   async updateEntities<E extends Entity>(
     events: EventForEntity<E>[],
     transformer: (
+      eventsPendingSave: EventForEntity<E>[],
       entityRecordMap: Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>,
     ) => Promise<Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>>,
   ): Promise<void> {
@@ -250,8 +251,15 @@ export class IDBDatabaseBackend implements DatabaseBackend {
           IDOfEntity<E>
         >(oldEntityRows);
 
+        // Determine which events are new--unfortunately, there's no "cheap" way for us to only insert events which we were missing.
+        const oldEvents = await this.getEvents(events.map(({ id }) => id));
+        const eventsToAdd = events.filter(({ id }) => !oldEvents.has(id));
+
         // Compute the new entities.
-        const newEntityRecordMap = await transformer(oldEntityRecordMap);
+        const newEntityRecordMap = await transformer(
+          eventsToAdd,
+          oldEntityRecordMap,
+        );
 
         // Write the new entities.
         const newEntityRows = Array<
@@ -273,10 +281,6 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         }
 
         await this.db.entities.bulkPut(newEntityRows);
-
-        // Determine which events are new--unfortunately, there's no "cheap" way for us to only insert events which we were missing.
-        const oldEvents = await this.getEvents(events.map(({ id }) => id));
-        const eventsToAdd = events.filter(({ id }) => !oldEvents.has(id));
 
         await this.db.events.bulkAdd(
           eventsToAdd.map((event) => ({

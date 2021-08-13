@@ -20,6 +20,7 @@ export interface DatabaseBackend {
   updateEntities<E extends Entity>(
     newEvents: EventForEntity<E>[],
     transformer: (
+      eventsPendingSave: EventForEntity<E>[],
       entityRecordMap: Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>,
     ) => Promise<Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>>,
   ): Promise<void>;

@@ -222,6 +222,7 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
   async updateEntities<E extends Entity>(
     events: EventForEntity<E>[],
     transformer: (
+      eventsPendingSave: EventForEntity<E>[],
       entityRecordMap: Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>,
     ) => Promise<Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>>,
   ): Promise<void> {
@@ -240,9 +241,13 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
         ...events.map(({ id }) => this._getEventRef(id, eventCollectionRef)),
         { fieldMask: [] },
       );
+      const newEvents = events.filter(
+        (event, index) => !eventSnapshots[index].exists,
+      );
 
       // Call the transformer.
       const newEntityRecordMap = await transformer(
+        newEvents,
         getEntityRecordMapFromFirestoreDocs<E, IDOfEntity<E>>(entityDocs),
       );
 
@@ -251,7 +256,10 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
       const orderedIDsByEntityID = new Map<IDOfEntity<E>, OrderedID>();
       for (const doc of entityDocs) {
         if (doc) {
-          orderedIDsByEntityID.set(doc.entity.id as IDOfEntity<E>, doc.orderedID);
+          orderedIDsByEntityID.set(
+            doc.entity.id as IDOfEntity<E>,
+            doc.orderedID,
+          );
         }
       }
       for (const [id, newRecord] of newEntityRecordMap) {

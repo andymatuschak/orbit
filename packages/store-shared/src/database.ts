@@ -37,18 +37,18 @@ export class Database {
   ): Promise<{ event: Event; entity: Entity }[]> {
     if (events.length === 0) return [];
 
-    const eventsByEntityID = new Map<EntityID, Event[]>();
-    for (const event of events) {
-      eventsByEntityID.set(event.entityID, [
-        ...(eventsByEntityID.get(event.entityID) ?? []),
-        event,
-      ]);
-    }
-
     let output: { event: Event; entity: Entity }[] | undefined;
     await this._backend.updateEntities<Entity>(
       events,
-      async (currentEntityRecordMap) => {
+      async (eventsPendingSave, currentEntityRecordMap) => {
+        const eventsByEntityID = new Map<EntityID, Event[]>();
+        for (const event of eventsPendingSave) {
+          eventsByEntityID.set(event.entityID, [
+            ...(eventsByEntityID.get(event.entityID) ?? []),
+            event,
+          ]);
+        }
+
         const entityUpdates = await Promise.all(
           [...eventsByEntityID.entries()].map(([id, events]) =>
             this._computeUpdatedEntitySnapshot(

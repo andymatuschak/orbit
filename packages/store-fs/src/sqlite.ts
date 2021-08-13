@@ -84,6 +84,7 @@ export class SQLDatabaseBackend implements DatabaseBackend {
   async updateEntities<E extends Entity>(
     events: EventForEntity<E>[],
     transformer: (
+      eventsPendingSave: EventForEntity<E>[],
       entityRecordMap: Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>,
     ) => Promise<Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>>,
   ): Promise<void> {
@@ -91,7 +92,10 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     const entityRecordMap = await this.getEntities<E, IDOfEntity<E>>([
       ...entityIDs,
     ]);
-    const transformedEntityRecordMap = await transformer(entityRecordMap);
+    const transformedEntityRecordMap = await transformer(
+      events,
+      entityRecordMap,
+    );
 
     const rows: unknown[][] = [];
     for (const [, record] of transformedEntityRecordMap) {
@@ -105,47 +109,50 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     }
 
     await execTransaction(await this._ensureDB(), (transaction) => {
-      SQLDatabaseBackend._put({
-        transaction,
-        tableName: SQLTableName.Events,
-        orderedColumnNames: [
-          SQLEventTableColumn.ID,
-          SQLEventTableColumn.EntityID,
-          SQLEventTableColumn.Data,
-        ],
-        rows: events.map((event) => [
-          event.id,
-          event.entityID,
-          JSON.stringify(event),
-        ]),
-        // Duplicate events are ignored.
-        conflictSpec: {
-          policy: "ignore",
-          uniqueColumnName: SQLEventTableColumn.ID,
-        },
-      });
-
-      SQLDatabaseBackend._put({
-        transaction,
-        tableName: SQLTableName.Entities,
-        orderedColumnNames: [
-          SQLEntityTableColumn.ID,
-          SQLEntityTableColumn.EntityType,
-          SQLEntityTableColumn.LastEventID,
-          SQLEntityTableColumn.LastEventTimestampMillis,
-          SQLEntityTableColumn.Data,
-        ],
-        rows,
-        conflictSpec: {
-          policy: "replace",
-          uniqueColumnName: SQLEntityTableColumn.ID,
-          updateColumnNames: [
+      if (events.length > 0) {
+        SQLDatabaseBackend._put({
+          transaction,
+          tableName: SQLTableName.Events,
+          orderedColumnNames: [
+            SQLEventTableColumn.ID,
+            SQLEventTableColumn.EntityID,
+            SQLEventTableColumn.Data,
+          ],
+          rows: events.map((event) => [
+            event.id,
+            event.entityID,
+            JSON.stringify(event),
+          ]),
+          // Duplicate events are ignored.
+          conflictSpec: {
+            policy: "ignore",
+            uniqueColumnName: SQLEventTableColumn.ID,
+          },
+        });
+      }
+      if (rows.length > 0) {
+        SQLDatabaseBackend._put({
+          transaction,
+          tableName: SQLTableName.Entities,
+          orderedColumnNames: [
+            SQLEntityTableColumn.ID,
+            SQLEntityTableColumn.EntityType,
             SQLEntityTableColumn.LastEventID,
             SQLEntityTableColumn.LastEventTimestampMillis,
             SQLEntityTableColumn.Data,
           ],
-        },
-      });
+          rows,
+          conflictSpec: {
+            policy: "replace",
+            uniqueColumnName: SQLEntityTableColumn.ID,
+            updateColumnNames: [
+              SQLEntityTableColumn.LastEventID,
+              SQLEntityTableColumn.LastEventTimestampMillis,
+              SQLEntityTableColumn.Data,
+            ],
+          },
+        });
+      }
     });
   }
 
