@@ -50,10 +50,10 @@ describe("core2 migration", () => {
       provenance: null,
     };
 
-    await setupAuthToken("migrate-actions");
+    const apiClient = await setupTestOrbitAPIClient();
+    await setupAuthToken("migrate-actions", {core2MigrationTimestampMillis: 1000});
 
     // Upload the attachment.
-    const apiClient = await setupTestOrbitAPIClient();
     await apiClient.storeAttachment(testAttachment);
 
     // Ingest the prompt.

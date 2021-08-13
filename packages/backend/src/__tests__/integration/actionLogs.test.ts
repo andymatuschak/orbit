@@ -133,7 +133,9 @@ describe("[PATCH] validation", () => {
   });
 
   it("also writes core2 events", async () => {
-    await setupAuthToken("migrate-action-log");
+    await setupAuthToken("migrate-action-log", {
+      core2MigrationTimestampMillis: 1000,
+    });
     const { status: taskDataPatchStatus, body: taskDataPatchBody } =
       await fetchRoute(`/api/taskData`, {
         method: "PATCH",
