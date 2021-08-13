@@ -131,6 +131,6 @@ function convertCore1Provenance(provenance: PromptProvenance): TaskProvenance {
     ...(colorPaletteName !== null && { colorPaletteName }),
     ...(containerTitle !== null && { containerTitle }),
     ...(provenance.title !== null && { title: provenance.title }),
-    ...(provenance.url !== null && { title: provenance.url }),
+    ...(provenance.url !== null && { url: provenance.url }),
   };
 }

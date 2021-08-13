@@ -12,6 +12,7 @@ import {
   TaskSpecType,
 } from "../entities/task";
 import { parseSingleCurlyBraceClozePromptMarkup } from "../entities/util/parseClozeMarkup";
+import { convertCore1ID } from "./convertCore1ID";
 
 export function convertCore1Prompt(prompt: Prompt): TaskSpec {
   switch (prompt.promptType) {
@@ -35,7 +36,9 @@ export function convertCore1Prompt(prompt: Prompt): TaskSpec {
           type: TaskContentType.Cloze,
           body: {
             text: markupWithoutBraces,
-            attachments: prompt.body.attachments.map(({ id }) => id),
+            attachments: prompt.body.attachments.map(({ id }) =>
+              convertCore1ID(id),
+            ),
           },
           components: clozeComponents,
         },
@@ -49,6 +52,6 @@ export function convertCore1Prompt(prompt: Prompt): TaskSpec {
 function convertPromptField(promptField: PromptField): TaskContentField {
   return {
     text: promptField.contents,
-    attachments: promptField.attachments.map(({ id }) => id),
+    attachments: promptField.attachments.map(({ id }) => convertCore1ID(id)),
   };
 }
