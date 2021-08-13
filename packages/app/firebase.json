@@ -20,7 +20,7 @@
 
     "headers": [
       {
-        "source": "/**",
+        "source": "/!(updateNotificationSettings)",
         "headers": [
           {
             "key": "Cache-Control",
