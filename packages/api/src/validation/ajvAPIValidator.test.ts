@@ -145,7 +145,7 @@ describe("AjvAPIValidator", () => {
       method: "GET",
       query: {},
     });
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       errors: [{ message: " must NOT have additional properties" }],
     });
   });
@@ -156,7 +156,7 @@ describe("AjvAPIValidator", () => {
       method: "POST",
       query: {},
     });
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       errors: [{ message: "~1basket must NOT have additional properties" }],
     });
   });
@@ -171,7 +171,7 @@ describe("AjvAPIValidator", () => {
       },
       [{ isSliced: true }],
     );
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       errors: [{ message: "query/limit must be integer" }],
     });
   });

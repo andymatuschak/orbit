@@ -39,10 +39,10 @@ test("duplicate events aren't returned from putEvents", async () => {
   const db = new Database(backend, eventReducer);
 
   const testEvents: TaskIngestEvent[] = fixtures.createTestTaskIngestEvents(5);
-  const firstResult = await db.putEvents(testEvents)
+  const firstResult = await db.putEvents(testEvents);
   expect(firstResult.length).toBe(5);
-  const secondResult = await db.putEvents(testEvents)
+  const secondResult = await db.putEvents(testEvents);
   expect(secondResult.length).toBe(0);
 
   await db.close();
-})
+});

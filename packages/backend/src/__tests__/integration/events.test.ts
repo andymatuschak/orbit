@@ -5,8 +5,8 @@ import { core2 as fixtures } from "@withorbit/sample-data";
 
 beforeAll(() => {
   // Spinning up the Cloud Function sometimes takes a few seconds...
-  jest.setTimeout(30*1000);
-})
+  jest.setTimeout(30 * 1000);
+});
 
 afterEach(async () => {
   await resetLocalEmulators();

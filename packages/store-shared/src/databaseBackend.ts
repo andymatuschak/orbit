@@ -3,7 +3,7 @@ import {
   Event,
   EventForEntity,
   EventID,
-  IDOfEntity
+  IDOfEntity,
 } from "@withorbit/core2";
 import { DatabaseEntityQuery, DatabaseEventQuery } from "./databaseQuery";
 

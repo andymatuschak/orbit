@@ -51,7 +51,9 @@ describe("core2 migration", () => {
     };
 
     const apiClient = await setupTestOrbitAPIClient();
-    await setupAuthToken("migrate-actions", {core2MigrationTimestampMillis: 1000});
+    await setupAuthToken("migrate-actions", {
+      core2MigrationTimestampMillis: 1000,
+    });
 
     // Upload the attachment.
     await apiClient.storeAttachment(testAttachment);

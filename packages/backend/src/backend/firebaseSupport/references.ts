@@ -11,7 +11,9 @@ import { UserMetadata } from "./userMetadata";
 function getPromptCollectionReference(
   database: firebase.firestore.Firestore,
 ): firebase.firestore.CollectionReference<Prompt> {
-  return database.collection("data") as firebase.firestore.CollectionReference<Prompt>;
+  return database.collection(
+    "data",
+  ) as firebase.firestore.CollectionReference<Prompt>;
 }
 
 export function getUserMetadataReference(

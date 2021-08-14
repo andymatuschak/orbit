@@ -4,7 +4,6 @@ import {
   Prompt,
   PromptID,
 } from "@withorbit/core";
-import functions from "firebase-functions";
 import * as backend from "../../backend";
 import { sharedLoggingService } from "../../logging";
 import { writeConvertedLogsToCore2Storage } from "./writeConvertedLogsToCore2Storage";
