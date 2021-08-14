@@ -64,7 +64,7 @@ export class DatabaseManager {
     if (this._syncPromise === null) {
       console.info("[Sync] Starting...");
       this._syncPromise = this._storePromise.then((store) =>
-        syncOrbitStore(store, this._apiSyncAdapter)
+        syncOrbitStore({ source: store, destination: this._apiSyncAdapter })
           .then(() => {
             console.info("[Sync] Sync completed.");
           })

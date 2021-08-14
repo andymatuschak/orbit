@@ -13,15 +13,22 @@ function log(...args: any[]) {
   console.log(`[Sync] ${Date.now() / 1000.0} ${first}`, ...rest);
 }
 
-export async function syncOrbitStore(
-  sourceStore: OrbitStore,
-  destination: SyncAdapter,
-): Promise<{ sentEventCount: number; receivedEventCount: number }> {
-  const sourceSyncInterface = new OrbitStoreSyncAdapter(sourceStore, "local");
+export async function syncOrbitStore({
+  source,
+  destination,
+  sendBatchSize = 200,
+  receiveBatchSize = 1000,
+}: {
+  source: OrbitStore;
+  destination: SyncAdapter;
+  sendBatchSize?: number;
+  receiveBatchSize?: number;
+}): Promise<{ sentEventCount: number; receivedEventCount: number }> {
+  const sourceSyncInterface = new OrbitStoreSyncAdapter(source, "local");
 
   const latestSentEventIDKey = `__sync_${destination.id}_latestEventIDSent`;
   const latestReceivedEventIDKey = `__sync_${destination.id}_latestEventIDReceived`;
-  const latestEventIDs = await sourceStore.database.getMetadataValues([
+  const latestEventIDs = await source.database.getMetadataValues([
     latestSentEventIDKey,
     latestReceivedEventIDKey,
   ]);
@@ -37,7 +44,7 @@ export async function syncOrbitStore(
     latestSentEventID:
       (latestEventIDs.get(latestSentEventIDKey) as EventID) ?? null,
     setLatestSentEventID: (eventID: EventID) =>
-      sourceStore.database.setMetadataValues(
+      source.database.setMetadataValues(
         new Map([[latestSentEventIDKey, eventID]]),
       ),
     batchSize: sendBatchSize,
@@ -52,7 +59,7 @@ export async function syncOrbitStore(
     latestSentEventID:
       (latestEventIDs.get(latestReceivedEventIDKey) as EventID) ?? null,
     setLatestSentEventID: (eventID) =>
-      sourceStore.database.setMetadataValues(
+      source.database.setMetadataValues(
         new Map([[latestReceivedEventIDKey, eventID]]),
       ),
     batchSize: receiveBatchSize,
@@ -65,7 +72,7 @@ export async function syncOrbitStore(
     destination: destination,
     latestSentEventID, // use the latest sent event ID from the first step
     setLatestSentEventID: (eventID: EventID) =>
-      sourceStore.database.setMetadataValues(
+      source.database.setMetadataValues(
         new Map([[latestSentEventIDKey, eventID]]),
       ),
     batchSize: sendBatchSize,
@@ -127,6 +134,3 @@ async function sendNewEvents({
   }
   return { sentEventCount, latestSentEventID: afterEventID };
 }
-
-const receiveBatchSize = 1000;
-const sendBatchSize = 200;

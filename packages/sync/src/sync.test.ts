@@ -32,7 +32,7 @@ test("bidi transmission", async () => {
   const {
     sentEventCount: sentEventCount1,
     receivedEventCount: receivedEventCount1,
-  } = await syncOrbitStore(store1, store2SyncAdapter);
+  } = await syncOrbitStore({ source: store1, destination: store2SyncAdapter });
 
   // These values are a bit non-intuitive. Due to inefficiencies in our sync algorithm, we have to send the server all the events we receive. And so these counts will (or should) always be the same, and equal to the total number of events on both source and destination needing sync.
   expect(sentEventCount1).toEqual(events1.length + events2.length);
@@ -48,7 +48,7 @@ test("bidi transmission", async () => {
   const {
     sentEventCount: sentEventCount2,
     receivedEventCount: receivedEventCount2,
-  } = await syncOrbitStore(store1, store2SyncAdapter);
+  } = await syncOrbitStore({ source: store1, destination: store2SyncAdapter });
   expect(sentEventCount2).toEqual(0);
   expect(receivedEventCount2).toEqual(0);
 
@@ -58,7 +58,7 @@ test("bidi transmission", async () => {
   const {
     sentEventCount: sentEventCount3,
     receivedEventCount: receivedEventCount3,
-  } = await syncOrbitStore(store1, store2SyncAdapter);
+  } = await syncOrbitStore({ source: store1, destination: store2SyncAdapter });
   expect(sentEventCount3).toEqual(extraEvents.length);
   expect(receivedEventCount3).toEqual(extraEvents.length);
   expect(await store1.database.listEvents({})).toEqual(
@@ -81,7 +81,10 @@ test("attachments synced", async () => {
   const { store: store1, events: events1 } = await prepTestStore(addEvents);
   const { store: store2, events: events2 } = await prepTestStore(addEvents);
 
-  await syncOrbitStore(store1, new OrbitStoreSyncAdapter(store2, "testServer"));
+  await syncOrbitStore({
+    source: store1,
+    destination: new OrbitStoreSyncAdapter(store2, "testServer"),
+  });
 
   // All attachments on both sides should now be stored on both sides.
   for (const { entityID } of [
