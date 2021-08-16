@@ -2,6 +2,7 @@ import admin from "firebase-admin";
 
 import { getUserMetadataReference, UserMetadata } from "./firebaseSupport";
 import { getDatabase } from "./firebaseSupport/firebase";
+import { WithFirebaseFields } from "./firebaseSupport/withFirebaseFields";
 
 export async function getUserMetadata(
   userID: string,
@@ -17,14 +18,6 @@ export async function getUserEmail(userID: string): Promise<string | null> {
     .catch(() => null);
   return userRecord?.email ?? null;
 }
-
-type WithFirebaseFields<T> = {
-  [K in keyof T]:
-    | T[K]
-    | (T[K] extends Record<string, unknown>
-        ? WithFirebaseFields<T[K]>
-        : admin.firestore.FieldValue);
-};
 
 export async function updateUserMetadata(
   userID: string,

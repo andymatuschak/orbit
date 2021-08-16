@@ -192,14 +192,15 @@ export async function updatePromptStateCacheWithLog(
   });
 
   // n.b. this active task count update operation is outside the transaction because the increment operation is itself transactional; we don't need to make the transaction retry if there's contention on the user metadata document.
-  await getUserMetadataReference(db, userID).update({
+  // This is all being updated in core2 now.
+  /*await getUserMetadataReference(db, userID).update({
     activeTaskCount: firebase.firestore.FieldValue.increment(
       _getActiveTaskCountDelta(
         result.oldPromptStateCache,
         result.newPromptStateCache,
       ),
     ),
-  });
+  });*/
 
   return result;
 }

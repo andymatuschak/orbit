@@ -17,7 +17,9 @@ import {
   DatabaseQueryPredicate,
 } from "@withorbit/store-shared";
 import firebase from "firebase-admin";
+import { UserMetadata } from "../firebaseSupport";
 import { getDatabase } from "../firebaseSupport/firebase";
+import { WithFirebaseFields } from "../firebaseSupport/withFirebaseFields";
 import { compareOrderedIDs, OrderedID, OrderedIDGenerator } from "./orderedID";
 
 export class FirestoreDatabaseBackend implements DatabaseBackend {
@@ -246,9 +248,13 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
       );
 
       // Call the transformer.
+      const oldEntityRecordMap = getEntityRecordMapFromFirestoreDocs<
+        E,
+        IDOfEntity<E>
+      >(entityDocs);
       const newEntityRecordMap = await transformer(
         newEvents,
-        getEntityRecordMapFromFirestoreDocs<E, IDOfEntity<E>>(entityDocs),
+        oldEntityRecordMap,
       );
 
       // Save the new entity records.
@@ -272,6 +278,11 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
               this._orderedIDGenerator.getOrderedID(),
           ),
         );
+        this._onEntityUpdate(
+          oldEntityRecordMap.get(id)?.entity ?? null,
+          newRecord.entity,
+          tx,
+        );
       }
 
       for (let i = 0; i < events.length; i++) {
@@ -294,6 +305,35 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
     throw new Error("Unimplemented; should not be called.");
   }
 
+  private _onEntityUpdate(
+    oldRecord: Entity | null,
+    newRecord: Entity,
+    transaction: firebase.firestore.Transaction,
+  ) {
+    switch (newRecord.type) {
+      case EntityType.AttachmentReference:
+        break;
+      case EntityType.Task:
+        const taskWasActive = isTaskActive(oldRecord as Task | null);
+        const taskIsActive = isTaskActive(newRecord);
+        const taskCountDelta =
+          !taskWasActive && taskIsActive
+            ? 1
+            : taskWasActive && !taskIsActive
+            ? -1
+            : 0;
+
+        const metadataUpdate: WithFirebaseFields<Partial<UserMetadata>> = {
+          ...(taskCountDelta !== 0 && {
+            activeTaskCount:
+              firebase.firestore.FieldValue.increment(taskCountDelta),
+          }),
+          sessionNotificationState: firebase.firestore.FieldValue.delete(),
+        };
+        transaction.update(this._getUserDocumentRef(), metadataUpdate);
+    }
+  }
+
   private async _getByID<D extends EntityDocumentBase | EventDocument>(
     collectionRef: firebase.firestore.CollectionReference<D>,
     ids: string[],
@@ -309,7 +349,9 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
   }
 
   private _getUserDocumentRef() {
-    return this._database.collection("users").doc(this._userID);
+    return this._database
+      .collection("users")
+      .doc(this._userID) as firebase.firestore.DocumentReference<UserMetadata>;
   }
 
   private _getEventCollectionRef<
@@ -446,4 +488,8 @@ function mapQueryPredicateToFirestoreOp(
   predicate: DatabaseQueryPredicate,
 ): FirebaseFirestore.WhereFilterOp {
   return predicate[1] === "=" ? "==" : predicate[1];
+}
+
+function isTaskActive(task: Task | null): boolean {
+  return !!task && !task.isDeleted;
 }
