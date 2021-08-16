@@ -24,7 +24,7 @@ export async function migrateUserImpl(userID: string) {
 
   let afterID: ActionLogID | undefined = undefined;
   const promptCache = new Map<PromptID, Prompt>();
-  const seenTaskIDs = new Set<string>();
+  const seenPromptIDs = new Set<string>();
   do {
     console.log(`Fetching logs after ${afterID}`);
     const logs: Map<ActionLogID, ActionLog> =
@@ -44,7 +44,7 @@ export async function migrateUserImpl(userID: string) {
         );
       }
 
-      if (!seenTaskIDs.has(promptTask.promptID)) {
+      if (!seenPromptIDs.has(promptTask.promptID)) {
         if (log.actionLogType !== ingestActionLogType) {
           console.log(
             `Encountering log of type ${log.actionLogType} for ${
@@ -62,7 +62,7 @@ export async function migrateUserImpl(userID: string) {
           entries.push([getIDForActionLogSync(ingestLog), ingestLog]);
         }
 
-        seenTaskIDs.add(promptTask.promptID);
+        seenPromptIDs.add(promptTask.promptID);
       }
 
       if (!promptCache.has(promptTask.promptID)) {
@@ -102,6 +102,7 @@ export async function migrateUserImpl(userID: string) {
 
   await backend.users.updateUserMetadata(userID, {
     core2MigrationTimestampMillis: Date.now(),
+    activeTaskCount: seenPromptIDs.size
   });
 }
 
