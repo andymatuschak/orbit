@@ -7,6 +7,4 @@ export interface FileStorageService {
   copyFile(fromSubpath: string, toSubpath: string): Promise<void>;
 }
 
-export type FileStorageResolution =
-  | { url: string }
-  | { data: Uint8Array; mimeType: string };
+export type FileStorageResolution = { data: Uint8Array; mimeType: string };

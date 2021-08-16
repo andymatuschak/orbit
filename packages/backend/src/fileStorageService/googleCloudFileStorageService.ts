@@ -43,7 +43,12 @@ export class GoogleCloudFileStorageService implements FileStorageService {
   }
 
   async resolveFile(subpath: string): Promise<FileStorageResolution | null> {
-    return { url: this.formatURL(subpath) };
+    const mimeType = await this.getMIMEType(subpath);
+    if (!mimeType) {
+      return null;
+    }
+    const [data] = await this._bucket.file(subpath).download();
+    return { data, mimeType };
   }
 
   async getMIMEType(subpath: string): Promise<string | null> {

@@ -76,7 +76,7 @@ export class RequestManager<API extends API.Spec> {
     method: Method,
     requestData: API.RouteRequestData<API[Path][Method]>,
   ): Promise<API.RouteResponseData<API[Path][Method]>> {
-    let url = this.getRequestURL(path, method, requestData);
+    const url = this.getRequestURL(path, method, requestData);
     const authorizationConfig = await this.authorizeRequest?.();
     const wireBody = getWireBody(requestData);
     const headers = {
@@ -91,78 +91,59 @@ export class RequestManager<API extends API.Spec> {
         }),
     };
 
-    // node-fetch doesn't support the "credentials" option, which we need to strip the Authorization header on redirect. So we have to implement our own redirect.
-    for (let redirectCount = 0; redirectCount < 20; redirectCount++) {
-      debugTrace("Requesting", url, method, headers, wireBody?.body);
-      const response = await (this.config.fetch ?? Network.fetch)(url, {
-        method,
-        headers,
-        compress: true,
-        redirect: "manual",
-        body: wireBody?.body as any,
-      });
-      debugTrace("Got response", url, method, response.status, [
-        ...response.headers.entries(),
-      ]);
-      if (
-        response.status >= 301 &&
-        response.status <= 303 &&
-        response.headers.has("Location")
-      ) {
-        const newURL = response.headers.get("Location")!;
-        if (getOrigin(url) !== getOrigin(newURL)) {
-          debugTrace("Stripping Authorization header for different origin");
-          delete headers["Authorization"];
-        }
-        url = newURL;
-        debugTrace("Redirecting to", url);
-        continue;
-      }
+    debugTrace("Requesting", url, method, headers, wireBody?.body);
+    const response = await (this.config.fetch ?? Network.fetch)(url, {
+      method,
+      headers,
+      compress: true,
+      body: wireBody?.body as any,
+    });
+    debugTrace("Got response", url, method, response.status, [
+      ...response.headers.entries(),
+    ]);
 
-      if (response.ok) {
-        let validationResult: APIValidatorError | true;
-        let output: API.RouteResponseData<API[Path][Method]>;
-        if (response.status === 204) {
-          validationResult = this.validator.validateResponse(
-            { path, method, ...requestData },
-            null,
-          );
-          output = undefined as unknown as API.RouteResponseData<
+    if (response.ok) {
+      let validationResult: APIValidatorError | true;
+      let output: API.RouteResponseData<API[Path][Method]>;
+      if (response.status === 204) {
+        validationResult = this.validator.validateResponse(
+          { path, method, ...requestData },
+          null,
+        );
+        output = undefined as unknown as API.RouteResponseData<
+          API[Path][Method]
+        >;
+      } else {
+        const responseContentType = response.headers.get("Content-Type");
+        if (responseContentType?.startsWith("application/json")) {
+          const responseText = await response.text();
+          output =
+            responseText.length > 0 ? await JSON.parse(responseText) : null;
+          debugTrace("Response JSON", JSON.stringify(output, null, "\t"));
+        } else {
+          output = (await response.blob()) as API.RouteResponseData<
             API[Path][Method]
           >;
-        } else {
-          const responseContentType = response.headers.get("Content-Type");
-          if (responseContentType?.startsWith("application/json")) {
-            const responseText = await response.text();
-            output =
-              responseText.length > 0 ? await JSON.parse(responseText) : null;
-            debugTrace("Response JSON", JSON.stringify(output, null, "\t"));
-          } else {
-            output = (await response.blob()) as API.RouteResponseData<
-              API[Path][Method]
-            >;
-          }
-          validationResult = this.validator.validateResponse(
-            { path, method, ...requestData },
-            output,
-          );
         }
-        if (validationResult !== true) {
-          console.warn(
-            `Validation Error: (${method}) ${path} did not match the expected value for this route`,
-          );
-          console.warn(validationResult);
-        }
-        return output;
-      } else {
-        const text = await response.text();
-        debugTrace("Response text", text);
-        throw new Error(
-          `Request failed (${response.status} ${response.statusText}): ${method} ${url} ${text}`,
+        validationResult = this.validator.validateResponse(
+          { path, method, ...requestData },
+          output,
         );
       }
+      if (validationResult !== true) {
+        console.warn(
+          `Validation Error: (${method}) ${path} did not match the expected value for this route`,
+        );
+        console.warn(validationResult);
+      }
+      return output;
+    } else {
+      const text = await response.text();
+      debugTrace("Response text", text);
+      throw new Error(
+        `Request failed (${response.status} ${response.statusText}): ${method} ${url} ${text}`,
+      );
     }
-    throw new Error(`Request failed (too many redirects): ${method} ${url}`);
   }
 }
 
@@ -229,8 +210,3 @@ export type AuthenticationConfig =
 const defaultHTTPHeaders = {
   Accept: "application/json",
 };
-
-function getOrigin(url: string): string {
-  const urlObject = new URL(url);
-  return urlObject.origin;
-}

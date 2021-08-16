@@ -21,20 +21,12 @@ export const getAttachment: TypedRouteHandler<
   );
 
   if (result) {
-    if ("url" in result) {
-      return {
-        status: 302,
-        redirectURL: result.url,
-        cachePolicy: CachePolicy.Immutable,
-      };
-    } else {
-      return {
-        status: 200,
-        data: result.data,
-        mimeType: result.mimeType,
-        cachePolicy: CachePolicy.Immutable,
-      };
-    }
+    return {
+      status: 200,
+      data: result.data,
+      mimeType: result.mimeType,
+      cachePolicy: CachePolicy.Immutable,
+    };
   } else {
     return {
       status: 404,
