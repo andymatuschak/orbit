@@ -11,8 +11,8 @@
   "dependencies": {
     "@withorbit/core2": "0.0.1",
     "@withorbit/store-shared": "0.0.1",
-    "expo-sqlite": "^9.1.0",
-    "react-native-unimodules": "^0.14.4",
+    "expo-sqlite": "^9.2.1",
+    "react-native-unimodules": "^0.14.6",
     "websql": "^2.0.2"
   },
   "scripts": {

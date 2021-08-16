@@ -1,8 +1,8 @@
-const createExpoWebpackConfigAsync = require("@expo/webpack-config");
+const { createWebpackConfigAsync } = require('expo-yarn-workspaces/webpack');
 const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 
 module.exports = async function (env, argv) {
-  const config = await createExpoWebpackConfigAsync(
+  const config = await createWebpackConfigAsync(
     { ...env, offline: false },
     argv,
   );
