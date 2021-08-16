@@ -60,7 +60,11 @@ export const storeActionLogs: TypedRouteHandler<
 
   // Double-write new logs in core2 storage.
   const metadata = await backend.users.getUserMetadata(userID);
-  if (metadata && metadata.core2MigrationTimestampMillis) {
+  if (
+    metadata &&
+    (metadata.core2MigrationTimestampMillis ||
+      metadata.registrationTimestampMillis >= 1629145583345)
+  ) {
     await writeConvertedLogsToCore2Storage(logs, userID, (promptIDs) =>
       backend.prompts.getPrompts(promptIDs),
     );

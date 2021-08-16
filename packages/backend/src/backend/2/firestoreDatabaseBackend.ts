@@ -278,17 +278,14 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
               this._orderedIDGenerator.getOrderedID(),
           ),
         );
-        this._onEntityUpdate(
-          oldEntityRecordMap.get(id)?.entity ?? null,
-          newRecord.entity,
-          tx,
-        );
       }
+      this._onEntityUpdates(oldEntityRecordMap, newEntityRecordMap, tx);
 
+      // Save the new events.
       for (let i = 0; i < events.length; i++) {
-        const snapshot = eventSnapshots[i];
-        if (!snapshot.exists) {
-          tx.create(snapshot.ref, {
+        const eventSnapshot = eventSnapshots[i];
+        if (!eventSnapshot.exists) {
+          tx.create(eventSnapshot.ref, {
             orderedID: this._orderedIDGenerator.getOrderedID(),
             event: events[i],
           });
@@ -305,36 +302,40 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
     throw new Error("Unimplemented; should not be called.");
   }
 
-  private _onEntityUpdate(
-    oldRecord: Entity | null,
-    newRecord: Entity,
+  private _onEntityUpdates<E extends Entity>(
+    oldRecordMap: Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>,
+    newRecordMap: Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>,
     transaction: firebase.firestore.Transaction,
   ) {
-    switch (newRecord.type) {
-      case EntityType.AttachmentReference:
-        break;
-      case EntityType.Task:
-        const taskWasActive = isTaskActive(oldRecord as Task | null);
-        const taskIsActive = isTaskActive(newRecord);
-        const taskCountDelta =
+    let taskCountDelta = 0;
+
+    for (const [id, record] of newRecordMap) {
+      const { entity } = record;
+      if (entity.type === EntityType.Task) {
+        const taskWasActive = isTaskActive(
+          (oldRecordMap.get(id)?.entity ?? null) as Task | null,
+        );
+        const taskIsActive = isTaskActive(entity as Task);
+        taskCountDelta +=
           !taskWasActive && taskIsActive
             ? 1
             : taskWasActive && !taskIsActive
             ? -1
             : 0;
+      }
+    }
 
-        const metadataUpdate: WithFirebaseFields<Partial<UserMetadata>> = {
-          ...(taskCountDelta !== 0 && {
-            activeTaskCount:
-              firebase.firestore.FieldValue.increment(taskCountDelta),
-          }),
-          sessionNotificationState: firebase.firestore.FieldValue.delete(),
-        };
-        transaction.set(
-          this._getUserDocumentRef(),
-          metadataUpdate as UserMetadata,
-          { merge: true },
-        );
+    if (taskCountDelta !== 0) {
+      const metadataUpdate: WithFirebaseFields<Partial<UserMetadata>> = {
+        activeTaskCount:
+          firebase.firestore.FieldValue.increment(taskCountDelta),
+        sessionNotificationState: firebase.firestore.FieldValue.delete(),
+      };
+      transaction.set(
+        this._getUserDocumentRef(),
+        metadataUpdate as UserMetadata,
+        { merge: true },
+      );
     }
   }
 

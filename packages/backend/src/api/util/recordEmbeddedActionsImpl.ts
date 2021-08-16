@@ -63,7 +63,11 @@ export async function recordEmbeddedActions(
     await storeLogs(userID, args.logs);
 
     const metadata = await backend.users.getUserMetadata(userID);
-    if (metadata && metadata.core2MigrationTimestampMillis) {
+    if (
+      metadata &&
+      (metadata.core2MigrationTimestampMillis ||
+        metadata.registrationTimestampMillis >= 1629145583345)
+    ) {
       await writeConvertedLogsToCore2Storage(
         args.logs.map((log) => ({ id: getIDForActionLogSync(log), data: log })),
         userID,
