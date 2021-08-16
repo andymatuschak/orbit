@@ -330,7 +330,11 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
           }),
           sessionNotificationState: firebase.firestore.FieldValue.delete(),
         };
-        transaction.update(this._getUserDocumentRef(), metadataUpdate);
+        transaction.set(
+          this._getUserDocumentRef(),
+          metadataUpdate as UserMetadata,
+          { merge: true },
+        );
     }
   }
 
