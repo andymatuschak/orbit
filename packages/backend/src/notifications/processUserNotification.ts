@@ -1,10 +1,11 @@
+import { EntityType, Task } from "@withorbit/core2";
 import dateFns from "date-fns";
-import { PromptState, PromptTaskID } from "@withorbit/core";
+import * as backend from "../backend";
 import type {
   SessionNotificationState,
   UserMetadata,
 } from "../backend/firebaseSupport";
-import * as backend from "../backend";
+import { getDatabase } from "../db";
 import getDefaultEmailService from "../email";
 import { EmailSpec } from "../email/types";
 import { sharedLoggingService } from "../logging";
@@ -17,14 +18,19 @@ import {
   reviewSessionBatchingLookaheadDays,
 } from "./reviewSessionScheduling";
 
-async function _fetchUpcomingPromptStates(
+async function _fetchUpcomingTasks(
   nowTimestampMillis: number,
   userID: string,
-) {
-  return await backend.promptStates.listPromptStates(userID, {
-    dueBeforeTimestampMillis: dateFns
-      .addDays(nowTimestampMillis, reviewSessionBatchingLookaheadDays)
-      .valueOf(),
+): Promise<Task[]> {
+  return await getDatabase(userID).listEntities({
+    entityType: EntityType.Task,
+    predicate: [
+      "dueTimestampMillis",
+      "<=",
+      dateFns
+        .addDays(nowTimestampMillis, reviewSessionBatchingLookaheadDays)
+        .valueOf(),
+    ],
     limit: 100,
   });
 }
@@ -53,13 +59,11 @@ export async function _getUserNotificationAction(
   nowTimestampMillis: number,
   userID: string,
   userMetadata: UserMetadata,
-  fetchUpcomingPromptStates = () =>
-    _fetchUpcomingPromptStates(nowTimestampMillis, userID),
+  fetchUpcomingTasks = () => _fetchUpcomingTasks(nowTimestampMillis, userID),
   createEmailAccessCode = () => backend.auth.createOneTimeAccessCode(userID),
 ): Promise<UserNotificationAction | null> {
   const { sessionNotificationState = null } = userMetadata;
 
-  let promptStates: Map<PromptTaskID, PromptState> | null = null;
   let shouldSendNotification: boolean;
   if (sessionNotificationState) {
     // They already have a session pending. Is today a good day for a reminder?
@@ -68,10 +72,10 @@ export async function _getUserNotificationAction(
       sessionNotificationState,
     );
   } else {
-    promptStates = await fetchUpcomingPromptStates();
+    const tasks = await fetchUpcomingTasks();
     const { shouldScheduleSession, reason } = evaluateReviewSessionSchedule(
       nowTimestampMillis,
-      promptStates,
+      tasks,
       userMetadata.activeTaskCount ?? null,
     );
     console.log(
@@ -81,7 +85,6 @@ export async function _getUserNotificationAction(
   }
 
   if (shouldSendNotification) {
-    promptStates ||= await fetchUpcomingPromptStates();
     return {
       emailSpec: await getReviewSessionEmailSpec(
         nowTimestampMillis,

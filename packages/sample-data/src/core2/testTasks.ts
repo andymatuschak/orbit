@@ -39,9 +39,11 @@ export const testTask: Task = {
 export function createTestTask({
   id,
   dueTimestampMillis,
+  intervalMillis = 1000,
 }: {
   id: string;
   dueTimestampMillis: number;
+  intervalMillis?: number;
 }): Task {
   // lazy deep clone
   const newTask = JSON.parse(JSON.stringify(testTask)) as Task;
@@ -49,6 +51,7 @@ export function createTestTask({
   for (const componentID of Object.keys(newTask.componentStates)) {
     newTask.componentStates[componentID].dueTimestampMillis =
       dueTimestampMillis;
+    newTask.componentStates[componentID].intervalMillis = intervalMillis;
   }
   return newTask;
 }

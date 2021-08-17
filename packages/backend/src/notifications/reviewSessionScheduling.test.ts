@@ -1,11 +1,11 @@
-import { generateDuePromptStates } from "./__fixtures__/generateDuePromptStates";
+import { generateDueTasks } from "./__fixtures__/generateDueTasks";
 import { evaluateReviewSessionSchedule } from "./reviewSessionScheduling";
 
 describe("shouldScheduleReviewSession", () => {
   const baseTimestampMillis = Date.now();
   test("no review session when no prompts are due", () => {
     expect(
-      evaluateReviewSessionSchedule(baseTimestampMillis, new Map(), 100),
+      evaluateReviewSessionSchedule(baseTimestampMillis, [], 100),
     ).toMatchObject({
       shouldScheduleSession: false,
       reason: "no-prompts-due",
@@ -14,7 +14,7 @@ describe("shouldScheduleReviewSession", () => {
 
   test("no review session when no prompts are collected", () => {
     expect(
-      evaluateReviewSessionSchedule(baseTimestampMillis, new Map(), 0),
+      evaluateReviewSessionSchedule(baseTimestampMillis, [], 0),
     ).toMatchObject({
       shouldScheduleSession: false,
       reason: "no-prompts-due",
@@ -25,7 +25,7 @@ describe("shouldScheduleReviewSession", () => {
     expect(
       evaluateReviewSessionSchedule(
         baseTimestampMillis,
-        generateDuePromptStates(baseTimestampMillis, 100, 0, 5),
+        generateDueTasks(baseTimestampMillis, 100, 0, 5),
         100,
       ),
     ).toMatchObject({
@@ -38,7 +38,7 @@ describe("shouldScheduleReviewSession", () => {
     expect(
       evaluateReviewSessionSchedule(
         baseTimestampMillis,
-        generateDuePromptStates(baseTimestampMillis, 10, 0, 5),
+        generateDueTasks(baseTimestampMillis, 10, 0, 5),
         100,
       ),
     ).toMatchObject({
@@ -51,7 +51,7 @@ describe("shouldScheduleReviewSession", () => {
     expect(
       evaluateReviewSessionSchedule(
         baseTimestampMillis,
-        generateDuePromptStates(baseTimestampMillis, 100, 0.5, 5),
+        generateDueTasks(baseTimestampMillis, 100, 0.5, 5),
         100,
       ),
     ).toMatchObject({
@@ -64,10 +64,10 @@ describe("shouldScheduleReviewSession", () => {
     expect(
       evaluateReviewSessionSchedule(
         baseTimestampMillis,
-        new Map([
-          ...generateDuePromptStates(baseTimestampMillis, 10, -5, 5),
-          ...generateDuePromptStates(baseTimestampMillis, 50, 6, 5),
-        ]),
+        [
+          ...generateDueTasks(baseTimestampMillis, 10, -5, 5),
+          ...generateDueTasks(baseTimestampMillis, 50, 6, 5),
+        ],
         100,
       ),
     ).toMatchObject({
@@ -80,10 +80,10 @@ describe("shouldScheduleReviewSession", () => {
     expect(
       evaluateReviewSessionSchedule(
         baseTimestampMillis,
-        new Map([
-          ...generateDuePromptStates(baseTimestampMillis, 20, -5, 5),
-          ...generateDuePromptStates(baseTimestampMillis, 50, 2, 5),
-        ]),
+        [
+          ...generateDueTasks(baseTimestampMillis, 20, -5, 5),
+          ...generateDueTasks(baseTimestampMillis, 50, 2, 5),
+        ],
         100,
       ),
     ).toMatchObject({
@@ -96,10 +96,10 @@ describe("shouldScheduleReviewSession", () => {
     expect(
       evaluateReviewSessionSchedule(
         baseTimestampMillis,
-        new Map([
-          ...generateDuePromptStates(baseTimestampMillis, 10, -3, 5),
-          ...generateDuePromptStates(baseTimestampMillis, 50, 3, 5),
-        ]),
+        [
+          ...generateDueTasks(baseTimestampMillis, 10, -3, 5),
+          ...generateDueTasks(baseTimestampMillis, 50, 3, 5),
+        ],
         100,
       ),
     ).toMatchObject({
@@ -113,7 +113,7 @@ describe("shouldScheduleReviewSession", () => {
       evaluateReviewSessionSchedule(
         baseTimestampMillis,
 
-        generateDuePromptStates(baseTimestampMillis, 10, 0, 5),
+        generateDueTasks(baseTimestampMillis, 10, 0, 5),
         10,
       ),
     ).toMatchObject({
@@ -127,7 +127,7 @@ describe("shouldScheduleReviewSession", () => {
       evaluateReviewSessionSchedule(
         baseTimestampMillis,
 
-        generateDuePromptStates(baseTimestampMillis, 200, 0, 5),
+        generateDueTasks(baseTimestampMillis, 200, 0, 5),
         null,
       ),
     ).toThrow();

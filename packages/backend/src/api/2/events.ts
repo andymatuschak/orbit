@@ -1,6 +1,7 @@
 import { OrbitAPI } from "@withorbit/api";
 import { Event } from "@withorbit/core2";
 import { Database } from "@withorbit/store-shared";
+import { getDatabase } from "../../db";
 import { FirestoreDatabaseBackend } from "../../db/firestoreDatabaseBackend";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "../util/typedRouter";
@@ -17,7 +18,7 @@ export const storeEvents: TypedRouteHandler<
 
 export const listEvents: TypedRouteHandler<OrbitAPI.Spec, "/2/events", "GET"> =
   authenticatedRequestHandler(async (request, userID) => {
-    const db = new Database(new FirestoreDatabaseBackend(userID));
+    const db = getDatabase(userID);
     const { query } = request;
 
     // In order to inform the client whether there are more events available than the requested limit, we query the backend with a limit of one additional result. If that extra result is returned, we know there are more events.

@@ -1,7 +1,6 @@
 import { OrbitAPI } from "@withorbit/api";
 import { Task, TaskID } from "@withorbit/core2";
-import { Database } from "@withorbit/store-shared";
-import { FirestoreDatabaseBackend } from "../../db/firestoreDatabaseBackend";
+import { getDatabase } from "../../db";
 import { authenticateTypedRequest } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "../util/typedRouter";
 
@@ -14,7 +13,7 @@ export const bulkGetTasks: TypedRouteHandler<
     request,
     async (userID) => {
       const { body } = request;
-      const db = new Database(new FirestoreDatabaseBackend(userID));
+      const db = getDatabase(userID);
       const results = await db.getEntities<Task, TaskID>(body);
 
       return {

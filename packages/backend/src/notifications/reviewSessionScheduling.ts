@@ -1,5 +1,11 @@
+import {
+  createReviewQueue,
+  defaultReviewSessionMaximumQueueSize,
+  getReviewQueueFuzzyDueTimestampThreshold,
+  ReviewItem,
+} from "@withorbit/core2";
 import * as dateFns from "date-fns";
-import { PromptState, PromptTaskID, reviewSession } from "@withorbit/core";
+import { Task } from "@withorbit/core2/src/entities/task";
 
 // We'll delay review sessions until we estimate doing so would cause at least this many prompts to be forgotten because of the delay.
 const forgottenPromptCountThreshold = 2;
@@ -11,12 +17,13 @@ const estimatedAccuracyAtDueTime = 0.9;
 export const reviewSessionBatchingLookaheadDays = 7;
 
 // Returns the estimated marginal number of prompts which we expect will be forgotten due to being overdue: i.e. the number we expected to be forgotten minus the number we expect would be forgotten if every prompt were answered exactly when it was due.
-function estimateOverdueForgottenPromptCount(
-  duePromptStates: PromptState[],
+function estimateOverdueForgottenItemCount(
+  reviewItems: ReviewItem[],
   timestampMillis: number,
 ): number {
   const oneDayIntervalMillis = 1000 * 60 * 60 * 24;
-  return duePromptStates.reduce((total, state) => {
+  return reviewItems.reduce((total, reviewItem) => {
+    const state = reviewItem.task.componentStates[reviewItem.componentID];
     const unitOverdueInterval =
       (timestampMillis - state.dueTimestampMillis) /
       Math.max(oneDayIntervalMillis, state.intervalMillis);
@@ -43,13 +50,13 @@ type ReviewSessionSchedulingDecision =
 
 export function evaluateReviewSessionSchedule(
   sessionTimestampMillis: number,
-  promptStates: Map<PromptTaskID, PromptState>,
+  upcomingTasks: Task[],
   activePromptCount: number | null,
 ): ReviewSessionSchedulingDecision {
   if (activePromptCount === null || activePromptCount === 0) {
-    if (promptStates.size > 0) {
+    if (upcomingTasks.length > 0) {
       throw new Error(
-        `Inconsistency: ${promptStates.size} due prompt states but missing activePromptCount`,
+        `Inconsistency: ${upcomingTasks.length} upcoming prompt states but missing activePromptCount`,
       );
     }
     return { shouldScheduleSession: false, reason: "no-prompts-due" };
@@ -57,22 +64,21 @@ export function evaluateReviewSessionSchedule(
 
   const sessionMaxPromptCount = Math.min(
     activePromptCount,
-    reviewSession.getReviewSessionCardLimit(),
+    defaultReviewSessionMaximumQueueSize,
   );
-  const initiallyDuePromptStates = reviewSession
-    .getDuePromptTasks({
-      promptStates,
-      thresholdTimestampMillis: sessionTimestampMillis,
-    })
-    .map((id) => promptStates.get(id)!);
+  const initiallyDueReviewItems =
+    filterReviewItemsByThresholdDueTimestampMillis(
+      createReviewQueue(upcomingTasks),
+      sessionTimestampMillis,
+    );
 
-  if (initiallyDuePromptStates.length >= sessionMaxPromptCount) {
+  if (initiallyDueReviewItems.length >= sessionMaxPromptCount) {
     return { shouldScheduleSession: true, reason: "full-session-ready" };
-  } else if (initiallyDuePromptStates.length === 0) {
+  } else if (initiallyDueReviewItems.length === 0) {
     return { shouldScheduleSession: false, reason: "no-prompts-due" };
   } else if (
-    estimateOverdueForgottenPromptCount(
-      initiallyDuePromptStates,
+    estimateOverdueForgottenItemCount(
+      initiallyDueReviewItems,
       sessionTimestampMillis,
     ) >= forgottenPromptCountThreshold
   ) {
@@ -87,16 +93,14 @@ export function evaluateReviewSessionSchedule(
     const futureSessionTimestampMillis = dateFns
       .addDays(sessionTimestampMillis, dayIndex)
       .valueOf();
-    const futureDuePromptStates = reviewSession
-      .getDuePromptTasks({
-        promptStates,
-        thresholdTimestampMillis: futureSessionTimestampMillis,
-      })
-      .map((id) => promptStates.get(id)!);
+    const futureDueReviewItems = filterReviewItemsByThresholdDueTimestampMillis(
+      createReviewQueue(upcomingTasks),
+      futureSessionTimestampMillis,
+    );
 
     if (
-      estimateOverdueForgottenPromptCount(
-        futureDuePromptStates,
+      estimateOverdueForgottenItemCount(
+        futureDueReviewItems,
         futureSessionTimestampMillis,
       ) >= forgottenPromptCountThreshold
     ) {
@@ -104,10 +108,22 @@ export function evaluateReviewSessionSchedule(
       break;
     }
 
-    if (futureDuePromptStates.length > initiallyDuePromptStates.length) {
+    if (futureDueReviewItems.length > initiallyDueReviewItems.length) {
       return { shouldScheduleSession: false, reason: "fuller-session-soon" };
     }
   }
 
   return { shouldScheduleSession: true, reason: "no-better-session-soon" };
+}
+
+function filterReviewItemsByThresholdDueTimestampMillis(
+  items: ReviewItem[],
+  dueTimestampMillis: number,
+): ReviewItem[] {
+  const threshold =
+    getReviewQueueFuzzyDueTimestampThreshold(dueTimestampMillis);
+  return items.filter(
+    ({ componentID, task }) =>
+      task.componentStates[componentID].dueTimestampMillis <= threshold,
+  );
 }

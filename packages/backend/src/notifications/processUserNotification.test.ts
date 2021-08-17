@@ -1,6 +1,6 @@
 import * as dateFns from "date-fns";
 import type { UserMetadata } from "../backend/firebaseSupport";
-import { generateDuePromptStates } from "./__fixtures__/generateDuePromptStates";
+import { generateDueTasks } from "./__fixtures__/generateDueTasks";
 import {
   _getUserNotificationAction,
   _updateSessionNotificationStateForNewNotification,
@@ -42,8 +42,8 @@ describe("_getUserNotificationAction", () => {
     emailAccessMock.mockClear();
   });
 
-  const fetchManyPromptsDueMock = async () =>
-    generateDuePromptStates(testTimestamp, 100, -5, 5);
+  const fetchManyDueTasksMock = async () =>
+    generateDueTasks(testTimestamp, 100, -5, 5);
   const manyDueUserMetadata: UserMetadata = {
     ...baseMetadata,
     activeTaskCount: 100,
@@ -55,7 +55,7 @@ describe("_getUserNotificationAction", () => {
         testTimestamp,
         "",
         baseMetadata,
-        async () => new Map(),
+        async () => [],
         emailAccessMock,
       ),
     ).toBeNull();
@@ -68,7 +68,7 @@ describe("_getUserNotificationAction", () => {
         testTimestamp,
         "",
         manyDueUserMetadata,
-        fetchManyPromptsDueMock,
+        fetchManyDueTasksMock,
         emailAccessMock,
       ),
     ).not.toBeNull();
@@ -109,7 +109,7 @@ describe("_getUserNotificationAction", () => {
             lastNotificationTimestampMillis: notificationTimestamp,
           },
         },
-        fetchManyPromptsDueMock,
+        fetchManyDueTasksMock,
         emailAccessMock,
       ),
     ).not.toBeNull();
