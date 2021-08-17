@@ -1,6 +1,6 @@
 import { Event } from "@withorbit/core2";
 import { Database } from "@withorbit/store-shared";
-import { FirestoreDatabaseBackend } from "../../../backend/2/firestoreDatabaseBackend";
+import { FirestoreDatabaseBackend } from "../../../db/firestoreDatabaseBackend";
 import { sharedLoggingService } from "../../../logging";
 
 export async function putAndLogEvents(

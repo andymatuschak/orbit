@@ -17,9 +17,9 @@ import {
   DatabaseQueryPredicate,
 } from "@withorbit/store-shared";
 import firebase from "firebase-admin";
-import { UserMetadata } from "../firebaseSupport";
-import { getDatabase } from "../firebaseSupport/firebase";
-import { WithFirebaseFields } from "../firebaseSupport/withFirebaseFields";
+import { UserMetadata } from "../backend/firebaseSupport";
+import { getDatabase } from "../backend/firebaseSupport/firebase";
+import { WithFirebaseFields } from "../backend/firebaseSupport/withFirebaseFields";
 import { compareOrderedIDs, OrderedID, OrderedIDGenerator } from "./orderedID";
 
 export class FirestoreDatabaseBackend implements DatabaseBackend {

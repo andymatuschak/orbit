@@ -1,7 +1,7 @@
 import { OrbitAPI } from "@withorbit/api";
 import { Event } from "@withorbit/core2";
 import { Database } from "@withorbit/store-shared";
-import { FirestoreDatabaseBackend } from "../../backend/2/firestoreDatabaseBackend";
+import { FirestoreDatabaseBackend } from "../../db/firestoreDatabaseBackend";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "../util/typedRouter";
 import { putAndLogEvents } from "./util/putAndLogEvents";

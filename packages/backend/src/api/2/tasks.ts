@@ -1,7 +1,7 @@
 import { OrbitAPI } from "@withorbit/api";
 import { Task, TaskID } from "@withorbit/core2";
 import { Database } from "@withorbit/store-shared";
-import { FirestoreDatabaseBackend } from "../../backend/2/firestoreDatabaseBackend";
+import { FirestoreDatabaseBackend } from "../../db/firestoreDatabaseBackend";
 import { authenticateTypedRequest } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "../util/typedRouter";
 
