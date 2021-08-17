@@ -9,7 +9,6 @@ import {
   Prompt,
   PromptID,
 } from "@withorbit/core";
-import { migration } from "@withorbit/core2";
 import express from "express";
 import * as backend from "../../backend";
 import { writeConvertedLogsToCore2Storage } from "../util/writeConvertedLogsToCore2Storage";
@@ -26,7 +25,6 @@ export async function migrateUserImpl(userID: string) {
   const promptCache = new Map<PromptID, Prompt>();
   const seenPromptIDs = new Set<string>();
   do {
-    console.log(`Fetching logs after ${afterID}`);
     const logs: Map<ActionLogID, ActionLog> =
       await backend.actionLogs.listActionLogs(userID, {
         limit: 100,
@@ -46,13 +44,6 @@ export async function migrateUserImpl(userID: string) {
 
       if (!seenPromptIDs.has(promptTask.promptID)) {
         if (log.actionLogType !== ingestActionLogType) {
-          console.log(
-            `Encountering log of type ${log.actionLogType} for ${
-              log.taskID
-            } (future entity ID ${migration.convertCore1ID(
-              promptTask.promptID,
-            )} before ingestion`,
-          );
           const ingestLog: IngestActionLog = {
             actionLogType: ingestActionLogType,
             taskID: log.taskID,
@@ -88,7 +79,6 @@ export async function migrateUserImpl(userID: string) {
     );
     if (entries.length > 0) {
       const nextID = entries[entries.length - 1][0];
-      console.log(`Migrated up through ${nextID}\n`);
       if (nextID == afterID) {
         console.log(`Current afterID is ${afterID}; new ID is same; breaking.`);
         break;
@@ -102,7 +92,7 @@ export async function migrateUserImpl(userID: string) {
 
   await backend.users.updateUserMetadata(userID, {
     core2MigrationTimestampMillis: Date.now(),
-    activeTaskCount: seenPromptIDs.size
+    activeTaskCount: seenPromptIDs.size,
   });
 }
 

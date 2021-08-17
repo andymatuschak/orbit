@@ -67,23 +67,32 @@ export async function writeConvertedLogsToCore2Storage(
         case applicationPromptType:
           throw new Error("Unsupported migration of application prompt");
       }
-      await backend.attachments.migrateAttachmentIDs(userID, attachmentIDs);
 
-      for (const attachmentID of attachmentIDs) {
-        const mimeType = await backend.attachments.getAttachmentMIMEType(
-          attachmentID,
-        );
-        if (!mimeType) {
-          throw new Error(`Unexpected missing attachment: ${attachmentID}`);
+      try {
+        await backend.attachments.migrateAttachmentIDs(userID, attachmentIDs);
+      } catch (error) {
+        throw new Error(`Failed to migrate attachment ${error}`);
+      }
+
+      for (const attachmentID of new Set(attachmentIDs)) {
+        try {
+          const mimeType = await backend.attachments.getAttachmentMIMEType(
+            attachmentID,
+          );
+          if (!mimeType) {
+            throw new Error(`Unexpected missing attachment: ${attachmentID}`);
+          }
+          const attachmentIngestEvent: AttachmentIngestEvent = {
+            type: EventType.AttachmentIngest,
+            id: migration.convertCore1ID(`${id}_${attachmentID}`),
+            entityID: migration.convertCore1ID(attachmentID),
+            timestampMillis: log.timestampMillis,
+            mimeType,
+          };
+          migratedEvents.push(attachmentIngestEvent);
+        } catch (error) {
+          console.warn(`Skipping attachment ingest for ${attachmentID}`);
         }
-        const attachmentIngestEvent: AttachmentIngestEvent = {
-          type: EventType.AttachmentIngest,
-          id: migration.convertCore1ID(`${id}_${attachmentID}`),
-          entityID: migration.convertCore1ID(attachmentID),
-          timestampMillis: log.timestampMillis,
-          mimeType,
-        };
-        migratedEvents.push(attachmentIngestEvent);
       }
     }
 
