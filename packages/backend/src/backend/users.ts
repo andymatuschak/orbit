@@ -56,32 +56,30 @@ export async function enumerateUsers(
       .auth()
       .listUsers(1000, pageToken);
 
-    await Promise.all(
-      listUsersResult.users.map(async (userRecord) => {
-        const userMetadataSnapshot = await getUserMetadataReference(
-          db,
-          userRecord.uid,
-        ).get();
-        if (!userRecord.email) {
-          throw new Error(
-            `Invariant violation: user ${userRecord.uid} has no email`,
-          );
-        }
+    for (const userRecord of listUsersResult.users) {
+      const userMetadataSnapshot = await getUserMetadataReference(
+        db,
+        userRecord.uid,
+      ).get();
+      if (!userRecord.email) {
+        throw new Error(
+          `Invariant violation: user ${userRecord.uid} has no email`,
+        );
+      }
 
-        const userMetadata = userMetadataSnapshot.data();
-        if (!userMetadata) {
-          throw new Error(
-            `Invariant violation: user ${userRecord.uid} has no metadata record`,
-          );
-        }
+      const userMetadata = userMetadataSnapshot.data();
+      if (!userMetadata) {
+        throw new Error(
+          `Invariant violation: user ${userRecord.uid} has no metadata record`,
+        );
+      }
 
-        await visitor({
-          userID: userRecord.uid,
-          email: userRecord.email,
-          userMetadata,
-        });
-      }),
-    );
+      await visitor({
+        userID: userRecord.uid,
+        email: userRecord.email,
+        userMetadata,
+      });
+    }
     pageToken = listUsersResult.pageToken;
   } while (pageToken);
 }
