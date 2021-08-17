@@ -11,7 +11,6 @@ import {
   reviewSession,
 } from "@withorbit/core";
 import firebase from "firebase-admin";
-import { getDatabase } from "./firebaseSupport/firebase";
 import {
   ActionLogDocument,
   getActionLogIDForFirebaseKey,
@@ -19,10 +18,10 @@ import {
   getPromptStateFromPromptStateCache,
   getTaskStateCacheCollectionReference,
   getTaskStateCacheReference,
-  getUserMetadataReference,
   maxServerTimestamp,
   PromptStateCache,
 } from "./firebaseSupport";
+import { getDatabase } from "./firebaseSupport/firebase";
 
 function taskIsActive(promptStateCache: PromptStateCache | null): boolean {
   return !!promptStateCache && !promptStateCache.taskMetadata.isDeleted;

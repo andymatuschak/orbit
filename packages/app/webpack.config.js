@@ -1,4 +1,4 @@
-const { createWebpackConfigAsync } = require('expo-yarn-workspaces/webpack');
+const { createWebpackConfigAsync } = require("expo-yarn-workspaces/webpack");
 const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 
 module.exports = async function (env, argv) {

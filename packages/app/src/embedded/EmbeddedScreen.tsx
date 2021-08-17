@@ -2,11 +2,12 @@ import {
   AttachmentID,
   defaultSpacedRepetitionSchedulerConfiguration,
   EventForEntity,
+  ReviewItem,
   Task,
   TaskID,
   TaskRepetitionOutcome,
 } from "@withorbit/core2";
-import { EmbeddedHostState, ReviewItem } from "@withorbit/embedded-support";
+import { EmbeddedHostState } from "@withorbit/embedded-support";
 import {
   FadeView,
   ReviewArea,

@@ -3,13 +3,14 @@ import {
   EventForEntity,
   EventType,
   generateUniqueID,
+  ReviewItem,
   Task,
   TaskContent,
   TaskContentType,
   TaskProvenance,
   TaskRepetitionOutcome,
 } from "@withorbit/core2";
-import { EmbeddedHostMetadata, ReviewItem } from "@withorbit/embedded-support";
+import { EmbeddedHostMetadata } from "@withorbit/embedded-support";
 
 export interface EmbeddedActionsRecord {
   events: EventForEntity<Task>[];

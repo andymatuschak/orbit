@@ -1,4 +1,5 @@
-import { EmbeddedHostState, ReviewItem } from "@withorbit/embedded-support";
+import { ReviewItem } from "@withorbit/core2";
+import { EmbeddedHostState } from "@withorbit/embedded-support";
 
 export function findItemsToRetry(
   sessionItems: ReviewItem[],

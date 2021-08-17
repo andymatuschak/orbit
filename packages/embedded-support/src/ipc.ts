@@ -1,5 +1,4 @@
-import { Task } from "@withorbit/core2";
-import { ReviewItem } from "./reviewItem";
+import { ReviewItem, Task } from "@withorbit/core2";
 
 // Messages from host to embedded:
 //================================

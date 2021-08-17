@@ -1,5 +1,4 @@
-import { ColorPaletteName } from "@withorbit/core";
-import { ReviewItem } from "./reviewItem";
+import { ColorPaletteName, ReviewItem } from "@withorbit/core2";
 
 export interface EmbeddedScreenConfiguration {
   reviewItems: ReviewItem[];

@@ -1,5 +1,5 @@
-import { Task } from "@withorbit/core2";
-import { EmbeddedScreenRecord, ReviewItem } from "@withorbit/embedded-support";
+import { ReviewItem, Task } from "@withorbit/core2";
+import { EmbeddedScreenRecord } from "@withorbit/embedded-support";
 import { findItemsToRetry } from "./findItemsToRetry";
 
 // null here indicates the item hasn't yet been reviewed; false means it has and doesn't need retry

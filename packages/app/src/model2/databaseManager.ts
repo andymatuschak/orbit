@@ -1,11 +1,16 @@
 import OrbitAPIClient from "@withorbit/api-client";
-import { reviewSession } from "@withorbit/core";
-import { AttachmentID, EntityType, Event, Task } from "@withorbit/core2";
-import { ReviewItem } from "@withorbit/embedded-support";
+import {
+  AttachmentID,
+  createReviewQueue,
+  EntityType,
+  Event,
+  getReviewQueueFuzzyDueTimestampThreshold,
+  ReviewItem,
+  Task,
+} from "@withorbit/core2";
 import { OrbitStore } from "@withorbit/store-shared";
 import { APISyncAdapter, syncOrbitStore } from "@withorbit/sync";
 import { createOrbitStore } from "./orbitStoreFactory";
-import { createReviewQueue } from "./reviewQueue";
 
 export class DatabaseManager {
   private readonly _storePromise: Promise<OrbitStore>;
@@ -27,15 +32,14 @@ export class DatabaseManager {
     await this._syncPromise;
 
     const store = await this._storePromise;
-    const thresholdTimestampMillis =
-      reviewSession.getFuzzyDueTimestampThreshold(Date.now()); // TODO migrate to core2
+    const thresholdTimestampMillis = getReviewQueueFuzzyDueTimestampThreshold();
 
     const dueTasks = await store.database.listEntities<Task>({
       entityType: EntityType.Task,
       limit: 500,
       predicate: ["dueTimestampMillis", "<=", thresholdTimestampMillis],
     });
-    return createReviewQueue(dueTasks, thresholdTimestampMillis);
+    return createReviewQueue(dueTasks);
   }
 
   async close(): Promise<void> {

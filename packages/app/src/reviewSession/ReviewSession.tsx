@@ -1,14 +1,14 @@
-import { reviewSession } from "@withorbit/core";
 import {
   defaultSpacedRepetitionSchedulerConfiguration,
   EventForEntity,
   EventType,
   generateUniqueID,
+  getReviewQueueFuzzyDueTimestampThreshold,
+  ReviewItem,
   Task,
   TaskRepetitionEvent,
   TaskRepetitionOutcome,
 } from "@withorbit/core2";
-import { ReviewItem } from "@withorbit/embedded-support";
 import {
   ReviewArea,
   ReviewAreaItem,
@@ -202,18 +202,13 @@ export default function ReviewSession() {
         newState.currentReviewAreaQueueIndex !== null &&
         newState.currentReviewAreaQueueIndex >= newState.reviewAreaQueue.length
       ) {
-        const nowDueThreshold = reviewSession.getFuzzyDueTimestampThreshold(
-          Date.now(),
-        );
-        const itemsToRetry = newState.sessionItems.filter(
-          (item) =>
-            item.task.componentStates[item.componentID].dueTimestampMillis <=
-            nowDueThreshold,
-        );
-        console.log("Pushing items to retry", itemsToRetry);
-        reviewSessionManager.pushReviewAreaQueueItems(
-          getReviewAreaItemsFromReviewItems(itemsToRetry),
-        );
+        const itemsToRetry = newState.sessionItems.filter(itemIsStillDue);
+        if (itemsToRetry.length > 0) {
+          console.log("Pushing items to retry", itemsToRetry);
+          reviewSessionManager.pushReviewAreaQueueItems(
+            getReviewAreaItemsFromReviewItems(itemsToRetry),
+          );
+        }
       }
     });
   }
@@ -288,9 +283,7 @@ export default function ReviewSession() {
 }
 
 function itemIsStillDue(item: ReviewItem): boolean {
-  const nowDueThreshold = reviewSession.getFuzzyDueTimestampThreshold(
-    Date.now(),
-  );
+  const nowDueThreshold = getReviewQueueFuzzyDueTimestampThreshold();
   return (
     item.task.componentStates[item.componentID].dueTimestampMillis <=
     nowDueThreshold
