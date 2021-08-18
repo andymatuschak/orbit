@@ -1,15 +1,17 @@
 import * as mdast from "mdast";
-// @ts-ignore
 import rehypeParse from "rehype-parse";
-// @ts-ignore
 import rehype2Remark from "rehype-remark";
 import remarkStringify from "remark-stringify";
-import unified from "unified";
+import { unified, Processor } from "unified";
 import { selectAll } from "unist-util-select";
 import { AnkiAttachmentReference } from "./ankiAttachmentReference";
 
-export function stripImages(this: unified.Processor) {
-  this.Compiler.prototype.visitors["image"] = () => "";
+export function stripImages(this: Processor) {
+  const data = this.data();
+  if (!data.toMarkdownExtensions) {
+    data.toMarkdownExtensions = [];
+  }
+  (data.toMarkdownExtensions as any[]).push({ handlers: { image: () => "" } });
 }
 
 const processor = unified()
@@ -38,6 +40,9 @@ export default function parseAnkiField(ankiField: string): {
 
   // Convert cloze prompts
   markdown = markdown.replace(/{{c\d+::([^}]+)}}/g, "{$1}");
+
+  // Strip explicit ending newline
+  markdown = markdown.replace(/\n\n\\/mg, "");
 
   return {
     contentsMarkdown: markdown.trimRight(),

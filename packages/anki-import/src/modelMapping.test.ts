@@ -68,36 +68,3 @@ test("fancy IR3 model doesn't map", () => {
   expect(getModelMapping(collection, getModelByName("IR3"))).toBe("unknown");
 });
 
-describe("spaced everything model mapping", () => {
-  test("basic", () => {
-    expect(
-      getModelMapping(
-        {
-          models: {
-            "10": {
-              name: SpacedEverything.qaPromptModelName,
-              type: ModelType.Standard,
-            } as Partial<Model>,
-          },
-        } as Partial<Collection> as Collection,
-        10,
-      ),
-    ).toEqual({ type: ModelMappingType.SpacedEverythingQA });
-  });
-
-  test("cloze", () => {
-    expect(
-      getModelMapping(
-        {
-          models: {
-            "10": {
-              name: SpacedEverything.clozeModelName,
-              type: ModelType.Cloze,
-            } as Partial<Model>,
-          },
-        } as Partial<Collection> as Collection,
-        10,
-      ),
-    ).toEqual({ type: ModelMappingType.SpacedEverythingCloze });
-  });
-});

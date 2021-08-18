@@ -9,7 +9,7 @@ test("translates divs into paragraphs", () => {
 test("translates standard text markup", () => {
   expect(
     parseAnkiField("<em>Test</em> <strong>foo</strong>").contentsMarkdown,
-  ).toEqual("_Test_ **foo**");
+  ).toEqual("*Test* **foo**");
 });
 
 test("extracts image references", () => {

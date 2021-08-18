@@ -1,42 +1,17 @@
 import {
   AttachmentIDReference,
-  QAPrompt,
-  qaPromptType,
   ClozePrompt,
   clozePromptType,
   NotePromptProvenance,
   Prompt,
   PromptField,
-  PromptProvenanceType,
+  QAPrompt,
+  qaPromptType,
 } from "@withorbit/core";
-import { getOrbitPromptForITPrompt } from "@withorbit/note-sync";
 import { Note, splitAnkiDBNoteFields } from "./ankiPkg";
 import { AnkiAttachmentReference } from "./ankiPkg/ankiAttachmentReference";
 import parseAnkiField from "./ankiPkg/parseAnkiField";
 import { ModelMapping, ModelMappingType } from "./modelMapping";
-import * as SpacedEverything from "./spacedEverything";
-
-function getNotePromptProvenanceFromNoteDataField(
-  noteDataField: SpacedEverything.NoteDataField,
-): NotePromptProvenance {
-  if (!noteDataField.externalNoteID) {
-    throw new Error(
-      "Can't import spaced everything note with no external note ID",
-    );
-  }
-
-  if (!noteDataField.noteTitle) {
-    throw new Error("Can't import spaced everything note with no title");
-  }
-
-  return {
-    provenanceType: PromptProvenanceType.Note,
-    externalID: noteDataField.externalNoteID.id,
-    url: noteDataField.externalNoteID.openURL,
-    title: noteDataField.noteTitle,
-    modificationTimestampMillis: noteDataField.modificationTimestamp,
-  };
-}
 
 export function mapNoteToPrompt(
   note: Note,
@@ -108,27 +83,6 @@ export function mapNoteToPrompt(
         issues,
         prompt: clozePrompt,
         provenance: null,
-      };
-
-    case ModelMappingType.SpacedEverythingQA:
-      return {
-        prompt: getOrbitPromptForITPrompt(JSON.parse(fields[6])),
-        issues: [],
-        provenance: getNotePromptProvenanceFromNoteDataField(
-          JSON.parse(fields[5]) as SpacedEverything.NoteDataField,
-        ),
-      };
-
-    case ModelMappingType.SpacedEverythingCloze:
-      return {
-        prompt: {
-          body: { contents: fields[2], attachments: [] },
-          promptType: clozePromptType,
-        },
-        issues: [],
-        provenance: getNotePromptProvenanceFromNoteDataField(
-          JSON.parse(fields[5]) as SpacedEverything.NoteDataField,
-        ),
       };
   }
 }
