@@ -4,6 +4,7 @@ import {
   EntityType,
   mainTaskComponentID,
   parseSingleCurlyBraceClozePromptMarkup,
+  ReviewItem,
   Task,
   TaskComponentState,
   TaskContent,
@@ -13,7 +14,7 @@ import {
   TaskSpec,
   TaskSpecType,
 } from "@withorbit/core2";
-import { EmbeddedScreenRecord, ReviewItem } from "@withorbit/embedded-support";
+import { EmbeddedScreenRecord } from "@withorbit/embedded-support";
 import { OrbitPromptElement } from "./OrbitPromptElement";
 import { v5 as uuidV5, parse as uuidParse } from "uuid";
 import fastJSONStableStringify from "fast-json-stable-stringify";

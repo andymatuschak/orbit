@@ -1,10 +1,10 @@
 import {
   ClozeTaskContent,
   mainTaskComponentID,
+  ReviewItem,
   QATaskContent,
   TaskContentType,
 } from "@withorbit/core2";
-import { ReviewItem } from "@withorbit/embedded-support";
 import { extractItems } from "./extractItems";
 
 function getTestElement(reviewAreaInnerHTML: string): HTMLElement {

@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "metabook-system"
+  },
+  "targets": {
+    "metabook-system": {
+      "hosting": {
+        "orbit-js": ["orbit-js"]
+      }
+    }
+  }
+}
