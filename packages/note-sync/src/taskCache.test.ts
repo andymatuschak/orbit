@@ -7,7 +7,7 @@ import * as spacedEverything from "spaced-everything";
 import { testClozePrompt } from "@withorbit/sample-data";
 import { simpleOrbitPrompt } from "./__fixtures__/testData";
 import SpacedEverythingImportCache from "./importCache";
-import { getUpdatesForTaskCacheChange } from "./taskCache";
+import { getEventsForTaskCacheChange } from "./taskCache";
 import { getITPromptForOrbitPrompt } from "./util/cstOrbitAdapters";
 
 const clozeITPrompt = getITPromptForOrbitPrompt(
@@ -18,7 +18,7 @@ describe("getUpdatesForTaskCacheChange", () => {
   test("insert qa prompt", async () => {
     const mock = {} as SpacedEverythingImportCache;
     mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue(null);
-    const { prompts, logs } = await getUpdatesForTaskCacheChange(
+    const { prompts, logs } = await getEventsForTaskCacheChange(
       {
         type: "insert",
         record: {
@@ -50,7 +50,7 @@ describe("getUpdatesForTaskCacheChange", () => {
   test("insert cloze prompt", async () => {
     const mock = {} as SpacedEverythingImportCache;
     mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue(null);
-    const { prompts, logs } = await getUpdatesForTaskCacheChange(
+    const { prompts, logs } = await getEventsForTaskCacheChange(
       {
         type: "insert",
         record: {
@@ -89,7 +89,7 @@ describe("getUpdatesForTaskCacheChange", () => {
       ITPrompt: clozeITPrompt,
       headActionLogIDs: ["parent-log"],
     });
-    const { prompts, logs } = await getUpdatesForTaskCacheChange(
+    const { prompts, logs } = await getEventsForTaskCacheChange(
       {
         type: "delete",
         path: ["container", "id"],
@@ -117,7 +117,7 @@ describe("getUpdatesForTaskCacheChange", () => {
       childIDs: ["childA", "childB"],
       metadata: {},
     });
-    const { prompts, logs } = await getUpdatesForTaskCacheChange(
+    const { prompts, logs } = await getEventsForTaskCacheChange(
       {
         type: "delete",
         path: ["container"],
@@ -153,7 +153,7 @@ describe("getUpdatesForTaskCacheChange", () => {
         URL: "old-url",
       },
     });
-    const { prompts, logs } = await getUpdatesForTaskCacheChange(
+    const { prompts, logs } = await getEventsForTaskCacheChange(
       {
         type: "update",
         path: ["container"],

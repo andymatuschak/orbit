@@ -1,25 +1,15 @@
 import { OrbitAPI } from "@withorbit/api";
-import * as IT from "incremental-thinking";
 import OrbitAPIClient from "@withorbit/api-client";
 import {
-  ActionLog,
-  clozePromptType,
-  getActionLogFromPromptActionLog,
-  getIDForActionLog,
-  getIDForPrompt,
-  getIDForPromptTask,
-  getPromptTaskForID,
-  ingestActionLogType,
-  Prompt,
-  PromptID,
-  PromptProvenance,
-  PromptProvenanceType,
-  PromptState,
-  PromptTask,
-  PromptTaskID,
-  qaPromptType,
-  updateMetadataActionLogType,
-} from "@withorbit/core";
+  Event,
+  EventType,
+  generateUniqueID,
+  TaskID,
+  TaskIngestEvent,
+  TaskProvenance,
+  TaskUpdateDeletedEvent, TaskUpdateProvenanceEvent,
+} from "@withorbit/core2";
+import * as IT from "incremental-thinking";
 import * as spacedEverything from "spaced-everything";
 import SpacedEverythingImportCache, { CachedNoteMetadata } from "./importCache";
 import {
@@ -30,10 +20,6 @@ import {
 type NotePromptTask = spacedEverything.notePrompts.PromptTask;
 type NotePromptTaskCollection =
   spacedEverything.notePrompts.PromptTaskCollection;
-
-function flat<T>(lists: T[][]): T[] {
-  return lists.reduce((whole, part) => whole.concat(part), []);
-}
 
 // When we start up, we'll fetch all remote prompt states we don't already have locally cached. We'll also fetch all the prompt contents we don't have.
 async function initializeImportCache(
@@ -272,59 +258,17 @@ async function getTaskRecordForPath(
 
 function getProvenanceForNoteData(
   noteData: spacedEverything.notePrompts.PromptTaskNoteData,
-): PromptProvenance | null {
+): TaskProvenance | null {
   if (!noteData.externalNoteID || !noteData.noteTitle) {
     return null;
   } else {
     return {
-      provenanceType: PromptProvenanceType.Note,
-      externalID: noteData.externalNoteID.id,
+      identifier: noteData.externalNoteID.id,
       title: noteData.noteTitle,
-      url: noteData.externalNoteID.openURL,
-      modificationTimestampMillis: noteData.modificationTimestamp,
+      ...(noteData.externalNoteID.openURL && {
+        url: noteData.externalNoteID.openURL,
+      }),
     };
-  }
-}
-
-function createIngestionLog(
-  taskID: PromptTaskID,
-  provenance: PromptProvenance,
-  timestampMillis: number,
-): ActionLog {
-  return getActionLogFromPromptActionLog({
-    actionLogType: "ingest",
-    taskID,
-    timestampMillis,
-    provenance,
-  });
-}
-
-async function mapTasksInPrompt<R>(
-  ITPrompt: IT.Prompt,
-  orbitPrompt: Prompt,
-  f: (taskID: PromptTaskID) => R,
-): Promise<R[]> {
-  const orbitPromptID = await getIDForPrompt(orbitPrompt);
-  switch (ITPrompt.type) {
-    case IT.qaPromptType:
-      const promptTask: PromptTask = {
-        promptType: qaPromptType,
-        promptParameters: null,
-        promptID: orbitPromptID,
-      };
-      return [f(getIDForPromptTask(promptTask))];
-
-    case IT.clozePromptType:
-      return Array.from(
-        new Array(IT.getClozeNodesInClozePrompt(ITPrompt).length).keys(),
-      ).map((index) => {
-        const promptTask: PromptTask = {
-          promptType: clozePromptType,
-          promptParameters: { clozeIndex: index },
-          promptID: orbitPromptID,
-        };
-        return f(getIDForPromptTask(promptTask));
-      });
   }
 }
 
@@ -336,13 +280,13 @@ async function getChildUpdatesForPromptsInNote(
   >,
   timestampMillis: number,
   importCache: SpacedEverythingImportCache,
-): Promise<{ logs: ActionLog[]; prompts: Prompt[] }> {
+): Promise<Event[]> {
   const noteData = await importCache.getNoteMetadata(noteID);
   if (noteData) {
-    const updateLists = await Promise.all(
+    const eventLists = await Promise.all(
       noteData.childIDs.map((childID) =>
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        getUpdatesForTaskCacheChange(
+        getEventsForTaskCacheChange(
           {
             ...change,
             path: [...change.path, childID],
@@ -352,26 +296,22 @@ async function getChildUpdatesForPromptsInNote(
         ),
       ),
     );
-    return {
-      prompts: [],
-      logs: flat(updateLists.map((update) => update.logs)),
-    };
+    return eventLists.flat();
   } else {
     throw new Error(`Unknown note ID: ${noteID}`);
   }
 }
 
-export async function getUpdatesForTaskCacheChange(
+export async function getEventsForTaskCacheChange(
   change: spacedEverything.taskCache.TaskCacheSessionChange<
     NotePromptTask,
     NotePromptTaskCollection
   >,
   timestampMillis: number,
   importCache: SpacedEverythingImportCache,
-): Promise<{ logs: ActionLog[]; prompts: Prompt[] }> {
+): Promise<Event[]> {
   const path = change.path;
   let log = `${change.path}: ${change.type}`;
-  const emptyResult = { logs: [], prompts: [] };
 
   if (path.length === 1) {
     if (
@@ -397,7 +337,7 @@ export async function getUpdatesForTaskCacheChange(
           importCache,
         ).catch((error) => {
           console.error(`Couldn't update note ${path[0]}: ${error}`);
-          return emptyResult;
+          return [];
         });
       }
     } else if (change.type === "delete") {
@@ -412,7 +352,7 @@ export async function getUpdatesForTaskCacheChange(
         console.error(
           `Couldn't delete note ${path[0]} because no remote entry with that ID exists`,
         );
-        return emptyResult;
+        return [];
       });
     }
   } else if (path.length === 2) {
@@ -427,20 +367,21 @@ export async function getUpdatesForTaskCacheChange(
       ) {
         if (existingPromptRecord) {
           // The prompt might exist in multiple notes, in which case we won't insert it again in the second place.
-          return { logs: [], prompts: [] };
+          return [];
         } else {
           const provenance = getProvenanceForNoteData(value.noteData);
           if (provenance) {
-            const orbitPrompt = getOrbitPromptForITPrompt(value.prompt);
-            return {
-              logs: await mapTasksInPrompt(
-                value.prompt,
-                orbitPrompt,
-                (taskID) =>
-                  createIngestionLog(taskID, provenance, timestampMillis),
-              ),
-              prompts: [orbitPrompt],
+            const spec = getOrbitPromptForITPrompt(value.prompt);
+            const taskID: TaskID;
+            const ingestEvent: TaskIngestEvent = {
+              id: generateUniqueID(),
+              type: EventType.TaskIngest,
+              spec,
+              entityID: taskID,
+              timestampMillis,
+              provenance,
             };
+            return [ingestEvent];
           } else {
             console.warn(
               `Skipping ${path} ${value.noteData.noteTitle} because its metadata is invalid`,
@@ -450,23 +391,15 @@ export async function getUpdatesForTaskCacheChange(
       }
     } else if (change.type === "delete") {
       if (existingPromptRecord) {
-        const orbitPrompt = getOrbitPromptForITPrompt(
-          existingPromptRecord.ITPrompt,
-        );
-        return {
-          logs: await mapTasksInPrompt(
-            existingPromptRecord.ITPrompt,
-            orbitPrompt,
-            (promptTaskID) => ({
-              actionLogType: updateMetadataActionLogType,
-              updates: { isDeleted: true },
-              taskID: promptTaskID,
-              timestampMillis,
-              parentActionLogIDs: existingPromptRecord.headActionLogIDs,
-            }),
-          ),
-          prompts: [],
-        };
+        const taskID: TaskID;
+        const deleteEvent: TaskUpdateDeletedEvent = {
+          id: generateUniqueID(),
+          type: EventType.TaskUpdateDeleted,
+          isDeleted: true,
+          timestampMillis,
+          entityID: taskID
+        }
+        return [deleteEvent];
       } else {
         console.error(
           `Couldn't delete ${path}: no remote entry exists at that path`,
@@ -477,9 +410,9 @@ export async function getUpdatesForTaskCacheChange(
       // This is a bit of a hack: we handle note updates by recursing down to the children.
       if (value.type === "note") {
         if (existingPromptRecord) {
-          const orbitPrompt = getOrbitPromptForITPrompt(
-            existingPromptRecord.ITPrompt,
-          );
+          const taskID: TaskID;
+          const updateProvenanceπEvent: TaskUpdateProvenanceEvent
+
           return {
             logs: await mapTasksInPrompt(
               existingPromptRecord.ITPrompt,
@@ -498,7 +431,7 @@ export async function getUpdatesForTaskCacheChange(
           };
         } else {
           console.error(
-            `Couldn't update ${path}: no remote entry exists at that path`,
+            `Couldn't update ${path}: no existing entry exists at that path`,
           );
         }
       } else {
@@ -514,7 +447,7 @@ export async function getUpdatesForTaskCacheChange(
     }
   }
 
-  return emptyResult;
+  return [];
 }
 
 export function createTaskCache(
@@ -551,50 +484,31 @@ export function createTaskCache(
 
         async writeChanges(changes) {
           const updateTimestamp = Date.now();
-          const updateLists = await Promise.all(
-            changes.map((change) =>
-              getUpdatesForTaskCacheChange(
-                change,
-                updateTimestamp,
-                importCache,
+          const events = (
+            await Promise.all(
+              changes.map((change) =>
+                getEventsForTaskCacheChange(
+                  change,
+                  updateTimestamp,
+                  importCache,
+                ),
               ),
-            ),
-          );
+            )
+          ).flat();
+          console.log(events);
 
-          const logs = flat(updateLists.map((update) => update.logs));
-          const prompts = flat(updateLists.map((update) => update.prompts));
-          console.log(logs);
-          console.log(prompts);
-
-          const deletions = logs.filter(
-            (l) => l.actionLogType === updateMetadataActionLogType,
+          const deletions = events.filter(
+            (l) => l.type === EventType.TaskUpdateDeleted,
           );
-          const insertions = logs.filter(
-            (l) => l.actionLogType === ingestActionLogType,
+          const insertions = events.filter(
+            (l) => l.type === EventType.TaskIngest,
           );
           console.log(
-            `${insertions.length} insertions; ${deletions.length} deletions; ${prompts.length} prompts to record`,
+            `${insertions.length} insertions; ${deletions.length} deletions`,
           );
 
-          await apiClient.storeTaskData(
-            await Promise.all(
-              prompts.map(async (prompt) => ({
-                id: await getIDForPrompt(prompt),
-                data: prompt,
-              })),
-            ),
-          );
-          console.log("Recorded prompts.");
-
-          await apiClient.storeActionLogs(
-            await Promise.all(
-              logs.map(async (log) => ({
-                id: await getIDForActionLog(log),
-                data: log,
-              })),
-            ),
-          );
-          console.log("Recorded logs.");
+          // TODO: Write events.
+          console.log("Done.");
           return;
         },
       });
