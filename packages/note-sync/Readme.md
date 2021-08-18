@@ -1,8 +1,8 @@
 # @withorbit/note-sync
 
-This package is meant to allow you to write prompts embedded within plaintext notes. It extracts those prompts and synchronizes them with an Orbit account, ingesting missing prompts and removing deleted ones as necessary.
+This package is meant to allow you to write prompts embedded within plaintext notes. It extracts those prompts and synchronizes them with a local Orbit database, ingesting missing prompts and removing deleted ones as necessary.
 
-Sample invocation (assuming you have a local emulator running):
+Sample invocation:
 
 ```
 # Set up a test note. Note that currently the script assumes these notes are exported from Bear, i.e. via https://github.com/andymatuschak/Bear-Markdown-Export. This requirement should be relaxed!
@@ -11,16 +11,10 @@ mkdir -p testNotes
 echo "# Test note\nThis is a {test cloze} note.\n<\!-- {BearID:BE407525-7100-4F63-9F11-690E325CDFE9-1084-00032CF318809DA5} -->" > testNotes/note.md
 
 # Sync that cloze to the test user test@test.com (see backend/Readme.md)
-ORBIT_ENV=development ORBIT_TOKEN=TEST yarn sync testNotes
+ORBIT_ENV=development ORBIT_TOKEN=TEST yarn sync myOrbitDB.orbitStore testNotes
 
-# Now if you visit http://localhost:19006/review as user test@test.com, you should see your test note.
+# Now you can sync myOrbitDB.orbitStore to the server or load it with a local client.
 ```
-
-To sync with a different user, set `ORBIT_TOKEN` to a personal access token for your user (which you can generate by visiting `/settings?action=generatePersonalAccessToken` while logged in).
-
-Note that the script performs some caching of user data, so you'll want to delete `cache.db` if you switch users.
-
-To run against the production server, set `ORBIT_ENV` to `production`.
 
 ## Implementation notes
 

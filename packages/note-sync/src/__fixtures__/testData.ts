@@ -1,14 +1,35 @@
-import { qaPromptType, Prompt } from "@withorbit/core";
+import {
+  parseSingleCurlyBraceClozePromptMarkup,
+  TaskContentType,
+  TaskSpec,
+  TaskSpecType,
+} from "@withorbit/core2";
 
-// Our project-level fixture has multiple paragraphs, which isn't supported in this pipeline.
-export const simpleOrbitPrompt: Prompt = {
-  promptType: qaPromptType,
-  question: {
-    contents: "This is a test prompt.",
-    attachments: [],
+export const simpleOrbitQATaskSpec: TaskSpec = {
+  type: TaskSpecType.Memory,
+  content: {
+    type: TaskContentType.QA,
+    body: {
+      text: "This is a test prompt.",
+      attachments: [],
+    },
+    answer: {
+      text: "1936\\.",
+      attachments: [],
+    },
   },
-  answer: {
-    contents: "This is a test answer.",
-    attachments: [],
+};
+
+const { markupWithoutBraces, clozeComponents } =
+  parseSingleCurlyBraceClozePromptMarkup("This {is} a {test cloze}.");
+export const simpleOrbitClozeTaskSpec: TaskSpec = {
+  type: TaskSpecType.Memory,
+  content: {
+    type: TaskContentType.Cloze,
+    body: {
+      text: markupWithoutBraces,
+      attachments: [],
+    },
+    components: clozeComponents,
   },
 };

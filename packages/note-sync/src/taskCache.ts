@@ -1,169 +1,131 @@
-import { OrbitAPI } from "@withorbit/api";
-import OrbitAPIClient from "@withorbit/api-client";
 import {
+  EntityType,
   Event,
   EventType,
   generateUniqueID,
+  Task,
   TaskID,
   TaskIngestEvent,
   TaskProvenance,
-  TaskUpdateDeletedEvent, TaskUpdateProvenanceEvent,
+  TaskUpdateDeletedEvent,
+  TaskUpdateProvenanceEvent,
 } from "@withorbit/core2";
+import { Database } from "@withorbit/store-shared";
 import * as IT from "incremental-thinking";
 import * as spacedEverything from "spaced-everything";
-import SpacedEverythingImportCache, { CachedNoteMetadata } from "./importCache";
 import {
-  getITPromptForOrbitPrompt,
-  getOrbitPromptForITPrompt,
-} from "./util/cstOrbitAdapters";
+  getITPromptForOrbitTaskSpec,
+  getOrbitTaskSpecForITPrompt,
+} from "./cstOrbitAdapters";
 
 type NotePromptTask = spacedEverything.notePrompts.PromptTask;
 type NotePromptTaskCollection =
   spacedEverything.notePrompts.PromptTaskCollection;
 
-// When we start up, we'll fetch all remote prompt states we don't already have locally cached. We'll also fetch all the prompt contents we don't have.
-async function initializeImportCache(
-  apiClient: OrbitAPIClient,
-  importCache: SpacedEverythingImportCache,
-) {
-  let lastCreatedTaskID = await importCache.getLastStoredTaskID();
-  console.log(
-    `Fetching new prompt states (created after ${lastCreatedTaskID})`,
-  );
-
-  const promptStates: OrbitAPI.ResponseObject<
-    "taskState",
-    PromptTaskID,
-    PromptState
-  >[] = [];
-
-  while (true) {
-    const newPromptStates = await apiClient.listTaskStates({
-      createdAfterID: lastCreatedTaskID as PromptTaskID,
-    });
-    if (newPromptStates.data.length > 0) {
-      // TODO provenanceType: PromptProvenanceType.Note,
-      promptStates.push(
-        ...newPromptStates.data.filter(
-          (promptStateWrapper) =>
-            promptStateWrapper.data.taskMetadata.provenance?.provenanceType ===
-            PromptProvenanceType.Note,
-        ),
-      );
-      lastCreatedTaskID =
-        newPromptStates.data[newPromptStates.data.length - 1].id;
-    } else {
-      break;
-    }
-  }
-
-  console.log(`Fetched ${promptStates.length} prompt states`);
-  const promptStatesToStore: {
-    promptState: PromptState;
-    ITPrompt: IT.Prompt;
-    taskID: PromptTaskID;
-  }[] = [];
-
-  // Get prompt contents for all the prompts we have cached.
-  const missingPromptIDs = new Map<
-    PromptID,
-    OrbitAPI.ResponseObject<"taskState", PromptTaskID, PromptState>
-  >();
-  await Promise.all(
-    promptStates.map(async (promptStateResponse) => {
-      const promptTask = getPromptTaskForID(promptStateResponse.id);
-      if (promptTask instanceof Error) {
-        console.log(
-          `Skipping unparseable prompt task ID ${promptStateResponse.id}`,
-        );
-      } else {
-        const promptID = promptTask.promptID;
-        const ITPrompt = await importCache.getPromptByOrbitPromptID(promptID);
-        if (ITPrompt) {
-          promptStatesToStore.push({
-            promptState: promptStateResponse.data,
-            ITPrompt,
-            taskID: promptStateResponse.id,
-          });
-        } else {
-          missingPromptIDs.set(promptID, promptStateResponse);
-        }
-      }
-    }),
-  );
-
-  // If we haven't cached some of these prompts, download their contents now.
-  if (missingPromptIDs.size > 0) {
-    console.log(`Fetching ${missingPromptIDs.size} missing prompt IDs`);
-    const missingPromptIDList = [...missingPromptIDs.keys()];
-    const fetchedPromptIDs = new Set<PromptID>();
-
-    const batchSize = 10;
-    for (
-      let sliceIndex = 0;
-      sliceIndex < missingPromptIDList.length / batchSize;
-      sliceIndex++
-    ) {
-      const slice = missingPromptIDList.slice(
-        sliceIndex * batchSize,
-        (sliceIndex + 1) * batchSize,
-      );
-      const taskDataResponse = await apiClient.getTaskData(slice);
-      for (const promptDataWrapper of taskDataResponse.data) {
-        const ITPrompt = getITPromptForOrbitPrompt(promptDataWrapper.data);
-        if (ITPrompt) {
-          const promptStateWrapper = missingPromptIDs.get(
-            promptDataWrapper.id,
-          )!;
-          promptStatesToStore.push({
-            promptState: promptStateWrapper.data,
-            ITPrompt,
-            taskID: promptStateWrapper.id,
-          });
-          fetchedPromptIDs.add(promptDataWrapper.id);
-        } else {
-          console.log(
-            `Skipping prompt ID ${promptDataWrapper.id} because it could not be converted to an incremental-thinking prompt`,
-          );
-        }
-      }
-    }
-
-    for (const id of missingPromptIDs.keys()) {
-      if (!fetchedPromptIDs.has(id)) {
-        console.error(`Couldn't fetch prompt ID ${id} from server`);
-      }
-    }
-  }
-
-  // Now we can save the prompt states.
-  importCache.storePromptStates(promptStatesToStore);
-  console.log(`Stored ${promptStatesToStore.length} states`);
-}
-
 function approximatePromptTaskNoteData(
   noteID: string,
-  cachedNoteMetadata: CachedNoteMetadata,
+  provenance: TaskProvenance,
 ): spacedEverything.notePrompts.PromptTaskNoteData {
   return {
-    modificationTimestamp: cachedNoteMetadata.modificationTimestamp,
-    noteTitle: cachedNoteMetadata.title,
+    modificationTimestamp: 0, // not bothering with this performance optimization
+    noteTitle: provenance.title ?? null,
     externalNoteID: {
       type: "bear", // TODO HACK I'm hardcoding Bear here
       id: noteID,
-      openURL: cachedNoteMetadata.URL,
+      openURL: provenance.url ?? null,
     },
   };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function unreachableCaseError(witness: never): Error {
+function unreachableCaseError(_: never): Error {
   return new Error("unreachable");
+}
+
+export interface ImportCache {
+  noteRecordsByNoteID: Map<string, ImportCacheNoteRecord>;
+  ITPromptsByCSTID: Map<string, IT.Prompt>;
+  taskIDsByCSTID: Map<string, TaskID>;
+}
+
+interface ImportCacheNoteRecord {
+  provenance: TaskProvenance;
+  childIDs: string[];
+}
+
+function isTaskImportedFromNote(task: Task): boolean {
+  // TODO: HACK we'll want to use a metadata key on the task instead.
+  return task.provenance?.url?.startsWith("bear://") ?? false;
+}
+
+export async function createImportCache(
+  database: Database,
+): Promise<ImportCache> {
+  const noteRecordsByNoteID = new Map<string, ImportCacheNoteRecord>();
+  const ITPromptsByCSTID = new Map<string, IT.Prompt>();
+  const taskIDsByCSTID = new Map<string, TaskID>();
+
+  let afterID: TaskID | undefined = undefined;
+  do {
+    const tasks: Task[] = await database.listEntities({
+      entityType: EntityType.Task,
+      afterID,
+      limit: 1000,
+    });
+
+    for (const task of tasks) {
+      if (!task.provenance) {
+        continue; // must not be imported from a note.
+      }
+      if (!isTaskImportedFromNote(task)) {
+        continue;
+      }
+      if (task.isDeleted) {
+        continue;
+      }
+
+      const ITPrompt = getITPromptForOrbitTaskSpec(task.spec);
+      if (!ITPrompt) {
+        continue;
+      }
+
+      const CSTID = spacedEverything.notePrompts.getIDForPrompt(ITPrompt);
+      ITPromptsByCSTID.set(CSTID, ITPrompt);
+      taskIDsByCSTID.set(CSTID, task.id);
+
+      const priorNoteRecord = noteRecordsByNoteID.get(
+        task.provenance.identifier,
+      );
+      if (priorNoteRecord) {
+        noteRecordsByNoteID.set(task.provenance.identifier, {
+          provenance: priorNoteRecord.provenance,
+          childIDs: [...priorNoteRecord.childIDs, CSTID],
+        });
+      } else {
+        noteRecordsByNoteID.set(task.provenance.identifier, {
+          provenance: task.provenance,
+          childIDs: [CSTID],
+        });
+      }
+    }
+
+    if (tasks.length > 0) {
+      afterID = tasks[tasks.length - 1].id;
+    } else {
+      break;
+    }
+  } while (!!afterID);
+
+  return {
+    noteRecordsByNoteID,
+    ITPromptsByCSTID,
+    taskIDsByCSTID,
+  };
 }
 
 async function getTaskRecordForPath(
   path: spacedEverything.taskCache.TaskIDPath,
-  importCache: SpacedEverythingImportCache,
+  importCache: ImportCache,
 ): Promise<spacedEverything.TaskRecord<
   NotePromptTask,
   NotePromptTaskCollection
@@ -171,24 +133,23 @@ async function getTaskRecordForPath(
   switch (path.length) {
     case 0:
       // Root.
-      const noteIDs = await importCache.getNoteIDs();
       return {
         type: "collection",
         value: { type: "root" },
-        childIDs: new Set(noteIDs),
+        childIDs: new Set(importCache.noteRecordsByNoteID.keys()),
       };
 
     case 1:
       // Note.
-      const noteData = await importCache.getNoteMetadata(path[0]);
-      if (noteData) {
+      const noteRecord = importCache.noteRecordsByNoteID.get(path[0]);
+      if (noteRecord) {
         return {
           type: "collection",
           value: {
             type: "note",
-            ...approximatePromptTaskNoteData(path[0], noteData.metadata),
+            ...approximatePromptTaskNoteData(path[0], noteRecord.provenance),
           },
-          childIDs: new Set(noteData.childIDs),
+          childIDs: new Set(noteRecord.childIDs),
         };
       } else {
         return null;
@@ -196,22 +157,21 @@ async function getTaskRecordForPath(
 
     case 2:
       // Prompt or Cloze block.
-      const promptRecord = await importCache.getPromptRecordByCSTID(path[1]);
-      if (promptRecord) {
-        const prompt = promptRecord.ITPrompt;
-        const cachedNoteData = await importCache.getNoteMetadata(path[0]);
-        if (cachedNoteData) {
+      const ITPrompt = importCache.ITPromptsByCSTID.get(path[1]);
+      if (ITPrompt) {
+        const noteRecord = importCache.noteRecordsByNoteID.get(path[0]);
+        if (noteRecord) {
           const noteData = approximatePromptTaskNoteData(
             path[0],
-            cachedNoteData.metadata,
+            noteRecord.provenance,
           );
-          switch (prompt.type) {
+          switch (ITPrompt.type) {
             case IT.qaPromptType:
               return {
                 type: "task",
                 value: {
                   type: "qaPrompt",
-                  prompt,
+                  prompt: ITPrompt,
                   noteData,
                 },
               };
@@ -220,16 +180,16 @@ async function getTaskRecordForPath(
                 type: "collection",
                 value: {
                   type: "clozeBlock",
-                  prompt,
+                  prompt: ITPrompt,
                   noteData,
                 },
                 childIDs:
                   spacedEverything.notePrompts.getClozeNoteTaskCollectionChildIDsForClozePrompt(
-                    prompt,
+                    ITPrompt,
                   ),
               };
             default:
-              throw unreachableCaseError(prompt);
+              throw unreachableCaseError(ITPrompt);
           }
         } else {
           console.warn(
@@ -279,12 +239,12 @@ async function getChildUpdatesForPromptsInNote(
     NotePromptTaskCollection
   >,
   timestampMillis: number,
-  importCache: SpacedEverythingImportCache,
+  importCache: ImportCache,
 ): Promise<Event[]> {
-  const noteData = await importCache.getNoteMetadata(noteID);
-  if (noteData) {
+  const noteRecord = await importCache.noteRecordsByNoteID.get(noteID);
+  if (noteRecord) {
     const eventLists = await Promise.all(
-      noteData.childIDs.map((childID) =>
+      noteRecord.childIDs.map((childID) =>
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         getEventsForTaskCacheChange(
           {
@@ -308,7 +268,7 @@ export async function getEventsForTaskCacheChange(
     NotePromptTaskCollection
   >,
   timestampMillis: number,
-  importCache: SpacedEverythingImportCache,
+  importCache: ImportCache,
 ): Promise<Event[]> {
   const path = change.path;
   let log = `${change.path}: ${change.type}`;
@@ -320,14 +280,14 @@ export async function getEventsForTaskCacheChange(
       change.record.value.type === "note"
     ) {
       // Should we bother to update?
-      const noteMetadata = await importCache.getNoteMetadata(path[0]);
+      const noteMetadata = await importCache.noteRecordsByNoteID.get(path[0]);
       if (
-        noteMetadata?.metadata.title !== change.record.value.noteTitle ||
-        noteMetadata?.metadata.URL !==
+        noteMetadata?.provenance.title !== change.record.value.noteTitle ||
+        noteMetadata?.provenance.url !==
           change.record.value.externalNoteID?.openURL
       ) {
         const newNoteData = change.record.value;
-        log += `\n\tOld metadata: ${noteMetadata?.metadata.title} :: ${noteMetadata?.metadata.URL}`;
+        log += `\n\tOld metadata: ${noteMetadata?.provenance.title} :: ${noteMetadata?.provenance.url}`;
         log += `\n\tNew metadata: ${newNoteData.noteTitle} :: ${newNoteData.externalNoteID?.type}/${newNoteData.externalNoteID?.id}/${newNoteData.externalNoteID?.openURL} :: ${newNoteData.modificationTimestamp}`;
         console.log(log);
         return getChildUpdatesForPromptsInNote(
@@ -356,7 +316,7 @@ export async function getEventsForTaskCacheChange(
       });
     }
   } else if (path.length === 2) {
-    const existingPromptRecord = await importCache.getPromptRecordByCSTID(
+    const existingPromptRecord = await importCache.ITPromptsByCSTID.get(
       path[1],
     );
     if (change.type === "insert") {
@@ -371,13 +331,12 @@ export async function getEventsForTaskCacheChange(
         } else {
           const provenance = getProvenanceForNoteData(value.noteData);
           if (provenance) {
-            const spec = getOrbitPromptForITPrompt(value.prompt);
-            const taskID: TaskID;
+            const spec = getOrbitTaskSpecForITPrompt(value.prompt);
             const ingestEvent: TaskIngestEvent = {
               id: generateUniqueID(),
               type: EventType.TaskIngest,
               spec,
-              entityID: taskID,
+              entityID: generateUniqueID(),
               timestampMillis,
               provenance,
             };
@@ -391,14 +350,19 @@ export async function getEventsForTaskCacheChange(
       }
     } else if (change.type === "delete") {
       if (existingPromptRecord) {
-        const taskID: TaskID;
+        const taskID = importCache.taskIDsByCSTID.get(path[1]);
+        if (!taskID) {
+          throw new Error(
+            `Inconsistency: no Orbit task ID for CSTID ${path[1]}`,
+          );
+        }
         const deleteEvent: TaskUpdateDeletedEvent = {
           id: generateUniqueID(),
           type: EventType.TaskUpdateDeleted,
           isDeleted: true,
           timestampMillis,
-          entityID: taskID
-        }
+          entityID: taskID,
+        };
         return [deleteEvent];
       } else {
         console.error(
@@ -410,25 +374,20 @@ export async function getEventsForTaskCacheChange(
       // This is a bit of a hack: we handle note updates by recursing down to the children.
       if (value.type === "note") {
         if (existingPromptRecord) {
-          const taskID: TaskID;
-          const updateProvenanceπEvent: TaskUpdateProvenanceEvent
-
-          return {
-            logs: await mapTasksInPrompt(
-              existingPromptRecord.ITPrompt,
-              orbitPrompt,
-              (promptTaskID) => ({
-                actionLogType: updateMetadataActionLogType,
-                updates: {
-                  provenance: getProvenanceForNoteData(value),
-                },
-                taskID: promptTaskID,
-                timestampMillis,
-                parentActionLogIDs: existingPromptRecord.headActionLogIDs,
-              }),
-            ),
-            prompts: [],
+          const taskID = importCache.taskIDsByCSTID.get(path[1]);
+          if (!taskID) {
+            throw new Error(
+              `Inconsistency: no Orbit task ID for CSTID ${path[1]}`,
+            );
+          }
+          const updateProvenanceEvent: TaskUpdateProvenanceEvent = {
+            id: generateUniqueID(),
+            type: EventType.TaskUpdateProvenanceEvent,
+            provenance: getProvenanceForNoteData(value),
+            timestampMillis,
+            entityID: taskID,
           };
+          return [updateProvenanceEvent];
         } else {
           console.error(
             `Couldn't update ${path}: no existing entry exists at that path`,
@@ -451,16 +410,14 @@ export async function getEventsForTaskCacheChange(
 }
 
 export function createTaskCache(
-  apiClient: OrbitAPIClient,
-  importCache: SpacedEverythingImportCache,
+  importCache: ImportCache,
+  database: Database,
 ): spacedEverything.taskCache.TaskCache<
   NotePromptTask,
   NotePromptTaskCollection
 > {
   return {
     async performOperations(continuation) {
-      await initializeImportCache(apiClient, importCache);
-
       // Index by task ID paths.
       return continuation({
         async getTaskNodes(paths) {
@@ -495,7 +452,7 @@ export function createTaskCache(
               ),
             )
           ).flat();
-          console.log(events);
+          console.log(JSON.stringify(events, null, "\t"));
 
           const deletions = events.filter(
             (l) => l.type === EventType.TaskUpdateDeleted,
@@ -507,9 +464,7 @@ export function createTaskCache(
             `${insertions.length} insertions; ${deletions.length} deletions`,
           );
 
-          // TODO: Write events.
-          console.log("Done.");
-          return;
+          await database.putEvents(events);
         },
       });
     },

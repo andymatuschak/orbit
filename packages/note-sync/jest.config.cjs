@@ -1,7 +1,8 @@
 module.exports = {
   testEnvironment: "node",
   testMatch: ["**/?(*.)+(spec|test).ts?(x)"],
-  testPathIgnorePatterns: ["dist", "node_modules"],
+  testPathIgnorePatterns: ["dist", "node_modules", "vendor"],
+  transformIgnorePatterns: [],
 
   // Jest struggles to read these mappings from the multiformats packages, which seem to be specifying them just fine as far as I can tell.
   moduleNameMapper: {

@@ -1,31 +1,40 @@
-import * as IT from "incremental-thinking";
 import {
-  PromptUpdateMetadataActionLog,
-  updateMetadataActionLogType,
-} from "@withorbit/core";
+  EventType,
+  TaskID,
+  TaskIngestEvent,
+  TaskProvenance,
+  TaskUpdateDeletedEvent,
+} from "@withorbit/core2";
+import * as IT from "incremental-thinking";
 import * as spacedEverything from "spaced-everything";
-import { testClozePrompt } from "@withorbit/sample-data";
-import { simpleOrbitPrompt } from "./__fixtures__/testData";
-import SpacedEverythingImportCache from "./importCache";
-import { getEventsForTaskCacheChange } from "./taskCache";
-import { getITPromptForOrbitPrompt } from "./util/cstOrbitAdapters";
+import {
+  simpleOrbitClozeTaskSpec,
+  simpleOrbitQATaskSpec,
+} from "./__fixtures__/testData";
+import { getITPromptForOrbitTaskSpec } from "./cstOrbitAdapters";
+import { getEventsForTaskCacheChange, ImportCache } from "./taskCache";
 
-const clozeITPrompt = getITPromptForOrbitPrompt(
-  testClozePrompt,
+const clozeITPrompt = getITPromptForOrbitTaskSpec(
+  simpleOrbitClozeTaskSpec,
 ) as IT.ClozePrompt;
 
 describe("getUpdatesForTaskCacheChange", () => {
   test("insert qa prompt", async () => {
-    const mock = {} as SpacedEverythingImportCache;
-    mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue(null);
-    const { prompts, logs } = await getEventsForTaskCacheChange(
+    const importCache: ImportCache = {
+      taskIDsByCSTID: new Map(),
+      ITPromptsByCSTID: new Map(),
+      noteRecordsByNoteID: new Map(),
+    };
+    const events = await getEventsForTaskCacheChange(
       {
         type: "insert",
         record: {
           type: "task",
           value: {
             type: "qaPrompt",
-            prompt: getITPromptForOrbitPrompt(simpleOrbitPrompt) as IT.QAPrompt,
+            prompt: getITPromptForOrbitTaskSpec(
+              simpleOrbitQATaskSpec,
+            ) as IT.QAPrompt,
             noteData: {
               noteTitle: "test-title",
               modificationTimestamp: 0,
@@ -40,17 +49,22 @@ describe("getUpdatesForTaskCacheChange", () => {
         path: ["container", "id"],
       },
       500,
-      mock,
+      importCache,
     );
 
-    expect(prompts[0]).toMatchObject(simpleOrbitPrompt);
-    expect(logs).toHaveLength(1);
+    expect(events).toHaveLength(1);
+    const ingestLog = events[0] as TaskIngestEvent;
+    expect(ingestLog.type).toEqual(EventType.TaskIngest);
+    expect(ingestLog.spec).toEqual(simpleOrbitQATaskSpec);
   });
 
   test("insert cloze prompt", async () => {
-    const mock = {} as SpacedEverythingImportCache;
-    mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue(null);
-    const { prompts, logs } = await getEventsForTaskCacheChange(
+    const importCache: ImportCache = {
+      taskIDsByCSTID: new Map(),
+      ITPromptsByCSTID: new Map(),
+      noteRecordsByNoteID: new Map(),
+    };
+    const events = await getEventsForTaskCacheChange(
       {
         type: "insert",
         record: {
@@ -76,84 +90,90 @@ describe("getUpdatesForTaskCacheChange", () => {
         path: ["container", "id"],
       },
       500,
-      mock,
+      importCache,
     );
 
-    expect(prompts[0]).toMatchObject(testClozePrompt);
-    expect(logs).toHaveLength(5);
+    expect(events).toHaveLength(1);
+    const ingestLog = events[0] as TaskIngestEvent;
+    expect(ingestLog.type).toEqual(EventType.TaskIngest);
+    expect(ingestLog.spec).toEqual(simpleOrbitClozeTaskSpec);
   });
 
   test("delete prompt", async () => {
-    const mock = {} as SpacedEverythingImportCache;
-    mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue({
-      ITPrompt: clozeITPrompt,
-      headActionLogIDs: ["parent-log"],
-    });
-    const { prompts, logs } = await getEventsForTaskCacheChange(
+    const deletedTaskID = "a" as TaskID;
+    const CSTID = spacedEverything.notePrompts.getIDForPrompt(clozeITPrompt);
+
+    const importCache: ImportCache = {
+      taskIDsByCSTID: new Map([[CSTID, deletedTaskID]]),
+      ITPromptsByCSTID: new Map([[CSTID, clozeITPrompt]]),
+      noteRecordsByNoteID: new Map([
+        ["container", { childIDs: [CSTID], provenance: {} as TaskProvenance }],
+      ]),
+    };
+    const events = await getEventsForTaskCacheChange(
       {
         type: "delete",
-        path: ["container", "id"],
+        path: ["container", CSTID],
       },
       500,
-      mock as unknown as SpacedEverythingImportCache,
+      importCache,
     );
 
-    expect(prompts).toHaveLength(0);
-    expect(logs).toHaveLength(5);
-    expect(logs[0]).toMatchObject({
-      actionLogType: updateMetadataActionLogType,
-      updates: { isDeleted: true },
-      parentActionLogIDs: ["parent-log"],
-    });
+    expect(events).toHaveLength(1);
+    const event = events[0] as TaskUpdateDeletedEvent;
+    expect(event.type).toEqual(EventType.TaskUpdateDeleted);
+    expect(event.entityID).toEqual(deletedTaskID);
   });
 
   test("delete note", async () => {
-    const mock = {} as SpacedEverythingImportCache;
-    mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue({
-      ITPrompt: clozeITPrompt,
-      headActionLogIDs: ["parent-log"],
-    });
-    mock.getNoteMetadata = jest.fn().mockResolvedValue({
-      childIDs: ["childA", "childB"],
-      metadata: {},
-    });
-    const { prompts, logs } = await getEventsForTaskCacheChange(
+    const CSTID = spacedEverything.notePrompts.getIDForPrompt(clozeITPrompt);
+
+    const importCache: ImportCache = {
+      taskIDsByCSTID: new Map([[CSTID, "a" as TaskID]]),
+      ITPromptsByCSTID: new Map([[CSTID, clozeITPrompt]]),
+      noteRecordsByNoteID: new Map([
+        ["container", { childIDs: [CSTID], provenance: {} as TaskProvenance }],
+      ]),
+    };
+
+    const events = await getEventsForTaskCacheChange(
       {
         type: "delete",
         path: ["container"],
       },
       500,
-      mock as unknown as SpacedEverythingImportCache,
+      importCache,
     );
 
-    expect(prompts).toHaveLength(0);
-    expect(logs).toHaveLength(10);
-    expect(mock.getPromptRecordByCSTID).toHaveBeenCalledTimes(2);
-    expect(mock.getPromptRecordByCSTID).toHaveBeenLastCalledWith("childB");
-    expect(logs[0]).toMatchObject({
-      actionLogType: updateMetadataActionLogType,
-      updates: { isDeleted: true },
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      type: EventType.TaskUpdateDeleted,
+      isDeleted: true,
+      entityID: "a" as TaskID,
     });
-    expect(
-      (logs[0] as PromptUpdateMetadataActionLog).parentActionLogIDs,
-    ).toMatchObject(["parent-log"]);
   });
 
   test("update note metadata", async () => {
-    const mock = {} as SpacedEverythingImportCache;
-    mock.getPromptRecordByCSTID = jest.fn().mockResolvedValue({
-      ITPrompt: clozeITPrompt,
-      headActionLogIDs: ["parent-log"],
-    });
-    mock.getNoteMetadata = jest.fn().mockResolvedValue({
-      childIDs: ["childA", "childB"],
-      metadata: {
-        title: "old-title",
-        modificationTimestamp: 0,
-        URL: "old-url",
-      },
-    });
-    const { prompts, logs } = await getEventsForTaskCacheChange(
+    const CSTID = spacedEverything.notePrompts.getIDForPrompt(clozeITPrompt);
+
+    const importCache: ImportCache = {
+      taskIDsByCSTID: new Map([[CSTID, "a" as TaskID]]),
+      ITPromptsByCSTID: new Map([[CSTID, clozeITPrompt]]),
+      noteRecordsByNoteID: new Map([
+        [
+          "container",
+          {
+            childIDs: [CSTID],
+            provenance: {
+              identifier: "test-id",
+              title: "old-title",
+            } as TaskProvenance,
+          },
+        ],
+      ]),
+    };
+
+    const events = await getEventsForTaskCacheChange(
       {
         type: "update",
         path: ["container"],
@@ -169,18 +189,22 @@ describe("getUpdatesForTaskCacheChange", () => {
             noteTitle: "new-title",
             modificationTimestamp: 1,
           },
-          childIDs: new Set(["childA", "childB"]),
+          childIDs: new Set(["a"]),
         },
       },
       500,
-      mock as unknown as SpacedEverythingImportCache,
+      importCache,
     );
 
-    expect(prompts).toHaveLength(0);
-    expect(logs).toHaveLength(10);
-    const log = logs[0] as PromptUpdateMetadataActionLog;
-    expect(log.parentActionLogIDs).toMatchObject(["parent-log"]);
-    expect(log.updates.provenance!.title).toEqual("new-title");
-    expect(log.updates.provenance!.url).toEqual("new-url");
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      type: EventType.TaskUpdateProvenanceEvent,
+      entityID: "a" as TaskID,
+      provenance: {
+        url: "new-url",
+        identifier: "test-id",
+        title: "new-title",
+      },
+    });
   });
 });
