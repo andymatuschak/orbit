@@ -6,7 +6,7 @@ import { FileStorageResolution } from "./fileStorageService/fileStorageService";
 
 const attachmentSizeLimitBytes = 10 * 1024 * 1024;
 
-export function getFileStorageSubpathForAttachmentID(
+function getFileStorageSubpathForAttachmentID(
   userID: string,
   attachmentID: AttachmentID,
 ): string {

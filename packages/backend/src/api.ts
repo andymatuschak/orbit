@@ -2,13 +2,13 @@ import { OrbitAPI, OrbitAPIValidator } from "@withorbit/api";
 import cookieParser from "cookie-parser";
 import express from "express";
 import morganBody from "morgan-body";
-import { listEvents, storeEvents } from "./api/2/events";
-import { bulkGetTasks } from "./api/2/tasks";
+import { listEvents, storeEvents } from "./api/events";
+import { bulkGetTasks } from "./api/tasks";
 import {
-  getAttachment as getAttachment2,
+  getAttachment,
   ingestAttachmentsFromURLs,
-  storeAttachment2,
-} from "./api/2/attachments";
+  storeAttachment,
+} from "./api/attachments";
 import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode";
 import { createLoginToken } from "./api/internal/auth/createLoginToken";
 import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens";
@@ -45,8 +45,8 @@ export function createAPIApp(): express.Application {
       POST: ingestAttachmentsFromURLs,
     },
     "/2/attachments/:id": {
-      GET: getAttachment2,
-      POST: storeAttachment2,
+      GET: getAttachment,
+      POST: storeAttachment,
     },
     "/2/events": {
       PATCH: storeEvents,

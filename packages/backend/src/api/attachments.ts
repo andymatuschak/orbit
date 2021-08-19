@@ -4,10 +4,14 @@ import {
   EventType,
   generateUniqueID,
 } from "@withorbit/core2";
-import * as attachments2 from "../../attachments";
-import { authenticatedRequestHandler } from "../util/authenticateRequest";
-import { CachePolicy, TypedRouteHandler } from "../util/typedRouter";
+import { authenticatedRequestHandler } from "./util/authenticateRequest";
+import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";
 import { putAndLogEvents } from "./util/putAndLogEvents";
+import {
+  resolveAttachment,
+  storeAttachment as _storeAttachment,
+  storeAttachmentAtURLIfNecessary,
+} from "../attachments";
 
 export const getAttachment: TypedRouteHandler<
   OrbitAPI.Spec,
@@ -15,10 +19,7 @@ export const getAttachment: TypedRouteHandler<
   "GET"
 > = authenticatedRequestHandler(async (request, userID) => {
   // When running against Google Cloud Storage, we'll redirect to their URLs; when running against the emulator, we'll just vend the data directly.
-  const result = await attachments2.resolveAttachment(
-    request.params.id,
-    userID,
-  );
+  const result = await resolveAttachment(request.params.id, userID);
 
   if (result) {
     return {
@@ -43,8 +44,11 @@ export const ingestAttachmentsFromURLs: TypedRouteHandler<
   const ingestEvents: AttachmentIngestEvent[] = [];
   for (const { url, id } of entries) {
     // TODO: if the request to the remote URL fails, return an appropriate status code rather than 500
-    const { mimeType, status } =
-      await attachments2.storeAttachmentAtURLIfNecessary(userID, id, url);
+    const { mimeType, status } = await storeAttachmentAtURLIfNecessary(
+      userID,
+      id,
+      url,
+    );
 
     if (status === "stored") {
       ingestEvents.push({
@@ -64,7 +68,7 @@ export const ingestAttachmentsFromURLs: TypedRouteHandler<
   };
 });
 
-export const storeAttachment2: TypedRouteHandler<
+export const storeAttachment: TypedRouteHandler<
   OrbitAPI.Spec,
   "/2/attachments/:id",
   "POST"
@@ -73,12 +77,7 @@ export const storeAttachment2: TypedRouteHandler<
   const mimeType = request.body.file.type;
   const buffer = new Uint8Array(await request.body.file.arrayBuffer());
 
-  await attachments2.storeAttachment(
-    userID,
-    request.params.id,
-    buffer,
-    mimeType,
-  );
+  await _storeAttachment(userID, request.params.id, buffer, mimeType);
 
   return {
     status: 204,
