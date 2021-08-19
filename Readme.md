@@ -2,7 +2,7 @@
 
 Orbit is an experimental platform for publishing and engaging with small tasks repeatedly over time. In the short term, it's focused on supporting the "[mnemonic medium](https://numinous.productions/ttft/)", a way of augmenting texts so that readers can easily remember all the key details. For an example, see [Quantum Country](https://quantum.country), a textbook on quantum computation. More abstractly, Orbit aspires to offer a more general form of spaced repetition systems like [Anki](https://apps.ankiweb.net), as part of a connected cloud service. Learn more on the [home page](https://withorbit.com).
 
-Orbit is a (nascent) ecosystem. At its core are decentralized data structures defining tasks, review actions, and scheduling algorithms. Tasks can be ingested from around the web, via APIs or embedded iframes, or through various services running on your local computer. You can complete scheduled tasks in desktop, mobile, and web applications. A backend service syncs user data and orchestrates notifications.
+Orbit stores a collection of tasks and manages their schedules. Tasks can be ingested from around the web, via APIs or embedded iframes, or through various services running on your local computer. You can complete scheduled tasks in desktop, mobile, and web applications. A backend service syncs user data and orchestrates notifications.
 
 You should also understand that Orbit is (for now) first and foremost a vehicle for research. We hope that it's useful, of course, but the main goal is not implementing features or polishing loose screws. We're focused on trying to understand the scope of systems like this, and what they one day want to become.
 
@@ -16,15 +16,18 @@ While everything is written in Typescript, components of Orbit must run in Node,
 
 | Package | Description | Node | Browser | react-native  | License |
 | --- | --- | --- | --- | --- | --- |
-| _Main packages:_ |
-| `core` | Core data structures and operations | ✅ | ✅ | ✅ | APL2 |
-| `app` | Orbit client apps and embedded interface | | ✅ | ✅ | AGPL3+ / BUSL1.1 |
+| `app` | Orbit client apps (webapp, native mobile / desktop) | | ✅ | ✅ | AGPL3+ / BUSL1.1 |
 | `backend` | Server components of Orbit, including API backend, notifier, logging service, etc | ✅ | | | AGPL3+ / BUSL1.1 |
-| `web-component` | Author-facing library for Orbit integration | | ✅ | | APL2 |
 | `api` | Interface definitions for Orbit's REST API | ✅ | ✅ | ✅ | APL2 |
 | `api-client` | Client implementation of Orbit API | ✅ | ✅ | ✅ | APL2 |
-| `ui` | Shared styles and UI components | | ✅ | ✅ | APL2 |
-| _Secondary packages:_ |
+| `core` | Core data structures and operations | ✅ | ✅ | ✅ | APL2 |
+| `store-shared` | Core types and functions for Orbit's data store | ✅ | ✅ | ✅ | APL2 |
+| `store-fs` | Data store implementation for on-disk file format | ✅ | | ✅ | APL2 |
+| `store-web` | Data store implementation for browsers via IndexedDB | | ✅ | | APL2 |
+| `sync` | Syncs Orbit data stores (e.g. to central server) | ✅ | ✅ | ✅ | APL2 |
+| `ui` | Generic styles and UI components | | ✅ | ✅ | APL2 |
+| `web-component` | Author-facing library for Orbit integration into external web sites | | ✅ | | APL2 |
+| _Auxiliary packages:_ |
 | `anki-import` | Implements Anki .apkg import | ✅ | | | APL2 |
 | `docs` | Orbit's documentation site | | ✅ | | APL2 |
 | `embedded-support` | Implementations shared by `app` and `web-component` | | ✅ | ✅ | APL2 |
