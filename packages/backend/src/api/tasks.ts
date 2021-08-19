@@ -6,10 +6,10 @@ import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";
 
 export const bulkGetTasks: TypedRouteHandler<
   OrbitAPI.Spec,
-  "/2/tasks/bulkGet",
+  "/tasks/bulkGet",
   "POST"
 > = (request) => {
-  return authenticateTypedRequest<OrbitAPI.Spec, "/2/tasks/bulkGet", "POST">(
+  return authenticateTypedRequest<OrbitAPI.Spec, "/tasks/bulkGet", "POST">(
     request,
     async (userID) => {
       const { body } = request;

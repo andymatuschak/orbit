@@ -41,18 +41,18 @@ export function createAPIApp(): express.Application {
   }); // Log request and response data.
 
   createTypedRouter<OrbitAPI.Spec>(app, routeValidator, {
-    "/2/attachments/ingestFromURLs": {
+    "/attachments/ingestFromURLs": {
       POST: ingestAttachmentsFromURLs,
     },
-    "/2/attachments/:id": {
+    "/attachments/:id": {
       GET: getAttachment,
       POST: storeAttachment,
     },
-    "/2/events": {
+    "/events": {
       PATCH: storeEvents,
       GET: listEvents,
     },
-    "/2/tasks/bulkGet": {
+    "/tasks/bulkGet": {
       POST: bulkGetTasks,
     },
   });

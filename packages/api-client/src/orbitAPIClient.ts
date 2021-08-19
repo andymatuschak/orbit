@@ -25,24 +25,24 @@ export class OrbitAPIClient {
   }
 
   listEvents2(
-    query: OrbitAPI.Spec["/2/events"]["GET"]["query"] = {},
-  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/2/events"]["GET"]>> {
-    return this.requestManager.request("/2/events", "GET", {
+    query: OrbitAPI.Spec["/events"]["GET"]["query"] = {},
+  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/events"]["GET"]>> {
+    return this.requestManager.request("/events", "GET", {
       query,
     });
   }
 
   putEvents2(
-    events: OrbitAPI.Spec["/2/events"]["PATCH"]["body"],
-  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/2/events"]["PATCH"]>> {
-    return this.requestManager.request("/2/events", "PATCH", {
+    events: OrbitAPI.Spec["/events"]["PATCH"]["body"],
+  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/events"]["PATCH"]>> {
+    return this.requestManager.request("/events", "PATCH", {
       contentType: "application/json",
       body: events,
     });
   }
 
   getAttachment2(id: AttachmentID): Promise<API.BlobLike<AttachmentMIMEType>> {
-    return this.requestManager.request("/2/attachments/:id", "GET", {
+    return this.requestManager.request("/attachments/:id", "GET", {
       query: {},
       params: { id },
     });
@@ -52,11 +52,9 @@ export class OrbitAPIClient {
     id: AttachmentID,
     mimeType: AttachmentMIMEType,
     contents: Uint8Array,
-  ): Promise<
-    API.RouteResponseData<OrbitAPI.Spec["/2/attachments/:id"]["POST"]>
-  > {
+  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/attachments/:id"]["POST"]>> {
     const blob = new Blob([contents], { type: mimeType });
-    return this.requestManager.request("/2/attachments/:id", "POST", {
+    return this.requestManager.request("/attachments/:id", "POST", {
       params: { id },
       contentType: "multipart/form-data",
       body: { file: blob as API.BlobLike<AttachmentMIMEType> },
@@ -64,26 +62,20 @@ export class OrbitAPIClient {
   }
 
   ingestAttachmentsFromURLs2(
-    entries: OrbitAPI.Spec["/2/attachments/ingestFromURLs"]["POST"]["body"],
+    entries: OrbitAPI.Spec["/attachments/ingestFromURLs"]["POST"]["body"],
   ): Promise<
-    API.RouteResponseData<
-      OrbitAPI.Spec["/2/attachments/ingestFromURLs"]["POST"]
-    >
+    API.RouteResponseData<OrbitAPI.Spec["/attachments/ingestFromURLs"]["POST"]>
   > {
-    return this.requestManager.request(
-      "/2/attachments/ingestFromURLs",
-      "POST",
-      {
-        contentType: "application/json",
-        body: entries,
-      },
-    );
+    return this.requestManager.request("/attachments/ingestFromURLs", "POST", {
+      contentType: "application/json",
+      body: entries,
+    });
   }
 
   getTasks2(
     taskIDs: TaskID[],
-  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/2/tasks/bulkGet"]["POST"]>> {
-    return this.requestManager.request("/2/tasks/bulkGet", "POST", {
+  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/tasks/bulkGet"]["POST"]>> {
+    return this.requestManager.request("/tasks/bulkGet", "POST", {
       contentType: "application/json",
       body: taskIDs,
     });

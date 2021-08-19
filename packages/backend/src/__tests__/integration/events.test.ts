@@ -19,7 +19,7 @@ beforeEach(async () => {
 test("round-trip request", async () => {
   const testEvents = createTestTaskIngestEvents(100);
   const { status: patchStatus, body: patchBody } = await fetchRoute(
-    `/api/2/events`,
+    `/api/events`,
     {
       method: "PATCH",
       json: testEvents,
@@ -30,7 +30,7 @@ test("round-trip request", async () => {
   expect(patchBody).toBeUndefined();
 
   const { status: getStatus, body: getBody } = await fetchRoute(
-    `/api/2/events?limit=100`,
+    `/api/events?limit=100`,
     {
       method: "GET",
       authorization: { token: "test" },
@@ -47,21 +47,21 @@ test("round-trip request", async () => {
 describe("[GET] validation", () => {
   it("succeeds with valid parameters", async () => {
     const testEvents = createTestTaskIngestEvents(5);
-    await fetchRoute(`/api/2/events`, {
+    await fetchRoute(`/api/events`, {
       method: "PATCH",
       json: testEvents,
       authorization: { token: "test" },
     });
 
     const { status } = await fetchRoute(
-      `/api/2/events?afterID=${testEvents[1].id}&limit=1000`,
+      `/api/events?afterID=${testEvents[1].id}&limit=1000`,
       { method: "GET", authorization: { token: "test" } },
     );
     expect(status).toBe(200);
   });
 
   it("it does not allow limit to be a negative integer", async () => {
-    const request = await fetchRoute(`/api/2/events?limit=-5`, {
+    const request = await fetchRoute(`/api/events?limit=-5`, {
       method: "GET",
       authorization: { token: "test" },
     });
@@ -74,7 +74,7 @@ describe("[GET] validation", () => {
   });
 
   it("it does not allow limit to be a floating point", async () => {
-    const request = await fetchRoute(`/api/2/events?limit=1.5`, {
+    const request = await fetchRoute(`/api/events?limit=1.5`, {
       method: "GET",
       authorization: { token: "test" },
     });
@@ -91,7 +91,7 @@ describe("[PATCH] validation", () => {
   // https://github.com/andymatuschak/orbit/issues/236
   it.skip("it fails when extra properties are provided", async () => {
     const ingestEvent = createTestTaskIngestEvents(1)[0];
-    const { status, body } = await fetchRoute(`/api/2/events`, {
+    const { status, body } = await fetchRoute(`/api/events`, {
       method: "PATCH",
       authorization: { token: "test" },
       json: [
@@ -110,7 +110,7 @@ describe("[PATCH] validation", () => {
   });
 
   it("it fails when actionLogType is invalid", async () => {
-    const { status, body } = await fetchRoute(`/api/2/events`, {
+    const { status, body } = await fetchRoute(`/api/events`, {
       method: "PATCH",
       authorization: { token: "test" },
       json: [

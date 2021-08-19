@@ -15,7 +15,7 @@ import {
 
 export const getAttachment: TypedRouteHandler<
   OrbitAPI.Spec,
-  "/2/attachments/:id",
+  "/attachments/:id",
   "GET"
 > = authenticatedRequestHandler(async (request, userID) => {
   // When running against Google Cloud Storage, we'll redirect to their URLs; when running against the emulator, we'll just vend the data directly.
@@ -37,7 +37,7 @@ export const getAttachment: TypedRouteHandler<
 
 export const ingestAttachmentsFromURLs: TypedRouteHandler<
   OrbitAPI.Spec,
-  "/2/attachments/ingestFromURLs",
+  "/attachments/ingestFromURLs",
   "POST"
 > = authenticatedRequestHandler(async (request, userID) => {
   const entries = request.body;
@@ -70,7 +70,7 @@ export const ingestAttachmentsFromURLs: TypedRouteHandler<
 
 export const storeAttachment: TypedRouteHandler<
   OrbitAPI.Spec,
-  "/2/attachments/:id",
+  "/attachments/:id",
   "POST"
 > = authenticatedRequestHandler(async (request, userID) => {
   // TODO: rate limit storage...

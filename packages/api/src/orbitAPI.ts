@@ -12,7 +12,7 @@ import { RequiredSpec } from "./util/requiredSpec";
 
 // Meant to conform to genericHTTPAPI/Spec, but I can't declare conformance without running into obscure Typescript limitations.
 export type ValidatableSpec = {
-  "/2/events"?: {
+  "/events"?: {
     GET?: {
       query: {
         /**
@@ -40,7 +40,7 @@ export type ValidatableSpec = {
     };
   };
 
-  "/2/attachments/:id"?: {
+  "/attachments/:id"?: {
     GET?: {
       // allow empty to indicate it takes no query values
       // eslint-disable-next-line @typescript-eslint/ban-types
@@ -77,7 +77,7 @@ export type ValidatableSpec = {
   /**
    * This API adds attachments to a user's collection by downloading them from URLs. It also adds corresponding AttachmentIngestEvents to the user's store using the metadata from the downloaded resources. It's used in the embedded interface.
    */
-  "/2/attachments/ingestFromURLs"?: {
+  "/attachments/ingestFromURLs"?: {
     POST?: {
       contentType: "application/json";
       body: {
@@ -88,7 +88,7 @@ export type ValidatableSpec = {
     };
   };
 
-  "/2/tasks/bulkGet"?: {
+  "/tasks/bulkGet"?: {
     POST?: {
       contentType: "application/json";
       body: TaskID[];

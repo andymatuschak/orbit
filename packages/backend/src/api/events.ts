@@ -5,16 +5,13 @@ import { authenticatedRequestHandler } from "./util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";
 import { putAndLogEvents } from "./util/putAndLogEvents";
 
-export const storeEvents: TypedRouteHandler<
-  OrbitAPI.Spec,
-  "/2/events",
-  "PATCH"
-> = authenticatedRequestHandler(async (request, userID) => {
-  await putAndLogEvents(userID, request.body);
-  return { status: 204 };
-});
+export const storeEvents: TypedRouteHandler<OrbitAPI.Spec, "/events", "PATCH"> =
+  authenticatedRequestHandler(async (request, userID) => {
+    await putAndLogEvents(userID, request.body);
+    return { status: 204 };
+  });
 
-export const listEvents: TypedRouteHandler<OrbitAPI.Spec, "/2/events", "GET"> =
+export const listEvents: TypedRouteHandler<OrbitAPI.Spec, "/events", "GET"> =
   authenticatedRequestHandler(async (request, userID) => {
     const db = sharedServerDatabase().getUserDatabase(userID);
     const { query } = request;
