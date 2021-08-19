@@ -31,7 +31,7 @@ export type RequestSpec<ResponseData extends AnyJson> = {
 
 function createRequest<
   ServerResponseData = any,
-  TransformedResponseData extends AnyJson = AnyJson
+  TransformedResponseData extends AnyJson = AnyJson,
 >(
   actionName: string,
   parameters?: AnyJson,
@@ -73,13 +73,13 @@ function getAnkiFieldsForAnkiPrompt(ankiPrompt: AnkiPrompt): AnkiNoteFields {
       NoteTitle: noteTitle,
       NoteURL: noteURL,
       _Path: encodeTaskIDPathToAnkiPathField(ankiPrompt.path),
-      _OriginalMarkdown: processor.stringify(prompt.block),
+      _OriginalMarkdown: processor.stringify(prompt.block).trimRight(),
       _NoteDataJSON: JSON.stringify(ankiPrompt.noteData),
     };
   } else if (prompt.type === qaPromptType) {
     return {
-      Front: processor.stringify(prompt.question),
-      Back: processor.stringify(prompt.answer),
+      Front: processor.stringify(prompt.question).trimRight(),
+      Back: processor.stringify(prompt.answer).trimRight(),
       NoteTitle: noteTitle,
       NoteURL: ankiPrompt.noteData.externalNoteID?.openURL?.toString() ?? "",
       _Path: encodeTaskIDPathToAnkiPathField(ankiPrompt.path),

@@ -10,10 +10,10 @@
   "devDependencies": {
     "@types/jest": "^26.0.24",
     "@types/lodash.isequal": "^4.5.5",
-    "@types/mdast": "^3.0.3",
+    "@types/mdast": "^3.0.7",
     "@types/mock-fs": "^4.10.0",
     "@types/node": "~12",
-    "@types/unist": "^2.0.3",
+    "@types/unist": "^2.0.6",
     "@types/uuid": "^3.4.6",
     "axios-mock-adapter": "^1.17.0",
     "callsites": "^3.1.0",
@@ -36,13 +36,13 @@
     "moment": "^2.24.0",
     "node-getpocket": "vicchi/node-getpocket",
     "node-pocket": "^0.9.5",
-    "strip-markdown": "^3.1.1",
+    "strip-markdown": "^5.0.0",
     "trash": "^6.0.0",
-    "unified": "^8.4.2",
-    "unified-stream": "^1.0.5",
-    "unist-util-select": "^3.0.0",
+    "unified": "^10.1.0",
+    "unified-stream": "^2.0.0",
+    "unist-util-select": "^4.0.0",
     "uuid": "^3.4.0",
-    "vfile": "^4.0.2"
+    "vfile": "^5.0.2"
   },
   "engines": {
     "node": ">=10"

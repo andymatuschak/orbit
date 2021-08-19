@@ -1,9 +1,8 @@
 import { clozeNodeType, ClozePrompt, processor } from "incremental-thinking";
+import { ClozePromptNode } from "incremental-thinking/dist/prompt";
 import mdast from "mdast";
-import remarkStringify from "remark-stringify";
 import stripMarkdown from "strip-markdown";
 import unified from "unified";
-import unist from "unist";
 import { JsonMap } from "../../../../util/JSONTypes";
 import {
   decodeTaskIDPath,
@@ -14,25 +13,32 @@ import {
 import { AnkiPathField } from "../../dataModel";
 
 function ankiClozePlugin(this: unified.Processor) {
-  this.Compiler.prototype.ankiClozeIndex = 1;
-  this.Compiler.prototype.visitors[clozeNodeType] = function (
-    this: remarkStringify.Compiler & {
-      ankiClozeIndex: number;
-      all: (node: unist.Node) => string[];
+  let ankiClozeIndex = 1;
+  const data = this.data();
+  if (!data.toMarkdownExtensions) {
+    data.toMarkdownExtensions = [];
+  }
+  (data.toMarkdownExtensions as any[]).push({
+    handlers: {
+      [clozeNodeType]: (node: ClozePromptNode) => {
+        const index = node.data?.ankiClozeIndex ?? ankiClozeIndex;
+        if (node.data?.ankiClozeIndex === undefined) {
+          ankiClozeIndex++;
+        }
+        node.data = node.data ? {...node.data, ankiClozeIndex: index} : {ankiClozeIndex: index};
+        const interiorContent = processor
+          .stringify({ ...node, type: "emphasis" })
+          .slice(1, -2);
+        return `{{c${index}::${interiorContent}}}`;
+      },
     },
-    node: unist.Node,
-  ) {
-    const interiorContent = this.all(node).join("");
-    const output = `{{c${this.ankiClozeIndex}::${interiorContent}}}`;
-    this.ankiClozeIndex++;
-    return output;
-  } as (node: unist.Node) => string;
+  });
 }
 
 export function createAnkiTextFromClozePrompt(prompt: ClozePrompt): string {
   const ankiProcessor = processor().use(ankiClozePlugin).use(stripMarkdown);
   const strippedTree = ankiProcessor.runSync(prompt.block);
-  return ankiProcessor.stringify(strippedTree);
+  return ankiProcessor.stringify(strippedTree).trimRight();
 }
 
 export function createClozePromptFromAnkiOriginalMarkdownField(

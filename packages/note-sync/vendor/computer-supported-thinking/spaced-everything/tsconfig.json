@@ -12,6 +12,7 @@
     "moduleResolution": "node",
     "types": ["node", "jest"],
     "composite": true,
+    "skipLibCheck": true,
     "rootDir": "./src"
   },
   "include": ["./src/**/*.ts"],

@@ -71,13 +71,12 @@ Array [
           "block": Object {
             "children": Array [
               Object {
-                "position": Position {
+                "position": Object {
                   "end": Object {
                     "column": 9,
                     "line": 1,
                     "offset": 8,
                   },
-                  "indent": Array [],
                   "start": Object {
                     "column": 1,
                     "line": 1,
@@ -90,13 +89,12 @@ Array [
               Object {
                 "children": Array [
                   Object {
-                    "position": Position {
+                    "position": Object {
                       "end": Object {
                         "column": 14,
                         "line": 1,
                         "offset": 13,
                       },
-                      "indent": Array [],
                       "start": Object {
                         "column": 10,
                         "line": 1,
@@ -107,13 +105,12 @@ Array [
                     "value": "with",
                   },
                 ],
-                "position": Position {
+                "position": Object {
                   "end": Object {
                     "column": 15,
                     "line": 1,
                     "offset": 14,
                   },
-                  "indent": Array [],
                   "start": Object {
                     "column": 9,
                     "line": 1,
@@ -123,13 +120,12 @@ Array [
                 "type": "incremental-thinking-cloze",
               },
               Object {
-                "position": Position {
+                "position": Object {
                   "end": Object {
                     "column": 16,
                     "line": 1,
                     "offset": 15,
                   },
-                  "indent": Array [],
                   "start": Object {
                     "column": 15,
                     "line": 1,
@@ -142,13 +138,12 @@ Array [
               Object {
                 "children": Array [
                   Object {
-                    "position": Position {
+                    "position": Object {
                       "end": Object {
                         "column": 22,
                         "line": 1,
                         "offset": 21,
                       },
-                      "indent": Array [],
                       "start": Object {
                         "column": 17,
                         "line": 1,
@@ -159,13 +154,12 @@ Array [
                     "value": "cloze",
                   },
                 ],
-                "position": Position {
+                "position": Object {
                   "end": Object {
                     "column": 23,
                     "line": 1,
                     "offset": 22,
                   },
-                  "indent": Array [],
                   "start": Object {
                     "column": 16,
                     "line": 1,
@@ -175,13 +169,12 @@ Array [
                 "type": "incremental-thinking-cloze",
               },
             ],
-            "position": Position {
+            "position": Object {
               "end": Object {
                 "column": 23,
                 "line": 1,
                 "offset": 22,
               },
-              "indent": Array [],
               "start": Object {
                 "column": 1,
                 "line": 1,
@@ -246,13 +239,12 @@ Object {
         "block": Object {
           "children": Array [
             Object {
-              "position": Position {
+              "position": Object {
                 "end": Object {
                   "column": 9,
                   "line": 1,
                   "offset": 8,
                 },
-                "indent": Array [],
                 "start": Object {
                   "column": 1,
                   "line": 1,
@@ -265,13 +257,12 @@ Object {
             Object {
               "children": Array [
                 Object {
-                  "position": Position {
+                  "position": Object {
                     "end": Object {
                       "column": 14,
                       "line": 1,
                       "offset": 13,
                     },
-                    "indent": Array [],
                     "start": Object {
                       "column": 10,
                       "line": 1,
@@ -282,13 +273,12 @@ Object {
                   "value": "with",
                 },
               ],
-              "position": Position {
+              "position": Object {
                 "end": Object {
                   "column": 15,
                   "line": 1,
                   "offset": 14,
                 },
-                "indent": Array [],
                 "start": Object {
                   "column": 9,
                   "line": 1,
@@ -298,13 +288,12 @@ Object {
               "type": "incremental-thinking-cloze",
             },
             Object {
-              "position": Position {
+              "position": Object {
                 "end": Object {
                   "column": 16,
                   "line": 1,
                   "offset": 15,
                 },
-                "indent": Array [],
                 "start": Object {
                   "column": 15,
                   "line": 1,
@@ -317,13 +306,12 @@ Object {
             Object {
               "children": Array [
                 Object {
-                  "position": Position {
+                  "position": Object {
                     "end": Object {
                       "column": 22,
                       "line": 1,
                       "offset": 21,
                     },
-                    "indent": Array [],
                     "start": Object {
                       "column": 17,
                       "line": 1,
@@ -334,13 +322,12 @@ Object {
                   "value": "cloze",
                 },
               ],
-              "position": Position {
+              "position": Object {
                 "end": Object {
                   "column": 23,
                   "line": 1,
                   "offset": 22,
                 },
-                "indent": Array [],
                 "start": Object {
                   "column": 16,
                   "line": 1,
@@ -350,13 +337,12 @@ Object {
               "type": "incremental-thinking-cloze",
             },
           ],
-          "position": Position {
+          "position": Object {
             "end": Object {
               "column": 23,
               "line": 1,
               "offset": 22,
             },
-            "indent": Array [],
             "start": Object {
               "column": 1,
               "line": 1,

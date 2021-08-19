@@ -15,7 +15,7 @@ import {
 import isEqual from "lodash.isequal";
 import mdast from "mdast";
 import uuid from "uuid/v5";
-import vfile from "vfile";
+import { VFile } from "vfile";
 import { JsonMap } from "../../util/JSONTypes";
 import unreachableCaseError from "../../util/unreachableCaseError";
 import { TaskID, TaskIDPath } from "../taskCache";
@@ -58,7 +58,7 @@ export interface PromptTaskNoteData extends JsonMap {
 
 async function readNote(notePath: string): Promise<mdast.Root> {
   const noteContents = await fs.promises.readFile(notePath, "utf-8");
-  const noteVfile = vfile({ path: notePath, contents: noteContents });
+  const noteVfile = new VFile({ path: notePath, value: noteContents });
   return (await processor.run(await processor.parse(noteVfile))) as mdast.Root;
 }
 
@@ -72,10 +72,10 @@ export function getPrompts(noteAST: mdast.Root): RegisteredPrompt[] {
 const namespaceUUID = "ddcdb44b-a586-4757-912c-cd34876c6dc7";
 export function getIDForPrompt(prompt: Prompt): string {
   if (prompt.type === clozePromptType) {
-    return uuid(processor.stringify(prompt.block), namespaceUUID);
+    return uuid(processor.stringify(prompt.block).trimRight(), namespaceUUID);
   } else if (prompt.type === qaPromptType) {
     return uuid(
-      processor.stringify(prompt.question) + processor.stringify(prompt.answer),
+      processor.stringify(prompt.question).trimRight() + processor.stringify(prompt.answer).trimRight(),
       namespaceUUID,
     );
   } else {
@@ -208,9 +208,8 @@ export function createTaskSource(
                 } else if (prompt.type === clozePromptType) {
                   outputMap.set(promptPath, {
                     type: "collection",
-                    childIDs: getClozeNoteTaskCollectionChildIDsForClozePrompt(
-                      prompt,
-                    ),
+                    childIDs:
+                      getClozeNoteTaskCollectionChildIDsForClozePrompt(prompt),
                     value: {
                       type: "clozeBlock",
                       prompt,
