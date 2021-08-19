@@ -1,5 +1,5 @@
 import { eventReducer, TaskIngestEvent } from "@withorbit/core2";
-import { core2 as fixtures } from "@withorbit/sample-data";
+import { createTestTaskIngestEvents } from "@withorbit/sample-data";
 import { Database, runDatabaseTests } from "@withorbit/store-shared";
 import firebase from "firebase-admin";
 import {
@@ -38,7 +38,7 @@ test("duplicate events aren't returned from putEvents", async () => {
   const backend = new TestFirestoreDatabaseBackend(currentFirebaseApp);
   const db = new Database(backend, eventReducer);
 
-  const testEvents: TaskIngestEvent[] = fixtures.createTestTaskIngestEvents(5);
+  const testEvents: TaskIngestEvent[] = createTestTaskIngestEvents(5);
   const firstResult = await db.putEvents(testEvents);
   expect(firstResult.length).toBe(5);
   const secondResult = await db.putEvents(testEvents);

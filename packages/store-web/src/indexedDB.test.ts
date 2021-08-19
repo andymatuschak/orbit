@@ -1,5 +1,5 @@
 import { Entity, EventID, EventType, Task, TaskID } from "@withorbit/core2";
-import { core2 as testFixtures } from "@withorbit/sample-data";
+import { createTestTask } from "@withorbit/sample-data";
 import {
   DatabaseBackend,
   DatabaseBackendEntityRecord,
@@ -7,8 +7,6 @@ import {
 // @ts-ignore Looks like there is no @types for this library
 import FDBFactory from "fake-indexeddb/lib/FDBFactory";
 import { IDBDatabaseBackend } from "./indexedDB";
-
-const { createTestTask } = testFixtures;
 
 let backend: IDBDatabaseBackend;
 

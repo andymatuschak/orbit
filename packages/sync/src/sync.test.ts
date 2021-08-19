@@ -1,5 +1,8 @@
 import { AttachmentIngestEvent, Event } from "@withorbit/core2";
-import { core2 as fixtures } from "@withorbit/sample-data";
+import {
+  createTestAttachmentIngestEvents,
+  createTestTaskIngestEvents,
+} from "@withorbit/sample-data";
 import OrbitStoreFS from "@withorbit/store-fs";
 import { OrbitStore } from "@withorbit/store-shared";
 import os from "os";
@@ -22,10 +25,10 @@ async function prepTestStore(
 
 test("bidi transmission", async () => {
   const { store: store1, events: events1 } = await prepTestStore(async () =>
-    fixtures.createTestTaskIngestEvents(2000),
+    createTestTaskIngestEvents(2000),
   );
   const { store: store2, events: events2 } = await prepTestStore(async () =>
-    fixtures.createTestTaskIngestEvents(2000),
+    createTestTaskIngestEvents(2000),
   );
 
   const store2SyncAdapter = new OrbitStoreSyncAdapter(store2, "testServer");
@@ -53,7 +56,7 @@ test("bidi transmission", async () => {
   expect(receivedEventCount2).toEqual(0);
 
   // If we add some more events to just the destination, they should appear on the source as expected.
-  const extraEvents = fixtures.createTestTaskIngestEvents(100);
+  const extraEvents = createTestTaskIngestEvents(100);
   await store2.database.putEvents(extraEvents);
   const {
     sentEventCount: sentEventCount3,
@@ -68,7 +71,7 @@ test("bidi transmission", async () => {
 
 test("attachments synced", async () => {
   async function addEvents(store: OrbitStore) {
-    const events = fixtures.createTestAttachmentIngestEvents(100);
+    const events = createTestAttachmentIngestEvents(100);
     for (const { entityID, mimeType } of events) {
       await store.attachmentStore.storeAttachment(
         Buffer.from("Test"),

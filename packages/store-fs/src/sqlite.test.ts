@@ -1,5 +1,5 @@
 import { Entity, EntityType, EventID, Task, TaskID } from "@withorbit/core2";
-import { core2 as testFixtures } from "@withorbit/sample-data";
+import { createTestTask } from "@withorbit/sample-data";
 import {
   DatabaseBackend,
   DatabaseBackendEntityRecord,
@@ -19,8 +19,6 @@ import {
 } from "./sqlite/tables";
 import { execReadStatement } from "./sqlite/transactionUtils";
 import { SQLDatabase } from "./sqlite/types";
-
-const { createTestTask } = testFixtures;
 
 const testTasks: DatabaseBackendEntityRecord<Task>[] = [
   {

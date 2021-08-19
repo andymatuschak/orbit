@@ -1,4 +1,4 @@
-import { core2 as fixtures } from "@withorbit/sample-data";
+import { createTestTaskIngestEvents } from "@withorbit/sample-data";
 import { resetLocalEmulators } from "../emulators";
 import { fetchRoute } from "./utils/fetchRoute";
 import { setupAuthToken } from "./utils/setupAuthToken";
@@ -17,7 +17,7 @@ beforeEach(async () => {
 });
 
 test("round-trip request", async () => {
-  const testEvents = fixtures.createTestTaskIngestEvents(100);
+  const testEvents = createTestTaskIngestEvents(100);
   const { status: patchStatus, body: patchBody } = await fetchRoute(
     `/api/2/events`,
     {
@@ -46,7 +46,7 @@ test("round-trip request", async () => {
 
 describe("[GET] validation", () => {
   it("succeeds with valid parameters", async () => {
-    const testEvents = fixtures.createTestTaskIngestEvents(5);
+    const testEvents = createTestTaskIngestEvents(5);
     await fetchRoute(`/api/2/events`, {
       method: "PATCH",
       json: testEvents,
@@ -90,7 +90,7 @@ describe("[GET] validation", () => {
 describe("[PATCH] validation", () => {
   // https://github.com/andymatuschak/orbit/issues/236
   it.skip("it fails when extra properties are provided", async () => {
-    const ingestEvent = fixtures.createTestTaskIngestEvents(1)[0];
+    const ingestEvent = createTestTaskIngestEvents(1)[0];
     const { status, body } = await fetchRoute(`/api/2/events`, {
       method: "PATCH",
       authorization: { token: "test" },
@@ -115,7 +115,7 @@ describe("[PATCH] validation", () => {
       authorization: { token: "test" },
       json: [
         {
-          ...fixtures.createTestTaskIngestEvents(1)[0],
+          ...createTestTaskIngestEvents(1)[0],
           type: "invalid",
         },
       ],

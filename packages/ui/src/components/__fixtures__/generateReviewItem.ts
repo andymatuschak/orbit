@@ -3,7 +3,7 @@ import {
   generateUniqueID,
   mainTaskComponentID,
 } from "@withorbit/core2";
-import { core2 as fixtures } from "@withorbit/sample-data";
+import { testQASpec } from "@withorbit/sample-data";
 import { ReviewAreaItem } from "../../reviewAreaItem";
 import * as styles from "../../styles";
 
@@ -23,7 +23,7 @@ export function generateReviewItem(
     },
     componentID: mainTaskComponentID,
     spec: {
-      ...fixtures.testQASpec,
+      ...testQASpec,
     },
   };
 }

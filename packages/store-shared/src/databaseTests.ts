@@ -13,16 +13,14 @@ import {
   TaskID,
   TaskIngestEvent,
 } from "@withorbit/core2";
-import { core2 as fixtures } from "@withorbit/sample-data";
+import { testTask } from "@withorbit/sample-data";
 import { Database, EventReducer } from "./database";
-
-const { testTask } = fixtures;
 
 // n.b. these tests are not actually run as part of this package: they're run in the implementation packages.
 
 function mockEventReducer(entitySnapshot: Entity | null, event: Event): Entity {
   return {
-    ...fixtures.testTask,
+    ...testTask,
     id: event.entityID,
     eventIDs: entitySnapshot
       ? [...(entitySnapshot as any).eventIDs, event.id]

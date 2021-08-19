@@ -1,5 +1,6 @@
 import { boolean, number } from "@storybook/addon-knobs";
 import { Story } from "@storybook/react";
+import { testClozeSpec, testQASpec } from "@withorbit/sample-data";
 import React, { ReactNode, useState } from "react";
 import { Button, View } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem";
@@ -16,7 +17,6 @@ import {
   QATaskContent,
   Task,
 } from "@withorbit/core2";
-import { testQASpec, testClozeSpec } from "@withorbit/sample-data/src/core2";
 
 // noinspection JSUnusedGlobalSymbols
 export default {
