@@ -1,11 +1,9 @@
 import * as BigQuery from "@google-cloud/bigquery";
+import { EntityID, EventID, EventType } from "@withorbit/core2";
 import crypto from "crypto";
-import { ActionLogID, ActionLogType, getIDForActionLog } from "@withorbit/core";
 import path from "path";
 import serviceConfig from "../serviceConfig";
 import {
-  ActionLogLog,
-  DataRecordLog,
   EventLog,
   LoggingService,
   PageViewLog,
@@ -13,7 +11,6 @@ import {
   UserEventLog,
   UserEventName,
 } from "./interface";
-import { EntityID, EventID, EventType } from "@withorbit/core2";
 
 let _bigQuery: BigQuery.BigQuery | null = null;
 let _logsDataset: BigQuery.Dataset | null = null;
@@ -62,20 +59,6 @@ async function logEvent(
   },
 ): Promise<unknown>;
 async function logEvent(
-  tableName: "actionLogs",
-  data: {
-    userID: string;
-    timestamp: BigQueryTimestamp;
-    serverTimestamp: BigQueryTimestamp;
-    actionLogType: ActionLogType;
-    actionLogID: ActionLogID;
-    parentActionLogIDs: ActionLogID[];
-    dataJSON: string;
-    taskID: string | null;
-    newTaskStateJSON: string | null;
-  },
-): Promise<unknown>;
-async function logEvent(
   tableName: "pageViews",
   data: WithBigQueryTimestamp<PageViewLog>,
 ): Promise<unknown>;
@@ -83,12 +66,6 @@ async function logEvent(
   tableName: "sessionNotifications",
   data: Omit<WithBigQueryTimestamp<SessionNotificationLog>, "emailSpec"> & {
     emailJSON: string;
-  },
-): Promise<unknown>;
-async function logEvent(
-  tableName: "dataRecords",
-  data: Omit<WithBigQueryTimestamp<DataRecordLog>, "record"> & {
-    dataJSON: string;
   },
 ): Promise<unknown>;
 async function logEvent(
@@ -141,36 +118,6 @@ export const bigQueryLoggingService: LoggingService = {
     return logEvent("userEvents", bqLog);
   },
 
-  async logActionLog({
-    userID,
-    actionLog,
-    serverTimestamp,
-    newTaskState,
-  }: ActionLogLog): Promise<unknown> {
-    const { timestampMillis, actionLogType, taskID, ...rest } = actionLog;
-    let parentActionLogIDs: ActionLogID[] = [];
-
-    let data: Omit<typeof rest, "parentActionLogIDs">;
-    if ("parentActionLogIDs" in rest) {
-      ({ parentActionLogIDs, ...data } = rest);
-    } else {
-      data = rest;
-    }
-
-    const bqLog = {
-      userID,
-      timestamp: createBigQueryTimestamp(timestampMillis),
-      serverTimestamp: createBigQueryTimestamp(serverTimestamp),
-      actionLogType,
-      actionLogID: await getIDForActionLog(actionLog),
-      parentActionLogIDs,
-      dataJSON: JSON.stringify(data),
-      taskID,
-      newTaskStateJSON: JSON.stringify(newTaskState),
-    };
-    return logEvent("actionLogs", bqLog);
-  },
-
   logPageView(log: PageViewLog): Promise<unknown> {
     return logEvent("pageViews", {
       ...log,
@@ -184,15 +131,6 @@ export const bigQueryLoggingService: LoggingService = {
       ...rest,
       timestamp: createBigQueryTimestamp(log.timestamp),
       emailJSON: JSON.stringify(emailSpec),
-    });
-  },
-
-  logDataRecord(log: DataRecordLog): Promise<unknown> {
-    const { record, ...rest } = log;
-    return logEvent("dataRecords", {
-      ...rest,
-      timestamp: createBigQueryTimestamp(log.timestamp),
-      dataJSON: JSON.stringify(record),
     });
   },
 

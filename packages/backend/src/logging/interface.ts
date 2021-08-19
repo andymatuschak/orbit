@@ -1,10 +1,7 @@
-import { ActionLog, Prompt, PromptID, PromptState } from "@withorbit/core";
 import { Entity, Event } from "@withorbit/core2";
 import { EmailSpec } from "../email/types";
 
 export interface LoggingService {
-  logActionLog(log: ActionLogLog): Promise<unknown>;
-  logDataRecord(log: DataRecordLog): Promise<unknown>;
   logPageView(log: PageViewLog): Promise<unknown>;
   logSessionNotification(log: SessionNotificationLog): Promise<unknown>;
   logUserEvent(log: UserEventLog): Promise<unknown>;
@@ -41,20 +38,6 @@ export type SessionNotificationLog = {
   userID: string;
   sessionNotificationNumber: number;
   emailSpec: EmailSpec;
-};
-
-export type DataRecordLog = {
-  timestamp: number;
-  id: PromptID;
-  record: Prompt;
-};
-
-// Unfortunate naming!
-export type ActionLogLog = {
-  serverTimestamp: number;
-  userID: string;
-  actionLog: ActionLog;
-  newTaskState: PromptState;
 };
 
 export type EventLog = {
