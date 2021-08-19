@@ -18,10 +18,8 @@
   },
   "license": "AGPL-3.0-or-later OR BUSL-1.1",
   "dependencies": {
-    "@aws-crypto/sha256-js": "^1.1.0",
     "@google-cloud/bigquery": "^5.5.0",
     "@google-cloud/pubsub": "^2.6.0",
-    "@ipld/dag-json": "^4.0.0",
     "ajv": "^8.6.2",
     "busboy": "^0.3.1",
     "cookie-parser": "^1.4.5",
@@ -35,7 +33,6 @@
     "firebase-functions": "^3.15.1",
     "isbot-fast": "^1.2.0",
     "morgan-body": "^2.6.6",
-    "multiformats": "^4.3.1",
     "node-fetch": "next",
     "node-mailjet": "^3.3.1",
     "prettier": "^2.3.1",
