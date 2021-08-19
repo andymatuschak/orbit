@@ -4,7 +4,6 @@ import express from "express";
 import morganBody from "morgan-body";
 import { listEvents, storeEvents } from "./api/2/events";
 import { bulkGetTasks } from "./api/2/tasks";
-import { getAttachment, storeAttachment } from "./api/attachments";
 import {
   getAttachment as getAttachment2,
   ingestAttachmentsFromURLs,
@@ -51,12 +50,6 @@ export function createAPIApp(): express.Application {
     "/taskData": {
       GET: listTaskData,
       PATCH: storeTaskData,
-    },
-    "/attachments": {
-      POST: storeAttachment,
-    },
-    "/attachments/:id": {
-      GET: getAttachment,
     },
     "/2/attachments/ingestFromURLs": {
       POST: ingestAttachmentsFromURLs,

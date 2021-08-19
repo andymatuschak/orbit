@@ -53,43 +53,6 @@ export type ValidatableSpec = {
     };
   };
 
-  "/attachments"?: {
-    /**
-     * encode with multipart/form-data, with the file in part named "file"
-     * make sure to include Content-Type heading for your attachment
-     * returns application/json encoded ResponseObject<"attachmentIDReference", AttachmentID, AttachmentIDReference>
-     */
-    POST?: {
-      // NOTE: Content-type must use regex to be validated since ince additional data,
-      // like the form-data length, is usually appended to the MIME type
-      /**
-       * @TJS-type string
-       * @TJS-pattern ^multipart/form-data
-       */
-      contentType: "multipart/form-data";
-      body: {
-        file: BlobLike<AttachmentMimeType>;
-      };
-      response?: ResponseObject<
-        "attachmentIDReference",
-        AttachmentID,
-        AttachmentIDReference
-      >;
-    };
-  };
-
-  "/attachments/:id"?: {
-    GET?: {
-      // allow empty to indicate it takes no query values
-      // eslint-disable-next-line @typescript-eslint/ban-types
-      query: {};
-      params: {
-        id: AttachmentID;
-      };
-      response?: null;
-    };
-  };
-
   "/2/events"?: {
     GET?: {
       query: {
