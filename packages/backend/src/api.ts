@@ -14,7 +14,6 @@ import { createLoginToken } from "./api/internal/auth/createLoginToken";
 import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens";
 import { refreshSessionCookie } from "./api/internal/auth/refreshSessionCookie";
 import { recordPageView } from "./api/internal/recordPageView";
-import { resolveAttachmentIDs } from "./api/internal/resolveAttachmentIDs";
 import corsHandler from "./api/util/corsHandler";
 import createTypedRouter from "./api/util/typedRouter";
 
@@ -66,8 +65,6 @@ export function createAPIApp(): express.Application {
   app.get("/internal/auth/refreshSessionCookie", refreshSessionCookie);
 
   app.post("/internal/recordPageView", recordPageView);
-
-  app.get("/internal/resolveAttachmentIDs", resolveAttachmentIDs);
 
   return app;
 }
