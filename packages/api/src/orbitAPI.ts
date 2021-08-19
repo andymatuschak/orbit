@@ -1,14 +1,3 @@
-import {
-  ActionLog,
-  ActionLogID,
-  AttachmentID,
-  AttachmentIDReference,
-  AttachmentMimeType,
-  Prompt,
-  PromptID,
-  PromptState,
-  PromptTaskID,
-} from "@withorbit/core";
 import * as core2 from "@withorbit/core2";
 import { AttachmentMIMEType, Task, TaskID } from "@withorbit/core2";
 import { BlobLike } from "./genericHTTPAPI";
@@ -16,31 +5,6 @@ import { RequiredSpec } from "./util/requiredSpec";
 
 // Meant to conform to genericHTTPAPI/Spec, but I can't declare conformance without running into obscure Typescript limitations.
 export type ValidatableSpec = {
-  "/taskStates"?: {
-    GET?: {
-      query:
-        | ({
-            /**
-             * @minimum 1
-             * @TJS-type integer
-             */
-            limit?: number;
-          } & (
-            | {
-                createdAfterID?: PromptTaskID;
-              }
-            | {
-                /**
-                 * @TJS-type integer
-                 */
-                dueBeforeTimestampMillis: number;
-              }
-          ))
-        | { ids: PromptTaskID[] };
-      response?: ResponseList<"taskState", PromptTaskID, PromptState>;
-    };
-  };
-
   "/2/events"?: {
     GET?: {
       query: {

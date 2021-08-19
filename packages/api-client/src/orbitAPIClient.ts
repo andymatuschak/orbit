@@ -1,14 +1,7 @@
-import { OrbitAPI, API, OrbitAPIValidator } from "@withorbit/api";
-import {
-  Attachment,
-  AttachmentID,
-  AttachmentIDReference,
-  AttachmentMimeType,
-  PromptID,
-  PromptTaskID,
-} from "@withorbit/core";
-import { AttachmentMIMEType, TaskID } from "@withorbit/core2";
+import { API, OrbitAPI, OrbitAPIValidator } from "@withorbit/api";
+import { PromptTaskID, } from "@withorbit/core";
 import * as core2 from "@withorbit/core2";
+import { AttachmentMIMEType, TaskID } from "@withorbit/core2";
 import { APIConfig, defaultAPIConfig } from "./apiConfig";
 import { AuthenticationConfig, RequestManager } from "./requestManager";
 import { Blob } from "./util/fetch";
@@ -31,26 +24,6 @@ export class OrbitAPIClient {
       ajvValidator,
       authenticateRequest,
     );
-  }
-
-  listTaskStates(
-    query: {
-      limit?: number;
-      createdAfterID?: PromptTaskID;
-      dueBeforeTimestampMillis?: number;
-    } = {},
-  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/taskStates"]["GET"]>> {
-    return this.requestManager.request("/taskStates", "GET", {
-      query,
-    });
-  }
-
-  getTaskStates(
-    ids: PromptTaskID[],
-  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/taskStates"]["GET"]>> {
-    return this.requestManager.request("/taskStates", "GET", {
-      query: { ids },
-    });
   }
 
   listEvents2(
