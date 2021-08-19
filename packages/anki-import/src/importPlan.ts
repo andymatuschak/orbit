@@ -1,59 +1,46 @@
-import fs from "fs";
 import {
-  ActionLog,
-  applicationPromptType,
-  applyActionLogToPromptState,
-  Attachment,
-  AttachmentIDReference,
-  qaPromptType,
-  clozePromptType,
-  getActionLogFromPromptActionLog,
-  getAttachmentMimeTypeForFilename,
-  getIDForActionLog,
-  getIDForAttachment,
-  getIDForPrompt,
-  getIDForPromptTask,
-  getPromptActionLogFromActionLog,
-  imageAttachmentType,
-  ingestActionLogType,
-  NotePromptProvenance,
-  Prompt,
-  PromptActionLog,
-  PromptParameters,
-  PromptProvenance,
-  PromptProvenanceType,
-  PromptRepetitionActionLog,
-  PromptRepetitionOutcome,
-  PromptState,
-  PromptTask,
-  PromptTaskID,
-  repetitionActionLogType,
-  rescheduleActionLogType,
-  ClozePromptTask,
-  QAPromptTask,
-} from "@withorbit/core";
+  AttachmentID,
+  AttachmentIngestEvent,
+  AttachmentMIMEType,
+  Event,
+  EventType,
+  generateUniqueID,
+  getAttachmentMIMETypeForFilename,
+  mainTaskComponentID,
+  migration,
+  TaskContentType,
+  TaskID,
+  TaskIngestEvent,
+  TaskRepetitionEvent,
+  TaskRepetitionOutcome,
+  TaskRescheduleEvent,
+  TaskSpec,
+} from "@withorbit/core2";
+import fs from "fs";
 import * as Anki from "./ankiPkg";
 import { Card, CardQueue, Collection } from "./ankiPkg";
 import { getModelMapping, ModelMapping } from "./modelMapping";
-import { mapNoteToPrompt } from "./noteMapping";
+import { mapNoteToTaskSpec } from "./noteMapping";
 
 interface ImportPlan {
-  prompts: Prompt[];
+  events: Event[];
   attachments: Attachment[];
-  logs: ActionLog[];
   issues: string[];
-  promptStateCaches: { taskID: string; promptState: PromptState }[];
 }
 
-export function createPlanForNote(
+interface Attachment {
+  contents: Uint8Array;
+  mimeType: AttachmentMIMEType;
+  id: AttachmentID;
+}
+
+export function createSpecForNote(
   note: Anki.Note,
   ankiCollection: Anki.Collection,
-  attachmentNamesToAttachmentIDReferences: Map<string, AttachmentIDReference>,
   modelMappingCache: { [p: number]: ModelMapping },
 ):
   | {
-      prompt: Prompt;
-      provenance: NotePromptProvenance | null;
+      spec: TaskSpec;
       issues: string[];
     }
   | Error {
@@ -74,112 +61,63 @@ export function createPlanForNote(
     modelMappingCache[modelID] = tentativeModelMapping;
   }
 
-  return mapNoteToPrompt(note, modelMapping, (reference) => {
-    return attachmentNamesToAttachmentIDReferences.get(reference.name) ?? null;
-  });
+  return mapNoteToTaskSpec(note, modelMapping);
 }
 
-export async function extractPromptTaskIDForCard(
-  card: Anki.Card,
-  prompt: Prompt,
-): Promise<PromptTaskID> {
-  const promptID = await getIDForPrompt(prompt);
-  let promptParameters: PromptParameters;
-  switch (prompt.promptType) {
-    case qaPromptType:
-    case applicationPromptType:
-      promptParameters = null;
-      break;
-    case clozePromptType:
-      promptParameters = { clozeIndex: card.ord };
-      break;
-  }
-  return getIDForPromptTask({
-    promptType: prompt.promptType,
-    promptID,
-    promptParameters,
-  } as PromptTask);
-}
-
-export async function createPlanForCard(
-  card: Anki.Card,
-  prompt: Prompt,
-  noteProvenance: PromptProvenance | null,
-  overrideTimestampMillis?: number,
-): Promise<PromptActionLog<QAPromptTask | ClozePromptTask>> {
-  // Generate an ingest log.
-  return {
-    actionLogType: ingestActionLogType,
-    provenance: noteProvenance ?? {
-      provenanceType: PromptProvenanceType.Anki,
-      modificationTimestampMillis: card.mod * 1000,
-      externalID: card.id.toString(),
-      url: null,
-      title: null,
-    },
-    taskID: await extractPromptTaskIDForCard(card, prompt),
-    timestampMillis: overrideTimestampMillis ?? card.id,
-  };
-}
-
-export async function createPlanForLog<
-  PT extends QAPromptTask | ClozePromptTask,
->(
+export async function createPlanForLog(
   ankiLog: Anki.Log,
-  cardLastActionLog: PromptActionLog<PT>,
-): Promise<PromptRepetitionActionLog<PT>> {
-  let outcome: PromptRepetitionOutcome;
+  taskID: TaskID,
+  componentID: string,
+): Promise<TaskRepetitionEvent> {
+  let outcome: TaskRepetitionOutcome;
   switch (ankiLog.type) {
     case Anki.ReviewLogType.Learn:
     case Anki.ReviewLogType.Relearn:
       outcome =
         ankiLog.ease === Anki.LearnEaseRating.Again
-          ? PromptRepetitionOutcome.Forgotten
-          : PromptRepetitionOutcome.Remembered;
+          ? TaskRepetitionOutcome.Forgotten
+          : TaskRepetitionOutcome.Remembered;
       break;
     case Anki.ReviewLogType.Cram:
     case Anki.ReviewLogType.Review:
       outcome =
         ankiLog.ease === Anki.ReviewEaseRating.Again
-          ? PromptRepetitionOutcome.Forgotten
-          : PromptRepetitionOutcome.Remembered;
+          ? TaskRepetitionOutcome.Forgotten
+          : TaskRepetitionOutcome.Remembered;
       break;
   }
 
   return {
-    timestampMillis: ankiLog.id,
-    context: null,
-    taskID: cardLastActionLog.taskID,
+    type: EventType.TaskRepetition,
+    id: generateUniqueID(),
+    entityID: taskID,
     outcome,
-    parentActionLogIDs: [
-      await getIDForActionLog(
-        getActionLogFromPromptActionLog(cardLastActionLog),
-      ),
-    ],
-    taskParameters: null,
-    actionLogType: repetitionActionLogType,
-  } as PromptRepetitionActionLog<PT>;
+    timestampMillis: ankiLog.id,
+    reviewSessionID: "anki",
+    componentID,
+  };
 }
 
 async function readAttachmentAtPath(
   name: string,
   path: string,
 ): Promise<Attachment | Error> {
-  const mimeType = getAttachmentMimeTypeForFilename(name);
+  const mimeType = getAttachmentMIMETypeForFilename(name);
   if (mimeType) {
     const contents = await fs.promises.readFile(path);
-    return { type: imageAttachmentType, mimeType, contents };
+    return { mimeType, contents, id: migration.convertCore1ID(name) };
   } else {
     return new Error(`Unsupported attachment type: ${name}`);
   }
 }
 
-export async function createRescheduleLogForCard(
+export function createRescheduleEventForCard(
   card: Card,
   collection: Collection,
-  lastActionLog: PromptActionLog<QAPromptTask | ClozePromptTask>,
-): Promise<ActionLog | null> {
-  let newTimestampMillis: number | null;
+  taskID: TaskID,
+  componentID: string,
+): TaskRescheduleEvent | null {
+  let newDueTimestampMillis: number | null;
   switch (card.queue) {
     case CardQueue.UserBuried:
     case CardQueue.Buried:
@@ -188,24 +126,41 @@ export async function createRescheduleLogForCard(
       return null;
     case CardQueue.Learning:
       // card.due is seconds since epoch
-      newTimestampMillis = card.due * 1000;
+      newDueTimestampMillis = card.due * 1000;
       break;
     case CardQueue.Due:
     case CardQueue.LearningNotDue:
       // card.due is days since collection's creation
-      newTimestampMillis =
+      newDueTimestampMillis =
         collection.crt * 1000 + card.due * 1000 * 60 * 60 * 24;
       break;
   }
   return {
-    actionLogType: rescheduleActionLogType,
-    parentActionLogIDs: [
-      await getIDForActionLog(getActionLogFromPromptActionLog(lastActionLog)),
-    ],
+    type: EventType.TaskReschedule,
     timestampMillis: Date.now(),
-    newTimestampMillis,
-    taskID: lastActionLog.taskID,
+    id: generateUniqueID(),
+    newDueTimestampMillis,
+    entityID: taskID,
+    componentID,
   };
+}
+
+export function getComponentID(
+  card: Card,
+  contentType: TaskContentType,
+): string | null {
+  switch (contentType) {
+    case TaskContentType.Plain:
+    case TaskContentType.QA:
+      if (card.ord === 0) {
+        return mainTaskComponentID;
+      } else {
+        return null;
+      }
+    case TaskContentType.Cloze:
+      // TODO: This mapping is only correct for "simple" cloze deletions (i.e. with only one range)
+      return card.ord.toString();
+  }
 }
 
 export async function createImportPlan(
@@ -214,22 +169,15 @@ export async function createImportPlan(
   attachmentIDsToExtractedPaths: { [key: string]: string },
 ): Promise<ImportPlan> {
   const plan: ImportPlan = {
-    prompts: [],
+    events: [],
     attachments: [],
-    logs: [],
     issues: [],
-    promptStateCaches: [],
   };
 
   const collection = await Anki.readCollection(handle);
   const modelMappingCache: { [key: number]: ModelMapping } = {};
-  const noteIDsToPrompts: Map<number, Prompt> = new Map();
-  const noteIDsToProvenance: Map<number, NotePromptProvenance> = new Map();
+  const noteIDsToTaskSpecs = new Map<number, TaskSpec>();
 
-  const attachmentNamesToAttachmentIDReferences: Map<
-    string,
-    AttachmentIDReference
-  > = new Map();
   if (mediaManifest) {
     await Promise.all(
       Object.entries(mediaManifest).map(
@@ -243,12 +191,15 @@ export async function createImportPlan(
           if (result instanceof Error) {
             plan.issues.push(result.message);
           } else {
+            const attachmentIngestEvent: AttachmentIngestEvent = {
+              type: EventType.AttachmentIngest,
+              id: generateUniqueID(),
+              entityID: result.id,
+              mimeType: result.mimeType,
+              timestampMillis: Date.now(),
+            };
+            plan.events.push(attachmentIngestEvent);
             plan.attachments.push(result);
-            attachmentNamesToAttachmentIDReferences.set(attachmentName, {
-              type: result.type,
-              byteLength: result.contents.length,
-              id: await getIDForAttachment(result.contents),
-            });
           }
         },
       ),
@@ -256,139 +207,118 @@ export async function createImportPlan(
   }
 
   await Anki.readNotes(handle, async (note) => {
-    const result = createPlanForNote(
-      note,
-      collection,
-      attachmentNamesToAttachmentIDReferences,
-      modelMappingCache,
-    );
+    const result = createSpecForNote(note, collection, modelMappingCache);
     if (result instanceof Error) {
       plan.issues.push(result.message);
     } else {
-      const { prompt, issues, provenance } = result;
-      plan.prompts.push(prompt);
+      const { spec, issues } = result;
       plan.issues.push(...issues);
-      noteIDsToPrompts.set(note.id, prompt);
-      if (provenance) {
-        noteIDsToProvenance.set(note.id, provenance);
-      }
+      noteIDsToTaskSpecs.set(note.id, spec);
     }
   });
 
   const cardIDsToCards: Map<number, Card> = new Map();
-  const cardIDsToIngest: Set<number> = new Set();
+  const noteIDsToCards: Map<number, Card[]> = new Map();
   await Anki.readCards(handle, async (card) => {
     cardIDsToCards.set(card.id, card);
-    cardIDsToIngest.add(card.id);
+
+    const priorNoteCards = noteIDsToCards.get(card.nid);
+    noteIDsToCards.set(
+      card.nid,
+      priorNoteCards ? [...priorNoteCards, card] : [card],
+    );
   });
 
-  const taskIDsToPromptStates: Map<string, PromptState> = new Map();
-  const cardIDsToLastActionLogs: Map<
-    number,
-    PromptActionLog<QAPromptTask | ClozePromptTask>
-  > = new Map();
+  const noteIDsToTaskIDs = new Map<number, TaskID>();
 
-  async function addIngestEventForCardID(
-    cardID: number,
-    overrideTimestampMillis?: number,
-  ): Promise<PromptActionLog<QAPromptTask | ClozePromptTask> | null> {
-    // Create the ingest log for this card.
-    const card = cardIDsToCards.get(cardID);
-    if (!card) {
-      return null;
+  function addIngestEventForNoteID(
+    noteID: number,
+    taskSpec: TaskSpec,
+    timestampMillis: number,
+  ): TaskIngestEvent {
+    const cards = noteIDsToCards.get(noteID);
+    if (!cards) throw new Error(`Inconsistent: note ${noteID} has no cards`);
+
+    const metadata: { [key: string]: string } = {};
+    for (const card of cards) {
+      const componentID = getComponentID(card, taskSpec.content.type);
+      if (componentID) {
+        metadata[`ankiCardID_${componentID}`] = card.id.toString();
+      }
     }
-    const prompt = noteIDsToPrompts.get(card.nid);
-    if (!prompt) {
-      // Only ingest cards whose notes are included.
-      return null;
-    }
-    const promptActionLog = await createPlanForCard(
-      card,
-      prompt,
-      noteIDsToProvenance.get(card.nid) ?? null,
-      overrideTimestampMillis,
-    );
-    plan.logs.push(getActionLogFromPromptActionLog(promptActionLog));
 
-    taskIDsToPromptStates.set(
-      promptActionLog.taskID,
-      applyActionLogToPromptState({
-        promptActionLog,
-        actionLogID: await getIDForActionLog(
-          getActionLogFromPromptActionLog(promptActionLog),
-        ),
-        schedule: "default",
-        basePromptState: null,
-      }) as PromptState,
-    );
-
-    return promptActionLog;
+    const ingestEvent: TaskIngestEvent = {
+      type: EventType.TaskIngest,
+      id: generateUniqueID(),
+      entityID: generateUniqueID(),
+      spec: taskSpec,
+      provenance: {
+        // TODO: perhaps migrate Anki deck metainfo here
+        identifier: `ankiNoteID_${noteID}`,
+      },
+      timestampMillis,
+      metadata,
+    };
+    plan.events.push(ingestEvent);
+    return ingestEvent;
   }
 
   await Anki.readLogs(handle, async (ankiLog) => {
-    let cardLastActionLog = cardIDsToLastActionLogs.get(ankiLog.cid);
-    if (!cardLastActionLog) {
-      const maybeLog = await addIngestEventForCardID(ankiLog.cid, ankiLog.id);
-      if (maybeLog) {
-        cardLastActionLog = maybeLog;
-        cardIDsToIngest.delete(ankiLog.cid);
-      } else {
-        return;
-      }
-    }
-
-    const promptActionLog = await createPlanForLog(ankiLog, cardLastActionLog);
-    plan.logs.push(getActionLogFromPromptActionLog(promptActionLog));
-
-    const newPromptState = applyActionLogToPromptState({
-      promptActionLog,
-      actionLogID: await getIDForActionLog(
-        getActionLogFromPromptActionLog(promptActionLog),
-      ),
-      schedule: "default",
-      basePromptState: taskIDsToPromptStates.get(promptActionLog.taskID)!,
-    }) as PromptState;
-    taskIDsToPromptStates.set(promptActionLog.taskID, newPromptState);
-
-    cardIDsToLastActionLogs.set(ankiLog.cid, promptActionLog);
-  });
-
-  let reschedulelessCards = 0;
-  await Anki.readCards(handle, async (card) => {
-    if (cardIDsToIngest.has(card.id)) {
-      // These cards have never actually been reviewed.
-      await addIngestEventForCardID(card.id);
-    } else {
-      const cardLastActionLog = cardIDsToLastActionLogs.get(card.id);
-      if (!cardLastActionLog) {
-        throw new Error(`Inconsistent database. ${card.id} generated no logs`);
-      }
-      const rescheduleLog = await createRescheduleLogForCard(
-        card,
-        collection,
-        cardLastActionLog,
+    const card = cardIDsToCards.get(ankiLog.cid);
+    if (!card) {
+      throw new Error(
+        `Inconsistent: log ${ankiLog.id} references missing card with ID ${ankiLog.cid}`,
       );
-      if (rescheduleLog) {
-        plan.logs.push(rescheduleLog);
-        const newPromptState = applyActionLogToPromptState({
-          promptActionLog: getPromptActionLogFromActionLog(rescheduleLog),
-          actionLogID: await getIDForActionLog(rescheduleLog),
-          schedule: "default",
-          basePromptState: taskIDsToPromptStates.get(rescheduleLog.taskID)!,
-        }) as PromptState;
-        taskIDsToPromptStates.set(rescheduleLog.taskID, newPromptState);
-      } else {
-        reschedulelessCards++;
+    }
+    const spec = noteIDsToTaskSpecs.get(card.nid);
+    if (!spec) return;
+
+    const componentID = getComponentID(card, spec.content.type);
+    if (componentID === null) return;
+
+    let taskID = noteIDsToTaskIDs.get(card.nid);
+    if (taskID === undefined) {
+      const event = addIngestEventForNoteID(card.nid, spec, ankiLog.id);
+      taskID = event.entityID;
+      noteIDsToTaskIDs.set(card.nid, taskID);
+    }
+
+    const repetitionEvent = await createPlanForLog(
+      ankiLog,
+      taskID,
+      componentID,
+    );
+    plan.events.push(repetitionEvent);
+  });
+
+  const stragglerNoteIDs = new Set<number>();
+  await Anki.readCards(handle, async (card) => {
+    const spec = noteIDsToTaskSpecs.get(card.nid);
+    if (!spec) return;
+
+    // If this card belongs to a note that was never reviewed, and we've already add an ingest event in this last pass, skip it.
+    if (stragglerNoteIDs.has(card.nid)) return;
+
+    const taskID = noteIDsToTaskIDs.get(card.nid);
+    if (taskID === undefined) {
+      // This note has never actually been reviewed.
+      addIngestEventForNoteID(card.nid, spec, card.id);
+      stragglerNoteIDs.add(card.nid);
+    } else {
+      const componentID = getComponentID(card, spec.content.type);
+      if (componentID) {
+        const rescheduleEvent = await createRescheduleEventForCard(
+          card,
+          collection,
+          taskID,
+          componentID,
+        );
+        if (rescheduleEvent) {
+          plan.events.push(rescheduleEvent);
+        }
       }
     }
   });
-  console.log("cards without reschedule", reschedulelessCards);
-
-  plan.promptStateCaches = [...taskIDsToPromptStates.entries()].map(
-    ([taskID, promptState]) => {
-      return { taskID, promptState };
-    },
-  );
 
   return plan;
 }

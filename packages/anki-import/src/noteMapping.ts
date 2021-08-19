@@ -1,27 +1,23 @@
 import {
-  AttachmentIDReference,
-  ClozePrompt,
-  clozePromptType,
-  NotePromptProvenance,
-  Prompt,
-  PromptField,
-  QAPrompt,
-  qaPromptType,
-} from "@withorbit/core";
+  AttachmentID,
+  migration,
+  parseSingleCurlyBraceClozePromptMarkup,
+  TaskContent,
+  TaskContentField,
+  TaskContentType,
+  TaskSpec,
+  TaskSpecType,
+} from "@withorbit/core2";
 import { Note, splitAnkiDBNoteFields } from "./ankiPkg";
 import { AnkiAttachmentReference } from "./ankiPkg/ankiAttachmentReference";
 import parseAnkiField from "./ankiPkg/parseAnkiField";
 import { ModelMapping, ModelMappingType } from "./modelMapping";
 
-export function mapNoteToPrompt(
+export function mapNoteToTaskSpec(
   note: Note,
   modelMapping: ModelMapping,
-  attachmentResolver: (
-    ankiAttachmentReference: AnkiAttachmentReference,
-  ) => AttachmentIDReference | null,
 ): {
-  prompt: Prompt;
-  provenance: NotePromptProvenance | null;
+  spec: TaskSpec;
   issues: string[];
 } {
   const fields = splitAnkiDBNoteFields(note.flds);
@@ -37,23 +33,23 @@ export function mapNoteToPrompt(
     });
   }
 
-  function transformAnkiField(field: string): PromptField {
-    const { contentsMarkdown, attachmentReferences } = parseAnkiField(field);
-
-    const attachmentIDReferences: AttachmentIDReference[] = [];
-    for (const ankiAttachmentReference of attachmentReferences) {
-      const attachmentIDReference = attachmentResolver(ankiAttachmentReference);
-      if (attachmentIDReference) {
-        attachmentIDReferences.push(attachmentIDReference);
-      } else {
-        issues.push(
-          `Couldn't find ${ankiAttachmentReference.type} attachment named ${ankiAttachmentReference.name}`,
-        );
-      }
-    }
-    return { contents: contentsMarkdown, attachments: attachmentIDReferences };
+  function transformAttachmentReferences(
+    attachmentReferences: AnkiAttachmentReference[],
+  ): AttachmentID[] {
+    return attachmentReferences.map((ref) =>
+      migration.convertCore1ID(ref.name),
+    );
   }
 
+  function transformQAAnkiField(field: string): TaskContentField {
+    const { contentsMarkdown, attachmentReferences } = parseAnkiField(field);
+    return {
+      text: contentsMarkdown,
+      attachments: transformAttachmentReferences(attachmentReferences),
+    };
+  }
+
+  let content: TaskContent;
   switch (modelMapping.type) {
     case ModelMappingType.Basic:
       checkForDroppedFields([
@@ -61,28 +57,36 @@ export function mapNoteToPrompt(
         modelMapping.answerFieldIndex,
       ]);
 
-      const qaPrompt: QAPrompt = {
-        question: transformAnkiField(fields[modelMapping.questionFieldIndex]),
-        answer: transformAnkiField(fields[modelMapping.answerFieldIndex]),
-        promptType: qaPromptType,
+      content = {
+        type: TaskContentType.QA,
+        body: transformQAAnkiField(fields[modelMapping.questionFieldIndex]),
+        answer: transformQAAnkiField(fields[modelMapping.answerFieldIndex]),
       };
-      return {
-        issues,
-        prompt: qaPrompt,
-        provenance: null,
-      };
+      break;
 
     case ModelMappingType.Cloze:
       checkForDroppedFields([modelMapping.contentsFieldIndex]);
-
-      const clozePrompt: ClozePrompt = {
-        body: transformAnkiField(fields[modelMapping.contentsFieldIndex]),
-        promptType: clozePromptType,
-      };
-      return {
-        issues,
-        prompt: clozePrompt,
-        provenance: null,
+      const { contentsMarkdown, attachmentReferences } = parseAnkiField(
+        fields[modelMapping.contentsFieldIndex],
+      );
+      // TODO: parse Anki order and hint specifiers
+      const { markupWithoutBraces, clozeComponents } =
+        parseSingleCurlyBraceClozePromptMarkup(contentsMarkdown);
+      content = {
+        type: TaskContentType.Cloze,
+        body: {
+          text: markupWithoutBraces,
+          attachments: transformAttachmentReferences(attachmentReferences),
+        },
+        components: clozeComponents,
       };
   }
+
+  return {
+    spec: {
+      type: TaskSpecType.Memory,
+      content,
+    },
+    issues,
+  };
 }

@@ -1,4 +1,4 @@
-import { qaPromptType, clozePromptType } from "@withorbit/core";
+import { ClozeTaskContent, TaskContentType } from "@withorbit/core2";
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
 import {
   AnkiCollectionDBHandle,
@@ -11,7 +11,7 @@ import {
   ClozeModelMapping,
   ModelMappingType,
 } from "./modelMapping";
-import { mapNoteToPrompt } from "./noteMapping";
+import { mapNoteToTaskSpec } from "./noteMapping";
 
 const notes: Note[] = [];
 beforeAll(async () => {
@@ -42,67 +42,91 @@ function findNoteByFirstFieldContents(contents: string): Note | null {
 
 test("mapping basic note", () => {
   expect(
-    mapNoteToPrompt(
-      findNoteByFirstFieldContents("Test Q")!,
-      basicMapping,
-      jest.fn(),
-    ),
+    mapNoteToTaskSpec(findNoteByFirstFieldContents("Test Q")!, basicMapping),
   ).toMatchObject({
     issues: [],
-    prompt: {
-      promptType: qaPromptType,
-      question: {
-        contents: "Test Q",
-        attachments: [],
-      },
-      answer: {
-        contents: "Test A",
-        attachments: [],
+    spec: {
+      content: {
+        type: TaskContentType.QA,
+        body: {
+          text: "Test Q",
+          attachments: [],
+        },
+        answer: {
+          text: "Test A",
+          attachments: [],
+        },
       },
     },
   });
 });
 
 test("mapping cloze note", () => {
-  const result = mapNoteToPrompt(
+  const result = mapNoteToTaskSpec(
     findNoteByFirstFieldContents("Test {{c1::cloze}} deletion {{c2::prompt}}")!,
     clozeMapping,
-    jest.fn(),
   );
-  expect(result.prompt).toMatchObject({
-    promptType: clozePromptType,
-    body: {
-      contents: "Test {cloze} deletion {prompt}",
-      attachments: [],
+  expect(result.spec).toMatchObject({
+    content: {
+      type: TaskContentType.Cloze,
+      body: {
+        text: "Test cloze deletion prompt",
+        attachments: [],
+      },
     },
   });
+  expect((result.spec.content as ClozeTaskContent).components)
+    .toMatchInlineSnapshot(`
+    Object {
+      "0": Object {
+        "order": 0,
+        "ranges": Array [
+          Object {
+            "hint": null,
+            "length": 5,
+            "startIndex": 5,
+          },
+        ],
+      },
+      "1": Object {
+        "order": 1,
+        "ranges": Array [
+          Object {
+            "hint": null,
+            "length": 6,
+            "startIndex": 20,
+          },
+        ],
+      },
+    }
+  `);
   expect(result.issues).toHaveLength(1);
 });
 
 test("mapping note with image", () => {
   const imageNote = notes.find((note) => note.flds.includes("<img"))!;
-  const mock = jest.fn();
-  mock.mockImplementation((ref) => `${ref.type}-${ref.name}`);
-  const result = mapNoteToPrompt(imageNote, basicMapping, mock);
+  const result = mapNoteToTaskSpec(imageNote, basicMapping);
   expect(result).toMatchInlineSnapshot(`
-    Object {
-      "issues": Array [],
-      "prompt": Object {
-        "answer": Object {
-          "attachments": Array [
-            "image-paste-235d52a420e48250574495268d1eaadbcd40e188.jpg",
-          ],
-          "contents": "Test answer with an image",
-        },
-        "promptType": "qaPrompt",
-        "question": Object {
-          "attachments": Array [
-            "image-paste-5146b5478bc75de1c703057f0a51a93a70ca922d.jpg",
-          ],
-          "contents": "Test question with an image",
-        },
+Object {
+  "issues": Array [],
+  "spec": Object {
+    "content": Object {
+      "answer": Object {
+        "attachments": Array [
+          "pyN-ng4VX1K49oL1eATILg",
+        ],
+        "text": "Test answer with an image",
       },
-      "provenance": null,
-    }
-  `);
+      "body": Object {
+        "attachments": Array [
+          "O1FLbMewV1yCmV2vzCfVxg",
+        ],
+        "text": "Test question with an image",
+      },
+      "type": "qa",
+    },
+    "type": "memory",
+  },
+}
+`);
 });

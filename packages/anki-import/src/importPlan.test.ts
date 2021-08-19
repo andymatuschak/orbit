@@ -1,141 +1,113 @@
 import {
-  AnkiPromptProvenance,
-  qaPromptType,
-  getActionLogFromPromptActionLog,
-  getIDForActionLog,
-  PromptIngestActionLog,
-  PromptRepetitionOutcome,
-  RescheduleActionLog,
-} from "@withorbit/core";
-import { testQAPrompt, testClozePrompt } from "@withorbit/sample-data";
+  EventType,
+  mainTaskComponentID,
+  TaskContentType,
+  TaskID,
+  TaskRescheduleEvent,
+} from "@withorbit/core2";
 import {
   testCard,
   testCollection,
-  testLog,
   testNote,
 } from "./__fixtures__/testAnkiData";
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
 import { CardQueue, Collection } from "./ankiPkg";
 import {
   createImportPlan,
-  createPlanForCard,
-  createPlanForLog,
-  createPlanForNote,
-  createRescheduleLogForCard,
-  extractPromptTaskIDForCard,
+  createRescheduleEventForCard,
+  createSpecForNote,
+  getComponentID,
 } from "./importPlan";
 import { ModelMapping } from "./modelMapping";
 
-describe("createPlanForNote", () => {
+describe("createSpecForNote", () => {
   const cache: { [p: number]: ModelMapping } = {};
-  const result = createPlanForNote(testNote, testCollection, new Map(), cache);
+  const result = createSpecForNote(testNote, testCollection, cache);
   if (result instanceof Error) {
     fail();
   }
-  const { prompt } = result;
+  const { spec } = result;
   test("uncached model", () => {
-    expect(prompt.promptType).toEqual(qaPromptType);
+    expect(spec.content.type).toEqual(TaskContentType.QA);
     expect(cache[testNote.mid]).toBeTruthy();
   });
   test("cached model", () => {
-    const secondResult = createPlanForNote(
-      testNote,
-      {} as Collection,
-      new Map(),
-      cache,
-    );
+    const secondResult = createSpecForNote(testNote, {} as Collection, cache);
     if (secondResult instanceof Error) {
       fail();
     }
-    expect(result.prompt).toEqual(prompt);
+    expect(result.spec).toEqual(spec);
   });
 
   test("unknown model", () => {
     expect(
-      createPlanForNote(
-        { ...testNote, mid: 51035 },
-        testCollection,
-        new Map(),
-        cache,
-      ),
+      createSpecForNote({ ...testNote, mid: 51035 }, testCollection, cache),
     ).toBeInstanceOf(Error);
   });
 });
 
-describe("extract prompt task ID for card", () => {
-  test("cloze prompts include their IDs", () => {
-    const basicTaskID = expect(
-      extractPromptTaskIDForCard(testCard, testQAPrompt),
-    );
-    const clozeTaskID = expect(
-      extractPromptTaskIDForCard({ ...testCard, ord: 5 }, testClozePrompt),
-    );
-    expect(basicTaskID).not.toEqual(clozeTaskID);
+describe("getComponentID", () => {
+  test("cloze prompts use their ord index", () => {
+    expect(
+      getComponentID({ ...testCard, ord: 5 }, TaskContentType.Cloze),
+    ).toEqual("5");
   });
-});
 
-test("create plan for card", async () => {
-  const log = (await createPlanForCard(
-    testCard,
-    testQAPrompt,
-    null,
-  )) as PromptIngestActionLog;
-  expect((log.provenance as AnkiPromptProvenance).externalID).toEqual(
-    testCard.id.toString(),
-  );
-});
+  test("qa prompts use the main component ID", () => {
+    expect(getComponentID({ ...testCard, ord: 0 }, TaskContentType.QA)).toEqual(
+      mainTaskComponentID,
+    );
+  });
 
-test("create plan for log", async () => {
-  const ingestLog = (await createPlanForCard(
-    testCard,
-    testQAPrompt,
-    null,
-  )) as PromptIngestActionLog;
-  const log = await createPlanForLog(testLog, ingestLog);
-  expect(log.parentActionLogIDs).toEqual([
-    await getIDForActionLog(getActionLogFromPromptActionLog(ingestLog)),
-  ]);
-  expect(log.outcome).toEqual(PromptRepetitionOutcome.Remembered);
+  test("reverse qa prompts have a null component ID", () => {
+    expect(
+      getComponentID({ ...testCard, ord: 1 }, TaskContentType.QA),
+    ).toBeNull();
+  });
 });
 
 describe("reschedule logs", () => {
-  let ingestLog: PromptIngestActionLog;
-  beforeAll(async () => {
-    ingestLog = (await createPlanForCard(
-      testCard,
-      testQAPrompt,
-      null,
-    )) as PromptIngestActionLog;
-  });
-
   test("learning card", async () => {
     expect(
       (
-        (await createRescheduleLogForCard(
+        createRescheduleEventForCard(
           { ...testCard, queue: CardQueue.Learning, due: 1e5 },
           testCollection,
-          ingestLog,
-        )) as RescheduleActionLog
-      ).newTimestampMillis,
+          "taskID" as TaskID,
+          "cid",
+        ) as TaskRescheduleEvent
+      ).newDueTimestampMillis,
     ).toEqual(1e8);
   });
 
   test("due card", async () => {
     expect(
       (
-        (await createRescheduleLogForCard(
+        createRescheduleEventForCard(
           { ...testCard, queue: CardQueue.Due, due: 50 },
           { ...testCollection, crt: 1000 },
-          ingestLog,
-        )) as RescheduleActionLog
-      ).newTimestampMillis,
+          "taskID" as TaskID,
+          "cid",
+        ) as TaskRescheduleEvent
+      ).newDueTimestampMillis,
     ).toEqual(1000 * 1000 + 50 * 1000 * 60 * 60 * 24);
   });
 });
 
 test("imports full database", async () => {
   const plan = await withTestAnkiCollection(createImportPlan);
-  expect(plan.prompts.length).toBeGreaterThan(0);
-  expect(plan.logs.length).toBeGreaterThan(0);
-  expect(plan.attachments.length).toBeGreaterThan(0);
+  expect(
+    plan.events.filter(({ type }) => type === EventType.AttachmentIngest)
+      .length,
+  ).toBe(2);
+  expect(
+    plan.events.filter(({ type }) => type === EventType.TaskIngest).length,
+  ).toBe(4);
+  expect(
+    plan.events.filter(({ type }) => type === EventType.TaskRepetition).length,
+  ).toBe(1);
+  expect(
+    plan.events.filter(({ type }) => type === EventType.TaskReschedule).length,
+  ).toBe(1);
+  expect(plan.attachments.length).toBe(2);
 });

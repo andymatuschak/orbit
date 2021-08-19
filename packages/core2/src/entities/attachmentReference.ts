@@ -38,3 +38,22 @@ export function getFileExtensionForAttachmentMIMEType(
       return null;
   }
 }
+
+// An intentionally quick and dirty mime type extractor: the libraries which map extensions to mime types are several kB.
+export function getAttachmentMIMETypeForFilename(
+  filename: string,
+): AttachmentMIMEType | null {
+  const uppercaseFilename = filename.toUpperCase();
+  if (uppercaseFilename.endsWith(".PNG")) {
+    return AttachmentMIMEType.PNG;
+  } else if (
+    uppercaseFilename.endsWith(".JPG") ||
+    uppercaseFilename.endsWith(".JPEG")
+  ) {
+    return AttachmentMIMEType.JPEG;
+  } else if (uppercaseFilename.endsWith(".SVG")) {
+    return AttachmentMIMEType.SVG;
+  } else {
+    return null;
+  }
+}

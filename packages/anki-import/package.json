@@ -9,7 +9,7 @@
   "exports": "./dist/index.js",
   "dependencies": {
     "@types/unzipper": "^0.10.3",
-    "@withorbit/core": "0.0.1",
+    "@withorbit/core2": "0.0.1",
     "@withorbit/sample-data": "0.0.1",
     "rehype-parse": "^8.0.2",
     "rehype-remark": "^9.0.0",
