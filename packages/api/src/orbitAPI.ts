@@ -41,30 +41,6 @@ export type ValidatableSpec = {
     };
   };
 
-  "/actionLogs"?: {
-    GET?: {
-      query: {
-        /**
-         * @minimum 1
-         * @default 100
-         * @TJS-type integer
-         */
-        limit?: number;
-        createdAfterID?: ActionLogID;
-      };
-      response?: ResponseList<"actionLog", ActionLogID, ActionLog>;
-    };
-
-    PATCH?: {
-      contentType: "application/json";
-      body: {
-        id: ActionLogID;
-        data: ActionLog;
-      }[];
-      response?: null;
-    };
-  };
-
   "/taskData"?: {
     GET?: {
       query: { ids: PromptID[] };

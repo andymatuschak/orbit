@@ -53,23 +53,6 @@ export class OrbitAPIClient {
     });
   }
 
-  listActionLogs(
-    query: OrbitAPI.Spec["/actionLogs"]["GET"]["query"] = {},
-  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/actionLogs"]["GET"]>> {
-    return this.requestManager.request("/actionLogs", "GET", {
-      query,
-    });
-  }
-
-  storeActionLogs(
-    logs: OrbitAPI.Spec["/actionLogs"]["PATCH"]["body"],
-  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/actionLogs"]["PATCH"]>> {
-    return this.requestManager.request("/actionLogs", "PATCH", {
-      contentType: "application/json",
-      body: logs,
-    });
-  }
-
   getTaskData(
     ids: PromptID[],
   ): Promise<API.RouteResponseData<OrbitAPI.Spec["/taskData"]["GET"]>> {

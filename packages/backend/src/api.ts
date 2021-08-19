@@ -4,7 +4,6 @@ import express from "express";
 import morganBody from "morgan-body";
 import { listEvents, storeEvents } from "./api/2/events";
 import { bulkGetTasks } from "./api/2/tasks";
-import { listActionLogs, storeActionLogs } from "./api/actionLogs";
 import { getAttachment, storeAttachment } from "./api/attachments";
 import {
   getAttachment as getAttachment2,
@@ -46,10 +45,6 @@ export function createAPIApp(): express.Application {
   }); // Log request and response data.
 
   createTypedRouter<OrbitAPI.Spec>(app, routeValidator, {
-    "/actionLogs": {
-      GET: listActionLogs,
-      PATCH: storeActionLogs,
-    },
     "/taskStates": {
       GET: listTaskStates,
     },

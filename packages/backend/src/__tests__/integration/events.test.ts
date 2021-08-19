@@ -1,3 +1,4 @@
+import { generateUniqueID } from "@withorbit/core2";
 import { resetLocalEmulators } from "../emulators";
 import { fetchRoute } from "./utils/fetchRoute";
 import { setupAuthToken } from "./utils/setupAuthToken";
@@ -12,26 +13,28 @@ afterEach(async () => {
   await resetLocalEmulators();
 });
 
+beforeEach(async () => {
+  await setupAuthToken("test");
+});
+
 test("round-trip request", async () => {
-  await setupAuthToken("patch-events-round-trip");
   const testEvents = fixtures.createTestTaskIngestEvents(100);
   const { status: patchStatus, body: patchBody } = await fetchRoute(
     `/api/2/events`,
     {
       method: "PATCH",
       json: testEvents,
-      authorization: { token: "patch-events-round-trip" },
+      authorization: { token: "test" },
     },
   );
   expect(patchStatus).toBe(204);
   expect(patchBody).toBeUndefined();
 
-  await setupAuthToken("get-events-round-trip");
   const { status: getStatus, body: getBody } = await fetchRoute(
     `/api/2/events?limit=100`,
     {
       method: "GET",
-      authorization: { token: "get-events-round-trip" },
+      authorization: { token: "test" },
     },
   );
   expect(getStatus).toBe(200);
@@ -39,5 +42,92 @@ test("round-trip request", async () => {
     type: "list",
     hasMore: false,
     items: testEvents,
+  });
+});
+
+describe("[GET] validation", () => {
+  it("succeeds with valid parameters", async () => {
+    const testEvents = fixtures.createTestTaskIngestEvents(5);
+    await fetchRoute(`/api/2/events`, {
+      method: "PATCH",
+      json: testEvents,
+      authorization: { token: "test" },
+    });
+
+    const { status } = await fetchRoute(
+      `/api/2/events?afterID=${testEvents[1].id}&limit=1000`,
+      { method: "GET", authorization: { token: "test" } },
+    );
+    expect(status).toBe(200);
+  });
+
+  it("it does not allow limit to be a negative integer", async () => {
+    const request = await fetchRoute(`/api/2/events?limit=-5`, {
+      method: "GET",
+      authorization: { token: "test" },
+    });
+    expect(request.status).toBe(400);
+    expect(request.body.errors).toMatchObject([
+      {
+        message: "query/limit must be >= 1",
+      },
+    ]);
+  });
+
+  it("it does not allow limit to be a floating point", async () => {
+    const request = await fetchRoute(`/api/2/events?limit=1.5`, {
+      method: "GET",
+      authorization: { token: "test" },
+    });
+    expect(request.status).toBe(400);
+    expect(request.body.errors).toMatchObject([
+      {
+        message: "query/limit must be integer",
+      },
+    ]);
+  });
+});
+
+describe("[PATCH] validation", () => {
+  // https://github.com/andymatuschak/orbit/issues/236
+  it.skip("it fails when extra properties are provided", async () => {
+    const ingestEvent = fixtures.createTestTaskIngestEvents(1)[0];
+    const { status, body } = await fetchRoute(`/api/2/events`, {
+      method: "PATCH",
+      authorization: { token: "test" },
+      json: [
+        {
+          ...ingestEvent,
+          someExtraProperty: true,
+        },
+      ],
+    });
+    expect(status).toBe(400);
+    expect(body.errors).toMatchObject([
+      {
+        message: "body/0 must NOT have additional properties",
+      },
+    ]);
+  });
+
+  it("it fails when actionLogType is invalid", async () => {
+    const { status, body } = await fetchRoute(`/api/2/events`, {
+      method: "PATCH",
+      authorization: { token: "test" },
+      json: [
+        {
+          ...fixtures.createTestTaskIngestEvents(1)[0],
+          type: "invalid",
+        },
+      ],
+    });
+    expect(status).toBe(400);
+    expect(
+      body.errors.includes(
+        (e: Error) =>
+          e.message ===
+          "body/0/type must be equal to one of the allowed values",
+      ),
+    );
   });
 });
