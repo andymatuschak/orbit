@@ -54,7 +54,5 @@ export const storeTaskData: TypedRouteHandler<
   await validatePrompts(prompts);
 
   await backend.prompts.storePrompts(prompts.map(({ data }) => data));
-  // TODO: move logging responsibility from onDataRecordCreate
-
   return { status: 204 };
 });
