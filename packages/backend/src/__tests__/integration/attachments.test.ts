@@ -3,7 +3,6 @@ import {
   AttachmentMIMEType,
   generateUniqueID,
 } from "@withorbit/core2";
-import { _getAttachmentMIMETypeFromResourceMetadata } from "../../attachments";
 import { resetLocalEmulators } from "../emulators";
 import { setupTestOrbitAPIClient } from "./utils/setupAuthToken";
 

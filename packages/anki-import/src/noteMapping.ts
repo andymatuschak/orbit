@@ -1,6 +1,5 @@
 import {
   AttachmentID,
-  migration,
   parseSingleCurlyBraceClozePromptMarkup,
   TaskContent,
   TaskContentField,
@@ -11,6 +10,7 @@ import {
 import { Note, splitAnkiDBNoteFields } from "./ankiPkg";
 import { AnkiAttachmentReference } from "./ankiPkg/ankiAttachmentReference";
 import parseAnkiField from "./ankiPkg/parseAnkiField";
+import { convertAnkiID } from "./convertAnkiID";
 import { ModelMapping, ModelMappingType } from "./modelMapping";
 
 export function mapNoteToTaskSpec(
@@ -36,9 +36,7 @@ export function mapNoteToTaskSpec(
   function transformAttachmentReferences(
     attachmentReferences: AnkiAttachmentReference[],
   ): AttachmentID[] {
-    return attachmentReferences.map((ref) =>
-      migration.convertCore1ID(ref.name),
-    );
+    return attachmentReferences.map((ref) => convertAnkiID(ref.name));
   }
 
   function transformQAAnkiField(field: string): TaskContentField {

@@ -18,8 +18,8 @@ export function sharedServerDatabase(): OrbitServerDatabase {
         return new Database(new FirestoreDatabaseBackend(userID));
       },
       accounts,
-      auth
-    }
+      auth,
+    };
   }
   return _sharedServerDatabase;
 }

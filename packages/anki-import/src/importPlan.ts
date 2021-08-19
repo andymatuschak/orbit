@@ -7,7 +7,6 @@ import {
   generateUniqueID,
   getAttachmentMIMETypeForFilename,
   mainTaskComponentID,
-  migration,
   TaskContentType,
   TaskID,
   TaskIngestEvent,
@@ -19,6 +18,7 @@ import {
 import fs from "fs";
 import * as Anki from "./ankiPkg";
 import { Card, CardQueue, Collection } from "./ankiPkg";
+import { convertAnkiID } from "./convertAnkiID";
 import { getModelMapping, ModelMapping } from "./modelMapping";
 import { mapNoteToTaskSpec } from "./noteMapping";
 
@@ -105,7 +105,7 @@ async function readAttachmentAtPath(
   const mimeType = getAttachmentMIMETypeForFilename(name);
   if (mimeType) {
     const contents = await fs.promises.readFile(path);
-    return { mimeType, contents, id: migration.convertCore1ID(name) };
+    return { mimeType, contents, id: convertAnkiID(name) };
   } else {
     return new Error(`Unsupported attachment type: ${name}`);
   }

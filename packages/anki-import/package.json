@@ -17,7 +17,8 @@
     "sqlite": "^3.0.6",
     "unified": "^10.1.0",
     "unist-util-select": "^4.0.0",
-    "unzipper": "^0.10.11"
+    "unzipper": "^0.10.11",
+    "uuid": "^8.3.2"
   },
   "scripts": {
     "build": "tsc -b",
