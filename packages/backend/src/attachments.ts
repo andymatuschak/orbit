@@ -1,6 +1,11 @@
-import { getAttachmentMimeTypeFromResourceMetadata } from "@withorbit/core";
-import { AttachmentID, AttachmentMIMEType } from "@withorbit/core2";
+import {
+  AttachmentID,
+  AttachmentMIMEType,
+  getAttachmentMIMETypeForFilename,
+  getFileExtensionForAttachmentMIMEType,
+} from "@withorbit/core2";
 import fetch, * as Fetch from "node-fetch";
+import URL from "url";
 import { sharedFileStorageService } from "./fileStorageService";
 import { FileStorageResolution } from "./fileStorageService/fileStorageService";
 
@@ -13,6 +18,23 @@ function getFileStorageSubpathForAttachmentID(
   return `attachments/${userID}/${attachmentID}`;
 }
 
+export function _getAttachmentMIMETypeFromResourceMetadata(
+  contentType: string | null,
+  urlString: string | null,
+): AttachmentMIMEType | null {
+  // Our quick way to validate MIME types is with our extension lookup table.
+  const attachmentExtension =
+    contentType && getFileExtensionForAttachmentMIMEType(contentType);
+  if (attachmentExtension) {
+    return contentType as AttachmentMIMEType;
+  } else if (urlString) {
+    const url = new URL.URL(urlString);
+    return getAttachmentMIMETypeForFilename(url.pathname);
+  } else {
+    return null;
+  }
+}
+
 export function _validateAttachmentResponse(
   response: Fetch.Response,
   url: string,
@@ -22,7 +44,7 @@ export function _validateAttachmentResponse(
   }
 
   const contentType = response.headers.get("Content-Type");
-  const attachmentMimeType = getAttachmentMimeTypeFromResourceMetadata(
+  const attachmentMimeType = _getAttachmentMIMETypeFromResourceMetadata(
     contentType,
     url,
   ) as AttachmentMIMEType | null; // TODO: re-implement in core2

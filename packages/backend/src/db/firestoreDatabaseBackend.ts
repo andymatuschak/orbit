@@ -17,7 +17,7 @@ import {
   DatabaseQueryPredicate,
 } from "@withorbit/store-shared";
 import firebase from "firebase-admin";
-import { getDatabase } from "../firebase";
+import { getDatabase } from "./firestore";
 import { WithFirebaseFields } from "./withFirebaseFields";
 import { compareOrderedIDs, OrderedID, OrderedIDGenerator } from "./orderedID";
 import { UserMetadata } from "./userMetadata";

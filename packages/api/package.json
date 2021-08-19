@@ -13,7 +13,7 @@
   "dependencies": {
     "@withorbit/core": "0.0.1",
     "@withorbit/core2": "0.0.1",
-    "ajv": "^8.5.0"
+    "ajv": "^8.6.2"
   },
   "devDependencies": {
     "@types/jest": "^26.0.24",

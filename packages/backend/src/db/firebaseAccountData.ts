@@ -1,8 +1,8 @@
 import firebase from "firebase-admin";
 import admin from "firebase-admin";
+import { getDatabase } from "./firestore";
 
 import { UserMetadata } from "./userMetadata";
-import { getDatabase } from "../firebase";
 import { WithFirebaseFields } from "./withFirebaseFields";
 
 function getUserMetadataReference(

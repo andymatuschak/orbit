@@ -10,9 +10,6 @@
   "include": ["src/**/*"],
   "references": [
     {
-      "path": "../core"
-    },
-    {
       "path": "../core2"
     },
     {
