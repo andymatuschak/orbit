@@ -22,7 +22,6 @@ import { listTaskData, storeTaskData } from "./api/taskData";
 import { listTaskStates } from "./api/taskStates";
 import corsHandler from "./api/util/corsHandler";
 import createTypedRouter from "./api/util/typedRouter";
-import { migrateUser } from "./api/internal/migrateUser";
 
 const routeValidator = new OrbitAPIValidator({
   allowUnsupportedRoute: true,
@@ -84,7 +83,6 @@ export function createAPIApp(): express.Application {
   app.post("/internal/recordEmbeddedActions", recordEmbeddedActions);
 
   app.post("/internal/auth/personalAccessTokens", personalAccessTokens);
-  app.get("/internal/migrateUser", migrateUser);
 
   // These older auth APIs need some rethinking...
   app.get("/internal/auth/createLoginToken", createLoginToken);
