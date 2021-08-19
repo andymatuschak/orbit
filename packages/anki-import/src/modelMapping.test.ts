@@ -1,13 +1,6 @@
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
-import {
-  AnkiCollectionDBHandle,
-  Collection,
-  Model,
-  ModelType,
-  readCollection,
-} from "./ankiPkg";
-import { getModelMapping, ModelMappingType } from "./modelMapping";
-import * as SpacedEverything from "./spacedEverything";
+import { AnkiCollectionDBHandle, Collection, readCollection } from "./ankiPkg";
+import { getModelMapping } from "./modelMapping";
 
 let collection: Collection;
 beforeAll(async () => {
@@ -67,4 +60,3 @@ test("missing model doesn't map", () => {
 test("fancy IR3 model doesn't map", () => {
   expect(getModelMapping(collection, getModelByName("IR3"))).toBe("unknown");
 });
-

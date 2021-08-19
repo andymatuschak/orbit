@@ -42,7 +42,7 @@ export default function parseAnkiField(ankiField: string): {
   markdown = markdown.replace(/{{c\d+::([^}]+)}}/g, "{$1}");
 
   // Strip explicit ending newline
-  markdown = markdown.replace(/\n\n\\/mg, "");
+  markdown = markdown.replace(/\n\n\\/gm, "");
 
   return {
     contentsMarkdown: markdown.trimRight(),

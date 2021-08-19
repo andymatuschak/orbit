@@ -11,9 +11,7 @@ export interface ClozeModelMapping {
   contentsFieldIndex: number;
 }
 
-export type ModelMapping =
-  | BasicModelMapping
-  | ClozeModelMapping
+export type ModelMapping = BasicModelMapping | ClozeModelMapping;
 export enum ModelMappingType {
   Basic = "basic",
   Cloze = "cloze",

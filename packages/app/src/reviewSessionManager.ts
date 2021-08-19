@@ -1,4 +1,9 @@
-import { EventForEntity, eventReducer, ReviewItem, Task } from "@withorbit/core2";
+import {
+  EventForEntity,
+  eventReducer,
+  ReviewItem,
+  Task,
+} from "@withorbit/core2";
 import { ReviewAreaItem } from "@withorbit/ui";
 import { useMemo, useState } from "react";
 
