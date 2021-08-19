@@ -1,5 +1,5 @@
 import { differenceInDays } from "date-fns";
-import { UserMetadata } from "../backend/firebaseSupport";
+import { UserMetadata } from "../db/userMetadata";
 
 export function shouldEvaluateUserForNotification(
   userMetadata: UserMetadata,

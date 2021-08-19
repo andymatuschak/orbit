@@ -1,12 +1,12 @@
 import { Event } from "@withorbit/core2";
-import { getDatabase } from "../../../db";
+import { sharedServerDatabase } from "../../../db";
 import { sharedLoggingService } from "../../../logging";
 
 export async function putAndLogEvents(
   userID: string,
   events: Event[],
 ): Promise<void> {
-  const db = getDatabase(userID);
+  const db = sharedServerDatabase().getUserDatabase(userID);
   const eventRecords = await db.putEvents(events);
 
   for (const { event, entity } of eventRecords) {

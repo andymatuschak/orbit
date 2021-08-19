@@ -1,11 +1,7 @@
 import { EntityType, Task } from "@withorbit/core2";
 import dateFns from "date-fns";
-import * as backend from "../backend";
-import type {
-  SessionNotificationState,
-  UserMetadata,
-} from "../backend/firebaseSupport";
-import { getDatabase } from "../db";
+import { sharedServerDatabase } from "../db";
+import { SessionNotificationState, UserMetadata } from "../db/userMetadata";
 import getDefaultEmailService from "../email";
 import { EmailSpec } from "../email/types";
 import { sharedLoggingService } from "../logging";
@@ -22,17 +18,19 @@ async function _fetchUpcomingTasks(
   nowTimestampMillis: number,
   userID: string,
 ): Promise<Task[]> {
-  return await getDatabase(userID).listEntities({
-    entityType: EntityType.Task,
-    predicate: [
-      "dueTimestampMillis",
-      "<=",
-      dateFns
-        .addDays(nowTimestampMillis, reviewSessionBatchingLookaheadDays)
-        .valueOf(),
-    ],
-    limit: 100,
-  });
+  return await sharedServerDatabase()
+    .getUserDatabase(userID)
+    .listEntities({
+      entityType: EntityType.Task,
+      predicate: [
+        "dueTimestampMillis",
+        "<=",
+        dateFns
+          .addDays(nowTimestampMillis, reviewSessionBatchingLookaheadDays)
+          .valueOf(),
+      ],
+      limit: 100,
+    });
 }
 
 export function _updateSessionNotificationStateForNewNotification(
@@ -60,7 +58,8 @@ export async function _getUserNotificationAction(
   userID: string,
   userMetadata: UserMetadata,
   fetchUpcomingTasks = () => _fetchUpcomingTasks(nowTimestampMillis, userID),
-  createEmailAccessCode = () => backend.auth.createOneTimeAccessCode(userID),
+  createEmailAccessCode = () =>
+    sharedServerDatabase().auth.createOneTimeAccessCode(userID),
 ): Promise<UserNotificationAction | null> {
   const { sessionNotificationState = null } = userMetadata;
 
@@ -119,7 +118,7 @@ export async function processUserNotification(
   if (action) {
     if (!isDryRun) {
       await getDefaultEmailService().sendEmail(email, action.emailSpec);
-      await backend.users.updateUserMetadata(userID, {
+      await sharedServerDatabase().accounts.updateUserMetadata(userID, {
         sessionNotificationState: action.newNotificationState,
       });
       await sharedLoggingService.logSessionNotification({

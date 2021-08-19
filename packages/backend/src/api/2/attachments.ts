@@ -4,7 +4,7 @@ import {
   EventType,
   generateUniqueID,
 } from "@withorbit/core2";
-import * as attachments2 from "../../backend/2/attachments";
+import * as attachments2 from "../../attachments";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "../util/typedRouter";
 import { putAndLogEvents } from "./util/putAndLogEvents";

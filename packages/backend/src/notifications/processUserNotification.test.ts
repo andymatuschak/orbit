@@ -1,10 +1,10 @@
 import * as dateFns from "date-fns";
-import type { UserMetadata } from "../backend/firebaseSupport";
 import { generateDueTasks } from "./__fixtures__/generateDueTasks";
 import {
   _getUserNotificationAction,
   _updateSessionNotificationStateForNewNotification,
 } from "./processUserNotification";
+import { UserMetadata } from "../db/userMetadata";
 
 describe("_updateSessionNotificationStateForNewNotification", () => {
   test("reminder", () => {

@@ -1,5 +1,5 @@
 import functions from "firebase-functions";
-import { updateUserMetadata } from "../backend/users";
+import { updateUserMetadata } from "../db/firebaseAccountData";
 import getDefaultEmailService from "../email";
 import { EmailSpec } from "../email/types";
 import { sharedLoggingService } from "../logging";

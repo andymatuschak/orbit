@@ -1,5 +1,5 @@
 import { Bucket } from "@google-cloud/storage";
-import { getApp } from "../backend/firebaseSupport/firebase";
+import { getApp } from "../firebase";
 import {
   FileStorageResolution,
   FileStorageService,

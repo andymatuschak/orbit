@@ -1,5 +1,5 @@
 import express from "express";
-import * as backend from "../../../backend";
+import { sharedServerDatabase } from "../../../db";
 import { authenticateRequest } from "../../util/authenticateRequest";
 
 export async function consumeAccessCode(
@@ -7,7 +7,9 @@ export async function consumeAccessCode(
   response: express.Response,
 ) {
   await authenticateRequest(request, response, async (userID) => {
-    const loginToken = await backend.auth.createCustomLoginToken(userID);
+    const loginToken = await sharedServerDatabase().auth.createCustomLoginToken(
+      userID,
+    );
     response.send(loginToken);
   });
 }

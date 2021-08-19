@@ -1,5 +1,5 @@
 import express from "express";
-import * as backend from "../../../backend";
+import { sharedServerDatabase } from "../../../db";
 import { authenticateRequest } from "../../util/authenticateRequest";
 
 interface CreatePersonalAccessTokenResponse {
@@ -11,7 +11,9 @@ export async function personalAccessTokens(
   response: express.Response,
 ) {
   await authenticateRequest(request, response, async (userID) => {
-    const token = await backend.auth.createPersonalAccessToken(userID);
+    const token = await sharedServerDatabase().auth.createPersonalAccessToken(
+      userID,
+    );
 
     const responseJSON: CreatePersonalAccessTokenResponse = {
       token,

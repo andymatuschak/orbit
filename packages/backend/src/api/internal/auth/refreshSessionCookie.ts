@@ -1,5 +1,5 @@
 import express from "express";
-import * as backend from "../../../backend";
+import { sharedServerDatabase } from "../../../db";
 import { getSessionCookieOptions, sessionCookieName } from "./sessionCookie";
 
 export async function refreshSessionCookie(
@@ -7,11 +7,12 @@ export async function refreshSessionCookie(
   response: express.Response,
 ) {
   const idToken = request.query["idToken"];
+  const db = sharedServerDatabase();
   try {
     if (idToken && typeof idToken === "string") {
-      await backend.auth.validateIDToken(idToken);
+      await db.auth.validateIDToken(idToken);
       const { sessionCookie, sessionCookieExpirationDate } =
-        await backend.auth.createSessionCookie(idToken);
+        await db.auth.createSessionCookie(idToken);
       response
         .cookie(
           sessionCookieName,

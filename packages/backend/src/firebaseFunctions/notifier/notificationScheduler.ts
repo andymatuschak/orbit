@@ -1,7 +1,8 @@
 import { PubSub } from "@google-cloud/pubsub";
 import admin from "firebase-admin";
 import functions from "firebase-functions";
-import * as backend from "../../backend";
+import { sharedServerDatabase } from "../../db";
+import { UserEnumerationRecord } from "../../db/firebaseAccountData";
 import { shouldEvaluateUserForNotification } from "../../notifications/shouldEvaluateUserForNotification";
 import {
   ProcessUserNotificationData,
@@ -24,7 +25,7 @@ function jsonEncodeServerTimestamps(key: string, value: unknown): unknown {
 }
 
 async function scheduleUserNotificationIfNeeded(
-  record: backend.users.UserEnumerationRecord,
+  record: UserEnumerationRecord,
   evaluationTimestampMillis: number,
 ) {
   console.log(`Evaluating ${record.userID}`);
@@ -49,7 +50,7 @@ export const notificationScheduler = functions.pubsub
   .timeZone("America/Los_Angeles")
   .onRun(async () => {
     const evaluationTimestampMillis = Date.now();
-    await backend.users.enumerateUsers((record) =>
+    await sharedServerDatabase().accounts.enumerateUsers((record) =>
       scheduleUserNotificationIfNeeded(record, evaluationTimestampMillis),
     );
   });

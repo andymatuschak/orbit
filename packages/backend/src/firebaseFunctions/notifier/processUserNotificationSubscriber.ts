@@ -1,6 +1,6 @@
 import functions from "firebase-functions";
-import { UserMetadata } from "../../backend/firebaseSupport";
-import * as backend from "../../backend";
+import { sharedServerDatabase } from "../../db";
+import { UserMetadata } from "../../db/userMetadata";
 import * as notifications from "../../notifications";
 
 export const processUserNotificationTopic = "processUserNotification";
@@ -20,12 +20,13 @@ export type ProcessUserNotificationData =
 async function fetchUserData(
   userID: string,
 ): Promise<{ userMetadata: UserMetadata; email: string }> {
-  const fetchedUserMetadata = await backend.users.getUserMetadata(userID);
+  const db = sharedServerDatabase();
+  const fetchedUserMetadata = await db.accounts.getUserMetadata(userID);
   if (!fetchedUserMetadata) {
     throw new Error(`Unknown user ID ${userID}`);
   }
 
-  const fetchedEmail = await backend.users.getUserEmail(userID);
+  const fetchedEmail = await db.accounts.getUserEmail(userID);
   if (!fetchedEmail) {
     throw new Error(`No email for user ID ${userID}`);
   }

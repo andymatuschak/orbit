@@ -1,8 +1,18 @@
+import firebase from "firebase-admin";
 import admin from "firebase-admin";
 
-import { getUserMetadataReference, UserMetadata } from "./firebaseSupport";
-import { getDatabase } from "./firebaseSupport/firebase";
-import { WithFirebaseFields } from "./firebaseSupport/withFirebaseFields";
+import { UserMetadata } from "./userMetadata";
+import { getDatabase } from "../firebase";
+import { WithFirebaseFields } from "./withFirebaseFields";
+
+function getUserMetadataReference(
+  database: firebase.firestore.Firestore,
+  userID: string,
+): firebase.firestore.DocumentReference<UserMetadata> {
+  return database.doc(
+    `users/${userID}`,
+  ) as firebase.firestore.DocumentReference<UserMetadata>;
+}
 
 export async function getUserMetadata(
   userID: string,

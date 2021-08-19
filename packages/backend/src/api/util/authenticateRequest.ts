@@ -1,12 +1,12 @@
 import { API as ApiType } from "@withorbit/api";
 import express from "express";
+import { sharedServerDatabase } from "../../db";
 import {
   CachePolicy,
   TypedRequest,
   TypedResponse,
   TypedRouteHandler,
 } from "./typedRouter";
-import * as backend from "../../backend";
 
 export async function authenticateRequest(
   request: express.Request,
@@ -30,12 +30,13 @@ export async function authenticateTypedRequest<
     userID: string,
   ) => Promise<TypedResponse<ApiType.RouteResponseData<API[Path][Method]>>>,
 ): Promise<TypedResponse<ApiType.RouteResponseData<API[Path][Method]>>> {
+  const db = sharedServerDatabase();
   const authorizationHeader = request.header("Authorization");
   if (authorizationHeader) {
     const match = authorizationHeader.match(/ID (.+)/);
     if (match) {
       try {
-        return next(await backend.auth.validateIDToken(match[1]));
+        return next(await db.auth.validateIDToken(match[1]));
       } catch (error) {
         console.error(`Couldn't validate ID token: ${error}`);
         return { status: 401 };
@@ -44,7 +45,7 @@ export async function authenticateTypedRequest<
       const match = authorizationHeader.match(/Token (.+)/);
       if (match) {
         try {
-          return next(await backend.auth.consumeAccessCode(match[1]));
+          return next(await db.auth.consumeAccessCode(match[1]));
         } catch (error) {
           console.error(`Couldn't consume access token: ${error}`);
           return { status: 401 };
@@ -59,7 +60,7 @@ export async function authenticateTypedRequest<
     if (accessCode && typeof accessCode === "string") {
       let userID: string;
       try {
-        userID = await backend.auth.consumeAccessCode(accessCode, Date.now());
+        userID = await db.auth.consumeAccessCode(accessCode, Date.now());
       } catch (error) {
         console.error(`Couldn't consume access code ${accessCode}: ${error}`);
         return { status: 401 };

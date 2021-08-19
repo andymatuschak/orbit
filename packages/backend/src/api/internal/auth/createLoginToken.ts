@@ -1,5 +1,5 @@
 import express from "express";
-import * as backend from "../../../backend";
+import { sharedServerDatabase } from "../../../db";
 import { getSessionCookieOptions, sessionCookieName } from "./sessionCookie";
 
 export async function createLoginToken(
@@ -8,25 +8,24 @@ export async function createLoginToken(
 ) {
   const idToken = request.query["idToken"];
   const sessionCookie = request.cookies[sessionCookieName];
+  const db = sharedServerDatabase();
   try {
     let userID: string | null = null;
     if (idToken && typeof idToken === "string") {
-      userID = await backend.auth.validateIDToken(idToken);
+      userID = await db.auth.validateIDToken(idToken);
       const { sessionCookie, sessionCookieExpirationDate } =
-        await backend.auth.createSessionCookie(idToken);
+        await db.auth.createSessionCookie(idToken);
       response.cookie(
         sessionCookieName,
         sessionCookie,
         getSessionCookieOptions(sessionCookieExpirationDate),
       );
     } else if (sessionCookie) {
-      userID = await backend.auth.validateSessionCookie(sessionCookie);
+      userID = await db.auth.validateSessionCookie(sessionCookie);
     }
 
     if (userID) {
-      const customLoginToken = await backend.auth.createCustomLoginToken(
-        userID,
-      );
+      const customLoginToken = await db.auth.createCustomLoginToken(userID);
       response.send(customLoginToken);
     } else {
       response.status(400).send();

@@ -1,8 +1,8 @@
 import { getAttachmentMimeTypeFromResourceMetadata } from "@withorbit/core";
 import { AttachmentID, AttachmentMIMEType } from "@withorbit/core2";
 import fetch, * as Fetch from "node-fetch";
-import { sharedFileStorageService } from "../../fileStorageService";
-import { FileStorageResolution } from "../../fileStorageService/fileStorageService";
+import { sharedFileStorageService } from "./fileStorageService";
+import { FileStorageResolution } from "./fileStorageService/fileStorageService";
 
 const attachmentSizeLimitBytes = 10 * 1024 * 1024;
 

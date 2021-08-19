@@ -1,5 +1,5 @@
 import * as dateFns from "date-fns";
-import { SessionNotificationState } from "../backend/firebaseSupport";
+import { SessionNotificationState } from "../db/userMetadata";
 import { EmailSpec } from "../email/types";
 import serviceConfig from "../serviceConfig";
 

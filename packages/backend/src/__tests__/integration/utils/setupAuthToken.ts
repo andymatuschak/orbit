@@ -1,5 +1,5 @@
 import OrbitAPIClient, { emulatorAPIConfig } from "@withorbit/api-client";
-import { UserMetadata } from "../../../backend/firebaseSupport";
+import { UserMetadata } from "../../../db/userMetadata";
 import { createTestAdminFirebaseApp } from "../../firebaseTesting";
 
 export async function setupAuthToken(
@@ -16,7 +16,7 @@ export async function setupAuthToken(
       ...userMetadata,
     });
 
-  firestore.collection("accessCodes").doc(name).set({
+  await firestore.collection("accessCodes").doc(name).set({
     type: "personalAccessToken",
     userID: "WvLvv9uDtFha1jVTyxObVl00gPFN",
   });

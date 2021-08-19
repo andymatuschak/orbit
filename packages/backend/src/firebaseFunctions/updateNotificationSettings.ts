@@ -1,10 +1,10 @@
 import * as dateFns from "date-fns";
 import express from "express";
 import functions from "firebase-functions";
-import { UserMetadata } from "../backend/firebaseSupport";
-import * as backend from "../backend";
+import { sharedServerDatabase } from "../db";
 import serviceConfig from "../serviceConfig";
 import { authenticateRequest } from "../api/util/authenticateRequest";
+import { UserMetadata } from "../db/userMetadata";
 
 export type UpdateNotificationSettingsAction = "unsubscribe" | "snooze1Week";
 
@@ -48,7 +48,10 @@ app.use(async (request, response) => {
     const action = getAction(request);
     if (action) {
       const metadataUpdate = actionTable[action](Date.now());
-      await backend.users.updateUserMetadata(userID, metadataUpdate);
+      await sharedServerDatabase().accounts.updateUserMetadata(
+        userID,
+        metadataUpdate,
+      );
     } else {
       console.log("Missing or unknown action", action);
     }

@@ -1,6 +1,6 @@
 import { OrbitAPI } from "@withorbit/api";
 import { Event } from "@withorbit/core2";
-import { getDatabase } from "../../db";
+import { sharedServerDatabase } from "../../db";
 import { authenticatedRequestHandler } from "../util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "../util/typedRouter";
 import { putAndLogEvents } from "./util/putAndLogEvents";
@@ -16,7 +16,7 @@ export const storeEvents: TypedRouteHandler<
 
 export const listEvents: TypedRouteHandler<OrbitAPI.Spec, "/2/events", "GET"> =
   authenticatedRequestHandler(async (request, userID) => {
-    const db = getDatabase(userID);
+    const db = sharedServerDatabase().getUserDatabase(userID);
     const { query } = request;
 
     // In order to inform the client whether there are more events available than the requested limit, we query the backend with a limit of one additional result. If that extra result is returned, we know there are more events.
