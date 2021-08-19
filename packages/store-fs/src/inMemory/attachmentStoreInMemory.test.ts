@@ -3,7 +3,7 @@ import {
   AttachmentMIMEType,
   AttachmentReference,
   EntityType,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { AttachmentStoreInMemory } from "./attachmentStoreInMemory";
 
 let store: AttachmentStoreInMemory;

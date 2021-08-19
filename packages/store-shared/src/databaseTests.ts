@@ -12,7 +12,7 @@ import {
   Task,
   TaskID,
   TaskIngestEvent,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { testTask } from "@withorbit/sample-data";
 import { Database, EventReducer } from "./database";
 

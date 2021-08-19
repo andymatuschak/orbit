@@ -3,7 +3,7 @@ import {
   TaskContentType,
   TaskSpec,
   TaskSpecType,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 
 export const simpleOrbitQATaskSpec: TaskSpec = {
   type: TaskSpecType.Memory,

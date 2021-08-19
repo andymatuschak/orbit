@@ -2,7 +2,7 @@ import {
   AttachmentID,
   AttachmentMIMEType,
   generateUniqueID,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { resetLocalEmulators } from "../emulators";
 import { setupTestOrbitAPIClient } from "./utils/setupAuthToken";
 

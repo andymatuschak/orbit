@@ -1,4 +1,4 @@
-import { ColorPaletteName } from "@withorbit/core2";
+import { ColorPaletteName } from "@withorbit/core";
 import {
   EmbeddedHostEventType,
   EmbeddedHostMetadata,

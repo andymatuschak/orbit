@@ -1,4 +1,4 @@
-import { AttachmentID, TaskRepetitionOutcome } from "@withorbit/core2";
+import { AttachmentID, TaskRepetitionOutcome } from "@withorbit/core";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem";

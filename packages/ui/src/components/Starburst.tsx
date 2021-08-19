@@ -1,4 +1,4 @@
-import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core2";
+import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core";
 import React, { useRef } from "react";
 import { Animated } from "react-native";
 import Svg, { ClipPath, G, Path } from "react-native-svg";

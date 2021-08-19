@@ -7,7 +7,7 @@ import { generateReviewItem } from "./__fixtures__/generateReviewItem";
 import DebugGrid from "./DebugGrid";
 import { useTransitioningColorValue } from "./hooks/useTransitioningValue";
 import ReviewArea from "./ReviewArea";
-import { AttachmentID } from "@withorbit/core2";
+import { AttachmentID } from "@withorbit/core";
 
 // noinspection JSUnusedGlobalSymbols
 export default {

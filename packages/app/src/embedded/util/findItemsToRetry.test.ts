@@ -1,4 +1,4 @@
-import { ReviewItem, Task } from "@withorbit/core2";
+import { ReviewItem, Task } from "@withorbit/core";
 import { EmbeddedScreenRecord } from "@withorbit/embedded-support";
 import { findItemsToRetry } from "./findItemsToRetry";
 

@@ -1,4 +1,4 @@
-import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core2";
+import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core";
 import React, { useMemo } from "react";
 import { Animated, View } from "react-native";
 import { generateIntervalSequence } from "../util/generateIntervalSequence";

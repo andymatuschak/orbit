@@ -1,4 +1,4 @@
-import { Event } from "@withorbit/core2";
+import { Event } from "@withorbit/core";
 import { sharedServerDatabase } from "../../db";
 import { sharedLoggingService } from "../../logging";
 

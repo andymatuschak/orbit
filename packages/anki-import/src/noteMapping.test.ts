@@ -1,4 +1,4 @@
-import { ClozeTaskContent, TaskContentType } from "@withorbit/core2";
+import { ClozeTaskContent, TaskContentType } from "@withorbit/core";
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
 import {
   AnkiCollectionDBHandle,

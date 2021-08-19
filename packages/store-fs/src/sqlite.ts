@@ -4,7 +4,7 @@ import {
   EventForEntity,
   EventID,
   IDOfEntity,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import {
   DatabaseBackend,
   DatabaseBackendEntityRecord,

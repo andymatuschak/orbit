@@ -12,7 +12,7 @@
     "build": "tsc -b"
   },
   "dependencies": {
-    "@withorbit/core2": "0.0.1",
+    "@withorbit/core": "0.0.1",
     "base64-js": "^1.5.1"
   },
   "devDependencies": {

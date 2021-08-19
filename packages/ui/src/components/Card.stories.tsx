@@ -16,7 +16,7 @@ import {
   generateUniqueID,
   QATaskContent,
   Task,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 
 // noinspection JSUnusedGlobalSymbols
 export default {

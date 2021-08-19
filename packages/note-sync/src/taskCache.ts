@@ -9,7 +9,7 @@ import {
   TaskProvenance,
   TaskUpdateDeletedEvent,
   TaskUpdateProvenanceEvent,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { Database } from "@withorbit/store-shared";
 import * as IT from "incremental-thinking";
 import * as spacedEverything from "spaced-everything";

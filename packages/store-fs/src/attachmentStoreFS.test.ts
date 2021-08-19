@@ -7,7 +7,7 @@ import {
   AttachmentMIMEType,
   AttachmentReference,
   EntityType,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { AttachmentStoreFS } from "./attachmentStoreFS";
 
 let store: AttachmentStoreFS;

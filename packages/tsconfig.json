@@ -5,7 +5,7 @@
     { "path": "./api-client" },
     { "path": "./app" },
     { "path": "./backend" },
-    { "path": "./core2" },
+    { "path": "./core" },
     { "path": "./embedded-support" },
     { "path": "./ui" },
     { "path": "./note-sync" },

@@ -3,7 +3,7 @@ import {
   AttachmentID,
   AttachmentMIMEType,
   getFileExtensionForAttachmentMIMEType,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 
 export function getPathForAttachment(
   basePath: string,

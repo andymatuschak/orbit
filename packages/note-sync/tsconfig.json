@@ -8,7 +8,7 @@
   "include": ["./src/**/*"],
   "references": [
     {
-      "path": "../core2"
+      "path": "../core"
     },
     {
       "path": "../sample-data"

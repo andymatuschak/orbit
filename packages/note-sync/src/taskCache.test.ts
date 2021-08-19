@@ -4,7 +4,7 @@ import {
   TaskIngestEvent,
   TaskProvenance,
   TaskUpdateDeletedEvent,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import * as IT from "incremental-thinking";
 import * as spacedEverything from "spaced-everything";
 import {

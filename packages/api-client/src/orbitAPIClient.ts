@@ -1,5 +1,5 @@
 import { API, OrbitAPI, OrbitAPIValidator } from "@withorbit/api";
-import { AttachmentID, AttachmentMIMEType, TaskID } from "@withorbit/core2";
+import { AttachmentID, AttachmentMIMEType, TaskID } from "@withorbit/core";
 import { APIConfig, defaultAPIConfig } from "./apiConfig";
 import { AuthenticationConfig, RequestManager } from "./requestManager";
 import { Blob } from "./util/fetch";

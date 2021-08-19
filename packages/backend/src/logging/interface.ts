@@ -1,4 +1,4 @@
-import { Entity, Event } from "@withorbit/core2";
+import { Entity, Event } from "@withorbit/core";
 import { EmailSpec } from "../email/types";
 
 export interface LoggingService {

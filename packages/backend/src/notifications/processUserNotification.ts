@@ -1,4 +1,4 @@
-import { EntityType, Task } from "@withorbit/core2";
+import { EntityType, Task } from "@withorbit/core";
 import dateFns from "date-fns";
 import { sharedServerDatabase } from "../db";
 import { SessionNotificationState, UserMetadata } from "../db/userMetadata";

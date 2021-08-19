@@ -3,7 +3,7 @@ import {
   AttachmentIngestEvent,
   EventType,
   generateUniqueID,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { authenticatedRequestHandler } from "./util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";
 import { putAndLogEvents } from "./util/putAndLogEvents";

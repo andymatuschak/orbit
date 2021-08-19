@@ -2,7 +2,7 @@ import {
   ColorPaletteName,
   generateUniqueID,
   mainTaskComponentID,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { testQASpec } from "@withorbit/sample-data";
 import { ReviewAreaItem } from "../../reviewAreaItem";
 import * as styles from "../../styles";

@@ -27,8 +27,8 @@ export default {
           replacement: path.resolve(__dirname, "../api/dist"),
         },
         {
-          find: "@withorbit/core2",
-          replacement: path.resolve(__dirname, "../core2/dist"),
+          find: "@withorbit/core",
+          replacement: path.resolve(__dirname, "../core/dist"),
         },
         {
           find: "@withorbit/store-shared",

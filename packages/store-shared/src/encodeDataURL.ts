@@ -1,4 +1,4 @@
-import { AttachmentMIMEType } from "@withorbit/core2";
+import { AttachmentMIMEType } from "@withorbit/core";
 import base64 from "base64-js";
 
 export function encodeDataURL(data: ArrayBuffer, type: AttachmentMIMEType) {

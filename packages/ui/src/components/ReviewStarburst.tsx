@@ -3,7 +3,7 @@ import {
   SpacedRepetitionSchedulerConfiguration,
   TaskComponentState,
   TaskRepetitionOutcome,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import React, { useMemo } from "react";
 import { Animated, Easing, View } from "react-native";
 import { colors, layout } from "../styles";

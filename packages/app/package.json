@@ -26,7 +26,7 @@
     "@types/katex": "^0.11.0",
     "@types/subleveldown": "^4.1.0",
     "@withorbit/api-client": "0.0.1",
-    "@withorbit/core2": "0.0.1",
+    "@withorbit/core": "0.0.1",
     "@withorbit/embedded-support": "0.0.1",
     "@withorbit/sample-data": "0.0.1",
     "@withorbit/store-fs": "0.0.1",

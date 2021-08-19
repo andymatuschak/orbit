@@ -13,7 +13,7 @@ import {
   TaskID,
   TaskSpec,
   TaskSpecType,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { EmbeddedScreenRecord } from "@withorbit/embedded-support";
 import { OrbitPromptElement } from "./OrbitPromptElement";
 import { v5 as uuidV5, parse as uuidParse } from "uuid";

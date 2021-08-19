@@ -7,7 +7,7 @@ import {
   AttachmentID,
   AttachmentMIMEType,
   getFileExtensionForAttachmentMIMEType,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { AttachmentStore } from "@withorbit/store-shared";
 import path from "path";
 import { FileSystem } from "react-native-unimodules";

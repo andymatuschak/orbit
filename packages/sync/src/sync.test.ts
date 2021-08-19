@@ -1,4 +1,4 @@
-import { AttachmentIngestEvent, Event } from "@withorbit/core2";
+import { AttachmentIngestEvent, Event } from "@withorbit/core";
 import {
   createTestAttachmentIngestEvents,
   createTestTaskIngestEvents,

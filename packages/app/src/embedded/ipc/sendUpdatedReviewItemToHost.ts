@@ -1,4 +1,4 @@
-import { Task } from "@withorbit/core2";
+import { Task } from "@withorbit/core";
 import {
   EmbeddedScreenEventType,
   EmbeddedScreenTaskUpdateEvent,

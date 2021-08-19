@@ -1,4 +1,4 @@
-import { ColorPaletteName } from "@withorbit/core2";
+import { ColorPaletteName } from "@withorbit/core";
 import { EmbeddedHostMetadata } from "@withorbit/embedded-support";
 
 let hasWarnedAboutTitle = false;

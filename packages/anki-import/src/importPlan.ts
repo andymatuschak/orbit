@@ -14,7 +14,7 @@ import {
   TaskRepetitionOutcome,
   TaskRescheduleEvent,
   TaskSpec,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import fs from "fs";
 import * as Anki from "./ankiPkg";
 import { Card, CardQueue, Collection } from "./ankiPkg";

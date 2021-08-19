@@ -1,4 +1,4 @@
-import { EntityType } from "@withorbit/core2";
+import { EntityType } from "@withorbit/core";
 import { Database, OrbitStore } from "@withorbit/store-shared";
 import fs from "fs";
 import path from "path";

@@ -1,4 +1,4 @@
-import { ColorPaletteName } from "@withorbit/core2";
+import { ColorPaletteName } from "@withorbit/core";
 
 export const ink = "rgba(0,0,0,0.8)";
 export const white = "rgba(255,255,255,1)";

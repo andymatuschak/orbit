@@ -1,5 +1,5 @@
 import { OrbitAPI } from "@withorbit/api";
-import { Event } from "@withorbit/core2";
+import { Event } from "@withorbit/core";
 import { sharedServerDatabase } from "../db";
 import { authenticatedRequestHandler } from "./util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";

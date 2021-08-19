@@ -31,7 +31,7 @@ import {
   renderInlineMath,
 } from "./PromptFieldRenderer/markdownLatexSupport";
 import { SawtoothPattern } from "./SawtoothPattern";
-import { AttachmentID, TaskContentField } from "@withorbit/core2";
+import { AttachmentID, TaskContentField } from "@withorbit/core";
 
 const sizeVariantCount = 5;
 const defaultSmallestSizeVariant = 4;

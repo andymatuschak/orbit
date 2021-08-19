@@ -3,7 +3,7 @@ import {
   defaultSpacedRepetitionSchedulerConfiguration,
   SpacedRepetitionSchedulerConfiguration,
   TaskComponentState,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import React from "react";
 import { View } from "react-native";
 import { generateIntervalSequence } from "../util/generateIntervalSequence";

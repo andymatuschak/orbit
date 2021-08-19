@@ -1,5 +1,5 @@
 import OrbitAPIClient from "@withorbit/api-client";
-import { ReviewItem, Task, TaskID } from "@withorbit/core2";
+import { ReviewItem, Task, TaskID } from "@withorbit/core";
 import { useEffect, useState } from "react";
 import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost";
 import { EmbeddedAuthenticationState } from "./useEmbeddedAuthenticationState";

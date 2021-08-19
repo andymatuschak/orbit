@@ -1,4 +1,4 @@
-import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core2";
+import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core";
 
 type ReviewIntervalMilliseconds = number;
 

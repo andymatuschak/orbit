@@ -8,7 +8,7 @@
   "types": "./dist/index.d.ts",
   "exports": "./dist/index.js",
   "dependencies": {
-    "@withorbit/core2": "0.0.1"
+    "@withorbit/core": "0.0.1"
   },
   "devDependencies": {
     "typescript": "^4.2.4"

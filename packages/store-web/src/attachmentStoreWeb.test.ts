@@ -1,4 +1,4 @@
-import { AttachmentID, AttachmentMIMEType } from "@withorbit/core2";
+import { AttachmentID, AttachmentMIMEType } from "@withorbit/core";
 // @ts-ignore Looks like there is no @types for this library
 import FDBFactory from "fake-indexeddb/lib/FDBFactory";
 import { AttachmentStoreWeb } from "./attachmentStoreWeb";

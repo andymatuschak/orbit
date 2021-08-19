@@ -1,4 +1,4 @@
-import { TaskContentType, TaskRepetitionOutcome } from "@withorbit/core2";
+import { TaskContentType, TaskRepetitionOutcome } from "@withorbit/core";
 import React, { useRef } from "react";
 import { View } from "react-native";
 import { colors, layout } from "../styles";

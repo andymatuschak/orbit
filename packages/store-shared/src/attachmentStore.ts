@@ -1,4 +1,4 @@
-import { AttachmentID, AttachmentMIMEType } from "@withorbit/core2";
+import { AttachmentID, AttachmentMIMEType } from "@withorbit/core";
 
 export interface AttachmentStore {
   storeAttachment(

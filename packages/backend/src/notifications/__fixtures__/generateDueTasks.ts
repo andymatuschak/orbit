@@ -1,4 +1,4 @@
-import { generateUniqueID, Task } from "@withorbit/core2";
+import { generateUniqueID, Task } from "@withorbit/core";
 import { createTestTask } from "@withorbit/sample-data";
 import * as dateFns from "date-fns";
 

@@ -3,7 +3,7 @@ import {
   AttachmentMIMEType,
   getAttachmentMIMETypeForFilename,
   getFileExtensionForAttachmentMIMEType,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import fetch, * as Fetch from "node-fetch";
 import URL from "url";
 import { sharedFileStorageService } from "./fileStorageService";
@@ -47,7 +47,7 @@ export function _validateAttachmentResponse(
   const attachmentMimeType = _getAttachmentMIMETypeFromResourceMetadata(
     contentType,
     url,
-  ) as AttachmentMIMEType | null; // TODO: re-implement in core2
+  ) as AttachmentMIMEType | null; // TODO: re-implement in core
   return (
     attachmentMimeType ??
     new Error(

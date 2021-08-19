@@ -1,5 +1,5 @@
 import * as BigQuery from "@google-cloud/bigquery";
-import { EntityID, EventID, EventType } from "@withorbit/core2";
+import { EntityID, EventID, EventType } from "@withorbit/core";
 import crypto from "crypto";
 import path from "path";
 import serviceConfig from "../serviceConfig";

@@ -3,7 +3,7 @@ import {
   AttachmentMIMEType,
   Event,
   EventID,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 
 export interface SyncAdapter {
   // This ID is used to track state associated with the remote destination associated with this interface (e.g. the last event ID sent/received to/from this destination).

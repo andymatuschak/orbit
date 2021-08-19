@@ -1,4 +1,4 @@
-import { EntityID, EntityType, EventID } from "@withorbit/core2";
+import { EntityID, EntityType, EventID } from "@withorbit/core";
 
 export enum DexieTable {
   Events = "events",

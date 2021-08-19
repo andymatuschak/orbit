@@ -1,4 +1,4 @@
-import { AttachmentMIMEType } from "@withorbit/core2";
+import { AttachmentMIMEType } from "@withorbit/core";
 import { _getAttachmentMIMETypeFromResourceMetadata } from "./attachments";
 
 describe("_getAttachmentMIMETypeFromResourceMetadata", () => {

@@ -5,7 +5,7 @@ import {
   QATaskContent,
   TaskContentType,
   TaskProvenance,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import React from "react";
 import {
   Animated,

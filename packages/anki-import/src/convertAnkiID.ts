@@ -2,7 +2,7 @@ import {
   encodeUUIDBytesToWebSafeBase64ID,
   EntityID,
   EventID,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { parse as uuidParse, v5 as uuidV5 } from "uuid";
 
 let _orbitAnkiImportNamespaceUUID: ArrayLike<number> | null = null;

@@ -3,7 +3,7 @@ import {
   Event,
   EventID,
   EventType,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { OrbitStore } from "@withorbit/store-shared";
 import { OrbitStoreSyncAdapter } from "./orbitStoreSyncAdapter";
 import { SyncAdapter } from "./syncAdapter";

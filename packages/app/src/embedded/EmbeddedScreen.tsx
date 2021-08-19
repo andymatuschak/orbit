@@ -6,7 +6,7 @@ import {
   Task,
   TaskID,
   TaskRepetitionOutcome,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { EmbeddedHostState } from "@withorbit/embedded-support";
 import {
   FadeView,

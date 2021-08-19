@@ -1,4 +1,4 @@
-import { AttachmentID, AttachmentMIMEType } from "@withorbit/core2";
+import { AttachmentID, AttachmentMIMEType } from "@withorbit/core";
 import { AttachmentStore } from "@withorbit/store-shared";
 import fs from "fs";
 import path from "path";

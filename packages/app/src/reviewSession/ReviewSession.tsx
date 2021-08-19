@@ -8,7 +8,7 @@ import {
   Task,
   TaskRepetitionEvent,
   TaskRepetitionOutcome,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import {
   ReviewArea,
   ReviewAreaItem,

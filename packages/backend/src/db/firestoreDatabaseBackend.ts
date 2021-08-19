@@ -8,7 +8,7 @@ import {
   EventID,
   IDOfEntity,
   Task,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import {
   DatabaseBackend,
   DatabaseBackendEntityRecord,

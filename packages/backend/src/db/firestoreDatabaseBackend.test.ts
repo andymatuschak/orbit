@@ -1,4 +1,4 @@
-import { eventReducer, TaskIngestEvent } from "@withorbit/core2";
+import { eventReducer, TaskIngestEvent } from "@withorbit/core";
 import { createTestTaskIngestEvents } from "@withorbit/sample-data";
 import { Database, runDatabaseTests } from "@withorbit/store-shared";
 import firebase from "firebase-admin";

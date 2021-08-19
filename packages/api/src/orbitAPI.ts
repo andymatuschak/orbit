@@ -6,7 +6,7 @@ import {
   Task,
   TaskID,
   AttachmentID,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { BlobLike } from "./genericHTTPAPI";
 import { RequiredSpec } from "./util/requiredSpec";
 

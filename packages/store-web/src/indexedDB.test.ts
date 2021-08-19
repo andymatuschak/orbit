@@ -1,4 +1,4 @@
-import { Entity, EventID, EventType, Task, TaskID } from "@withorbit/core2";
+import { Entity, EventID, EventType, Task, TaskID } from "@withorbit/core";
 import { createTestTask } from "@withorbit/sample-data";
 import {
   DatabaseBackend,

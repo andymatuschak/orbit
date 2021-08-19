@@ -11,7 +11,7 @@
     "sync": "yarn build; node --experimental-specifier-resolution=node dist/bin/run.js"
   },
   "dependencies": {
-    "@withorbit/core2": "0.0.1",
+    "@withorbit/core": "0.0.1",
     "@withorbit/sample-data": "0.0.1",
     "abstract-leveldown": "^6.3.0",
     "incremental-thinking": "0.0.1",

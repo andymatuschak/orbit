@@ -4,7 +4,7 @@ import {
   AttachmentMIMEType,
   Event,
   EventID,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { SyncAdapter } from "./syncAdapter";
 
 export class OrbitStoreSyncAdapter implements SyncAdapter {

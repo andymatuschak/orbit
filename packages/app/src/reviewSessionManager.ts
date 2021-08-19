@@ -3,7 +3,7 @@ import {
   eventReducer,
   ReviewItem,
   Task,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { ReviewAreaItem } from "@withorbit/ui";
 import { useMemo, useState } from "react";
 

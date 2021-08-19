@@ -9,7 +9,7 @@ import {
   TaskContentType,
   TaskProvenance,
   TaskRepetitionOutcome,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { EmbeddedHostMetadata } from "@withorbit/embedded-support";
 
 export interface EmbeddedActionsRecord {

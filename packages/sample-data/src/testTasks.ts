@@ -9,7 +9,7 @@ import {
   Task,
   TaskID,
   TaskIngestEvent,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { testClozeSpec } from "./testClozeSpec";
 
 export const testTask: Task = {

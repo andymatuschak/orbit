@@ -7,7 +7,7 @@ import {
   getReviewQueueFuzzyDueTimestampThreshold,
   ReviewItem,
   Task,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { OrbitStore } from "@withorbit/store-shared";
 import { APISyncAdapter, syncOrbitStore } from "@withorbit/sync";
 import { createOrbitStore } from "./orbitStoreFactory";

@@ -9,7 +9,7 @@
   "exports": "./dist/index.js",
   "sideEffects": false,
   "dependencies": {
-    "@withorbit/core2": "0.0.1",
+    "@withorbit/core": "0.0.1",
     "@withorbit/store-shared": "0.0.1",
     "dexie": "^3.0.3"
   },

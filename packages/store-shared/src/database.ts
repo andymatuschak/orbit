@@ -5,7 +5,7 @@ import {
   EventID,
   eventReducer as _eventReducer,
   IDOfEntity,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import {
   DatabaseBackend,
   DatabaseBackendEntityRecord,

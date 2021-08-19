@@ -5,7 +5,7 @@ import {
   TaskContentType,
   TaskSpec,
   TaskSpecType,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import * as IT from "incremental-thinking";
 import mdast from "mdast";
 import unist from "unist";

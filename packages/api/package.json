@@ -12,7 +12,7 @@
     "generateSchema": "typescript-json-schema src/orbitAPI.ts ValidatableSpec -o src/orbitAPISchema.json --noExtraProps --required --ignoreErrors --strictNullChecks"
   },
   "dependencies": {
-    "@withorbit/core2": "0.0.1",
+    "@withorbit/core": "0.0.1",
     "ajv": "^8.6.2"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 import { OrbitAPI } from "@withorbit/api";
-import { Task, TaskID } from "@withorbit/core2";
+import { Task, TaskID } from "@withorbit/core";
 import { sharedServerDatabase } from "../db";
 import { authenticateTypedRequest } from "./util/authenticateRequest";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";

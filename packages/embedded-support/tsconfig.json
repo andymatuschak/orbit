@@ -7,7 +7,7 @@
   "include": ["./src/**/*.ts"],
   "references": [
     {
-      "path": "../core2"
-    },
+      "path": "../core"
+    }
   ]
 }

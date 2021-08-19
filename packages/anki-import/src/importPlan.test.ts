@@ -4,7 +4,7 @@ import {
   TaskContentType,
   TaskID,
   TaskRescheduleEvent,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import {
   testCard,
   testCollection,

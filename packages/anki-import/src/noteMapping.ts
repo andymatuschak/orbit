@@ -6,7 +6,7 @@ import {
   TaskContentType,
   TaskSpec,
   TaskSpecType,
-} from "@withorbit/core2";
+} from "@withorbit/core";
 import { Note, splitAnkiDBNoteFields } from "./ankiPkg";
 import { AnkiAttachmentReference } from "./ankiPkg/ankiAttachmentReference";
 import parseAnkiField from "./ankiPkg/parseAnkiField";
