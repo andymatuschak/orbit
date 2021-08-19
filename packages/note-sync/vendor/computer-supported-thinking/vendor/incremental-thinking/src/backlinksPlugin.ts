@@ -1,8 +1,8 @@
 import unist from "unist";
 import mdast from "mdast";
 import unified from "unified";
-import heading from "mdast-util-heading-range";
-import unistUtilSelect from "unist-util-select";
+import { headingRange } from "mdast-util-heading-range";
+import * as unistUtilSelect from "unist-util-select";
 import { NoteLinkNode, noteLinkNodeType } from "./noteLinkProcessorPlugin";
 
 export const backlinksNodeType = "backlinksNode";
@@ -89,11 +89,15 @@ Inside backlinks node: ${JSON.stringify(listItem, null, "\t")}`,
   });
 }
 
-function extractBacklinksBlock(node: unist.Node): unist.Node {
-  heading(
+function extractBacklinksBlock(node: mdast.Root | mdast.Content): unist.Node {
+  headingRange(
     node,
     "Backlinks",
     (start, nodes, end, { parent, start: startIndex, end: endIndex }) => {
+      if (!parent) {
+        return nodes;
+      }
+
       const listNode = nodes[0] as mdast.List;
       const defaultResult = parent.children.slice(
         startIndex,

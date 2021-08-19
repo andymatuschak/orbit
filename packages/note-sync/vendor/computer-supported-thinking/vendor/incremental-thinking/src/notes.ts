@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import mdast from "mdast";
-import unistUtilSelect from "unist-util-select";
+import unist from "unist";
+import * as unistUtilSelect from "unist-util-select";
 import { BearIDNode, bearIDNodeType } from "./bearIDPlugin";
 import { processor } from "./index";
 import { JsonMap } from "./util/JSONTypes";
@@ -47,12 +48,14 @@ export function getNoteTitle(noteRoot: mdast.Root): string | null {
   if (noteRoot.children.length > 0) {
     const firstNode = noteRoot.children[0];
     if (firstNode.type === "heading") {
-      return processor.stringify({
-        type: "paragraph",
-        children: firstNode.children,
-      });
+      return processor
+        .stringify({
+          type: "paragraph",
+          children: firstNode.children,
+        } as unist.Node)
+        .trimRight();
     } else {
-      return processor.stringify(firstNode);
+      return processor.stringify(firstNode).trimRight();
     }
   } else {
     return null;

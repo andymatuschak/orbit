@@ -1,7 +1,7 @@
 import unist from "unist";
 import mdast from "mdast";
-import parents, { NodeWithParent } from "unist-util-parents";
-import unistUtilSelect from "unist-util-select";
+import { parents } from "unist-util-parents";
+import * as unistUtilSelect from "unist-util-select";
 import { backlinksNodeType } from "../backlinksPlugin";
 import { JsonMap } from "../util/JSONTypes";
 
@@ -33,8 +33,12 @@ export interface QAPrompt extends JsonMap {
 
 export type Prompt = ClozePrompt | QAPrompt;
 
+type NodeWithParent = unist.Node & {
+  parent?: NodeWithParent;
+};
+
 export function findAllPrompts(tree: unist.Node): Prompt[] {
-  const treeWithParents = parents(tree);
+  const treeWithParents = parents(tree) as NodeWithParent;
   const clozeNodes = unistUtilSelect.selectAll(
     clozeNodeType,
     treeWithParents,
@@ -43,7 +47,7 @@ export function findAllPrompts(tree: unist.Node): Prompt[] {
   const clozePrompts: ClozePrompt[] = [];
   const visitedClozePromptBlocks: Set<mdast.BlockContent> = new Set();
   for (const node of clozeNodes) {
-    let parent: NodeWithParent | null = node.parent;
+    let parent = node.parent;
     while (parent && !isBlockContent(parent)) {
       parent = parent.parent;
     }
@@ -63,7 +67,7 @@ export function findAllPrompts(tree: unist.Node): Prompt[] {
 
   const qaPrompts = unistUtilSelect
     .selectAll(qaPromptNodeType, treeWithParents)
-    .filter((n) => !promptNodeHasUnsupportedParent(n as NodeWithParent))
+    .filter((n) => !promptNodeHasUnsupportedParent(n))
     .map((n) => {
       const qaPromptNode = n as QAPromptNode;
       const qaPrompt: QAPrompt = {
@@ -86,8 +90,8 @@ export function getClozeNodesInClozePrompt(
   ) as ClozePromptNode[];
 }
 
-function promptNodeHasUnsupportedParent(promptNode: NodeWithParent): boolean {
-  let node = promptNode.parent;
+function promptNodeHasUnsupportedParent(promptNode: unist.Node): boolean {
+  let node = (promptNode as NodeWithParent).parent;
   while (node) {
     if (node.type === backlinksNodeType) {
       return true;

@@ -1,33 +1,23 @@
 import mdast from "mdast";
-import remarkStringify from "remark-stringify";
 import unified from "unified";
 import unist from "unist";
-import parents, { NodeWithParent } from "unist-util-parents";
-import unistUtilSelect from "unist-util-select";
+import { parents } from "unist-util-parents";
+import * as unistUtilSelect from "unist-util-select";
 import { QAPromptNode, qaPromptNodeType } from "./index";
 
 // TODO: don't match QA prompts inside code and html blocks
 export default function qaPromptPlugin(this: unified.Processor) {
-  const compilerPrototype = this.Compiler.prototype as remarkStringify.Compiler;
-  compilerPrototype.visitors[qaPromptNodeType] = qaPromptCompiler as (
-    node: unist.Node,
-  ) => string;
-
   return extractQAPromptNodes;
-}
-
-function qaPromptCompiler(
-  this: remarkStringify.Compiler & {
-    all: (node: unist.Node) => string[];
-  },
-  node: QAPromptNode,
-): string {
-  throw new Error("Unimplemented");
 }
 
 const questionPrefix = "Q. ";
 const answerPrefix = "A. ";
 const answerSplitRegexp = new RegExp(`\n${answerPrefix}`, "m");
+
+type NodeWithParent<N extends unist.Node = unist.Node> = unist.Node & {
+  parent?: NodeWithParent<unist.Parent>;
+  node: N;
+};
 
 function extractQAPromptNodes(node: unist.Node): unist.Node {
   const nodeWithParents = parents(node);
@@ -107,7 +97,7 @@ function extractQAPromptNodes(node: unist.Node): unist.Node {
       splitNodeIndex,
     );
     const answerPhrasingNodes = paragraphNode.children.slice(splitNodeIndex);
-    if (preSplitString !== "") {
+    if (preSplitString !== "" && answerPhrasingNodes[0].type === "text") {
       // We've gotta split that node.
       questionPhrasingNodes.push({
         type: "text",
@@ -115,10 +105,12 @@ function extractQAPromptNodes(node: unist.Node): unist.Node {
       });
       answerPhrasingNodes[0].value = postSplitString;
     }
-    (questionPhrasingNodes[0] as mdast.Text).value = (questionPhrasingNodes[0] as mdast.Text).value.slice(
-      questionPrefix.length,
-    );
-    (answerPhrasingNodes[0] as mdast.Text).value = (answerPhrasingNodes[0] as mdast.Text).value.slice(
+    (questionPhrasingNodes[0] as mdast.Text).value = (
+      questionPhrasingNodes[0] as mdast.Text
+    ).value.slice(questionPrefix.length);
+    (answerPhrasingNodes[0] as mdast.Text).value = (
+      answerPhrasingNodes[0] as mdast.Text
+    ).value.slice(
       answerPrefix.length + 1, // add 1 for the newline
     );
 

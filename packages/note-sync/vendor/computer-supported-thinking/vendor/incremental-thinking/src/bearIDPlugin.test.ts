@@ -1,7 +1,7 @@
 import mdast from "mdast";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
-import unified from "unified";
+import { unified } from "unified";
 import bearIDPlugin, { bearIDNodeType } from "./bearIDPlugin";
 
 const processor = unified()

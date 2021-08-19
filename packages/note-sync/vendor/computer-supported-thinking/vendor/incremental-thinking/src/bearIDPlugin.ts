@@ -1,7 +1,7 @@
 import mdast from "mdast";
 import unified from "unified";
 import unist from "unist";
-import unistUtilMap from "unist-util-map";
+import {map as unistUtilMap} from "unist-util-map";
 
 export const bearIDNodeType = "bearID";
 
@@ -30,7 +30,15 @@ function reifyBearIDNodes(root: unist.Node): unist.Node {
 }
 
 export default function bearIDPlugin(this: unified.Processor) {
-  this.Compiler.prototype.visitors[bearIDNodeType] = (node: BearIDNode) =>
-    `<!-- {BearID:${node.bearID}} -->`;
+  const data = this.data();
+  if (!data.toMarkdownExtensions) {
+    data.toMarkdownExtensions = [];
+  }
+  (data.toMarkdownExtensions as any[]).push({
+    handlers: {
+      [bearIDNodeType]: (node: BearIDNode) =>
+        `<!-- {BearID:${node.bearID}} -->`,
+    },
+  });
   return reifyBearIDNodes;
 }

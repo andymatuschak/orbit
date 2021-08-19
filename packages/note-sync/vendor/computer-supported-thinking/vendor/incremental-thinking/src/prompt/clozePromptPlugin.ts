@@ -1,68 +1,123 @@
-import mdast from "mdast";
-import remarkParse from "remark-parse";
-import remarkStringify from "remark-stringify";
-import unified from "unified";
-import unist from "unist";
+import * as Mdast from "mdast-util-from-markdown";
+import { markdownLineEnding } from "micromark-util-character";
+import { codes } from "micromark-util-symbol/codes.js";
+import * as Micromark from "micromark-util-types";
+import { Processor } from "unified";
+import processor from "../processor";
 import { clozeNodeType, ClozePromptNode } from "./index";
 
 // TODO: don't match clozes inside code and html blocks
-const clozeRegexp = /^{(.+?)}/;
-export default function clozePlugin(this: unified.Processor) {
-  function clozeTokenizer(
-    this: remarkParse.Parser & {
-      tokenizeInline: (
-        content: string,
-        now: {
-          line: number;
-          column: number;
-          offset: number;
-        },
-      ) => mdast.PhrasingContent[];
-    },
-    eat: remarkParse.Eat & {
-      now: () => {
-        line: number;
-        column: number;
-        offset: number;
-      };
-    },
-    value: string,
-  ) {
-    const match = clozeRegexp.exec(value);
-    if (match) {
-      const now = eat.now();
-      now.column += 1;
-      now.offset += 1;
-      const children = this.tokenizeInline(match[1], now);
-      const output: ClozePromptNode = {
-        type: clozeNodeType,
-        children,
-      };
-      return eat(match[0])(output);
+const clozeToken = "clozePrompt";
+const clozeMarkerToken = "clozePromptMarker";
+const clozeChunkToken = "clozePromptChunk";
+
+const micromarkClozeExtension: Micromark.Extension = {
+  text: { [codes.leftCurlyBrace]: { tokenize } },
+};
+
+function tokenize(
+  this: Micromark.TokenizeContext,
+  effects: Micromark.Effects,
+  ok: Micromark.State,
+  nok: Micromark.State,
+) {
+  const self = this;
+  const eventStart = this.events.length + 3; // Add main and marker token
+  let balance = 1;
+
+  return atOpeningBrace;
+
+  function atOpeningBrace(code: Micromark.Code): Micromark.State {
+    effects.enter(clozeToken);
+    effects.enter(clozeMarkerToken);
+    effects.consume(code);
+    effects.exit(clozeMarkerToken);
+
+    effects.enter(clozeChunkToken);
+    return inside;
+  }
+
+  function inside(code: Micromark.Code): Micromark.State {
+    if (code === codes.eof || markdownLineEnding(code)) {
+      return nok;
+    } else if (code === codes.rightCurlyBrace) {
+      effects.exit(clozeChunkToken);
+      return atClosingBrace(code);
+    } else if (code === codes.leftCurlyBrace) {
+      effects.consume(code);
+      balance++;
+      return inside;
+    } else {
+      effects.consume(code);
+      return inside;
     }
   }
-  clozeTokenizer.locator = (value: string, fromIndex: number) => {
-    return value.indexOf("{", fromIndex);
-  };
-  const parserPrototype = this.Parser.prototype as remarkParse.Parser;
-  parserPrototype.inlineTokenizers.clozePrompt = clozeTokenizer as remarkParse.Tokenizer;
-  parserPrototype.inlineMethods.splice(
-    parserPrototype.inlineMethods.indexOf("text"),
-    0,
-    "clozePrompt",
-  );
-  const compilerPrototype = this.Compiler.prototype as remarkStringify.Compiler;
-  compilerPrototype.visitors[clozeNodeType] = clozePromptCompiler as (
-    node: unist.Node,
-  ) => string;
+
+  function atClosingBrace(code: Micromark.Code): Micromark.State {
+    balance--;
+    if (balance) {
+      effects.enter(clozeChunkToken);
+      effects.consume(code);
+      return inside;
+    } else {
+      effects.enter(clozeMarkerToken);
+      effects.consume(code);
+      effects.exit(clozeMarkerToken);
+      effects.exit(clozeToken);
+      return ok;
+    }
+  }
 }
 
-function clozePromptCompiler(
-  this: remarkStringify.Compiler & {
-    all: (node: unist.Node) => string[];
-  },
-  node: ClozePromptNode,
-): string {
-  const content = this.all(node).join("");
-  return `{${content}}`;
+export default function clozePlugin(this: Processor) {
+  const data = this.data();
+
+  if (!data.toMarkdownExtensions) {
+    data.toMarkdownExtensions = [];
+  }
+  (data.toMarkdownExtensions as any[]).push({
+    handlers: {
+      [clozeNodeType]: clozePromptCompiler,
+    },
+  });
+
+  if (!data.micromarkExtensions) {
+    data.micromarkExtensions = [];
+  }
+  (data.micromarkExtensions as any[]).push(micromarkClozeExtension);
+
+  if (!data.fromMarkdownExtensions) {
+    data.fromMarkdownExtensions = [];
+  }
+  (data.fromMarkdownExtensions as any[]).push({
+    enter: {
+      [clozeToken]: enterClozeNode,
+      [clozeChunkToken]: enterClozeNodeData,
+    },
+    exit: {
+      [clozeToken]: exitClozeNode,
+      [clozeChunkToken]: exitClozeNodeData,
+    },
+  });
+}
+
+function enterClozeNode(this: Mdast.CompileContext, token: Mdast.Token) {
+  this.enter({ type: clozeNodeType, children: [] } as any, token);
+}
+
+function exitClozeNode(this: Mdast.CompileContext, token: Mdast.Token) {
+  this.exit(token);
+}
+
+function enterClozeNodeData(this: Mdast.CompileContext, token: Mdast.Token) {
+  this.config.enter.data.call(this, token);
+}
+
+function exitClozeNodeData(this: Mdast.CompileContext, token: Mdast.Token) {
+  this.config.exit.data.call(this, token);
+}
+
+function clozePromptCompiler(node: ClozePromptNode): string {
+  const result = processor.stringify({ ...node, type: "emphasis" }) as string;
+  return `{${result.slice(1, -2)}}`;
 }
