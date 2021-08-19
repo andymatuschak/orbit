@@ -53,46 +53,6 @@ export class OrbitAPIClient {
     });
   }
 
-  getTaskData(
-    ids: PromptID[],
-  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/taskData"]["GET"]>> {
-    return this.requestManager.request("/taskData", "GET", {
-      query: { ids },
-    });
-  }
-
-  storeTaskData(
-    data: OrbitAPI.Spec["/taskData"]["PATCH"]["body"],
-  ): Promise<API.RouteResponseData<OrbitAPI.Spec["/taskData"]["PATCH"]>> {
-    return this.requestManager.request("/taskData", "PATCH", {
-      contentType: "application/json",
-      body: data,
-    });
-  }
-
-  storeAttachment(
-    attachment: Attachment,
-  ): Promise<
-    OrbitAPI.ResponseObject<
-      "attachmentIDReference",
-      AttachmentID,
-      AttachmentIDReference
-    >
-  > {
-    const blob = new Blob([attachment.contents], { type: attachment.mimeType });
-    return this.requestManager.request("/attachments", "POST", {
-      contentType: "multipart/form-data",
-      body: { file: blob as API.BlobLike<AttachmentMimeType> },
-    });
-  }
-
-  getAttachmentURL(attachmentID: AttachmentID): string {
-    return this.requestManager.getRequestURL("/attachments/:id", "GET", {
-      query: {},
-      params: { id: attachmentID },
-    });
-  }
-
   listEvents2(
     query: OrbitAPI.Spec["/2/events"]["GET"]["query"] = {},
   ): Promise<API.RouteResponseData<OrbitAPI.Spec["/2/events"]["GET"]>> {

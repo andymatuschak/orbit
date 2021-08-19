@@ -41,18 +41,6 @@ export type ValidatableSpec = {
     };
   };
 
-  "/taskData"?: {
-    GET?: {
-      query: { ids: PromptID[] };
-      response?: ResponseList<"taskData", PromptID, Prompt>;
-    };
-    PATCH?: {
-      contentType: "application/json";
-      body: { id: PromptID; data: Prompt }[];
-      response?: null;
-    };
-  };
-
   "/2/events"?: {
     GET?: {
       query: {

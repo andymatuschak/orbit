@@ -15,7 +15,6 @@ import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens";
 import { refreshSessionCookie } from "./api/internal/auth/refreshSessionCookie";
 import { recordPageView } from "./api/internal/recordPageView";
 import { resolveAttachmentIDs } from "./api/internal/resolveAttachmentIDs";
-import { listTaskData, storeTaskData } from "./api/taskData";
 import { listTaskStates } from "./api/taskStates";
 import corsHandler from "./api/util/corsHandler";
 import createTypedRouter from "./api/util/typedRouter";
@@ -46,10 +45,6 @@ export function createAPIApp(): express.Application {
   createTypedRouter<OrbitAPI.Spec>(app, routeValidator, {
     "/taskStates": {
       GET: listTaskStates,
-    },
-    "/taskData": {
-      GET: listTaskData,
-      PATCH: storeTaskData,
     },
     "/2/attachments/ingestFromURLs": {
       POST: ingestAttachmentsFromURLs,
