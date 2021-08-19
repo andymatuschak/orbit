@@ -1,7 +1,5 @@
 import { API, OrbitAPI, OrbitAPIValidator } from "@withorbit/api";
-import { PromptTaskID, } from "@withorbit/core";
-import * as core2 from "@withorbit/core2";
-import { AttachmentMIMEType, TaskID } from "@withorbit/core2";
+import { AttachmentID, AttachmentMIMEType, TaskID } from "@withorbit/core2";
 import { APIConfig, defaultAPIConfig } from "./apiConfig";
 import { AuthenticationConfig, RequestManager } from "./requestManager";
 import { Blob } from "./util/fetch";
@@ -43,9 +41,7 @@ export class OrbitAPIClient {
     });
   }
 
-  getAttachment2(
-    id: core2.AttachmentID,
-  ): Promise<API.BlobLike<AttachmentMIMEType>> {
+  getAttachment2(id: AttachmentID): Promise<API.BlobLike<AttachmentMIMEType>> {
     return this.requestManager.request("/2/attachments/:id", "GET", {
       query: {},
       params: { id },
@@ -53,8 +49,8 @@ export class OrbitAPIClient {
   }
 
   putAttachment2(
-    id: core2.AttachmentID,
-    mimeType: core2.AttachmentMIMEType,
+    id: AttachmentID,
+    mimeType: AttachmentMIMEType,
     contents: Uint8Array,
   ): Promise<
     API.RouteResponseData<OrbitAPI.Spec["/2/attachments/:id"]["POST"]>

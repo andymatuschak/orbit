@@ -1,5 +1,12 @@
-import * as core2 from "@withorbit/core2";
-import { AttachmentMIMEType, Task, TaskID } from "@withorbit/core2";
+import {
+  AttachmentMIMEType,
+  Event,
+  EntityID,
+  EventID,
+  Task,
+  TaskID,
+  AttachmentID,
+} from "@withorbit/core2";
 import { BlobLike } from "./genericHTTPAPI";
 import { RequiredSpec } from "./util/requiredSpec";
 
@@ -17,18 +24,18 @@ export type ValidatableSpec = {
         /**
          * Events are returned in an arbitrary stable order. When `afterID` is set, only events after that event's ID in the stable order will be returned. You can combine this parameter with `limit` to page through results.
          */
-        afterID?: core2.EventID;
+        afterID?: EventID;
         /**
          * When set, only events with matching `entityID` will be returned.
          */
-        entityID?: core2.EntityID;
+        entityID?: EntityID;
       };
-      response?: ResponseList2<core2.Event>;
+      response?: ResponseList2<Event>;
     };
 
     PATCH?: {
       contentType: "application/json";
-      body: core2.Event[];
+      body: Event[];
       response?: null;
     };
   };
@@ -39,7 +46,7 @@ export type ValidatableSpec = {
       // eslint-disable-next-line @typescript-eslint/ban-types
       query: {};
       params: {
-        id: core2.AttachmentID;
+        id: AttachmentID;
       };
       response?: BlobLike<AttachmentMIMEType>;
     };
@@ -58,7 +65,7 @@ export type ValidatableSpec = {
        */
       contentType: "multipart/form-data";
       params: {
-        id: core2.AttachmentID;
+        id: AttachmentID;
       };
       body: {
         file: BlobLike<AttachmentMIMEType>;
@@ -74,7 +81,7 @@ export type ValidatableSpec = {
     POST?: {
       contentType: "application/json";
       body: {
-        id: core2.AttachmentID;
+        id: AttachmentID;
         url: string;
       }[];
       response?: null;

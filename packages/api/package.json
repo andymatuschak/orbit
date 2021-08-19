@@ -5,13 +5,13 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "private": true,
+  "sideEffects": false,
   "scripts": {
     "build": "tsc -b",
     "test": "jest --runInBand",
     "generateSchema": "typescript-json-schema src/orbitAPI.ts ValidatableSpec -o src/orbitAPISchema.json --noExtraProps --required --ignoreErrors --strictNullChecks"
   },
   "dependencies": {
-    "@withorbit/core": "0.0.1",
     "@withorbit/core2": "0.0.1",
     "ajv": "^8.6.2"
   },
