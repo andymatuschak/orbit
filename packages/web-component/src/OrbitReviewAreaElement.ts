@@ -65,6 +65,7 @@ let _embeddedHostStateIsDirty = false;
 function markEmbeddedHostStateDirty() {
   if (!_embeddedHostStateIsDirty) {
     _embeddedHostStateIsDirty = true;
+    _orderedReviewAreaElements = null;
 
     // Debounce by waiting a moment.
     setTimeout(() => {
