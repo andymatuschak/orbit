@@ -85,7 +85,10 @@ export class AjvAPIValidator<T extends AjvSchema> implements APIValidator {
 
   private _isUnsupportedRoute(): boolean {
     if (this.validator.errors) {
-      return this.validator.errors[0].schemaPath === "#/additionalProperties";
+      return (
+        this.validator.errors[0].instancePath === "" &&
+        this.validator.errors[0].schemaPath == "#/additionalProperties"
+      );
     }
     return false;
   }
