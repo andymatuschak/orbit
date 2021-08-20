@@ -1,7 +1,6 @@
 import { ColorPaletteName } from "@withorbit/core";
 import {
   EmbeddedHostEventType,
-  EmbeddedHostInitialConfigurationEvent,
   EmbeddedHostMetadata,
   EmbeddedHostUpdateEvent,
   EmbeddedScreenConfiguration,

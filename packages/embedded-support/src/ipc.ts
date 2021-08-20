@@ -1,5 +1,5 @@
 import { ReviewItem, Task } from "@withorbit/core";
-import { EmbeddedScreenConfiguration } from "../dist";
+import { EmbeddedScreenConfiguration } from ".";
 
 // Messages from host to embedded:
 //================================

@@ -52,8 +52,7 @@ import {
 import { useRemoteTaskStates } from "./useRemoteTaskStates";
 import { findItemsToRetry } from "./util/findItemsToRetry";
 import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
-import getEmbeddedScreenConfigurationFromURL
-  from "./util/getEmbeddedScreenConfigurationFromURL";
+import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL";
 
 function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
   return sessionItems.map((item) => {
