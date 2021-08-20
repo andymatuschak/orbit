@@ -7,7 +7,14 @@ import {
   TaskID,
   TaskRepetitionOutcome,
 } from "@withorbit/core";
-import { EmbeddedHostState } from "@withorbit/embedded-support";
+import {
+  EmbeddedHostEventType,
+  EmbeddedHostInitialConfigurationEvent,
+  EmbeddedHostState,
+  EmbeddedScreenConfiguration,
+  EmbeddedScreenEventType,
+  EmbeddedScreenOnLoadEvent,
+} from "@withorbit/embedded-support";
 import {
   FadeView,
   ReviewArea,
@@ -20,7 +27,7 @@ import {
   useTransitioningValue,
 } from "@withorbit/ui";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Animated, Text, View } from "react-native";
 
 import { useAuthenticationClient } from "../authentication/authContext";
@@ -45,7 +52,8 @@ import {
 import { useRemoteTaskStates } from "./useRemoteTaskStates";
 import { findItemsToRetry } from "./util/findItemsToRetry";
 import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
-import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL";
+import getEmbeddedScreenConfigurationFromURL
+  from "./util/getEmbeddedScreenConfigurationFromURL";
 
 function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
   return sessionItems.map((item) => {
@@ -290,10 +298,11 @@ function getEmbeddedReviewAreaItemsFromReviewItems(
   }));
 }
 
-export default function EmbeddedScreen() {
-  const configuration = useRef(
-    getEmbeddedScreenConfigurationFromURL(window.location.href),
-  ).current;
+function EmbeddedScreen({
+  configuration,
+}: {
+  configuration: EmbeddedScreenConfiguration;
+}) {
   const colorPalette = useMemo(
     () => getEmbeddedColorPalette(configuration),
     [configuration],
@@ -476,4 +485,40 @@ export default function EmbeddedScreen() {
       </ReviewSessionContainer>
     </View>
   );
+}
+
+export default function EmbeddedScreenDataWrapper() {
+  // For debug and development purposes, the configuration information can be supplied in a URL query parameter.
+  const [configuration, setConfiguration] =
+    useState<EmbeddedScreenConfiguration | null>(
+      getEmbeddedScreenConfigurationFromURL(window.location.href),
+    );
+
+  // But normally we'll request it from the host on load.
+  useEffect(() => {
+    if (configuration === null) {
+      function onMessage(event: MessageEvent) {
+        if (
+          event.source === parent &&
+          event.data &&
+          event.data.type === EmbeddedHostEventType.InitialConfiguration
+        ) {
+          const updateEvent: EmbeddedHostInitialConfigurationEvent = event.data;
+          setConfiguration(updateEvent.configuration);
+        }
+      }
+      window.addEventListener("message", onMessage);
+
+      const onLoadEvent: EmbeddedScreenOnLoadEvent = {
+        type: EmbeddedScreenEventType.OnLoad,
+      };
+      parent.postMessage(onLoadEvent, "*");
+
+      return () => {
+        window.removeEventListener("message", onMessage);
+      };
+    }
+  }, [configuration]);
+
+  return configuration && <EmbeddedScreen configuration={configuration} />;
 }

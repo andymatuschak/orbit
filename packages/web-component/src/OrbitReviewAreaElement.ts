@@ -1,6 +1,7 @@
 import { ColorPaletteName } from "@withorbit/core";
 import {
   EmbeddedHostEventType,
+  EmbeddedHostInitialConfigurationEvent,
   EmbeddedHostMetadata,
   EmbeddedHostUpdateEvent,
   EmbeddedScreenConfiguration,
@@ -92,25 +93,46 @@ function onMessage(event: MessageEvent) {
     return;
   }
 
-  switch (event.data.type) {
-    case EmbeddedScreenEventType.TaskUpdate:
-      const { task } = event.data as EmbeddedScreenTaskUpdateEvent;
-      // May replace this with a straight lookup table if the full iteration becomes a problem, but usually N < 100.
-      const reviewAreaEntry = [...screenRecordsByReviewArea.entries()].find(
-        ([element]) => element.iframe?.contentWindow === event.source,
-      );
-      if (!reviewAreaEntry) {
-        throw new Error(`Update from unknown review area ${event.source}`);
-      }
+  function getReviewAreaEntry() {
+    const reviewAreaEntry = [...screenRecordsByReviewArea.entries()].find(
+      ([element]) => element.iframe?.contentWindow === event.source,
+    );
+    if (!reviewAreaEntry) {
+      throw new Error(`Update from unknown review area ${event.source}`);
+    }
+    return { element: reviewAreaEntry[0], record: reviewAreaEntry[1] };
+  }
 
-      // Replace our record of that task with the new state.
-      screenRecordsByReviewArea.set(reviewAreaEntry[0], {
-        ...reviewAreaEntry[1],
-        reviewItems: reviewAreaEntry[1].reviewItems.map((item) =>
-          item.task.id === task.id ? { ...item, task } : item,
-        ),
-      });
-      markEmbeddedHostStateDirty();
+  switch (event.data.type) {
+    case EmbeddedScreenEventType.OnLoad:
+      {
+        const { element } = getReviewAreaEntry();
+        const configuration = element.getConfiguration();
+        element.iframe!.contentWindow!.postMessage(
+          {
+            type: EmbeddedHostEventType.InitialConfiguration,
+            configuration,
+          },
+          "*",
+        );
+      }
+      break;
+
+    case EmbeddedScreenEventType.TaskUpdate:
+      {
+        const { element, record } = getReviewAreaEntry();
+        const { task } = event.data as EmbeddedScreenTaskUpdateEvent;
+        // May replace this with a straight lookup table if the full iteration becomes a problem, but usually N < 100.
+
+        // Replace our record of that task with the new state.
+        screenRecordsByReviewArea.set(element, {
+          ...record,
+          reviewItems: record.reviewItems.map((item) =>
+            item.task.id === task.id ? { ...item, task } : item,
+          ),
+        });
+        markEmbeddedHostStateDirty();
+      }
       break;
   }
 }
@@ -169,6 +191,23 @@ export class OrbitReviewAreaElement extends HTMLElement {
     return this.cachedRecord;
   }
 
+  getConfiguration(): EmbeddedScreenConfiguration {
+    if (!this.cachedMetadata) {
+      throw new Error("Invariant violation: no embedded host metadata");
+    }
+
+    const colorOverride = this.getAttribute("color") as ColorPaletteName | null;
+    return {
+      ...this.getEmbeddedItems(),
+      embeddedHostMetadata: {
+        ...this.cachedMetadata,
+        ...(colorOverride && { colorPaletteName: colorOverride }),
+      },
+      sessionStartTimestampMillis,
+      isDebug: pageIsDebug() || this.hasAttribute("debug"),
+    };
+  }
+
   connectedCallback() {
     addEmbeddedScreenMessageListener();
     getSharedMetadataMonitor().addEventListener(this.onMetadataChange);
@@ -191,32 +230,13 @@ export class OrbitReviewAreaElement extends HTMLElement {
 
     // We'll wait to actually set the iframe's contents until the next frame, since the child <orbit-prompt> elements may not yet have connected.
     const iframe = this.iframe;
+
+    // Update global bookkeeping with our initial state-- bit of a hack.
+    this.getEmbeddedItems();
+
     requestAnimationFrame(() => {
-      if (!this.cachedMetadata) {
-        throw new Error("Invariant violation: no embedded host metadata");
-      }
       setIFrameSize(iframe);
-
-      const colorOverride = this.getAttribute(
-        "color",
-      ) as ColorPaletteName | null;
-
-      const configuration: EmbeddedScreenConfiguration = {
-        ...this.getEmbeddedItems(),
-        embeddedHostMetadata: {
-          ...this.cachedMetadata,
-          ...(colorOverride && { colorPaletteName: colorOverride }),
-        },
-        sessionStartTimestampMillis,
-        isDebug: pageIsDebug() || this.hasAttribute("debug"),
-      };
-
-      const itemsParameterString = encodeURIComponent(
-        JSON.stringify(configuration),
-      );
-      const baseURL = new URL(EMBED_API_BASE_URL);
-      baseURL.search = `i=${itemsParameterString}`;
-      iframe.src = baseURL.href;
+      iframe.src = EMBED_API_BASE_URL;
     });
   }
 

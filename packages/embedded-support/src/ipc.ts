@@ -1,10 +1,17 @@
 import { ReviewItem, Task } from "@withorbit/core";
+import { EmbeddedScreenConfiguration } from "../dist";
 
 // Messages from host to embedded:
 //================================
 
 export enum EmbeddedHostEventType {
+  InitialConfiguration = "initialConfiguration",
   HostUpdate = "hostUpdate",
+}
+
+export interface EmbeddedHostInitialConfigurationEvent {
+  type: typeof EmbeddedHostEventType.InitialConfiguration;
+  configuration: EmbeddedScreenConfiguration;
 }
 
 export interface EmbeddedHostUpdateEvent {
@@ -27,7 +34,12 @@ export interface EmbeddedScreenRecord {
 //================================
 
 export enum EmbeddedScreenEventType {
+  OnLoad = "onLoad",
   TaskUpdate = "taskUpdate",
+}
+
+export interface EmbeddedScreenOnLoadEvent {
+  type: typeof EmbeddedScreenEventType.OnLoad;
 }
 
 export interface EmbeddedScreenTaskUpdateEvent {

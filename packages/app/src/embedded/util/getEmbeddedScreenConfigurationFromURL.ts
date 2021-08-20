@@ -3,20 +3,17 @@ import { styles } from "@withorbit/ui";
 
 export default function getEmbeddedScreenConfigurationFromURL(
   href: string,
-): EmbeddedScreenConfiguration {
+): EmbeddedScreenConfiguration | null {
   const url = new URL(href);
   const params = new URLSearchParams(url.search);
   const tasksString = params.get("i");
-  if (tasksString) {
-    const configuration: EmbeddedScreenConfiguration = JSON.parse(tasksString);
-    // TODO: validate
-    const colorPaletteName =
-      configuration.embeddedHostMetadata.colorPaletteName;
-    if (colorPaletteName && !styles.colors.palettes[colorPaletteName]) {
-      throw new Error(`Unknown color palette name: ${colorPaletteName}`);
-    }
-    return configuration;
-  } else {
-    throw new Error("No review items supplied");
+  if (tasksString === null) return null;
+
+  const configuration: EmbeddedScreenConfiguration = JSON.parse(tasksString);
+  // TODO: validate
+  const colorPaletteName = configuration.embeddedHostMetadata.colorPaletteName;
+  if (colorPaletteName && !styles.colors.palettes[colorPaletteName]) {
+    throw new Error(`Unknown color palette name: ${colorPaletteName}`);
   }
+  return configuration;
 }
