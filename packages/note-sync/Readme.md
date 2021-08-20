@@ -10,10 +10,15 @@ mkdir -p testNotes
 
 echo "# Test note\nThis is a {test cloze} note.\n<\!-- {BearID:BE407525-7100-4F63-9F11-690E325CDFE9-1084-00032CF318809DA5} -->" > testNotes/note.md
 
-# Sync that cloze to a local Orbit store.
-yarn sync myOrbitDB.orbitStore testNotes
+# Sync your user's data from the Orbit server to a local Orbit store. (see documentation in ../sync/Readme.md for more)
+cd ../sync
+ORBIT_TOKEN=myUserToken ORBIT_ENV=production yarn sync ~/myOrbitDB.orbitStore
+cd ../note-sync
 
-# Now you can sync myOrbitDB.orbitStore to the server or load it with a local client.
+# Extract that test note's cloze into your a local Orbit store.
+yarn sync ~/myOrbitDB.orbitStore testNotes
+
+# Now you can repeat the previous command to sync that data to the Orbit server if you like. 
 ```
 
 ## Implementation notes
