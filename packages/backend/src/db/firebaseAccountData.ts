@@ -3,7 +3,6 @@ import admin from "firebase-admin";
 import { getDatabase } from "./firestore";
 
 import { UserMetadata } from "./userMetadata";
-import { WithFirebaseFields } from "./withFirebaseFields";
 
 function getUserMetadataReference(
   database: firebase.firestore.Firestore,
@@ -35,19 +34,6 @@ export async function updateUserMetadata(
 ): Promise<void> {
   const ref = getUserMetadataReference(getDatabase(), userID);
   await ref.set(userRecordUpdate, { merge: true });
-}
-
-export async function clearUserSessionNotificationState(
-  userID: string,
-): Promise<void> {
-  const ref = getUserMetadataReference(getDatabase(), userID);
-  // set() has the wrong type annotation: it should accept FieldValues. So we have to do this casting dance.
-  await ref.set(
-    {
-      sessionNotificationState: admin.firestore.FieldValue.delete(),
-    } as WithFirebaseFields<Partial<UserMetadata>> as Partial<UserMetadata>,
-    { merge: true },
-  );
 }
 
 export interface UserEnumerationRecord {
