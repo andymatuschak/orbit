@@ -308,10 +308,12 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
     transaction: firebase.firestore.Transaction,
   ) {
     let taskCountDelta = 0;
+    let taskUpdateCount = 0;
 
     for (const [id, record] of newRecordMap) {
       const { entity } = record;
       if (entity.type === EntityType.Task) {
+        taskUpdateCount++;
         const taskWasActive = isTaskActive(
           (oldRecordMap.get(id)?.entity ?? null) as Task | null,
         );
@@ -325,10 +327,12 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
       }
     }
 
-    if (taskCountDelta !== 0) {
+    if (taskUpdateCount > 0) {
       const metadataUpdate: WithFirebaseFields<Partial<UserMetadata>> = {
-        activeTaskCount:
-          firebase.firestore.FieldValue.increment(taskCountDelta),
+        ...(taskCountDelta !== 0 && {
+          activeTaskCount:
+            firebase.firestore.FieldValue.increment(taskCountDelta),
+        }),
         sessionNotificationState: firebase.firestore.FieldValue.delete(),
       };
       transaction.set(
