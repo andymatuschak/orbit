@@ -15,6 +15,8 @@ import {
 } from "@withorbit/core";
 import { testTask } from "@withorbit/sample-data";
 import { Database, EventReducer } from "./database";
+import { AjvEventsValidator } from "./validation/AjvEventsValidator";
+import { EventsValidator } from "./validation/eventsValidator";
 
 // n.b. these tests are not actually run as part of this package: they're run in the implementation packages.
 
@@ -28,6 +30,10 @@ function mockEventReducer(entitySnapshot: Entity | null, event: Event): Entity {
   } as Entity;
 }
 
+const mockValidator: EventsValidator = {
+  validateEvents: () => true,
+};
+
 const testEvents = [
   { id: "a", entityID: "x", timestampMillis: 100 },
   { id: "b", entityID: "x", timestampMillis: 90 },
@@ -36,12 +42,16 @@ const testEvents = [
 
 export function runDatabaseTests(
   name: string,
-  databaseFactory: (eventReducer: EventReducer) => Promise<Database>,
+  databaseFactory: (
+    eventReducer: EventReducer,
+    mockValidator: EventsValidator,
+  ) => Promise<Database>,
   runMetadataTests = true, // We don't implement this DB backend feature for Firebase.
 ) {
   let db: Database;
+
   beforeEach(async () => {
-    db = await databaseFactory(mockEventReducer);
+    db = await databaseFactory(mockEventReducer, mockValidator);
   });
 
   afterEach(async () => {
@@ -102,7 +112,7 @@ export function runDatabaseTests(
     });
 
     test("doesn't write events which fail to apply", async () => {
-      const db = await databaseFactory(eventReducer);
+      const db = await databaseFactory(eventReducer, mockValidator);
       await expect(
         db.putEvents([
           {
@@ -220,7 +230,7 @@ export function runDatabaseTests(
       // These tests use the real Orbit event reducer.
       let db: Database;
       beforeEach(async () => {
-        db = await databaseFactory(eventReducer);
+        db = await databaseFactory(eventReducer, mockValidator);
         await db.putEvents(testTaskEvents);
         await db.putEvents(testAttachmentEvents);
       });
@@ -322,6 +332,39 @@ export function runDatabaseTests(
         expect(entities[1].id).toBe("b_a");
       });
     });
+
+    describe("validation", () => {
+      // These tests use the real Orbit event validator
+      let db: Database;
+
+      beforeEach(async () => {
+        db = await databaseFactory(eventReducer, new AjvEventsValidator());
+      });
+
+      afterEach(async () => {
+        await db.close();
+      });
+
+      test("rejects non-array events", async () => {
+        // @ts-expect-error
+        const input = { someNonArrayType: true } as Event[];
+
+        await expect(db.putEvents(input)).rejects.toEqual({
+          errors: [{ message: "#/type must be array" }],
+        });
+      });
+
+      test("rejects invalid events", async () => {
+        const invalidTestEvents = [...createTestTaskEvents("a", [50, 300], 5)];
+        await expect(db.putEvents(invalidTestEvents)).rejects.toBeDefined();
+      });
+
+      test("accepts valid input", async () => {
+        await expect(
+          db.putEvents(transformTestEventsToHaveValidIDs(testTaskEvents)),
+        ).resolves.toBeDefined();
+      });
+    });
   });
 }
 
@@ -356,6 +399,25 @@ function createTestTaskEvents(
       entityID: taskID as TaskID,
     },
   ];
+}
+
+function transformTestEventsToHaveValidIDs(events: Event[]): Event[] {
+  // IDs must be at least 22 characters long
+  const EVENT_ID_LENGTH = 22;
+  const createValidID = (str: string): string => {
+    const missingCharsAsZeros = Array(EVENT_ID_LENGTH - str.length + 1).join(
+      "0",
+    );
+    return `${str}${missingCharsAsZeros}` as EventID;
+  };
+  return events.map(
+    (event) =>
+      ({
+        ...event,
+        id: createValidID(event.id),
+        entityID: createValidID(event.entityID),
+      } as Event),
+  );
 }
 
 const testTaskEvents: Event[] = [
