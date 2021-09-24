@@ -24,10 +24,10 @@ class TestFirestoreDatabaseBackend extends FirestoreDatabaseBackend {
 describe("database tests", () => {
   runDatabaseTests(
     "Firestore",
-    async (eventReducer) => {
+    async (eventReducer, eventValidator) => {
       const currentFirebaseApp = createTestAdminFirebaseApp();
       const backend = new TestFirestoreDatabaseBackend(currentFirebaseApp);
-      return new Database(backend, eventReducer);
+      return new Database(backend, eventReducer, eventValidator);
     },
     false,
   );

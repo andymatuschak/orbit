@@ -5,7 +5,7 @@
     "rootDir": "./src",
     "types": ["jest"]
   },
-  "include": ["./src/**/*.ts", "./@types/**/*.d.ts"],
+  "include": ["./src/**/*.ts", "./@types/**/*.d.ts", "./src/**/*.json"],
   "references": [
     {
       "path": "../core"

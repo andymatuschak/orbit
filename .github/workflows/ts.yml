@@ -57,8 +57,13 @@ jobs:
         run: yarn install
       - name: "run build"
         run: "yarn build"
-      - name: "run generateSchema"
+      - name: "run generateSchema for the API"
         working-directory: packages/api
+        run: "yarn generateSchema"
+      - name: "check if changes are pending"
+        run: "git diff --exit-code"
+      - name: "run generateSchema for the events validator"
+        working-directory: packages/store-shared
         run: "yarn generateSchema"
       - name: "check if changes are pending"
         run: "git diff --exit-code"

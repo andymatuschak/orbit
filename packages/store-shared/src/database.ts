@@ -11,6 +11,10 @@ import {
   DatabaseBackendEntityRecord,
 } from "./databaseBackend";
 import { DatabaseEntityQuery, DatabaseEventQuery } from "./databaseQuery";
+import { AjvEventsValidator } from "./validation/AjvEventsValidator";
+import { EventsValidator } from "./validation/eventsValidator";
+
+const _ajvEventValidator = new AjvEventsValidator();
 
 // The Database offers interfaces for storing and querying events and the entities generated from those events.
 export class Database {
@@ -19,13 +23,17 @@ export class Database {
 
   // The event reducer specifies how entities are generated from events. Note that Database doesn't know anything about any specific event or entity types; it's a general event source implementation.
   private readonly _eventReducer: EventReducer;
+  // Validator to ensure that the events match type declarations of the events
+  private readonly _eventValidator: EventsValidator;
 
   constructor(
     backend: DatabaseBackend,
     eventReducer: EventReducer = _eventReducer,
+    eventValidator: EventsValidator = _ajvEventValidator,
   ) {
     this._backend = backend;
     this._eventReducer = eventReducer;
+    this._eventValidator = eventValidator;
   }
 
   close(): Promise<void> {
@@ -35,6 +43,10 @@ export class Database {
   async putEvents(
     events: Event[],
   ): Promise<{ event: Event; entity: Entity }[]> {
+    const eventValidationResult = this._eventValidator.validateEvents(events);
+    if (eventValidationResult !== true) {
+      return new Promise((_, reject) => reject(eventValidationResult));
+    }
     if (events.length === 0) return [];
 
     let output: { event: Event; entity: Entity }[] | undefined;
