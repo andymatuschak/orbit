@@ -29,7 +29,7 @@
     "eslint-plugin-react": "^7.21.5",
     "eslint-plugin-react-hooks": "^4.2.0",
     "fetch-blob": "^2.1.1",
-    "firebase-admin": "^9.4.2",
+    "firebase-admin": "^9.11.1",
     "firebase-functions": "^3.15.1",
     "isbot-fast": "^1.2.0",
     "morgan-body": "^2.6.6",
