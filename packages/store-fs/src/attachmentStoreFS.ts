@@ -1,28 +1,12 @@
 import { AttachmentID, AttachmentMIMEType } from "@withorbit/core";
 import { AttachmentStore } from "@withorbit/store-shared";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath, pathToFileURL } from "url";
-import { getPathForAttachment } from "./util/getPathForAttachment";
+import { SQLDatabaseBackend } from "./sqlite";
 
-/*
-Implements an attachment store by writing files to a folder on disk.
-
-This implementation is for Node.js clients.
- */
+// Facade exposing attachment I/O via SQLite blobs.
 export class AttachmentStoreFS implements AttachmentStore {
-  private readonly _basePath: string;
-  private readonly _getAttachmentType: (
-    id: AttachmentID,
-  ) => Promise<AttachmentMIMEType | null>;
-
-  // basePath must be a path to a folder which already exists.
-  constructor(
-    basePath: string,
-    getAttachmentType: (id: AttachmentID) => Promise<AttachmentMIMEType | null>,
-  ) {
-    this._basePath = path.normalize(basePath);
-    this._getAttachmentType = getAttachmentType;
+  private readonly _sqlDatabaseBackend: SQLDatabaseBackend;
+  constructor(sqlDatabaseBackend: SQLDatabaseBackend) {
+    this._sqlDatabaseBackend = sqlDatabaseBackend;
   }
 
   async storeAttachment(
@@ -30,33 +14,14 @@ export class AttachmentStoreFS implements AttachmentStore {
     id: AttachmentID,
     type: AttachmentMIMEType,
   ): Promise<void> {
-    await fs.promises.writeFile(
-      getPathForAttachment(this._basePath, id, type),
-      contents,
-    );
+    return this._sqlDatabaseBackend.storeAttachment(contents, id, type);
   }
 
-  // If the attachment has already been stored, resolves to its local URL; otherwise resolves to null.
   async getURLForStoredAttachment(id: AttachmentID): Promise<string | null> {
-    const type = await this._getAttachmentType(id);
-    if (!type) {
-      return null;
-    }
-
-    const attachmentPath = getPathForAttachment(this._basePath, id, type);
-    const exists = await fs.promises
-      .access(attachmentPath)
-      .then(() => true)
-      .catch(() => false);
-    return exists ? pathToFileURL(attachmentPath).href : null;
+    return this._sqlDatabaseBackend.getURLForStoredAttachment(id);
   }
 
   async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
-    const url = await this.getURLForStoredAttachment(id);
-    if (!url) {
-      throw new Error(`Missing data for attachment ${id}`);
-    }
-    const path = fileURLToPath(url);
-    return await fs.promises.readFile(path);
+    return this._sqlDatabaseBackend.getAttachmentContents(id);
   }
 }

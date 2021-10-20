@@ -2,6 +2,7 @@ export enum SQLTableName {
   Metadata = "metadata",
   Events = "events",
   Entities = "entities",
+  Attachments = "attachments",
 }
 
 export enum SQLMetadataTableKey {
@@ -22,4 +23,10 @@ export enum SQLEntityTableColumn {
   LastEventTimestampMillis = "lastEventTimestampMillis",
   Data = "data",
   RowID = "rowID",
+}
+
+export enum SQLAttachmentTableColumn {
+  ID = "id",
+  Data = "data",
+  MimeType = "mimeType"
 }

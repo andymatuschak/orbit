@@ -1,4 +1,6 @@
 import {
+  AttachmentID,
+  AttachmentMIMEType,
   Entity,
   Event,
   EventForEntity,
@@ -17,6 +19,7 @@ import { openDatabase } from "./sqlite/binding";
 import { getMetadataValues, setMetadataValues } from "./sqlite/metadata";
 import { performMigration } from "./sqlite/migration";
 import {
+  SQLAttachmentTableColumn,
   SQLEntityTableColumn,
   SQLEventTableColumn,
   SQLTableName,
@@ -29,12 +32,7 @@ import { SQLDatabase, SQLTransaction } from "./sqlite/types";
 SQLite-based implementation of an Orbit database backend.
 
 Running list of implementation problems / gotchas:
-1. expo-sqlite doesn't support a real close() operation[1]. A few implications:
-  a. opening/closing many databases in a React Native context will leak resources
-  b. clients can't know exactly when all writes are complete--but I don't think that's relevant in practice
-  c. the database must be run in WAL mode at all times to avoid iOS killing us for holding a database lock while suspended
-
-2. Our transaction primitives don't give us enough control to safely isolate schema migration. Simultaneous migrations could occur in the context of multiple processes accessing the same database, or multiple instances in the same process reading the same database. In practice, this probably won't cause corruption: most likely the migration transaction will simply fail in one process. But in the future complex migrations could partially succeed. At some point we should consider flock()ing during migration.
+1. Our transaction primitives don't give us enough control to safely isolate schema migration. Simultaneous migrations could occur in the context of multiple processes accessing the same database, or multiple instances in the same process reading the same database. In practice, this probably won't cause corruption: most likely the migration transaction will simply fail in one process. But in the future complex migrations could partially succeed. At some point we should consider flock()ing during migration.
 
 [1] https://github.com/expo/expo/issues/2278
  */
@@ -42,6 +40,8 @@ Running list of implementation problems / gotchas:
 export class SQLDatabaseBackend implements DatabaseBackend {
   private _db: SQLDatabase | null;
   private readonly _migrationPromise: Promise<void>;
+
+  static attachmentURLProtocol = "x-orbit-sqlattachment";
 
   constructor(subpath: string) {
     this._db = openDatabase(subpath);
@@ -220,6 +220,67 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     await execTransaction(db, async (tx) => {
       await setMetadataValues(tx, values);
     });
+  }
+
+  async storeAttachment(
+    contents: Uint8Array,
+    id: AttachmentID,
+    type: AttachmentMIMEType,
+  ): Promise<void> {
+    const db = await this._ensureDB();
+    await execTransaction(db, async (transaction) => {
+      SQLDatabaseBackend._put({
+        transaction,
+        tableName: SQLTableName.Attachments,
+        rows: [[id, contents, type]],
+        orderedColumnNames: [
+          SQLAttachmentTableColumn.ID,
+          SQLAttachmentTableColumn.Data,
+          SQLAttachmentTableColumn.MimeType,
+        ],
+        conflictSpec: {
+          policy: "replace",
+          uniqueColumnName: SQLAttachmentTableColumn.ID,
+          updateColumnNames: [
+            SQLAttachmentTableColumn.Data,
+            SQLAttachmentTableColumn.MimeType,
+          ],
+        },
+      });
+    });
+  }
+
+  // If the attachment has already been stored, resolves to its local URL; otherwise resolves to null.
+  async getURLForStoredAttachment(id: AttachmentID): Promise<string | null> {
+    const outputMap = await this._getByID(
+      SQLTableName.Attachments,
+      SQLAttachmentTableColumn.ID,
+      ["TRUE"], // We're just testing for existence--so we SELECT TRUE.
+      [id],
+      () => [id, true],
+    );
+    const result = outputMap.get(id);
+    if (result) {
+      return `${SQLDatabaseBackend.attachmentURLProtocol}:${id}`;
+    } else {
+      return null;
+    }
+  }
+
+  async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
+    const outputMap = await this._getByID(
+      SQLTableName.Attachments,
+      SQLAttachmentTableColumn.ID,
+      [SQLAttachmentTableColumn.Data],
+      [id],
+      (result) => [id, result],
+    );
+    const result = outputMap.get(id);
+    if (result) {
+      return result.data;
+    } else {
+      throw new Error(`Unknown attachment ${id}`);
+    }
   }
 
   private static _put({
