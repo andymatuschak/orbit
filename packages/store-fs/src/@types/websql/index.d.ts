@@ -15,17 +15,19 @@ declare module "websql/custom" {
       args: any[];
     }
 
-    export type WebSQLResult = {
-      error: Error;
-      insertId: undefined;
-      rowsAffected: undefined;
-      rows: undefined;
-    } | {
-      error: undefined;
-      insertId?: number;
-      rowsAffected: number;
-      rows: unknown[];
-    }
+    export type WebSQLResult =
+      | {
+          error: Error;
+          insertId: undefined;
+          rowsAffected: undefined;
+          rows: undefined;
+        }
+      | {
+          error: undefined;
+          insertId?: number;
+          rowsAffected: number;
+          rows: unknown[];
+        };
 
     export class WebSQLCustomDatabase {
       constructor(name: string);
@@ -39,6 +41,11 @@ declare module "websql/custom" {
   }
   function customOpenDatabase(
     constructor: typeof customOpenDatabase.WebSQLCustomDatabase,
-  ): (name: string) => import("../../sqlite/types").SQLDatabase;
+  ): (
+    name: string,
+    version: string,
+    description: string,
+    size: number,
+  ) => import("../../sqlite/types").SQLDatabase;
   export = customOpenDatabase;
 }

@@ -22,26 +22,26 @@ class RNSQLiteDatabase {
     const results = new Array<CustomWebSQLDatabase.WebSQLResult>(
       queries.length,
     );
-    for (const query of queries) {
+
+    queries.forEach((query, i) => {
       try {
         const result = sqlite.executeSql(this._name, query.sql, query.args);
-        results.push({
+        results[i] = {
           insertId: result.insertId,
           rowsAffected: result.rowsAffected,
           rows: result.rows._array,
           error: undefined,
-        });
+        };
       } catch (error) {
-        results.push({
+        results[i] = {
           error,
           rows: undefined,
           rowsAffected: undefined,
           insertId: undefined,
-        });
+        };
       }
-    }
-
-    callback(undefined, results);
+    });
+    callback(null, results);
   }
 }
 
