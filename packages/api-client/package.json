@@ -21,6 +21,7 @@
   "dependencies": {
     "@withorbit/api": "0.0.1",
     "@withorbit/core": "0.0.1",
+    "base64-js": "^1.5.1",
     "fetch-blob": "^2.1.1",
     "formdata-node": "^2.4.0",
     "node-fetch": "next"

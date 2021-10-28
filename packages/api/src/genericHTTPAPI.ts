@@ -72,6 +72,8 @@ export interface BlobLike<T> {
    * @TJS-type integer
    */
   size: number;
-  arrayBuffer(): Promise<ArrayBuffer>;
-  stream(): any;
+
+  // React Native doesn't support either of these.
+  arrayBuffer?(): Promise<ArrayBuffer>;
+  stream?(): any;
 }

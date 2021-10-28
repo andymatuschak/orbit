@@ -2,7 +2,7 @@ import { API, OrbitAPI, OrbitAPIValidator } from "@withorbit/api";
 import { AttachmentID, AttachmentMIMEType, TaskID } from "@withorbit/core";
 import { APIConfig, defaultAPIConfig } from "./apiConfig";
 import { AuthenticationConfig, RequestManager } from "./requestManager";
-import { Blob } from "./util/fetch";
+import { createBlobFromBuffer, getBytesFromBlobLike } from "./util/fetch";
 
 const ajvValidator = new OrbitAPIValidator({
   allowUnsupportedRoute: true,
@@ -41,19 +41,27 @@ export class OrbitAPIClient {
     });
   }
 
-  getAttachment2(id: AttachmentID): Promise<API.BlobLike<AttachmentMIMEType>> {
-    return this.requestManager.request("/attachments/:id", "GET", {
-      query: {},
-      params: { id },
-    });
+  async getAttachment2(
+    id: AttachmentID,
+  ): Promise<{ contents: Uint8Array; mimeType: AttachmentMIMEType }> {
+    const blobLike = await this.requestManager.request(
+      "/attachments/:id",
+      "GET",
+      {
+        query: {},
+        params: { id },
+      },
+    );
+    const contents = await getBytesFromBlobLike(blobLike);
+    return { contents, mimeType: blobLike.type };
   }
 
-  putAttachment2(
+  async putAttachment2(
     id: AttachmentID,
     mimeType: AttachmentMIMEType,
     contents: Uint8Array,
   ): Promise<API.RouteResponseData<OrbitAPI.Spec["/attachments/:id"]["POST"]>> {
-    const blob = new Blob([contents], { type: mimeType });
+    const blob = await createBlobFromBuffer(contents, mimeType);
     return this.requestManager.request("/attachments/:id", "POST", {
       params: { id },
       contentType: "multipart/form-data",

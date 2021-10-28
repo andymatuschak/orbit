@@ -39,6 +39,6 @@ export class OrbitStoreSyncAdapter implements SyncAdapter {
   }
 
   async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
-    return await this._orbitStore.attachmentStore.getAttachmentContents(id);
+    return (await this._orbitStore.attachmentStore.getAttachment(id)).contents;
   }
 }

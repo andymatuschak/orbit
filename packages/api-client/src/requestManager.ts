@@ -176,7 +176,8 @@ function getWireBody<
       case "multipart/form-data":
         const formData = new Network.FormData();
         for (const name of Object.keys(requestData.body)) {
-          formData.set(name, requestData.body[name]);
+          console.log("appending form data", name, requestData.body[name]);
+          formData.append(name, requestData.body[name]);
         }
         return { body: formData, contentType: requestData.contentType };
       case "application/json":

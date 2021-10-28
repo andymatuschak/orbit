@@ -40,7 +40,7 @@ export class APISyncAdapter implements SyncAdapter {
   }
 
   async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
-    const blobLike = await this._apiClient.getAttachment2(id);
-    return new Uint8Array(await blobLike.arrayBuffer());
+    const { contents } = await this._apiClient.getAttachment2(id);
+    return contents;
   }
 }
