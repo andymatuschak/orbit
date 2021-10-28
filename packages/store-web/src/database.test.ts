@@ -6,10 +6,11 @@ import { IDBDatabaseBackend } from "./indexedDB";
 describe("database tests", () => {
   runDatabaseTests(
     "IndexedDB",
-    async (eventReducer) =>
+    async (eventReducer, eventValidator) =>
       new Database(
         new IDBDatabaseBackend("TestDB", new FDBFactory()),
         eventReducer,
+        eventValidator,
       ),
   );
 });
