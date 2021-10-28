@@ -33,7 +33,7 @@ import { syncOrbitStore } from "../sync";
     apiConfig,
   );
   const apiAdapter = new APISyncAdapter(apiClient, "remote");
-  const localStore = await OrbitStoreFS.open(orbitStorePath, true);
+  const localStore = new OrbitStoreFS(orbitStorePath);
 
   await syncOrbitStore({
     source: localStore,

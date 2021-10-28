@@ -12,7 +12,7 @@ async function updateStore(noteDirectory: string, orbitStorePath: string) {
     noteFilenames.map((filename) => path.join(noteDirectory, filename)),
   );
 
-  const orbitStore = await OrbitStoreFS.open(orbitStorePath, true);
+  const orbitStore = new OrbitStoreFS(orbitStorePath);
   const importCache = await createImportCache(orbitStore.database);
   const orbitTaskSink = createTaskCache(importCache, orbitStore.database);
 

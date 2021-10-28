@@ -17,7 +17,7 @@ async function prepTestStore(
   events: Event[];
 }> {
   const dbPath = path.join(os.tmpdir(), "orbit-test-" + Math.random());
-  const store = await OrbitStoreFS.open(dbPath, true);
+  const store = new OrbitStoreFS(dbPath);
   const events = await prepFn(store);
   await store.database.putEvents(events);
   return { store, events };
