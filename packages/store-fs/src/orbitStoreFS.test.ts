@@ -7,11 +7,7 @@ import {
 import fs from "fs";
 import os from "os";
 import path from "path";
-import {
-  attachmentFolderName,
-  databaseFileName,
-  OrbitStoreFS,
-} from "./orbitStoreFS";
+import { OrbitStoreFS } from "./orbitStoreFS";
 
 let dbPath: string;
 let store: OrbitStoreFS;
@@ -55,10 +51,10 @@ describe("attachments", () => {
     );
     expect(path.basename(url!)).toBeTruthy();
 
-    expect(
-      await store.attachmentStore.getAttachmentContents(
-        testAttachmentReference.id,
-      ),
-    ).toEqual(testBuffer);
+    const { contents, type } = await store.attachmentStore.getAttachment(
+      testAttachmentReference.id,
+    );
+    expect(contents).toEqual(new Uint8Array(testBuffer));
+    expect(type).toEqual(testAttachmentReference.mimeType);
   });
 });

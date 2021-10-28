@@ -21,7 +21,9 @@ export class AttachmentStoreFS implements AttachmentStore {
     return this._sqlDatabaseBackend.getURLForStoredAttachment(id);
   }
 
-  async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
+  async getAttachment(
+    id: AttachmentID,
+  ): Promise<{ contents: Uint8Array; type: AttachmentMIMEType }> {
     return this._sqlDatabaseBackend.getAttachmentContents(id);
   }
 }

@@ -38,10 +38,12 @@ export class AttachmentStoreWeb implements AttachmentStore {
     }
   }
 
-  async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
+  async getAttachment(
+    id: AttachmentID,
+  ): Promise<{ contents: Uint8Array; type: AttachmentMIMEType }> {
     const row = await this._table.get(id);
     if (row) {
-      return row.data;
+      return { contents: row.data, type: row.type };
     } else {
       throw new Error(`Missing attachment ${id}`);
     }

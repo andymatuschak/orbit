@@ -20,6 +20,7 @@ test("after downloading URL resolves", async () => {
   const url = await store.getURLForStoredAttachment(testID);
   expect(url).toMatchInlineSnapshot(`"data:image/png;base64,AQID"`);
 
-  const contents = await store.getAttachmentContents(testID);
+  const {contents, type} = await store.getAttachment(testID);
   expect(contents).toEqual(testContents);
+  expect(type).toEqual("image/png");
 });

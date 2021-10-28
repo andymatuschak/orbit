@@ -11,5 +11,7 @@ export interface AttachmentStore {
   getURLForStoredAttachment(id: AttachmentID): Promise<string | null>;
 
   // Rejects if the attachment is not stored.
-  getAttachmentContents(id: AttachmentID): Promise<Uint8Array>;
+  getAttachment(
+    id: AttachmentID,
+  ): Promise<{ contents: Uint8Array; type: AttachmentMIMEType }>;
 }

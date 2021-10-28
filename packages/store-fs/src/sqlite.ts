@@ -271,17 +271,19 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     }
   }
 
-  async getAttachmentContents(id: AttachmentID): Promise<Uint8Array> {
+  async getAttachmentContents(
+    id: AttachmentID,
+  ): Promise<{ contents: Uint8Array; type: AttachmentMIMEType }> {
     const outputMap = await this._getByID(
       SQLTableName.Attachments,
       SQLAttachmentTableColumn.ID,
-      [SQLAttachmentTableColumn.Data],
+      [SQLAttachmentTableColumn.Data, SQLAttachmentTableColumn.MimeType],
       [id],
       (result) => [id, result],
     );
     const result = outputMap.get(id);
     if (result) {
-      return result.data;
+      return { contents: new Uint8Array(result.data), type: result.mimeType };
     } else {
       throw new Error(`Unknown attachment ${id}`);
     }
@@ -359,7 +361,7 @@ export class SQLDatabaseBackend implements DatabaseBackend {
       await this._migrationPromise;
       return this._db;
     } else {
-      throw new Error("Attempting to access database after it's been cloesd");
+      throw new Error("Attempting to access database after it's been closed");
     }
   }
 
