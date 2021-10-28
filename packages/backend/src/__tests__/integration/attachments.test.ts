@@ -22,11 +22,9 @@ test("ingests URLs", async () => {
     },
   ]);
 
-  const blob = await client.getAttachment2(testID);
-  const savedBase64Data = Buffer.from(await blob.arrayBuffer()).toString(
-    "base64",
-  );
-  expect(blob.type).toEqual(AttachmentMIMEType.PNG);
+  const { contents, mimeType } = await client.getAttachment2(testID);
+  const savedBase64Data = Buffer.from(contents).toString("base64");
+  expect(mimeType).toEqual(AttachmentMIMEType.PNG);
   expect(savedBase64Data).toEqual(testAttachmentBase64Data);
 
   // There should be a corresponding event.
@@ -41,10 +39,8 @@ test("round-trips attachments", async () => {
     AttachmentMIMEType.PNG,
     Buffer.from(testAttachmentBase64Data, "base64"),
   );
-  const blob = await client.getAttachment2(testID);
-  const savedBase64Data = Buffer.from(await blob.arrayBuffer()).toString(
-    "base64",
-  );
-  expect(blob.type).toEqual(AttachmentMIMEType.PNG);
+  const { contents, mimeType } = await client.getAttachment2(testID);
+  const savedBase64Data = Buffer.from(contents).toString("base64");
+  expect(mimeType).toEqual(AttachmentMIMEType.PNG);
   expect(savedBase64Data).toEqual(testAttachmentBase64Data);
 });

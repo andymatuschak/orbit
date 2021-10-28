@@ -75,7 +75,7 @@ export const storeAttachment: TypedRouteHandler<
 > = authenticatedRequestHandler(async (request, userID) => {
   // TODO: rate limit storage...
   const mimeType = request.body.file.type;
-  const buffer = new Uint8Array(await request.body.file.arrayBuffer());
+  const buffer = new Uint8Array(await request.body.file.arrayBuffer!());
 
   await _storeAttachment(userID, request.params.id, buffer, mimeType);
 
