@@ -40,11 +40,13 @@ Running list of implementation problems / gotchas:
 export class SQLDatabaseBackend implements DatabaseBackend {
   private _db: SQLDatabase | null;
   private readonly _migrationPromise: Promise<void>;
+  private readonly _path: string;
 
   static attachmentURLProtocol = "x-orbit-sqlattachment";
 
-  constructor(subpath: string) {
-    this._db = openDatabase(subpath);
+  constructor(path: string) {
+    this._path = path;
+    this._db = openDatabase(path);
     this._migrationPromise = performMigration(this._db);
   }
   static inMemoryDBSubpath = ":memory:"; // Pass to constructor to create an in-memory database
@@ -261,7 +263,9 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     );
     const result = outputMap.get(id);
     if (result) {
-      return `${SQLDatabaseBackend.attachmentURLProtocol}:${id}`;
+      return `${SQLDatabaseBackend.attachmentURLProtocol}:/${encodeURIComponent(
+        this._path,
+      )}/${id}`;
     } else {
       return null;
     }
