@@ -48,5 +48,10 @@ class RNSQLiteDatabase {
 const openRNSQLiteDatabase = CustomWebSQLDatabase(RNSQLiteDatabase);
 
 export function openDatabase(subpath: string): SQLDatabase {
-  return openRNSQLiteDatabase(subpath);
+  return openRNSQLiteDatabase(subpath, "", "", 1);
+}
+
+// Convert a Uint8Array into the representation expected by this SQLite implementation for BLOB columns.
+export function bufferToSQLBlob(bytes: Uint8Array): unknown {
+  return bytes.buffer; // react-native-quick-sqlite expects an ArrayBuffer.
 }

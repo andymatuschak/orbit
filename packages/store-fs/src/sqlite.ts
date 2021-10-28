@@ -15,7 +15,7 @@ import {
   DatabaseQueryOptions,
   DatabaseQueryPredicate,
 } from "@withorbit/store-shared";
-import { openDatabase } from "./sqlite/binding";
+import { bufferToSQLBlob, openDatabase } from "./sqlite/binding";
 import { getMetadataValues, setMetadataValues } from "./sqlite/metadata";
 import { performMigration } from "./sqlite/migration";
 import {
@@ -234,7 +234,7 @@ export class SQLDatabaseBackend implements DatabaseBackend {
       SQLDatabaseBackend._put({
         transaction,
         tableName: SQLTableName.Attachments,
-        rows: [[id, contents, type]],
+        rows: [[id, bufferToSQLBlob(contents), type]],
         orderedColumnNames: [
           SQLAttachmentTableColumn.ID,
           SQLAttachmentTableColumn.Data,

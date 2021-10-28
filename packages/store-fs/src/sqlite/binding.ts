@@ -8,3 +8,8 @@ import { SQLDatabase } from "./types";
 export function openDatabase(subpath: string): SQLDatabase {
   return webSQLOpenDatabase(subpath, "", "", 1);
 }
+
+// Convert a Uint8Array into the representation expected by this SQLite implementation for BLOB columns.
+export function bufferToSQLBlob(bytes: Uint8Array): unknown {
+  return Buffer.from(bytes); // node-sqlite3 expects a Buffer
+}
