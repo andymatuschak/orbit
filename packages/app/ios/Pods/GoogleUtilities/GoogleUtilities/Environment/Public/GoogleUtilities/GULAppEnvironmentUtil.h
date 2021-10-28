@@ -47,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
     "Always `YES` because only iOS 8 and higher supported. The method will be removed.");
 
 /// @return YES if Swift runtime detected in the app.
-+ (BOOL)hasSwiftRuntime;
++ (BOOL)hasSwiftRuntime __deprecated;
 
 /// @return An Apple platform. Possible values "ios", "tvos", "macos", "watchos", "maccatalyst".
 + (NSString *)applePlatform;

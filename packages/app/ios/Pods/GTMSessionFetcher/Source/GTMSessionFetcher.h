@@ -136,6 +136,8 @@
 // Alternative HTTP methods, like PUT, and custom headers can be specified by
 // creating the fetcher with an appropriate NSMutableURLRequest.
 //
+// Custom headers can also be provided per-request via an instance of `GTMFetcherDecoratorProtocol`
+// passed to `-[GTMSessionFetcherService addDecorator:]`.
 //
 // Caching:
 //
@@ -179,9 +181,8 @@
 // Note: cookies set while following redirects will be sent to the server, as
 // the redirects are followed by the fetcher.
 //
-// To completely disable cookies, similar to setting cookieStorageMethod to
-// kGTMHTTPFetcherCookieStorageMethodNone, adjust the session configuration
-// appropriately in the fetcher or fetcher service:
+// To completely disable cookies, adjust the session configuration appropriately
+// in the fetcher or fetcher service:
 //  fetcher.configurationBlock = ^(GTMSessionFetcher *configFetcher,
 //                                 NSURLSessionConfiguration *config) {
 //    config.HTTPCookieAcceptPolicy = NSHTTPCookieAcceptPolicyNever;
@@ -376,7 +377,8 @@
 // To disallow use of background tasks during fetches, the target should define
 // GTM_BACKGROUND_TASK_FETCHING to 0, or alternatively may set the
 // skipBackgroundTask property to YES.
-#if TARGET_OS_IPHONE && !TARGET_OS_WATCH && !defined(GTM_BACKGROUND_TASK_FETCHING)
+#if !defined(GTM_BACKGROUND_TASK_FETCHING) && \
+    (TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_MACCATALYST)
 #define GTM_BACKGROUND_TASK_FETCHING 1
 #endif
 
@@ -384,20 +386,9 @@
 extern "C" {
 #endif
 
-#if (TARGET_OS_TV || TARGET_OS_WATCH ||                          \
-     (!TARGET_OS_IPHONE && defined(MAC_OS_X_VERSION_10_11) &&    \
-      MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_11) || \
-     (TARGET_OS_IPHONE && defined(__IPHONE_9_0) &&               \
-      __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_9_0))
-#ifndef GTM_USE_SESSION_FETCHER
-#define GTM_USE_SESSION_FETCHER 1
-#endif
-#endif
-
 #if !defined(GTMBridgeFetcher)
-// These bridge macros should be identical in GTMHTTPFetcher.h and GTMSessionFetcher.h
-#if GTM_USE_SESSION_FETCHER
-// Macros to new fetcher class.
+// The bridge macros are deprecated, and should be replaced; GTMHTTPFetcher is no longer
+// supported and all code should switch to use GTMSessionFetcher types directly.
 #define GTMBridgeFetcher GTMSessionFetcher
 #define GTMBridgeFetcherService GTMSessionFetcherService
 #define GTMBridgeFetcherServiceProtocol GTMSessionFetcherServiceProtocol
@@ -408,19 +399,6 @@ extern "C" {
 #define GTMBridgeApplicationIdentifier GTMFetcherApplicationIdentifier
 #define kGTMBridgeFetcherStatusDomain kGTMSessionFetcherStatusDomain
 #define kGTMBridgeFetcherStatusBadRequest GTMSessionFetcherStatusBadRequest
-#else
-// Macros to old fetcher class.
-#define GTMBridgeFetcher GTMHTTPFetcher
-#define GTMBridgeFetcherService GTMHTTPFetcherService
-#define GTMBridgeFetcherServiceProtocol GTMHTTPFetcherServiceProtocol
-#define GTMBridgeAssertValidSelector GTMAssertSelectorNilOrImplementedWithArgs
-#define GTMBridgeCookieStorage GTMCookieStorage
-#define GTMBridgeCleanedUserAgentString GTMCleanedUserAgentString
-#define GTMBridgeSystemVersionString GTMSystemVersionString
-#define GTMBridgeApplicationIdentifier GTMApplicationIdentifier
-#define kGTMBridgeFetcherStatusDomain kGTMHTTPFetcherStatusDomain
-#define kGTMBridgeFetcherStatusBadRequest kGTMHTTPFetcherStatusBadRequest
-#endif  // GTM_USE_SESSION_FETCHER
 #endif
 
 // When creating background sessions to perform out-of-process uploads and
@@ -570,7 +548,7 @@ typedef void (^GTMSessionFetcherRetryResponse)(BOOL shouldRetry);
 typedef void (^GTMSessionFetcherRetryBlock)(BOOL suggestedWillRetry, NSError *_Nullable error,
                                             GTMSessionFetcherRetryResponse response);
 
-API_AVAILABLE(ios(10.0), macosx(10.12), tvos(10.0), watchos(3.0))
+API_AVAILABLE(ios(10.0), macosx(10.12), tvos(10.0), watchos(6.0))
 typedef void (^GTMSessionFetcherMetricsCollectionBlock)(NSURLSessionTaskMetrics *metrics);
 
 typedef void (^GTMSessionFetcherTestResponse)(NSHTTPURLResponse *_Nullable response,
@@ -633,9 +611,54 @@ NSData *_Nullable GTMDataFromInputStream(NSInputStream *inputStream, NSError **o
 }  // extern "C"
 #endif
 
-#if !GTM_USE_SESSION_FETCHER
-@protocol GTMHTTPFetcherServiceProtocol;
-#endif
+// Completion handler passed to -[GTMFetcherDecoratorProtocol fetcherWillStart:completionHandler:].
+typedef void (^GTMFetcherDecoratorFetcherWillStartCompletionHandler)(NSURLRequest *_Nullable,
+                                                                     NSError *_Nullable);
+
+// Allows intercepting a request and optionally modifying it before the request (or a retry)
+// is sent. See `-[GTMSessionFetcherService addDecorator:]` and `-[GTMSessionFetcherService
+// removeDecorator:]`.
+//
+// Decorator methods must be thread-safe, as they might be invoked on any queue.
+@protocol GTMFetcherDecoratorProtocol <NSObject>
+
+// Invoked just before a fetcher's request starts.
+//
+// After the decorator's work is complete, the decorator must invoke `handler(request, error)`
+// either synchronously or asynchronously (on any queue).
+//
+// If no changes are to be made, pass `nil` for both `request` and `error`.
+//
+// Otherwise, if `error` is non-nil, then the fetcher is stopped with the given error, and any
+// further decorators' `-fetcherWillStart:completionHandler:` methods are not invoked.
+//
+// Otherwise, the decorator may use `[fetcher.request mutableCopy]`, make changes to the mutable
+// copy of the request, and pass the result to the handler via the `request` parameter.
+//
+// To distinguish the initial fetch from retries, the decorator can look at `fetcher.retryCount`.
+//
+// This method must not block the caller (e.g., performing synchronous I/O). Perform any blocking
+// work or I/O on a different queue, then invoke `handler` with the results after the blocking work
+// completes.
+- (void)fetcherWillStart:(GTMSessionFetcher *)fetcher
+       completionHandler:(GTMFetcherDecoratorFetcherWillStartCompletionHandler)handler;
+
+// Invoked just after a fetcher's request finishes (either on success or on failure).
+//
+// After the decorator's work is complete, the decorator must invoke `handler()` either
+// synchronously or asynchronously (on any queue).
+//
+// To access the result of the fetch, the decorator can look at `fetcher.response`.
+//
+// This method must not block the caller (e.g., performing synchronous I/O). Perform any blocking
+// work or I/O on a different queue, then invoke `handler` with the results after the blocking work
+// completes.
+- (void)fetcherDidFinish:(GTMSessionFetcher *)fetcher
+                withData:(nullable NSData *)data
+                   error:(nullable NSError *)error
+       completionHandler:(void (^)(void))handler;
+
+@end
 
 // This protocol allows abstract references to the fetcher service, primarily for
 // fetchers (which may be compiled without the fetcher service class present.)
@@ -661,8 +684,12 @@ NSData *_Nullable GTMDataFromInputStream(NSInputStream *inputStream, NSError **o
 - (nullable id<NSURLSessionDelegate>)sessionDelegate;
 - (nullable NSDate *)stoppedAllFetchersDate;
 
-// Methods for compatibility with the old GTMHTTPFetcher.
 @property(atomic, readonly, strong, nullable) NSOperationQueue *delegateQueue;
+
+@optional
+// This property is optional, for now, to enable releasing the feature without breaking existing
+// code that fakes the service but doesn't implement this.
+@property(atomic, readonly, strong, nullable) NSArray<id<GTMFetcherDecoratorProtocol>> *decorators;
 
 @end  // @protocol GTMSessionFetcherServiceProtocol
 
@@ -699,11 +726,7 @@ NSData *_Nullable GTMDataFromInputStream(NSInputStream *inputStream, NSError **o
 - (void)authorizeRequest:(nullable NSMutableURLRequest *)request
        completionHandler:(void (^)(NSError *_Nullable error))handler;
 
-#if GTM_USE_SESSION_FETCHER
 @property(atomic, weak, nullable) id<GTMSessionFetcherServiceProtocol> fetcherService;
-#else
-@property(atomic, weak, nullable) id<GTMHTTPFetcherServiceProtocol> fetcherService;
-#endif
 
 - (BOOL)primeForRefresh;
 
@@ -1022,7 +1045,7 @@ NSData *_Nullable GTMDataFromInputStream(NSInputStream *inputStream, NSError **o
 // This is called on the callback queue.
 @property(atomic, copy, nullable)
     GTMSessionFetcherMetricsCollectionBlock metricsCollectionBlock API_AVAILABLE(
-        ios(10.0), macosx(10.12), tvos(10.0), watchos(3.0));
+        ios(10.0), macosx(10.12), tvos(10.0), watchos(6.0));
 
 // Retry intervals must be strictly less than maxRetryInterval, else
 // they will be limited to maxRetryInterval and no further retries will
@@ -1135,7 +1158,10 @@ NSData *_Nullable GTMDataFromInputStream(NSInputStream *inputStream, NSError **o
 // Log of request and response, if logging is enabled
 @property(atomic, copy, nullable) NSString *log;
 
-// Callbacks are run on this queue.  If none is supplied, the main queue is used.
+// Callbacks are run on this queue. If none is supplied, the main queue is used.
+//
+// CAUTION: This block MUST be a serial queue. Setting a concurrent queue can result in callbacks
+// being dispatched concurrently, leading events to appear out-of-order.
 @property(atomic, strong, null_resettable) dispatch_queue_t callbackQueue;
 
 // The queue used internally by the session to invoke its delegate methods in the fetcher.
@@ -1235,9 +1261,10 @@ NSData *_Nullable GTMDataFromInputStream(NSInputStream *inputStream, NSError **o
 @end
 
 @interface GTMSessionFetcher (BackwardsCompatibilityOnly)
-// Clients using GTMSessionFetcher should set the cookie storage explicitly themselves.
-// This method is just for compatibility with the old GTMHTTPFetcher class.
-- (void)setCookieStorageMethod:(NSInteger)method;
+// Clients using GTMSessionFetcher should set the cookie storage explicitly themselves;
+// this method is deprecated and will be removed soon.
+- (void)setCookieStorageMethod:(NSInteger)method
+    __deprecated_msg("Create an NSHTTPCookieStorage and set .cookieStorage directly.");
 @end
 
 // Until we can just instantiate NSHTTPCookieStorage for local use, we'll

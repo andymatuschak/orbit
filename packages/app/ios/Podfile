@@ -38,6 +38,14 @@ target 'Orbit' do
     ["Crashlytics", "Fabric"]
   end
   post_install do |installer|
+    installer.pods_project.targets.each do |target|
+      if target.name == "react-native-quick-sqlite"
+        target.build_configurations.each do |config|
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)', 'HAVE_FULLFSYNC=1', 'SQLITE_ENABLE_JSON1=1']
+        end
+      end
+    end
+
     #flipper_post_install(installer)
     configure_support_catalyst installer, unsupported_pods
   end

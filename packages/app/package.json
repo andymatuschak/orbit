@@ -16,8 +16,8 @@
     "generateBrowserCompatibility": "scripts/generate_browser_compatibility_regex.sh"
   },
   "dependencies": {
-    "@react-native-firebase/app": "^11.0.0",
-    "@react-native-firebase/auth": "^11.0.0",
+    "@react-native-firebase/app": "^12.9.2",
+    "@react-native-firebase/auth": "^12.9.2",
     "@react-navigation/native": "^5.8.1",
     "@sentry/browser": "^5.27.2",
     "@sentry/react-native": "^1.9.0",
@@ -64,7 +64,7 @@
     "react-dom": "17.0.1",
     "react-native": "0.63.4",
     "react-native-get-random-values": "~1.7.0",
-    "react-native-leveldown": "1.0.1",
+    "react-native-quick-sqlite": "^1.0.5",
     "react-native-safe-area-context": "3.2.0",
     "react-native-svg": "12.1.1",
     "react-native-unimodules": "~0.14.5",

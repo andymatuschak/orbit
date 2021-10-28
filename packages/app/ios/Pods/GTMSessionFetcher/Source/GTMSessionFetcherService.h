@@ -67,7 +67,7 @@ extern NSString *const kGTMSessionFetcherServiceSessionKey;
 @property(atomic, copy, nullable) NSDictionary<NSString *, id> *properties;
 @property(atomic, copy, nullable)
     GTMSessionFetcherMetricsCollectionBlock metricsCollectionBlock API_AVAILABLE(
-        ios(10.0), macosx(10.12), tvos(10.0), watchos(3.0));
+        ios(10.0), macosx(10.12), tvos(10.0), watchos(6.0));
 
 #if GTM_BACKGROUND_TASK_FETCHING
 @property(atomic, assign) BOOL skipBackgroundTask;
@@ -143,6 +143,15 @@ extern NSString *const kGTMSessionFetcherServiceSessionKey;
 
 - (void)stopAllFetchers;
 
+// Holds a weak reference to `decorator`. When creating a fetcher via
+// `-fetcherWithRequest:fetcherClass:`, each registered `decorator` can inspect and potentially
+// change the fetcher's request before it starts. Decorators are invoked in the order in which
+// they are passed to this method.
+- (void)addDecorator:(id<GTMFetcherDecoratorProtocol>)decorator;
+
+// Removes a `decorator` previously passed to `-removeDecorator:`.
+- (void)removeDecorator:(id<GTMFetcherDecoratorProtocol>)decorator;
+
 // Methods for use by the fetcher class only.
 - (nullable NSURLSession *)session;
 - (nullable NSURLSession *)sessionForFetcherCreation;
@@ -191,9 +200,10 @@ extern NSString *const kGTMSessionFetcherServiceSessionKey;
 
 @interface GTMSessionFetcherService (BackwardsCompatibilityOnly)
 
-// Clients using GTMSessionFetcher should set the cookie storage explicitly themselves.
-// This method is just for compatibility with the old fetcher.
-@property(atomic, assign) NSInteger cookieStorageMethod;
+// Clients using GTMSessionFetcher should set the cookie storage explicitly themselves;
+// this property is deprecated and will be removed soon.
+@property(atomic, assign) NSInteger cookieStorageMethod __deprecated_msg(
+    "Create an NSHTTPCookieStorage and set .cookieStorage directly.");
 
 @end
 
