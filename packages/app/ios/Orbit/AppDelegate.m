@@ -232,25 +232,23 @@ static void InitializeFlipper(UIApplication *application) {
   }
 
   UIWindowScene *windowScene = (UIWindowScene *)scene;
-
   self.window = [[UIWindow alloc] initWithWindowScene:windowScene];
+
   if (!self.appDelegate.bridge) {
+    // When running in debug, we can start RN immediately. Otherwise, we'll check the remote for updates first.
 #if DEBUG
-  [self initializeReactNativeApp];
+    [self initializeReactNativeApp];
 #else
-  EXUpdatesAppController *controller = [EXUpdatesAppController sharedInstance];
-  controller.delegate = self;
-  [controller startAndShowLaunchScreen:self.window];
+    EXUpdatesAppController *controller = [EXUpdatesAppController sharedInstance];
+    controller.delegate = self;
+    [controller startAndShowLaunchScreen:self.window];
 #endif
   }
 
 #if TARGET_OS_MACCATALYST
   windowScene.titlebar.titleVisibility = UITitlebarTitleVisibilityHidden;
-  windowScene.titlebar.toolbar = [[NSToolbar alloc] init];
-  windowScene.titlebar.toolbar.showsBaselineSeparator = NO;
-  if (windowScene.sizeRestrictions) {
-    windowScene.sizeRestrictions.minimumSize = CGSizeMake(370, 600);
-  }
+  windowScene.titlebar.toolbar = nil;
+  windowScene.sizeRestrictions.minimumSize = CGSizeMake(370, 600);
 #endif
 }
 
@@ -270,17 +268,7 @@ static void InitializeFlipper(UIApplication *application) {
   UIViewController *rootViewController = [UIViewController new];
   rootViewController.view = rootView;
   self.window.rootViewController = rootViewController;
-
-#if TARGET_OS_MACCATALYST
-  dispatch_async(dispatch_get_main_queue(), ^{
-    ORNSWindowAdditions *window = [self.window nsWindow];
-    window.styleMask |= 1<<15;
-    window.titlebarAppearsTransparent = YES;
-    [self.window makeKeyAndVisible];
-  });
-#else
   [self.window makeKeyAndVisible];
-#endif
 }
 
 @end
