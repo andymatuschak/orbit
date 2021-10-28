@@ -31,6 +31,7 @@
     "fetch-blob": "^2.1.1",
     "firebase-admin": "^9.11.1",
     "firebase-functions": "^3.15.1",
+    "firebase-tools": "^9.20.0",
     "isbot-fast": "^1.2.0",
     "morgan-body": "^2.6.6",
     "node-fetch": "next",

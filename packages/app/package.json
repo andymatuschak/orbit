@@ -98,7 +98,7 @@
     "babel-preset-react-native": "^4.0.1",
     "browserslist-useragent-regexp": "^3.0.0",
     "expo-yarn-workspaces": "^1.5.2",
-    "firebase-tools": "^9.16.2",
+    "firebase-tools": "^9.20.0",
     "husky": "^4.2.3",
     "jest": "~27.0.6",
     "jest-expo": "^42.0.0",
