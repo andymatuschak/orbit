@@ -9,7 +9,7 @@ const migration: SQLMigration = {
       data BLOB NOT NULL,
       mimeType TEXT NOT NULL
     )
-    `
+    `,
   ],
 };
 export default migration;

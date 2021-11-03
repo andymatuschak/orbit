@@ -28,5 +28,5 @@ export enum SQLEntityTableColumn {
 export enum SQLAttachmentTableColumn {
   ID = "id",
   Data = "data",
-  MimeType = "mimeType"
+  MimeType = "mimeType",
 }
