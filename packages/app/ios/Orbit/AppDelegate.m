@@ -182,18 +182,21 @@ static void InitializeFlipper(UIApplication *application) {
 - (void)buildMenuWithBuilder:(id<UIMenuBuilder>)builder {
   [super buildMenuWithBuilder:builder];
 
+#if DEBUG
   UIKeyCommand *clearCacheCommand = [UIKeyCommand keyCommandWithInput:@"K" modifierFlags:UIKeyModifierCommand | UIKeyModifierControl action:@selector(clearCaches)];
-  clearCacheCommand.title = @"Clear Caches";
-
-  UICommand *signOutCommand = [UICommand commandWithTitle:@"Sign out" image:nil action:@selector(signOut) propertyList:nil];
+  clearCacheCommand.title = @"Clear Local Data";
 
   UIKeyCommand *reactNativeDebugCommand = [UIKeyCommand keyCommandWithInput:@"D" modifierFlags:UIKeyModifierCommand | UIKeyModifierControl action:@selector(showReactNativeDebugMenu)];
-  reactNativeDebugCommand.title = @"React Native debug";
+  reactNativeDebugCommand.title = @"React Native Debug";
 
-  UIMenu *debugMenu = [UIMenu menuWithTitle:@"Debug" children:@[clearCacheCommand, signOutCommand, reactNativeDebugCommand]];
-
+  UIMenu *debugMenu = [UIMenu menuWithTitle:@"Debug" children:@[clearCacheCommand, reactNativeDebugCommand]];
 
   [builder insertSiblingMenu:debugMenu beforeMenuForIdentifier:UIMenuHelp];
+#endif
+
+  UICommand *signOutCommand = [UICommand commandWithTitle:@"Sign Out" image:nil action:@selector(signOut) propertyList:nil];
+  UIMenu *signOutMenuGroup = [UIMenu menuWithTitle:@"" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:@[signOutCommand]];
+  [builder insertSiblingMenu:signOutMenuGroup afterMenuForIdentifier:UIMenuAbout] ;
 }
 #endif
 
