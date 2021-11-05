@@ -13,9 +13,11 @@ enum RootScreen {
   LearnMore = "LearnMore",
   TermsOfService = "TermsOfService",
   Settings = "Settings",
+  Download = "Download",
 }
 
 function useNavigationState(): RootScreen {
+  // TODO: Implement a real router.
   if (Platform.OS === "web") {
     const pathname = window.location.pathname;
     if (pathname.startsWith("/login")) {
@@ -26,6 +28,8 @@ function useNavigationState(): RootScreen {
       return RootScreen.TermsOfService;
     } else if (pathname.startsWith("/settings")) {
       return RootScreen.Settings;
+    } else if (pathname.startsWith("/download")) {
+      return RootScreen.Download;
     } else if (pathname === "/") {
       return RootScreen.LearnMore;
     }
@@ -34,6 +38,7 @@ function useNavigationState(): RootScreen {
   return RootScreen.Review;
 }
 
+// TODO: We should really separate the "web site" bits from the "Orbit web app" bits.
 const screens: Record<
   RootScreen,
   () => Promise<{ default: React.ComponentType<any> }>
@@ -44,6 +49,7 @@ const screens: Record<
   [RootScreen.Settings]: () => import("./settings/SettingsScreen"),
   [RootScreen.LearnMore]: () => import("./learnMore/LearnMoreScreen"),
   [RootScreen.TermsOfService]: () => import("./terms/TermsOfServiceScreen"),
+  [RootScreen.Download]: () => import("./download/DownloadScreen"),
 };
 
 function Lazy<T extends React.ComponentType<any>>(props: {
