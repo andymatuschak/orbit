@@ -2,10 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>EXUpdatesAutoSetup</key>
+	<false/>
 	<key>EXUpdatesReleaseChannel</key>
 	<string>default</string>
 	<key>EXUpdatesSDKVersion</key>
-	<string>38.0.0</string>
+	<string>42.0.0</string>
 	<key>EXUpdatesURL</key>
 	<string>https://exp.host/@andymatuschak/orbit</string>
 </dict>

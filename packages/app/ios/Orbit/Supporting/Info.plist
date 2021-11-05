@@ -9,7 +9,7 @@
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)$(ORBIT_BUNDLE_ID_SUFFIX)</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -22,45 +22,25 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<false/>
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>localhost</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
+				<false/>
 			</dict>
 		</dict>
 	</dict>
 	<key>UIAppFonts</key>
 	<array>
-		<string>dr-bold-TRIAL.otf</string>
-		<string>dr-bolditalic-TRIAL.otf</string>
-		<string>dr-extrabold-TRIAL.otf</string>
-		<string>dr-extrabolditalic-TRIAL.otf</string>
-		<string>dr-extralight-TRIAL.otf</string>
-		<string>dr-extralightitalic-TRIAL.otf</string>
-		<string>dr-italic-TRIAL.otf</string>
-		<string>dr-light-TRIAL.otf</string>
-		<string>dr-lightitalic-TRIAL.otf</string>
-		<string>dr-medium-TRIAL.otf</string>
-		<string>dr-mediumitalic-TRIAL.otf</string>
-		<string>dr-regular-TRIAL.otf</string>
-		<string>drweb-bold-TRIAL.woff</string>
-		<string>drweb-bolditalic-TRIAL.woff</string>
-		<string>drweb-extrabold-TRIAL.woff</string>
-		<string>drweb-extrabolditalic-TRIAL.woff</string>
-		<string>drweb-extralight-TRIAL.woff</string>
-		<string>drweb-extralightitalic-TRIAL.woff</string>
-		<string>drweb-italic-TRIAL.woff</string>
-		<string>drweb-light-TRIAL.woff</string>
-		<string>drweb-lightitalic-TRIAL.woff</string>
-		<string>drweb-medium-TRIAL.woff</string>
-		<string>drweb-mediumitalic-TRIAL.woff</string>
-		<string>drweb-regular-TRIAL.woff</string>
 		<string>dr-bold.otf</string>
 		<string>dr-bolditalic.otf</string>
 		<string>dr-extrabold.otf</string>

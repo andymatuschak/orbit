@@ -387,6 +387,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				ORBIT_ALLOWS_LOCAL_NETWORKING = YES;
 				ORBIT_BUNDLE_ID_SUFFIX = "-Development";
 				ORBIT_DISPLAY_NAME_SUFFIX = " Dev";
 				OTHER_LDFLAGS = (
@@ -394,7 +395,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.withorbit.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.withorbit.native;
 				PRODUCT_NAME = Orbit;
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -419,6 +420,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				ORBIT_ALLOWS_LOCAL_NETWORKING = NO;
 				ORBIT_BUNDLE_ID_SUFFIX = "";
 				ORBIT_DISPLAY_NAME_SUFFIX = "";
 				OTHER_LDFLAGS = (
@@ -426,7 +428,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.withorbit.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.withorbit.native;
 				PRODUCT_NAME = Orbit;
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;

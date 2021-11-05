@@ -10,7 +10,7 @@
       "config": "metro.config.js"
     },
     "ios": {
-      "bundleIdentifier": "com.withorbit.app"
+      "bundleIdentifier": "com.withorbit.native"
     },
     "android": {
       "package": "com.withorbit.app"
