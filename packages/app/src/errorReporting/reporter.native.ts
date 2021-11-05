@@ -45,7 +45,6 @@ class ExpoIntegration {
     });
 
     setTags({
-      deviceId: Constants.installationId,
       platform: Platform.OS,
     });
 
