@@ -28,7 +28,7 @@ test("bidi transmission", async () => {
     createTestTaskIngestEvents(2000),
   );
   const { store: store2, events: events2 } = await prepTestStore(async () =>
-    createTestTaskIngestEvents(2000),
+    createTestTaskIngestEvents(1000),
   );
 
   const store2SyncAdapter = new OrbitStoreSyncAdapter(store2, "testServer");
@@ -37,9 +37,8 @@ test("bidi transmission", async () => {
     receivedEventCount: receivedEventCount1,
   } = await syncOrbitStore({ source: store1, destination: store2SyncAdapter });
 
-  // These values are a bit non-intuitive. Due to inefficiencies in our sync algorithm, we have to send the server all the events we receive. And so these counts will (or should) always be the same, and equal to the total number of events on both source and destination needing sync.
-  expect(sentEventCount1).toEqual(events1.length + events2.length);
-  expect(receivedEventCount1).toEqual(events1.length + events2.length);
+  expect(sentEventCount1).toEqual(events1.length);
+  expect(receivedEventCount1).toEqual(events2.length);
 
   const finalEvents1 = await store1.database.listEvents({});
   const finalEvents2 = await store2.database.listEvents({});
@@ -51,7 +50,11 @@ test("bidi transmission", async () => {
   const {
     sentEventCount: sentEventCount2,
     receivedEventCount: receivedEventCount2,
-  } = await syncOrbitStore({ source: store1, destination: store2SyncAdapter });
+  } = await syncOrbitStore({
+    source: store1,
+    destination: store2SyncAdapter,
+    // syncCache,
+  });
   expect(sentEventCount2).toEqual(0);
   expect(receivedEventCount2).toEqual(0);
 
@@ -61,8 +64,11 @@ test("bidi transmission", async () => {
   const {
     sentEventCount: sentEventCount3,
     receivedEventCount: receivedEventCount3,
-  } = await syncOrbitStore({ source: store1, destination: store2SyncAdapter });
-  expect(sentEventCount3).toEqual(extraEvents.length);
+  } = await syncOrbitStore({
+    source: store1,
+    destination: store2SyncAdapter,
+  });
+  expect(sentEventCount3).toEqual(0);
   expect(receivedEventCount3).toEqual(extraEvents.length);
   expect(await store1.database.listEvents({})).toEqual(
     events1.concat(events2).concat(extraEvents),

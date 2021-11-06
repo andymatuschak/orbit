@@ -13,6 +13,12 @@ function log(...args: any[]) {
   console.log(`[Sync] ${Date.now() / 1000.0} ${first}`, ...rest);
 }
 
+// We don't currently persist any metadata about whether a given event or attachment was created locally or remotely. So to avoid double-transmitting stuff, we keep track in memory of the IDs we've transmitting each way on the connection.
+export interface SyncCache {
+  sourceEventIDs: Set<EventID>;
+  destinationEventIDs: Set<EventID>;
+}
+
 export async function syncOrbitStore({
   source,
   destination,
@@ -23,7 +29,14 @@ export async function syncOrbitStore({
   destination: SyncAdapter;
   sendBatchSize?: number;
   receiveBatchSize?: number;
-}): Promise<{ sentEventCount: number; receivedEventCount: number }> {
+}): Promise<{
+  sentEventCount: number;
+  receivedEventCount: number;
+}> {
+  const syncCache: SyncCache = {
+    sourceEventIDs: new Set(),
+    destinationEventIDs: new Set(),
+  };
   const sourceSyncInterface = new OrbitStoreSyncAdapter(source, "local");
 
   const latestSentEventIDKey = `__sync_${destination.id}_latestEventIDSent`;
@@ -48,6 +61,7 @@ export async function syncOrbitStore({
         new Map([[latestSentEventIDKey, eventID]]),
       ),
     batchSize: sendBatchSize,
+    syncCache,
   };
   const { sentEventCount: sentEventCount1, latestSentEventID } =
     await sendNewEvents(sendArgs);
@@ -63,19 +77,17 @@ export async function syncOrbitStore({
         new Map([[latestReceivedEventIDKey, eventID]]),
       ),
     batchSize: receiveBatchSize,
+    syncCache: {
+      sourceEventIDs: syncCache.destinationEventIDs,
+      destinationEventIDs: syncCache.sourceEventIDs,
+    },
   });
 
   // After receiving, we send events again
   log("*** Reconciling received events");
   const { sentEventCount: sentEventCount2 } = await sendNewEvents({
-    source: sourceSyncInterface,
-    destination: destination,
+    ...sendArgs,
     latestSentEventID, // use the latest sent event ID from the first step
-    setLatestSentEventID: (eventID: EventID) =>
-      source.database.setMetadataValues(
-        new Map([[latestSentEventIDKey, eventID]]),
-      ),
-    batchSize: sendBatchSize,
   });
 
   return {
@@ -90,23 +102,29 @@ async function sendNewEvents({
   latestSentEventID,
   setLatestSentEventID,
   batchSize,
+  syncCache,
 }: {
   source: SyncAdapter;
   destination: SyncAdapter;
   latestSentEventID: EventID | null;
   setLatestSentEventID: (id: EventID) => Promise<void>;
   batchSize: number;
+  syncCache: SyncCache;
 }) {
   let afterEventID = latestSentEventID;
   let sentEventCount = 0;
   while (true) {
     log("Requesting next batch of events");
-    const events: Event[] = await source.listEvents(afterEventID, batchSize);
-    log(`Received ${events.length} events`);
+    const allEvents: Event[] = await source.listEvents(afterEventID, batchSize);
+    allEvents.forEach((event) => syncCache.sourceEventIDs.add(event.id));
+    const newEvents = allEvents.filter(
+      ({ id }) => !syncCache.destinationEventIDs.has(id),
+    );
+    log(`Received ${allEvents.length} events (${newEvents.length} new)`);
 
-    if (events.length > 0) {
+    if (newEvents.length > 0) {
       // Transmit any attachments ingested among these events.
-      const attachmentIngestEvents = events.filter(
+      const attachmentIngestEvents = newEvents.filter(
         (event): event is AttachmentIngestEvent =>
           event.type === EventType.AttachmentIngest,
       );
@@ -122,11 +140,15 @@ async function sendNewEvents({
       }
 
       log("Putting events at destination");
-      await destination.putEvents(events);
-      sentEventCount += events.length;
+      await destination.putEvents(newEvents);
+      sentEventCount += newEvents.length;
       log(`Done. ${sentEventCount} total events transferred.`);
+      newEvents.forEach((event) => syncCache.destinationEventIDs.add(event.id));
+    }
 
-      afterEventID = events[events.length - 1].id;
+    // Note that we examine the unfiltered set of events here, so that we don't re-request the events we've already seen in the future here.
+    if (allEvents.length > 0) {
+      afterEventID = allEvents[allEvents.length - 1].id;
       await setLatestSentEventID(afterEventID);
     } else {
       break;
