@@ -1,21 +1,13 @@
-import { styles } from "@withorbit/ui";
 import React from "react";
-import { ActivityIndicator, Platform, View } from "react-native";
+import { Platform } from "react-native";
 import { AuthenticationClient } from "../authentication";
-import SignInScreen from "../signIn/SignInScreen";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
 } from "../authentication/authContext";
+import SignInScreen from "../signIn/SignInScreen";
+import { LoadingScreen } from "./LoadingScreen";
 import ReviewSession from "./ReviewSession";
-
-function LoadingScreen() {
-  return (
-    <View style={{ flex: 1, justifyContent: "center" }}>
-      <ActivityIndicator size="large" color={styles.colors.productKeyColor} />
-    </View>
-  );
-}
 
 function extractAccessCode(): string | null {
   if (Platform.OS === "web") {

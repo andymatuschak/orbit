@@ -29,6 +29,7 @@ import { DatabaseManager as DatabaseManager2 } from "../model2/databaseManager";
 import { ReviewSessionContainer } from "../ReviewSessionContainer";
 import { useReviewSessionManager } from "../reviewSessionManager";
 import { useAPIClient } from "../util/useAPIClient";
+import { LoadingScreen } from "./LoadingScreen";
 
 export function useDatabaseManager(
   authenticationClient: AuthenticationClient,
@@ -175,8 +176,7 @@ export default function ReviewSession() {
   }, [initialQueue, weakReviewSessionManager]);
 
   if (initialQueue === null) {
-    // TODO: display loading screen...
-    return null;
+    return <LoadingScreen />;
   }
 
   const currentColorPalette =
