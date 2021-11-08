@@ -24,6 +24,17 @@ export function generateReviewItem(
     componentID: mainTaskComponentID,
     spec: {
       ...testQASpec,
+      content: {
+        ...testQASpec.content,
+        body: {
+          ...testQASpec.content.body,
+          text: questionText,
+        },
+        answer: {
+          ...testQASpec.content.answer,
+          text: answerText,
+        }
+      }
     },
   };
 }
