@@ -17,7 +17,7 @@ function Contents() {
       <Button
         color={styles.colors.white}
         accentColor={palette.accentColor}
-        href="/"
+        href="https://testflight.apple.com/join/Jq6fObeM"
         iconName={IconName.ArrowRight}
         title="Download Orbit for macOS"
       />
