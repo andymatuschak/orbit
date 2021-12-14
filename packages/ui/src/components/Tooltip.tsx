@@ -1,5 +1,11 @@
-import React, { useRef, useState, useReducer, useCallback, useMemo } from "react";
-import { useEffect } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import {
   ColorValue,
   StyleProp,
@@ -8,57 +14,61 @@ import {
   ViewStyle,
 } from "react-native";
 
-
 const styles = StyleSheet.create({
   triangle: {
-    position: 'absolute',
+    position: "absolute",
     width: 0,
     height: 0,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
+    backgroundColor: "transparent",
+    borderStyle: "solid",
     borderLeftWidth: 8,
     borderRightWidth: 8,
     borderBottomWidth: 16,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: 'white',
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderBottomColor: "white",
   },
   container: {
     position: "absolute",
     width: "100%",
     height: "100%",
     left: 0,
-    top: 0
+    top: 0,
   },
   tooltip: {
     padding: "10px",
     backgroundColor: "black",
     opacity: 0.5,
     zIndex: 10000,
-  }
+  },
 });
 
 type TriangleProps = {
   pointerColor?: ColorValue;
   style?: StyleProp<ViewStyle>;
   placement: TooltipPosition;
-  trianglePosition: { top?: number, left?: number };
+  trianglePosition: { top?: number; left?: number };
 };
 
-const TRIANGLE_ROTATION: { [key: string]: number } = {
-  "bottom": 0,
-  "left": 90,
-  "top": 180,
-  "right": 270
-}
+const triangleAnglesByPlacement: { [key: string]: number } = {
+  bottom: 0,
+  left: 90,
+  top: 180,
+  right: 270,
+};
 
-const Triangle: React.FC<TriangleProps> = ({ style, pointerColor, placement, trianglePosition }) => (
+const Triangle: React.FC<TriangleProps> = ({
+  style,
+  pointerColor,
+  placement,
+  trianglePosition,
+}) => (
   <View
     style={StyleSheet.flatten([
       styles.triangle,
       {
         borderBottomColor: pointerColor,
-        transform: [{ rotate: `${TRIANGLE_ROTATION[placement]}deg`}],
+        transform: [{ rotate: `${triangleAnglesByPlacement[placement]}deg` }],
         ...trianglePosition,
       },
       style,
@@ -66,7 +76,8 @@ const Triangle: React.FC<TriangleProps> = ({ style, pointerColor, placement, tri
   />
 );
 
-export type TooltipPosition = "top"
+export type TooltipPosition =
+  | "top"
   | "right"
   | "bottom"
   | "left"
@@ -75,166 +86,211 @@ export type TooltipPosition = "top"
   | "inset-bottom-right"
   | "inset-top-left"
   | "inset-top-right"
-  | "cursor" 
+  | "cursor";
 
 export type TooltipProps = {
   placement?: TooltipPosition;
   stayOnScreen?: boolean;
   show: boolean;
   anchorRef: React.MutableRefObject<View | null>;
-} & ({ text: string; } | { children: React.ReactNode; })
+  children: React.ReactNode;
+};
 
-const getPositions = (
-  { placement, anchor, tooltip }: { placement: string, anchor: Measure, tooltip: Measure }
-): TooltipState => {
+const getPositions = ({
+  placement,
+  anchor,
+  tooltip,
+}: {
+  placement: string;
+  anchor: Size;
+  tooltip: Size;
+}): TooltipState => {
   switch (placement) {
     case "top":
       return {
-        tooltipPosition: { top: -tooltip.height - 16, left: anchor.width/2 - tooltip.width/2 },
-        trianglePosition: { top: tooltip.height - 1, left: tooltip.width/2 - 7.5 }
-      }
+        tooltipPosition: {
+          top: -tooltip.height - 16,
+          left: anchor.width / 2 - tooltip.width / 2,
+        },
+        trianglePosition: {
+          top: tooltip.height - 1,
+          left: tooltip.width / 2 - 7.5,
+        },
+      };
     case "right":
       return {
-        tooltipPosition: { top: anchor.height/2 - tooltip.height/2, left: anchor.width + 15 },
-        trianglePosition: { top: tooltip.height/2 - 7.5, left: -15 }
-      }
+        tooltipPosition: {
+          top: anchor.height / 2 - tooltip.height / 2,
+          left: anchor.width + 15,
+        },
+        trianglePosition: { top: tooltip.height / 2 - 7.5, left: -15 },
+      };
     case "bottom":
       return {
-        tooltipPosition: { top: anchor.height + 15, left: anchor.width/2 - tooltip.width/2 },
-        trianglePosition: { top: -15, left: tooltip.width/2 - 7.5 }
-      }
+        tooltipPosition: {
+          top: anchor.height + 15,
+          left: anchor.width / 2 - tooltip.width / 2,
+        },
+        trianglePosition: { top: -15, left: tooltip.width / 2 - 7.5 },
+      };
     case "left":
       return {
-        tooltipPosition: { top: anchor.height/2 - tooltip.height/2, left: -tooltip.width - 16 },
-        trianglePosition: { top: tooltip.height/2 - 7.5, left: tooltip.width - 1 }
-      }
+        tooltipPosition: {
+          top: anchor.height / 2 - tooltip.height / 2,
+          left: -tooltip.width - 16,
+        },
+        trianglePosition: {
+          top: tooltip.height / 2 - 7.5,
+          left: tooltip.width - 1,
+        },
+      };
     case "overlay":
       return {
-        tooltipPosition: { top: 0, left: 0, width: anchor.width, height: anchor.height },
-        trianglePosition: {}
-      }
+        tooltipPosition: {
+          top: 0,
+          left: 0,
+          width: anchor.width,
+          height: anchor.height,
+        },
+        trianglePosition: {},
+      };
     case "inset-bottom-left":
       return {
         tooltipPosition: { bottom: 0, left: 0 },
-        trianglePosition: {}
-      }
+        trianglePosition: {},
+      };
     case "inset-top-left":
       return {
         tooltipPosition: { top: 0, left: 0 },
-        trianglePosition: {}
-      }
+        trianglePosition: {},
+      };
     case "inset-top-right":
       return {
         tooltipPosition: { top: 0, right: 0 },
-        trianglePosition: {}
-      }
+        trianglePosition: {},
+      };
     case "inset-bottom-right":
       return {
         tooltipPosition: { bottom: 0, right: 0 },
-        trianglePosition: {}
-      }
+        trianglePosition: {},
+      };
     default:
-      return { tooltipPosition: {}, trianglePosition: {} }
+      return { tooltipPosition: {}, trianglePosition: {} };
   }
-}
+};
 
-type UIPosition = { top?: number, bottom?: number, left?: number, right?: number, width?: number, height?: number }
+type UIPosition = {
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+  width?: number;
+  height?: number;
+};
 
 type TooltipState = {
-  tooltipPosition?: UIPosition,
-  trianglePosition?: UIPosition,
-}
+  tooltipPosition?: UIPosition;
+  trianglePosition?: UIPosition;
+};
 
-type Measure = { width?: number, height?: number, x?: number, y?: number, pageX?: number, pageY?: number, }
+type Position = {
+  x: number;
+  y: number;
+};
+
+type Size = {
+  width: number;
+  height: number;
+};
 
 export default (props: TooltipProps) => {
-  const {
-    placement = "top",
-    show,
-    anchorRef,
-    text,
-    children,
-  } = props;
+  const { placement = "top", show, anchorRef, children } = props;
 
-  const tooltipRef = useRef<View | null>(null)
-  const containerRef = useRef<View | null>(null)
+  const tooltipRef = useRef<View | null>(null);
+  const containerRef = useRef<View | null>(null);
 
-  const [{ tooltipPosition, trianglePosition }, dispatch] = useReducer((
-    state: TooltipState,
-    { type, payload }: { type: string, payload: any }
-  ) => {
-    if (type === "init") {
-      return { ...getPositions(payload) }
-    }
-    if (type === "move") {
-      return {
-        tooltipPosition: { ...payload }
+  const [{ tooltipPosition, trianglePosition }, dispatch] = useReducer(
+    (
+      state: TooltipState,
+      { type, payload }: { type: string; payload: any },
+    ) => {
+      if (type === "init") {
+        return { ...getPositions(payload) };
       }
-    }
-    return state
-  }, {})
+      if (type === "move") {
+        return {
+          tooltipPosition: { ...payload },
+        };
+      }
+      return state;
+    },
+    {},
+  );
 
-  const [containerMeasure, setContainerMeasure] = useState<Measure>({})
+  const [containerPosition, setContainerPosition] = useState<Position | null>(
+    null,
+  );
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.measure((x, y, width, height, pageX, pageY) => {
-        setContainerMeasure({
-          pageX,
-          pageY,
-        })
-      })
+        setContainerPosition({
+          x: pageX,
+          y: pageY,
+        });
+      });
     }
-  }, [containerRef])
+  }, [containerRef]);
 
-  const [anchorMeasure, setAnchorMeasure] = useState<Measure>({})
+  const [anchorMeasure, setAnchorMeasure] = useState<Size | null>(null);
   useEffect(() => {
     if (anchorRef.current) {
       anchorRef.current.measure((x, y, width, height) => {
         setAnchorMeasure({
           width,
           height,
-        })
-      })
+        });
+      });
     }
-  }, [anchorRef])
-  
+  }, [anchorRef]);
+
   useEffect(() => {
-    if (anchorMeasure.width && tooltipRef.current) {
+    if (anchorMeasure?.width && tooltipRef.current) {
       tooltipRef.current.measure((x, y, width, height) => {
         dispatch({
           type: "init",
           payload: {
             placement,
             anchor: anchorMeasure,
-            tooltip: { width, height }
-          }
-        })
-      })
+            tooltip: { width, height },
+          },
+        });
+      });
     }
-  }, [
-    anchorMeasure,
-    tooltipRef.current,
-    show,
-    placement
-  ])
+  }, [anchorMeasure, show, placement]);
 
   const trackCursor = useCallback(
     (e: React.MouseEvent) => {
-      if (!containerMeasure) return
+      if (!containerPosition) return;
       dispatch({
         type: "move",
         payload: {
-          top: e.clientY - containerMeasure.pageY,
-          left: e.clientX - containerMeasure.pageX,
-        }
-      })
+          top: e.clientY - containerPosition.y,
+          left: e.clientX - containerPosition.x,
+        },
+      });
     },
-    [containerMeasure]
-  )
+    [containerPosition],
+  );
 
-  const mouseEvents = useMemo(() => placement === "cursor" ? {
-    onMouseMove: trackCursor,
-  } : {}, [placement, trackCursor])
+  const mouseEvents = useMemo(
+    () =>
+      placement === "cursor"
+        ? {
+            onMouseMove: trackCursor,
+          }
+        : {},
+    [placement, trackCursor],
+  );
 
   // TODO: a "stay-on-screen" effect
   // TODO: potentially use composition instead of anchorRef
@@ -243,31 +299,32 @@ export default (props: TooltipProps) => {
 
   // embedded views to pick up the "cursor" event
   return (
-    <View
-      ref={containerRef}
-      style={styles.container}
-      {...mouseEvents}
-    >
+    <View ref={containerRef} style={styles.container} {...mouseEvents}>
       <View
         ref={tooltipRef}
         style={StyleSheet.flatten([
-          (
-            !show || (placement === "cursor" && !tooltipPosition.left)
-          ) && { visibility: "hidden" },
+          (!show || (placement === "cursor" && !tooltipPosition.left)) && {
+            visibility: "hidden",
+          },
           {
-            position: (placement.indexOf("inset") === 0 || placement === "cursor") ? "absolute" : "relative",
+            position:
+              placement.indexOf("inset") === 0 || placement === "cursor"
+                ? "absolute"
+                : "relative",
             width: placement === "overlay" ? "100%" : "fit-content",
             height: placement === "overlay" ? "100%" : "fit-content",
-            ...tooltipPosition
+            ...tooltipPosition,
           },
           styles.tooltip,
         ])}
       >
-        {["top", "right", "bottom", "left"].includes(placement) && <Triangle placement={placement} trianglePosition={trianglePosition} />}
-        {children || (
-          <div style={{ color: "white" }}>
-            {text}
-          </div>
+        {["top", "right", "bottom", "left"].includes(placement) && (
+          <Triangle placement={placement} trianglePosition={trianglePosition} />
+        )}
+        {typeof children === "string" ? (
+          <div style={{ color: "white" }}>{children}</div>
+        ) : (
+          children
         )}
       </View>
     </View>

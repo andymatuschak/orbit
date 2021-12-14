@@ -1,15 +1,14 @@
-import { boolean, number, text, select, withKnobs } from "@storybook/addon-knobs";
+import { select, withKnobs } from "@storybook/addon-knobs";
 
-import React, { useState, useRef } from "react";
+import React, { useRef, useState } from "react";
+import { Pressable, View } from "react-native";
 import Hoverable from "./Hoverable";
 import Tooltip from "./Tooltip";
-import { Pressable, View } from "react-native";
-import { MutableRefObject } from "react";
 
 export default {
   title: "Tooltip",
   component: Tooltip,
-  decorators: [withKnobs]
+  decorators: [withKnobs],
 };
 
 export function Text() {
@@ -22,14 +21,37 @@ export function Text() {
     >
       <View
         ref={ref}
-        style={{ border: "1px solid black", width: "200px", height: "100px", padding: 20, margin: 100 }}
+        style={{
+          borderWidth: 1,
+          borderColor: "black",
+          width: "200px",
+          height: "100px",
+          padding: 20,
+          margin: 100,
+        }}
       >
-        <Tooltip 
+        <Tooltip
           show={isHovered}
-          placement={select("direction", ["top", "right", "bottom", "left", "overlay", "inset-bottom-left", "inset-bottom-right", "inset-top-left", "inset-top-right", "cursor"], "top")}
-          text="Tooltip text"
+          placement={select(
+            "direction",
+            [
+              "top",
+              "right",
+              "bottom",
+              "left",
+              "overlay",
+              "inset-bottom-left",
+              "inset-bottom-right",
+              "inset-top-left",
+              "inset-top-right",
+              "cursor",
+            ],
+            "top",
+          )}
           anchorRef={ref}
-        />
+        >
+          Tooltip text
+        </Tooltip>
         <div>Some Text That Is Important</div>
       </View>
     </Hoverable>
@@ -46,19 +68,60 @@ export function Children() {
     >
       <View
         ref={ref}
-        style={{ border: "1px solid black", width: "200px", height: "100px", padding: 20, margin: 100 }}
+        style={{
+          borderWidth: 1,
+          borderColor: "black",
+          width: "200px",
+          height: "100px",
+          padding: 20,
+          margin: 100,
+        }}
       >
-        <Tooltip 
+        <Tooltip
           show={isHovered}
-          placement={select("placement", ["top", "right", "bottom", "left", "overlay", "inset-bottom-left", "inset-bottom-right", "inset-top-left", "inset-top-right", "cursor"], "top")}
-          text="Tooltip text"
+          placement={select(
+            "placement",
+            [
+              "top",
+              "right",
+              "bottom",
+              "left",
+              "overlay",
+              "inset-bottom-left",
+              "inset-bottom-right",
+              "inset-top-left",
+              "inset-top-right",
+              "cursor",
+            ],
+            "top",
+          )}
           anchorRef={ref}
         >
-          <View style={{ flexDirection: "row", width: "100%", height: "100%", alignItems: "center", justifyContent: "space-around" }}>
-            <View style={{ border: "1px solid red", backgroundColor: "red" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              width: "100%",
+              height: "100%",
+              alignItems: "center",
+              justifyContent: "space-around",
+            }}
+          >
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: "red",
+                backgroundColor: "red",
+              }}
+            >
               <p>L</p>
             </View>
-            <View style={{ border: "1px solid blue", backgroundColor: "blue" }}>
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: "blue",
+                backgroundColor: "blue",
+              }}
+            >
               <p>R</p>
             </View>
           </View>
@@ -78,15 +141,38 @@ export function Button() {
       onHoverOut={() => setHovered(false)}
     >
       <Pressable
-        style={{ border: "1px solid black", width: "120px", height: "50px", margin: 150 }}
-        ref={ref}>
+        style={{
+          borderWidth: 1,
+          borderColor: "black",
+          width: "120px",
+          height: "50px",
+          margin: 150,
+        }}
+        ref={ref}
+      >
         <p>A Pressable</p>
-        <Tooltip 
+        <Tooltip
           show={isHovered}
-          placement={select("placement", ["top", "right", "bottom", "left", "overlay", "inset-bottom-left", "inset-bottom-right", "inset-top-left", "inset-top-right", "cursor"], "top")}
-          text="Tooltip text"
+          placement={select(
+            "placement",
+            [
+              "top",
+              "right",
+              "bottom",
+              "left",
+              "overlay",
+              "inset-bottom-left",
+              "inset-bottom-right",
+              "inset-top-left",
+              "inset-top-right",
+              "cursor",
+            ],
+            "top",
+          )}
           anchorRef={ref}
-        />
+        >
+          Tooltip text
+        </Tooltip>
       </Pressable>
     </Hoverable>
   );

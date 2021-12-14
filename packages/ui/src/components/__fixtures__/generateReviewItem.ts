@@ -33,8 +33,8 @@ export function generateReviewItem(
         answer: {
           ...testQASpec.content.answer,
           text: answerText,
-        }
-      }
+        },
+      },
     },
   };
 }

@@ -21,7 +21,6 @@ import Icon from "./Icon";
 import { IconName, IconPosition } from "./IconShared";
 import Tooltip from "./Tooltip";
 
-
 export type ButtonPendingActivationState = "hover" | "pressed" | null;
 
 type ButtonContents =
@@ -245,59 +244,61 @@ export default React.memo(function Button(props: ButtonProps) {
       }}
     >
       {(isHovered) => (
-          <Pressable
-            ref={ref}
-            accessible={true}
-            accessibilityRole={href ? "link" : "button"}
-            accessibilityLabel={accessibilityLabel}
-            onPress={
-              onPress
-                ? () => {
-                    isPressed.current = false;
-                    dispatchPendingInteractionState();
-                    onPress();
-                  }
-                : () => {
-                    Linking.openURL(href!).catch(() => {
-                      Alert.alert(
-                        "Couldn't open link",
-                        `You may need to install an app to open this URL: ${href}`,
-                      );
-                    });
-                  }
-            }
-            onPressIn={() => {
-              isPressed.current = true;
-              dispatchPendingInteractionState();
-            }}
-            onPressOut={() => {
-              isPressed.current = false;
-              dispatchPendingInteractionState();
-            }}
-            // @ts-ignore react-native-web adds this prop
-            delayPressOut={1} // HACK: When a press is completed, we handle onPressOut within onPress so that React batches all updates into a single re-render.
-            disabled={props.disabled}
-            // @ts-ignore react-native-web adds this prop.
-            href={href}
-            hitSlop={props.hitSlop}
-            style={[isSoloIcon && styles.soloIcon, style]}
-          >
-            {({ pressed }) => (
-              <React.Fragment>
-                {tooltipText && (<Tooltip
+        <Pressable
+          ref={ref}
+          accessible={true}
+          accessibilityRole={href ? "link" : "button"}
+          accessibilityLabel={accessibilityLabel}
+          onPress={
+            onPress
+              ? () => {
+                  isPressed.current = false;
+                  dispatchPendingInteractionState();
+                  onPress();
+                }
+              : () => {
+                  Linking.openURL(href!).catch(() => {
+                    Alert.alert(
+                      "Couldn't open link",
+                      `You may need to install an app to open this URL: ${href}`,
+                    );
+                  });
+                }
+          }
+          onPressIn={() => {
+            isPressed.current = true;
+            dispatchPendingInteractionState();
+          }}
+          onPressOut={() => {
+            isPressed.current = false;
+            dispatchPendingInteractionState();
+          }}
+          // @ts-ignore react-native-web adds this prop
+          delayPressOut={1} // HACK: When a press is completed, we handle onPressOut within onPress so that React batches all updates into a single re-render.
+          disabled={props.disabled}
+          // @ts-ignore react-native-web adds this prop.
+          href={href}
+          hitSlop={props.hitSlop}
+          style={[isSoloIcon && styles.soloIcon, style]}
+        >
+          {({ pressed }) => (
+            <React.Fragment>
+              {tooltipText && (
+                <Tooltip
                   anchorRef={ref}
                   show={isHovered}
                   text={tooltipText}
                   placement="inset-bottom-right"
-                />)}
-                <ButtonInterior
-                  {...props}
-                  isHovered={isHovered}
-                  isPressed={pressed}
                 />
-              </React.Fragment>
-            )}
-          </Pressable>
+              )}
+              <ButtonInterior
+                {...props}
+                isHovered={isHovered}
+                isPressed={pressed}
+              />
+            </React.Fragment>
+          )}
+        </Pressable>
       )}
     </Hoverable>
   );
