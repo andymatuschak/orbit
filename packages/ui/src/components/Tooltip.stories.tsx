@@ -44,7 +44,6 @@ export function Text() {
               "inset-bottom-right",
               "inset-top-left",
               "inset-top-right",
-              "cursor",
             ],
             "top",
           )}
@@ -91,7 +90,6 @@ export function Children() {
               "inset-bottom-right",
               "inset-top-left",
               "inset-top-right",
-              "cursor",
             ],
             "top",
           )}
@@ -165,7 +163,6 @@ export function Button() {
               "inset-bottom-right",
               "inset-top-left",
               "inset-top-right",
-              "cursor",
             ],
             "top",
           )}

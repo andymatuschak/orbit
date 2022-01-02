@@ -287,9 +287,10 @@ export default React.memo(function Button(props: ButtonProps) {
                 <Tooltip
                   anchorRef={ref}
                   show={isHovered}
-                  text={tooltipText}
                   placement="inset-bottom-right"
-                />
+                >
+                  {tooltipText}
+                </Tooltip>
               )}
               <ButtonInterior
                 {...props}
