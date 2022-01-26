@@ -7,7 +7,7 @@ This package contains the main Orbit GUI app for the web, iOS, Android, and macO
     * Start up a local instance of the backend: see `packages/backend/Readme.md` for details.
     * To run the Orbit web app: `yarn run web`
     * To run the Orbit iOS app on the simulator: `yarn run ios`
-       * (You'll need to `cd ios; pod install` first)
+       * (You'll need to `cd ios; EXPO_USE_SOURCE=1 pod install` first; see [this issue](https://github.com/expo/expo/issues/12040) for background on the Expo workaround)
     * To run the Orbit iOS app on an attached device: `yarn run ios --device [device name]`
     * To run the Orbit macOS app: `yarn run ios --device YOUR_MAC_DEVICE_NAME`
 * Deployment
