@@ -21,7 +21,8 @@ export function useKeyDown(onKeyDown: (event: KeydownEvent) => void) {
 
   useEffect(() => {
     if (!(Platform.OS === "macos" || Platform.OS === "ios")) return;
-
+    // [27/01/21] onKeyDownListener is unimplemented for iOS. Will use onKeyUp listener for now.
+    //  Related Issue: https://github.com/kevinejohn/react-native-keyevent/issues/62
     KeyEvent.onKeyUpListener((e: unknown) => {
       if (typeof e !== "object" || !e) return;
 
