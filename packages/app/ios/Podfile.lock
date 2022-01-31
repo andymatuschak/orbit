@@ -272,6 +272,8 @@ PODS:
   - React-jsinspector (0.63.4)
   - react-native-get-random-values (1.7.0):
     - React-Core
+  - react-native-keyevent (0.2.8):
+    - React
   - react-native-quick-sqlite (1.0.5):
     - React-Core
   - react-native-safe-area-context (3.2.0):
@@ -393,6 +395,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../../../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../../../node_modules/react-native/ReactCommon/jsinspector`)
   - react-native-get-random-values (from `../../../node_modules/react-native-get-random-values`)
+  - react-native-keyevent (from `../../../node_modules/react-native-keyevent`)
   - react-native-quick-sqlite (from `../../../node_modules/react-native-quick-sqlite`)
   - react-native-safe-area-context (from `../../../node_modules/react-native-safe-area-context`)
   - React-RCTActionSheet (from `../../../node_modules/react-native/Libraries/ActionSheetIOS`)
@@ -488,6 +491,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native/ReactCommon/jsinspector"
   react-native-get-random-values:
     :path: "../../../node_modules/react-native-get-random-values"
+  react-native-keyevent:
+    :path: "../../../node_modules/react-native-keyevent"
   react-native-quick-sqlite:
     :path: "../../../node_modules/react-native-quick-sqlite"
   react-native-safe-area-context:
@@ -571,6 +576,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 93bd528844ad21dc07aab1c67cb10abae6df6949
   React-jsinspector: 58aef7155bc9a9683f5b60b35eccea8722a4f53a
   react-native-get-random-values: 237bffb1c7e05fb142092681531810a29ba53015
+  react-native-keyevent: f8728b8c73dbfbcb4d2c56d9e78be082c673c456
   react-native-quick-sqlite: b86820d88ce8c0ee4b5491a2ba1ebbf807a311b4
   react-native-safe-area-context: f0906bf8bc9835ac9a9d3f97e8bde2a997d8da79
   React-RCTActionSheet: 89a0ca9f4a06c1f93c26067af074ccdce0f40336
