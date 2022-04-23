@@ -9,7 +9,6 @@ import { ingestSources } from "../ingest";
     process.exit(0);
   }
 
-  // TODO: temporary, move this CLI to a new package
   const orbitStore = new OrbitStoreFS(orbitStorePath);
   await ingestSources([], orbitStore);
 })()
