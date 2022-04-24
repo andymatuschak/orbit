@@ -1,0 +1,104 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "IngestibleQAPrompt": {
+            "additionalProperties": false,
+            "properties": {
+                "answer": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "text": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "text"
+                    ],
+                    "type": "object"
+                },
+                "body": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "text": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "text"
+                    ],
+                    "type": "object"
+                },
+                "type": {
+                    "enum": [
+                        "qa"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "answer",
+                "body",
+                "type"
+            ],
+            "type": "object"
+        },
+        "IngestibleSource": {
+            "additionalProperties": false,
+            "properties": {
+                "colorPaletteName": {
+                    "enum": [
+                        "blue",
+                        "brown",
+                        "cyan",
+                        "green",
+                        "lime",
+                        "orange",
+                        "pink",
+                        "purple",
+                        "red",
+                        "turquoise",
+                        "violet",
+                        "yellow"
+                    ],
+                    "type": "string"
+                },
+                "identifier": {
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                    "type": "string"
+                },
+                "prompts": {
+                    "items": {
+                        "$ref": "#/definitions/IngestibleQAPrompt"
+                    },
+                    "type": "array"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "identifier",
+                "prompts",
+                "title"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "sources": {
+            "items": {
+                "$ref": "#/definitions/IngestibleSource"
+            },
+            "type": "array"
+        }
+    },
+    "required": [
+        "sources"
+    ],
+    "type": "object"
+}
+

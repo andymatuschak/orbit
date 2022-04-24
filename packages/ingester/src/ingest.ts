@@ -13,7 +13,7 @@ import {
   TaskUpdateDeletedEvent,
 } from "@withorbit/core";
 import { DatabaseEntityQuery, OrbitStore } from "@withorbit/store-shared";
-import { IngestiblePrompt, IngestibleSource } from "./ingestibleSource";
+import { IngestiblePrompt, IngestibleSource } from "./ingestible";
 
 // TODO: handle moves across sources
 // TODO: handle provenance updates

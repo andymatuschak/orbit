@@ -9,13 +9,18 @@ import {
 } from "@withorbit/core";
 import { OrbitStoreInMemory } from "@withorbit/store-fs";
 import { ingestSources } from "./ingest";
-import {
-  IngestibleSource,
-  IngestibleSourceIdentifier,
-} from "./ingestibleSource";
+import { IngestibleSource, IngestibleSourceIdentifier } from "./ingestible";
+
+let store: OrbitStoreInMemory;
+beforeEach(() => {
+  store = new OrbitStoreInMemory();
+});
+
+afterEach(() => {
+  store.database.close();
+});
 
 it("ingest new prompts from unknown source", async () => {
-  const store = new OrbitStoreInMemory();
   const sources: IngestibleSource[] = [
     {
       identifier: "source_identifier" as IngestibleSourceIdentifier,
@@ -46,7 +51,6 @@ it("ingest new prompts from unknown source", async () => {
 });
 
 it("ingest new prompts from known source", async () => {
-  const store = new OrbitStoreInMemory();
   await store.database.putEvents([
     mockQATask({
       eventID: "aaaaaaaaaaaaaaaaaaaaaa",
@@ -95,7 +99,6 @@ it("ingest new prompts from known source", async () => {
 });
 
 it("ignores already ingested prompts", async () => {
-  const store = new OrbitStoreInMemory();
   await store.database.putEvents([
     mockQATask({
       eventID: "aaaaaaaaaaaaaaaaaaaaaa",
@@ -125,7 +128,6 @@ it("ignores already ingested prompts", async () => {
 });
 
 it("marks prompts as deleted", async () => {
-  const store = new OrbitStoreInMemory();
   await store.database.putEvents([
     mockQATask({
       eventID: "aaaaaaaaaaaaaaaaaaaaaa",
@@ -154,7 +156,6 @@ it("marks prompts as deleted", async () => {
 });
 
 it("only ingests specified sources", async () => {
-  const store = new OrbitStoreInMemory();
   await store.database.putEvents([
     mockQATask({
       eventID: "aaaaaaaaaaaaaaaaaaaaaa",

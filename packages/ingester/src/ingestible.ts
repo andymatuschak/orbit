@@ -1,5 +1,9 @@
 import { ColorPaletteName } from "@withorbit/core";
 
+export type Ingestible = {
+  sources: IngestibleSource[];
+};
+
 /**
  * @TJS-type string
  * @TJS-pattern ^[0-9a-zA-Z_\-]{22}$
