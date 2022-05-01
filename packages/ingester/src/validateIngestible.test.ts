@@ -11,6 +11,7 @@ it("accepts valid schema", () => {
         title: "Brand new source",
         items: [
           {
+            identifier: "identifier_item_A",
             spec: {
               type: "memory",
               content: {
