@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { BearInterpreter } from "../interpreters";
 import { InterpretableFile, Interpreter } from "../interpreter";
+import { CryptoBase64Hasher } from "../hasher/CryptoBase64Hasher";
 
 async function run(
   noteDirectory: string,
@@ -52,7 +53,7 @@ async function readFile(path: string): Promise<string> {
     process.exit(1);
   }
 
-  const interpreter = new BearInterpreter();
+  const interpreter = new BearInterpreter(CryptoBase64Hasher);
   const ingestible = await run(noteDirectory, interpreter);
   await fs.promises.writeFile(outJsonFilePath, JSON.stringify(ingestible));
 })()

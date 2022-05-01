@@ -1,3 +1,4 @@
+import { TaskSpec } from "@withorbit/core";
 import { Ingestible } from "@withorbit/ingester";
 
 export interface Interpreter {

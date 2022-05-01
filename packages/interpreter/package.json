@@ -15,12 +15,13 @@
     "@withorbit/core": "0.0.1",
     "@withorbit/ingester": "0.0.1",
     "@withorbit/store-fs": "0.0.1",
-    "remark-parse": "^10.0.1",
-    "remark-stringify": "^10.0.2",
+    "remark-parse": "10.0.0",
+    "remark-stringify": "10.0.0",
     "remark-wiki-link": "^1.0.4",
-    "unified": "^10.1.2",
+    "unified": "10.1.0",
+    "unist-util-map": "3.0.0",
     "unist-util-parents": "^2.0.0",
-    "unist-util-select": "^4.0.1"
+    "unist-util-select": "4.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.16.11",

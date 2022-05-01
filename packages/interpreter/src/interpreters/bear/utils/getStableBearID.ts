@@ -9,7 +9,6 @@ function getOpenURLForBearID(bearID: string): string {
 export type BearID = { id: string; openURL: string };
 export function getStableBearID(noteRoot: mdast.Root): BearID | null {
   const bearNoteIDNodes = unistUtilSelect.selectAll(bearIDNodeType, noteRoot);
-
   if (bearNoteIDNodes.length === 1) {
     const bearID = (bearNoteIDNodes[0] as BearIDNode).bearID;
     return { id: bearID, openURL: getOpenURLForBearID(bearID) };

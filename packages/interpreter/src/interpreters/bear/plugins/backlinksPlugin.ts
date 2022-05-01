@@ -91,6 +91,7 @@ Inside backlinks node: ${JSON.stringify(listItem, null, "\t")}`,
 
 function extractBacklinksBlock(node: mdast.Root | mdast.Content): unist.Node {
   headingRange(
+    // @ts-expect-error
     node,
     "Backlinks",
     (start, nodes, end, { parent, start: startIndex, end: endIndex }) => {
