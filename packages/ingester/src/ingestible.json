@@ -88,18 +88,21 @@
                     "type": "string"
                 },
                 "identifier": {
-                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                     "type": "string"
                 },
                 "items": {
                     "items": {
                         "additionalProperties": false,
                         "properties": {
+                            "identifier": {
+                                "type": "string"
+                            },
                             "spec": {
                                 "$ref": "#/definitions/TaskSpec<TaskContent>"
                             }
                         },
                         "required": [
+                            "identifier",
                             "spec"
                         ],
                         "type": "object"

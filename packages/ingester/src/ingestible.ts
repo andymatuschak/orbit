@@ -6,7 +6,6 @@ export type Ingestible = {
 
 /**
  * @TJS-type string
- * @TJS-pattern ^[0-9a-zA-Z_\-]{22}$
  */
 export type IngestibleSourceIdentifier = string & {
   __sourceIDOpaqueType: never;
@@ -27,7 +26,6 @@ export interface IngestibleSource {
 
 /**
  * @TJS-type string
- * @TJS-pattern ^[0-9a-zA-Z_\-]{22}$
  */
 export type IngestibleItemIdentifier = string & {
   __sourceIDOpaqueType: never;
