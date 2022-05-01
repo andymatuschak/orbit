@@ -97,19 +97,20 @@ function groupEntitiesByProvenanceIdentifiers(entities: Task<TaskContent>[]) {
 }
 
 function groupEntitiesBySourceIdentifiers(entities: Task<TaskContent>[]) {
-  const mapping: Record<IngestibleItemIdentifier, Task<TaskContent>> = {};
+  // [01/05/22]: our current versin of typescript does not allow
+  // `IngestibleItemIdentifier` to be the key of an object. Newer
+  // releases of typescript support this behavior.
+  // https://github.com/microsoft/TypeScript/pull/44512
+  const mapping: Record<string, Task<TaskContent>> = {};
   for (const entity of entities) {
-    const _sourceID = entity.metadata[INGEST_SOURCE_IDENTIFIER_KEY];
-    if (!_sourceID) continue;
-    const sourceID = _sourceID as IngestibleItemIdentifier;
-
+    const sourceID = entity.metadata[INGEST_SOURCE_IDENTIFIER_KEY];
     mapping[sourceID] = entity;
   }
   return mapping;
 }
 
 function groupIngestibleItemsBySourceIdentifiers(items: IngestibleItem[]) {
-  const mapping: Record<IngestibleItemIdentifier, IngestibleItem> = {};
+  const mapping: Record<string, IngestibleItem> = {};
   for (const item of items) {
     mapping[item.identifier] = item;
   }
