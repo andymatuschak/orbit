@@ -9,11 +9,16 @@ it("accepts valid schema", () => {
       {
         identifier: "aaaaaaaaaaaaaaaaaaaaaa",
         title: "Brand new source",
-        prompts: [
+        items: [
           {
-            type: "qa",
-            body: { text: "Question" },
-            answer: { text: "Answer" },
+            spec: {
+              type: "memory",
+              content: {
+                type: "qa",
+                body: { text: "Question", attachments: [] },
+                answer: { text: "Answer", attachments: [] },
+              },
+            },
           },
         ],
       },

@@ -1,4 +1,4 @@
-import { ColorPaletteName } from "@withorbit/core";
+import { ColorPaletteName, TaskSpec } from "@withorbit/core";
 
 export type Ingestible = {
   sources: IngestibleSource[];
@@ -17,18 +17,23 @@ export interface IngestibleSource {
   identifier: IngestibleSourceIdentifier;
   // title that can be used when displaying the source.
   title: string;
-  // prompts associated with the given source
-  prompts: IngestiblePrompt[];
+  // items associated with the given source
+  items: IngestibleItem[];
   // an optional URL to open when the user indicates they'd like to navigate to the provenance of the task
   url?: string;
   // an optional const that can be used to customize the visual appearance of the source during review
   colorPaletteName?: ColorPaletteName;
 }
 
-export type IngestiblePrompt = IngestibleQAPrompt;
+/**
+ * @TJS-type string
+ * @TJS-pattern ^[0-9a-zA-Z_\-]{22}$
+ */
+export type IngestibleItemIdentifier = string & {
+  __sourceIDOpaqueType: never;
+};
 
-export interface IngestibleQAPrompt {
-  type: "qa";
-  body: { text: string };
-  answer: { text: string };
-}
+export type IngestibleItem = {
+  identifier: IngestibleItemIdentifier;
+  spec: TaskSpec;
+};

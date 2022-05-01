@@ -8,8 +8,12 @@ import {
   TaskUpdateDeletedEvent,
 } from "@withorbit/core";
 import { OrbitStoreInMemory } from "@withorbit/store-fs";
-import { ingestSources } from "./ingest";
-import { IngestibleSource, IngestibleSourceIdentifier } from "./ingestible";
+import { ingestSources, INGEST_SOURCE_IDENTIFIER_KEY } from "./ingest";
+import {
+  IngestibleItemIdentifier,
+  IngestibleSource,
+  IngestibleSourceIdentifier,
+} from "./ingestible";
 
 let store: OrbitStoreInMemory;
 beforeEach(() => {
@@ -25,8 +29,18 @@ it("ingest new prompts from unknown source", async () => {
     {
       identifier: "source_identifier" as IngestibleSourceIdentifier,
       title: "Brand new source",
-      prompts: [
-        { type: "qa", body: { text: "Question" }, answer: { text: "Answer" } },
+      items: [
+        {
+          identifier: "Question+Answer" as IngestibleItemIdentifier,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.QA,
+              body: { text: "Question", attachments: [] },
+              answer: { text: "Answer", attachments: [] },
+            },
+          },
+        },
       ],
     },
   ];
@@ -64,16 +78,28 @@ it("ingest new prompts from known source", async () => {
     {
       identifier: "source_identifier" as IngestibleSourceIdentifier,
       title: "Existing Source",
-      prompts: [
+      items: [
         {
-          type: "qa",
-          body: { text: "Question" },
-          answer: { text: "Answer" },
+          identifier: "Question+Answer" as IngestibleItemIdentifier,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.QA,
+              body: { text: "Question", attachments: [] },
+              answer: { text: "Answer", attachments: [] },
+            },
+          },
         },
         {
-          type: "qa",
-          body: { text: "New Question" },
-          answer: { text: "New Answer" },
+          identifier: "New Question+New Answer" as IngestibleItemIdentifier,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.QA,
+              body: { text: "New Question", attachments: [] },
+              answer: { text: "New Answer", attachments: [] },
+            },
+          },
         },
       ],
     },
@@ -113,11 +139,17 @@ it("ignores already ingested prompts", async () => {
     {
       identifier: "source_identifier" as IngestibleSourceIdentifier,
       title: "Existing Source",
-      prompts: [
+      items: [
         {
-          type: "qa",
-          body: { text: "Question" },
-          answer: { text: "Answer" },
+          identifier: "Question+Answer" as IngestibleItemIdentifier,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.QA,
+              body: { text: "Question", attachments: [] },
+              answer: { text: "Answer", attachments: [] },
+            },
+          },
         },
       ],
     },
@@ -142,7 +174,7 @@ it("marks prompts as deleted", async () => {
     {
       identifier: "source_identifier" as IngestibleSourceIdentifier,
       title: "Existing Source",
-      prompts: [],
+      items: [],
     },
   ];
 
@@ -173,6 +205,46 @@ it("only ingests specified sources", async () => {
   expect(events).toHaveLength(0);
 });
 
+describe("provenance", () => {
+  const BASE: IngestibleSource = {
+    identifier: "source_identifier" as IngestibleSourceIdentifier,
+    title: "Brand new source",
+    items: [
+      {
+        identifier: "Question+Answer" as IngestibleItemIdentifier,
+        spec: {
+          type: TaskSpecType.Memory,
+          content: {
+            type: TaskContentType.QA,
+            body: { text: "Question", attachments: [] },
+            answer: { text: "Answer", attachments: [] },
+          },
+        },
+      },
+    ],
+  };
+
+  it("uses url", async () => {
+    const source: IngestibleSource = { ...BASE, url: "/some/random/url" };
+    const events = await ingestSources([source], store);
+    expect(events[0]).toMatchObject({
+      provenance: {
+        url: "/some/random/url",
+      },
+    });
+  });
+
+  it("uses colorPaletteName", async () => {
+    const source: IngestibleSource = { ...BASE, colorPaletteName: "lime" };
+    const events = await ingestSources([source], store);
+    expect(events[0]).toMatchObject({
+      provenance: {
+        colorPaletteName: "lime",
+      },
+    });
+  });
+});
+
 function mockQATask(args: {
   eventID: string;
   entityID: string;
@@ -192,6 +264,9 @@ function mockQATask(args: {
         body: { text: args.body, attachments: [] },
         answer: { text: args.answer, attachments: [] },
       },
+    },
+    metadata: {
+      [INGEST_SOURCE_IDENTIFIER_KEY]: `${args.body}+${args.answer}`,
     },
     provenance: {
       identifier: args.provenance.identifier,
