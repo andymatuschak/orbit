@@ -23,7 +23,7 @@ const DEFAULT_OPTIONS = (): IngestOptions => ({
   ingestDateMilis: Date.now(),
 });
 
-export const INGEST_SOURCE_IDENTIFIER_KEY = "ingest_source_identifier" as const;
+export const INGEST_ITEM_IDENTIFIER_KEY = "ingest_item_identifier" as const;
 
 // TODO: handle moves across sources
 // TODO: handle provenance updates
@@ -46,10 +46,10 @@ export async function ingestSources(
   for (const source of sources) {
     if (groupedEntities[source.identifier]) {
       // determine which prompts are new and which have been deleted
-      const existingPrompts = groupEntitiesBySourceIdentifiers(
+      const existingPrompts = mapEntitiesByItemIdentifiers(
         groupedEntities[source.identifier],
       );
-      const newPrompts = groupIngestibleItemsBySourceIdentifiers(source.items);
+      const newPrompts = mapIngestibleItemsByItemIdentifiers(source.items);
 
       // determine which tasks are newly added
       for (const [key, potentialNewPrompt] of Object.entries(newPrompts)) {
@@ -96,20 +96,20 @@ function groupEntitiesByProvenanceIdentifiers(entities: Task<TaskContent>[]) {
   return mapping;
 }
 
-function groupEntitiesBySourceIdentifiers(entities: Task<TaskContent>[]) {
+function mapEntitiesByItemIdentifiers(entities: Task<TaskContent>[]) {
   // [01/05/22]: our current versin of typescript does not allow
   // `IngestibleItemIdentifier` to be the key of an object. Newer
   // releases of typescript support this behavior.
   // https://github.com/microsoft/TypeScript/pull/44512
   const mapping: Record<string, Task<TaskContent>> = {};
   for (const entity of entities) {
-    const sourceID = entity.metadata[INGEST_SOURCE_IDENTIFIER_KEY];
-    mapping[sourceID] = entity;
+    const itemID = entity.metadata[INGEST_ITEM_IDENTIFIER_KEY];
+    mapping[itemID] = entity;
   }
   return mapping;
 }
 
-function groupIngestibleItemsBySourceIdentifiers(items: IngestibleItem[]) {
+function mapIngestibleItemsByItemIdentifiers(items: IngestibleItem[]) {
   const mapping: Record<string, IngestibleItem> = {};
   for (const item of items) {
     mapping[item.identifier] = item;
@@ -137,7 +137,7 @@ function createIngestTaskForSource(
       entityID: generateUniqueID(),
       timestampMillis: insertTimestampMilis,
       metadata: {
-        [INGEST_SOURCE_IDENTIFIER_KEY]: source.identifier,
+        [INGEST_ITEM_IDENTIFIER_KEY]: item.identifier,
       },
       provenance: {
         ...provenance,
