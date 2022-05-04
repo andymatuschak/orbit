@@ -8,7 +8,7 @@ import {
   TaskUpdateDeletedEvent,
 } from "@withorbit/core";
 import { OrbitStoreInMemory } from "@withorbit/store-fs";
-import { ingestSources, INGEST_SOURCE_IDENTIFIER_KEY } from "./ingest";
+import { ingestSources, INGEST_ITEM_IDENTIFIER_KEY } from "./ingest";
 import {
   IngestibleItemIdentifier,
   IngestibleSource,
@@ -25,6 +25,19 @@ afterEach(() => {
 });
 
 it("ingest new prompts from unknown source", async () => {
+  await store.database.putEvents([
+    mockQATask({
+      eventID: "bbbbbbbbbbbbbbbbbbbbbb",
+      entityID: "yyyyyyyyyyyyyyyyyyyyyy",
+      body: "Existing Question",
+      answer: "Answer",
+      provenance: {
+        identifier: "existing_source_identifier",
+        title: "Existing Source",
+      },
+    }),
+  ]);
+
   const sources: IngestibleSource[] = [
     {
       identifier: "source_identifier" as IngestibleSourceIdentifier,
@@ -205,6 +218,101 @@ it("only ingests specified sources", async () => {
   expect(events).toHaveLength(0);
 });
 
+it("round trip", async () => {
+  const initialSources: IngestibleSource[] = [
+    {
+      identifier: "source_identifier" as IngestibleSourceIdentifier,
+      title: "Brand new source",
+      items: [
+        {
+          identifier: "Question+Answer" as IngestibleItemIdentifier,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.QA,
+              body: { text: "Question", attachments: [] },
+              answer: { text: "Answer", attachments: [] },
+            },
+          },
+        },
+      ],
+    },
+  ];
+
+  // ingest new sources
+  const eventsA = await ingestSources(initialSources, store);
+  expect(eventsA).toHaveLength(1);
+  expect(eventsA[0]).toMatchObject({
+    type: EventType.TaskIngest,
+    metadata: { [INGEST_ITEM_IDENTIFIER_KEY]: "Question+Answer" },
+    provenance: {
+      identifier: "source_identifier",
+    },
+  });
+
+  // put events
+  await store.database.putEvents(eventsA);
+
+  // re-ingest same source
+  const eventsB = await ingestSources(initialSources, store);
+  expect(eventsB).toHaveLength(0);
+
+  // add new items to existing source
+  const sourcesWithExtraItem: IngestibleSource[] = [
+    {
+      identifier: "source_identifier" as IngestibleSourceIdentifier,
+      title: "Brand new source",
+      items: [
+        {
+          identifier: "Question+Answer" as IngestibleItemIdentifier,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.QA,
+              body: { text: "Question", attachments: [] },
+              answer: { text: "Answer", attachments: [] },
+            },
+          },
+        },
+        {
+          identifier: "New Question+Answer" as IngestibleItemIdentifier,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.QA,
+              body: { text: "New Question", attachments: [] },
+              answer: { text: "Answer", attachments: [] },
+            },
+          },
+        },
+      ],
+    },
+  ];
+  const eventsC = await ingestSources(sourcesWithExtraItem, store);
+  expect(eventsC).toHaveLength(1);
+  expect(eventsC[0]).toMatchObject({
+    type: EventType.TaskIngest,
+    metadata: { [INGEST_ITEM_IDENTIFIER_KEY]: "New Question+Answer" },
+    provenance: {
+      identifier: "source_identifier",
+    },
+  });
+
+  // add new event to DB
+  await store.database.putEvents(eventsC);
+
+  // delete all items associated to source
+  const sourcesWithDeletedItems: IngestibleSource[] = [
+    {
+      identifier: "source_identifier" as IngestibleSourceIdentifier,
+      title: "Brand new source",
+      items: [],
+    },
+  ];
+  const eventsD = await ingestSources(sourcesWithDeletedItems, store);
+  expect(eventsD).toHaveLength(2);
+});
+
 describe("provenance", () => {
   const BASE: IngestibleSource = {
     identifier: "source_identifier" as IngestibleSourceIdentifier,
@@ -266,7 +374,7 @@ function mockQATask(args: {
       },
     },
     metadata: {
-      [INGEST_SOURCE_IDENTIFIER_KEY]: `${args.body}+${args.answer}`,
+      [INGEST_ITEM_IDENTIFIER_KEY]: `${args.body}+${args.answer}`,
     },
     provenance: {
       identifier: args.provenance.identifier,
