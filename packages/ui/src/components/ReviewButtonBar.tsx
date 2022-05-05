@@ -144,7 +144,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   let children: React.ReactNode;
   if (promptType && colorPalette) {
     const sharedButtonProps = {
-      color: colors.white,
+      color: colors.ink,
       accentColor: colorPalette.accentColor,
       style: buttonStyle,
       backgroundColor: colorPalette.secondaryBackgroundColor,

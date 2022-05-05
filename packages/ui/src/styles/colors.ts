@@ -15,11 +15,11 @@ export interface ColorPalette {
 // Colors expressed in HSL for better interpolation.
 const _palettes = {
   red: {
-    backgroundColor: "#ff5252",
-    accentColor: "#ffcb2e",
-    secondaryAccentColor: "#ff7e05",
-    secondaryBackgroundColor: "#f73b3b",
-    secondaryTextColor: "#ad0000",
+    backgroundColor: "#F9F6F1",
+    accentColor: "#D60909",
+    secondaryAccentColor: "#897158",
+    secondaryBackgroundColor: "#eeeae2",
+    secondaryTextColor: "#897158",
   },
   orange: {
     backgroundColor: "#fa863d",
