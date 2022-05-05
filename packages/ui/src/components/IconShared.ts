@@ -5,6 +5,7 @@ export enum IconName {
   Cross = "cross",
   Reveal = "reveal",
   ArrowRight = "right",
+  DoubleArrowRight = "doubleArrowRight",
 }
 
 export enum IconPosition {

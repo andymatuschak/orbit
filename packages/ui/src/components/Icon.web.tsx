@@ -71,6 +71,14 @@ function getIconAsset(
           throw unreachableCaseError(iconPosition);
       }
 
+    case IconName.DoubleArrowRight:
+      if (accent) return null;
+      if (IconPosition.TopLeft) {
+        return require("../../assets/icons/doubleRight-TL.svg");
+      } else {
+        return null;
+      }
+
     case IconName.Reveal:
       if (accent) {
         switch (iconPosition) {
