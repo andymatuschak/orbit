@@ -160,7 +160,7 @@ function EmbeddedScreenRenderer({
   });
 
   if (currentReviewAreaQueueIndex >= reviewAreaQueue.length && !isComplete) {
-    setTimeout(() => setComplete(true), 350);
+    // setTimeout(() => setComplete(true), 350);
     setTimeout(() => {
       // There are bugs with RNW's implementation of delay with spring animations, alas.
       if (authenticationState.status !== "signedIn") {
@@ -203,47 +203,8 @@ function EmbeddedScreenRenderer({
           colorPalette={colorPalette}
           config={defaultSpacedRepetitionSchedulerConfiguration}
         />
-        <FadeView
-          isVisible={isComplete}
-          delayMillis={500}
-          removeFromLayoutWhenHidden
-        >
-          <Text
-            style={[
-              styles.type.label.layoutStyle,
-              {
-                textAlign: "center",
-                color: styles.colors.white,
-                marginBottom: styles.layout.gridUnit * 2,
-              },
-            ]}
-          >
-            {getEndOfTaskLabel(starburstItems, !!hostState)}
-          </Text>
-        </FadeView>
-        <FadeView
-          isVisible={
-            isComplete && !wasInitiallyComplete && !hasUncommittedActions
-          }
-          delayMillis={750}
-          removeFromLayoutWhenHidden
-        >
-          <Text
-            style={[
-              styles.type.labelSmall.layoutStyle,
-              {
-                textAlign: "center",
-                color: colorPalette.secondaryTextColor,
-              },
-            ]}
-          >
-            Saved to your account:
-            <br />
-            {authenticationState.userRecord?.emailAddress}
-          </Text>
-        </FadeView>
       </Animated.View>
-      {!isComplete && (
+      {(
         <ReviewArea
           items={reviewAreaQueue}
           currentItemIndex={currentReviewAreaQueueIndex}
@@ -255,23 +216,6 @@ function EmbeddedScreenRenderer({
           insetBottom={0}
           getURLForAttachmentID={getURLForAttachmentID}
         />
-      )}
-      {isComplete && (
-        <>
-          <View style={{ flex: 1 }} />
-          <Animated.View
-            style={{
-              overflow: "hidden",
-              transform: [{ translateY: onboardingOffsetY }],
-            }}
-            onLayout={onModalLayout}
-          >
-            <OnboardingModalWeb
-              colorPalette={colorPalette}
-              sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
-            />
-          </Animated.View>
-        </>
       )}
       {isDebug && <TestModeBanner colorPalette={colorPalette} />}
     </>
