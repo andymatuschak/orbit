@@ -6,15 +6,22 @@ import { SQLDatabase } from "./types";
 
 export async function performMigration(
   db: SQLDatabase,
+  logProgress?: boolean,
   throughSchemaVersionNumber?: number,
 ): Promise<void> {
   const currentVersion = await getSchemaVersionNumber(db);
+
+  const debugLog = (str: string) => {
+    if (logProgress) {
+      console.log(str);
+    }
+  };
 
   await execTransaction(db, (tx) => {
     const targetVersionNumber =
       throughSchemaVersionNumber ?? latestSchemaVersionNumber;
     if (currentVersion < targetVersionNumber) {
-      console.log(
+      debugLog(
         `Starting migration from ${currentVersion} to ${targetVersionNumber}`,
       );
       let lastVersionNumber = currentVersion;
@@ -25,7 +32,7 @@ export async function performMigration(
         migrationIndex++
       ) {
         const migration = migrations[migrationIndex];
-        console.log(`Migrating to ${migration.version}`);
+        debugLog(`Migrating to ${migration.version}`);
         for (const statement of migration.statements) {
           tx.executeSql(statement);
         }

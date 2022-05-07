@@ -15,6 +15,7 @@ export class OrbitStoreInMemory implements OrbitStore {
   constructor(eventReducer?: EventReducer) {
     const sqlDatabaseBackend = new SQLDatabaseBackend(
       SQLDatabaseBackend.inMemoryDBSubpath,
+      { enableDebugLogs: false },
     );
     this.database = new Database(sqlDatabaseBackend, eventReducer);
 
