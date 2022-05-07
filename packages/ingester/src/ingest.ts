@@ -17,13 +17,18 @@ import {
 } from "./ingestible";
 
 type IngestOptions = {
-  ingestDateMilis: number;
+  ingestDateMillis: number;
 };
 const DEFAULT_OPTIONS = (): IngestOptions => ({
-  ingestDateMilis: Date.now(),
+  ingestDateMillis: Date.now(),
 });
 
-export const INGEST_ITEM_IDENTIFIER_KEY = "ingest_item_identifier" as const;
+export const INGEST_ITEM_IDENTIFIER_KEY = "ingestSourceIdentifier" as const;
+export const MissingItemIdentifierError = new Error(
+  "existing item with matching source identifier does not contain item identifier",
+);
+export const DuplicateItemIdentifierError = (identifier: string) =>
+  new Error(`item identifier '${identifier}' is not unique`);
 
 // TODO: handle moves across sources
 // TODO: handle provenance updates
@@ -40,38 +45,40 @@ export async function ingestSources(
     entityType: EntityType.Task,
   };
   const entities = await store.database.listEntities(query);
-  const groupedEntities = groupEntitiesByProvenanceIdentifiers(entities);
-  const timeMillis = opts.ingestDateMilis;
+  const existingGroupedEntities =
+    groupEntitiesByProvenanceIdentifiers(entities);
+  const timeMillis = opts.ingestDateMillis;
 
   for (const source of sources) {
-    if (groupedEntities[source.identifier]) {
-      // determine which prompts are new and which have been deleted
-      const existingPrompts = mapEntitiesByItemIdentifiers(
-        groupedEntities[source.identifier],
-      );
-      const newPrompts = mapIngestibleItemsByItemIdentifiers(source.items);
+    const existingEntity = existingGroupedEntities.get(source.identifier);
+    if (existingEntity) {
+      // determine which tasks are new and which have been deleted
+      const existingEntitiesByItemIdentifiers =
+        mapEntitiesByItemIdentifier(existingEntity);
+      const ingestibleItemsByItemIdentifiers =
+        mapIngestibleItemsByItemIdentifier(source.items);
 
       // determine which tasks are newly added
-      for (const [key, potentialNewPrompt] of Object.entries(newPrompts)) {
-        if (!existingPrompts[key as IngestibleItemIdentifier]) {
+      for (const [key, potentialNewItem] of ingestibleItemsByItemIdentifiers) {
+        if (!existingEntitiesByItemIdentifiers.get(key)) {
           // task is new
           events.push(
-            createIngestTaskForSource(source, timeMillis)(potentialNewPrompt),
+            createIngestTaskForSource(source, timeMillis)(potentialNewItem),
           );
         }
       }
 
       // determine which task have been deleted
-      for (const [key, existingPrompt] of Object.entries(existingPrompts)) {
-        if (!newPrompts[key as IngestibleItemIdentifier]) {
+      for (const [key, existingTask] of existingEntitiesByItemIdentifiers) {
+        if (!ingestibleItemsByItemIdentifiers.get(key)) {
           // task has been deleted within
           // TODO: before marking as deleted, check if this ID is a new ingest event
           // for another. If so, convert event to be a provenance update.
-          events.push(createDeletePromptEvent(existingPrompt, timeMillis));
+          events.push(createDeleteTaskEvent(existingTask, timeMillis));
         }
       }
     } else {
-      // completely new source, ingest each prompt
+      // completely new source, ingest each item as a new task
       const ingestEvents = source.items.map(
         createIngestTaskForSource(source, timeMillis),
       );
@@ -82,37 +89,42 @@ export async function ingestSources(
 }
 
 function groupEntitiesByProvenanceIdentifiers(entities: Task<TaskContent>[]) {
-  const mapping: Record<TaskProvenance["identifier"], Task<TaskContent>[]> = {};
+  const mapping = new Map<TaskProvenance["identifier"], Task<TaskContent>[]>();
   for (const entity of entities) {
     const provenance = entity.provenance;
     if (!provenance) continue;
 
-    if (mapping[provenance.identifier]) {
-      mapping[provenance.identifier].push(entity);
+    const existing = mapping.get(provenance.identifier);
+    if (existing) {
+      mapping.set(provenance.identifier, [...existing, entity]);
     } else {
-      mapping[provenance.identifier] = [entity];
+      mapping.set(provenance.identifier, [entity]);
     }
   }
   return mapping;
 }
 
-function mapEntitiesByItemIdentifiers(entities: Task<TaskContent>[]) {
-  // [01/05/22]: our current versin of typescript does not allow
-  // `IngestibleItemIdentifier` to be the key of an object. Newer
-  // releases of typescript support this behavior.
-  // https://github.com/microsoft/TypeScript/pull/44512
-  const mapping: Record<string, Task<TaskContent>> = {};
+function mapEntitiesByItemIdentifier(entities: Task<TaskContent>[]) {
+  const mapping = new Map<IngestibleItemIdentifier, Task<TaskContent>>();
   for (const entity of entities) {
     const itemID = entity.metadata[INGEST_ITEM_IDENTIFIER_KEY];
-    mapping[itemID] = entity;
+    if (itemID) {
+      mapping.set(itemID as IngestibleItemIdentifier, entity);
+    } else {
+      throw MissingItemIdentifierError;
+    }
   }
   return mapping;
 }
 
-function mapIngestibleItemsByItemIdentifiers(items: IngestibleItem[]) {
-  const mapping: Record<string, IngestibleItem> = {};
+function mapIngestibleItemsByItemIdentifier(items: IngestibleItem[]) {
+  const mapping = new Map<IngestibleItemIdentifier, IngestibleItem>();
   for (const item of items) {
-    mapping[item.identifier] = item;
+    if (!mapping.get(item.identifier)) {
+      mapping.set(item.identifier, item);
+    } else {
+      throw DuplicateItemIdentifierError(item.identifier);
+    }
   }
   return mapping;
 }
@@ -146,7 +158,7 @@ function createIngestTaskForSource(
   };
 }
 
-function createDeletePromptEvent(
+function createDeleteTaskEvent(
   task: Task<TaskContent>,
   timestampMillis: number,
 ): TaskUpdateDeletedEvent {

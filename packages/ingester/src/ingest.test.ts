@@ -8,8 +8,14 @@ import {
   TaskUpdateDeletedEvent,
 } from "@withorbit/core";
 import { OrbitStoreInMemory } from "@withorbit/store-fs";
-import { ingestSources, INGEST_ITEM_IDENTIFIER_KEY } from "./ingest";
 import {
+  DuplicateItemIdentifierError,
+  ingestSources,
+  INGEST_ITEM_IDENTIFIER_KEY,
+  MissingItemIdentifierError,
+} from "./ingest";
+import {
+  IngestibleItem,
   IngestibleItemIdentifier,
   IngestibleSource,
   IngestibleSourceIdentifier,
@@ -27,8 +33,6 @@ afterEach(() => {
 it("ingest new prompts from unknown source", async () => {
   await store.database.putEvents([
     mockQATask({
-      eventID: "bbbbbbbbbbbbbbbbbbbbbb",
-      entityID: "yyyyyyyyyyyyyyyyyyyyyy",
       body: "Existing Question",
       answer: "Answer",
       provenance: {
@@ -80,8 +84,6 @@ it("ingest new prompts from unknown source", async () => {
 it("ingest new prompts from known source", async () => {
   await store.database.putEvents([
     mockQATask({
-      eventID: "aaaaaaaaaaaaaaaaaaaaaa",
-      entityID: "xxxxxxxxxxxxxxxxxxxxxx",
       body: "Question",
       answer: "Answer",
       provenance: { identifier: "source_identifier", title: "Existing Source" },
@@ -140,8 +142,6 @@ it("ingest new prompts from known source", async () => {
 it("ignores already ingested prompts", async () => {
   await store.database.putEvents([
     mockQATask({
-      eventID: "aaaaaaaaaaaaaaaaaaaaaa",
-      entityID: "xxxxxxxxxxxxxxxxxxxxxx",
       body: "Question",
       answer: "Answer",
       provenance: { identifier: "source_identifier", title: "Existing Source" },
@@ -175,8 +175,6 @@ it("ignores already ingested prompts", async () => {
 it("marks prompts as deleted", async () => {
   await store.database.putEvents([
     mockQATask({
-      eventID: "aaaaaaaaaaaaaaaaaaaaaa",
-      entityID: "xxxxxxxxxxxxxxxxxxxxxx",
       body: "Question",
       answer: "Answer",
       provenance: { identifier: "source_identifier", title: "Existing Source" },
@@ -196,15 +194,13 @@ it("marks prompts as deleted", async () => {
   expect(events[0].type).toBe(EventType.TaskUpdateDeleted);
   const event = events[0] as TaskUpdateDeletedEvent;
 
-  expect(event.entityID).toEqual("xxxxxxxxxxxxxxxxxxxxxx");
+  expect(event.entityID).toEqual(MOCK_ENTITY_ID);
   expect(event.isDeleted).toBeTruthy();
 });
 
 it("only ingests specified sources", async () => {
   await store.database.putEvents([
     mockQATask({
-      eventID: "aaaaaaaaaaaaaaaaaaaaaa",
-      entityID: "xxxxxxxxxxxxxxxxxxxxxx",
       body: "Question",
       answer: "Answer",
       provenance: { identifier: "source_identifier", title: "Existing Source" },
@@ -353,18 +349,80 @@ describe("provenance", () => {
   });
 });
 
+describe("throws", () => {
+  it("throws if two items share the same identifier", async () => {
+    const task = mockQATask({
+      body: "Question",
+      answer: "Answer",
+      provenance: {
+        identifier: "source_identifier",
+        title: "Existing Source",
+      },
+    });
+    await store.database.putEvents([task]);
+
+    const ITEM: IngestibleItem = {
+      identifier: "Question+Answer" as IngestibleItemIdentifier,
+      spec: {
+        type: TaskSpecType.Memory,
+        content: {
+          type: TaskContentType.QA,
+          body: { text: "Question", attachments: [] },
+          answer: { text: "Answer", attachments: [] },
+        },
+      },
+    };
+
+    const source: IngestibleSource = {
+      identifier: "source_identifier" as IngestibleSourceIdentifier,
+      title: "Source",
+      items: [{ ...ITEM }, { ...ITEM }],
+    };
+    await expect(ingestSources([source], store)).rejects.toThrow(
+      DuplicateItemIdentifierError("Question+Answer"),
+    );
+  });
+
+  it("throws if metadata is not defined on existing task", async () => {
+    const task = mockQATask({
+      body: "Question",
+      answer: "Answer",
+      provenance: {
+        identifier: "source_identifier",
+        title: "Existing Source",
+      },
+    });
+    // remove the item identifier key
+    task.metadata = {};
+    await store.database.putEvents([task]);
+    const source: IngestibleSource = {
+      identifier: "source_identifier" as IngestibleSourceIdentifier,
+      title: "Source",
+      items: [],
+    };
+    await expect(ingestSources([source], store)).rejects.toThrow(
+      MissingItemIdentifierError,
+    );
+  });
+});
+
+// These need the following format or else the putEvents will fail the schema validation
+// check for events
+const MOCK_EVENT_ID = "bbbbbbbbbbbbbbbbbbbbbb";
+const MOCK_ENTITY_ID = "yyyyyyyyyyyyyyyyyyyyyy";
+
 function mockQATask(args: {
-  eventID: string;
-  entityID: string;
+  eventID?: string;
+  entityID?: string;
   body: string;
   answer: string;
   provenance: { identifier: string; title: string };
 }): TaskIngestEvent {
   return {
-    id: args.eventID as EventID,
+    id: (args.eventID ?? MOCK_EVENT_ID) as EventID,
     type: EventType.TaskIngest,
     timestampMillis: 0,
-    entityID: args.entityID as TaskID,
+    entityID: (args.entityID ?? MOCK_ENTITY_ID) as TaskID,
     spec: {
       type: TaskSpecType.Memory,
       content: {
