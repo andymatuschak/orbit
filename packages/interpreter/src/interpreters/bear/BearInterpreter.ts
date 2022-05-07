@@ -34,11 +34,11 @@ export class BearInterpreter implements Interpreter {
           const noteTitle = getNoteTitle(root);
 
           return {
-            identifier: (bearId?.id ?? file.path) as IngestibleSourceIdentifier,
+            identifier: bearId.id as IngestibleSourceIdentifier,
             title: noteTitle ?? file.name,
             url: bearId.openURL,
             items: prompts.map((prompt): IngestibleItem => {
-              const spec = convertInterpreterPromptToIngestable(prompt);
+              const spec = convertInterpreterPromptToIngestible(prompt);
               const identifier = this._hasher.hash(
                 spec,
               ) as IngestibleItemIdentifier;
@@ -57,7 +57,7 @@ export class BearInterpreter implements Interpreter {
   }
 }
 
-function convertInterpreterPromptToIngestable(prompt: Prompt): TaskSpec {
+function convertInterpreterPromptToIngestible(prompt: Prompt): TaskSpec {
   if (prompt.type === "qaPrompt") {
     return {
       type: TaskSpecType.Memory,

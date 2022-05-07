@@ -9,7 +9,7 @@ import {
 import crypto from "crypto";
 import { Hasher } from "./hasher";
 
-// normalize each of the object into an array of strings to ensure
+// normalize each of the objects into an array of strings to ensure
 // that the hash is not sensitive to key ordering
 const taskContentDeterministicOrder: {
   [key in TaskContentType]: (spec: TaskContent) => string[];
