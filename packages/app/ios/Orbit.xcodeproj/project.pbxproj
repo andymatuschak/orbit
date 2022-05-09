@@ -27,6 +27,9 @@
 		AD93E75736E0494F95D119ED /* dr-lightitalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = DB62AFBDCFB64E00AB6FF8EB /* dr-lightitalic.otf */; };
 		BAAC840D7B964D4888CCEFC7 /* dr-regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = F6C5BE09A93F4B7286876094 /* dr-regular.otf */; };
 		BF7662E1BD1C40ACAFAEA768 /* dr-extralightitalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 83BFC3A7DC7A44EBA1D06F0F /* dr-extralightitalic.otf */; };
+		D9886FE0282739EA00E8E85A /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = D9886FDF282739EA00E8E85A /* Intents.intentdefinition */; };
+		D9886FE6282754A700E8E85A /* IngestEventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = D9886FE5282754A700E8E85A /* IngestEventEmitter.m */; };
+		D9886FE82828416700E8E85A /* IngestEventHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = D9886FE72828416700E8E85A /* IngestEventHandler.m */; };
 		E5C8D8EA4BD84E27A37A2044 /* dr-bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 51462ABDC1684936987B6556 /* dr-bold.otf */; };
 		EBC71A529C664772951484F4 /* dr-medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 93BE72CBB46646D69E92DB0D /* dr-medium.otf */; };
 /* End PBXBuildFile section */
@@ -59,6 +62,11 @@
 		C24AE4C418D8B3D2FEDCDD04 /* Pods-Orbit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Orbit.debug.xcconfig"; path = "Target Support Files/Pods-Orbit/Pods-Orbit.debug.xcconfig"; sourceTree = "<group>"; };
 		CB01D7A4F53F4954AC1D8FEE /* dr-extralight.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-extralight.otf"; path = "../assets/fonts/dr-extralight.otf"; sourceTree = "<group>"; };
 		CD82D2AB4B8944AEA650052E /* dr-italic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-italic.otf"; path = "../assets/fonts/dr-italic.otf"; sourceTree = "<group>"; };
+		D9886FDF282739EA00E8E85A /* Intents.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = Intents.intentdefinition; sourceTree = "<group>"; };
+		D9886FE42827548200E8E85A /* IngestEventEmitter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IngestEventEmitter.h; sourceTree = "<group>"; };
+		D9886FE5282754A700E8E85A /* IngestEventEmitter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IngestEventEmitter.m; sourceTree = "<group>"; };
+		D9886FE72828416700E8E85A /* IngestEventHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IngestEventHandler.m; sourceTree = "<group>"; };
+		D9886FE92828417200E8E85A /* IngestEventHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IngestEventHandler.h; sourceTree = "<group>"; };
 		DB62AFBDCFB64E00AB6FF8EB /* dr-lightitalic.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-lightitalic.otf"; path = "../assets/fonts/dr-lightitalic.otf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F6C5BE09A93F4B7286876094 /* dr-regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "dr-regular.otf"; path = "../assets/fonts/dr-regular.otf"; sourceTree = "<group>"; };
@@ -126,6 +134,11 @@
 				61D31C7C24AD2FB2009823BC /* Supporting */,
 				6141970D271FA15A008B9205 /* ORSQLImageURLLoader.h */,
 				6141970E271FA15A008B9205 /* ORSQLImageURLLoader.m */,
+				D9886FDF282739EA00E8E85A /* Intents.intentdefinition */,
+				D9886FE42827548200E8E85A /* IngestEventEmitter.h */,
+				D9886FE5282754A700E8E85A /* IngestEventEmitter.m */,
+				D9886FE92828417200E8E85A /* IngestEventHandler.h */,
+				D9886FE72828416700E8E85A /* IngestEventHandler.m */,
 			);
 			path = Orbit;
 			sourceTree = "<group>";
@@ -361,6 +374,9 @@
 				61AF729C246B596200679E6B /* ORDebugManager.m in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
+				D9886FE6282754A700E8E85A /* IngestEventEmitter.m in Sources */,
+				D9886FE0282739EA00E8E85A /* Intents.intentdefinition in Sources */,
+				D9886FE82828416700E8E85A /* IngestEventHandler.m in Sources */,
 				6141970F271FA15A008B9205 /* ORSQLImageURLLoader.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
