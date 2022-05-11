@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "array-flat-polyfill": "^1.0.1",
-    "axios": "^0.19.2",
+    "axios": "^0.21.2",
     "bplist-parser": "^0.2",
     "citation-js": "^0.4.8",
     "exiftool-vendored": "~8",
