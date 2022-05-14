@@ -8,12 +8,8 @@
 #import <Foundation/Foundation.h>
 
 #import "IngestEventEmitter.h"
-#import <libkern/OSAtomic.h>
-#import <stdatomic.h>
 
 @implementation IngestEventEmitter
-
-@synthesize semaphore;
 
 + (BOOL)requiresMainQueueSetup {
     return NO;
@@ -43,30 +39,15 @@ RCT_EXPORT_MODULE();
     return @[@"onIngestEvent"];
 }
 
-- (BOOL)emitIngestEvent:(NSString *)fileJSON {
-  // update state
-  self.intentState = IntentStateWaiting;
-  
+- (void)emitIngestEvent:(NSString *)fileJSON completion:(void (^)(BOOL *result))block {
   // emit event to RN
   [self sendEventWithName:@"onIngestEvent" body:@{@"json": fileJSON}];
-  
-  // block until response from RN
-  dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-  self.semaphore = semaphore;
-  dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-  self.semaphore = nil;
-  
-  // return status
-  return [self intentState] == IntentStateSuccess;
+  self.completionHandler = block;
 }
 
 RCT_EXPORT_METHOD(completedIngestion:(BOOL *)success) {
-  if (success) {
-    self.intentState = IntentStateSuccess;
-  } else {
-    self.intentState = IntentStateFailure;
-  }
-  dispatch_semaphore_signal([self semaphore]);
+  self.completionHandler(success);
+  self.completionHandler = nil;
 }
 
 @end

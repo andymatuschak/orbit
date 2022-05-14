@@ -17,19 +17,20 @@
   NSString *data = [[NSString alloc] initWithData:ingestIntent.file.data encoding:NSUTF8StringEncoding];
   
   IngestEventEmitter *emitter = [[IngestEventEmitter alloc] init];
-  ShortcutIngestIntentResponseCode code;
   if (emitter.hasListeners) {
-    bool success = [emitter emitIngestEvent:data];
-    
-    if (success) {
-      code = ShortcutIngestIntentResponseCodeSuccess;
-    } else {
-      code = ShortcutIngestIntentResponseCodeFailure;
-    }
+    [emitter emitIngestEvent:data completion:^(BOOL *result) {
+      ShortcutIngestIntentResponseCode code;
+      if (result) {
+        code = ShortcutIngestIntentResponseCodeSuccess;
+      } else {
+        code = ShortcutIngestIntentResponseCodeFailure;
+      }
+      completion([[ShortcutIngestIntentResponse alloc] initWithCode:code userActivity:nil]);
+    }];
   } else {
-    code = ShortcutIngestIntentResponseCodeContinueInApp;
+    ShortcutIngestIntentResponseCode code = ShortcutIngestIntentResponseCodeContinueInApp;
+    completion([[ShortcutIngestIntentResponse alloc] initWithCode:code userActivity:nil]);
   }
-  completion([[ShortcutIngestIntentResponse alloc] initWithCode:code userActivity:nil]);
 }
 
 @end
