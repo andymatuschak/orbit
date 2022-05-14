@@ -7,29 +7,29 @@
 
 #import <Foundation/Foundation.h>
 #import "IngestEventHandler.h"
-#import "IngestIntent.h"
+#import "ShortcutIngestIntent.h"
 #import "IngestEventEmitter.h"
 
 @implementation IngestEventHandler
 
-- (void)handleIngest:(IngestIntent *)intent completion:(void (^)(IngestIntentResponse *response))completion NS_SWIFT_NAME(handle(intent:completion:)) {
-  IngestIntent *ingestIntent = ((IngestIntent *) intent);
-  NSString *data = [[NSString alloc] initWithData: ingestIntent.file.data encoding: NSUTF8StringEncoding];
+- (void)handleShortcutIngest:(nonnull ShortcutIngestIntent *)intent completion:(nonnull void (^)(ShortcutIngestIntentResponse * _Nonnull))completion{
+  ShortcutIngestIntent *ingestIntent = (ShortcutIngestIntent *) intent;
+  NSString *data = [[NSString alloc] initWithData:ingestIntent.file.data encoding:NSUTF8StringEncoding];
   
   IngestEventEmitter *emitter = [[IngestEventEmitter alloc] init];
-  IngestIntentResponseCode code;
+  ShortcutIngestIntentResponseCode code;
   if (emitter.hasListeners) {
     bool success = [emitter emitIngestEvent:data];
     
     if (success) {
-      code = IngestIntentResponseCodeSuccess;
+      code = ShortcutIngestIntentResponseCodeSuccess;
     } else {
-      code = IngestIntentResponseCodeFailure;
+      code = ShortcutIngestIntentResponseCodeFailure;
     }
   } else {
-    code = IngestIntentResponseCodeContinueInApp;
+    code = ShortcutIngestIntentResponseCodeContinueInApp;
   }
-  completion([[IngestIntentResponse alloc] initWithCode:code userActivity:nil]);
+  completion([[ShortcutIngestIntentResponse alloc] initWithCode:code userActivity:nil]);
 }
 
 @end

@@ -12,18 +12,18 @@
 #import <React/RCTEventEmitter.h>
 
 typedef enum {
-    kSuccess,
-    kFailure,
-    kWaiting
+  IntentStateSuccess,
+  IntentStateFailure,
+  IntentStateWaiting
 } IntentState;
 
 @interface IngestEventEmitter : RCTEventEmitter <RCTBridgeModule>
 
 @property(atomic,assign) bool hasListeners;
 @property(atomic,assign) IntentState intentState;
-@property (atomic,assign) dispatch_semaphore_t semaphore;
+@property(atomic,assign) dispatch_semaphore_t semaphore;
 
-- (bool) emitIngestEvent:(NSString *) fileJSON;
+- (BOOL)emitIngestEvent:(NSString *)fileJSON;
 
 @end
 

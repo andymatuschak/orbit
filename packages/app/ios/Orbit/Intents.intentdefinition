@@ -48,7 +48,7 @@
 				</dict>
 			</dict>
 			<key>INIntentName</key>
-			<string>Ingest</string>
+			<string>ShortcutIngest</string>
 			<key>INIntentParameters</key>
 			<array>
 				<dict>

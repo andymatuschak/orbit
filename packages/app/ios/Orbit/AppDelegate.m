@@ -262,7 +262,7 @@ RNKeyEvent *keyEvent = nil;
 }
 
 - (id)application:(UIApplication *)application handlerForIntent:(INIntent *)intent {
-  if ([intent isKindOfClass:[IngestIntent class]]) {
+  if ([intent isKindOfClass:[ShortcutIngestIntent class]]) {
     return [[IngestEventHandler alloc] init];
   }
   return nil;

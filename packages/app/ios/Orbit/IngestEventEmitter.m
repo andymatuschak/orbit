@@ -15,21 +15,16 @@
 
 @synthesize semaphore;
 
-- (instancetype)init {
-  self = [super init];
-  return self;
-}
-
 + (BOOL)requiresMainQueueSetup {
     return NO;
 }
 
--(void)startObserving {
+- (void)startObserving {
     self.hasListeners = YES;
 }
 
 // Will be called when this module's last listener is removed, or on dealloc.
--(void)stopObserving {
+- (void)stopObserving {
     self.hasListeners = NO;
 }
 
@@ -48,9 +43,9 @@ RCT_EXPORT_MODULE();
     return @[@"onIngestEvent"];
 }
 
-- (bool) emitIngestEvent:(NSString *) fileJSON {
+- (BOOL)emitIngestEvent:(NSString *)fileJSON {
   // update state
-  self.intentState = kWaiting;
+  self.intentState = IntentStateWaiting;
   
   // emit event to RN
   [self sendEventWithName:@"onIngestEvent" body:@{@"json": fileJSON}];
@@ -62,14 +57,14 @@ RCT_EXPORT_MODULE();
   self.semaphore = nil;
   
   // return status
-  return [self intentState] == kSuccess;
+  return [self intentState] == IntentStateSuccess;
 }
 
 RCT_EXPORT_METHOD(completedIngestion:(BOOL *)success) {
   if (success) {
-    self.intentState = kSuccess;
+    self.intentState = IntentStateSuccess;
   } else {
-    self.intentState = kFailure;
+    self.intentState = IntentStateFailure;
   }
   dispatch_semaphore_signal([self semaphore]);
 }

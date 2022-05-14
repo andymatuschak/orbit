@@ -7,9 +7,11 @@
 
 #ifndef IngestEventHandler_h
 #define IngestEventHandler_h
-#import "IngestIntent.h"
+// Automatically generated file by SiriKit which codify's
+// the intent definitions.
+#import "ShortcutIngestIntent.h"
 
-@interface IngestEventHandler : NSObject <IngestIntentHandling>
+@interface IngestEventHandler : NSObject <ShortcutIngestIntentHandling>
 
 @end
 
