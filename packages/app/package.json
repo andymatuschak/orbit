@@ -32,6 +32,7 @@
     "@withorbit/store-fs": "0.0.1",
     "@withorbit/store-shared": "0.0.1",
     "@withorbit/store-web": "0.0.1",
+    "@withorbit/ingester": "0.0.1",
     "@withorbit/ui": "0.0.1",
     "assert": "^1.5.0",
     "babel-plugin-macros": "^2.8.0",
