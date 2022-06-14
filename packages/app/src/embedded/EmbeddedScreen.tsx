@@ -204,7 +204,7 @@ function EmbeddedScreenRenderer({
           config={defaultSpacedRepetitionSchedulerConfiguration}
         />
       </Animated.View>
-      {(
+      {
         <ReviewArea
           items={reviewAreaQueue}
           currentItemIndex={currentReviewAreaQueueIndex}
@@ -216,7 +216,7 @@ function EmbeddedScreenRenderer({
           insetBottom={0}
           getURLForAttachmentID={getURLForAttachmentID}
         />
-      )}
+      }
       {isDebug && <TestModeBanner colorPalette={colorPalette} />}
     </>
   );
@@ -402,7 +402,11 @@ function EmbeddedScreen({
   }
 
   function onSkip() {
-    reviewSessionManager.markCurrentItem([])
+    reviewSessionManager.markCurrentItem([], (newState) =>
+      sendUpdatedReviewItemToHost(
+        newState.sessionItems[currentSessionItemIndex].task,
+      ),
+    );
   }
 
   if (

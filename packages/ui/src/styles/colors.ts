@@ -29,11 +29,11 @@ const _palettes = {
     secondaryTextColor: "#c74200",
   },
   brown: {
-    backgroundColor: "#e0a642",
-    accentColor: "#ffdd1a",
-    secondaryAccentColor: "#ff7105",
-    secondaryBackgroundColor: "#da962b",
-    secondaryTextColor: "#a46b0e",
+    backgroundColor: "#F9F6F1",
+    accentColor: "#D28200",
+    secondaryAccentColor: "#897158",
+    secondaryBackgroundColor: "#eeeae2",
+    secondaryTextColor: "#897158",
   },
   yellow: {
     backgroundColor: "#fac800",
@@ -78,11 +78,12 @@ const _palettes = {
     secondaryTextColor: "#1d78e7",
   },
   violet: {
-    backgroundColor: "#ad89fb",
-    accentColor: "#ffcb2e",
-    secondaryAccentColor: "#a82efa",
-    secondaryBackgroundColor: "#a47ef7",
-    secondaryTextColor: "#6b39d5",
+    backgroundColor: "#F9F6F1",
+    accentColor: "#824FE8",
+    secondaryAccentColor: "#897158",
+    secondaryBackgroundColor: "#eeeae2",
+    secondaryTextColor: "#897158",
+
   },
   purple: {
     backgroundColor: "#d071ef",

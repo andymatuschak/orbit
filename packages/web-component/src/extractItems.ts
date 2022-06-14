@@ -25,12 +25,14 @@ export function extractItems(parentElement: HTMLElement): EmbeddedScreenRecord {
   parentElement
     .querySelectorAll<OrbitPromptElement>(":scope > orbit-prompt")
     .forEach((element) => {
-      const { content, attachmentIDsToURLs: elementAttachmentMap } =
-        extractContent(element);
-      reviewItems.push(generateTaskReviewItem(content));
+      const content = extractContent(element);
+      // TODO: validate content.externalID... shouldn't be repeats, etc
+      reviewItems.push(
+        generateTaskReviewItem(content.content, content.externalID),
+      );
 
-      if (elementAttachmentMap) {
-        for (const [attachmentID, url] of elementAttachmentMap) {
+      if (content.attachmentIDsToURLs) {
+        for (const [attachmentID, url] of content.attachmentIDsToURLs) {
           attachmentIDsToURLs[attachmentID] = url;
         }
       }
@@ -73,7 +75,10 @@ function getComponentIDForEmbeddedReview(content: TaskContent): string {
   }
 }
 
-function generateTaskReviewItem(content: TaskContent): ReviewItem {
+function generateTaskReviewItem(
+  content: TaskContent,
+  externalID: string | null,
+): ReviewItem {
   const spec: TaskSpec = {
     type: TaskSpecType.Memory,
     content,
@@ -87,7 +92,12 @@ function generateTaskReviewItem(content: TaskContent): ReviewItem {
     createdAtTimestampMillis: Date.now(),
     componentStates: generateInitialComponentStates(content),
     isDeleted: false,
-    metadata: {},
+    // HACK: This isn't the way I'd like to store this. Think about this more carefully.
+    metadata: externalID
+      ? {
+          externalID,
+        }
+      : {},
   };
   return {
     task,
@@ -97,8 +107,10 @@ function generateTaskReviewItem(content: TaskContent): ReviewItem {
 
 function extractContent(element: OrbitPromptElement): {
   content: TaskContent;
+  externalID: string | null;
   attachmentIDsToURLs: Map<AttachmentID, string> | null;
 } {
+  const externalID = element.id ? element.id : null;
   const clozeMarkup = element.getAttribute("cloze");
   if (clozeMarkup) {
     const { markupWithoutBraces, clozeComponents } =
@@ -113,6 +125,7 @@ function extractContent(element: OrbitPromptElement): {
         components: clozeComponents,
       },
       attachmentIDsToURLs: null,
+      externalID,
     };
   } else {
     const attachmentIDsToURLs = new Map<AttachmentID, string>();
@@ -131,9 +144,9 @@ function extractContent(element: OrbitPromptElement): {
       const attachmentURLs =
         element.getAttribute(attachmentAttributeName)?.split(";") ?? [];
       for (const url of attachmentURLs) {
-        const id = generateAttachmentIDForURL(url);
-        attachmentIDsToURLs.set(id, url);
-        attachments.push(id);
+        const attachmentID = generateAttachmentIDForURL(url);
+        attachmentIDsToURLs.set(attachmentID, url);
+        attachments.push(attachmentID);
       }
       return {
         text,
@@ -148,6 +161,7 @@ function extractContent(element: OrbitPromptElement): {
         answer: extractContentField("answer", "answer-attachments"),
       },
       attachmentIDsToURLs,
+      externalID,
     };
   }
 }

@@ -141,7 +141,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
     );
   }
 
-  const spacer = <Spacer units={0.5} />;
+  const spacer = <Spacer units={0.375} />;
 
   let children: React.ReactNode;
   if (promptType && colorPalette) {
