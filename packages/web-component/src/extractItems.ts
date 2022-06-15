@@ -75,7 +75,7 @@ function getComponentIDForEmbeddedReview(content: TaskContent): string {
   }
 }
 
-function generateTaskReviewItem(
+export function generateTaskReviewItem(
   content: TaskContent,
   externalID: string | null,
 ): ReviewItem {
@@ -85,7 +85,10 @@ function generateTaskReviewItem(
   };
   const task: Task = {
     type: EntityType.Task,
-    id: generateTaskIDForSpec(spec),
+    id: externalID
+      // HACK probably not actually how we want to do this
+      ? generateTaskIDForString(externalID)
+      : generateTaskIDForSpec(spec),
     spec,
     // TODO consider moving provenance generation from `app` to here.
     provenance: null, // Will be generated in the app
@@ -175,14 +178,17 @@ function generateAttachmentIDForURL(url: string): AttachmentID {
 
 let _orbitEmbeddedTaskNamespaceUUID: ArrayLike<number> | null = null;
 
-export function generateTaskIDForSpec(spec: TaskSpec): TaskID {
+function generateTaskIDForString(input: string): TaskID {
   if (!_orbitEmbeddedTaskNamespaceUUID) {
     _orbitEmbeddedTaskNamespaceUUID = uuidParse(
       "354182c0-33a8-4763-bbad-960bf679b4a1",
     );
   }
-
   const bytes = new Uint8Array(16);
-  uuidV5(fastJSONStableStringify(spec), _orbitEmbeddedTaskNamespaceUUID, bytes);
+  uuidV5(input, _orbitEmbeddedTaskNamespaceUUID, bytes);
   return encodeUUIDBytesToWebSafeBase64ID(bytes) as TaskID;
+}
+
+function generateTaskIDForSpec(spec: TaskSpec): TaskID {
+  return generateTaskIDForString(fastJSONStableStringify(spec));
 }

@@ -1,4 +1,4 @@
-import { ColorPaletteName } from "@withorbit/core";
+import { ColorPaletteName, ReviewItem, TaskContent } from "@withorbit/core";
 import {
   EmbeddedHostEventType,
   EmbeddedHostMetadata,
@@ -8,7 +8,7 @@ import {
   EmbeddedScreenRecord,
   EmbeddedScreenTaskUpdateEvent,
 } from "@withorbit/embedded-support";
-import { extractItems } from "./extractItems";
+import { extractItems, generateTaskReviewItem } from "./extractItems";
 import { getSharedMetadataMonitor } from "./metadataMonitor";
 
 declare global {
@@ -82,7 +82,7 @@ function markEmbeddedHostStateDirty() {
             receiverIndex: index,
           },
         };
-        // element.iframe!.contentWindow!.postMessage(event, "*");
+        element.iframe!.contentWindow!.postMessage(event, "*");
       });
     }, 1000);
   }
@@ -170,6 +170,10 @@ const sessionStartTimestampMillis = Date.now();
 export class OrbitReviewAreaElement extends HTMLElement {
   private cachedMetadata: EmbeddedHostMetadata | null = null;
   private cachedRecord: EmbeddedScreenRecord | null = null;
+
+  // added at runtime by the user
+  private extraItems: EmbeddedScreenRecord | null = null;
+
   iframe: HTMLIFrameElement | null = null;
 
   onMetadataChange = (metadata: EmbeddedHostMetadata) => {
@@ -182,13 +186,81 @@ export class OrbitReviewAreaElement extends HTMLElement {
     // TODO: notify child
   }
 
-  getEmbeddedItems() {
+  addItem(externalID: string, content: TaskContent) {
+    const reviewItem = generateTaskReviewItem(content, externalID);
+    if (!this.extraItems) {
+      this.extraItems = {
+        reviewItems: [],
+        attachmentIDsToURLs: {},
+      };
+    }
+    this.extraItems = {
+      ...this.extraItems,
+      reviewItems: [...this.extraItems.reviewItems, reviewItem],
+    };
+    this.updateScreenRecords();
+  }
+
+  removeItem(externalID: string) {
+    if (!this.extraItems) return;
+    const newItems: ReviewItem[] = [];
+    for (const item of this.extraItems.reviewItems) {
+      if (item.task.metadata.externalID !== externalID) {
+        newItems.push(item);
+      }
+    }
+    this.extraItems = {
+      ...this.extraItems,
+      reviewItems: newItems,
+    };
+    this.updateScreenRecords();
+  }
+
+  updateItem(externalID: string, content: TaskContent) {
+    // TODO also apply updates to author-provided prompts
+    if (!this.extraItems) return;
+    const newItems: ReviewItem[] = [];
+    for (const item of this.extraItems.reviewItems) {
+      if (item.task.metadata.externalID !== externalID) {
+        newItems.push(item);
+      } else {
+        newItems.push({
+          ...item,
+          task: { ...item.task, spec: { ...item.task.spec, content: content } },
+        });
+      }
+    }
+    this.extraItems = {
+      ...this.extraItems,
+      reviewItems: newItems,
+    };
+    this.updateScreenRecords();
+  }
+
+  private updateScreenRecords() {
     if (this.cachedRecord === null) {
       this.cachedRecord = extractItems(this);
-      screenRecordsByReviewArea.set(this, this.cachedRecord);
-      markEmbeddedHostStateDirty();
     }
+    screenRecordsByReviewArea.set(this, {
+      reviewItems: [
+        ...this.cachedRecord.reviewItems,
+        ...(this.extraItems?.reviewItems ?? []),
+      ],
+      attachmentIDsToURLs: {
+        ...this.cachedRecord.attachmentIDsToURLs,
+        ...this.extraItems?.attachmentIDsToURLs,
+      },
+    });
+    markEmbeddedHostStateDirty();
     return this.cachedRecord;
+  }
+
+  getEmbeddedItems() {
+    let cachedRecord = this.cachedRecord;
+    if (this.cachedRecord === null) {
+      cachedRecord = this.updateScreenRecords();
+    }
+    return cachedRecord!;
   }
 
   getConfiguration(): EmbeddedScreenConfiguration {
@@ -231,8 +303,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
     // We'll wait to actually set the iframe's contents until the next frame, since the child <orbit-prompt> elements may not yet have connected.
     const iframe = this.iframe;
 
-    // Update global bookkeeping with our initial state-- bit of a hack.
-    this.getEmbeddedItems();
+    this.updateScreenRecords();
 
     requestAnimationFrame(() => {
       setIFrameSize(iframe);

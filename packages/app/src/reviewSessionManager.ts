@@ -3,6 +3,7 @@ import {
   eventReducer,
   ReviewItem,
   Task,
+  TaskID,
 } from "@withorbit/core";
 import { ReviewAreaItem } from "@withorbit/ui";
 import { useMemo, useState } from "react";
@@ -26,6 +27,7 @@ export interface ReviewSessionManagerActions {
   ): void;
 
   pushReviewAreaQueueItems(items: ReviewAreaItem[]): void;
+  removeReviewAreaQueueItems(itemIDs: TaskID[]): void;
 }
 
 function findSessionItemIndex(
@@ -113,8 +115,25 @@ function reviewSessionManagerUpdateSessionItems(
     }
   }
 
+  // In case prompt contents have been edited, update the specs in ReviewAreaItems with the specs from the new ReviewItems.
+  // This is a pretty gross consequence of coupling uniqued state (the queue's contents) with derived state (the specs). It would be cleaner to store a queue of task IDs and to derive the ReviewAreaItems from that, but I was trying to avoid a third layer. Probably the wrong trade.
+  const reviewItemsByTaskID = new Map(
+    newSessionItems.map((item) => [item.task.id, item]),
+  );
+  const newReviewAreaQueue: ReviewAreaItem[] = [];
+  for (const reviewAreaItem of state.reviewAreaQueue) {
+    const reviewItem = reviewItemsByTaskID.get(reviewAreaItem.taskID);
+    if (!reviewItem) {
+      throw new Error(
+        `Inconsistent state: task ID ${reviewAreaItem.taskID} in queue but not session item list`,
+      );
+    }
+    newReviewAreaQueue.push({ ...reviewAreaItem, spec: reviewItem.task.spec });
+  }
+
   return {
     ...state,
+    reviewAreaQueue: newReviewAreaQueue,
     sessionItems: newSessionItems,
     currentSessionItemIndex: newCurrentSessionItemIndex,
   };
@@ -155,6 +174,53 @@ function reviewSessionManagerPushReviewAreaQueueItems(
   }
 }
 
+function reviewSessionManagerRemoveReviewAreaQueueItems(
+  state: ReviewSessionManagerState,
+  taskIDs: TaskID[],
+): ReviewSessionManagerState {
+  if (taskIDs.length === 0) {
+    return state;
+  }
+
+  const taskIDSet = new Set(taskIDs);
+  const newReviewAreaQueue: ReviewAreaItem[] = [];
+  let newReviewAreaQueueIndex = 0;
+  for (let i = 0; i < state.reviewAreaQueue.length; i++) {
+    const item = state.reviewAreaQueue[i];
+    if (!taskIDSet.has(item.taskID)) {
+      newReviewAreaQueue.push(item);
+      if (
+        state.currentReviewAreaQueueIndex !== null &&
+        i < state.currentReviewAreaQueueIndex
+      ) {
+        newReviewAreaQueueIndex++;
+      }
+    }
+  }
+
+  if (
+    state.currentReviewAreaQueueIndex !== null &&
+    state.currentSessionItemIndex !== null
+  ) {
+    return {
+      reviewAreaQueue: newReviewAreaQueue,
+      currentReviewAreaQueueIndex: newReviewAreaQueueIndex,
+      sessionItems: state.sessionItems,
+      currentSessionItemIndex: findSessionItemIndex(
+        newReviewAreaQueue[newReviewAreaQueueIndex],
+        state.sessionItems,
+      ),
+    };
+  } else {
+    return {
+      reviewAreaQueue: newReviewAreaQueue,
+      currentReviewAreaQueueIndex: null,
+      sessionItems: state.sessionItems,
+      currentSessionItemIndex: null,
+    };
+  }
+}
+
 const initialReviewSessionManagerState: ReviewSessionManagerState = {
   reviewAreaQueue: [],
   currentReviewAreaQueueIndex: null,
@@ -184,6 +250,11 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
       pushReviewAreaQueueItems: (queueItems) =>
         setState((state) =>
           reviewSessionManagerPushReviewAreaQueueItems(state, queueItems),
+        ),
+
+      removeReviewAreaQueueItems: (taskIDs: TaskID[]) =>
+        setState((state) =>
+          reviewSessionManagerRemoveReviewAreaQueueItems(state, taskIDs),
         ),
 
       updateSessionItems: (mutator) =>

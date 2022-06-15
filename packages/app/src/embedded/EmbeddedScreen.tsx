@@ -16,7 +16,6 @@ import {
   EmbeddedScreenOnLoadEvent,
 } from "@withorbit/embedded-support";
 import {
-  FadeView,
   ReviewArea,
   ReviewAreaItem,
   ReviewAreaMarkingRecord,
@@ -26,9 +25,10 @@ import {
   useLayout,
   useTransitioningValue,
 } from "@withorbit/ui";
+import usePrevious from "@withorbit/ui/dist/components/hooks/usePrevious";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Animated, Text, View } from "react-native";
+import { Animated, View } from "react-native";
 
 import { useAuthenticationClient } from "../authentication/authContext";
 import { ReviewSessionContainer } from "../ReviewSessionContainer";
@@ -43,7 +43,6 @@ import { useEmbeddedNetworkQueue } from "./embeddedNetworkQueue";
 import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost";
 import { useEmbeddedHostState } from "./ipc/useEmbeddedHostState";
 import { getActionsRecordForMarking } from "./markingActions";
-import OnboardingModalWeb from "./OnboardingModal.web";
 import { TestModeBanner } from "./TestModeBanner";
 import {
   EmbeddedAuthenticationState,
@@ -52,7 +51,8 @@ import {
 import { useRemoteTaskStates } from "./useRemoteTaskStates";
 import { findItemsToRetry } from "./util/findItemsToRetry";
 import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
-import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL";
+import getEmbeddedScreenConfigurationFromURL
+  from "./util/getEmbeddedScreenConfigurationFromURL";
 
 function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
   return sessionItems.map((item) => {
@@ -286,17 +286,44 @@ function EmbeddedScreen({
   // Update the review session manager when we get a new set of items from the host.
   const hostState = useEmbeddedHostState();
   const updateSessionItemsFromHostState = useByrefCallback(
-    (hostState: EmbeddedHostState) => {
-      reviewSessionManager.updateSessionItems(() =>
-        getSessionReviewItemsFromHostState(hostState),
-      );
+    (
+      previousHostState: EmbeddedHostState | null,
+      hostState: EmbeddedHostState,
+    ) => {
+      const reviewItems = getSessionReviewItemsFromHostState(hostState);
+      reviewSessionManager.updateSessionItems(() => reviewItems);
+      if (previousHostState) {
+        const previousReviewItems =
+          getSessionReviewItemsFromHostState(previousHostState);
+        const previousTaskIDs = new Set(
+          previousReviewItems.map((item) => item.task.id),
+        );
+        const newItems: ReviewItem[] = [];
+        for (const item of reviewItems) {
+          const taskID = item.task.id;
+          if (previousTaskIDs.has(taskID)) {
+            previousTaskIDs.delete(taskID);
+          } else {
+            newItems.push(item);
+          }
+        }
+        if (newItems.length > 0) {
+          reviewSessionManager.pushReviewAreaQueueItems(
+            getEmbeddedReviewAreaItemsFromReviewItems(newItems, colorPalette),
+          );
+        }
+        if (previousTaskIDs.size > 0) {
+          reviewSessionManager.removeReviewAreaQueueItems([...previousTaskIDs]);
+        }
+      }
     },
   );
+  const previousHostState = usePrevious(hostState);
   useEffect(() => {
     if (hostState && hostState.orderedScreenRecords[hostState.receiverIndex]) {
-      updateSessionItemsFromHostState(hostState);
+      updateSessionItemsFromHostState(previousHostState ?? null, hostState);
     }
-  }, [hostState, updateSessionItemsFromHostState]);
+  }, [hostState, previousHostState, updateSessionItemsFromHostState]);
 
   // Load the states for these tasks as they exist on the server and merge into our local session state.
   const remoteTaskStates = useRemoteTaskStates({
@@ -368,11 +395,6 @@ function EmbeddedScreen({
           e.entityID === markingRecord.reviewAreaItem.taskID,
       ),
       (newState) => {
-        // Propagate those updates to peer embedded screens.
-        sendUpdatedReviewItemToHost(
-          newState.sessionItems[currentSessionItemIndex].task,
-        );
-
         // If we were at the end of our queue, refill it with items needing retry.
         if (
           newState.currentReviewAreaQueueIndex !== null &&
@@ -391,6 +413,20 @@ function EmbeddedScreen({
               colorPalette,
             ),
           );
+
+          // Propagate those updates to peer embedded screens.
+          sendUpdatedReviewItemToHost(
+            newState.sessionItems[currentSessionItemIndex].task,
+            newState.reviewAreaQueue.length + itemsToRetry.length,
+            newState.currentReviewAreaQueueIndex!
+          );
+        } else {
+          // Update the prototype state
+          sendUpdatedReviewItemToHost(
+            newState.sessionItems[currentSessionItemIndex].task,
+            newState.reviewAreaQueue.length,
+            newState.currentReviewAreaQueueIndex!
+          );
         }
       },
     );
@@ -404,7 +440,9 @@ function EmbeddedScreen({
   function onSkip() {
     reviewSessionManager.markCurrentItem([], (newState) =>
       sendUpdatedReviewItemToHost(
-        newState.sessionItems[currentSessionItemIndex].task,
+        newState.sessionItems[currentSessionItemIndex!].task,
+        newState.reviewAreaQueue.length,
+        newState.currentReviewAreaQueueIndex!
       ),
     );
   }
