@@ -41,7 +41,7 @@ async function scheduleUserNotificationIfNeeded(
       jsonEncodeServerTimestamps,
     );
 
-    await notificationTopic.publish(Buffer.from(notificationJSONString));
+    return notificationTopic.publish(Buffer.from(notificationJSONString));
   }
 }
 
@@ -50,7 +50,14 @@ export const notificationScheduler = functions.pubsub
   .timeZone("America/Los_Angeles")
   .onRun(async () => {
     const evaluationTimestampMillis = Date.now();
-    await sharedServerDatabase().accounts.enumerateUsers((record) =>
-      scheduleUserNotificationIfNeeded(record, evaluationTimestampMillis),
+    const promises: Promise<unknown>[] = [];
+    await sharedServerDatabase().accounts.enumerateUsers(async (record) =>
+      promises.push(
+        scheduleUserNotificationIfNeeded(record, evaluationTimestampMillis),
+      ),
     );
+
+    console.log("Waiting for pubsub broadcasts to finish...")
+    await Promise.all(promises);
+    console.log("Done")
   });

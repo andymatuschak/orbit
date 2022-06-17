@@ -52,18 +52,19 @@ export async function enumerateUsers(
       .auth()
       .listUsers(1000, pageToken);
 
-    for (const userRecord of listUsersResult.users) {
-      const userMetadataSnapshot = await getUserMetadataReference(
-        db,
-        userRecord.uid,
-      ).get();
+    const userMetadataRefs = listUsersResult.users.map((userRecord) =>
+      getUserMetadataReference(db, userRecord.uid),
+    );
+    const snapshots = await db.getAll(...userMetadataRefs);
+    for (let i = 0; i < listUsersResult.users.length; i++) {
+      const userRecord = listUsersResult.users[i];
       if (!userRecord.email) {
         throw new Error(
           `Invariant violation: user ${userRecord.uid} has no email`,
         );
       }
 
-      const userMetadata = userMetadataSnapshot.data();
+      const userMetadata = snapshots[i].data() as UserMetadata;
       if (!userMetadata) {
         throw new Error(
           `Invariant violation: user ${userRecord.uid} has no metadata record`,
