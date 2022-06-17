@@ -57,7 +57,7 @@ export const notificationScheduler = functions.pubsub
       ),
     );
 
-    console.log("Waiting for pubsub broadcasts to finish...")
+    console.log("Waiting for pubsub broadcasts to finish...");
     await Promise.all(promises);
-    console.log("Done")
+    console.log("Done");
   });
