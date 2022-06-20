@@ -10,6 +10,7 @@ import {
 } from "@withorbit/embedded-support";
 import { extractItems, generateTaskReviewItem } from "./extractItems";
 import { getSharedMetadataMonitor } from "./metadataMonitor";
+import { OrbitPromptElement } from "./OrbitPromptElement";
 
 declare global {
   // supplied by Webpack
@@ -217,23 +218,43 @@ export class OrbitReviewAreaElement extends HTMLElement {
   }
 
   updateItem(externalID: string, content: TaskContent) {
-    // TODO also apply updates to author-provided prompts
-    if (!this.extraItems) return;
-    const newItems: ReviewItem[] = [];
-    for (const item of this.extraItems.reviewItems) {
-      if (item.task.metadata.externalID !== externalID) {
-        newItems.push(item);
+    let found = false;
+    if (this.extraItems) {
+      const newItems: ReviewItem[] = [];
+      for (const item of this.extraItems.reviewItems) {
+        if (item.task.metadata.externalID !== externalID) {
+          newItems.push(item);
+        } else {
+          found = true;
+          newItems.push({
+            ...item,
+            task: {
+              ...item.task,
+              spec: { ...item.task.spec, content: content },
+            },
+          });
+        }
+      }
+      this.extraItems = {
+        ...this.extraItems,
+        reviewItems: newItems,
+      };
+    }
+
+    if (!found) {
+      // Must be an update to an author-provided prompt.
+      const promptElement = document.getElementById(externalID);
+      if (promptElement) {
+        promptElement.setAttribute("question", content.body.text);
+        promptElement.setAttribute("answer", (content as any).answer.text);
+        this.cachedRecord = null;
       } else {
-        newItems.push({
-          ...item,
-          task: { ...item.task, spec: { ...item.task.spec, content: content } },
-        });
+        console.error(
+          "Couldn't find prompt element corresponding to edit for",
+          externalID,
+        );
       }
     }
-    this.extraItems = {
-      ...this.extraItems,
-      reviewItems: newItems,
-    };
     this.updateScreenRecords();
   }
 
