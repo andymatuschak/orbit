@@ -41,7 +41,7 @@ module.exports = {
       EMBED_API_BASE_URL: JSON.stringify(
         useLocalServer
           ? "http://localhost:19006/embed"
-          : "https://withorbit.com/embed",
+          : "https://orbit-app--peritextual-c9n7zavp.web.app/embed",
       ),
     }),
   ],
