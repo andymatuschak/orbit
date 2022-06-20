@@ -5,9 +5,11 @@ import {
   generateUniqueID,
   Task,
   TaskContent,
+  TaskID,
   TaskIngestEvent,
   TaskProvenance,
   TaskUpdateDeletedEvent,
+  TaskUpdateProvenanceEvent,
 } from "@withorbit/core";
 import { DatabaseEntityQuery, OrbitStore } from "@withorbit/store-shared";
 import {
@@ -30,14 +32,17 @@ export const MissingItemIdentifierError = new Error(
 export const DuplicateItemIdentifierError = (identifier: string) =>
   new Error(`item identifier '${identifier}' is not unique`);
 
-// TODO: handle moves across sources
 // TODO: handle provenance updates
 export async function ingestSources(
   sources: IngestibleSource[],
   store: OrbitStore,
   opts: IngestOptions = DEFAULT_OPTIONS(),
-) {
-  const events: Event[] = [];
+): Promise<Event[]> {
+  const ingestEvents = new Map<IngestibleItemIdentifier, TaskIngestEvent>();
+  const deleteEvents = new Map<
+    IngestibleItemIdentifier,
+    TaskUpdateDeletedEvent
+  >();
 
   // TODO: create a new query or extend the entity query such that
   // we can filter on only sources that would have used this ingester
@@ -62,30 +67,58 @@ export async function ingestSources(
       for (const [key, potentialNewItem] of ingestibleItemsByItemIdentifiers) {
         if (!existingEntitiesByItemIdentifiers.get(key)) {
           // task is new
-          events.push(
+          ingestEvents.set(
+            key,
             createIngestTaskForSource(source, timeMillis)(potentialNewItem),
           );
+        } else {
+          // task exists
+          // TODO: we should make sure the content is up to date
         }
       }
 
       // determine which task have been deleted
       for (const [key, existingTask] of existingEntitiesByItemIdentifiers) {
         if (!ingestibleItemsByItemIdentifiers.get(key)) {
-          // task has been deleted within
-          // TODO: before marking as deleted, check if this ID is a new ingest event
-          // for another. If so, convert event to be a provenance update.
-          events.push(createDeleteTaskEvent(existingTask, timeMillis));
+          // task has been deleted within the source
+          deleteEvents.set(
+            key,
+            createDeleteTaskEvent(existingTask, timeMillis),
+          );
         }
       }
     } else {
       // completely new source, ingest each item as a new task
-      const ingestEvents = source.items.map(
-        createIngestTaskForSource(source, timeMillis),
-      );
-      events.push(...ingestEvents);
+      for (const item of source.items) {
+        const ingestEvent = createIngestTaskForSource(source, timeMillis)(item);
+        ingestEvents.set(item.identifier, ingestEvent);
+      }
     }
   }
-  return events;
+
+  // check if the inserts / deletes are really just moves
+  const updateProvenanceEvents: TaskUpdateProvenanceEvent[] = [];
+  for (const [ingestedEventItemIdentifier, ingestEvent] of ingestEvents) {
+    const deleteEvent = deleteEvents.get(ingestedEventItemIdentifier);
+    if (deleteEvent) {
+      // item identifier is in both the ingest and delete map, must be a move:
+      // delete the old events and generate an update provenance event instead
+      deleteEvents.delete(ingestedEventItemIdentifier);
+      ingestEvents.delete(ingestedEventItemIdentifier);
+      updateProvenanceEvents.push(
+        createUpdateProvenanceEvent(deleteEvent.entityID, ingestEvent),
+      );
+    }
+  }
+
+  // TS compiler quirk: must declare a variable with the proper type annotation instead of just
+  // defining an empty array inline
+  const events: Event[] = [];
+  return events.concat(
+    Array.from(ingestEvents.values()),
+    Array.from(deleteEvents.values()),
+    updateProvenanceEvents,
+  );
 }
 
 function groupEntitiesByProvenanceIdentifiers(entities: Task<TaskContent>[]) {
@@ -168,5 +201,18 @@ function createDeleteTaskEvent(
     entityID: task.id,
     timestampMillis,
     isDeleted: true,
+  };
+}
+
+function createUpdateProvenanceEvent(
+  originalEntityId: TaskID,
+  ingestEvent: TaskIngestEvent,
+): TaskUpdateProvenanceEvent {
+  return {
+    type: EventType.TaskUpdateProvenanceEvent,
+    id: generateUniqueID(),
+    entityID: originalEntityId,
+    timestampMillis: ingestEvent.timestampMillis,
+    provenance: ingestEvent.provenance,
   };
 }
