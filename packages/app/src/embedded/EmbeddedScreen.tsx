@@ -291,7 +291,6 @@ function EmbeddedScreen({
       hostState: EmbeddedHostState,
     ) => {
       const reviewItems = getSessionReviewItemsFromHostState(hostState);
-      reviewSessionManager.updateSessionItems(() => reviewItems);
       if (previousHostState) {
         const previousReviewItems =
           getSessionReviewItemsFromHostState(previousHostState);
@@ -316,6 +315,7 @@ function EmbeddedScreen({
           reviewSessionManager.removeReviewAreaQueueItems([...previousTaskIDs]);
         }
       }
+      reviewSessionManager.updateSessionItems(() => reviewItems);
     },
   );
   const previousHostState = usePrevious(hostState);
