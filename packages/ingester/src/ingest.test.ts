@@ -6,6 +6,7 @@ import {
   TaskIngestEvent,
   TaskSpecType,
   TaskUpdateDeletedEvent,
+  TaskUpdateProvenanceEvent,
 } from "@withorbit/core";
 import { OrbitStoreInMemory } from "@withorbit/store-fs";
 import {
@@ -214,11 +215,56 @@ it("only ingests specified sources", async () => {
   expect(events).toHaveLength(0);
 });
 
+it("moves entities across sources", async () => {
+  const mockIngestEvent = mockQATask({
+    body: "Question",
+    answer: "Answer",
+    provenance: { identifier: "source_identifier", title: "Existing Source" },
+  });
+  await store.database.putEvents([mockIngestEvent]);
+  // insert the same item identifier but with a different provenance
+  const sources: IngestibleSource[] = [
+    {
+      identifier: "source_identifier" as IngestibleSourceIdentifier,
+      title: "Existing Source",
+      items: [],
+    },
+    {
+      identifier: "some_new_source_identifier" as IngestibleSourceIdentifier,
+      title: "Some Fancy New Source",
+      items: [
+        {
+          identifier: "Question+Answer" as IngestibleItemIdentifier,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.QA,
+              body: { text: "Question", attachments: [] },
+              answer: { text: "Answer", attachments: [] },
+            },
+          },
+        },
+      ],
+    },
+  ];
+
+  const events = await ingestSources(sources, store);
+  expect(events).toHaveLength(1);
+  expect(events[0].type).toBe(EventType.TaskUpdateProvenanceEvent);
+  const event = events[0] as TaskUpdateProvenanceEvent;
+
+  expect(event.entityID).toEqual(mockIngestEvent.entityID);
+  expect(event.provenance).toEqual({
+    identifier: "some_new_source_identifier",
+    title: "Some Fancy New Source",
+  });
+});
+
 it("round trip", async () => {
   const initialSources: IngestibleSource[] = [
     {
       identifier: "source_identifier" as IngestibleSourceIdentifier,
-      title: "Brand new source",
+      title: "Existing Source",
       items: [
         {
           identifier: "Question+Answer" as IngestibleItemIdentifier,
@@ -245,19 +291,53 @@ it("round trip", async () => {
       identifier: "source_identifier",
     },
   });
-
-  // put events
   await store.database.putEvents(eventsA);
 
   // re-ingest same source
   const eventsB = await ingestSources(initialSources, store);
   expect(eventsB).toHaveLength(0);
 
-  // add new items to existing source
+  // add new items to a new source
   const sourcesWithExtraItem: IngestibleSource[] = [
     {
-      identifier: "source_identifier" as IngestibleSourceIdentifier,
+      identifier: "new_source_identifier" as IngestibleSourceIdentifier,
       title: "Brand new source",
+      items: [
+        {
+          identifier: "New Question+Answer" as IngestibleItemIdentifier,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.QA,
+              body: { text: "New Question", attachments: [] },
+              answer: { text: "Answer", attachments: [] },
+            },
+          },
+        },
+      ],
+    },
+  ];
+  const eventsC = await ingestSources(sourcesWithExtraItem, store);
+  expect(eventsC).toHaveLength(1);
+  expect(eventsC[0]).toMatchObject({
+    type: EventType.TaskIngest,
+    metadata: { [INGEST_ITEM_IDENTIFIER_KEY]: "New Question+Answer" },
+    provenance: {
+      identifier: "new_source_identifier",
+    },
+  });
+  await store.database.putEvents(eventsC);
+
+  // move new task to the existing source
+  const sourcesWithMovedItem: IngestibleSource[] = [
+    {
+      identifier: "new_source_identifier" as IngestibleSourceIdentifier,
+      title: "Brand new source",
+      items: [],
+    },
+    {
+      identifier: "source_identifier" as IngestibleSourceIdentifier,
+      title: "Existing Source",
       items: [
         {
           identifier: "Question+Answer" as IngestibleItemIdentifier,
@@ -284,29 +364,27 @@ it("round trip", async () => {
       ],
     },
   ];
-  const eventsC = await ingestSources(sourcesWithExtraItem, store);
-  expect(eventsC).toHaveLength(1);
-  expect(eventsC[0]).toMatchObject({
-    type: EventType.TaskIngest,
-    metadata: { [INGEST_ITEM_IDENTIFIER_KEY]: "New Question+Answer" },
+  const eventsD = await ingestSources(sourcesWithMovedItem, store);
+  expect(eventsD).toHaveLength(1);
+  expect(eventsD[0]).toMatchObject({
+    type: EventType.TaskUpdateProvenanceEvent,
     provenance: {
       identifier: "source_identifier",
+      title: "Existing Source",
     },
   });
-
-  // add new event to DB
-  await store.database.putEvents(eventsC);
+  await store.database.putEvents(eventsD);
 
   // delete all items associated to source
   const sourcesWithDeletedItems: IngestibleSource[] = [
     {
       identifier: "source_identifier" as IngestibleSourceIdentifier,
-      title: "Brand new source",
+      title: "Existing source",
       items: [],
     },
   ];
-  const eventsD = await ingestSources(sourcesWithDeletedItems, store);
-  expect(eventsD).toHaveLength(2);
+  const eventsE = await ingestSources(sourcesWithDeletedItems, store);
+  expect(eventsE).toHaveLength(2);
 });
 
 describe("provenance", () => {
