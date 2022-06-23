@@ -100,35 +100,40 @@ function reviewSessionManagerUpdateSessionItems(
 ): ReviewSessionManagerState {
   const newSessionItems = mutator(state.sessionItems);
 
-  let newCurrentSessionItemIndex: number | null;
-  if (state.currentReviewAreaQueueIndex === null) {
-    newCurrentSessionItemIndex = null;
-  } else {
-    if (state.currentReviewAreaQueueIndex >= state.reviewAreaQueue.length) {
-      // If we're past the end of the queue, freeze the starburst wherever it stopped. Not a great solution.
-      newCurrentSessionItemIndex = state.currentSessionItemIndex;
-    } else {
-      newCurrentSessionItemIndex = findSessionItemIndex(
-        state.reviewAreaQueue[state.currentReviewAreaQueueIndex],
-        newSessionItems,
-      );
-    }
-  }
-
   // In case prompt contents have been edited, update the specs in ReviewAreaItems with the specs from the new ReviewItems.
   // This is a pretty gross consequence of coupling uniqued state (the queue's contents) with derived state (the specs). It would be cleaner to store a queue of task IDs and to derive the ReviewAreaItems from that, but I was trying to avoid a third layer. Probably the wrong trade.
   const reviewItemsByTaskID = new Map(
     newSessionItems.map((item) => [item.task.id, item]),
   );
-  const newReviewAreaQueue: ReviewAreaItem[] = [];
-  for (const reviewAreaItem of state.reviewAreaQueue) {
-    const reviewItem = reviewItemsByTaskID.get(reviewAreaItem.taskID);
-    if (!reviewItem) {
-      throw new Error(
-        `Inconsistent state: task ID ${reviewAreaItem.taskID} in queue but not session item list`,
-      );
+  const newReviewAreaQueue: ReviewAreaItem[] = state.reviewAreaQueue.map(
+    (reviewAreItem) => {
+      const reviewItem = reviewItemsByTaskID.get(reviewAreItem.taskID);
+      if (reviewItem) {
+        return { ...reviewAreItem, spec: reviewItem.task.spec };
+      } else {
+        return reviewAreItem;
+      }
+    },
+  );
+
+  let newCurrentSessionItemIndex: number | null;
+  if (state.currentReviewAreaQueueIndex === null) {
+    newCurrentSessionItemIndex = null;
+  } else {
+    if (state.currentReviewAreaQueueIndex >= newReviewAreaQueue.length) {
+      // If we're past the end of the queue, freeze the starburst wherever it stopped. Not a great solution.
+      newCurrentSessionItemIndex = state.currentSessionItemIndex;
+    } else {
+      try {
+        newCurrentSessionItemIndex = findSessionItemIndex(
+          newReviewAreaQueue[state.currentReviewAreaQueueIndex],
+          newSessionItems,
+        );
+      } catch {
+        // HACK for deleting a prompt you're viewing... not thinking about this carefully right now.
+        newCurrentSessionItemIndex = state.currentSessionItemIndex;
+      }
     }
-    newReviewAreaQueue.push({ ...reviewAreaItem, spec: reviewItem.task.spec });
   }
 
   return {
@@ -207,7 +212,9 @@ function reviewSessionManagerRemoveReviewAreaQueueItems(
       currentReviewAreaQueueIndex: newReviewAreaQueueIndex,
       sessionItems: state.sessionItems,
       currentSessionItemIndex: findSessionItemIndex(
-        newReviewAreaQueue[newReviewAreaQueueIndex],
+        newReviewAreaQueue[
+          Math.min(newReviewAreaQueueIndex, newReviewAreaQueue.length - 1)
+        ],
         state.sessionItems,
       ),
     };
