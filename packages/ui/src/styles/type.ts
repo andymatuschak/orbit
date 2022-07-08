@@ -46,6 +46,10 @@ export function getVariantStyles(
     fontFamily: workingFontName,
     // When we can't bold any further, use a darker ink.
     ...(baseFontName.includes("Bold") && isBold && { color: "black" }),
+    // This requires some explanation. Rather than asking the platform to choose the font (i.e. "Dr-Bold" or "Dr-MediumItalic") based on fontWeight and fontStyle, we're explicitly compute the desired font name ("Dr-ExtraBoldItalic") and specify no fontWeight or fontStyle to the system. We do this because platforms' algorithms for mapping family/weight/style (i.e. "Dr"/700/italic) to font names ("Dr-BoldItalic") are inconsistent and heuristic-based.
+    // So... why do we need to do anything at all here? Isn't undefined the default value? Well, when we render text elements, we use the *inherited* style to compute the desired font name. If the node tree looks like <em><text>value</text></em>, the inherited style will include { fontVariant: "italic" }. We need that information to call this function with the correct value, but now we'll suppress it before passing the text styles off the to the platform.
+    fontWeight: undefined,
+    fontStyle: undefined,
   };
 }
 

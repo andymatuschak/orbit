@@ -65,7 +65,6 @@ function getMarkdownStyles(
     marginRight: paragraphStyle.lineHeight! / 3.0,
   };
   return {
-    text: { fontWeight: "normal", fontStyle: "normal" },
     textgroup: paragraphStyle,
     math_block: paragraphStyle,
     bullet_list_icon: listIconStyle,
@@ -228,7 +227,6 @@ const getMarkdownRenderRules = (
         key={node.key}
         style={[
           inheritedStyles,
-          styles.text,
           getVariantStyles(
             inheritedStyles.fontFamily,
             inheritedStyles.fontWeight === "bold",
