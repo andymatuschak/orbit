@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`interprets file with mixed content 1`] = `
+exports[`interprets bear export file with mixed content 1`] = `
 Object {
   "identifier": "0DE4CB36-2EFC-4207-9074-667CBAE25ABB-12048-0000D97D373A46D2",
   "items": Array [

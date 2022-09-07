@@ -1,1 +1,1 @@
-export * from "./bear/BearInterpreter";
+export * from "./markdown/MarkdownInterpreter";

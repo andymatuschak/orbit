@@ -1,8 +1,8 @@
 import { CryptoBase64Hasher } from "../../hasher/CryptoBase64Hasher";
 import { InterpretableFile } from "../../interpreter";
-import { BearInterpreter } from "./BearInterpreter";
+import { MarkdownInterpreter } from "./MarkdownInterpreter";
 
-it("interprets file with mixed content", async () => {
+it("interprets bear export file with mixed content", async () => {
   const file: InterpretableFile = {
     name: "Hello World.md",
     path: "/some/file/path/Hello World.md",
@@ -22,7 +22,7 @@ This is a {test} cloze prompt
     
 <!-- {BearID:0DE4CB36-2EFC-4207-9074-667CBAE25ABB-12048-0000D97D373A46D2} -->`,
   };
-  const interpreter = new BearInterpreter(CryptoBase64Hasher);
+  const interpreter = new MarkdownInterpreter(CryptoBase64Hasher);
   const ingestible = await interpreter.interpret([file]);
   expect(ingestible.sources).toHaveLength(1);
   expect(ingestible.sources[0]).toMatchSnapshot();
