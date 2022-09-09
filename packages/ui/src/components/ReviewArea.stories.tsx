@@ -84,6 +84,7 @@ function ReviewAreaTemplate({
               setCurrentItemIndex((currentItemIndex) => currentItemIndex + 1),
             [],
           )}
+          onSkip={() => {return;}}
           currentItemIndex={currentItemIndex}
         />
       </View>

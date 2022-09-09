@@ -13,10 +13,13 @@ function getIconAsset(
   iconPosition: IconPosition,
   accent: true,
 ): number | null;
+// @ts-ignore
+// @ts-ignore
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: boolean,
+// @ts-ignore
 ): number | null {
   switch (name) {
     case IconName.Check:
