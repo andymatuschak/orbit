@@ -10,7 +10,6 @@ import {
 } from "@withorbit/embedded-support";
 import { extractItems, generateTaskReviewItem } from "./extractItems";
 import { getSharedMetadataMonitor } from "./metadataMonitor";
-import { OrbitPromptElement } from "./OrbitPromptElement";
 
 declare global {
   // supplied by Webpack
@@ -135,6 +134,10 @@ function onMessage(event: MessageEvent) {
         markEmbeddedHostStateDirty();
       }
       break;
+
+    case EmbeddedScreenEventType.ExitReview:
+      const { element } = getReviewAreaEntry();
+      element.onExitReview?.();
   }
 }
 
@@ -176,6 +179,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
   private extraItems: EmbeddedScreenRecord | null = null;
 
   iframe: HTMLIFrameElement | null = null;
+  onExitReview?: () => void;
 
   onMetadataChange = (metadata: EmbeddedHostMetadata) => {
     this.cachedMetadata = metadata;

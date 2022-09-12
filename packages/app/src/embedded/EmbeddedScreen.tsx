@@ -14,8 +14,11 @@ import {
   EmbeddedScreenConfiguration,
   EmbeddedScreenEventType,
   EmbeddedScreenOnLoadEvent,
+  EmbeddedTaskScreenExitReviewEvent,
 } from "@withorbit/embedded-support";
 import {
+  Button,
+  IconName,
   ReviewArea,
   ReviewAreaItem,
   ReviewAreaMarkingRecord,
@@ -133,7 +136,11 @@ function EmbeddedScreenRenderer({
     <>
       <Animated.View
         onLayout={onInteriorLayout}
-        style={{ transform: [{ translateY: interiorY }] }}
+        style={{
+          transform: [{ translateY: interiorY }],
+          flexDirection: "row",
+          justifyContent: "space-between",
+        }}
       >
         <ReviewStarburst
           containerWidth={containerSize.width}
@@ -150,6 +157,22 @@ function EmbeddedScreenRenderer({
           colorPalette={colorPalette}
           config={defaultSpacedRepetitionSchedulerConfiguration}
         />
+        <View style={{ paddingTop: 12 }}>
+          <Button
+            size="small"
+            color={colorPalette.reviewButtonTextColor}
+            accentColor={colorPalette.accentColor}
+            backgroundColor={colorPalette.secondaryBackgroundColor}
+            iconName={IconName.Cross}
+            title="Exit Review"
+            onPress={() => {
+              const exitReviewEvent: EmbeddedTaskScreenExitReviewEvent = {
+                type: EmbeddedScreenEventType.ExitReview,
+              };
+              parent.postMessage(exitReviewEvent, "*");
+            }}
+          />
+        </View>
       </Animated.View>
       {
         <ReviewArea

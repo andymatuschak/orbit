@@ -304,15 +304,6 @@ export default React.memo(function Button(props: ButtonProps) {
     }
   }, [props.focusOnMount]);
 
-  // If the cursor's inside the button on mount, we start hovered.
-  React.useEffect(() => {
-    console.log("DISPATCH");
-    // @ts-ignore HACK for demo
-    const mouseoverEvent = new PointerEvent("mouseover");
-    // @ts-ignore HACK for demo
-    ref.current!.dispatchEvent(mouseoverEvent);
-  }, []);
-
   const ButtonInteriorComponent =
     !props.size || props.size === "regular"
       ? ButtonInterior
