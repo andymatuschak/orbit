@@ -38,7 +38,6 @@ import {
 } from "../reviewSessionManager";
 import { useAPIClient } from "../util/useAPIClient";
 import useByrefCallback from "../util/useByrefCallback";
-import EmbeddedBanner from "./EmbeddedBanner";
 import { useEmbeddedNetworkQueue } from "./embeddedNetworkQueue";
 import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost";
 import { useEmbeddedHostState } from "./ipc/useEmbeddedHostState";
@@ -51,8 +50,7 @@ import {
 import { useRemoteTaskStates } from "./useRemoteTaskStates";
 import { findItemsToRetry } from "./util/findItemsToRetry";
 import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
-import getEmbeddedScreenConfigurationFromURL
-  from "./util/getEmbeddedScreenConfigurationFromURL";
+import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL";
 
 function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
   return sessionItems.map((item) => {
@@ -63,21 +61,6 @@ function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
         componentState.lastRepetitionTimestampMillis === null,
     };
   });
-}
-
-function getEndOfTaskLabel(
-  starburstItems: ReviewStarburstItem[],
-  hasPeerStates: boolean,
-): string {
-  const promptString = starburstItems.length > 1 ? "prompts" : "prompt";
-  if (hasPeerStates) {
-    const collectedCount = starburstItems.filter(
-      (state) => !state.isPendingForSession,
-    ).length;
-    return `${collectedCount} of ${starburstItems.length} prompts on page collected`;
-  } else {
-    return `${starburstItems.length} ${promptString} collected`;
-  }
 }
 
 interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
@@ -103,8 +86,7 @@ function EmbeddedScreenRenderer({
   containerSize,
   authenticationState,
   colorPalette,
-  hostState,
-  hasUncommittedActions,
+  // hostState,
   isDebug,
   getURLForAttachmentID,
   currentSessionItemIndex,
@@ -117,15 +99,8 @@ function EmbeddedScreenRenderer({
     useState<TaskRepetitionOutcome | null>(null);
 
   const [isComplete, setComplete] = useState(false);
-  const [shouldShowOnboardingModal, setShouldShowOnboardingModal] =
-    useState(false);
-  useEffect(() => {
-    if (authenticationState.status === "signedIn") {
-      setShouldShowOnboardingModal(false);
-    }
-  }, [authenticationState]);
   const { height: interiorHeight, onLayout: onInteriorLayout } = useLayout();
-  const { height: modalHeight, onLayout: onModalLayout } = useLayout();
+  const { height: modalHeight } = useLayout();
 
   useEffect(() => {
     if (wasInitiallyComplete) {
@@ -149,26 +124,6 @@ function EmbeddedScreenRenderer({
     },
   });
 
-  const onboardingOffsetY = useTransitioningValue({
-    value: shouldShowOnboardingModal ? 0 : window.innerHeight,
-    timing: {
-      type: "spring",
-      speed: 3,
-      bounciness: 0,
-      useNativeDriver: true,
-    },
-  });
-
-  if (currentReviewAreaQueueIndex >= reviewAreaQueue.length && !isComplete) {
-    // setTimeout(() => setComplete(true), 350);
-    setTimeout(() => {
-      // There are bugs with RNW's implementation of delay with spring animations, alas.
-      if (authenticationState.status !== "signedIn") {
-        setShouldShowOnboardingModal(true);
-      }
-    }, 750);
-  }
-
   const starburstItems = useMemo(
     () => getStarburstItems(sessionItems),
     [sessionItems],
@@ -176,14 +131,6 @@ function EmbeddedScreenRenderer({
 
   return (
     <>
-      <EmbeddedBanner
-        palette={colorPalette}
-        isSignedIn={authenticationState.status === "signedIn"}
-        totalPromptCount={reviewAreaQueue.length}
-        completePromptCount={currentReviewAreaQueueIndex}
-        wasInitiallyComplete={wasInitiallyComplete}
-        sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
-      />
       <Animated.View
         onLayout={onInteriorLayout}
         style={{ transform: [{ translateY: interiorY }] }}
@@ -419,14 +366,14 @@ function EmbeddedScreen({
           sendUpdatedReviewItemToHost(
             newState.sessionItems[currentSessionItemIndex].task,
             newState.reviewAreaQueue.length + itemsToRetry.length,
-            newState.currentReviewAreaQueueIndex!
+            newState.currentReviewAreaQueueIndex!,
           );
         } else {
           // Update the prototype state
           sendUpdatedReviewItemToHost(
             newState.sessionItems[currentSessionItemIndex].task,
             newState.reviewAreaQueue.length,
-            newState.currentReviewAreaQueueIndex!
+            newState.currentReviewAreaQueueIndex!,
           );
         }
       },
@@ -443,7 +390,7 @@ function EmbeddedScreen({
       sendUpdatedReviewItemToHost(
         newState.sessionItems[currentSessionItemIndex!].task,
         newState.reviewAreaQueue.length,
-        newState.currentReviewAreaQueueIndex!
+        newState.currentReviewAreaQueueIndex!,
       ),
     );
   }
