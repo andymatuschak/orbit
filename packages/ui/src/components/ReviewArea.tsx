@@ -187,6 +187,7 @@ export interface ReviewAreaProps {
   currentItemIndex: number;
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
   onSkip: () => void;
+  onUndo: () => void;
   onPendingOutcomeChange: (
     pendingOutcome: TaskRepetitionOutcome | null,
   ) => void;
@@ -203,6 +204,7 @@ export default React.memo(function ReviewArea({
   currentItemIndex,
   onMark,
   onSkip,
+  onUndo,
   forceShowAnswer,
   onPendingOutcomeChange,
   getURLForAttachmentID,
@@ -256,6 +258,7 @@ export default React.memo(function ReviewArea({
           onMark={handleMark}
           onReveal={handleReveal}
           onSkip={onSkip}
+          onUndo={onUndo}
           onPendingOutcomeChange={onPendingOutcomeChange}
           promptType={currentItem.spec.content.type}
           isShowingAnswer={isShowingAnswer}

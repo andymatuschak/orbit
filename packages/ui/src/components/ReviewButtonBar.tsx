@@ -86,6 +86,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   onMark,
   onReveal,
   onSkip,
+  onUndo,
   onPendingOutcomeChange,
   promptType,
   isShowingAnswer,
@@ -96,6 +97,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   onMark: (outcome: TaskRepetitionOutcome) => void;
   onReveal: () => void;
   onSkip: () => void;
+  onUndo: () => void;
   onPendingOutcomeChange: (
     pendingOutcome: TaskRepetitionOutcome | null,
   ) => void;
@@ -169,7 +171,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             {...sharedButtonProps}
             style={{ marginTop: 2 }}
             size="small"
-            onPress={onSkip}
+            onPress={onUndo}
             iconName={IconName.ArrowLeft}
             title={"Undo"}
             hitSlop={secondButtonSlop}

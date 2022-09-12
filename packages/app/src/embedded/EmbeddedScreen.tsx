@@ -70,6 +70,7 @@ interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
   containerSize: { width: number; height: number };
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
   onSkip: () => void;
+  onUndo: () => void;
   authenticationState: EmbeddedAuthenticationState;
   colorPalette: styles.colors.ColorPalette;
   hostState: EmbeddedHostState | null;
@@ -86,6 +87,7 @@ interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
 function EmbeddedScreenRenderer({
   onMark,
   onSkip,
+  onUndo,
   containerSize,
   authenticationState,
   colorPalette,
@@ -181,6 +183,7 @@ function EmbeddedScreenRenderer({
           currentItemIndex={currentReviewAreaQueueIndex}
           onMark={onMark}
           onSkip={onSkip}
+          onUndo={onUndo}
           onPendingOutcomeChange={(newPendingOutcome) => {
             setPendingOutcome(newPendingOutcome);
           }}
@@ -419,6 +422,10 @@ function EmbeddedScreen({
     );
   }
 
+  function onUndo() {
+    reviewSessionManager.undo();
+  }
+
   if (
     currentReviewAreaQueueIndex === null ||
     currentSessionItemIndex === null
@@ -437,6 +444,7 @@ function EmbeddedScreen({
             sessionItems={sessionItems}
             onMark={onMark}
             onSkip={onSkip}
+            onUndo={onUndo}
             containerSize={containerSize}
             authenticationState={authenticationState}
             colorPalette={colorPalette}
