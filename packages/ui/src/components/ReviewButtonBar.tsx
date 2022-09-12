@@ -1,7 +1,7 @@
 import { TaskContentType, TaskRepetitionOutcome } from "@withorbit/core";
 import React, { useRef } from "react";
 import { View } from "react-native";
-import { colors, layout } from "../styles";
+import { layout } from "../styles";
 import { ColorPalette } from "../styles/colors";
 import Button, { ButtonPendingActivationState } from "./Button";
 import { useKeyDown } from "./hooks/useKey";
@@ -55,7 +55,7 @@ function getButtonTitle(
         case TaskContentType.Cloze:
           return "Remembered";
         case TaskContentType.Plain:
-          return "Answered";
+          return "Succeeded";
       }
     case TaskRepetitionOutcome.Forgotten:
       switch (promptType) {
@@ -63,7 +63,7 @@ function getButtonTitle(
         case TaskContentType.Cloze:
           return isVeryNarrow ? "Forgot" : "Forgotten";
         case TaskContentType.Plain:
-          return "Missed";
+          return "Needs Practice";
       }
   }
 }
@@ -146,11 +146,46 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   let children: React.ReactNode;
   if (promptType && colorPalette) {
     const sharedButtonProps = {
-      color: colors.ink,
+      color: colorPalette.reviewButtonTextColor,
       accentColor: colorPalette.accentColor,
       style: buttonStyle,
       backgroundColor: colorPalette.secondaryBackgroundColor,
     } as const;
+
+    const smallButtonBlock = (
+      <>
+        {spacer}
+        <View
+          style={{
+            // backgroundColor: "green",
+            flexGrow: 0,
+            flexShrink: 0,
+            // flexBasis: 76,
+            justifyContent: "flex-start",
+            // alignItems: "flex-end",
+          }}
+        >
+          <Button
+            {...sharedButtonProps}
+            style={{ marginTop: 2 }}
+            size="small"
+            onPress={onSkip}
+            iconName={IconName.ArrowLeft}
+            title={"Undo"}
+            hitSlop={secondButtonSlop}
+          />
+          <Button
+            {...sharedButtonProps}
+            style={{ marginTop: -8 }}
+            size="small"
+            onPress={onSkip}
+            iconName={IconName.DoubleArrowRight}
+            title={"Skip"}
+            hitSlop={secondButtonSlop}
+          />
+        </View>
+      </>
+    );
 
     if (isShowingAnswer) {
       children = (
@@ -189,6 +224,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             }}
             hitSlop={secondButtonSlop}
           />
+          {smallButtonBlock}
         </>
       );
     } else {
@@ -198,20 +234,11 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             {...sharedButtonProps}
             onPress={onReveal}
             iconName={IconName.Reveal}
-            title={"Show answer"}
+            title={"Show Answer"}
             key={"Show answer"}
             hitSlop={firstButtonSlop}
           />
-          {spacer}
-          <Button
-            {...sharedButtonProps}
-            style={[buttonStyle, {flexGrow: 0, flexShrink: 0, flexBasis: 76}]}
-            key={"Skip"}
-            onPress={onSkip}
-            iconName={IconName.DoubleArrowRight}
-            title={"Skip"}
-            hitSlop={secondButtonSlop}
-          />
+          {smallButtonBlock}
         </>
       );
     }

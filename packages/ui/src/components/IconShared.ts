@@ -4,6 +4,7 @@ export enum IconName {
   Check = "check",
   Cross = "cross",
   Reveal = "reveal",
+  ArrowLeft = "left",
   ArrowRight = "right",
   DoubleArrowRight = "doubleArrowRight",
 }

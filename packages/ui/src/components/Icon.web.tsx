@@ -54,6 +54,20 @@ function getIconAsset(
           throw unreachableCaseError(iconPosition);
       }
 
+    case IconName.ArrowLeft:
+      if (accent) return null;
+      switch (iconPosition) {
+        case IconPosition.TopLeft:
+        case IconPosition.TopRight:
+        case IconPosition.BottomLeft:
+        case IconPosition.BottomRight:
+        case IconPosition.Center:
+          // HACK
+          return require("../../assets/icons/left-center.svg");
+        default:
+          throw unreachableCaseError(iconPosition);
+      }
+
     case IconName.ArrowRight:
       if (accent) return null;
       switch (iconPosition) {
@@ -73,10 +87,17 @@ function getIconAsset(
 
     case IconName.DoubleArrowRight:
       if (accent) return null;
-      if (IconPosition.TopLeft) {
-        return require("../../assets/icons/doubleRight-TL.svg");
-      } else {
-        return null;
+      switch (iconPosition) {
+        case IconPosition.TopLeft:
+        case IconPosition.TopRight:
+        case IconPosition.BottomLeft:
+        case IconPosition.BottomRight:
+          // HACK
+          return require("../../assets/icons/doubleRight-TL.svg");
+        case IconPosition.Center:
+          return require("../../assets/icons/doubleRight-center.svg");
+        default:
+          throw unreachableCaseError(iconPosition);
       }
 
     case IconName.Reveal:
