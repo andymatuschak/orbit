@@ -319,7 +319,9 @@ export class OrbitReviewAreaElement extends HTMLElement {
       "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-modals",
     );
     shadowRoot.appendChild(this.iframe);
-    iframeResizeObserver.observe(this.iframe);
+
+    // HACK
+    // iframeResizeObserver.observe(this.iframe);
 
     // We'll wait to actually set the iframe's contents until the next frame, since the child <orbit-prompt> elements may not yet have connected.
     const iframe = this.iframe;
@@ -327,7 +329,12 @@ export class OrbitReviewAreaElement extends HTMLElement {
     this.updateScreenRecords();
 
     requestAnimationFrame(() => {
-      setIFrameSize(iframe);
+      // HACK
+      if (this.hasAttribute("height")) {
+        this.iframe!.style.height = this.getAttribute("height")!;
+      } else {
+        setIFrameSize(iframe);
+      }
       iframe.src = EMBED_API_BASE_URL;
     });
   }
