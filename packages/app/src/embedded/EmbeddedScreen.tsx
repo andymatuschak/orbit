@@ -138,6 +138,7 @@ function EmbeddedScreenRenderer({
         onLayout={onInteriorLayout}
         style={{
           transform: [{ translateY: interiorY }],
+          marginBottom: 16,
           flexDirection: "row",
           justifyContent: "space-between",
         }}
