@@ -258,6 +258,12 @@ export default function ReviewSession() {
                     ? 0
                     : insets.bottom ?? 0
                 }
+                onSkip={() => {
+                  return;
+                }}
+                onUndo={() => {
+                  return;
+                }}
               />
             </>
           );
