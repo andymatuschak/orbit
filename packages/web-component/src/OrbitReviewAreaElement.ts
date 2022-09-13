@@ -135,9 +135,19 @@ function onMessage(event: MessageEvent) {
       }
       break;
 
-    case EmbeddedScreenEventType.ExitReview:
-      const { element } = getReviewAreaEntry();
-      element.onExitReview?.();
+    case EmbeddedScreenEventType.OnExitReview:
+      {
+        const { element } = getReviewAreaEntry();
+        element.onExitReview?.();
+      }
+      break;
+
+    case EmbeddedScreenEventType.OnReviewComplete:
+      {
+        const { element } = getReviewAreaEntry();
+        element.onReviewComplete?.();
+      }
+      break;
   }
 }
 
@@ -180,6 +190,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
 
   iframe: HTMLIFrameElement | null = null;
   onExitReview?: () => void;
+  onReviewComplete?: () => void;
 
   onMetadataChange = (metadata: EmbeddedHostMetadata) => {
     this.cachedMetadata = metadata;

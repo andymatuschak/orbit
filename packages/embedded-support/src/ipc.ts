@@ -36,7 +36,8 @@ export interface EmbeddedScreenRecord {
 export enum EmbeddedScreenEventType {
   OnLoad = "onLoad",
   TaskUpdate = "taskUpdate",
-  ExitReview = "exitReview",
+  OnExitReview = "onExitReview",
+  OnReviewComplete = "onReviewComplete",
 }
 
 export interface EmbeddedScreenOnLoadEvent {
@@ -50,6 +51,10 @@ export interface EmbeddedScreenTaskUpdateEvent {
   queueIndex: number;
 }
 
-export interface EmbeddedTaskScreenExitReviewEvent {
-  type: typeof EmbeddedScreenEventType.ExitReview;
+export interface EmbeddedTaskScreenOnExitReviewEvent {
+  type: typeof EmbeddedScreenEventType.OnExitReview;
+}
+
+export interface EmbeddedTaskScreenOnReviewCompleteEvent {
+  type: typeof EmbeddedScreenEventType.OnReviewComplete;
 }

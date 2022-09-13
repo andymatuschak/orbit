@@ -14,7 +14,8 @@ import {
   EmbeddedScreenConfiguration,
   EmbeddedScreenEventType,
   EmbeddedScreenOnLoadEvent,
-  EmbeddedTaskScreenExitReviewEvent,
+  EmbeddedTaskScreenOnExitReviewEvent,
+  EmbeddedTaskScreenOnReviewCompleteEvent,
 } from "@withorbit/embedded-support";
 import {
   Button,
@@ -89,7 +90,6 @@ function EmbeddedScreenRenderer({
   onSkip,
   onUndo,
   containerSize,
-  authenticationState,
   colorPalette,
   // hostState,
   isDebug,
@@ -105,7 +105,6 @@ function EmbeddedScreenRenderer({
 
   const [isComplete, setComplete] = useState(false);
   const { height: interiorHeight, onLayout: onInteriorLayout } = useLayout();
-  const { height: modalHeight } = useLayout();
 
   useEffect(() => {
     if (wasInitiallyComplete) {
@@ -125,7 +124,13 @@ function EmbeddedScreenRenderer({
   });
 
   if (currentReviewAreaQueueIndex >= reviewAreaQueue.length && !isComplete) {
-    setTimeout(() => setComplete(true), 350);
+    setTimeout(() => {
+      setComplete(true);
+      const onReviewCompleteEvent: EmbeddedTaskScreenOnReviewCompleteEvent = {
+        type: EmbeddedScreenEventType.OnReviewComplete,
+      };
+      parent.postMessage(onReviewCompleteEvent, "*");
+    }, 350);
   }
 
   const starburstItems = useMemo(
@@ -168,8 +173,8 @@ function EmbeddedScreenRenderer({
               iconName={IconName.Cross}
               title="Exit Review"
               onPress={() => {
-                const exitReviewEvent: EmbeddedTaskScreenExitReviewEvent = {
-                  type: EmbeddedScreenEventType.ExitReview,
+                const exitReviewEvent: EmbeddedTaskScreenOnExitReviewEvent = {
+                  type: EmbeddedScreenEventType.OnExitReview,
                 };
                 parent.postMessage(exitReviewEvent, "*");
               }}
