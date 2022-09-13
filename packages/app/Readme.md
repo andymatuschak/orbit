@@ -4,7 +4,7 @@ This package contains the main Orbit GUI app for the web, iOS, Android, and macO
 
 * Local development
     * First, make sure all the libraries are built by running `yarn install && yarn build` from the monorepo root.
-    * Install `[watchman](https://facebook.github.io/watchman/docs/nodejs.html)` with `brew install watchman` (the pure-JS file watcher will run out of file handles).
+    * Install [`watchman`](https://facebook.github.io/watchman/docs/nodejs.html) with `brew install watchman` (the pure-JS file watcher will run out of file handles).
     * Start up a local instance of the backend: see `packages/backend/Readme.md` for details.
     * To run the Orbit web app: `yarn run web`
     * To run the Orbit iOS app on the simulator: `yarn run ios`
