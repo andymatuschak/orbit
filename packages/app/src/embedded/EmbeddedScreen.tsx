@@ -113,14 +113,9 @@ function EmbeddedScreenRenderer({
     }
   }, [wasInitiallyComplete]);
 
+  console.log(window.innerHeight, interiorHeight);
   const interiorY = useTransitioningValue({
-    value: isComplete
-      ? (window.innerHeight -
-          interiorHeight -
-          (authenticationState.status !== "signedIn" ? modalHeight : 0)) /
-          2 -
-        styles.layout.gridUnit * 4
-      : 0,
+    value: isComplete ? interiorHeight / 2 - 128 : 0,
     timing: {
       type: "spring",
       speed: 2,
@@ -129,15 +124,18 @@ function EmbeddedScreenRenderer({
     },
   });
 
+  if (currentReviewAreaQueueIndex >= reviewAreaQueue.length && !isComplete) {
+    setTimeout(() => setComplete(true), 350);
+  }
+
   const starburstItems = useMemo(
     () => getStarburstItems(sessionItems),
     [sessionItems],
   );
 
   return (
-    <>
+    <View onLayout={onInteriorLayout} style={{ flex: 1 }}>
       <Animated.View
-        onLayout={onInteriorLayout}
         style={{
           transform: [{ translateY: interiorY }],
           marginBottom: 16,
@@ -160,39 +158,39 @@ function EmbeddedScreenRenderer({
           colorPalette={colorPalette}
           config={defaultSpacedRepetitionSchedulerConfiguration}
         />
-        <View style={{ paddingTop: 12 }}>
-          <Button
-            size="small"
-            color={colorPalette.reviewButtonTextColor}
-            accentColor={colorPalette.accentColor}
-            backgroundColor={colorPalette.secondaryBackgroundColor}
-            iconName={IconName.Cross}
-            title="Exit Review"
-            onPress={() => {
-              const exitReviewEvent: EmbeddedTaskScreenExitReviewEvent = {
-                type: EmbeddedScreenEventType.ExitReview,
-              };
-              parent.postMessage(exitReviewEvent, "*");
-            }}
-          />
-        </View>
+        {!isComplete && (
+          <View style={{ paddingTop: 12 }}>
+            <Button
+              size="small"
+              color={colorPalette.reviewButtonTextColor}
+              accentColor={colorPalette.accentColor}
+              backgroundColor={colorPalette.secondaryBackgroundColor}
+              iconName={IconName.Cross}
+              title="Exit Review"
+              onPress={() => {
+                const exitReviewEvent: EmbeddedTaskScreenExitReviewEvent = {
+                  type: EmbeddedScreenEventType.ExitReview,
+                };
+                parent.postMessage(exitReviewEvent, "*");
+              }}
+            />
+          </View>
+        )}
       </Animated.View>
-      {
-        <ReviewArea
-          items={reviewAreaQueue}
-          currentItemIndex={currentReviewAreaQueueIndex}
-          onMark={onMark}
-          onSkip={onSkip}
-          onUndo={onUndo}
-          onPendingOutcomeChange={(newPendingOutcome) => {
-            setPendingOutcome(newPendingOutcome);
-          }}
-          insetBottom={0}
-          getURLForAttachmentID={getURLForAttachmentID}
-        />
-      }
+      <ReviewArea
+        items={reviewAreaQueue}
+        currentItemIndex={currentReviewAreaQueueIndex}
+        onMark={onMark}
+        onSkip={onSkip}
+        onUndo={onUndo}
+        onPendingOutcomeChange={(newPendingOutcome) => {
+          setPendingOutcome(newPendingOutcome);
+        }}
+        insetBottom={0}
+        getURLForAttachmentID={getURLForAttachmentID}
+      />
       {isDebug && <TestModeBanner colorPalette={colorPalette} />}
-    </>
+    </View>
   );
 }
 
