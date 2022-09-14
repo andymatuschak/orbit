@@ -100,6 +100,20 @@ function getIconAsset(
           throw unreachableCaseError(iconPosition);
       }
 
+    case IconName.List:
+      if (accent) return null;
+      switch (iconPosition) {
+        case IconPosition.TopLeft:
+        case IconPosition.TopRight:
+        case IconPosition.BottomLeft:
+        case IconPosition.BottomRight:
+        case IconPosition.Center:
+          // HACK
+          return require("../../assets/icons/list-center.svg");
+        default:
+          throw unreachableCaseError(iconPosition);
+      }
+
     case IconName.Reveal:
       if (accent) {
         switch (iconPosition) {

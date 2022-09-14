@@ -32,7 +32,7 @@ import {
 import usePrevious from "@withorbit/ui/dist/components/hooks/usePrevious";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Animated, View } from "react-native";
+import { Animated, Platform, View } from "react-native";
 
 import { useAuthenticationClient } from "../authentication/authContext";
 import { ReviewSessionContainer } from "../ReviewSessionContainer";
@@ -137,6 +137,9 @@ function EmbeddedScreenRenderer({
     [sessionItems],
   );
 
+  const isModalReview =
+    Platform.OS === "web" && document.location.hash === "#modal";
+
   return (
     <View onLayout={onInteriorLayout} style={{ flex: 1 }}>
       <Animated.View
@@ -169,8 +172,8 @@ function EmbeddedScreenRenderer({
               color={colorPalette.reviewButtonTextColor}
               accentColor={colorPalette.accentColor}
               backgroundColor={colorPalette.secondaryBackgroundColor}
-              iconName={IconName.Cross}
-              title="Exit Review"
+              iconName={isModalReview ? IconName.Cross : IconName.List}
+              title={isModalReview ? "Exit Review" : "View Prompt List"}
               onPress={() => {
                 const exitReviewEvent: EmbeddedTaskScreenOnExitReviewEvent = {
                   type: EmbeddedScreenEventType.OnExitReview,
