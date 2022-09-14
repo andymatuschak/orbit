@@ -288,7 +288,6 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
       undo: () => {
         const [state, ...newUndoStack] = undoStack.current;
         undoStack.current = newUndoStack;
-        console.log(state, newUndoStack);
         setState(state);
       },
     }),

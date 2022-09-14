@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { colors, layout, type } from "../styles";
+import { palettes } from "../styles/colors";
 import usePrevious from "./hooks/usePrevious";
 import Hoverable from "./Hoverable";
 import Icon from "./Icon";
@@ -197,7 +198,6 @@ const SmallButtonInterior = function SmallButtonImpl(
     iconName,
     isHovered,
     isPressed,
-    ...rest
   } = props;
   let iconColor;
   if (disabled) {
@@ -232,7 +232,6 @@ const SmallButtonInterior = function SmallButtonImpl(
       >
         {"title" in props && (
           <Text
-            {...rest}
             style={[
               {
                 // HACK hardcoding type styles here
@@ -240,7 +239,11 @@ const SmallButtonInterior = function SmallButtonImpl(
                 fontFamily: "Dr-ExtraBold",
                 lineHeight: 16,
                 letterSpacing: 15 * 0.04,
-                color: isHovered ? accentColor : color ?? defaultButtonColor,
+                color: isHovered
+                  ? accentColor === color // HACK
+                    ? palettes["brown"].secondaryAccentColor
+                    : accentColor
+                  : color ?? defaultButtonColor,
                 marginTop: 2.5,
                 marginRight: 4,
               },
@@ -256,7 +259,13 @@ const SmallButtonInterior = function SmallButtonImpl(
             name={iconName}
             position={IconPosition.Center}
             // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's color becomes the icon's accent color. It's intentional, though, to produce an inversion.
-            tintColor={iconColor ?? defaultButtonColor}
+            tintColor={
+              isHovered
+                ? iconColor === color // HACK
+                  ? palettes["brown"].secondaryAccentColor
+                  : iconColor ?? defaultButtonColor
+                : color ?? defaultButtonColor
+            }
             accentColor={color ?? defaultButtonColor}
           />
         )}
@@ -365,8 +374,8 @@ export default React.memo(function Button(props: ButtonProps) {
           {({ pressed }) => (
             <ButtonInteriorComponent
               {...props}
-              isHovered={isHovered}
-              isPressed={pressed}
+              isHovered={isHovered && !props.disabled}
+              isPressed={pressed && !props.disabled}
             />
           )}
         </Pressable>
