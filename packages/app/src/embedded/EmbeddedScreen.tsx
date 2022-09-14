@@ -380,12 +380,12 @@ function EmbeddedScreen({
         if (
           newState.currentReviewAreaQueueIndex !== null &&
           newState.currentReviewAreaQueueIndex >=
-            newState.reviewAreaQueue.length &&
-          hostState
+            newState.reviewAreaQueue.length
+          // && hostState
         ) {
           const itemsToRetry = findItemsToRetry(
             newState.sessionItems,
-            hostState,
+            // hostState,
           );
           console.log("Pushing items to retry", itemsToRetry);
           reviewSessionManager.pushReviewAreaQueueItems(
