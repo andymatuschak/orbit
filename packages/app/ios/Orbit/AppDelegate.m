@@ -16,6 +16,8 @@
 #import "ORDebugManager.h"
 
 #import <RNKeyEvent.h>
+#import <Intents/Intents.h>
+#import "IngestEventHandler.h"
 
 #if 0
 //#if DEBUG && !TARGET_OS_MACCATALYST
@@ -257,6 +259,13 @@ RNKeyEvent *keyEvent = nil;
 - (void)keyInput:(UIKeyCommand *)sender {
   NSString *selected = sender.input;
   [keyEvent sendKeyEvent:selected];
+}
+
+- (id)application:(UIApplication *)application handlerForIntent:(INIntent *)intent {
+  if ([intent isKindOfClass:[ShortcutIngestIntent class]]) {
+    return [[IngestEventHandler alloc] init];
+  }
+  return nil;
 }
 
 @end

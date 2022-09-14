@@ -10,7 +10,7 @@ import {
 } from "@withorbit/core";
 import { OrbitStore } from "@withorbit/store-shared";
 import { APISyncAdapter, syncOrbitStore } from "@withorbit/sync";
-import { createOrbitStore } from "./orbitStoreFactory";
+import { createDefaultOrbitStore } from "./orbitStoreFactory";
 
 export class DatabaseManager {
   private readonly _storePromise: Promise<OrbitStore>;
@@ -21,7 +21,7 @@ export class DatabaseManager {
 
   constructor(apiClient: OrbitAPIClient) {
     this._apiClient = apiClient;
-    this._storePromise = createOrbitStore("shared.orbitStore"); // TODO: namespace the store by user ID
+    this._storePromise = createDefaultOrbitStore(); // TODO: namespace the store by user ID
     this._apiSyncAdapter = new APISyncAdapter(this._apiClient, "server");
 
     this._startSync();

@@ -121,6 +121,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
 
   const buttonStyle = {
     flex: 1,
+    flexShrink: 0,
     ...(insetBottom && {
       paddingBottom:
         // The button already has internal padding when the background is showing. We subtract that off if the safe inset area is larger. This is a bit of a hack, relying on internal knowledge of the button metrics. It might be better to have the button subtract off part of its paddingBottom if necessary.
@@ -211,7 +212,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
           {spacer}
           <Button
             {...sharedButtonProps}
-            style={[buttonStyle, { minWidth: 176 }]}
+            style={buttonStyle}
             key={"Remembered"}
             onPress={() => onMark(TaskRepetitionOutcome.Remembered)}
             iconName={IconName.Check}

@@ -1,0 +1,231 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "ClozeTaskContent": {
+            "additionalProperties": false,
+            "properties": {
+                "body": {
+                    "$ref": "#/definitions/TaskContentField"
+                },
+                "components": {
+                    "additionalProperties": {
+                        "$ref": "#/definitions/ClozeTaskContentComponent"
+                    },
+                    "type": "object"
+                },
+                "type": {
+                    "enum": [
+                        "cloze"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "body",
+                "components",
+                "type"
+            ],
+            "type": "object"
+        },
+        "ClozeTaskContentComponent": {
+            "additionalProperties": false,
+            "properties": {
+                "order": {
+                    "type": "number"
+                },
+                "ranges": {
+                    "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                            "hint": {
+                                "type": [
+                                    "null",
+                                    "string"
+                                ]
+                            },
+                            "length": {
+                                "type": "number"
+                            },
+                            "startIndex": {
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "hint",
+                            "length",
+                            "startIndex"
+                        ],
+                        "type": "object"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "order",
+                "ranges"
+            ],
+            "type": "object"
+        },
+        "IngestibleSource": {
+            "additionalProperties": false,
+            "properties": {
+                "colorPaletteName": {
+                    "enum": [
+                        "blue",
+                        "brown",
+                        "cyan",
+                        "green",
+                        "lime",
+                        "orange",
+                        "pink",
+                        "purple",
+                        "red",
+                        "turquoise",
+                        "violet",
+                        "yellow"
+                    ],
+                    "type": "string"
+                },
+                "identifier": {
+                    "type": "string"
+                },
+                "items": {
+                    "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                            "identifier": {
+                                "type": "string"
+                            },
+                            "spec": {
+                                "$ref": "#/definitions/TaskSpec<TaskContent>"
+                            }
+                        },
+                        "required": [
+                            "identifier",
+                            "spec"
+                        ],
+                        "type": "object"
+                    },
+                    "type": "array"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "identifier",
+                "items",
+                "title"
+            ],
+            "type": "object"
+        },
+        "PlainTaskContent": {
+            "additionalProperties": false,
+            "properties": {
+                "body": {
+                    "$ref": "#/definitions/TaskContentField"
+                },
+                "type": {
+                    "enum": [
+                        "plain"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "body",
+                "type"
+            ],
+            "type": "object"
+        },
+        "QATaskContent": {
+            "additionalProperties": false,
+            "properties": {
+                "answer": {
+                    "$ref": "#/definitions/TaskContentField"
+                },
+                "body": {
+                    "$ref": "#/definitions/TaskContentField"
+                },
+                "type": {
+                    "enum": [
+                        "qa"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "answer",
+                "body",
+                "type"
+            ],
+            "type": "object"
+        },
+        "TaskContentField": {
+            "additionalProperties": false,
+            "properties": {
+                "attachments": {
+                    "items": {
+                        "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "attachments",
+                "text"
+            ],
+            "type": "object"
+        },
+        "TaskSpec<TaskContent>": {
+            "additionalProperties": false,
+            "properties": {
+                "content": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/QATaskContent"
+                        },
+                        {
+                            "$ref": "#/definitions/ClozeTaskContent"
+                        },
+                        {
+                            "$ref": "#/definitions/PlainTaskContent"
+                        }
+                    ]
+                },
+                "type": {
+                    "enum": [
+                        "memory"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "content",
+                "type"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "sources": {
+            "items": {
+                "$ref": "#/definitions/IngestibleSource"
+            },
+            "type": "array"
+        }
+    },
+    "required": [
+        "sources"
+    ],
+    "type": "object"
+}
+

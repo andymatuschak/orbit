@@ -43,6 +43,9 @@
       "path": "../store-web"
     },
     {
+      "path": "../ingester"
+    },
+    {
       "path": "../sync"
     },
     {

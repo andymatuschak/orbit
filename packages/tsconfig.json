@@ -7,6 +7,7 @@
     { "path": "./backend" },
     { "path": "./core" },
     { "path": "./embedded-support" },
+    { "path": "./ingester" },
     { "path": "./ui" },
     { "path": "./note-sync" },
     { "path": "./sample-data" },
