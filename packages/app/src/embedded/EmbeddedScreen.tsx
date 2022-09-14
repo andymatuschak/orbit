@@ -112,9 +112,8 @@ function EmbeddedScreenRenderer({
     }
   }, [wasInitiallyComplete]);
 
-  console.log(window.innerHeight, interiorHeight);
   const interiorY = useTransitioningValue({
-    value: isComplete ? interiorHeight / 2 - 128 : 0,
+    value: isComplete ? interiorHeight / 2 - 164 : 0,
     timing: {
       type: "spring",
       speed: 2,
