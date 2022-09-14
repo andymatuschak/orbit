@@ -264,6 +264,7 @@ export default function ReviewSession() {
                 onUndo={() => {
                   return;
                 }}
+                canUndo={false}
               />
             </>
           );

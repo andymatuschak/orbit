@@ -90,6 +90,7 @@ function ReviewAreaTemplate({
           onUndo={() => {
             return;
           }}
+          canUndo={false}
           currentItemIndex={currentItemIndex}
         />
       </View>

@@ -89,6 +89,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   onUndo,
   onPendingOutcomeChange,
   promptType,
+  canUndo,
   isShowingAnswer,
   insetBottom,
 }: {
@@ -101,6 +102,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   onPendingOutcomeChange: (
     pendingOutcome: TaskRepetitionOutcome | null,
   ) => void;
+  canUndo: boolean;
   isShowingAnswer: boolean;
   insetBottom?: number;
 }) {
@@ -175,6 +177,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             onPress={onUndo}
             iconName={IconName.ArrowLeft}
             title={"Undo"}
+            disabled={!canUndo}
             hitSlop={secondButtonSlop}
           />
           <Button

@@ -192,6 +192,7 @@ export interface ReviewAreaProps {
     pendingOutcome: TaskRepetitionOutcome | null,
   ) => void;
   getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
+  canUndo: boolean;
 
   insetBottom?: number;
 
@@ -208,6 +209,7 @@ export default React.memo(function ReviewArea({
   forceShowAnswer,
   onPendingOutcomeChange,
   getURLForAttachmentID,
+  canUndo,
   insetBottom = 0,
 }: ReviewAreaProps) {
   // console.debug("[Performance - ReviewArea] Render", Date.now() / 1000.0);
@@ -261,6 +263,7 @@ export default React.memo(function ReviewArea({
           onUndo={onUndo}
           onPendingOutcomeChange={onPendingOutcomeChange}
           promptType={currentItem.spec.content.type}
+          canUndo={canUndo}
           isShowingAnswer={isShowingAnswer}
           insetBottom={insetBottom}
         />

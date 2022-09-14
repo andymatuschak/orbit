@@ -192,6 +192,7 @@ function EmbeddedScreenRenderer({
         }}
         insetBottom={0}
         getURLForAttachmentID={getURLForAttachmentID}
+        canUndo={currentReviewAreaQueueIndex > 0}
       />
       {isDebug && <TestModeBanner colorPalette={colorPalette} />}
     </View>
