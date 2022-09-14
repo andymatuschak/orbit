@@ -82,7 +82,7 @@ function markEmbeddedHostStateDirty() {
             receiverIndex: index,
           },
         };
-        element.iframe!.contentWindow!.postMessage(event, "*");
+        // element.iframe!.contentWindow!.postMessage(event, "*");
       });
     }, 1000);
   }
