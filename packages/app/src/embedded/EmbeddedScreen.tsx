@@ -441,7 +441,10 @@ function EmbeddedScreen({
 
   return (
     <View style={{ height: "100vh", width: "100vw", overflow: "hidden" }}>
-      <ReviewSessionContainer colorPalette={colorPalette}>
+      <ReviewSessionContainer
+        colorPalette={colorPalette}
+        insets={{ top: 0, bottom: 8, left: 8, right: 4 }}
+      >
         {({ containerSize }) => (
           <EmbeddedScreenRenderer
             currentSessionItemIndex={currentSessionItemIndex}

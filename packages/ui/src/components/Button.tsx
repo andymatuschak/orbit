@@ -264,7 +264,7 @@ const SmallButtonInterior = function SmallButtonImpl(
                 ? iconColor === color // HACK
                   ? palettes["brown"].secondaryAccentColor
                   : iconColor ?? defaultButtonColor
-                : color ?? defaultButtonColor
+                : iconColor ?? defaultButtonColor
             }
             accentColor={color ?? defaultButtonColor}
           />
