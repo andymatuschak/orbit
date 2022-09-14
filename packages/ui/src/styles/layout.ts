@@ -1,10 +1,13 @@
+import { Platform } from "react-native";
+
 export const borderRadius = 8;
 export const gridUnit = 8;
 
 export const columnMargin = gridUnit;
 export const edgeMargin = gridUnit * 2;
 
-export const maximumContentWidth = 550;
+export const maximumContentWidth =
+  Platform.OS === "web" && document.location.hash === "#modal" ? 550 : 1024;
 export const maximumContentHeight = 750;
 
 export function getColumnSpan(columnCount: number, layoutWidth: number) {

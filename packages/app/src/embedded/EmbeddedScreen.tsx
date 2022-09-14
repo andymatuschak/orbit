@@ -163,7 +163,7 @@ function EmbeddedScreenRenderer({
           config={defaultSpacedRepetitionSchedulerConfiguration}
         />
         {!isComplete && (
-          <View style={{ paddingTop: 12 }}>
+          <View style={{ paddingTop: 12, marginRight: 4 }}>
             <Button
               size="small"
               color={colorPalette.reviewButtonTextColor}

@@ -165,6 +165,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             // backgroundColor: "green",
             flexGrow: 0,
             flexShrink: 0,
+            marginRight: 4,
             // flexBasis: 76,
             justifyContent: "flex-start",
             // alignItems: "flex-end",

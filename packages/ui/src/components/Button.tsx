@@ -155,9 +155,12 @@ const ButtonInterior = function ButtonImpl(
           <Icon
             name={iconName}
             position={isSoloIcon ? IconPosition.Center : IconPosition.TopLeft}
-            // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's color becomes the icon's accent color. It's intentional, though, to produce an inversion.
+            // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's text color becomes the icon's accent color. It's intentional, though, to produce an inversion.
             tintColor={iconColor ?? defaultButtonColor}
-            accentColor={color ?? defaultButtonColor}
+            accentColor={
+              // HACK
+              color === iconColor ? colors.ink : color ?? defaultButtonColor
+            }
           />
         )}
         {"title" in props && (

@@ -350,7 +350,13 @@ export class OrbitReviewAreaElement extends HTMLElement {
       } else {
         setIFrameSize(iframe);
       }
-      iframe.src = EMBED_API_BASE_URL;
+
+      let url = EMBED_API_BASE_URL;
+      // HACK
+      if (this.getAttribute("modal")) {
+        url += "#modal";
+      }
+      iframe.src = url;
     });
   }
 
