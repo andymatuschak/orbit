@@ -179,6 +179,11 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             iconName={IconName.ArrowLeft}
             title={"Undo"}
             disabled={!canUndo}
+            color={
+              canUndo
+                ? sharedButtonProps.color
+                : colorPalette.secondaryTextColor
+            }
             hitSlop={secondButtonSlop}
           />
           <Button

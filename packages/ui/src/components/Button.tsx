@@ -212,7 +212,7 @@ const SmallButtonInterior = function SmallButtonImpl(
     <View
       style={[
         disabled && {
-          opacity: 0.3,
+          opacity: 0.6,
           ...(Platform.OS === "web" && { cursor: "not-allowed" }),
         },
       ]}
