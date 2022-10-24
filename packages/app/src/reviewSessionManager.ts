@@ -104,16 +104,16 @@ function reviewSessionManagerUpdateSessionItems(
 
   // In case prompt contents have been edited, update the specs in ReviewAreaItems with the specs from the new ReviewItems.
   // This is a pretty gross consequence of coupling uniqued state (the queue's contents) with derived state (the specs). It would be cleaner to store a queue of task IDs and to derive the ReviewAreaItems from that, but I was trying to avoid a third layer. Probably the wrong trade.
-  const reviewItemsByTaskID = new Map(
+  const newReviewItemsByTaskID = new Map(
     newSessionItems.map((item) => [item.task.id, item]),
   );
   const newReviewAreaQueue: ReviewAreaItem[] = state.reviewAreaQueue.map(
-    (reviewAreItem) => {
-      const reviewItem = reviewItemsByTaskID.get(reviewAreItem.taskID);
+    (reviewAreaItem) => {
+      const reviewItem = newReviewItemsByTaskID.get(reviewAreaItem.taskID);
       if (reviewItem) {
-        return { ...reviewAreItem, spec: reviewItem.task.spec };
+        return { ...reviewAreaItem, spec: reviewItem.task.spec };
       } else {
-        return reviewAreItem;
+        return reviewAreaItem;
       }
     },
   );
