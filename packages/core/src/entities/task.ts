@@ -150,4 +150,47 @@ export interface TaskProvenance {
   title?: string; // an optional title representing the task's provenance, suitable for presentation in the UI (e.g. the <title> of a web page, title of a note, etc)
   containerTitle?: string; // an optional title describing some larger body containing the task's provenance; e.g. if a web site has many chapters, title may be a chapter name while containerTitle may be the name of the web site. Perhaps at some point we'll use a more elaborate breadcrumb reprsentation a la schema.org.
   colorPaletteName?: ColorPaletteName;
+
+  selectors?: TaskProvenanceSelector[];
+}
+
+// These selectors are a subset of the W3C Annotation selector schema.
+// https://www.w3.org/TR/annotation-model/#selectors
+export type TaskProvenanceSelector =
+  | TaskProvenanceRangeSelector
+  | TaskProvenanceTextPositionSelector
+  | TaskProvenanceTextQuoteSelector
+  | TaskProvenanceXPathSelector;
+
+export enum TaskProvenanceSelectorType {
+  Range = "RangeSelector",
+  TextPosition = "TextPositionSelector",
+  TextQuote = "TextQuoteSelector",
+  XPath = "XPathSelector",
+}
+
+export interface TaskProvenanceRangeSelector {
+  type: TaskProvenanceSelectorType.Range;
+  startSelector: TaskProvenanceXPathSelector;
+  endSelector: TaskProvenanceXPathSelector;
+}
+
+export interface TaskProvenanceTextPositionSelector {
+  type: TaskProvenanceSelectorType.TextPosition;
+  start: number;
+  end: number;
+}
+
+export interface TaskProvenanceTextQuoteSelector {
+  type: TaskProvenanceSelectorType.TextQuote;
+  exact: string;
+  prefix: string;
+  suffix: string;
+}
+
+export interface TaskProvenanceXPathSelector {
+  type: TaskProvenanceSelectorType.XPath;
+  value: string;
+  // The W3C spec allows this field on any selector type, but we only support it on XPaths for now; and for the moment, we only allow text position selectors.
+  refinedBy: TaskProvenanceTextPositionSelector;
 }
