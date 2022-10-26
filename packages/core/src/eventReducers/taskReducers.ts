@@ -24,6 +24,7 @@ export function taskIngestEventReducer(
       ...oldSnapshot,
       provenance: event.provenance ?? oldSnapshot.provenance,
       spec: oldSnapshot.spec,
+      isDeleted: false,
       metadata: { ...oldSnapshot.metadata, ...event.metadata },
     };
   } else {

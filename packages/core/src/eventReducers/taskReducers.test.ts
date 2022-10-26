@@ -51,6 +51,17 @@ describe("ingest reducer", () => {
     });
     expect(modifiedTask).toEqual(initialTask);
   });
+
+  test("no-op with a deleted base state", () => {
+    const initialTask = eventReducer(null, testIngestClozeTaskEvent);
+    initialTask.isDeleted = true;
+    const modifiedTask = eventReducer(initialTask, {
+      ...testIngestClozeTaskEvent,
+      id: (testIngestClozeTaskEvent.id + "2") as EventID,
+      timestampMillis: 1000,
+    });
+    expect(modifiedTask.isDeleted).toBe(false);
+  });
 });
 
 describe("repetition reducer", () => {
