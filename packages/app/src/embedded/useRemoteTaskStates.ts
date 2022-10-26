@@ -27,7 +27,8 @@ export function useRemoteTaskStates({
         const output = new Map<TaskID, Task>();
         for (const task of response.items) {
           output.set(task.id, task);
-          // HACK HACK HACK: 0 is not a real value; this code should never execute in the deemo.
+          // TODO: reconcile this nonsense -- my note on the hack no longer applies; this will now be excecuted!
+          // HACK HACK HACK: 0 is not a real value; this code should never execute in the demo.
           sendUpdatedReviewItemToHost(task, 0, 0);
         }
         setInitialTaskStates(output);
