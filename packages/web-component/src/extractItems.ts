@@ -83,11 +83,16 @@ export function generateTaskReviewItem(
     type: TaskSpecType.Memory,
     content,
   };
+
+  if (externalID && !/^[0-9a-zA-Z_\-]{22}$/.test(externalID)) {
+    throw new Error(`Invalid external ID: ${externalID}`);
+  }
+
   const task: Task = {
     type: EntityType.Task,
     id: externalID
-      // HACK probably not actually how we want to do this
-      ? generateTaskIDForString(externalID)
+      ? // HACK probably not actually how we want to do this
+        (externalID as TaskID)
       : generateTaskIDForSpec(spec),
     spec,
     // TODO consider moving provenance generation from `app` to here.
