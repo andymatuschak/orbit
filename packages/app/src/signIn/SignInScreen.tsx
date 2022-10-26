@@ -61,7 +61,22 @@ async function completeSignIn(authenticationClient: AuthenticationClient) {
 
     if (tokenTarget === "opener") {
       if (window.opener) {
-        window.opener.postMessage({ loginToken }, window.origin);
+        const requestedOrigin = new URLSearchParams(window.location.search).get(
+          "origin",
+        );
+        let origin;
+        // HACK: Permitting cross-origin login for my prototype.
+        if (
+          requestedOrigin &&
+          ((__DEV__ && requestedOrigin.startsWith("http://localhost")) ||
+            requestedOrigin ===
+              "https://orbit-summer-2022-demo-andymatuschak.vercel.app/")
+        ) {
+          origin = requestedOrigin;
+        } else {
+          origin = window.origin;
+        }
+        window.opener.postMessage({ loginToken }, origin);
       } else {
         throw new Error(
           "window.opener is unavailable: no way to pass the auth token",
