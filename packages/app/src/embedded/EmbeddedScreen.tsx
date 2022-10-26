@@ -2,6 +2,7 @@ import {
   AttachmentID,
   defaultSpacedRepetitionSchedulerConfiguration,
   EventForEntity,
+  getReviewQueueFuzzyDueTimestampThreshold,
   ReviewItem,
   Task,
   TaskID,
@@ -124,6 +125,7 @@ function EmbeddedScreenRenderer({
 
   if (currentReviewAreaQueueIndex >= reviewAreaQueue.length && !isComplete) {
     setTimeout(() => {
+      console.log("Review complete.");
       setComplete(true);
       const onReviewCompleteEvent: EmbeddedTaskScreenOnReviewCompleteEvent = {
         type: EmbeddedScreenEventType.OnReviewComplete,
@@ -317,9 +319,14 @@ function EmbeddedScreen({
   const wasInitiallyComplete = useMemo(
     () =>
       remoteTaskStates
-        ? configuration.reviewItems.every((item) =>
-            remoteTaskStates.has(item.task.id),
-          )
+        ? configuration.reviewItems.every((item) => {
+            const task = remoteTaskStates.get(item.task.id);
+            return (
+              task &&
+              task.componentStates[item.componentID].dueTimestampMillis >=
+                getReviewQueueFuzzyDueTimestampThreshold(Date.now())
+            );
+          })
         : false,
     [remoteTaskStates, configuration.reviewItems],
   );
