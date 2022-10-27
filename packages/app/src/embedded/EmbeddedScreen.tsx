@@ -15,8 +15,8 @@ import {
   EmbeddedScreenConfiguration,
   EmbeddedScreenEventType,
   EmbeddedScreenOnLoadEvent,
-  EmbeddedTaskScreenOnExitReviewEvent,
-  EmbeddedTaskScreenOnReviewCompleteEvent,
+  EmbeddedScreenOnExitReviewEvent,
+  EmbeddedScreenOnReviewCompleteEvent,
 } from "@withorbit/embedded-support";
 import {
   Button,
@@ -32,7 +32,7 @@ import {
 } from "@withorbit/ui";
 import usePrevious from "@withorbit/ui/dist/components/hooks/usePrevious";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Platform, View } from "react-native";
 
 import { useAuthenticationClient } from "../authentication/authContext";
@@ -104,14 +104,8 @@ function EmbeddedScreenRenderer({
   const [pendingOutcome, setPendingOutcome] =
     useState<TaskRepetitionOutcome | null>(null);
 
-  const [isComplete, setComplete] = useState(false);
+  const [isComplete, setComplete] = useState(wasInitiallyComplete);
   const { height: interiorHeight, onLayout: onInteriorLayout } = useLayout();
-
-  useEffect(() => {
-    if (wasInitiallyComplete) {
-      setComplete(true);
-    }
-  }, [wasInitiallyComplete]);
 
   const interiorY = useTransitioningValue({
     value: isComplete ? interiorHeight / 2 - 164 : 0,
@@ -123,12 +117,19 @@ function EmbeddedScreenRenderer({
     },
   });
 
-  if (currentReviewAreaQueueIndex >= reviewAreaQueue.length && !isComplete) {
-    setTimeout(() => {
+  const completionTimerID = useRef<unknown | null>(null);
+  if (
+    (wasInitiallyComplete ||
+      currentReviewAreaQueueIndex >= reviewAreaQueue.length) &&
+    !isComplete &&
+    completionTimerID.current === null
+  ) {
+    completionTimerID.current = setTimeout(() => {
       console.log("Review complete.");
       setComplete(true);
-      const onReviewCompleteEvent: EmbeddedTaskScreenOnReviewCompleteEvent = {
+      const onReviewCompleteEvent: EmbeddedScreenOnReviewCompleteEvent = {
         type: EmbeddedScreenEventType.OnReviewComplete,
+        wasInitiallyComplete,
       };
       parent.postMessage(onReviewCompleteEvent, "*");
     }, 350);
@@ -177,7 +178,7 @@ function EmbeddedScreenRenderer({
               iconName={isModalReview ? IconName.Cross : IconName.List}
               title={isModalReview ? "Exit Review" : "View Prompt List"}
               onPress={() => {
-                const exitReviewEvent: EmbeddedTaskScreenOnExitReviewEvent = {
+                const exitReviewEvent: EmbeddedScreenOnExitReviewEvent = {
                   type: EmbeddedScreenEventType.OnExitReview,
                 };
                 parent.postMessage(exitReviewEvent, "*");
@@ -323,6 +324,7 @@ function EmbeddedScreen({
             const task = remoteTaskStates.get(item.task.id);
             return (
               task &&
+              !task.isDeleted &&
               task.componentStates[item.componentID].dueTimestampMillis >=
                 getReviewQueueFuzzyDueTimestampThreshold(Date.now())
             );

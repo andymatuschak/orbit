@@ -51,10 +51,11 @@ export interface EmbeddedScreenTaskUpdateEvent {
   queueIndex: number;
 }
 
-export interface EmbeddedTaskScreenOnExitReviewEvent {
+export interface EmbeddedScreenOnExitReviewEvent {
   type: typeof EmbeddedScreenEventType.OnExitReview;
 }
 
-export interface EmbeddedTaskScreenOnReviewCompleteEvent {
+export interface EmbeddedScreenOnReviewCompleteEvent {
   type: typeof EmbeddedScreenEventType.OnReviewComplete;
+  wasInitiallyComplete: boolean;
 }

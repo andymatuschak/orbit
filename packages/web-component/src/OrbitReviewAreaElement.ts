@@ -6,6 +6,7 @@ import {
   EmbeddedScreenConfiguration,
   EmbeddedScreenEventType,
   EmbeddedScreenRecord,
+  EmbeddedScreenTaskOnReviewCompleteEvent,
   EmbeddedScreenTaskUpdateEvent,
 } from "@withorbit/embedded-support";
 import { extractItems, generateTaskReviewItem } from "./extractItems";
@@ -145,7 +146,10 @@ function onMessage(event: MessageEvent) {
     case EmbeddedScreenEventType.OnReviewComplete:
       {
         const { element } = getReviewAreaEntry();
-        element.onReviewComplete?.();
+        element.onReviewComplete?.(
+          (event.data as EmbeddedScreenTaskOnReviewCompleteEvent)
+            .wasInitiallyComplete,
+        );
       }
       break;
   }
@@ -190,7 +194,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
 
   iframe: HTMLIFrameElement | null = null;
   onExitReview?: () => void;
-  onReviewComplete?: () => void;
+  onReviewComplete?: (wasInitiallyComplete: boolean) => void;
 
   onMetadataChange = (metadata: EmbeddedHostMetadata) => {
     this.cachedMetadata = metadata;
