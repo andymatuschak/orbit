@@ -558,6 +558,39 @@
                 "type"
             ],
             "type": "object"
+        },
+        "TaskUpdateSpecEvent": {
+            "additionalProperties": false,
+            "properties": {
+                "entityID": {
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                    "type": "string"
+                },
+                "id": {
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                    "type": "string"
+                },
+                "spec": {
+                    "$ref": "#/definitions/TaskSpec<TaskContent>"
+                },
+                "timestampMillis": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "taskUpdateSpec"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "entityID",
+                "id",
+                "spec",
+                "timestampMillis",
+                "type"
+            ],
+            "type": "object"
         }
     },
     "items": {
@@ -573,6 +606,9 @@
             },
             {
                 "$ref": "#/definitions/TaskUpdateDeletedEvent"
+            },
+            {
+                "$ref": "#/definitions/TaskUpdateSpecEvent"
             },
             {
                 "$ref": "#/definitions/TaskUpdateProvenanceEvent"

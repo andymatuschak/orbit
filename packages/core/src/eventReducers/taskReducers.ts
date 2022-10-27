@@ -12,6 +12,7 @@ import {
   TaskRescheduleEvent,
   TaskUpdateDeletedEvent,
   TaskUpdateProvenanceEvent,
+  TaskUpdateSpecEvent,
 } from "../event";
 import { createSpacedRepetitionScheduler } from "../schedulers/spacedRepetitionScheduler";
 
@@ -101,6 +102,14 @@ export function taskUpdateDeletedEventReducer(
 ): Task {
   assertTaskExists(oldSnapshot, event.type);
   return { ...oldSnapshot, isDeleted: event.isDeleted };
+}
+
+export function taskUpdateSpecEventReducer(
+  oldSnapshot: Task | null,
+  event: TaskUpdateSpecEvent,
+): Task {
+  assertTaskExists(oldSnapshot, event.type);
+  return { ...oldSnapshot, spec: event.spec };
 }
 
 export function taskUpdateProvenanceEventReducer(

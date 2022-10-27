@@ -11,6 +11,7 @@ import {
   TaskRescheduleEvent,
   TaskUpdateDeletedEvent,
   TaskUpdateProvenanceEvent,
+  TaskUpdateSpecEvent,
 } from "../event";
 import { eventReducer } from "../eventReducer";
 
@@ -151,6 +152,34 @@ describe("updateDeleted reducer", () => {
   test("reschedules", () => {
     const task = eventReducer(testClozeTask, testEvent);
     expect(task.isDeleted).toBe(true);
+  });
+});
+
+describe("updateSpec reducer", () => {
+  const testEvent: TaskUpdateSpecEvent = {
+    id: "y" as EventID,
+    type: EventType.TaskUpdateSpecEvent,
+    entityID: testIngestClozeTaskEvent.entityID,
+    timestampMillis: 1500,
+    spec: {
+      ...testClozeSpec,
+      content: {
+        ...testClozeSpec.content,
+        body: {
+          ...testClozeSpec.content.body,
+          text: "This is a test cloze prompt - updated.",
+        },
+      },
+    },
+  };
+
+  test("fails without a base state", () => {
+    expect(() => eventReducer(null, testEvent)).toThrow();
+  });
+
+  test("updates provenance", () => {
+    const task = eventReducer(testClozeTask, testEvent);
+    expect(task.spec).toEqual(testEvent.spec);
   });
 });
 

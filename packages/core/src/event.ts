@@ -11,6 +11,7 @@ export type Event =
   | TaskRepetitionEvent
   | TaskRescheduleEvent
   | TaskUpdateDeletedEvent
+  | TaskUpdateSpecEvent
   | TaskUpdateProvenanceEvent
   | AttachmentIngestEvent;
 
@@ -19,6 +20,7 @@ export enum EventType {
   TaskRepetition = "taskRepetition",
   TaskReschedule = "taskReschedule",
   TaskUpdateDeleted = "taskUpdatedDeleted",
+  TaskUpdateSpecEvent = "taskUpdateSpec",
   TaskUpdateProvenanceEvent = "taskUpdateProvenanceEvent",
 
   AttachmentIngest = "attachmentIngest",
@@ -82,6 +84,11 @@ export interface TaskUpdateDeletedEvent
 export interface TaskUpdateProvenanceEvent
   extends EventBase<EventType.TaskUpdateProvenanceEvent, Task> {
   provenance: TaskProvenance | null;
+}
+
+export interface TaskUpdateSpecEvent
+  extends EventBase<EventType.TaskUpdateSpecEvent, Task> {
+  spec: TaskSpec;
 }
 
 export enum TaskRepetitionOutcome {
