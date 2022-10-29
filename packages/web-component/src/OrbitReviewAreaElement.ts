@@ -5,8 +5,8 @@ import {
   EmbeddedHostUpdateEvent,
   EmbeddedScreenConfiguration,
   EmbeddedScreenEventType,
+  EmbeddedScreenOnReviewCompleteEvent,
   EmbeddedScreenRecord,
-  EmbeddedScreenTaskOnReviewCompleteEvent,
   EmbeddedScreenTaskUpdateEvent,
 } from "@withorbit/embedded-support";
 import { extractItems, generateTaskReviewItem } from "./extractItems";
@@ -147,7 +147,7 @@ function onMessage(event: MessageEvent) {
       {
         const { element } = getReviewAreaEntry();
         element.onReviewComplete?.(
-          (event.data as EmbeddedScreenTaskOnReviewCompleteEvent)
+          (event.data as EmbeddedScreenOnReviewCompleteEvent)
             .wasInitiallyComplete,
         );
       }

@@ -69,8 +69,7 @@ async function completeSignIn(authenticationClient: AuthenticationClient) {
         if (
           requestedOrigin &&
           ((__DEV__ && requestedOrigin.startsWith("http://localhost")) ||
-            requestedOrigin ===
-              "https://orbit-summer-2022-demo-andymatuschak.vercel.app/")
+            requestedOrigin === "https://fall-2022-beta.withorbit.com")
         ) {
           origin = requestedOrigin;
         } else {
