@@ -61,8 +61,8 @@ function getIconAsset(
         case IconPosition.TopRight:
         case IconPosition.BottomLeft:
         case IconPosition.BottomRight:
+          throw new Error("Left arrow icon doesn't support this position");
         case IconPosition.Center:
-          // HACK
           return require("../../assets/icons/left-center.svg");
         default:
           throw unreachableCaseError(iconPosition);
@@ -88,11 +88,11 @@ function getIconAsset(
     case IconName.DoubleArrowRight:
       if (accent) return null;
       switch (iconPosition) {
-        case IconPosition.TopLeft:
         case IconPosition.TopRight:
         case IconPosition.BottomLeft:
         case IconPosition.BottomRight:
-          // HACK
+          throw new Error("Double right icon doesn't support this position");
+        case IconPosition.TopLeft:
           return require("../../assets/icons/doubleRight-TL.svg");
         case IconPosition.Center:
           return require("../../assets/icons/doubleRight-center.svg");
@@ -107,8 +107,8 @@ function getIconAsset(
         case IconPosition.TopRight:
         case IconPosition.BottomLeft:
         case IconPosition.BottomRight:
+          throw new Error("List icon doesn't support this position");
         case IconPosition.Center:
-          // HACK
           return require("../../assets/icons/list-center.svg");
         default:
           throw unreachableCaseError(iconPosition);

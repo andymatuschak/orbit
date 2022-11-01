@@ -13,13 +13,10 @@ function getIconAsset(
   iconPosition: IconPosition,
   accent: true,
 ): number | null;
-// @ts-ignore
-// @ts-ignore
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: boolean,
-// @ts-ignore
 ): number | null {
   switch (name) {
     case IconName.Check:
@@ -102,6 +99,48 @@ function getIconAsset(
         }
       }
       throw unreachableCaseError(iconPosition);
+
+    case IconName.ArrowLeft:
+      if (accent) return null;
+      switch (iconPosition) {
+        case IconPosition.TopLeft:
+        case IconPosition.TopRight:
+        case IconPosition.BottomLeft:
+        case IconPosition.BottomRight:
+          throw new Error("Left arrow icon doesn't support this position");
+        case IconPosition.Center:
+          return require("../../assets/icons/left-center.png");
+        default:
+          throw unreachableCaseError(iconPosition);
+      }
+
+    case IconName.DoubleArrowRight:
+      if (accent) return null;
+      switch (iconPosition) {
+        case IconPosition.TopRight:
+        case IconPosition.BottomLeft:
+        case IconPosition.BottomRight:
+          throw new Error("Double right icon doesn't support this position");
+        case IconPosition.TopLeft:
+          return require("../../assets/icons/doubleRight-TL.png");
+        case IconPosition.Center:
+          return require("../../assets/icons/doubleRight-center.png");
+        default:
+          throw unreachableCaseError(iconPosition);
+      }
+
+    case IconName.List:
+      switch (iconPosition) {
+        case IconPosition.TopLeft:
+        case IconPosition.TopRight:
+        case IconPosition.BottomLeft:
+        case IconPosition.BottomRight:
+          throw new Error("List icon doesn't support this position");
+        case IconPosition.Center:
+          return require("../../assets/icons/list-center.png");
+        default:
+          throw unreachableCaseError(iconPosition);
+      }
   }
 }
 
