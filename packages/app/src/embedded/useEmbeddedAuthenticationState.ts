@@ -57,7 +57,12 @@ function useLoginTokenSubscription(
   React.useEffect(() => {
     const channel = channelRef.current;
     function onLoginToken(event: MessageEvent) {
-      if (event.origin === window.origin && event.data.loginToken) {
+      if (
+        (event.origin === window.origin ||
+          // HACK in support of fall-2022-beta.withorbit.com.
+          event.origin.endsWith(".withorbit.com")) &&
+        event.data.loginToken
+      ) {
         console.debug(
           "Received broadcasted login token",
           event.data,
