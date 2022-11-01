@@ -17,7 +17,7 @@ import { findAllPrompts, parseMarkdown, processor, Prompt } from "./markdown";
 import { getNoteTitle } from "./utils/getNoteTitle";
 import { getStableBearID } from "./utils/getStableBearID";
 
-export class BearInterpreter implements Interpreter {
+export class MarkdownInterpreter implements Interpreter {
   private _hasher: Hasher;
   constructor(hasher: Hasher) {
     this._hasher = hasher;
@@ -29,25 +29,30 @@ export class BearInterpreter implements Interpreter {
         const root = await parseMarkdown(file.content);
         const bearId = getStableBearID(root);
 
+        let identifier: IngestibleSourceIdentifier;
+        let url: string | undefined;
         if (bearId) {
-          const prompts = findAllPrompts(root);
-          const noteTitle = getNoteTitle(root);
-
-          return {
-            identifier: bearId.id as IngestibleSourceIdentifier,
-            title: noteTitle ?? file.name,
-            url: bearId.openURL,
-            items: prompts.map((prompt): IngestibleItem => {
-              const spec = convertInterpreterPromptToIngestible(prompt);
-              const identifier = this._hasher.hash(
-                spec,
-              ) as IngestibleItemIdentifier;
-              return { identifier, spec };
-            }),
-          };
+          identifier = bearId.id as IngestibleSourceIdentifier;
+          url = bearId.openURL;
         } else {
-          return null;
+          identifier = file.path as IngestibleSourceIdentifier;
         }
+
+        const prompts = findAllPrompts(root);
+        const noteTitle = getNoteTitle(root);
+
+        return {
+          identifier,
+          title: noteTitle ?? file.name,
+          url,
+          items: prompts.map((prompt): IngestibleItem => {
+            const spec = convertInterpreterPromptToIngestible(prompt);
+            const identifier = this._hasher.hash(
+              spec,
+            ) as IngestibleItemIdentifier;
+            return { identifier, spec };
+          }),
+        };
       }),
     );
     const sources = nullableSources.filter(
