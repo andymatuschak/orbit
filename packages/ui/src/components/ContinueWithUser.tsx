@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors, type, layout } from "../styles";
+import { colors, layout, type } from "../styles";
 import Button from "./Button";
 import { IconName } from "./IconShared";
 import Logo from "./Logo";
@@ -18,16 +18,18 @@ export default function ContinueWithUser({
   onContinueWithUser,
 }: ContinueWithUserProps) {
   const flexibleSpacer = <View style={{ flex: 1 }} />;
-
+  // TODO should probably add an affordance to sign out!
   return (
     <View style={styles.container}>
       {flexibleSpacer}
       <Logo units={3} tintColor={colorPalette.secondaryTextColor} />
       <Spacer units={8} />
-      <Text style={styles.label}>
-        Welcome back, {email}. We signed you in using a saved password.
+      <Text style={styles.label}>Welcome back, {email}.</Text>
+      <Spacer units={3} />
+      <Text style={[styles.label, { color: colorPalette.secondaryTextColor }]}>
+        We signed you in using a saved password.
       </Text>
-      <Spacer units={3.5} />
+      <Spacer units={7} />
       <View>
         <Button
           color={colors.white}
@@ -51,7 +53,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   label: {
-    ...type.labelSmall.layoutStyle,
-    color: colors.white,
+    ...type.label.layoutStyle,
+    color: colors.ink,
   },
 });
