@@ -47,9 +47,6 @@ export {
 } from "./components/TextInput";
 export type { TextInputProps } from "./components/TextInput";
 
-export { default as SignInForm } from "./components/SignInForm";
-export type { SignInFormProps } from "./components/SignInForm";
-
 export { default as useLayout } from "./components/hooks/useLayout";
 export {
   useTransitioningValue,
