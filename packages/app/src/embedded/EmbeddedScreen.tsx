@@ -407,15 +407,11 @@ function EmbeddedScreen({
           // Propagate those updates to peer embedded screens.
           sendUpdatedReviewItemToHost(
             newState.sessionItems[currentSessionItemIndex].task,
-            newState.reviewAreaQueue.length + itemsToRetry.length,
-            newState.currentReviewAreaQueueIndex!,
           );
         } else {
           // Update the prototype state
           sendUpdatedReviewItemToHost(
             newState.sessionItems[currentSessionItemIndex].task,
-            newState.reviewAreaQueue.length,
-            newState.currentReviewAreaQueueIndex!,
           );
         }
       },
@@ -431,8 +427,6 @@ function EmbeddedScreen({
     reviewSessionManager.markCurrentItem([], (newState) =>
       sendUpdatedReviewItemToHost(
         newState.sessionItems[currentSessionItemIndex!].task,
-        newState.reviewAreaQueue.length,
-        newState.currentReviewAreaQueueIndex!,
       ),
     );
   }

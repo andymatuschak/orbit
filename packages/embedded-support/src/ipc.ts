@@ -47,8 +47,6 @@ export interface EmbeddedScreenOnLoadEvent {
 export interface EmbeddedScreenTaskUpdateEvent {
   type: typeof EmbeddedScreenEventType.TaskUpdate;
   task: Task;
-  queueLength: number;
-  queueIndex: number;
 }
 
 export interface EmbeddedScreenOnExitReviewEvent {

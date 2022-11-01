@@ -4,16 +4,10 @@ import {
   EmbeddedScreenTaskUpdateEvent,
 } from "@withorbit/embedded-support";
 
-export function sendUpdatedReviewItemToHost(
-  task: Task,
-  queueLength: number,
-  newQueueIndex: number,
-) {
+export function sendUpdatedReviewItemToHost(task: Task) {
   const event: EmbeddedScreenTaskUpdateEvent = {
     type: EmbeddedScreenEventType.TaskUpdate,
     task,
-    queueLength,
-    queueIndex: newQueueIndex,
   };
   parent.postMessage(event, "*");
 }
