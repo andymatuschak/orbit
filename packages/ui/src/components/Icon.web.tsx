@@ -54,6 +54,20 @@ function getIconAsset(
           throw unreachableCaseError(iconPosition);
       }
 
+    case IconName.ArrowLeft:
+      if (accent) return null;
+      switch (iconPosition) {
+        case IconPosition.TopLeft:
+        case IconPosition.TopRight:
+        case IconPosition.BottomLeft:
+        case IconPosition.BottomRight:
+          throw new Error("Left arrow icon doesn't support this position");
+        case IconPosition.Center:
+          return require("../../assets/icons/left-center.svg");
+        default:
+          throw unreachableCaseError(iconPosition);
+      }
+
     case IconName.ArrowRight:
       if (accent) return null;
       switch (iconPosition) {
@@ -67,6 +81,35 @@ function getIconAsset(
           return require("../../assets/icons/right-BR.svg");
         case IconPosition.Center:
           return require("../../assets/icons/right-center.svg");
+        default:
+          throw unreachableCaseError(iconPosition);
+      }
+
+    case IconName.DoubleArrowRight:
+      if (accent) return null;
+      switch (iconPosition) {
+        case IconPosition.TopRight:
+        case IconPosition.BottomLeft:
+        case IconPosition.BottomRight:
+          throw new Error("Double right icon doesn't support this position");
+        case IconPosition.TopLeft:
+          return require("../../assets/icons/doubleRight-TL.svg");
+        case IconPosition.Center:
+          return require("../../assets/icons/doubleRight-center.svg");
+        default:
+          throw unreachableCaseError(iconPosition);
+      }
+
+    case IconName.List:
+      if (accent) return null;
+      switch (iconPosition) {
+        case IconPosition.TopLeft:
+        case IconPosition.TopRight:
+        case IconPosition.BottomLeft:
+        case IconPosition.BottomRight:
+          throw new Error("List icon doesn't support this position");
+        case IconPosition.Center:
+          return require("../../assets/icons/list-center.svg");
         default:
           throw unreachableCaseError(iconPosition);
       }
