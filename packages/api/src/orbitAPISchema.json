@@ -311,6 +311,25 @@
                 "identifier": {
                     "type": "string"
                 },
+                "selectors": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/TaskProvenanceRangeSelector"
+                            },
+                            {
+                                "$ref": "#/definitions/TaskProvenanceTextPositionSelector"
+                            },
+                            {
+                                "$ref": "#/definitions/TaskProvenanceTextQuoteSelector"
+                            },
+                            {
+                                "$ref": "#/definitions/TaskProvenanceXPathSelector"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
                 "title": {
                     "type": "string"
                 },
@@ -320,6 +339,102 @@
             },
             "required": [
                 "identifier"
+            ],
+            "type": "object"
+        },
+        "TaskProvenanceRangeSelector": {
+            "additionalProperties": false,
+            "properties": {
+                "endSelector": {
+                    "$ref": "#/definitions/TaskProvenanceXPathSelector"
+                },
+                "startSelector": {
+                    "$ref": "#/definitions/TaskProvenanceXPathSelector"
+                },
+                "type": {
+                    "enum": [
+                        "RangeSelector"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "endSelector",
+                "startSelector",
+                "type"
+            ],
+            "type": "object"
+        },
+        "TaskProvenanceTextPositionSelector": {
+            "additionalProperties": false,
+            "properties": {
+                "end": {
+                    "type": "number"
+                },
+                "start": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "TextPositionSelector"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "end",
+                "start",
+                "type"
+            ],
+            "type": "object"
+        },
+        "TaskProvenanceTextQuoteSelector": {
+            "additionalProperties": false,
+            "properties": {
+                "exact": {
+                    "type": "string"
+                },
+                "prefix": {
+                    "type": "string"
+                },
+                "suffix": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "TextQuoteSelector"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "exact",
+                "prefix",
+                "suffix",
+                "type"
+            ],
+            "type": "object"
+        },
+        "TaskProvenanceXPathSelector": {
+            "additionalProperties": false,
+            "properties": {
+                "refinedBy": {
+                    "$ref": "#/definitions/TaskProvenanceTextPositionSelector"
+                },
+                "type": {
+                    "enum": [
+                        "XPathSelector"
+                    ],
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "refinedBy",
+                "type",
+                "value"
             ],
             "type": "object"
         },
@@ -509,6 +624,39 @@
                 "type"
             ],
             "type": "object"
+        },
+        "TaskUpdateSpecEvent": {
+            "additionalProperties": false,
+            "properties": {
+                "entityID": {
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                    "type": "string"
+                },
+                "id": {
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                    "type": "string"
+                },
+                "spec": {
+                    "$ref": "#/definitions/TaskSpec<TaskContent>"
+                },
+                "timestampMillis": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "taskUpdateSpec"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "entityID",
+                "id",
+                "spec",
+                "timestampMillis",
+                "type"
+            ],
+            "type": "object"
         }
     },
     "properties": {
@@ -689,6 +837,9 @@
                                                 "$ref": "#/definitions/TaskUpdateDeletedEvent"
                                             },
                                             {
+                                                "$ref": "#/definitions/TaskUpdateSpecEvent"
+                                            },
+                                            {
                                                 "$ref": "#/definitions/TaskUpdateProvenanceEvent"
                                             },
                                             {
@@ -735,6 +886,9 @@
                                     },
                                     {
                                         "$ref": "#/definitions/TaskUpdateDeletedEvent"
+                                    },
+                                    {
+                                        "$ref": "#/definitions/TaskUpdateSpecEvent"
                                     },
                                     {
                                         "$ref": "#/definitions/TaskUpdateProvenanceEvent"
