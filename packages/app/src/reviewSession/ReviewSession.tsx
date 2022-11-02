@@ -248,6 +248,9 @@ export default function ReviewSession() {
                 items={reviewAreaQueue}
                 currentItemIndex={currentReviewAreaQueueIndex}
                 onMark={(markingRecord) => onMark(markingRecord)}
+                onSkip={() => {
+                  /* TODO */
+                }}
                 onPendingOutcomeChange={setPendingOutcome}
                 getURLForAttachmentID={(id) =>
                   databaseManager.getURLForAttachmentID(id)

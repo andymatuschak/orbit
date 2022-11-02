@@ -246,6 +246,9 @@ function EmbeddedScreenRenderer({
           items={reviewAreaQueue}
           currentItemIndex={currentReviewAreaQueueIndex}
           onMark={onMark}
+          onSkip={() => {
+            /* TODO */
+          }}
           onPendingOutcomeChange={(newPendingOutcome) => {
             setPendingOutcome(newPendingOutcome);
           }}
