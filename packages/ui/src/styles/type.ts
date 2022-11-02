@@ -119,7 +119,7 @@ export const promptLarge = makeTypeSpec(
   {
     fontSize: 36,
     fontFamily: "Dr-Regular",
-    lineHeight: 32,
+    lineHeight: 36,
     letterSpacing: 0,
   },
   -2,
