@@ -52,7 +52,6 @@ export type ButtonProps = ButtonContents &
     focusOnMount?: boolean;
   };
 
-const pressedButtonOpacity = 0.2;
 const defaultButtonColor = colors.ink;
 
 const ButtonInterior = function ButtonImpl(
@@ -69,19 +68,6 @@ const ButtonInterior = function ButtonImpl(
     isPressed,
     ...rest
   } = props;
-  const opacity = React.useRef(new Animated.Value(1)).current;
-  const wasPressed = usePrevious(isPressed);
-  if (wasPressed && !isPressed) {
-    Animated.timing(opacity, {
-      easing: Easing.linear,
-      duration: 100,
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  } else if (!wasPressed && isPressed) {
-    opacity.setValue(pressedButtonOpacity);
-  }
-
   const isSoloIcon = !("title" in props);
   let iconColor;
   if (disabled) {
@@ -93,19 +79,10 @@ const ButtonInterior = function ButtonImpl(
   }
 
   let titleColor: string;
-  if ((isHovered || isPressed) && !disabled && !backgroundColor) {
+  if ((isHovered || isPressed) && !backgroundColor) {
     titleColor = accentColor ?? defaultButtonColor;
   } else {
     titleColor = color ?? defaultButtonColor;
-  }
-
-  let backgroundOpacity: number;
-  if (isPressed) {
-    backgroundOpacity = 0.35;
-  } else if (isHovered) {
-    backgroundOpacity = 0.55;
-  } else {
-    backgroundOpacity = 1.0;
   }
 
   return (
@@ -128,9 +105,18 @@ const ButtonInterior = function ButtonImpl(
             style={[
               StyleSheet.absoluteFill,
               isSoloIcon && styles.soloIcon,
-              { backgroundColor, opacity: backgroundOpacity },
+              { backgroundColor, opacity: isPressed || isHovered ? 1 : 0 },
             ]}
           />
+          {isPressed && (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                isSoloIcon && styles.soloIcon,
+                { backgroundColor: "rgba(0, 0, 0, 0.14);" },
+              ]}
+            />
+          )}
           {isSoloIcon && isHovered && (
             <View
               style={[
@@ -145,16 +131,12 @@ const ButtonInterior = function ButtonImpl(
           )}
         </>
       )}
-      <Animated.View
-        style={[
-          {
-            opacity,
-          },
-          !!backgroundColor &&
-            !isSoloIcon && {
-              margin: layout.gridUnit * 2,
-            },
-        ]}
+      <View
+        style={
+          !isSoloIcon && {
+            margin: layout.gridUnit * 2,
+          }
+        }
       >
         {iconName && (
           <Icon
@@ -182,7 +164,7 @@ const ButtonInterior = function ButtonImpl(
             {props.title}
           </Text>
         )}
-      </Animated.View>
+      </View>
     </View>
   );
 };
@@ -282,8 +264,8 @@ export default React.memo(function Button(props: ButtonProps) {
           {({ pressed }) => (
             <ButtonInterior
               {...props}
-              isHovered={isHovered}
-              isPressed={pressed}
+              isHovered={isHovered && !props.disabled}
+              isPressed={pressed && !props.disabled}
             />
           )}
         </Pressable>
