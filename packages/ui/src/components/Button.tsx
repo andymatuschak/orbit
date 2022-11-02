@@ -71,6 +71,7 @@ const ButtonInterior = function ButtonImpl(
     <View
       style={[
         !isSoloIcon &&
+          !!backgroundColor &&
           size === "regular" && {
             margin: layout.gridUnit * 2,
           },
