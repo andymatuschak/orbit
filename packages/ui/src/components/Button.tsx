@@ -51,152 +51,89 @@ export type ButtonProps = ButtonContents &
     focusOnMount?: boolean;
   };
 
-const defaultButtonColor = colors.ink;
-
 const ButtonInterior = function ButtonImpl(
-  props: ButtonProps & { isHovered: boolean; isPressed: boolean },
+  props: ButtonProps & { isHovered: boolean },
 ) {
   const {
-    color,
-    accentColor,
+    color = colors.ink,
+    accentColor = colors.ink,
     backgroundColor,
     disabled,
     size = "regular",
     alignment = "left",
     iconName,
     isHovered,
-    isPressed,
-    ...rest
+    numberOfLines,
+    ellipsizeMode,
   } = props;
   const isSoloIcon = !("title" in props);
-  let iconColor;
-  if (disabled) {
-    iconColor = color;
-  } else if (isSoloIcon) {
-    iconColor = color;
-  } else {
-    iconColor = accentColor;
-  }
-
-  let titleColor: string;
-  if ((isHovered || isPressed) && !backgroundColor) {
-    titleColor = accentColor ?? defaultButtonColor;
-  } else {
-    titleColor = color ?? defaultButtonColor;
-  }
-
   return (
     <View
       style={[
-        disabled && {
-          opacity: 0.3,
-          ...(Platform.OS === "web" && { cursor: "not-allowed" }),
-        },
-        isSoloIcon && {
-          alignItems: "center",
-          justifyContent: "center",
-          flex: 1,
-        },
+        !isSoloIcon &&
+          size === "regular" && {
+            margin: layout.gridUnit * 2,
+          },
+        !isSoloIcon &&
+          size === "small" && {
+            marginTop: 12,
+            marginBottom: 12,
+            marginLeft: alignment === "left" && iconName ? 12 : 16,
+            marginRight: alignment === "right" && iconName ? 12 : 16,
+            flexDirection: alignment === "left" ? "row" : "row-reverse",
+            justifyContent: "flex-start",
+          },
       ]}
     >
-      {backgroundColor && (
-        <>
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              isSoloIcon && styles.soloIcon,
-              { backgroundColor, opacity: isPressed || isHovered ? 1 : 0 },
-            ]}
-          />
-          {isPressed && (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                isSoloIcon && styles.soloIcon,
-                { backgroundColor: "rgba(0, 0, 0, 0.14);" },
-              ]}
-            />
-          )}
-          {isSoloIcon && isHovered && (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                styles.soloIcon,
-                {
-                  borderColor: props.accentColor,
-                  borderWidth: 3,
-                },
-              ]}
-            />
-          )}
-        </>
+      {iconName && (
+        <Icon
+          name={iconName}
+          position={
+            isSoloIcon || size === "small"
+              ? IconPosition.Center
+              : IconPosition.TopLeft
+          }
+          // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's color becomes the icon's accent color. It's intentional, though, to produce an inversion.
+          tintColor={disabled ? color : isSoloIcon ? color : accentColor}
+          accentColor={color}
+        />
       )}
-      <View
-        style={[
-          !isSoloIcon &&
-            size === "regular" && {
-              margin: layout.gridUnit * 2,
-            },
-          !isSoloIcon &&
+      {size === "small" && !isSoloIcon && <Spacer units={0.5} />}
+      {"title" in props && (
+        <Text
+          numberOfLines={numberOfLines}
+          ellipsizeMode={ellipsizeMode}
+          style={[
+            size === "regular" && type.label.layoutStyle,
             size === "small" && {
-              marginTop: 12,
-              marginBottom: 12,
-              marginLeft: alignment === "left" && iconName ? 12 : 16,
-              marginRight: alignment === "right" && iconName ? 12 : 16,
-              flexDirection: alignment === "left" ? "row" : "row-reverse",
-              justifyContent: "flex-start",
+              ...type.labelSmall.layoutStyle,
+              top: 0.5, // optical alignment with icon
             },
-        ]}
-      >
-        {iconName && (
-          <Icon
-            name={iconName}
-            position={
-              isSoloIcon || size === "small"
-                ? IconPosition.Center
-                : IconPosition.TopLeft
-            }
-            // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's color becomes the icon's accent color. It's intentional, though, to produce an inversion.
-            tintColor={iconColor ?? defaultButtonColor}
-            accentColor={color ?? defaultButtonColor}
-          />
-        )}
-        {size === "small" && !isSoloIcon && <Spacer units={0.5} />}
-        {"title" in props && (
-          <Text
-            {...rest}
-            style={[
-              size === "regular" && type.label.layoutStyle,
-              size === "small" && {
-                ...type.labelSmall.layoutStyle,
-                top: 0.5, // optical alignment with icon
-              },
-              size === "tiny" && type.labelTiny.layoutStyle,
-              {
-                color: titleColor,
-              },
-            ]}
-            selectable={false}
-            suppressHighlighting={true}
-          >
-            {props.title}
-          </Text>
-        )}
-      </View>
+            size === "tiny" && type.labelTiny.layoutStyle,
+            {
+              color: isHovered && !backgroundColor ? accentColor : color,
+            },
+          ]}
+          selectable={false}
+          suppressHighlighting={true}
+        >
+          {props.title}
+        </Text>
+      )}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  soloIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-});
+function openURL(href: string | null) {
+  Linking.openURL(href!).catch(() => {
+    Alert.alert(
+      "Couldn't open link",
+      `You may need to install an app to open this URL: ${href}`,
+    );
+  });
+}
 
 export default React.memo(function Button(props: ButtonProps) {
-  const { onPendingInteractionStateDidChange, style } = props;
   const ref = React.useRef<View | null>(null);
   const href = "href" in props ? props.href : null;
   const onPress = "onPress" in props ? props.onPress : null;
@@ -214,14 +151,9 @@ export default React.memo(function Button(props: ButtonProps) {
       : null;
     if (lastDispatchedPendingInteractionState.current !== activationState) {
       lastDispatchedPendingInteractionState.current = activationState;
-      onPendingInteractionStateDidChange?.(activationState);
+      props.onPendingInteractionStateDidChange?.(activationState);
     }
   }
-
-  const accessibilityLabel =
-    "title" in props ? props.title : props.accessibilityLabel;
-
-  const isSoloIcon = !("title" in props);
 
   React.useEffect(() => {
     if (props.focusOnMount && ref.current) {
@@ -229,7 +161,6 @@ export default React.memo(function Button(props: ButtonProps) {
     }
   }, [props.focusOnMount]);
 
-  // @ts-ignore
   return (
     <Hoverable
       onHoverIn={() => {
@@ -246,7 +177,9 @@ export default React.memo(function Button(props: ButtonProps) {
           ref={ref}
           accessible={true}
           accessibilityRole={href ? "link" : "button"}
-          accessibilityLabel={accessibilityLabel}
+          accessibilityLabel={
+            "title" in props ? props.title : props.accessibilityLabel
+          }
           onPress={
             onPress
               ? () => {
@@ -254,14 +187,7 @@ export default React.memo(function Button(props: ButtonProps) {
                   dispatchPendingInteractionState();
                   onPress();
                 }
-              : () => {
-                  Linking.openURL(href!).catch(() => {
-                    Alert.alert(
-                      "Couldn't open link",
-                      `You may need to install an app to open this URL: ${href}`,
-                    );
-                  });
-                }
+              : () => openURL(href)
           }
           onPressIn={() => {
             isPressed.current = true;
@@ -277,14 +203,41 @@ export default React.memo(function Button(props: ButtonProps) {
           // @ts-ignore react-native-web adds this prop.
           href={href}
           hitSlop={props.hitSlop}
-          style={[isSoloIcon && styles.soloIcon, style]}
+          style={[
+            props.disabled && {
+              opacity: 0.3,
+              ...(Platform.OS === "web" && { cursor: "not-allowed" }),
+            },
+            props.iconName &&
+              !("title" in props) && {
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                overflow: "hidden",
+                alignItems: "center",
+                justifyContent: "center",
+              },
+            !!props.backgroundColor &&
+              isHovered && { backgroundColor: props.backgroundColor },
+            props.style,
+          ]}
         >
           {({ pressed }) => (
-            <ButtonInterior
-              {...props}
-              isHovered={isHovered && !props.disabled}
-              isPressed={pressed && !props.disabled}
-            />
+            <>
+              <View
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    backgroundColor: "rgba(0, 0, 0, 0.14);",
+                    opacity: pressed ? 1 : 0,
+                  },
+                ]}
+              />
+              <ButtonInterior
+                {...props}
+                isHovered={isHovered && !props.disabled}
+              />
+            </>
           )}
         </Pressable>
       )}
