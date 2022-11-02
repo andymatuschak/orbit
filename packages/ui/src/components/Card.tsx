@@ -126,7 +126,7 @@ function PromptContextLabel({
     <View style={style}>
       {provenance.url ? (
         <Button
-          size={size}
+          size={size === "regular" ? "regular" : "tiny"}
           href={provenance.url}
           title={provenance.title}
           color={color}

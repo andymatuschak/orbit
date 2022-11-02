@@ -1,8 +1,6 @@
 import React from "react";
 import {
   Alert,
-  Animated,
-  Easing,
   FlexStyle,
   Linking,
   Platform,
@@ -15,10 +13,10 @@ import {
   View,
 } from "react-native";
 import { colors, layout, type } from "../styles";
-import usePrevious from "./hooks/usePrevious";
 import Hoverable from "./Hoverable";
 import Icon from "./Icon";
 import { IconName, IconPosition } from "./IconShared";
+import Spacer from "./Spacer";
 
 export type ButtonPendingActivationState = "hover" | "pressed" | null;
 
@@ -38,7 +36,8 @@ export type ButtonProps = ButtonContents &
     backgroundColor?: string;
 
     disabled?: boolean;
-    size?: "regular" | "small";
+    size?: "regular" | "small" | "tiny";
+    alignment?: "left" | "right";
     hitSlop?: PressableProps["hitSlop"];
 
     style?: StyleProp<FlexStyle>;
@@ -62,7 +61,8 @@ const ButtonInterior = function ButtonImpl(
     accentColor,
     backgroundColor,
     disabled,
-    size,
+    size = "regular",
+    alignment = "left",
     iconName,
     isHovered,
     isPressed,
@@ -132,28 +132,46 @@ const ButtonInterior = function ButtonImpl(
         </>
       )}
       <View
-        style={
-          !isSoloIcon && {
-            margin: layout.gridUnit * 2,
-          }
-        }
+        style={[
+          !isSoloIcon &&
+            size === "regular" && {
+              margin: layout.gridUnit * 2,
+            },
+          !isSoloIcon &&
+            size === "small" && {
+              marginTop: 12,
+              marginBottom: 12,
+              marginLeft: alignment === "left" && iconName ? 12 : 16,
+              marginRight: alignment === "right" && iconName ? 12 : 16,
+              flexDirection: alignment === "left" ? "row" : "row-reverse",
+              justifyContent: "flex-start",
+            },
+        ]}
       >
         {iconName && (
           <Icon
             name={iconName}
-            position={isSoloIcon ? IconPosition.Center : IconPosition.TopLeft}
+            position={
+              isSoloIcon || size === "small"
+                ? IconPosition.Center
+                : IconPosition.TopLeft
+            }
             // This is a bit confusing: the button's accent color becomes the icon's tint color; the button's color becomes the icon's accent color. It's intentional, though, to produce an inversion.
             tintColor={iconColor ?? defaultButtonColor}
             accentColor={color ?? defaultButtonColor}
           />
         )}
+        {size === "small" && !isSoloIcon && <Spacer units={0.5} />}
         {"title" in props && (
           <Text
             {...rest}
             style={[
-              (size ?? "regular") === "regular"
-                ? type.label.layoutStyle
-                : type.labelTiny.layoutStyle,
+              size === "regular" && type.label.layoutStyle,
+              size === "small" && {
+                ...type.labelSmall.layoutStyle,
+                top: 0.5, // optical alignment with icon
+              },
+              size === "tiny" && type.labelTiny.layoutStyle,
               {
                 color: titleColor,
               },
