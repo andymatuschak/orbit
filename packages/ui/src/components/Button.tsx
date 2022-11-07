@@ -78,7 +78,7 @@ const ButtonInterior = function ButtonImpl(
         !isSoloIcon &&
           size === "small" && {
             marginTop: 12,
-            marginBottom: 12,
+            marginBottom: !!iconName ? 12 : 24,
             marginLeft: alignment === "left" && iconName ? 12 : 16,
             marginRight: alignment === "right" && iconName ? 12 : 16,
             flexDirection: alignment === "left" ? "row" : "row-reverse",

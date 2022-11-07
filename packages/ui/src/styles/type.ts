@@ -190,9 +190,9 @@ export const label = makeTypeSpec(
 export const labelSmall = makeTypeSpec(
   {
     fontSize: 17,
-    fontFamily: "Dr-Bold",
+    fontFamily: "Dr-ExtraBold",
     lineHeight: 20,
-    letterSpacing: 16 * 0.04,
+    letterSpacing: 17 * 0.01,
   },
   -3,
   -4.5,
