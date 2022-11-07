@@ -8,10 +8,6 @@ import { useKeyDown } from "./hooks/useKey";
 import useLayout from "./hooks/useLayout";
 import { IconName } from "./IconShared";
 
-export interface PendingMarkingInteractionState {
-  pendingActionOutcome: TaskRepetitionOutcome;
-}
-
 interface Shortcuts {
   [key: string]: {
     callback: () => void;
@@ -44,7 +40,7 @@ function getShortcuts(
 
 function getButtonTitle(
   promptType: TaskContentType,
-  outcome: TaskRepetitionOutcome,
+  outcome: TaskRepetitionOutcome.Remembered | TaskRepetitionOutcome.Forgotten,
   isVeryNarrow: boolean,
 ) {
   switch (outcome) {
@@ -56,6 +52,7 @@ function getButtonTitle(
         case TaskContentType.Plain:
           return "Succeeded";
       }
+      break;
     case TaskRepetitionOutcome.Forgotten:
       switch (promptType) {
         case TaskContentType.QA:

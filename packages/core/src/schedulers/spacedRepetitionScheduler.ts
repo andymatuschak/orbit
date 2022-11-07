@@ -29,7 +29,10 @@ export function createSpacedRepetitionScheduler(
       );
 
       let newIntervalMillis: number;
-      if (outcome === TaskRepetitionOutcome.Remembered) {
+      if (
+        outcome === TaskRepetitionOutcome.Remembered ||
+        outcome === TaskRepetitionOutcome.Skipped
+      ) {
         if (currentReviewIntervalMillis < componentState.intervalMillis) {
           // We'll be in this case if the user is retrying or if they practiced again too early.
           // In this case, the next interval will be unchanged, unless they waited long enough that the current review interval would naturally grow larger than that.
@@ -74,9 +77,9 @@ export function createSpacedRepetitionScheduler(
       const newDueTimestampMillis =
         timestampMillis +
         jitter +
-        (outcome === TaskRepetitionOutcome.Remembered
-          ? newIntervalMillis
-          : 1000 * 60 * 10); // When forgotten, assign it to be due in 10 minutes or so.
+        (outcome === TaskRepetitionOutcome.Forgotten
+          ? 1000 * 60 * 10 // When forgotten, assign it to be due in 10 minutes or so.
+          : newIntervalMillis);
 
       return {
         dueTimestampMillis: newDueTimestampMillis,

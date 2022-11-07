@@ -416,7 +416,8 @@
         "TaskRepetitionOutcome": {
             "enum": [
                 "forgotten",
-                "remembered"
+                "remembered",
+                "skipped"
             ],
             "type": "string"
         },

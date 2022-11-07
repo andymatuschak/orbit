@@ -83,6 +83,7 @@ describe("repetition reducer", () => {
   test.each([
     { outcome: TaskRepetitionOutcome.Remembered },
     { outcome: TaskRepetitionOutcome.Forgotten },
+    { outcome: TaskRepetitionOutcome.Skipped },
   ])("repetition: $outcome", ({ outcome }) => {
     const repetitionEvent: TaskRepetitionEvent = {
       ...testRepetitionEvent,

@@ -58,6 +58,26 @@ describe("first repetition", () => {
     ).toMatchInlineSnapshot(`0`);
   });
 
+  test("skipped", () => {
+    const { dueTimestampMillis, intervalMillis } =
+      scheduler.computeNextDueIntervalMillisForRepetition(
+        state,
+        state.dueTimestampMillis,
+        TaskRepetitionOutcome.Skipped,
+      );
+
+    expect(intervalMillis).toBe(
+      Math.floor(
+        defaultSpacedRepetitionSchedulerConfiguration.initialReviewInterval,
+      ),
+    );
+
+    // Should be small, within jitter.
+    expect(
+      dueTimestampMillis - (state.dueTimestampMillis + intervalMillis),
+    ).toMatchInlineSnapshot(`0`);
+  });
+
   test("forgotten", () => {
     const reviewTimestampMillis = 10000;
     const { dueTimestampMillis, intervalMillis } =
@@ -84,14 +104,17 @@ const testState: TaskComponentState = {
     defaultSpacedRepetitionSchedulerConfiguration.initialReviewInterval * 2,
 };
 
-describe("successful repetition", () => {
-  test("typical successful repetition", () => {
+describe.each([
+  { outcome: TaskRepetitionOutcome.Remembered, label: "successful" },
+  { outcome: TaskRepetitionOutcome.Skipped, label: "skipped" },
+])("$label repetition", ({ outcome }) => {
+  test("typical repetition", () => {
     const reviewTimestampMillis = testState.dueTimestampMillis + 100000;
     const { dueTimestampMillis, intervalMillis } =
       scheduler.computeNextDueIntervalMillisForRepetition(
         testState,
         reviewTimestampMillis,
-        TaskRepetitionOutcome.Remembered,
+        outcome,
       );
 
     // Interval should grow by a little more than growth rate (because we remembered for a bit longer than requested).
@@ -107,14 +130,14 @@ describe("successful repetition", () => {
     ).toMatchInlineSnapshot(`0`);
   });
 
-  test("very delayed successful repetition", () => {
+  test("very delayed repetition", () => {
     const reviewTimestampMillis =
       testState.dueTimestampMillis + testState.intervalMillis;
     const { dueTimestampMillis, intervalMillis } =
       scheduler.computeNextDueIntervalMillisForRepetition(
         testState,
         reviewTimestampMillis,
-        TaskRepetitionOutcome.Remembered,
+        outcome,
       );
 
     // Interval should grow by roughly double the normal more than growth rate (because we remembered for around twice as long as requested)
@@ -130,7 +153,7 @@ describe("successful repetition", () => {
     ).toMatchInlineSnapshot(`0`);
   });
 
-  test("too-early successful repetition", () => {
+  test("too-early repetition", () => {
     const reviewTimestampMillis =
       testState.lastRepetitionTimestampMillis! + testState.intervalMillis / 2.0;
     const { dueTimestampMillis, intervalMillis } =
@@ -188,8 +211,11 @@ test.each([
   );
 });
 
-describe("retrying", () => {
-  test("successful repetition after retry, not yet successful", () => {
+describe.each([
+  { outcome: TaskRepetitionOutcome.Remembered, label: "successful" },
+  { outcome: TaskRepetitionOutcome.Skipped, label: "skipped" },
+])("$label after retry", ({ outcome }) => {
+  test("not yet successful", () => {
     const reviewTimestampMillis = 10000;
     const { dueTimestampMillis, intervalMillis } =
       scheduler.computeNextDueIntervalMillisForRepetition(
@@ -200,7 +226,7 @@ describe("retrying", () => {
           intervalMillis: 0,
         },
         reviewTimestampMillis,
-        TaskRepetitionOutcome.Remembered,
+        outcome,
       );
 
     // After a successful initial retry, the interval should jump from 0 to the initial interval.
@@ -214,7 +240,7 @@ describe("retrying", () => {
     ).toMatchInlineSnapshot(`0`);
   });
 
-  test("successful repetition after retry, with past success", () => {
+  test("with past success", () => {
     const lastRepetitionTimestampMillis =
       defaultSpacedRepetitionSchedulerConfiguration.initialReviewInterval * 4;
     const reviewTimestampMillis = lastRepetitionTimestampMillis + 10000;
@@ -229,7 +255,7 @@ describe("retrying", () => {
             2,
         },
         reviewTimestampMillis,
-        TaskRepetitionOutcome.Remembered,
+        outcome,
       );
 
     // The interval shouldn't grow.
@@ -243,7 +269,7 @@ describe("retrying", () => {
     ).toMatchInlineSnapshot(`0`);
   });
 
-  test("successful repetition after very delayed retry, with past success", () => {
+  test("very delayed, with past success", () => {
     const lastRepetitionTimestampMillis =
       defaultSpacedRepetitionSchedulerConfiguration.initialReviewInterval * 4;
     const reviewTimestampMillis =
@@ -260,7 +286,7 @@ describe("retrying", () => {
             2,
         },
         reviewTimestampMillis,
-        TaskRepetitionOutcome.Remembered,
+        outcome,
       );
 
     // Because they waited so long, and still rememberd, the interval should grow.
