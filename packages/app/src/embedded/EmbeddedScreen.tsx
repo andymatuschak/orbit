@@ -83,7 +83,6 @@ function getEndOfTaskLabel(
 interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
   containerSize: { width: number; height: number };
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
-  onSkip: () => void;
   authenticationState: EmbeddedAuthenticationState;
   colorPalette: styles.colors.ColorPalette;
   hostState: EmbeddedHostState | null;
@@ -99,7 +98,6 @@ interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
 }
 function EmbeddedScreenRenderer({
   onMark,
-  onSkip,
   containerSize,
   authenticationState,
   colorPalette,
@@ -248,7 +246,6 @@ function EmbeddedScreenRenderer({
           items={reviewAreaQueue}
           currentItemIndex={currentReviewAreaQueueIndex}
           onMark={onMark}
-          onSkip={onSkip}
           onPendingOutcomeChange={(newPendingOutcome) => {
             setPendingOutcome(newPendingOutcome);
           }}
@@ -457,14 +454,6 @@ function EmbeddedScreen({
     }
   }
 
-  function onSkip() {
-    reviewSessionManager.markCurrentItem([], (newState) =>
-      sendUpdatedReviewItemToHost(
-        newState.sessionItems[currentSessionItemIndex!].task,
-      ),
-    );
-  }
-
   if (
     currentReviewAreaQueueIndex === null ||
     currentSessionItemIndex === null
@@ -482,7 +471,6 @@ function EmbeddedScreen({
             reviewAreaQueue={reviewAreaQueue}
             sessionItems={sessionItems}
             onMark={onMark}
-            onSkip={onSkip}
             containerSize={containerSize}
             authenticationState={authenticationState}
             colorPalette={colorPalette}
