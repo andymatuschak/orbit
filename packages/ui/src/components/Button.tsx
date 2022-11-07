@@ -72,22 +72,12 @@ const ButtonInterior = function ButtonImpl(
 
   return (
     <View
-      style={[
-        !isSoloIcon &&
-          !!backgroundColor &&
-          size === "regular" && {
-            margin: layout.gridUnit * 2,
-          },
-        !isSoloIcon &&
-          size === "small" && {
-            marginTop: 12,
-            marginBottom: !!iconName ? 12 : 24,
-            marginLeft: alignment === "left" && iconName ? 12 : 16,
-            marginRight: alignment === "right" && iconName ? 12 : 16,
-            flexDirection: alignment === "left" ? "row" : "row-reverse",
-            justifyContent: "flex-start",
-          },
-      ]}
+      style={
+        size === "small" && {
+          flexDirection: alignment === "left" ? "row" : "row-reverse",
+          justifyContent: "flex-start",
+        }
+      }
     >
       {iconName && (
         <Icon
@@ -105,7 +95,7 @@ const ButtonInterior = function ButtonImpl(
           }
         />
       )}
-      {size === "small" && !isSoloIcon && <Spacer units={0.5} />}
+      {size === "small" && !isSoloIcon && iconName && <Spacer units={0.5} />}
       {"title" in props && (
         <Text
           numberOfLines={numberOfLines}
@@ -143,7 +133,9 @@ function openURL(href: string | null) {
 export default React.memo(function Button(props: ButtonProps) {
   const ref = React.useRef<View | null>(null);
   const href = "href" in props ? props.href : null;
+  const title = "title" in props ? props.title : null;
   const onPress = "onPress" in props ? props.onPress : null;
+  const { size = "regular" } = props;
 
   const isPressed = React.useRef(false);
   const isHovered = React.useRef(false);
@@ -226,6 +218,20 @@ export default React.memo(function Button(props: ButtonProps) {
               },
             !!props.backgroundColor &&
               isHovered && { backgroundColor: props.backgroundColor },
+            !!title &&
+              !!props.backgroundColor &&
+              size === "regular" && {
+                padding: layout.gridUnit * 2,
+              },
+            !!title &&
+              size === "small" && {
+                paddingTop: 12,
+                paddingBottom: !!props.iconName ? 12 : 24,
+                paddingLeft:
+                  props.alignment === "left" && props.iconName ? 12 : 16,
+                paddingRight:
+                  props.alignment === "right" && props.iconName ? 12 : 16,
+              },
             props.style,
           ]}
         >

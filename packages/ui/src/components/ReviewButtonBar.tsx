@@ -114,9 +114,10 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   const buttonStyle = {
     flex: 1,
     ...(insetBottom && {
-      paddingBottom:
-        // The button already has internal padding when the background is showing. We subtract that off if the safe inset area is larger. This is a bit of a hack, relying on internal knowledge of the button metrics. It might be better to have the button subtract off part of its paddingBottom if necessary.
-        Math.max(0, insetBottom - layout.gridUnit * 2),
+      paddingBottom: Math.max(
+        layout.gridUnit * 2,
+        insetBottom - layout.gridUnit * 2,
+      ),
     }),
   };
 
