@@ -94,6 +94,7 @@ export interface TaskUpdateSpecEvent
 export enum TaskRepetitionOutcome {
   Remembered = "remembered",
   Forgotten = "forgotten",
+  Skipped = "skipped",
 }
 
 // TODO: update metadata

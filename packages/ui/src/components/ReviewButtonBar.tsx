@@ -40,7 +40,7 @@ function getShortcuts(
 
 function getButtonTitle(
   promptType: TaskContentType,
-  outcome: TaskRepetitionOutcome,
+  outcome: TaskRepetitionOutcome.Remembered | TaskRepetitionOutcome.Forgotten,
   isVeryNarrow: boolean,
 ) {
   switch (outcome) {
@@ -52,6 +52,7 @@ function getButtonTitle(
         case TaskContentType.Plain:
           return "Succeeded";
       }
+      break;
     case TaskRepetitionOutcome.Forgotten:
       switch (promptType) {
         case TaskContentType.QA:
@@ -80,7 +81,6 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   colorPalette,
   onMark,
   onReveal,
-  onSkip,
   onPendingOutcomeChange,
   promptType,
   isShowingAnswer,
@@ -90,7 +90,6 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   promptType: TaskContentType;
   onMark: (outcome: TaskRepetitionOutcome) => void;
   onReveal: () => void;
-  onSkip: () => void;
   onPendingOutcomeChange: (
     pendingOutcome: TaskRepetitionOutcome | null,
   ) => void;
@@ -157,7 +156,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
           {...sharedButtonProps}
           style={{ flexGrow: 1, justifyContent: "flex-end" }}
           size="small"
-          onPress={onSkip}
+          onPress={() => onMark(TaskRepetitionOutcome.Skipped)}
           iconName={IconName.DoubleArrowRight}
           title="Skip"
           alignment="right"

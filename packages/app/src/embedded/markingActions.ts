@@ -44,6 +44,10 @@ export function getActionsRecordForMarking({
   getURLForAttachmentID: (id: AttachmentID) => string | null;
   markingTimestampMillis?: number;
 }): EmbeddedActionsRecord {
+  if (outcome === TaskRepetitionOutcome.Skipped) {
+    return { events: [], ingestedAttachmentEntries: [] };
+  }
+
   const attachmentIDs = getAttachmentsInTaskContent(
     reviewItem.task.spec.content,
   );

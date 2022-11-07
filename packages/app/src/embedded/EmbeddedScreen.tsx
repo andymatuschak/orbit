@@ -71,7 +71,6 @@ function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
 interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
   containerSize: { width: number; height: number };
   onMark: (markingRecord: ReviewAreaMarkingRecord) => void;
-  onSkip: () => void;
   onUndo: () => void;
   authenticationState: EmbeddedAuthenticationState;
   colorPalette: styles.colors.ColorPalette;
@@ -88,7 +87,6 @@ interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
 }
 function EmbeddedScreenRenderer({
   onMark,
-  onSkip,
   containerSize,
   colorPalette,
   // hostState,
@@ -191,7 +189,6 @@ function EmbeddedScreenRenderer({
         items={reviewAreaQueue}
         currentItemIndex={currentReviewAreaQueueIndex}
         onMark={onMark}
-        onSkip={onSkip}
         onPendingOutcomeChange={(newPendingOutcome) => {
           setPendingOutcome(newPendingOutcome);
         }}
@@ -421,14 +418,6 @@ function EmbeddedScreen({
     }
   }
 
-  function onSkip() {
-    reviewSessionManager.markCurrentItem([], (newState) =>
-      sendUpdatedReviewItemToHost(
-        newState.sessionItems[currentSessionItemIndex!].task,
-      ),
-    );
-  }
-
   function onUndo() {
     reviewSessionManager.undo();
   }
@@ -453,7 +442,6 @@ function EmbeddedScreen({
             reviewAreaQueue={reviewAreaQueue}
             sessionItems={sessionItems}
             onMark={onMark}
-            onSkip={onSkip}
             onUndo={onUndo}
             containerSize={containerSize}
             authenticationState={authenticationState}
