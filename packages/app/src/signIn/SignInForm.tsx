@@ -196,7 +196,7 @@ export default function SignInForm({
           <Text style={formStyles.label}>Password</Text>
           {formMode === "signIn" && (
             <Button
-              size="small"
+              size="tiny"
               onPress={onResetPassword}
               title="Forgot your password?"
               color={colorPalette.accentColor}

@@ -89,7 +89,6 @@ interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
 function EmbeddedScreenRenderer({
   onMark,
   onSkip,
-  onUndo,
   containerSize,
   colorPalette,
   // hostState,
@@ -169,9 +168,10 @@ function EmbeddedScreenRenderer({
           config={defaultSpacedRepetitionSchedulerConfiguration}
         />
         {!isComplete && (
-          <View style={{ paddingTop: 12, marginRight: 4 }}>
+          <View style={{ paddingTop: 12 }}>
             <Button
               size="small"
+              alignment="right"
               color={colorPalette.reviewButtonTextColor}
               accentColor={colorPalette.accentColor}
               backgroundColor={colorPalette.secondaryBackgroundColor}
@@ -192,13 +192,11 @@ function EmbeddedScreenRenderer({
         currentItemIndex={currentReviewAreaQueueIndex}
         onMark={onMark}
         onSkip={onSkip}
-        onUndo={onUndo}
         onPendingOutcomeChange={(newPendingOutcome) => {
           setPendingOutcome(newPendingOutcome);
         }}
         insetBottom={0}
         getURLForAttachmentID={getURLForAttachmentID}
-        canUndo={currentReviewAreaQueueIndex > 0}
       />
       {isDebug && <TestModeBanner colorPalette={colorPalette} />}
     </View>
@@ -446,7 +444,7 @@ function EmbeddedScreen({
     <View style={{ height: "100vh", width: "100vw", overflow: "hidden" }}>
       <ReviewSessionContainer
         colorPalette={colorPalette}
-        insets={{ top: 0, bottom: 8, left: 8, right: 4 }}
+        insets={{ top: 0, bottom: 8, left: 8, right: 8 }}
       >
         {({ containerSize }) => (
           <EmbeddedScreenRenderer

@@ -7,11 +7,6 @@ import Button, { ButtonPendingActivationState } from "./Button";
 import { useKeyDown } from "./hooks/useKey";
 import useLayout from "./hooks/useLayout";
 import { IconName } from "./IconShared";
-import Spacer from "./Spacer";
-
-export interface PendingMarkingInteractionState {
-  pendingActionOutcome: TaskRepetitionOutcome;
-}
 
 interface Shortcuts {
   [key: string]: {
@@ -53,7 +48,7 @@ function getButtonTitle(
       switch (promptType) {
         case TaskContentType.QA:
         case TaskContentType.Cloze:
-          return "Remembered";
+          return isVeryNarrow ? "Success" : "Remembered";
         case TaskContentType.Plain:
           return "Succeeded";
       }
@@ -61,7 +56,7 @@ function getButtonTitle(
       switch (promptType) {
         case TaskContentType.QA:
         case TaskContentType.Cloze:
-          return isVeryNarrow ? "Forgot" : "Forgotten";
+          return isVeryNarrow ? "Needs Work" : "Forgotten";
         case TaskContentType.Plain:
           return "Needs Practice";
       }
@@ -86,10 +81,8 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   onMark,
   onReveal,
   onSkip,
-  onUndo,
   onPendingOutcomeChange,
   promptType,
-  canUndo,
   isShowingAnswer,
   insetBottom,
 }: {
@@ -98,16 +91,14 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   onMark: (outcome: TaskRepetitionOutcome) => void;
   onReveal: () => void;
   onSkip: () => void;
-  onUndo: () => void;
   onPendingOutcomeChange: (
     pendingOutcome: TaskRepetitionOutcome | null,
   ) => void;
-  canUndo: boolean;
   isShowingAnswer: boolean;
   insetBottom?: number;
 }) {
   const { width, onLayout } = useLayout();
-  const isVeryNarrow = width > 0 && width < 320;
+  const isVeryNarrow = width > 0 && width <= 320;
 
   const shortcuts = getShortcuts(isShowingAnswer, onMark, onReveal);
 
@@ -123,7 +114,6 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
 
   const buttonStyle = {
     flex: 1,
-    flexShrink: 0,
     ...(insetBottom && {
       paddingBottom:
         // The button already has internal padding when the background is showing. We subtract that off if the safe inset area is larger. This is a bit of a hack, relying on internal knowledge of the button metrics. It might be better to have the button subtract off part of its paddingBottom if necessary.
@@ -146,8 +136,6 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
     );
   }
 
-  const spacer = <Spacer units={0.375} />;
-
   let children: React.ReactNode;
   if (promptType && colorPalette) {
     const sharedButtonProps = {
@@ -158,45 +146,23 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
     } as const;
 
     const smallButtonBlock = (
-      <>
-        {spacer}
-        <View
-          style={{
-            // backgroundColor: "green",
-            flexGrow: 0,
-            flexShrink: 0,
-            marginRight: 4,
-            // flexBasis: 76,
-            justifyContent: "flex-start",
-            // alignItems: "flex-end",
-          }}
-        >
-          <Button
-            {...sharedButtonProps}
-            style={{ marginTop: 2 }}
-            size="small"
-            onPress={onUndo}
-            iconName={IconName.ArrowLeft}
-            title={"Undo"}
-            disabled={!canUndo}
-            color={
-              canUndo
-                ? sharedButtonProps.color
-                : colorPalette.secondaryTextColor
-            }
-            hitSlop={secondButtonSlop}
-          />
-          <Button
-            {...sharedButtonProps}
-            style={{ marginTop: -8 }}
-            size="small"
-            onPress={onSkip}
-            iconName={IconName.DoubleArrowRight}
-            title={"Skip"}
-            hitSlop={secondButtonSlop}
-          />
-        </View>
-      </>
+      <View
+        style={{
+          flexGrow: 0,
+          flexShrink: 0,
+          justifyContent: "flex-end",
+        }}
+      >
+        <Button
+          {...sharedButtonProps}
+          style={{ flexGrow: 1, justifyContent: "flex-end" }}
+          size="small"
+          onPress={onSkip}
+          iconName={IconName.DoubleArrowRight}
+          title="Skip"
+          alignment="right"
+        />
+      </View>
     );
 
     if (isShowingAnswer) {
@@ -218,10 +184,8 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             }}
             hitSlop={firstButtonSlop}
           />
-          {spacer}
           <Button
             {...sharedButtonProps}
-            style={buttonStyle}
             key={"Remembered"}
             onPress={() => onMark(TaskRepetitionOutcome.Remembered)}
             iconName={IconName.Check}
@@ -236,7 +200,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             }}
             hitSlop={secondButtonSlop}
           />
-          {smallButtonBlock}
+          {!isVeryNarrow && smallButtonBlock}
         </>
       );
     } else {
@@ -250,7 +214,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             key={"Show answer"}
             hitSlop={firstButtonSlop}
           />
-          {smallButtonBlock}
+          {!isVeryNarrow && smallButtonBlock}
         </>
       );
     }

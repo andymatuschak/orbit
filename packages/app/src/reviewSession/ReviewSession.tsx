@@ -261,10 +261,6 @@ export default function ReviewSession() {
                 onSkip={() => {
                   return;
                 }}
-                onUndo={() => {
-                  return;
-                }}
-                canUndo={false}
               />
             </>
           );

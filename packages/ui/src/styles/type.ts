@@ -196,7 +196,7 @@ export const labelSmall = makeTypeSpec(
   },
   -3,
   -4.5,
-  -7.5,
+  -8,
 );
 
 export const labelTiny = makeTypeSpec(

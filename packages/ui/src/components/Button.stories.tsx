@@ -45,6 +45,12 @@ Link.args = {
   href: "https://google.com",
 };
 
+export const Tiny = Template.bind({});
+Tiny.args = {
+  ...Template.args,
+  size: "tiny",
+};
+
 export const Disabled = Template.bind({});
 Disabled.args = { ...Template.args, disabled: true };
 
@@ -59,6 +65,16 @@ Background.args = {
   color: colors.white,
 };
 Background.parameters = {
+  backgrounds: { default: "colorful" },
+};
+
+export const SmallBackground = Template.bind({});
+SmallBackground.args = {
+  ...Background.args,
+  size: "small",
+  alignment: "right",
+};
+SmallBackground.parameters = {
   backgrounds: { default: "colorful" },
 };
 

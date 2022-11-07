@@ -87,10 +87,6 @@ function ReviewAreaTemplate({
           onSkip={() => {
             return;
           }}
-          onUndo={() => {
-            return;
-          }}
-          canUndo={false}
           currentItemIndex={currentItemIndex}
         />
       </View>
