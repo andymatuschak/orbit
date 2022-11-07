@@ -42,54 +42,27 @@ function makeScreenRecord(needsRetry: boolean | null): EmbeddedScreenRecord {
 }
 
 test("it doesn't include items without prompt states", () => {
-  expect(
-    findItemsToRetry([makeItem(null), makeItem(null)], {
-      orderedScreenRecords: [makeScreenRecord(null), makeScreenRecord(null)],
-      receiverIndex: 0,
-    }),
-  ).toMatchObject([]);
+  expect(findItemsToRetry([makeItem(null), makeItem(null)])).toMatchObject([]);
 });
 
 test("it doesn't include items which don't need retry", () => {
-  expect(
-    findItemsToRetry([makeItem(null), makeItem(false)], {
-      orderedScreenRecords: [makeScreenRecord(null), makeScreenRecord(false)],
-      receiverIndex: 0,
-    }),
-  ).toMatchObject([]);
+  expect(findItemsToRetry([makeItem(null), makeItem(false)])).toMatchObject([]);
 });
 
 test("it doesn't include items from its own screen", () => {
-  expect(
-    findItemsToRetry([makeItem(true), makeItem(false)], {
-      orderedScreenRecords: [makeScreenRecord(true), makeScreenRecord(false)],
-      receiverIndex: 0,
-    }),
-  ).toMatchObject([]);
+  expect(findItemsToRetry([makeItem(true), makeItem(false)])).toMatchObject([]);
 });
 
 describe("it includes items from valid screens", () => {
-  const orderedScreenRecords = [
-    makeScreenRecord(false),
-    makeScreenRecord(true),
-  ];
   const sessionItems = [makeItem(false), makeItem(true)];
 
   test("including other screens", () => {
-    const results = findItemsToRetry(sessionItems, {
-      orderedScreenRecords,
-      receiverIndex: 0,
-    });
+    const results = findItemsToRetry(sessionItems);
     expect(results).toHaveLength(1);
     expect(results[0]).toBe(sessionItems[1]);
   });
 
   test("including its own screen if it's the last one", () => {
-    expect(
-      findItemsToRetry(sessionItems, {
-        orderedScreenRecords,
-        receiverIndex: 1,
-      }),
-    ).toHaveLength(1);
+    expect(findItemsToRetry(sessionItems)).toHaveLength(1);
   });
 });
