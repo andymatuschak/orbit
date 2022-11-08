@@ -281,10 +281,21 @@ export default function ReviewSession() {
       });
   }
 
-  const canUndo =
-    currentReviewAreaQueueIndex !== null && currentReviewAreaQueueIndex > 0;
+  const canUndo = !!reviewSessionManager.topUndoItem;
   function onUndo() {
-    reviewSessionManager.undo();
+    reviewSessionManager.undo(({ getUndoEvents }) => {
+      const undoEvents = getUndoEvents();
+      if (undoEvents.length > 0) {
+        databaseManager!
+          .recordEvents(undoEvents)
+          .then(() => {
+            console.log("Wrote undo events", Date.now() / 1000.0);
+          })
+          .catch((error) => {
+            console.error("Couldn't commit undo events", error);
+          });
+      }
+    });
   }
 
   const canVisitPromptOrigin =

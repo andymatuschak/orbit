@@ -100,7 +100,7 @@ function reviewSessionManagerMarkCurrentItem(
     currentReviewAreaQueueIndex: newReviewAreaQueueIndex,
     sessionItems: newSessionItems,
     currentSessionItemIndex: newSessionItemIndex,
-    topUndoItem: { previousState: state, onUndoEvents: [] },
+    topUndoItem: { previousState: state, getUndoEvents: () => [] },
   };
 }
 
@@ -119,6 +119,8 @@ function reviewSessionManagerDeleteCurrentItem(
       ...state.sessionItems.slice(0, state.currentSessionItemIndex),
       ...state.sessionItems.slice(state.currentSessionItemIndex + 1),
     ];
+    const deletedTaskID =
+      state.reviewAreaQueue[state.currentReviewAreaQueueIndex].taskID;
 
     return {
       reviewAreaQueue: newReviewAreaQueue,
@@ -133,13 +135,12 @@ function reviewSessionManagerDeleteCurrentItem(
           : newSessionItems.length - 1,
       topUndoItem: {
         previousState: state,
-        onUndoEvents: [
+        getUndoEvents: () => [
           {
             type: EventType.TaskUpdateDeleted,
             timestampMillis: Date.now(),
             id: generateUniqueID(),
-            entityID:
-              state.reviewAreaQueue[state.currentReviewAreaQueueIndex].taskID,
+            entityID: deletedTaskID,
             isDeleted: false,
           },
         ],
@@ -227,7 +228,7 @@ const initialReviewSessionManagerState: ReviewSessionManagerState = {
 
 type ReviewSessionManagerUndoStackItem = {
   previousState: ReviewSessionManagerState;
-  onUndoEvents: Event[];
+  getUndoEvents: () => Event[];
 };
 
 export function useReviewSessionManager(): ReviewSessionManagerActions &
