@@ -45,9 +45,10 @@ const Template: Story<LogoProps> = (args) => {
           colorPalette={colors.palettes.red}
           items={[
             { title: "Undo", action: noop },
-            { title: "Exit Review", action: noop },
             menuItemDividerSpec,
-            { title: "Undo", action: noop },
+            { title: "Delete Prompt", action: noop },
+            { title: "Visit Prompt Origin", action: noop },
+            menuItemDividerSpec,
             { title: "Exit Review", action: noop },
           ]}
         />
