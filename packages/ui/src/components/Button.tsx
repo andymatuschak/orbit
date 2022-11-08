@@ -98,7 +98,7 @@ const ButtonInterior = function ButtonImpl(
             size === "regular" && type.label.layoutStyle,
             size === "small" && {
               ...type.labelSmall.layoutStyle,
-              top: 0.5, // optical alignment with icon
+              // top: 0.5, // optical alignment with icon
             },
             size === "tiny" && type.labelTiny.layoutStyle,
             {

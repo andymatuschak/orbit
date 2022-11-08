@@ -1,11 +1,11 @@
 import { Story } from "@storybook/react";
 import React, { useRef, useState } from "react";
 import { View } from "react-native";
-import Button from "./Button";
 import { colors } from "../styles";
+import Button from "./Button";
 import { IconName } from "./IconShared";
 import { LogoProps } from "./LogoShared";
-import MenuItem, { Menu } from "./Menu";
+import { Menu, menuItemDividerSpec } from "./Menu";
 
 export default {
   title: "Menu",
@@ -43,18 +43,14 @@ const Template: Story<LogoProps> = (args) => {
           targetRef={buttonRef.current}
           onClose={() => setMenuIsVisible(false)}
           colorPalette={colors.palettes.red}
-        >
-          <MenuItem
-            title="Undo"
-            onPress={noop}
-            colorPalette={colors.palettes.red}
-          />
-          <MenuItem
-            title="Exit Review"
-            onPress={noop}
-            colorPalette={colors.palettes.red}
-          />
-        </Menu>
+          items={[
+            { title: "Undo", action: noop },
+            { title: "Exit Review", action: noop },
+            menuItemDividerSpec,
+            { title: "Undo", action: noop },
+            { title: "Exit Review", action: noop },
+          ]}
+        />
       )}
     </View>
   );

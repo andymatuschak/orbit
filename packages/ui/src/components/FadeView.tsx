@@ -18,9 +18,9 @@ const defaultDurationMillis = 150;
 export default function FadeView(props: FadeViewProps) {
   const {
     isVisible,
-    durationMillis,
+    durationMillis = defaultDurationMillis,
     onTransitionEnd,
-    delayMillis,
+    delayMillis = 0,
     removeFromLayoutWhenHidden,
     style,
   } = props;
@@ -33,8 +33,8 @@ export default function FadeView(props: FadeViewProps) {
     timing: {
       type: "timing",
       easing: Easing.linear,
-      duration: durationMillis || defaultDurationMillis,
-      delay: delayMillis || 0,
+      duration: durationMillis,
+      delay: delayMillis,
       useNativeDriver: true,
     },
     onEndCallback: ({ finished }) => {
