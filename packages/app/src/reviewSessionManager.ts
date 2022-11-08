@@ -5,7 +5,7 @@ import {
   Task,
 } from "@withorbit/core";
 import { ReviewAreaItem } from "@withorbit/ui";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 export interface ReviewSessionManagerState {
   reviewAreaQueue: ReviewAreaItem[];
@@ -13,6 +13,8 @@ export interface ReviewSessionManagerState {
 
   sessionItems: ReviewItem[];
   currentSessionItemIndex: number | null;
+
+  topUndoItem: ReviewSessionManagerUndoStackItem | null;
 }
 
 export interface ReviewSessionManagerActions {
@@ -27,7 +29,9 @@ export interface ReviewSessionManagerActions {
 
   pushReviewAreaQueueItems(items: ReviewAreaItem[]): void;
 
-  undo(): void;
+  undo(
+    continuation?: (undoItem: ReviewSessionManagerUndoStackItem) => void,
+  ): void;
 }
 
 function findSessionItemIndex(
@@ -91,6 +95,7 @@ function reviewSessionManagerMarkCurrentItem(
     currentReviewAreaQueueIndex: newReviewAreaQueueIndex,
     sessionItems: newSessionItems,
     currentSessionItemIndex: newSessionItemIndex,
+    topUndoItem: { previousState: state, onUndoEvents: [] },
   };
 }
 
@@ -143,6 +148,7 @@ function reviewSessionManagerPushReviewAreaQueueItems(
         newReviewAreaQueue[state.currentReviewAreaQueueIndex],
         state.sessionItems,
       ),
+      topUndoItem: state.topUndoItem,
     };
   } else {
     return {
@@ -153,6 +159,7 @@ function reviewSessionManagerPushReviewAreaQueueItems(
         newReviewAreaQueue[0],
         state.sessionItems,
       ),
+      topUndoItem: state.topUndoItem,
     };
   }
 }
@@ -163,6 +170,13 @@ const initialReviewSessionManagerState: ReviewSessionManagerState = {
 
   sessionItems: [],
   currentSessionItemIndex: null,
+
+  topUndoItem: null,
+};
+
+type ReviewSessionManagerUndoStackItem = {
+  previousState: ReviewSessionManagerState;
+  onUndoEvents: Event[];
 };
 
 export function useReviewSessionManager(): ReviewSessionManagerActions &
@@ -170,25 +184,11 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
   const [state, setState] = useState<ReviewSessionManagerState>(
     initialReviewSessionManagerState,
   );
-  const undoStack = useRef<ReviewSessionManagerState[]>([]);
-
-  const pushUndoableState: typeof setState = (action) => {
-    setState((state) => {
-      undoStack.current = [state, ...undoStack.current];
-      if (typeof action === "function") {
-        return action(state);
-      } else {
-        return state;
-      }
-    });
-  };
 
   const reviewSessionManagerActions: ReviewSessionManagerActions = useMemo(
     () => ({
       markCurrentItem: (events, continuation) => {
-        pushUndoableState((state) =>
-          reviewSessionManagerMarkCurrentItem(state, events),
-        );
+        setState((state) => reviewSessionManagerMarkCurrentItem(state, events));
         // This is a pretty heinous abuse. Clients need to access the new state, so we invoke the reducer again but return its input (making it a no-op) to call the continuation with the correct context.
         if (continuation) {
           setState((newState) => {
@@ -207,10 +207,15 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
           reviewSessionManagerUpdateSessionItems(state, mutator),
         ),
 
-      undo: () => {
-        const [state, ...newUndoStack] = undoStack.current;
-        undoStack.current = newUndoStack;
-        setState(state);
+      undo: (continuation) => {
+        setState((state) => {
+          const { topUndoItem } = state;
+          if (!topUndoItem) {
+            throw new Error("Nothing on the undo stack");
+          }
+          continuation?.(topUndoItem);
+          return topUndoItem.previousState;
+        });
       },
     }),
     [],
