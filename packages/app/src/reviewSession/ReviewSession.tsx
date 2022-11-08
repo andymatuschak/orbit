@@ -20,7 +20,11 @@ import {
   useWeakRef,
 } from "@withorbit/ui";
 import { openURL } from "@withorbit/ui/dist/components/Button";
-import { Menu, MenuItemSpec } from "@withorbit/ui/dist/components/Menu";
+import {
+  Menu,
+  menuItemDividerSpec,
+  MenuItemSpec,
+} from "@withorbit/ui/dist/components/Menu";
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -254,6 +258,29 @@ export default function ReviewSession() {
     });
   }
 
+  function onDelete() {
+    if (currentReviewAreaQueueIndex === null) {
+      throw new Error("No current review item");
+    }
+    reviewSessionManager.deleteCurrentItem();
+    databaseManager!
+      .recordEvents([
+        {
+          type: EventType.TaskUpdateDeleted,
+          id: generateUniqueID(),
+          timestampMillis: Date.now(),
+          entityID: reviewAreaQueue[currentReviewAreaQueueIndex].taskID,
+          isDeleted: true,
+        },
+      ])
+      .then(() => {
+        console.log("Wrote delete event", Date.now() / 1000.0);
+      })
+      .catch((error) => {
+        console.error("Couldn't commit delete event", error);
+      });
+  }
+
   const canUndo =
     currentReviewAreaQueueIndex !== null && currentReviewAreaQueueIndex > 0;
   function onUndo() {
@@ -323,6 +350,11 @@ export default function ReviewSession() {
                     colorPalette={currentColorPalette}
                     items={[
                       { title: "Undo", action: onUndo, disabled: !canUndo },
+                      menuItemDividerSpec,
+                      {
+                        title: "Delete Prompt",
+                        action: onDelete,
+                      },
                       {
                         title: "Visit Prompt Origin",
                         action: visitPromptOrigin,

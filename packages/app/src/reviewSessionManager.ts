@@ -1,6 +1,9 @@
 import {
+  Event,
   EventForEntity,
   eventReducer,
+  EventType,
+  generateUniqueID,
   ReviewItem,
   Task,
 } from "@withorbit/core";
@@ -32,6 +35,8 @@ export interface ReviewSessionManagerActions {
   undo(
     continuation?: (undoItem: ReviewSessionManagerUndoStackItem) => void,
   ): void;
+
+  deleteCurrentItem(): void;
 }
 
 function findSessionItemIndex(
@@ -97,6 +102,52 @@ function reviewSessionManagerMarkCurrentItem(
     currentSessionItemIndex: newSessionItemIndex,
     topUndoItem: { previousState: state, onUndoEvents: [] },
   };
+}
+
+function reviewSessionManagerDeleteCurrentItem(
+  state: ReviewSessionManagerState,
+): ReviewSessionManagerState {
+  if (
+    state.currentReviewAreaQueueIndex !== null &&
+    state.currentSessionItemIndex !== null
+  ) {
+    const newReviewAreaQueue = [
+      ...state.reviewAreaQueue.slice(0, state.currentReviewAreaQueueIndex),
+      ...state.reviewAreaQueue.slice(state.currentReviewAreaQueueIndex + 1),
+    ];
+    const newSessionItems = [
+      ...state.sessionItems.slice(0, state.currentSessionItemIndex),
+      ...state.sessionItems.slice(state.currentSessionItemIndex + 1),
+    ];
+
+    return {
+      reviewAreaQueue: newReviewAreaQueue,
+      currentReviewAreaQueueIndex: state.currentReviewAreaQueueIndex,
+      sessionItems: newSessionItems,
+      currentSessionItemIndex:
+        state.currentReviewAreaQueueIndex < state.reviewAreaQueue.length - 1
+          ? findSessionItemIndex(
+              newReviewAreaQueue[state.currentReviewAreaQueueIndex],
+              newSessionItems,
+            )
+          : newSessionItems.length - 1,
+      topUndoItem: {
+        previousState: state,
+        onUndoEvents: [
+          {
+            type: EventType.TaskUpdateDeleted,
+            timestampMillis: Date.now(),
+            id: generateUniqueID(),
+            entityID:
+              state.reviewAreaQueue[state.currentReviewAreaQueueIndex].taskID,
+            isDeleted: false,
+          },
+        ],
+      },
+    };
+  } else {
+    return state;
+  }
 }
 
 function reviewSessionManagerUpdateSessionItems(
@@ -216,6 +267,10 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
           continuation?.(topUndoItem);
           return topUndoItem.previousState;
         });
+      },
+
+      deleteCurrentItem() {
+        setState((state) => reviewSessionManagerDeleteCurrentItem(state));
       },
     }),
     [],
