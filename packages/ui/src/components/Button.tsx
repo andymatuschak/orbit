@@ -98,7 +98,7 @@ const ButtonInterior = function ButtonImpl(
             size === "regular" && type.label.layoutStyle,
             size === "small" && {
               ...type.labelSmall.layoutStyle,
-              // top: 0.5, // optical alignment with icon
+              ...(!!iconName ? { top: 0.5 } : {}), // optical alignment with icon
             },
             size === "tiny" && type.labelTiny.layoutStyle,
             {
@@ -115,7 +115,7 @@ const ButtonInterior = function ButtonImpl(
   );
 };
 
-function openURL(href: string | null) {
+export function openURL(href: string | null) {
   Linking.openURL(href!).catch(() => {
     Alert.alert(
       "Couldn't open link",

@@ -1,5 +1,11 @@
 import React, { useLayoutEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import {
+  Modal,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { colors, layout } from "../styles";
 import { ColorPalette } from "../styles/colors";
 import Button from "./Button";
@@ -17,6 +23,7 @@ export interface MenuProps {
 export type MenuItemSpec = {
   title: string;
   action: () => void;
+  disabled?: boolean;
 };
 
 export const menuItemDividerSpec = {
@@ -26,11 +33,9 @@ export const menuItemDividerSpec = {
   },
 };
 
-interface Measure {
+interface Point {
   x: number;
   y: number;
-  width: number;
-  height: number;
 }
 
 export function Menu({
@@ -40,18 +45,22 @@ export function Menu({
   onClose,
   targetRef,
 }: React.PropsWithChildren<MenuProps>) {
-  const [measure, setMeasure] = useState<Measure | null>(null);
+  const [position, setPosition] = useState<Point | null>(null);
   const [isDisappearing, setDisappearing] = useState(false);
   const wasVisible = usePrevious(isVisible);
+  const { width: windowWidth } = useWindowDimensions();
   useLayoutEffect(() => {
     if (isVisible) {
-      targetRef.measure((x, y, width, height) =>
-        setMeasure({ x, y, width, height }),
+      targetRef.measure((x, y, width, height, pageX, pageY) =>
+        setPosition({
+          x: windowWidth - pageX - width,
+          y: pageY + height + layout.gridUnit,
+        }),
       );
     } else if (wasVisible) {
       setDisappearing(true);
     }
-  }, [targetRef, isVisible, wasVisible]);
+  }, [targetRef, isVisible, wasVisible, windowWidth]);
 
   return (
     <Modal
@@ -67,19 +76,19 @@ export function Menu({
         onPress={onClose}
       >
         <FadeView
-          isVisible={!!measure && isVisible}
+          isVisible={!!position && isVisible}
           durationMillis={isVisible ? 0 : 75}
           onTransitionEnd={(toVisible) => {
             if (!toVisible) {
               setDisappearing(false);
-              setMeasure(null);
+              setPosition(null);
             }
           }}
         >
           <Pressable
             onPress={(event) => event.stopPropagation()}
             style={
-              measure && {
+              position && {
                 position: "absolute",
                 shadowOpacity: 0.22,
                 shadowOffset: { width: 0, height: 6 },
@@ -88,10 +97,9 @@ export function Menu({
                 borderColor: colorPalette.secondaryTextColor,
                 backgroundColor: colorPalette.secondaryBackgroundColor,
                 borderWidth: 3,
-                padding: layout.gridUnit * 0.5,
                 // Hard-coding relative positioning for now: menu appears below the target ref, aligned right.
-                right: measure.x,
-                top: measure.y + measure.height + layout.gridUnit,
+                right: position.x,
+                top: position.y,
               }
             }
           >
@@ -100,16 +108,13 @@ export function Menu({
                 <View
                   style={{
                     height: 3,
-                    marginLeft: -layout.gridUnit * 0.5,
-                    marginRight: -layout.gridUnit * 0.5,
-                    marginTop: layout.gridUnit * 0.5,
-                    marginBottom: layout.gridUnit * 0.5,
                     backgroundColor: colorPalette.secondaryTextColor,
                   }}
                 />
               ) : (
                 <MenuItem
                   title={item.title}
+                  disabled={item.disabled}
                   key={index}
                   onPress={() => {
                     onClose();
@@ -143,10 +148,10 @@ function MenuItem({ onPress, colorPalette, disabled, title }: MenuItemProps) {
       backgroundColor={colorPalette.backgroundColor}
       color={colors.white}
       style={{
-        paddingLeft: layout.gridUnit * 1.5,
-        paddingRight: layout.gridUnit * 1.5,
-        paddingTop: layout.gridUnit * 1.5,
-        paddingBottom: layout.gridUnit * 1.5,
+        paddingLeft: layout.gridUnit * 2,
+        paddingRight: layout.gridUnit * 2,
+        paddingTop: layout.gridUnit * 2,
+        paddingBottom: layout.gridUnit * 2,
       }}
     />
   );

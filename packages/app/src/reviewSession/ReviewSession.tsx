@@ -10,6 +10,8 @@ import {
   TaskRepetitionOutcome,
 } from "@withorbit/core";
 import {
+  Button,
+  IconName,
   ReviewArea,
   ReviewAreaItem,
   ReviewAreaMarkingRecord,
@@ -17,6 +19,8 @@ import {
   styles,
   useWeakRef,
 } from "@withorbit/ui";
+import { openURL } from "@withorbit/ui/dist/components/Button";
+import { Menu, MenuItemSpec } from "@withorbit/ui/dist/components/Menu";
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -145,6 +149,43 @@ function getReviewAreaItemsFromReviewItems(
   }));
 }
 
+function noop() {
+  return;
+}
+
+function ReviewMenuButton({
+  colorPalette,
+  items,
+}: {
+  colorPalette: styles.colors.ColorPalette;
+  items: MenuItemSpec[];
+}) {
+  const buttonRef = useRef<View | null>(null);
+  const [menuIsVisible, setMenuIsVisible] = useState(false);
+  return (
+    <View ref={buttonRef}>
+      <Button
+        size="small"
+        alignment="right"
+        color={colorPalette.accentColor}
+        backgroundColor={colorPalette.secondaryBackgroundColor}
+        iconName={IconName.Menu}
+        accessibilityLabel="Menu"
+        onPress={() => setMenuIsVisible(true)}
+      />
+      {buttonRef.current && (
+        <Menu
+          isVisible={menuIsVisible}
+          targetRef={buttonRef.current}
+          onClose={() => setMenuIsVisible(false)}
+          colorPalette={colorPalette}
+          items={items}
+        />
+      )}
+    </View>
+  );
+}
+
 export default function ReviewSession() {
   const insets = useSafeAreaInsets();
   const reviewSessionStartTimestampMillis = useRef(Date.now());
@@ -213,6 +254,25 @@ export default function ReviewSession() {
     });
   }
 
+  const canUndo =
+    currentReviewAreaQueueIndex !== null && currentReviewAreaQueueIndex > 0;
+  function onUndo() {
+    reviewSessionManager.undo();
+  }
+
+  const canVisitPromptOrigin =
+    currentSessionItemIndex !== null &&
+    !!sessionItems[currentSessionItemIndex].task.provenance?.url;
+  function visitPromptOrigin() {
+    if (currentSessionItemIndex === null) {
+      return;
+    }
+    const url = sessionItems[currentSessionItemIndex].task.provenance?.url;
+    if (url) {
+      openURL(url);
+    }
+  }
+
   return (
     <ReviewSessionContainer
       insets={{ top: insets.top }}
@@ -227,23 +287,51 @@ export default function ReviewSession() {
         ) {
           return (
             <>
-              <ReviewStarburst
-                containerWidth={containerSize.width}
-                containerHeight={containerSize.height}
-                items={sessionItems.map((item, index) => ({
-                  component: item.task.componentStates[item.componentID],
-                  isPendingForSession:
-                    index >= currentReviewAreaQueueIndex ||
-                    itemIsStillDue(item),
-                }))}
-                currentItemIndex={currentSessionItemIndex}
-                pendingOutcome={pendingOutcome}
-                position="left"
-                showLegend={true}
-                colorMode="bicolor"
-                colorPalette={currentColorPalette}
-                config={defaultSpacedRepetitionSchedulerConfiguration}
-              />
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <ReviewStarburst
+                  containerWidth={
+                    // Make room for the action button
+                    containerSize.width - styles.layout.gridUnit * 6
+                  }
+                  containerHeight={containerSize.height}
+                  items={sessionItems.map((item, index) => ({
+                    component: item.task.componentStates[item.componentID],
+                    isPendingForSession:
+                      index >= currentReviewAreaQueueIndex ||
+                      itemIsStillDue(item),
+                  }))}
+                  currentItemIndex={currentSessionItemIndex}
+                  pendingOutcome={pendingOutcome}
+                  position="left"
+                  showLegend={true}
+                  colorMode="bicolor"
+                  colorPalette={currentColorPalette}
+                  config={defaultSpacedRepetitionSchedulerConfiguration}
+                />
+                <View
+                  style={{
+                    paddingTop: styles.layout.gridUnit * 2,
+                    marginRight: styles.layout.gridUnit,
+                  }}
+                >
+                  <ReviewMenuButton
+                    colorPalette={currentColorPalette}
+                    items={[
+                      { title: "Undo", action: onUndo, disabled: !canUndo },
+                      {
+                        title: "Visit Prompt Origin",
+                        action: visitPromptOrigin,
+                        disabled: !canVisitPromptOrigin,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
               <ReviewArea
                 items={reviewAreaQueue}
                 currentItemIndex={currentReviewAreaQueueIndex}
