@@ -114,6 +114,20 @@ function getIconAsset(
           throw unreachableCaseError(iconPosition);
       }
 
+    case IconName.Menu:
+      if (accent) return null;
+      switch (iconPosition) {
+        case IconPosition.TopLeft:
+        case IconPosition.TopRight:
+        case IconPosition.BottomLeft:
+        case IconPosition.BottomRight:
+          throw new Error("Menu icon doesn't support this position");
+        case IconPosition.Center:
+          return require("../../assets/icons/dots-center.svg");
+        default:
+          throw unreachableCaseError(iconPosition);
+      }
+
     case IconName.Reveal:
       if (accent) {
         switch (iconPosition) {

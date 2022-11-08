@@ -8,6 +8,7 @@ export enum IconName {
   ArrowRight = "right",
   DoubleArrowRight = "doubleArrowRight",
   List = "list",
+  Menu = "menu",
 }
 
 export enum IconPosition {

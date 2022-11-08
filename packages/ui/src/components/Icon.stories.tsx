@@ -49,6 +49,11 @@ export function Index() {
       <IconEntry iconName={IconName.Cross} />
       <IconEntry iconName={IconName.Reveal} />
       <IconEntry iconName={IconName.ArrowRight} />
+      <IconSwatch
+        name={IconName.Menu}
+        position={IconPosition.Center}
+        tintColor={productKeyColor}
+      />
     </View>
   );
 }
