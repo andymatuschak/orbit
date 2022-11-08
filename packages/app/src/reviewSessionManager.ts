@@ -5,7 +5,7 @@ import {
   Task,
 } from "@withorbit/core";
 import { ReviewAreaItem } from "@withorbit/ui";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 export interface ReviewSessionManagerState {
   reviewAreaQueue: ReviewAreaItem[];
@@ -26,6 +26,8 @@ export interface ReviewSessionManagerActions {
   ): void;
 
   pushReviewAreaQueueItems(items: ReviewAreaItem[]): void;
+
+  undo(): void;
 }
 
 function findSessionItemIndex(
@@ -168,11 +170,25 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
   const [state, setState] = useState<ReviewSessionManagerState>(
     initialReviewSessionManagerState,
   );
+  const undoStack = useRef<ReviewSessionManagerState[]>([]);
+
+  const pushUndoableState: typeof setState = (action) => {
+    setState((state) => {
+      undoStack.current = [state, ...undoStack.current];
+      if (typeof action === "function") {
+        return action(state);
+      } else {
+        return state;
+      }
+    });
+  };
 
   const reviewSessionManagerActions: ReviewSessionManagerActions = useMemo(
     () => ({
       markCurrentItem: (events, continuation) => {
-        setState((state) => reviewSessionManagerMarkCurrentItem(state, events));
+        pushUndoableState((state) =>
+          reviewSessionManagerMarkCurrentItem(state, events),
+        );
         // This is a pretty heinous abuse. Clients need to access the new state, so we invoke the reducer again but return its input (making it a no-op) to call the continuation with the correct context.
         if (continuation) {
           setState((newState) => {
@@ -190,6 +206,12 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
         setState((state) =>
           reviewSessionManagerUpdateSessionItems(state, mutator),
         ),
+
+      undo: () => {
+        const [state, ...newUndoStack] = undoStack.current;
+        undoStack.current = newUndoStack;
+        setState(state);
+      },
     }),
     [],
   );
