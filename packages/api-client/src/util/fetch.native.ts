@@ -1,5 +1,4 @@
 import { API } from "@withorbit/api";
-import { BlobLike } from "@withorbit/api/dist/genericHTTPAPI";
 import {
   fromByteArray as byteArrayToBase64,
   toByteArray as base64ToByteArray,
@@ -40,7 +39,7 @@ export async function getBytesFromBlobLike(
 export function createBlobFromBuffer<T>(
   buffer: Uint8Array,
   mimeType: T,
-): BlobLike<T> {
+): API.BlobLike<T> {
   // HACK: Working around RN's lack of support for binary buffers.
   // Here relying on some RN internals--see FormData.js and RCTNetworking.mm
   return {
@@ -48,5 +47,5 @@ export function createBlobFromBuffer<T>(
     size: buffer.length,
     name: "unknown.txt",
     base64: byteArrayToBase64(buffer),
-  } as BlobLike<T>;
+  } as API.BlobLike<T>;
 }

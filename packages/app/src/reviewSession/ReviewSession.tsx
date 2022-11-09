@@ -12,6 +12,10 @@ import {
 import {
   Button,
   IconName,
+  Menu,
+  menuItemDividerSpec,
+  MenuItemSpec,
+  openURL,
   ReviewArea,
   ReviewAreaItem,
   ReviewAreaMarkingRecord,
@@ -19,13 +23,6 @@ import {
   styles,
   useWeakRef,
 } from "@withorbit/ui";
-import { openURL } from "@withorbit/ui/dist/components/Button";
-import {
-  Menu,
-  menuItemDividerSpec,
-  MenuItemSpec,
-} from "@withorbit/ui/dist/components/Menu";
-import { getWidthSizeClass } from "@withorbit/ui/dist/styles/layout";
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -152,10 +149,6 @@ function getReviewAreaItemsFromReviewItems(
     provenance: item.task.provenance,
     colorPalette: getColorPaletteForReviewItem(item),
   }));
-}
-
-function noop() {
-  return;
 }
 
 function ReviewMenuButton({
@@ -401,7 +394,7 @@ export default function ReviewSession() {
                     ? 0
                     : insets.bottom ?? 0
                 }
-                sizeClass={getWidthSizeClass(containerSize.width)}
+                sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
               />
             </>
           );

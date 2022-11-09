@@ -1,5 +1,4 @@
 import { styles } from "@withorbit/ui";
-import { ColorPalette } from "@withorbit/ui/dist/styles/colors";
 import React, { ReactNode } from "react";
 import { StyleSheet, Text } from "react-native";
 
@@ -54,6 +53,6 @@ export function Paragraph({ children }: { children: ReactNode }) {
 
 export interface InfoPageProps {
   contents: ReactNode;
-  palette: ColorPalette;
+  palette: styles.colors.ColorPalette;
   summaryContents?: ReactNode;
 }

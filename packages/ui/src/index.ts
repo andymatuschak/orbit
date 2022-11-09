@@ -2,7 +2,7 @@ export type { ReviewAreaItem } from "./reviewAreaItem";
 
 export * as styles from "./styles";
 
-export { default as Button } from "./components/Button";
+export { default as Button, openURL } from "./components/Button";
 export type { ButtonProps } from "./components/Button";
 
 export { default as Card } from "./components/Card";
@@ -22,6 +22,9 @@ export type { LinkProps } from "./components/Link";
 
 export { default as Logo } from "./components/Logo";
 export type { LogoProps } from "./components/LogoShared";
+
+export { Menu, menuItemDividerSpec } from "./components/Menu";
+export type { MenuItemSpec, MenuProps } from "./components/Menu";
 
 export { default as ReviewArea } from "./components/ReviewArea";
 export type {
