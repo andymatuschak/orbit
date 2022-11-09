@@ -3,6 +3,7 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem";
 import { colors, layout } from "../styles";
+import { SizeClass } from "../styles/layout";
 import { Size } from "../util/Size";
 import Card, { CardProps } from "./Card";
 import FadeView from "./FadeView";
@@ -191,6 +192,7 @@ export interface ReviewAreaProps {
   ) => void;
   getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
 
+  sizeClass: SizeClass;
   insetBottom?: number;
 
   // Debug flags
@@ -204,6 +206,7 @@ export default React.memo(function ReviewArea({
   forceShowAnswer,
   onPendingOutcomeChange,
   getURLForAttachmentID,
+  sizeClass,
   insetBottom = 0,
 }: ReviewAreaProps) {
   // console.debug("[Performance - ReviewArea] Render", Date.now() / 1000.0);
@@ -251,6 +254,7 @@ export default React.memo(function ReviewArea({
       {currentItem && (
         <ReviewButtonBar
           colorPalette={currentColorPalette}
+          sizeClass={sizeClass}
           onMark={handleMark}
           onReveal={handleReveal}
           onPendingOutcomeChange={onPendingOutcomeChange}

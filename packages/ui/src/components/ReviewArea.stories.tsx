@@ -3,8 +3,10 @@ import React, { useCallback, useMemo, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem";
 import { colors } from "../styles";
+import { getWidthSizeClass } from "../styles/layout";
 import { generateReviewItem } from "./__fixtures__/generateReviewItem";
 import DebugGrid from "./DebugGrid";
+import useLayout from "./hooks/useLayout";
 import { useTransitioningColorValue } from "./hooks/useTransitioningValue";
 import ReviewArea from "./ReviewArea";
 import { AttachmentID } from "@withorbit/core";
@@ -63,17 +65,21 @@ function ReviewAreaTemplate({
     },
   });
 
+  const { width, onLayout } = useLayout();
+
   return (
     <Animated.View
       style={{
         backgroundColor,
         height: "100vh",
       }}
+      onLayout={onLayout}
     >
       <View style={{ flex: 1 }}>
         {boolean("Show debug grid", false) && <DebugGrid />}
         <ReviewArea
           items={items}
+          sizeClass={getWidthSizeClass(width)}
           insetBottom={number("Bottom safe inset", 0)}
           onPendingOutcomeChange={useCallback(() => {
             return;

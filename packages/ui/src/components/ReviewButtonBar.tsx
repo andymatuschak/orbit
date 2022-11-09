@@ -3,6 +3,7 @@ import React, { useRef } from "react";
 import { View } from "react-native";
 import { colors, layout } from "../styles";
 import { ColorPalette } from "../styles/colors";
+import { SizeClass } from "../styles/layout";
 import Button, { ButtonPendingActivationState } from "./Button";
 import { useKeyDown } from "./hooks/useKey";
 import useLayout from "./hooks/useLayout";
@@ -48,7 +49,7 @@ function getButtonTitle(
       switch (promptType) {
         case TaskContentType.QA:
         case TaskContentType.Cloze:
-          return isVeryNarrow ? "Success" : "Remembered";
+          return isVeryNarrow ? "Succeeded" : "Remembered";
         case TaskContentType.Plain:
           return "Succeeded";
       }
@@ -79,6 +80,7 @@ const secondButtonSlop = {
 
 const ReviewButtonBar = React.memo(function ReviewButtonArea({
   colorPalette,
+  sizeClass,
   onMark,
   onReveal,
   onPendingOutcomeChange,
@@ -87,6 +89,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   insetBottom,
 }: {
   colorPalette: ColorPalette | null;
+  sizeClass: SizeClass;
   promptType: TaskContentType;
   onMark: (outcome: TaskRepetitionOutcome) => void;
   onReveal: () => void;
@@ -200,7 +203,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             }}
             hitSlop={secondButtonSlop}
           />
-          {!isVeryNarrow && smallButtonBlock}
+          {sizeClass !== "compact" && smallButtonBlock}
         </>
       );
     } else {
@@ -214,7 +217,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             key={"Show answer"}
             hitSlop={firstButtonSlop}
           />
-          {!isVeryNarrow && smallButtonBlock}
+          {smallButtonBlock}
         </>
       );
     }

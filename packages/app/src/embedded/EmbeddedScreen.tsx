@@ -131,6 +131,7 @@ function EmbeddedScreenRenderer({
     }
   }, [wasInitiallyComplete]);
 
+  const widthSizeClass = styles.layout.getWidthSizeClass(containerSize.width);
   const interiorY = useTransitioningValue({
     value: isComplete
       ? (window.innerHeight -
@@ -180,7 +181,7 @@ function EmbeddedScreenRenderer({
         totalPromptCount={reviewAreaQueue.length}
         completePromptCount={currentReviewAreaQueueIndex}
         wasInitiallyComplete={wasInitiallyComplete}
-        sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
+        sizeClass={widthSizeClass}
       />
       <Animated.View
         onLayout={onInteriorLayout}
@@ -250,6 +251,7 @@ function EmbeddedScreenRenderer({
             setPendingOutcome(newPendingOutcome);
           }}
           insetBottom={0}
+          sizeClass={widthSizeClass}
           getURLForAttachmentID={getURLForAttachmentID}
         />
       )}
@@ -265,7 +267,7 @@ function EmbeddedScreenRenderer({
           >
             <OnboardingModalWeb
               colorPalette={colorPalette}
-              sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
+              sizeClass={widthSizeClass}
             />
           </Animated.View>
         </>
@@ -312,13 +314,7 @@ function EmbeddedScreen({
     useEmbeddedAuthenticationState(authenticationClient);
   const apiClient = useAPIClient(authenticationClient);
 
-  const {
-    currentSessionItemIndex,
-    currentReviewAreaQueueIndex,
-    sessionItems,
-    reviewAreaQueue,
-    ...reviewSessionManager
-  } = useReviewSessionManager();
+  const reviewSessionManager = useReviewSessionManager();
 
   // Add the initial queue to the review session manager.
   const enqueueInitialItems = useByrefCallback(
@@ -403,6 +399,7 @@ function EmbeddedScreen({
     useEmbeddedNetworkQueue(authenticationState.status, apiClient);
 
   function onMark(markingRecord: ReviewAreaMarkingRecord) {
+    const { currentSessionItemIndex, sessionItems } = reviewSessionManager;
     if (currentSessionItemIndex === null) {
       throw new Error("Marking without valid currentSessionItemIndex");
     }
@@ -454,33 +451,35 @@ function EmbeddedScreen({
     }
   }
 
-  if (
-    currentReviewAreaQueueIndex === null ||
-    currentSessionItemIndex === null
-  ) {
-    return null;
-  }
-
   return (
     <View style={{ height: "100vh", width: "100vw", overflow: "hidden" }}>
       <ReviewSessionContainer colorPalette={colorPalette}>
-        {({ containerSize }) => (
-          <EmbeddedScreenRenderer
-            currentSessionItemIndex={currentSessionItemIndex}
-            currentReviewAreaQueueIndex={currentReviewAreaQueueIndex}
-            reviewAreaQueue={reviewAreaQueue}
-            sessionItems={sessionItems}
-            onMark={onMark}
-            containerSize={containerSize}
-            authenticationState={authenticationState}
-            colorPalette={colorPalette}
-            hostState={hostState}
-            hasUncommittedActions={hasUncommittedActions}
-            isDebug={configuration.isDebug}
-            wasInitiallyComplete={wasInitiallyComplete}
-            getURLForAttachmentID={getURLForAttachmentIDAsync}
-          />
-        )}
+        {({ containerSize }) => {
+          const { currentReviewAreaQueueIndex, currentSessionItemIndex } =
+            reviewSessionManager;
+          if (
+            currentReviewAreaQueueIndex === null ||
+            currentSessionItemIndex === null
+          ) {
+            return null;
+          }
+          return (
+            <EmbeddedScreenRenderer
+              {...reviewSessionManager}
+              currentReviewAreaQueueIndex={currentReviewAreaQueueIndex}
+              currentSessionItemIndex={currentSessionItemIndex}
+              onMark={onMark}
+              containerSize={containerSize}
+              authenticationState={authenticationState}
+              colorPalette={colorPalette}
+              hostState={hostState}
+              hasUncommittedActions={hasUncommittedActions}
+              isDebug={configuration.isDebug}
+              wasInitiallyComplete={wasInitiallyComplete}
+              getURLForAttachmentID={getURLForAttachmentIDAsync}
+            />
+          );
+        }}
       </ReviewSessionContainer>
     </View>
   );

@@ -25,6 +25,7 @@ import {
   menuItemDividerSpec,
   MenuItemSpec,
 } from "@withorbit/ui/dist/components/Menu";
+import { getWidthSizeClass } from "@withorbit/ui/dist/styles/layout";
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -298,6 +299,13 @@ export default function ReviewSession() {
     });
   }
 
+  function onSkip() {
+    onMark({
+      reviewAreaItem: reviewAreaQueue[currentReviewAreaQueueIndex!],
+      outcome: TaskRepetitionOutcome.Skipped,
+    });
+  }
+
   const canVisitPromptOrigin =
     currentSessionItemIndex !== null &&
     !!sessionItems[currentSessionItemIndex].task.provenance?.url;
@@ -367,6 +375,10 @@ export default function ReviewSession() {
                         action: onDelete,
                       },
                       {
+                        title: "Skip Prompt",
+                        action: onSkip,
+                      },
+                      {
                         title: "Visit Prompt Origin",
                         action: visitPromptOrigin,
                         disabled: !canVisitPromptOrigin,
@@ -389,6 +401,7 @@ export default function ReviewSession() {
                     ? 0
                     : insets.bottom ?? 0
                 }
+                sizeClass={getWidthSizeClass(containerSize.width)}
               />
             </>
           );
