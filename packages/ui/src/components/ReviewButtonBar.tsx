@@ -169,6 +169,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
               dispatchPendingMarkingInteraction();
             }}
             hitSlop={firstButtonSlop}
+            tooltipText={"Shortcut: 1"}
           />
           {spacer}
           <Button
@@ -187,6 +188,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
               dispatchPendingMarkingInteraction();
             }}
             hitSlop={secondButtonSlop}
+            tooltipText={"Shortcut: Space or 2"}
           />
         </>
       );
@@ -200,6 +202,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             title={"Show answer"}
             key={"Show answer"}
             hitSlop={secondButtonSlop}
+            tooltipText={"Shortcut: Space"}
           />
         </>
       );
