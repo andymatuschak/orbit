@@ -213,11 +213,8 @@ export default React.memo(function ReviewArea({
 
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
 
-  const previousItemIndex = usePrevious(currentItemIndex);
-  if (
-    previousItemIndex !== undefined &&
-    currentItemIndex !== previousItemIndex
-  ) {
+  const previousTaskID = usePrevious(items[currentItemIndex]?.taskID);
+  if (previousTaskID && items[currentItemIndex]?.taskID !== previousTaskID) {
     setShowingAnswer(false);
   }
 
