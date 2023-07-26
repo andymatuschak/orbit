@@ -268,7 +268,7 @@ export function runDatabaseTests(
           limit: 1,
         });
         expect(entities.length).toBe(1);
-        expect(entities[0].id).toBe("a");
+        expect(entities[0].id).toBe("q");
       });
 
       test("after", async () => {
@@ -421,9 +421,18 @@ function transformTestEventsToHaveValidIDs(events: Event[]): Event[] {
 }
 
 const testTaskEvents: Event[] = [
+  ...createTestTaskEvents("q", [50, 300], 5),
   ...createTestTaskEvents("a", [50, 300], 5),
   ...createTestTaskEvents("b", [100, 100], 4),
   ...createTestTaskEvents("c", [150, 150], 3),
+  // ensure that deleted tasks don't show up in due timestamp listing
+  {
+    type: EventType.TaskUpdateDeleted,
+    entityID: "q" as TaskID,
+    id: "zzz" as EventID,
+    isDeleted: true,
+    timestampMillis: 150,
+  },
 ];
 
 const testAttachmentEvents: AttachmentIngestEvent[] = [

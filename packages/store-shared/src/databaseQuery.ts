@@ -16,6 +16,7 @@ export type DatabaseEntityQuery<E extends Entity> = DatabaseQueryOptions<
   entityType: TypeOfEntity<E>;
   predicate?: E extends Task ? DatabaseTaskQueryPredicate : never;
 };
+// When dueTimestampMillis is used as a predicate, only non-deleted tasks will be returned.
 export type DatabaseTaskQueryPredicate = DatabaseQueryPredicate<
   "dueTimestampMillis",
   "<=",

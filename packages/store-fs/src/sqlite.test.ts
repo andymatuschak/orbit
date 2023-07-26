@@ -4,6 +4,8 @@ import {
   DatabaseBackend,
   DatabaseBackendEntityRecord,
 } from "@withorbit/store-shared";
+import { tmpdir } from "os";
+import path from "path";
 import {
   constructGetByIDSQLQuery,
   constructListEntitySQLQuery,
@@ -121,6 +123,22 @@ describe("task components", () => {
         "taskID": "a",
       }
     `);
+  });
+
+  test("removed when deleted", async () => {
+    await putEntities(backend, testTasks);
+    const updatedRecord: DatabaseBackendEntityRecord<Task> = {
+      entity: { ...testTasks[0].entity, isDeleted: true },
+      lastEventID: "y" as EventID,
+      lastEventTimestampMillis: 20,
+    };
+    await putEntities(backend, [updatedRecord]);
+    const results = await execReadStatement(
+      await backend.__accessDBForTesting(),
+      `SELECT * FROM derived_taskComponents WHERE taskID=? ORDER BY componentID`,
+      ["a"],
+    );
+    expect(results.rows.length).toBe(0);
   });
 });
 
@@ -241,6 +259,43 @@ Array [
       ]
     `);
   });
+});
+
+describe("20230726103155_derived_taskComponents_whenNotDeleted", () => {
+  test.each([{ isDeleted: true }, { isDeleted: false }])(
+    "for isDeleted = $isDeleted",
+    async ({ isDeleted }) => {
+      const tempPath = path.join(
+        tmpdir(),
+        `temp-${Date.now()}-${Math.random()}.sqlite`,
+      );
+      await backend.close();
+      backend = new SQLDatabaseBackend(tempPath, {
+        schemaVersion: 20211019170802,
+      });
+      await putEntities(
+        backend,
+        testTasks.map((record) => ({
+          ...record,
+          entity: { ...record.entity, isDeleted },
+        })),
+      );
+      const oldCount = (
+        await execReadStatement(
+          await backend.__accessDBForTesting(),
+          `SELECT * FROM derived_taskComponents`,
+        )
+      ).rows.length;
+      await backend.close();
+
+      backend = new SQLDatabaseBackend(tempPath);
+      const results = await execReadStatement(
+        await backend.__accessDBForTesting(),
+        `SELECT * FROM derived_taskComponents`,
+      );
+      expect(results.rows.length).toBe(isDeleted ? 0 : oldCount);
+    },
+  );
 });
 
 async function getQueryPlan(db: SQLDatabase, statement: string, args?: any[]) {

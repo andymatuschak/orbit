@@ -1,3 +1,4 @@
+import { EntityType, Task } from "@withorbit/core";
 import Dexie from "dexie";
 import {
   DexieDerivedTaskComponentKeys,
@@ -23,28 +24,43 @@ export class DexieDatabase extends Dexie {
   constructor(name: string, indexedDB: IDBFactory) {
     super(name, { indexedDB });
 
-    this.version(1).stores({
-      [DexieTable.Events]: [
-        `++${DexieEventKeys.SequenceNumber}`,
-        `&${DexieEventKeys.ID}`,
-        DexieEventKeys.EntityID,
-        `[${DexieEventKeys.EntityID}+${DexieEventKeys.SequenceNumber}]`,
-      ].join(", "),
+    this.version(2)
+      .stores({
+        [DexieTable.Events]: [
+          `++${DexieEventKeys.SequenceNumber}`,
+          `&${DexieEventKeys.ID}`,
+          DexieEventKeys.EntityID,
+          `[${DexieEventKeys.EntityID}+${DexieEventKeys.SequenceNumber}]`,
+        ].join(", "),
 
-      [DexieTable.Entities]: [
-        `++${DexieEntityKeys.RowID}`,
-        `&${DexieEntityKeys.ID}`,
-        `[${DexieEntityKeys.EntityType}+${DexieEntityKeys.RowID}]`,
-      ].join(", "),
+        [DexieTable.Entities]: [
+          `++${DexieEntityKeys.RowID}`,
+          `&${DexieEntityKeys.ID}`,
+          `[${DexieEntityKeys.EntityType}+${DexieEntityKeys.RowID}]`,
+        ].join(", "),
 
-      [DexieTable.DerivedTaskComponents]: [
-        `&[${DexieDerivedTaskComponentKeys.TaskID}+${DexieDerivedTaskComponentKeys.ComponentID}]`,
-        DexieDerivedTaskComponentKeys.TaskID,
-        DexieDerivedTaskComponentKeys.DueTimestampMillis,
-      ].join(", "),
+        [DexieTable.DerivedTaskComponents]: [
+          `&[${DexieDerivedTaskComponentKeys.TaskID}+${DexieDerivedTaskComponentKeys.ComponentID}]`,
+          DexieDerivedTaskComponentKeys.TaskID,
+          DexieDerivedTaskComponentKeys.DueTimestampMillis,
+        ].join(", "),
 
-      [DexieTable.Metadata]: `&${DexieMetadataKeys.Key}`,
-    });
+        [DexieTable.Metadata]: `&${DexieMetadataKeys.Key}`,
+      })
+      .upgrade((tx) => {
+        tx.table<DexieEntityRow>(DexieTable.Entities)
+          .where(DexieEntityKeys.EntityType)
+          .equals(EntityType.Task)
+          .filter((row) => {
+            return (JSON.parse(row.data) as Task).isDeleted;
+          })
+          .toArray((deletedRows) => {
+            tx.table(DexieTable.DerivedTaskComponents)
+              .where(DexieDerivedTaskComponentKeys.TaskID)
+              .anyOf(deletedRows.map(({ id }) => id))
+              .delete();
+          });
+      });
 
     this.events = this.table(DexieTable.Events);
     this.entities = this.table(DexieTable.Entities);

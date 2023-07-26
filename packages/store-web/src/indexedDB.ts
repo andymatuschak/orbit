@@ -307,13 +307,17 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         .equals(oldEntity.id)
         .delete();
     }
-    await this.db[DexieTable.DerivedTaskComponents].bulkPut(
-      Object.entries(newEntity.componentStates).map(([componentID, value]) => ({
-        taskID: newEntity.id,
-        componentID,
-        dueTimestampMillis: value.dueTimestampMillis,
-      })),
-    );
+    if (!newEntity.isDeleted) {
+      await this.db[DexieTable.DerivedTaskComponents].bulkPut(
+        Object.entries(newEntity.componentStates).map(
+          ([componentID, value]) => ({
+            taskID: newEntity.id,
+            componentID,
+            dueTimestampMillis: value.dueTimestampMillis,
+          }),
+        ),
+      );
+    }
   }
 
   async getMetadataValues<Key extends string>(

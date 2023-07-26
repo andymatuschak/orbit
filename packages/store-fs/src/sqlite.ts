@@ -44,12 +44,16 @@ export class SQLDatabaseBackend implements DatabaseBackend {
 
   static attachmentURLProtocol = "x-orbit-sqlattachment";
 
-  constructor(path: string, options?: { enableDebugLogs?: boolean }) {
+  constructor(
+    path: string,
+    options?: { enableDebugLogs?: boolean; schemaVersion?: number },
+  ) {
     this._path = path;
     this._db = openDatabase(path);
     this._migrationPromise = performMigration(
       this._db,
       options?.enableDebugLogs ?? true,
+      options?.schemaVersion,
     );
   }
   static inMemoryDBSubpath = ":memory:"; // Pass to constructor to create an in-memory database
