@@ -25,13 +25,9 @@ export async function performMigration(
         `Starting migration from ${currentVersion} to ${targetVersionNumber}`,
       );
       let lastVersionNumber = currentVersion;
-      for (
-        let migrationIndex = 0;
-        migrationIndex < migrations.length &&
-        migrations[migrationIndex].version <= targetVersionNumber;
-        migrationIndex++
-      ) {
-        const migration = migrations[migrationIndex];
+      for (const migration of migrations.filter(
+        (m) => m.version > currentVersion && m.version <= targetVersionNumber,
+      )) {
         debugLog(`Migrating to ${migration.version}`);
         for (const statement of migration.statements) {
           tx.executeSql(statement);
