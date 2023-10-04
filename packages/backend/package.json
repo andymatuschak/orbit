@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "dev": "rm -rf \"$TMPDIR/orbit-file-storage-emulator\"; firebase emulators:start --import emulator-data",
-    "build": "tsc -b && rollup -c rollup.config.js",
+    "build:local": "tsc -b && rollup -c rollup.config.js",
     "predeploy": "yarn run build",
     "deploy": "firebase deploy --only functions",
     "deployCORS": "gsutil cors set ../backend/firebase-storage-cors.json gs://metabook-system.appspot.com",
