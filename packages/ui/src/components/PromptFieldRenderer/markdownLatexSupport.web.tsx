@@ -30,7 +30,7 @@ export const renderInlineMath: MarkdownDisplay.RenderFunction = (
   try {
     output = _katex!.renderToString(node.content, { displayMode: false });
   } catch (error) {
-    output = error;
+    output = error instanceof Error ? error.message : String(error);
   }
   return (
     <div
@@ -53,7 +53,7 @@ export const renderBlockMath: MarkdownDisplay.RenderFunction = (
   try {
     output = _katex!.renderToString(node.content, { displayMode: true });
   } catch (error) {
-    output = error;
+    output = error instanceof Error ? error.message : String(error);
   }
   return (
     <div

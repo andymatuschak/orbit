@@ -10,7 +10,7 @@ export default {
   // Store your auth token securely: firebase functions:config:set sentry.auth_token=SENTRY_AUTH_TOKEN
 
   httpsAPIBaseURLString: shouldUseLocalBackend
-    ? "http://localhost:5001/metabook-system/us-central1/api"
+    ? "http://127.0.0.1:5001/metabook-system/us-central1/api"
     : "https://withorbit.com/api",
   shouldUseLocalBackend,
 };

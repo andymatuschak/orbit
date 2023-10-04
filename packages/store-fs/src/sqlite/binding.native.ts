@@ -34,7 +34,7 @@ class RNSQLiteDatabase {
         };
       } catch (error) {
         results[i] = {
-          error,
+          error: error instanceof Error ? error : new Error(String(error)),
           rows: undefined,
           rowsAffected: undefined,
           insertId: undefined,

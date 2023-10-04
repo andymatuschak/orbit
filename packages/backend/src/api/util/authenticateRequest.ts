@@ -25,7 +25,7 @@ export async function authenticateTypedRequest<
   Path extends Extract<keyof API, string>,
   Method extends Extract<keyof API[Path], ApiType.HTTPMethod>,
 >(
-  request: TypedRequest<API[Path][Method]>,
+  request: TypedRequest<Exclude<API[Path][Method], undefined>>,
   next: (
     userID: string,
   ) => Promise<TypedResponse<ApiType.RouteResponseData<API[Path][Method]>>>,
@@ -78,7 +78,7 @@ export function authenticatedRequestHandler<
   Method extends Extract<keyof API[Path], ApiType.HTTPMethod>,
 >(
   handler: (
-    request: TypedRequest<API[Path][Method]>,
+    request: TypedRequest<Exclude<API[Path][Method], undefined>>,
     userID: string,
   ) => Promise<TypedResponse<ApiType.RouteResponseData<API[Path][Method]>>>,
 ): TypedRouteHandler<API, Path, Method> {

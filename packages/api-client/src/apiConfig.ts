@@ -12,5 +12,5 @@ export const defaultAPIConfig: APIConfig = {
 
 export const emulatorAPIConfig: APIConfig = {
   ...defaultAPIConfig,
-  baseURL: "http://localhost:5001/metabook-system/us-central1/api",
+  baseURL: "http://127.0.0.1:5001/metabook-system/us-central1/api",
 };

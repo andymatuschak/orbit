@@ -94,9 +94,9 @@ export default function SignInForm({
       }
       onComplete();
     } catch (error) {
-      console.error("Couldn't login", error.code, error.message);
+      console.error("Couldn't login", error);
       // TODO: replace with inline error
-      showSimpleAlert(error.message);
+      showSimpleAlert(error instanceof Error ? error.message : String(error));
     }
     setPendingServerResponse(false);
   }

@@ -24,7 +24,7 @@ export function startFirebaseTestingEmulator() {
   );
   emulatorProcess = localEmulatorProcess;
 
-  process.env["FIRESTORE_EMULATOR_HOST"] = "localhost:8080";
+  process.env["FIRESTORE_EMULATOR_HOST"] = "127.0.0.1:8080";
 
   return new Promise((resolve) => {
     localEmulatorProcess.stdout.on("data", async (data) => {

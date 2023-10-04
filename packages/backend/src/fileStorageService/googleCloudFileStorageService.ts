@@ -31,7 +31,10 @@ export class GoogleCloudFileStorageService implements FileStorageService {
     mimeType: string,
   ): Promise<void> {
     const fileRef = this._bucket.file(subpath);
-    await fileRef.save(data, { contentType: mimeType, public: true });
+    await fileRef.save(Buffer.from(data.buffer, data.byteOffset, data.length), {
+      contentType: mimeType,
+      public: true,
+    });
     await fileRef.setMetadata({
       cacheControl: "public, max-age=604800, immutable",
     });

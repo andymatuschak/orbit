@@ -33,7 +33,7 @@ export type TypedRouteHandler<
   Path extends Extract<keyof API, string>,
   Method extends Extract<keyof API[Path], API.HTTPMethod>,
 > = (
-  request: TypedRequest<API[Path][Method]>,
+  request: TypedRequest<Exclude<API[Path][Method], undefined>>,
 ) => Promise<TypedResponse<API.RouteResponseData<API[Path][Method]>>>;
 
 export type TypedResponse<Data> = (
@@ -100,7 +100,9 @@ export default function createTypedRouter<API extends API.Spec>(
         return;
       }
 
-      return handler(request as TypedRequest<API[Path][Method]>)
+      return handler(
+        request as TypedRequest<Exclude<API[Path][Method], undefined>>,
+      )
         .then((result) => {
           response.status(result.status);
 
