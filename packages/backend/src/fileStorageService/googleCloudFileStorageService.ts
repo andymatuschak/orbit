@@ -52,8 +52,12 @@ export class GoogleCloudFileStorageService implements FileStorageService {
   }
 
   async getMIMEType(subpath: string): Promise<string | null> {
-    const [metadata] = await this._bucket.file(subpath).getMetadata();
-    return metadata["contentType"];
+    try {
+      const [metadata] = await this._bucket.file(subpath).getMetadata();
+      return metadata["contentType"];
+    } catch {
+      return null;
+    }
   }
 
   async copyFile(fromSubpath: string, toSubpath: string): Promise<void> {
