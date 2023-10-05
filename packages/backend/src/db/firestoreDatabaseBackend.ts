@@ -276,7 +276,7 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
             newRecord,
             orderedIDsByEntityID.get(id) ??
               this._orderedIDGenerator.getOrderedID(),
-          ),
+          ) as EntityDocumentBase,
         );
       }
       this._onEntityUpdates(oldEntityRecordMap, newEntityRecordMap, tx);
@@ -470,11 +470,13 @@ function getEntityDocumentFromRecord<E extends Entity>(
   let newDocument: EntityDocument;
   switch (entity.type) {
     case EntityType.Task:
-      const minimumDueTimestampMillis = Math.min(
-        ...Object.values(entity.componentStates).map(
-          ({ dueTimestampMillis }) => dueTimestampMillis,
-        ),
-      );
+      const minimumDueTimestampMillis = entity.isDeleted
+        ? Number.MAX_SAFE_INTEGER
+        : Math.min(
+            ...Object.values(entity.componentStates).map(
+              ({ dueTimestampMillis }) => dueTimestampMillis,
+            ),
+          );
       if (isNaN(minimumDueTimestampMillis)) {
         throw new Error(
           `Unexpected component-less entity: ${JSON.stringify(entity)}`,
