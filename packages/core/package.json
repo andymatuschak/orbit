@@ -8,10 +8,6 @@
   "types": "./dist/index.d.ts",
   "exports": "./dist/index.js",
   "sideEffects": false,
-  "dependencies": {
-    "base64-js": "^1.5.1",
-    "uuid": "^8.3.2"
-  },
   "scripts": {
     "build": "tsc -b",
     "test": "jest"
@@ -21,7 +17,6 @@
     "@babel/preset-env": "^7.14.7",
     "@babel/preset-typescript": "^7.14.5",
     "@types/jest": "^26.0.24",
-    "@types/uuid": "^8.3.1",
     "@types/node": "^18.18.3",
     "babel-jest": "^27.0.6",
     "jest": "~27.0.6",

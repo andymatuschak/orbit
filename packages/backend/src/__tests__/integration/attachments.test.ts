@@ -7,7 +7,7 @@ import { resetLocalEmulators } from "../emulators";
 import { setupTestOrbitAPIClient } from "./utils/setupAuthToken";
 
 const testAttachmentBase64Data = "VGVzdA==";
-const testID = generateUniqueID<AttachmentID>(() => Buffer.from("test"));
+const testID = generateUniqueID<AttachmentID>();
 
 afterEach(async () => {
   await resetLocalEmulators();
