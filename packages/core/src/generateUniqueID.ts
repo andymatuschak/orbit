@@ -1,13 +1,6 @@
 import { EntityID } from "./entity";
 import { EventID } from "./event";
-
-// @types/node doesn't seem to have marked crypto as a global variable, even though it is as of 18.
-// eslint-disable-next-line @typescript-eslint/no-namespace, @typescript-eslint/prefer-namespace-keyword
-declare module globalThis {
-  const crypto: typeof import("crypto");
-}
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const crypto = globalThis.crypto || require("node:crypto").webcrypto;
+import { crypto } from "./util/crypto";
 
 // Orbit ID strings are UUIDs (either v4 or v5), encoded to base64 (web-safe variant: psee RFC 4648 section 5](https://datatracker.ietf.org/doc/html/rfc4648#section-5). They're of known size (128 bits) so we can safely drop the "==" padding which would normally appear at the end of the string.
 export function encodeUUIDBytesToWebSafeBase64ID<ID extends EntityID | EventID>(
