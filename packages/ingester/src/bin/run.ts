@@ -10,9 +10,8 @@ async function run(config: { ingestible: Ingestible; orbitStorePath: string }) {
     const events = await ingestSources(config.ingestible.sources, orbitStore);
     console.log(events);
     await orbitStore.database.putEvents(events);
-  } catch (error) {
+  } finally {
     orbitStore.close();
-    throw error;
   }
 }
 
