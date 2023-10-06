@@ -49,7 +49,10 @@ export async function ingestSources(
   const query: DatabaseEntityQuery<Task> = {
     entityType: EntityType.Task,
   };
-  const entities = await store.database.listEntities(query);
+  const entities = (await store.database.listEntities(query)).filter(
+    // Ignore tasks which are deleted. This means that if you add the prompt back, it'll end up creating a new Task in the database. In the future we should consider just marking the deleted task as undeleted in those cases, to preserve continuous review history.
+    (e) => !e.isDeleted,
+  );
   const existingGroupedEntities =
     groupEntitiesByProvenanceIdentifiers(entities);
   const timeMillis = opts.ingestDateMillis;
