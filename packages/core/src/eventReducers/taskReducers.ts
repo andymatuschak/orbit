@@ -11,6 +11,7 @@ import {
   TaskRepetitionEvent,
   TaskRescheduleEvent,
   TaskUpdateDeletedEvent,
+  TaskUpdateMetadataEvent,
   TaskUpdateProvenanceEvent,
   TaskUpdateSpecEvent,
 } from "../event";
@@ -118,6 +119,17 @@ export function taskUpdateProvenanceEventReducer(
 ): Task {
   assertTaskExists(oldSnapshot, event.type);
   return { ...oldSnapshot, provenance: event.provenance };
+}
+
+export function taskUpdateMetadataEventReducer(
+  oldSnapshot: Task | null,
+  event: TaskUpdateMetadataEvent,
+): Task {
+  assertTaskExists(oldSnapshot, event.type);
+  return {
+    ...oldSnapshot,
+    metadata: { ...oldSnapshot.metadata, ...event.metadata },
+  };
 }
 
 function modifyTaskComponent(

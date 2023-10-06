@@ -520,6 +520,42 @@
             ],
             "type": "object"
         },
+        "TaskUpdateMetadataEvent": {
+            "additionalProperties": false,
+            "properties": {
+                "entityID": {
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                    "type": "string"
+                },
+                "id": {
+                    "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                    "type": "string"
+                },
+                "metadata": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                },
+                "timestampMillis": {
+                    "type": "number"
+                },
+                "type": {
+                    "enum": [
+                        "taskUpdateMetadata"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "entityID",
+                "id",
+                "metadata",
+                "timestampMillis",
+                "type"
+            ],
+            "type": "object"
+        },
         "TaskUpdateProvenanceEvent": {
             "additionalProperties": false,
             "properties": {
@@ -613,6 +649,9 @@
             },
             {
                 "$ref": "#/definitions/TaskUpdateProvenanceEvent"
+            },
+            {
+                "$ref": "#/definitions/TaskUpdateMetadataEvent"
             },
             {
                 "$ref": "#/definitions/AttachmentIngestEvent"

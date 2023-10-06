@@ -10,6 +10,7 @@ import {
   TaskRepetitionOutcome,
   TaskRescheduleEvent,
   TaskUpdateDeletedEvent,
+  TaskUpdateMetadataEvent,
   TaskUpdateProvenanceEvent,
   TaskUpdateSpecEvent,
 } from "../event";
@@ -26,14 +27,14 @@ describe("ingest reducer", () => {
     expect(task.isDeleted).toBe(false);
     expect(task.spec).toEqual(testClozeSpec);
     expect(task.componentStates).toMatchInlineSnapshot(`
-      Object {
-        "a": Object {
+      {
+        "a": {
           "createdAtTimestampMillis": 100,
           "dueTimestampMillis": 100,
           "intervalMillis": 0,
           "lastRepetitionTimestampMillis": null,
         },
-        "b": Object {
+        "b": {
           "createdAtTimestampMillis": 100,
           "dueTimestampMillis": 100,
           "intervalMillis": 0,
@@ -203,5 +204,43 @@ describe("updateProvenance reducer", () => {
   test("updates provenance", () => {
     const task = eventReducer(testClozeTask, testEvent);
     expect(task.provenance).toEqual(testEvent.provenance);
+  });
+});
+
+describe("updateMetadata reducer", () => {
+  const testEvent: TaskUpdateMetadataEvent = {
+    id: "y" as EventID,
+    type: EventType.TaskUpdateMetadataEvent,
+    entityID: testIngestClozeTaskEvent.entityID,
+    timestampMillis: 1500,
+    metadata: {
+      a: "a",
+      b: "b",
+    },
+  };
+
+  test("fails without a base state", () => {
+    expect(() => eventReducer(null, testEvent)).toThrow();
+  });
+
+  test("updates from empty", () => {
+    const task = eventReducer(testClozeTask, testEvent);
+    expect(task.metadata).toEqual(testEvent.metadata);
+  });
+
+  test("merges", () => {
+    const secondUpdateEvent: TaskUpdateMetadataEvent = {
+      id: "z" as EventID,
+      type: EventType.TaskUpdateMetadataEvent,
+      entityID: testIngestClozeTaskEvent.entityID,
+      timestampMillis: 1501,
+      metadata: {
+        b: "b'",
+        c: "c",
+      },
+    };
+    const task1 = eventReducer(testClozeTask, testEvent);
+    const task2 = eventReducer(task1, secondUpdateEvent);
+    expect(task2.metadata).toEqual({ a: "a", b: "b'", c: "c" });
   });
 });

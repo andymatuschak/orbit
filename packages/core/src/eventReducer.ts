@@ -7,6 +7,7 @@ import {
   taskUpdateDeletedEventReducer,
   taskUpdateProvenanceEventReducer,
   taskUpdateSpecEventReducer,
+  taskUpdateMetadataEventReducer,
 } from "./eventReducers/taskReducers";
 
 const reducers: {
@@ -21,6 +22,7 @@ const reducers: {
   [EventType.TaskUpdateDeleted]: taskUpdateDeletedEventReducer,
   [EventType.TaskUpdateSpecEvent]: taskUpdateSpecEventReducer,
   [EventType.TaskUpdateProvenanceEvent]: taskUpdateProvenanceEventReducer,
+  [EventType.TaskUpdateMetadataEvent]: taskUpdateMetadataEventReducer,
 
   [EventType.AttachmentIngest]: attachmentIngestEventReducer,
 };

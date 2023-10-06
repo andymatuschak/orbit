@@ -13,6 +13,7 @@ export type Event =
   | TaskUpdateDeletedEvent
   | TaskUpdateSpecEvent
   | TaskUpdateProvenanceEvent
+  | TaskUpdateMetadataEvent
   | AttachmentIngestEvent;
 
 export enum EventType {
@@ -22,6 +23,7 @@ export enum EventType {
   TaskUpdateDeleted = "taskUpdatedDeleted",
   TaskUpdateSpecEvent = "taskUpdateSpec",
   TaskUpdateProvenanceEvent = "taskUpdateProvenanceEvent",
+  TaskUpdateMetadataEvent = "taskUpdateMetadata",
 
   AttachmentIngest = "attachmentIngest",
 }
@@ -84,6 +86,11 @@ export interface TaskUpdateDeletedEvent
 export interface TaskUpdateProvenanceEvent
   extends EventBase<EventType.TaskUpdateProvenanceEvent, Task> {
   provenance: TaskProvenance | null;
+}
+
+export interface TaskUpdateMetadataEvent
+  extends EventBase<EventType.TaskUpdateMetadataEvent, Task> {
+  metadata: { [key: string]: string }; // is merged with existing metadata
 }
 
 export interface TaskUpdateSpecEvent
