@@ -10,7 +10,7 @@ import { Card, Note } from "./ankiDBTypes";
 test("manifest contains two test images", async () => {
   await withTestAnkiCollection(async (handle, manifest) => {
     expect(manifest).toMatchInlineSnapshot(`
-      Object {
+      {
         "0": "paste-5146b5478bc75de1c703057f0a51a93a70ca922d.jpg",
         "1": "paste-235d52a420e48250574495268d1eaadbcd40e188.jpg",
       }
@@ -30,7 +30,7 @@ test("reads revlog", async () => {
     await readLogs(handle, mock);
     expect(mock.mock.calls).toHaveLength(1);
     expect(mock.mock.calls[0][0]).toMatchInlineSnapshot(`
-      Object {
+      {
         "cid": 1586378910504,
         "ease": 3,
         "factor": 2500,

@@ -77,21 +77,21 @@ test("mapping cloze note", () => {
   });
   expect((result.spec.content as ClozeTaskContent).components)
     .toMatchInlineSnapshot(`
-    Object {
-      "0": Object {
+    {
+      "0": {
         "order": 0,
-        "ranges": Array [
-          Object {
+        "ranges": [
+          {
             "hint": null,
             "length": 5,
             "startIndex": 5,
           },
         ],
       },
-      "1": Object {
+      "1": {
         "order": 1,
-        "ranges": Array [
-          Object {
+        "ranges": [
+          {
             "hint": null,
             "length": 6,
             "startIndex": 20,
@@ -107,26 +107,26 @@ test("mapping note with image", () => {
   const imageNote = notes.find((note) => note.flds.includes("<img"))!;
   const result = mapNoteToTaskSpec(imageNote, basicMapping);
   expect(result).toMatchInlineSnapshot(`
-Object {
-  "issues": Array [],
-  "spec": Object {
-    "content": Object {
-      "answer": Object {
-        "attachments": Array [
-          "pyN-ng4VX1K49oL1eATILg",
-        ],
-        "text": "Test answer with an image",
+    {
+      "issues": [],
+      "spec": {
+        "content": {
+          "answer": {
+            "attachments": [
+              "pyN-ng4VX1K49oL1eATILg",
+            ],
+            "text": "Test answer with an image",
+          },
+          "body": {
+            "attachments": [
+              "O1FLbMewV1yCmV2vzCfVxg",
+            ],
+            "text": "Test question with an image",
+          },
+          "type": "qa",
+        },
+        "type": "memory",
       },
-      "body": Object {
-        "attachments": Array [
-          "O1FLbMewV1yCmV2vzCfVxg",
-        ],
-        "text": "Test question with an image",
-      },
-      "type": "qa",
-    },
-    "type": "memory",
-  },
-}
-`);
+    }
+  `);
 });

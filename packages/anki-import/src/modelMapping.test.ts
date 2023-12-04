@@ -20,7 +20,7 @@ function getModelByName(modelName: string): number {
 test("basic model maps", () => {
   expect(getModelMapping(collection, getModelByName("Basic")))
     .toMatchInlineSnapshot(`
-    Object {
+    {
       "answerFieldIndex": 1,
       "questionFieldIndex": 0,
       "type": "basic",
@@ -29,7 +29,7 @@ test("basic model maps", () => {
   expect(
     getModelMapping(collection, getModelByName("Basic (type in the answer)")),
   ).toMatchInlineSnapshot(`
-    Object {
+    {
       "answerFieldIndex": 1,
       "questionFieldIndex": 0,
       "type": "basic",
@@ -40,7 +40,7 @@ test("basic model maps", () => {
 test("cloze model maps", () => {
   expect(getModelMapping(collection, getModelByName("Cloze")))
     .toMatchInlineSnapshot(`
-    Object {
+    {
       "contentsFieldIndex": 0,
       "type": "cloze",
     }

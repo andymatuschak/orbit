@@ -2,7 +2,8 @@ import events from "events";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import sqlite from "sqlite";
+import * as sqlite from "sqlite";
+import * as sqlite3 from "sqlite3";
 import unzip, { Entry } from "unzipper";
 import { Card, Collection, Log, Note } from "./ankiDBTypes";
 
@@ -66,7 +67,11 @@ async function withCollectionDatabase<R = undefined>(
   ankiCollectionPath: string,
   continuation: (handle: AnkiCollectionDBHandle) => Promise<R>,
 ): Promise<R> {
-  const database = await sqlite.open(ankiCollectionPath, { mode: 1 });
+  const database = await sqlite.open({
+    filename: ankiCollectionPath,
+    mode: 1,
+    driver: sqlite3.Database,
+  });
   return continuation(database);
 }
 
