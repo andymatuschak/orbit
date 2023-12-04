@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "rm -rf \"$TMPDIR/orbit-file-storage-emulator\"; firebase emulators:start --import emulator-data",
     "build:local": "tsc -b && rollup -c rollup.config.js",
-    "predeploy": "yarn run build",
+    "predeploy": "yarn run build:local",
     "deploy": "firebase deploy --only functions",
     "deployCORS": "gsutil cors set ../backend/firebase-storage-cors.json gs://metabook-system.appspot.com",
     "deployFirestoreConfig": "firebase deploy --only firestore",
@@ -66,6 +66,7 @@
     "babel-jest": "^27.0.6",
     "babel-loader": "^8.2.2",
     "babel-plugin-add-import-extension": "^1.4.3",
+    "bun-types": "^1.0.15",
     "eslint": "^7.13.0",
     "firebase-tools": "^12.6.2",
     "jest": "^27.0.6",
@@ -74,12 +75,6 @@
     "ts-loader": "^8.0.11",
     "ts-node": "^9.0.0",
     "typescript": "^4.2.4"
-  },
-  "workspaces": {
-    "nohoist": [
-      "firebase-functions",
-      "firebase-admin"
-    ]
   },
   "resolutions": {
     "api/ajv": "^8.5.0"
