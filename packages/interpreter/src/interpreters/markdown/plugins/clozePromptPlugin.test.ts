@@ -1,13 +1,7 @@
-import remarkParse from "remark-parse";
-import remarkStringify from "remark-stringify";
-import { unified } from "unified";
-import { clozeNodeType } from "../markdown";
+import { clozeNodeType, markdownProcessor } from "../markdown";
 import promptProcessorPlugin from "./clozePromptPlugin";
 
-const processor = unified()
-  .use(remarkParse)
-  .use(remarkStringify)
-  .use(promptProcessorPlugin);
+const processor = markdownProcessor().use(promptProcessorPlugin);
 
 test("parses cloze", () => {
   const markdown = "This is {a test} of cloze";
@@ -51,6 +45,8 @@ test("doesn't parse unbalanced braces", () => {
   expect(processor.stringify(ast).trimRight()).toEqual(markdown);
 });
 
+// For now, let's say that the inner cloze "wins", like links.
+// TODO: figure out what policy I actually want here.
 test("parses nested braces", () => {
   const markdown = "This is {a {test}} of cloze";
   const ast = processor.parse(markdown);
@@ -59,16 +55,60 @@ test("parses nested braces", () => {
       {
         type: "paragraph",
         children: [
-          { type: "text", value: "This is " },
+          { type: "text", value: "This is {a " },
           {
             type: clozeNodeType,
-            children: [{ type: "text", value: "a {test}" }],
+            children: [{ type: "text", value: "test" }],
           },
-          { type: "text", value: " of cloze" },
+          { type: "text", value: "} of cloze" },
         ],
       },
     ],
   });
 
   expect(processor.stringify(ast).trimRight()).toEqual(markdown);
+});
+
+test("doesn't parse clozes inside code blocks", () => {
+  const markdown = "`{c}`";
+  const ast = processor.parse(markdown);
+  expect(ast).toMatchObject({
+    children: [
+      {
+        type: "paragraph",
+        children: [{ type: "inlineCode", value: "{c}" }],
+      },
+    ],
+  });
+});
+
+test("doesn't parse clozes inside fenced code blocks", () => {
+  const markdown = "```\n{c}\n```";
+  const ast = processor.parse(markdown);
+  expect(ast).toMatchObject({
+    children: [
+      {
+        type: "code",
+        value: "{c}",
+      },
+    ],
+  });
+});
+
+test("doesn't parse clozes inside math", () => {
+  const markdown = "${c}$";
+  const ast = processor.parse(markdown);
+  expect(ast).toMatchObject({
+    children: [
+      {
+        type: "paragraph",
+        children: [
+          {
+            type: "inlineMath",
+            value: "{c}",
+          },
+        ],
+      },
+    ],
+  });
 });

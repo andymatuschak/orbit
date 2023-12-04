@@ -9,7 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "lib": ["es2020"],
-    "module": "es6",
+    "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "sourceMap": true,

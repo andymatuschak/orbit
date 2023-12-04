@@ -1,3 +1,0 @@
-<component name="DependencyValidationManager">
-  <scope name="Local sources" pattern="(file[spaced-everything]:src//*||file:*.ts)&amp;&amp;!file[computer-supported-thinking]:*/dist//*" />
-</component>

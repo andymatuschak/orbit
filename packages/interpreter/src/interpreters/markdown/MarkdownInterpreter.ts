@@ -1,5 +1,5 @@
 import {
-  parseSingleCurlyBraceClozePromptMarkup,
+  ClozeTaskContentComponent,
   TaskContentType,
   TaskSpec,
   TaskSpecType,
@@ -11,9 +11,17 @@ import {
   IngestibleSource,
   IngestibleSourceIdentifier,
 } from "@withorbit/ingester";
+import mdast, * as Mdast from "mdast";
+import { selectAll } from "unist-util-select";
 import { Hasher } from "../../hasher/hasher";
 import { InterpretableFile, Interpreter } from "../../interpreter";
-import { findAllPrompts, parseMarkdown, processor, Prompt } from "./markdown";
+import {
+  clozeNodeType,
+  findAllPrompts,
+  parseMarkdown,
+  processor,
+  Prompt,
+} from "./markdown";
 import { getNoteTitle } from "./utils/getNoteTitle";
 import { getStableBearID } from "./utils/getStableBearID";
 
@@ -69,19 +77,60 @@ function convertInterpreterPromptToIngestible(prompt: Prompt): TaskSpec {
       content: {
         type: TaskContentType.QA,
         body: {
-          text: processor.stringify(prompt.question).trimRight(),
+          text: processor
+            .stringify(prompt.question as unknown as mdast.Root)
+            .trimEnd(),
           attachments: [],
         },
         answer: {
-          text: processor.stringify(prompt.answer).trimRight(),
+          text: processor
+            .stringify(prompt.answer as unknown as mdast.Root)
+            .trimEnd(),
           attachments: [],
         },
       },
     };
   } else {
-    const markdownString = processor.stringify(prompt.block).trimRight();
-    const { markupWithoutBraces, clozeComponents } =
-      parseSingleCurlyBraceClozePromptMarkup(markdownString);
+    // We've got to strip the braces out of the clozes.
+    const markupWithBraces = processor
+      .stringify(prompt.block as unknown as Mdast.Root)
+      .trimEnd();
+    const ast = processor.parse(markupWithBraces);
+    const clozes = selectAll(clozeNodeType, ast);
+    let markupWithoutBraces = "";
+    const components: { [componentID: string]: ClozeTaskContentComponent } = {};
+    clozes.forEach((cloze, i) => {
+      if (i === 0) {
+        markupWithoutBraces += markupWithBraces.slice(
+          0,
+          clozes[0].position!.start.offset!,
+        );
+      } else {
+        markupWithoutBraces += markupWithBraces.slice(
+          clozes[i - 1].position!.end.offset!,
+          cloze.position!.start.offset!,
+        );
+      }
+      markupWithoutBraces += markupWithBraces.slice(
+        cloze.position!.start.offset! + 1,
+        cloze.position!.end.offset! - 1,
+      );
+      components[i.toString()] = {
+        order: i,
+        ranges: [
+          {
+            hint: null,
+            startIndex: cloze.position!.start.offset! - i * 2,
+            length:
+              cloze.position!.end.offset! - cloze.position!.start.offset! - 2,
+          },
+        ],
+      };
+    });
+    markupWithoutBraces += markupWithBraces.slice(
+      clozes.at(-1)!.position!.end.offset!,
+    );
+
     return {
       type: TaskSpecType.Memory,
       content: {
@@ -90,7 +139,7 @@ function convertInterpreterPromptToIngestible(prompt: Prompt): TaskSpec {
           text: markupWithoutBraces,
           attachments: [],
         },
-        components: clozeComponents,
+        components,
       },
     };
   }

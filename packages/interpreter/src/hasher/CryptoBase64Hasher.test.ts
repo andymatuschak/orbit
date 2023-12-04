@@ -57,3 +57,28 @@ it("is not sensitive to key ordering", () => {
   const hashB = CryptoBase64Hasher.hash(objectB);
   expect(hashA).toEqual(hashB);
 });
+
+it("generates different outputs for identical cloze strings with different ranges", () => {
+  const a: TaskSpec = {
+    type: TaskSpecType.Memory,
+    content: {
+      type: TaskContentType.Cloze,
+      body: { text: "Foo", attachments: [] },
+      components: {
+        "0": { order: 0, ranges: [{ hint: null, startIndex: 0, length: 1 }] },
+      },
+    },
+  };
+  const b: TaskSpec = {
+    type: TaskSpecType.Memory,
+    content: {
+      type: TaskContentType.Cloze,
+      body: { text: "Foo", attachments: [] },
+      components: {
+        "0": { order: 0, ranges: [{ hint: null, startIndex: 0, length: 1 }] },
+        "1": { order: 1, ranges: [{ hint: null, startIndex: 2, length: 1 }] },
+      },
+    },
+  };
+  expect(CryptoBase64Hasher.hash(a)).not.toEqual(CryptoBase64Hasher.hash(b));
+});

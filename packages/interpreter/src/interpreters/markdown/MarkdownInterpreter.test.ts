@@ -44,7 +44,7 @@ This is another paragraph.
 Q. This is another prompt.
 A. Which contains a completely valid answer.
     
-This is a {test} cloze prompt`,
+This is a {test} cloze {prompt}`,
   };
   const interpreter = new MarkdownInterpreter(CryptoBase64Hasher);
   const ingestible = await interpreter.interpret([file]);

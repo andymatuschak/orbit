@@ -1,7 +1,7 @@
-import mdast from "mdast";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
 import { unified } from "unified";
+import { selectAll } from "unist-util-select";
 import bearIDPlugin, { bearIDNodeType } from "./bearIDPlugin";
 
 const processor = unified()
@@ -15,12 +15,14 @@ const input = `# Test node
 
 test("decodes IDs", () => {
   const ast = processor.runSync(processor.parse(input));
-  expect((ast as mdast.Root).children).toContainEqual({
-    type: bearIDNodeType,
-    bearID: testBearID,
-  });
+  expect(selectAll(bearIDNodeType, ast)).toMatchObject([
+    {
+      type: bearIDNodeType,
+      bearID: testBearID,
+    },
+  ]);
 });
 
 test("encodes IDs", () => {
-  expect(processor.processSync(input).toString().trimRight()).toEqual(input);
+  expect(processor.processSync(input).toString().trimEnd()).toEqual(input);
 });

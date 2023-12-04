@@ -12,7 +12,7 @@ import { Hasher } from "./hasher";
 // normalize each of the objects into an array of strings to ensure
 // that the hash is not sensitive to key ordering
 const taskContentDeterministicOrder: {
-  [key in TaskContentType]: (spec: TaskContent) => string[];
+  [key in TaskContentType]: (spec: TaskContent) => (string | number | null)[];
 } = {
   [TaskContentType.QA]: (content) => {
     const qa = content as QATaskContent;
@@ -20,7 +20,15 @@ const taskContentDeterministicOrder: {
   },
   [TaskContentType.Cloze]: (content) => {
     const cloze = content as ClozeTaskContent;
-    return [content.type, cloze.body.text];
+    let output: (string | number | null)[] = [content.type, cloze.body.text];
+    for (const [id, component] of Object.entries(cloze.components)) {
+      output = output.concat(
+        id,
+        component.order,
+        ...component.ranges.flatMap((r) => [r.hint, r.startIndex, r.length]),
+      );
+    }
+    return output;
   },
   [TaskContentType.Plain]: (content) => {
     const plain = content as PlainTaskContent;

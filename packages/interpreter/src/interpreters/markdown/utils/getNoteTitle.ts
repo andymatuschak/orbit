@@ -8,12 +8,14 @@ export function getNoteTitle(noteRoot: mdast.Root): string | null {
     if (firstNode.type === "heading") {
       return processor
         .stringify({
-          type: "paragraph",
+          type: "root",
           children: firstNode.children,
-        } as unist.Node)
-        .trimRight();
+        })
+        .trimEnd();
     } else {
-      return processor.stringify(firstNode).trimRight();
+      return processor
+        .stringify({ type: "root", children: [firstNode] })
+        .trimEnd();
     }
   } else {
     return null;

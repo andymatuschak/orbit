@@ -1,12 +1,13 @@
-import unist from "unist";
 import mdast from "mdast";
+import { headingRange } from "mdast-util-heading-range";
+import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
+import remarkWikiLink from "remark-wiki-link";
 import { unified } from "unified";
+import unist from "unist";
 import { parents } from "unist-util-parents";
-import * as unistUtilSelect from "unist-util-select";
-import noteLinkProcessorPlugin from "./plugins/noteLinkProcessorPlugin";
-import backlinksPlugin from "./plugins/backlinksPlugin";
+import { selectAll } from "unist-util-select";
 import bearIDPlugin from "./plugins/bearIDPlugin";
 import clozePromptPlugin from "./plugins/clozePromptPlugin";
 import qaPromptPlugin from "./plugins/qaPromptPlugin";
@@ -26,45 +27,42 @@ export interface ClozePrompt extends JsonMap {
 export const qaPromptType = "qaPrompt";
 export interface QAPrompt extends JsonMap {
   type: typeof qaPromptType;
-  question: mdast.Parent & JsonMap;
-  answer: mdast.Parent & JsonMap;
+  question: mdast.RootContent & JsonMap;
+  answer: mdast.RootContent & JsonMap;
 }
 
 export type Prompt = ClozePrompt | QAPrompt;
 
-const backlinksNodeType = "backlinksNode";
-
-export const clozeNodeType = "incremental-thinking-cloze";
+export const clozeNodeType = "clozePromptNode";
 export interface ClozePromptNode extends unist.Node {
   type: typeof clozeNodeType;
   children: mdast.PhrasingContent[];
 }
 
-export const qaPromptNodeType = "incremental-thinking-QA";
+export const qaPromptNodeType = "qaPrompt";
 export interface QAPromptNode extends unist.Node {
   type: typeof qaPromptNodeType;
-  question: mdast.Parent;
-  answer: mdast.Parent;
+  question: mdast.RootContent;
+  answer: mdast.RootContent;
 }
 
-type NodeWithParent = unist.Node & {
+type NodeWithParent = mdast.Nodes & {
   parent?: NodeWithParent;
 };
 
 export const markdownProcessor = unified()
-  .use(remarkParse as any)
-  // @ts-ignore
+  .use(remarkParse)
   .use(remarkStringify, {
     bullet: "*",
     emphasis: "*",
     listItemIndent: "one",
     rule: "-",
     ruleSpaces: false,
-  });
+  })
+  .use(remarkMath);
 
 export const processor = markdownProcessor()
-  .use(noteLinkProcessorPlugin)
-  .use(backlinksPlugin)
+  .use(remarkWikiLink)
   .use(bearIDPlugin)
   .use(clozePromptPlugin)
   .use(qaPromptPlugin);
@@ -74,9 +72,11 @@ export async function parseMarkdown(content: string) {
   return root as mdast.Root;
 }
 
-export function findAllPrompts(tree: unist.Node): Prompt[] {
+export function findAllPrompts(tree: mdast.Root): Prompt[] {
+  // Strip backlinks section out of tree. (headingRange mutates in-place)
+  headingRange(tree, "Backlinks", () => []);
   const treeWithParents = parents(tree) as NodeWithParent;
-  const clozeNodes = unistUtilSelect.selectAll(
+  const clozeNodes = selectAll(
     clozeNodeType,
     treeWithParents,
   ) as NodeWithParent[];
@@ -89,11 +89,7 @@ export function findAllPrompts(tree: unist.Node): Prompt[] {
       parent = parent.parent;
     }
 
-    if (
-      parent &&
-      !promptNodeHasUnsupportedParent(node) &&
-      !visitedClozePromptBlocks.has(parent)
-    ) {
+    if (parent && !visitedClozePromptBlocks.has(parent)) {
       visitedClozePromptBlocks.add(parent);
       clozePrompts.push({
         type: "cloze",
@@ -102,31 +98,17 @@ export function findAllPrompts(tree: unist.Node): Prompt[] {
     }
   }
 
-  const qaPrompts = unistUtilSelect
-    .selectAll(qaPromptNodeType, treeWithParents)
-    .filter((n) => !promptNodeHasUnsupportedParent(n))
-    .map((n) => {
-      const qaPromptNode = n as QAPromptNode;
-      const qaPrompt: QAPrompt = {
-        type: "qaPrompt",
-        question: qaPromptNode.question as mdast.Parent & JsonMap,
-        answer: qaPromptNode.answer as mdast.Parent & JsonMap,
-      };
-      return qaPrompt;
-    });
+  const qaPrompts = selectAll(qaPromptNodeType, treeWithParents).map((n) => {
+    const qaPromptNode = n as QAPromptNode;
+    const qaPrompt: QAPrompt = {
+      type: "qaPrompt",
+      question: qaPromptNode.question as mdast.RootContent & JsonMap,
+      answer: qaPromptNode.answer as mdast.RootContent & JsonMap,
+    };
+    return qaPrompt;
+  });
 
   return (clozePrompts as Prompt[]).concat(qaPrompts);
-}
-
-function promptNodeHasUnsupportedParent(promptNode: unist.Node): boolean {
-  let node = (promptNode as NodeWithParent).parent;
-  while (node) {
-    if (node.type === backlinksNodeType) {
-      return true;
-    }
-    node = node.parent;
-  }
-  return false;
 }
 
 const blockTypes = new Set([

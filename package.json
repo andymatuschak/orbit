@@ -3,7 +3,7 @@
   "scripts": {
     "build": "tsc -b packages/tsconfig.json && (cd packages/backend; yarn build)",
     "watch": "tsc -b -w packages/tsconfig.json",
-    "test": "cd packages; npx jest --projects anki-import api-client ingester backend core web-component note-sync api store-fs store-web interpreter --runInBand",
+    "test": "cd packages; npx jest --projects anki-import api-client ingester backend core web-component api store-fs store-web interpreter --runInBand",
     "test:watch": "yarn run test --watch",
     "lint": "cd packages; eslint .",
     "lint:fix": "cd packages; eslint --fix .",
@@ -24,9 +24,7 @@
     "typescript": "^4.2.4"
   },
   "workspaces": [
-    "packages/*",
-    "packages/note-sync/vendor/computer-supported-thinking/spaced-everything",
-    "packages/note-sync/vendor/computer-supported-thinking/vendor/incremental-thinking"
+    "packages/*"
   ],
   "name": "@withorbit/umbrella"
 }

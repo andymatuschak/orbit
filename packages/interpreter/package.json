@@ -9,28 +9,36 @@
   "scripts": {
     "build": "tsc -b",
     "test": "jest",
-    "interpret": "yarn build; node --experimental-specifier-resolution=node dist/bin/run.js"
+    "interpret": "yarn build; node --experimental-specifier-resolution=node dist/bin/run.js",
+    "migrateNoteSync": "yarn build; node --experimental-specifier-resolution=node dist/bin/migrateNoteSync.js"
   },
   "dependencies": {
     "@withorbit/core": "0.0.1",
     "@withorbit/ingester": "0.0.1",
     "@withorbit/store-fs": "0.0.1",
-    "remark-parse": "10.0.0",
-    "remark-stringify": "10.0.0",
-    "remark-wiki-link": "^1.0.4",
-    "unified": "10.1.0",
-    "unist-util-map": "3.0.0",
-    "unist-util-parents": "^2.0.0",
-    "unist-util-select": "4.0.0"
+    "mdast-util-from-markdown": "^2.0.0",
+    "mdast-util-heading-range": "^4.0.0",
+    "micromark-util-resolve-all": "^2.0.0",
+    "micromark-util-symbol": "^2.0.0",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "remark-wiki-link": "^2.0.1",
+    "unified": "^11.0.3",
+    "unist-util-filter": "^5.0.1",
+    "unist-util-map": "^4.0.0",
+    "unist-util-parents": "^3.0.0",
+    "unist-util-select": "^5.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.16.11",
     "@types/jest": "^26.0.24",
-    "@types/mdast": "^3.0.10",
+    "@types/mdast": "^4.0.1",
     "@types/node": "^18.18.3",
-    "@types/unist": "^2.0.6",
+    "@types/unist": "^3.0.0",
     "babel-jest": "^27.0.6",
     "jest": "^27.0.6",
+    "micromark-util-types": "^2.0.0",
     "typescript": "^4.2.4"
   }
 }

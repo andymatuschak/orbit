@@ -10,7 +10,6 @@
     "build": "tsc -b",
     "test": "jest --runInBand",
     "ingest": "yarn build; node --experimental-specifier-resolution=node dist/bin/run.js",
-    "migrateNoteSync": "yarn build; node --experimental-specifier-resolution=node dist/bin/migrateNoteSync.js",
     "generateSchema": "typescript-json-schema src/ingestible.ts Ingestible -o src/ingestible.json --noExtraProps --required --ignoreErrors --strictNullChecks"
   },
   "dependencies": {

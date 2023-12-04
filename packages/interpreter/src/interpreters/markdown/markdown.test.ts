@@ -1,3 +1,4 @@
+import mdast from "mdast";
 import { selectAll } from "unist-util-select";
 import {
   clozeNodeType,
@@ -5,12 +6,14 @@ import {
   ClozePromptNode,
   clozePromptType,
   findAllPrompts,
-  qaPromptType,
   processor,
+  qaPromptType,
 } from "./markdown";
 
 function getPrompts(input: string) {
-  return findAllPrompts(processor.runSync(processor.parse(input)));
+  return findAllPrompts(
+    processor.runSync(processor.parse(input)) as mdast.Root,
+  );
 }
 
 test("double cloze", () => {
@@ -63,4 +66,14 @@ test("cloze in backlink section", () => {
 `);
 
   expect(prompts).toHaveLength(0);
+});
+
+test("QA prompt in blockquote", () => {
+  const prompts = getPrompts(`# Heading
+
+> Q. Test.
+> A. Answer.
+`);
+
+  expect(prompts).toHaveLength(1);
 });
