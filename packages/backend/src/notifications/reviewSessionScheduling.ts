@@ -3,9 +3,9 @@ import {
   defaultReviewSessionMaximumQueueSize,
   getReviewQueueFuzzyDueTimestampThreshold,
   ReviewItem,
+  Task,
 } from "@withorbit/core";
 import * as dateFns from "date-fns";
-import { Task } from "@withorbit/core/src/entities/task";
 
 // We'll delay review sessions until we estimate doing so would cause at least this many prompts to be forgotten because of the delay.
 const forgottenPromptCountThreshold = 2;
