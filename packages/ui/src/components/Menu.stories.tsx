@@ -2,10 +2,10 @@ import { Story } from "@storybook/react";
 import React, { useRef, useState } from "react";
 import { View } from "react-native";
 import { colors } from "../styles";
-import Button from "./Button";
-import { IconName } from "./IconShared";
-import { LogoProps } from "./LogoShared";
-import { Menu, menuItemDividerSpec } from "./Menu";
+import Button from "./Button.js";
+import { IconName } from "./IconShared.js";
+import { LogoProps } from "./LogoShared.js";
+import { Menu, menuItemDividerSpec } from "./Menu.js";
 
 export default {
   title: "Menu",

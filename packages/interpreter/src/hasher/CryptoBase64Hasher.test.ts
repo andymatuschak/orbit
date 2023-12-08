@@ -1,5 +1,5 @@
 import { TaskContentType, TaskSpec, TaskSpecType } from "@withorbit/core";
-import { CryptoBase64Hasher } from "./CryptoBase64Hasher";
+import { CryptoBase64Hasher } from "./CryptoBase64Hasher.js";
 
 it("hashes", () => {
   const object: TaskSpec = {

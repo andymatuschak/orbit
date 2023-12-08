@@ -1,5 +1,5 @@
 import React from "react";
-import serviceConfig from "../../serviceConfig";
+import serviceConfig from "../../serviceConfig.js";
 
 function trackPageView(pathname: string, referrer: string | null) {
   const {

@@ -1,9 +1,9 @@
 import {
   AttachmentMIMEType,
   AttachmentReference,
-} from "./entities/attachmentReference";
-import { Task, TaskProvenance, TaskSpec } from "./entities/task";
-import { Entity, IDOfEntity } from "./entity";
+} from "./entities/attachmentReference.js";
+import { Task, TaskProvenance, TaskSpec } from "./entities/task.js";
+import { Entity, IDOfEntity } from "./entity.js";
 
 // Events are the central data type in our system. Entities are created and updated over time through a series of events.
 export type Event =

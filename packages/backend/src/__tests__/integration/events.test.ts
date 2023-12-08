@@ -1,7 +1,7 @@
 import { createTestTaskIngestEvents } from "@withorbit/sample-data";
-import { resetLocalEmulators } from "../emulators";
-import { fetchRoute } from "./utils/fetchRoute";
-import { setupAuthToken } from "./utils/setupAuthToken";
+import { resetLocalEmulators } from "../emulators.js";
+import { fetchRoute } from "./utils/fetchRoute.js";
+import { setupAuthToken } from "./utils/setupAuthToken.js";
 
 beforeAll(() => {
   // Spinning up the Cloud Function sometimes takes a few seconds...

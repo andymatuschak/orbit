@@ -1,2 +1,2 @@
-export { OrbitStoreFS as default } from "./orbitStoreFS";
-export { OrbitStoreInMemory } from "./orbitStoreInMemory";
+export { OrbitStoreFS as default } from "./orbitStoreFS.js";
+export { OrbitStoreInMemory } from "./orbitStoreInMemory.js";

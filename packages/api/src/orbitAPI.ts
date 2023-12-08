@@ -7,8 +7,8 @@ import {
   TaskID,
   AttachmentID,
 } from "@withorbit/core";
-import { BlobLike } from "./genericHTTPAPI";
-import { RequiredSpec } from "./util/requiredSpec";
+import { BlobLike } from "./genericHTTPAPI.js";
+import { RequiredSpec } from "./util/requiredSpec.js";
 
 // Meant to conform to genericHTTPAPI/Spec, but I can't declare conformance without running into obscure Typescript limitations.
 export type ValidatableSpec = {

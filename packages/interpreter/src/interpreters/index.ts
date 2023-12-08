@@ -1,1 +1,1 @@
-export * from "./markdown/MarkdownInterpreter";
+export * from "./markdown/MarkdownInterpreter.js";

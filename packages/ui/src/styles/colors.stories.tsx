@@ -2,13 +2,13 @@ import { boolean, number } from "@storybook/addon-knobs";
 import React from "react";
 import { View, Text } from "react-native";
 import Svg, { Circle, Text as SVGText } from "react-native-svg";
-import Button from "../components/Button";
-import { IconName } from "../components/IconShared";
-import Spacer from "../components/Spacer";
-import Starburst from "../components/Starburst";
-import * as layout from "./layout";
-import * as type from "./type";
-import * as colors from "./colors";
+import Button from "../components/Button.js";
+import { IconName } from "../components/IconShared.js";
+import Spacer from "../components/Spacer.js";
+import Starburst from "../components/Starburst.js";
+import * as layout from "./layout.js";
+import * as type from "./type.js";
+import * as colors from "./colors.js";
 
 type RGBA = [number, number, number, number];
 

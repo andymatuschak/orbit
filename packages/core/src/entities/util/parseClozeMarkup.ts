@@ -1,4 +1,4 @@
-import { ClozeTaskContentComponent } from "../task";
+import { ClozeTaskContentComponent } from "../task.js";
 
 /**
  * Parses a string indicating cloze prompts using a simple single-curly brace syntax.

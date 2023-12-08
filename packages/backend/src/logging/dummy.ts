@@ -1,4 +1,4 @@
-import { LoggingService } from "./interface";
+import { LoggingService } from "./interface.js";
 
 function createTracer(name: string) {
   return (...args: unknown[]) => {

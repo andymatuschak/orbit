@@ -2,9 +2,9 @@ import { ContinueWithUser, styles } from "@withorbit/ui";
 import React from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { AuthenticationClient } from "../authentication";
-import { useAuthenticationClient } from "../authentication/authContext";
-import { createLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";
-import SignInForm from "./SignInForm";
+import { useAuthenticationClient } from "../authentication/authContext.js";
+import { createLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel.js";
+import SignInForm from "./SignInForm.js";
 
 type LoginTokenTarget = "opener" | "channel";
 function getCurrentLoginTokenTarget(): LoginTokenTarget | null {

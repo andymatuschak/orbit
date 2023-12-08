@@ -1,5 +1,5 @@
 import * as dateFns from "date-fns";
-import { shouldEvaluateUserForNotification } from "./shouldEvaluateUserForNotification";
+import { shouldEvaluateUserForNotification } from "./shouldEvaluateUserForNotification.js";
 
 test("don't bother with recently registered users", () => {
   expect(

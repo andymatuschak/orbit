@@ -8,7 +8,7 @@ import {
   findAllPrompts,
   processor,
   qaPromptType,
-} from "./markdown";
+} from "./markdown.js";
 
 function getPrompts(input: string) {
   return findAllPrompts(

@@ -1,6 +1,6 @@
-import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
+import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection.js";
 import { AnkiCollectionDBHandle, Collection, readCollection } from "./ankiPkg";
-import { getModelMapping } from "./modelMapping";
+import { getModelMapping } from "./modelMapping.js";
 
 let collection: Collection;
 beforeAll(async () => {

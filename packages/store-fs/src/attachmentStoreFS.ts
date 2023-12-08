@@ -1,6 +1,6 @@
 import { AttachmentID, AttachmentMIMEType } from "@withorbit/core";
 import { AttachmentStore } from "@withorbit/store-shared";
-import { SQLDatabaseBackend } from "./sqlite";
+import { SQLDatabaseBackend } from "./sqlite.js";
 
 // Facade exposing attachment I/O via SQLite blobs.
 export class AttachmentStoreFS implements AttachmentStore {

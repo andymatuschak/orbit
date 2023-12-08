@@ -1,5 +1,5 @@
 import { Database, runDatabaseTests } from "@withorbit/store-shared";
-import { SQLDatabaseBackend } from "./sqlite";
+import { SQLDatabaseBackend } from "./sqlite.js";
 
 describe("database tests", () => {
   runDatabaseTests("SQLite", async (eventReducer, eventValidator) => {

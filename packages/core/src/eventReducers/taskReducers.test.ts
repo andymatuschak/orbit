@@ -2,7 +2,7 @@ import {
   testClozeSpec,
   testClozeTask,
   testIngestClozeTaskEvent,
-} from "../__tests__/testTasks";
+} from "../__tests__/testTasks.js";
 import {
   EventID,
   EventType,
@@ -13,8 +13,8 @@ import {
   TaskUpdateMetadataEvent,
   TaskUpdateProvenanceEvent,
   TaskUpdateSpecEvent,
-} from "../event";
-import { eventReducer } from "../eventReducer";
+} from "../event.js";
+import { eventReducer } from "../eventReducer.js";
 
 const testTaskFirstComponentID = Object.keys(
   testClozeSpec.content.components,

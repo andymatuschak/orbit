@@ -1,6 +1,6 @@
 import express from "express";
 import { sharedServerDatabase } from "../../../db";
-import { getSessionCookieOptions, sessionCookieName } from "./sessionCookie";
+import { getSessionCookieOptions, sessionCookieName } from "./sessionCookie.js";
 
 export async function refreshSessionCookie(
   request: express.Request,

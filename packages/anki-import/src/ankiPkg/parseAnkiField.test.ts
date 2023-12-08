@@ -1,4 +1,4 @@
-import parseAnkiField from "./parseAnkiField";
+import parseAnkiField from "./parseAnkiField.js";
 
 test("translates divs into paragraphs", () => {
   expect(

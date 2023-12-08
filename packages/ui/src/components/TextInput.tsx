@@ -8,7 +8,7 @@ import {
   StyleProp,
 } from "react-native";
 import { colors, layout, type } from "../styles";
-import { ColorPalette } from "../styles/colors";
+import { ColorPalette } from "../styles/colors.js";
 
 export const textFieldHorizontalPadding = layout.gridUnit;
 

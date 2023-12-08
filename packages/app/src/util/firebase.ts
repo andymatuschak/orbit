@@ -3,7 +3,7 @@ import firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/functions";
 
-import serviceConfig from "../../serviceConfig";
+import serviceConfig from "../../serviceConfig.js";
 
 let _app: firebase.app.App | null;
 export function getDefaultFirebaseApp(): firebase.app.App {

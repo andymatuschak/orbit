@@ -1,4 +1,4 @@
-import { ComponentIDsOf, Task, TaskContent } from "./entities/task";
+import { ComponentIDsOf, Task, TaskContent } from "./entities/task.js";
 
 export interface ReviewItem<TC extends TaskContent = TaskContent> {
   task: Task<TC>;

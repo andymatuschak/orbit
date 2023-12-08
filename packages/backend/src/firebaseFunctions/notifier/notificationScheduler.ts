@@ -2,12 +2,12 @@ import { PubSub } from "@google-cloud/pubsub";
 import admin from "firebase-admin";
 import functions from "firebase-functions";
 import { sharedServerDatabase } from "../../db";
-import { UserEnumerationRecord } from "../../db/firebaseAccountData";
-import { shouldEvaluateUserForNotification } from "../../notifications/shouldEvaluateUserForNotification";
+import { UserEnumerationRecord } from "../../db/firebaseAccountData.js";
+import { shouldEvaluateUserForNotification } from "../../notifications/shouldEvaluateUserForNotification.js";
 import {
   ProcessUserNotificationData,
   processUserNotificationTopic,
-} from "./processUserNotificationSubscriber";
+} from "./processUserNotificationSubscriber.js";
 
 // How notifications work:
 // The cloud function defines here runs periodically. It queries all users, doing a cheap filter to find those who may have notifications pending. It pushes an event for each eligible user into a pubsub queue, which is then drained by processUserNotification.

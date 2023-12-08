@@ -2,12 +2,12 @@ import { TaskContentType, TaskRepetitionOutcome } from "@withorbit/core";
 import React, { useRef } from "react";
 import { View } from "react-native";
 import { colors, layout } from "../styles";
-import { ColorPalette } from "../styles/colors";
-import { SizeClass } from "../styles/layout";
-import Button, { ButtonPendingActivationState } from "./Button";
-import { useKeyDown } from "./hooks/useKey";
-import useLayout from "./hooks/useLayout";
-import { IconName } from "./IconShared";
+import { ColorPalette } from "../styles/colors.js";
+import { SizeClass } from "../styles/layout.js";
+import Button, { ButtonPendingActivationState } from "./Button.js";
+import { useKeyDown } from "./hooks/useKey.js";
+import useLayout from "./hooks/useLayout.js";
+import { IconName } from "./IconShared.js";
 
 interface Shortcuts {
   [key: string]: {

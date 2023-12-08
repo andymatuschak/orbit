@@ -21,7 +21,7 @@ import Dexie, {
   PromiseExtended,
   WhereClause,
 } from "dexie";
-import { DexieDatabase } from "./dexie/dexie";
+import { DexieDatabase } from "./dexie/dexie.js";
 import {
   DexieDerivedTaskComponentKeys,
   DexieEntityKeys,
@@ -31,7 +31,7 @@ import {
   DexieEventRow,
   DexieEventRowWithPrimaryKey,
   DexieTable,
-} from "./dexie/tables";
+} from "./dexie/tables.js";
 
 export class IDBDatabaseBackend implements DatabaseBackend {
   db: DexieDatabase;

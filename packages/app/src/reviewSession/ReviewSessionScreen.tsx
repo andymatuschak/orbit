@@ -4,10 +4,10 @@ import { AuthenticationClient } from "../authentication";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
-} from "../authentication/authContext";
-import SignInScreen from "../signIn/SignInScreen";
-import { LoadingScreen } from "./LoadingScreen";
-import ReviewSession from "./ReviewSession";
+} from "../authentication/authContext.js";
+import SignInScreen from "../signIn/SignInScreen.js";
+import { LoadingScreen } from "./LoadingScreen.js";
+import ReviewSession from "./ReviewSession.js";
 
 function extractAccessCode(): string | null {
   if (Platform.OS === "web") {

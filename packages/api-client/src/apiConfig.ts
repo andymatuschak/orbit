@@ -1,4 +1,4 @@
-import * as Network from "./util/fetch";
+import * as Network from "./util/fetch.js";
 
 export interface APIConfig {
   baseURL: string; // no trailing slash

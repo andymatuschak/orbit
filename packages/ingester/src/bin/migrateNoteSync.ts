@@ -7,7 +7,7 @@ import {
 } from "@withorbit/core";
 import { CryptoBase64Hasher } from "@withorbit/interpreter/dist/hasher/CryptoBase64Hasher";
 import OrbitStoreFS from "@withorbit/store-fs";
-import { INGEST_ITEM_IDENTIFIER_KEY } from "../ingest";
+import { INGEST_ITEM_IDENTIFIER_KEY } from "../ingest.js";
 
 async function run(config: { orbitStorePath: string }) {
   const orbitStore = new OrbitStoreFS(config.orbitStorePath);

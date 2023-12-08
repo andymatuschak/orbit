@@ -1,7 +1,7 @@
 // This file and databaseBinding.ts provide a unified binding for the external SQLite database APIs we use on those platforms.
 // This file supplies the implementation used when running in a React Native  environment.
 
-import { SQLDatabase } from "./types";
+import { SQLDatabase } from "./types.js";
 import "react-native-quick-sqlite";
 import CustomWebSQLDatabase from "websql/custom";
 

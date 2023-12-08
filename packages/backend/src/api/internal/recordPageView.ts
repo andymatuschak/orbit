@@ -5,7 +5,7 @@ import requestIp from "request-ip";
 import { sharedLoggingService } from "../../logging";
 import crypto from "crypto";
 import { startOfMonth } from "date-fns";
-import serviceConfig from "../../serviceConfig";
+import serviceConfig from "../../serviceConfig.js";
 
 // Adapted from Umami: https://github.com/mikecao/umami
 /* MIT License

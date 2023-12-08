@@ -1,6 +1,6 @@
-export type { AuthenticationClient, UserRecord } from "./authenticationClient";
+export type { AuthenticationClient, UserRecord } from "./authenticationClient.js";
 export {
   default as FirebaseAuthenticationClient,
   FirebaseOpaqueLoginToken,
   FirebaseOpaqueIDToken,
-} from "./firebaseAuthenticationClient";
+} from "./firebaseAuthenticationClient.js";

@@ -1,6 +1,6 @@
-import { CryptoBase64Hasher } from "../../hasher/CryptoBase64Hasher";
-import { InterpretableFile } from "../../interpreter";
-import { MarkdownInterpreter } from "./MarkdownInterpreter";
+import { CryptoBase64Hasher } from "../../hasher/CryptoBase64Hasher.js";
+import { InterpretableFile } from "../../interpreter.js";
+import { MarkdownInterpreter } from "./MarkdownInterpreter.js";
 
 it("interprets bear export file with mixed content", async () => {
   const file: InterpretableFile = {

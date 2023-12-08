@@ -6,7 +6,7 @@ import { resolveAll } from "micromark-util-resolve-all";
 import { codes, types } from "micromark-util-symbol";
 import * as Micromark from "micromark-util-types";
 import { Processor } from "unified";
-import { clozeNodeType, ClozePromptNode } from "../markdown";
+import { clozeNodeType, ClozePromptNode } from "../markdown.js";
 
 // TODO: don't match clozes inside html blocks
 const clozeOpenToken = "clozeOpenToken";

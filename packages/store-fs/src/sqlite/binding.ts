@@ -3,7 +3,7 @@
 
 // Note: we're not actually using WebSQL here. This is just a SQLite adapter which presents the simplified WebSQL API, convenient for unifying the two platforms' interfaces.
 import webSQLOpenDatabase from "websql";
-import { SQLDatabase } from "./types";
+import { SQLDatabase } from "./types.js";
 
 export function openDatabase(subpath: string): SQLDatabase {
   return webSQLOpenDatabase(subpath, "", "", 1);

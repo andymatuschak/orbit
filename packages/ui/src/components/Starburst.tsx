@@ -2,11 +2,11 @@ import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core";
 import React, { useRef } from "react";
 import { Animated } from "react-native";
 import Svg, { ClipPath, G, Path } from "react-native-svg";
-import { generateIntervalSequence } from "../util/generateIntervalSequence";
-import clamp from "../util/clamp";
-import lerp from "../util/lerp";
-import usePrevious from "./hooks/usePrevious";
-import { useTransitioningValue } from "./hooks/useTransitioningValue";
+import { generateIntervalSequence } from "../util/generateIntervalSequence.js";
+import clamp from "../util/clamp.js";
+import lerp from "../util/lerp.js";
+import usePrevious from "./hooks/usePrevious.js";
+import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 const AnimatedPath = Animated.createAnimatedComponent(Path);

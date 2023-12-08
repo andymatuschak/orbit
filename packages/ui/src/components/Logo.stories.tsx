@@ -1,8 +1,8 @@
 import React from "react";
 import { Story } from "@storybook/react";
-import Logo from "./Logo";
+import Logo from "./Logo.js";
 import { colors } from "../styles";
-import { LogoProps } from "./LogoShared";
+import { LogoProps } from "./LogoShared.js";
 
 export default {
   title: "Logo",

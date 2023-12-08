@@ -1,7 +1,7 @@
 import { select, selectAll } from "unist-util-select";
-import { markdownProcessor } from "../markdown";
-import { QAPromptNode, qaPromptNodeType } from "../markdown";
-import qaPromptPlugin from "./qaPromptPlugin";
+import { markdownProcessor } from "../markdown.js";
+import { QAPromptNode, qaPromptNodeType } from "../markdown.js";
+import qaPromptPlugin from "./qaPromptPlugin.js";
 
 const processor = markdownProcessor().use(qaPromptPlugin);
 

@@ -8,8 +8,8 @@ import {
   EmbeddedScreenRecord,
   EmbeddedScreenTaskUpdateEvent,
 } from "@withorbit/embedded-support";
-import { extractItems } from "./extractItems";
-import { getSharedMetadataMonitor } from "./metadataMonitor";
+import { extractItems } from "./extractItems.js";
+import { getSharedMetadataMonitor } from "./metadataMonitor.js";
 
 declare global {
   // supplied by Webpack

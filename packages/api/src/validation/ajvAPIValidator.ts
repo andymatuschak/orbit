@@ -7,7 +7,7 @@ import {
   APIValidatorRequest,
   APIValidatorError,
   APIValidator,
-} from "./apiValidator";
+} from "./apiValidator.js";
 
 export type AjvAPIValidatorConfig = {
   mutateWithDefaultValues: boolean;

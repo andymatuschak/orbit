@@ -18,7 +18,7 @@ import {
   TextInput as RNTextInput,
   View,
 } from "react-native";
-import { useAuthenticationClient } from "../authentication/authContext";
+import { useAuthenticationClient } from "../authentication/authContext.js";
 
 function showSimpleAlert(text: string) {
   if (Platform.OS === "web") {
@@ -164,7 +164,7 @@ export default function SignInForm({
         </Text>
         {Platform.OS === "web" && (
           // Help out the password managesr.
-          <input
+          (<input
             style={{ display: "none" }}
             type="text"
             name="email"
@@ -172,7 +172,7 @@ export default function SignInForm({
             autoComplete="username"
             value={overrideEmailAddress ?? email}
             readOnly
-          />
+          />)
         )}
         {formMode === "signIn" ? (
           <Spacer units={3.5} />

@@ -1,6 +1,6 @@
 import mdast from "mdast";
-import { processor } from "../markdown";
-import { getNoteTitle } from "./getNoteTitle";
+import { processor } from "../markdown.js";
+import { getNoteTitle } from "./getNoteTitle.js";
 
 describe("getting note title", () => {
   test("extracts title heading", () => {

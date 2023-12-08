@@ -10,7 +10,7 @@ import {
 } from "@withorbit/core";
 import { OrbitStore } from "@withorbit/store-shared";
 import { APISyncAdapter, syncOrbitStore } from "@withorbit/sync";
-import { createDefaultOrbitStore } from "./orbitStoreFactory";
+import { createDefaultOrbitStore } from "./orbitStoreFactory.js";
 
 export class DatabaseManager {
   private readonly _storePromise: Promise<OrbitStore>;

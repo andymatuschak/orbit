@@ -1,2 +1,2 @@
-export * from "./embeddedScreenInterface";
-export * from "./ipc";
+export * from "./embeddedScreenInterface.js";
+export * from "./ipc.js";

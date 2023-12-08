@@ -17,10 +17,10 @@ import {
   DatabaseQueryPredicate,
 } from "@withorbit/store-shared";
 import firebase from "firebase-admin";
-import { getDatabase } from "./firestore";
-import { WithFirebaseFields } from "./withFirebaseFields";
-import { compareOrderedIDs, OrderedID, OrderedIDGenerator } from "./orderedID";
-import { UserMetadata } from "./userMetadata";
+import { getDatabase } from "./firestore.js";
+import { WithFirebaseFields } from "./withFirebaseFields.js";
+import { compareOrderedIDs, OrderedID, OrderedIDGenerator } from "./orderedID.js";
+import { UserMetadata } from "./userMetadata.js";
 
 export class FirestoreDatabaseBackend implements DatabaseBackend {
   private readonly _userID: string;

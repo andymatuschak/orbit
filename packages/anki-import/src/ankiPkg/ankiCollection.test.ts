@@ -1,11 +1,11 @@
-import withTestAnkiCollection from "../__fixtures__/withTestAnkiCollection";
+import withTestAnkiCollection from "../__fixtures__/withTestAnkiCollection.js";
 import {
   readCards,
   readCollection,
   readLogs,
   readNotes,
-} from "./ankiCollection";
-import { Card, Note } from "./ankiDBTypes";
+} from "./ankiCollection.js";
+import { Card, Note } from "./ankiDBTypes.js";
 
 test("manifest contains two test images", async () => {
   await withTestAnkiCollection(async (handle, manifest) => {

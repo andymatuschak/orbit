@@ -1,4 +1,4 @@
-import splitAnkiDBNoteFields from "./splitAnkiDBNoteFields";
+import splitAnkiDBNoteFields from "./splitAnkiDBNoteFields.js";
 
 test("parse Anki DB field with two entries", () => {
   // String literal here copied from my database, includes the 0x1f character code.

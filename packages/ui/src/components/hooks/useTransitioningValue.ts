@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated } from "react-native";
-import unreachableCaseError from "../../util/unreachableCaseError";
-import useWeakRef from "./useWeakRef";
+import unreachableCaseError from "../../util/unreachableCaseError.js";
+import useWeakRef from "./useWeakRef.js";
 
 export type AnimatedTransitionTiming =
   | ({ type: "timing" } & Omit<Animated.TimingAnimationConfig, "toValue">)

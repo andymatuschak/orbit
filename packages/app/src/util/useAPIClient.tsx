@@ -1,6 +1,6 @@
 import OrbitAPIClient from "@withorbit/api-client";
 import React from "react";
-import serviceConfig from "../../serviceConfig";
+import serviceConfig from "../../serviceConfig.js";
 import { AuthenticationClient } from "../authentication";
 
 export function useAPIClient(

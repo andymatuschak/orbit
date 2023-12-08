@@ -24,7 +24,7 @@ module.exports = function (api) {
         "@babel/preset-typescript",
         "module:metro-react-native-babel-preset",
       ],
-      plugins: [],
+      plugins: [["@babel/plugin-transform-private-methods", { loose: true }]],
     };
   } else {
     return {

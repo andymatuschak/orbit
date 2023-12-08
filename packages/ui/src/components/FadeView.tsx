@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Animated, Easing, StyleProp, ViewStyle } from "react-native";
-import { useTransitioningValue } from "./hooks/useTransitioningValue";
+import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
 
 export interface FadeViewProps {
   isVisible: boolean;

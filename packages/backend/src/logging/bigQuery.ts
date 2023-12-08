@@ -2,7 +2,7 @@ import * as BigQuery from "@google-cloud/bigquery";
 import { EntityID, EventID, EventType } from "@withorbit/core";
 import crypto from "crypto";
 import path from "path";
-import serviceConfig from "../serviceConfig";
+import serviceConfig from "../serviceConfig.js";
 import {
   EventLog,
   LoggingService,
@@ -10,7 +10,7 @@ import {
   SessionNotificationLog,
   UserEventLog,
   UserEventName,
-} from "./interface";
+} from "./interface.js";
 
 let _bigQuery: BigQuery.BigQuery | null = null;
 let _logsDataset: BigQuery.Dataset | null = null;

@@ -1,3 +1,3 @@
-export * from "./testQASpec";
-export * from "./testTasks";
-export * from "./testClozeSpec";
+export * from "./testQASpec.js";
+export * from "./testTasks.js";
+export * from "./testClozeSpec.js";

@@ -8,9 +8,9 @@ import { unified } from "unified";
 import unist from "unist";
 import { parents } from "unist-util-parents";
 import { selectAll } from "unist-util-select";
-import bearIDPlugin from "./plugins/bearIDPlugin";
-import clozePromptPlugin from "./plugins/clozePromptPlugin";
-import qaPromptPlugin from "./plugins/qaPromptPlugin";
+import bearIDPlugin from "./plugins/bearIDPlugin.js";
+import clozePromptPlugin from "./plugins/clozePromptPlugin.js";
+import qaPromptPlugin from "./plugins/qaPromptPlugin.js";
 
 export type JsonArray = Array<AnyJson>;
 export type AnyJson = boolean | number | string | null | JsonArray | JsonMap;

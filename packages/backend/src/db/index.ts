@@ -1,7 +1,7 @@
 import { Database } from "@withorbit/store-shared";
-import { FirestoreDatabaseBackend } from "./firestoreDatabaseBackend";
-import * as accounts from "./firebaseAccountData";
-import * as auth from "./firebaseAuth";
+import { FirestoreDatabaseBackend } from "./firestoreDatabaseBackend.js";
+import * as accounts from "./firebaseAccountData.js";
+import * as auth from "./firebaseAuth.js";
 
 // Currently there's only a Firestore / Firebase Auth-based implementation.
 interface OrbitServerDatabase {

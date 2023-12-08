@@ -6,7 +6,7 @@ import {
 } from "@withorbit/store-shared";
 // @ts-ignore Looks like there is no @types for this library
 import FDBFactory from "fake-indexeddb/lib/FDBFactory";
-import { IDBDatabaseBackend } from "./indexedDB";
+import { IDBDatabaseBackend } from "./indexedDB.js";
 
 let backend: IDBDatabaseBackend;
 

@@ -5,8 +5,8 @@ import {
   EventType,
 } from "@withorbit/core";
 import { OrbitStore } from "@withorbit/store-shared";
-import { OrbitStoreSyncAdapter } from "./orbitStoreSyncAdapter";
-import { SyncAdapter } from "./syncAdapter";
+import { OrbitStoreSyncAdapter } from "./orbitStoreSyncAdapter.js";
+import { SyncAdapter } from "./syncAdapter.js";
 
 function log(...args: any[]) {
   const [first, ...rest] = args;

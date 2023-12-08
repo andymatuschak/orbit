@@ -1,5 +1,5 @@
-import { clozeNodeType, markdownProcessor } from "../markdown";
-import promptProcessorPlugin from "./clozePromptPlugin";
+import { clozeNodeType, markdownProcessor } from "../markdown.js";
+import promptProcessorPlugin from "./clozePromptPlugin.js";
 
 const processor = markdownProcessor().use(promptProcessorPlugin);
 

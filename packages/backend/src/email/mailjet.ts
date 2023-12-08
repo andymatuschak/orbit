@@ -1,6 +1,6 @@
 import mailjet from "node-mailjet";
-import serviceConfig from "../serviceConfig";
-import { EmailService, EmailSpec } from "./types";
+import serviceConfig from "../serviceConfig.js";
+import { EmailService, EmailSpec } from "./types.js";
 
 const testingMode = false;
 

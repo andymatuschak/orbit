@@ -1,4 +1,4 @@
-import { OrbitReviewAreaElement } from "./OrbitReviewAreaElement";
+import { OrbitReviewAreaElement } from "./OrbitReviewAreaElement.js";
 
 export class OrbitPromptElement extends HTMLElement {
   private mountPoint: HTMLElement | null = null;

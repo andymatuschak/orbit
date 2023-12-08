@@ -1,7 +1,7 @@
 import { Logo, styles, useLayout } from "@withorbit/ui";
 import React, { ReactNode } from "react";
 import { Image, Text, View } from "react-native";
-import { InfoPageProps, SizeContextProvider } from "./InfoPageShared";
+import { InfoPageProps, SizeContextProvider } from "./InfoPageShared.js";
 
 function Summary(props: { children: ReactNode; style: "small" | "large" }) {
   return (

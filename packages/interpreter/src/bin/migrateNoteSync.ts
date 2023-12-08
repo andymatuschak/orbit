@@ -10,8 +10,8 @@ import {
 } from "@withorbit/core";
 import { INGEST_ITEM_IDENTIFIER_KEY } from "@withorbit/ingester";
 import OrbitStoreFS from "@withorbit/store-fs";
-import { CryptoBase64Hasher } from "../hasher/CryptoBase64Hasher";
-import { processor } from "../interpreters/markdown/markdown";
+import { CryptoBase64Hasher } from "../hasher/CryptoBase64Hasher.js";
+import { processor } from "../interpreters/markdown/markdown.js";
 
 async function normalizeTaskContentFieldBody(text: string): Promise<string> {
   return (await processor.process(text)).toString().trimEnd();

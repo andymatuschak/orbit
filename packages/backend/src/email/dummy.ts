@@ -1,4 +1,4 @@
-import { EmailService, EmailSpec } from "./types";
+import { EmailService, EmailSpec } from "./types.js";
 
 export const dummyEmailService: EmailService = {
   async sendEmail(

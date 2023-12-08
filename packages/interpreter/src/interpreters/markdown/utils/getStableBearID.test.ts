@@ -1,6 +1,6 @@
 import mdast from "mdast";
-import { processor } from "../markdown";
-import { getStableBearID } from "./getStableBearID";
+import { processor } from "../markdown.js";
+import { getStableBearID } from "./getStableBearID.js";
 
 describe("finding note IDs", () => {
   describe("bear note IDs", () => {

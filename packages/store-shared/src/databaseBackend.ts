@@ -5,7 +5,7 @@ import {
   EventID,
   IDOfEntity,
 } from "@withorbit/core";
-import { DatabaseEntityQuery, DatabaseEventQuery } from "./databaseQuery";
+import { DatabaseEntityQuery, DatabaseEventQuery } from "./databaseQuery.js";
 
 export interface DatabaseBackend {
   close(): Promise<void>;

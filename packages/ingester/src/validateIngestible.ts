@@ -1,6 +1,6 @@
 import Ajv from "ajv";
-import schema from "./ingestible.json" assert { type: "json" };
-import { Ingestible } from "./ingestible";
+import schema from "./ingestible.json";
+import { Ingestible } from "./ingestible.js";
 
 type ValidationError = { path: string; message: string | null };
 export interface IngestibleValidator {

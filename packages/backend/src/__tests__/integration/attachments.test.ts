@@ -3,8 +3,8 @@ import {
   AttachmentMIMEType,
   generateUniqueID,
 } from "@withorbit/core";
-import { resetLocalEmulators } from "../emulators";
-import { setupTestOrbitAPIClient } from "./utils/setupAuthToken";
+import { resetLocalEmulators } from "../emulators.js";
+import { setupTestOrbitAPIClient } from "./utils/setupAuthToken.js";
 
 const testAttachmentBase64Data = "VGVzdA==";
 const testID = generateUniqueID<AttachmentID>();

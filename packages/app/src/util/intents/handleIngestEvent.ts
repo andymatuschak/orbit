@@ -5,7 +5,7 @@ import {
 } from "@withorbit/ingester";
 import { OrbitStore } from "@withorbit/store-shared";
 import { NativeModule } from "react-native";
-import { createDefaultOrbitStore } from "../../model2/orbitStoreFactory";
+import { createDefaultOrbitStore } from "../../model2/orbitStoreFactory.js";
 
 export type IngestEventEmitterType = {
   completedIngestion(val: boolean): void;

@@ -3,7 +3,7 @@ import childProcess, { ChildProcess } from "child_process";
 import events from "events";
 import firebase from "firebase-admin";
 import path from "path";
-import { resetLocalEmulators } from "./emulators";
+import { resetLocalEmulators } from "./emulators.js";
 
 const projectID = "metabook-system";
 

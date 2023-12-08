@@ -1,5 +1,5 @@
-import { generateDueTasks } from "./__fixtures__/generateDueTasks";
-import { evaluateReviewSessionSchedule } from "./reviewSessionScheduling";
+import { generateDueTasks } from "./__fixtures__/generateDueTasks.js";
+import { evaluateReviewSessionSchedule } from "./reviewSessionScheduling.js";
 
 describe("shouldScheduleReviewSession", () => {
   const baseTimestampMillis = Date.now();

@@ -13,17 +13,17 @@ import {
 } from "@withorbit/ingester";
 import mdast, * as Mdast from "mdast";
 import { selectAll } from "unist-util-select";
-import { Hasher } from "../../hasher/hasher";
-import { InterpretableFile, Interpreter } from "../../interpreter";
+import { Hasher } from "../../hasher/hasher.js";
+import { InterpretableFile, Interpreter } from "../../interpreter.js";
 import {
   clozeNodeType,
   findAllPrompts,
   parseMarkdown,
   processor,
   Prompt,
-} from "./markdown";
-import { getNoteTitle } from "./utils/getNoteTitle";
-import { getStableBearID } from "./utils/getStableBearID";
+} from "./markdown.js";
+import { getNoteTitle } from "./utils/getNoteTitle.js";
+import { getStableBearID } from "./utils/getStableBearID.js";
 
 export class MarkdownInterpreter implements Interpreter {
   private _hasher: Hasher;

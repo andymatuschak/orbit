@@ -1,5 +1,5 @@
-import { OrbitPromptElement } from "./OrbitPromptElement";
-import { OrbitReviewAreaElement } from "./OrbitReviewAreaElement";
+import { OrbitPromptElement } from "./OrbitPromptElement.js";
+import { OrbitReviewAreaElement } from "./OrbitReviewAreaElement.js";
 
 export { OrbitPromptElement };
 export { OrbitReviewAreaElement };

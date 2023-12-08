@@ -1,7 +1,7 @@
 import { Button, IconName, Spacer, styles } from "@withorbit/ui";
 import React from "react";
-import { InfoPage } from "../infoPage/InfoPage";
-import { Heading, Paragraph } from "../infoPage/InfoPageShared";
+import { InfoPage } from "../infoPage/InfoPage.js";
+import { Heading, Paragraph } from "../infoPage/InfoPageShared.js";
 
 const palette = styles.colors.palettes.brown;
 

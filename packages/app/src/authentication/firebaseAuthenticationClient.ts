@@ -1,8 +1,8 @@
 import type firebase from "firebase/app";
 import { Platform } from "react-native";
-import serviceConfig from "../../serviceConfig";
-import { AuthenticationClient, UserRecord } from "./authenticationClient";
-import isBrowserStorageAvailable from "./isBrowserStorageAvailable";
+import serviceConfig from "../../serviceConfig.js";
+import { AuthenticationClient, UserRecord } from "./authenticationClient.js";
+import isBrowserStorageAvailable from "./isBrowserStorageAvailable.js";
 
 export class FirebaseOpaqueLoginToken {
   _token: string;

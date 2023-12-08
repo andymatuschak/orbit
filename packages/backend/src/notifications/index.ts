@@ -1,1 +1,1 @@
-export { processUserNotification } from "./processUserNotification";
+export { processUserNotification } from "./processUserNotification.js";

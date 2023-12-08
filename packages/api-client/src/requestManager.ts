@@ -1,6 +1,6 @@
 import { API, APIValidator, APIValidatorError } from "@withorbit/api";
-import { APIConfig } from "./apiConfig";
-import * as Network from "./util/fetch";
+import { APIConfig } from "./apiConfig.js";
+import * as Network from "./util/fetch.js";
 
 const enableDebugTrace = !!process.env["ORBIT_REQUEST_DEBUG"];
 function debugTrace(...args: any[]) {

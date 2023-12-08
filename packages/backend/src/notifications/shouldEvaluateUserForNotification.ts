@@ -1,5 +1,5 @@
 import { differenceInDays } from "date-fns";
-import { UserMetadata } from "../db/userMetadata";
+import { UserMetadata } from "../db/userMetadata.js";
 
 export function shouldEvaluateUserForNotification(
   userMetadata: UserMetadata,

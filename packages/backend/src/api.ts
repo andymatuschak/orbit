@@ -2,20 +2,20 @@ import { OrbitAPI, OrbitAPIValidator } from "@withorbit/api";
 import cookieParser from "cookie-parser";
 import express from "express";
 import morganBody from "morgan-body";
-import { listEvents, storeEvents } from "./api/events";
-import { bulkGetTasks } from "./api/tasks";
+import { listEvents, storeEvents } from "./api/events.js";
+import { bulkGetTasks } from "./api/tasks.js";
 import {
   getAttachment,
   ingestAttachmentsFromURLs,
   storeAttachment,
-} from "./api/attachments";
-import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode";
-import { createLoginToken } from "./api/internal/auth/createLoginToken";
-import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens";
-import { refreshSessionCookie } from "./api/internal/auth/refreshSessionCookie";
-import { recordPageView } from "./api/internal/recordPageView";
-import corsHandler from "./api/util/corsHandler";
-import createTypedRouter from "./api/util/typedRouter";
+} from "./api/attachments.js";
+import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode.js";
+import { createLoginToken } from "./api/internal/auth/createLoginToken.js";
+import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens.js";
+import { refreshSessionCookie } from "./api/internal/auth/refreshSessionCookie.js";
+import { recordPageView } from "./api/internal/recordPageView.js";
+import corsHandler from "./api/util/corsHandler.js";
+import createTypedRouter from "./api/util/typedRouter.js";
 
 const routeValidator = new OrbitAPIValidator({
   allowUnsupportedRoute: true,

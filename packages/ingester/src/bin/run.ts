@@ -1,8 +1,8 @@
 import OrbitStoreFS from "@withorbit/store-fs";
 import fs from "fs";
-import { ingestSources } from "../ingest";
-import { Ingestible } from "../ingestible";
-import { createIngestibleValidator } from "../validateIngestible";
+import { ingestSources } from "../ingest.js";
+import { Ingestible } from "../ingestible.js";
+import { createIngestibleValidator } from "../validateIngestible.js";
 
 async function run(config: { ingestible: Ingestible; orbitStorePath: string }) {
   const orbitStore = new OrbitStoreFS(config.orbitStorePath);

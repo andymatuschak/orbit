@@ -1,8 +1,8 @@
 import React from "react";
 import { View } from "react-native";
-import { ink, productKeyColor } from "../styles/colors";
-import Icon from "./Icon";
-import { IconName, IconPosition, IconProps, iconSize } from "./IconShared";
+import { ink, productKeyColor } from "../styles/colors.js";
+import Icon from "./Icon.js";
+import { IconName, IconPosition, IconProps, iconSize } from "./IconShared.js";
 
 export default {
   title: "Style/Icons",

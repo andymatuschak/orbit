@@ -14,7 +14,7 @@ import Constants from "expo-constants";
 import * as Updates from "expo-updates";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
-import serviceConfig from "../../serviceConfig";
+import serviceConfig from "../../serviceConfig.js";
 
 const useSentryInDevelopment = false;
 

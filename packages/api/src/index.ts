@@ -1,7 +1,7 @@
-export * as OrbitAPI from "./orbitAPI";
-export * as API from "./genericHTTPAPI";
-export { OrbitAPIValidator } from "./validation/orbitAPIValidator";
+export * as OrbitAPI from "./orbitAPI.js";
+export * as API from "./genericHTTPAPI.js";
+export { OrbitAPIValidator } from "./validation/orbitAPIValidator.js";
 export type {
   APIValidator,
   APIValidatorError,
-} from "./validation/apiValidator";
+} from "./validation/apiValidator.js";

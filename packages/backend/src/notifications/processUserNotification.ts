@@ -1,18 +1,18 @@
 import { EntityType, Task } from "@withorbit/core";
 import dateFns from "date-fns";
 import { sharedServerDatabase } from "../db";
-import { SessionNotificationState, UserMetadata } from "../db/userMetadata";
+import { SessionNotificationState, UserMetadata } from "../db/userMetadata.js";
 import getDefaultEmailService from "../email";
-import { EmailSpec } from "../email/types";
+import { EmailSpec } from "../email/types.js";
 import { sharedLoggingService } from "../logging";
 import {
   getReviewSessionEmailSpec,
   shouldSendReminderEmail,
-} from "./reviewSessionEmails";
+} from "./reviewSessionEmails.js";
 import {
   evaluateReviewSessionSchedule,
   reviewSessionBatchingLookaheadDays,
-} from "./reviewSessionScheduling";
+} from "./reviewSessionScheduling.js";
 
 async function _fetchUpcomingTasks(
   nowTimestampMillis: number,

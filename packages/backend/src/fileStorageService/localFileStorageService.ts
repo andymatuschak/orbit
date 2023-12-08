@@ -2,12 +2,12 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { pathToFileURL } from "url";
-import { isRunningInEmulator } from "../util/isRunningInEmulator";
-import { isRunningInTest } from "../util/isRunningInTest";
+import { isRunningInEmulator } from "../util/isRunningInEmulator.js";
+import { isRunningInTest } from "../util/isRunningInTest.js";
 import {
   FileStorageResolution,
   FileStorageService,
-} from "./fileStorageService";
+} from "./fileStorageService.js";
 
 // n.b. not suitable for use in production; used only in testing and as an emulator for Google Cloud Storage in development.
 export class LocalFileStorageService implements FileStorageService {

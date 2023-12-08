@@ -1,4 +1,4 @@
-import { crypto as _crypto } from "./crypto.web";
+import { crypto as _crypto } from "./crypto.web.js";
 export const crypto = _crypto;
 
 if (!crypto.getRandomValues) {

@@ -1,58 +1,58 @@
-export type { ReviewAreaItem } from "./reviewAreaItem";
+export type { ReviewAreaItem } from "./reviewAreaItem.js";
 
 export * as styles from "./styles";
 
-export { default as Button, openURL } from "./components/Button";
-export type { ButtonProps } from "./components/Button";
+export { default as Button, openURL } from "./components/Button.js";
+export type { ButtonProps } from "./components/Button.js";
 
-export { default as Card } from "./components/Card";
-export type { CardProps } from "./components/Card";
+export { default as Card } from "./components/Card.js";
+export type { CardProps } from "./components/Card.js";
 
-export { default as ContinueWithUser } from "./components/ContinueWithUser";
+export { default as ContinueWithUser } from "./components/ContinueWithUser.js";
 
-export { default as FadeView } from "./components/FadeView";
-export type { FadeViewProps } from "./components/FadeView";
+export { default as FadeView } from "./components/FadeView.js";
+export type { FadeViewProps } from "./components/FadeView.js";
 
-export { default as Icon } from "./components/Icon";
-export { IconName, IconPosition } from "./components/IconShared";
-export type { IconProps } from "./components/IconShared";
+export { default as Icon } from "./components/Icon.js";
+export { IconName, IconPosition } from "./components/IconShared.js";
+export type { IconProps } from "./components/IconShared.js";
 
-export { default as Link } from "./components/Link";
-export type { LinkProps } from "./components/Link";
+export { default as Link } from "./components/Link.js";
+export type { LinkProps } from "./components/Link.js";
 
-export { default as Logo } from "./components/Logo";
-export type { LogoProps } from "./components/LogoShared";
+export { default as Logo } from "./components/Logo.js";
+export type { LogoProps } from "./components/LogoShared.js";
 
-export { Menu, menuItemDividerSpec } from "./components/Menu";
-export type { MenuItemSpec, MenuProps } from "./components/Menu";
+export { Menu, menuItemDividerSpec } from "./components/Menu.js";
+export type { MenuItemSpec, MenuProps } from "./components/Menu.js";
 
-export { default as ReviewArea } from "./components/ReviewArea";
+export { default as ReviewArea } from "./components/ReviewArea.js";
 export type {
   ReviewAreaProps,
   ReviewAreaMarkingRecord,
-} from "./components/ReviewArea";
+} from "./components/ReviewArea.js";
 
-export { default as ReviewStarburst } from "./components/ReviewStarburst";
+export { default as ReviewStarburst } from "./components/ReviewStarburst.js";
 export type {
   ReviewStarburstProps,
   ReviewStarburstItem,
-} from "./components/ReviewStarburst";
+} from "./components/ReviewStarburst.js";
 
-export { default as Spacer } from "./components/Spacer";
-export type { SpacerProps } from "./components/Spacer";
+export { default as Spacer } from "./components/Spacer.js";
+export type { SpacerProps } from "./components/Spacer.js";
 
-export { default as Starburst } from "./components/Starburst";
-export type { StarburstProps } from "./components/Starburst";
+export { default as Starburst } from "./components/Starburst.js";
+export type { StarburstProps } from "./components/Starburst.js";
 
 export {
   default as TextInput,
   textFieldHorizontalPadding,
-} from "./components/TextInput";
-export type { TextInputProps } from "./components/TextInput";
+} from "./components/TextInput.js";
+export type { TextInputProps } from "./components/TextInput.js";
 
-export { default as useLayout } from "./components/hooks/useLayout";
+export { default as useLayout } from "./components/hooks/useLayout.js";
 export {
   useTransitioningValue,
   useTransitioningColorValue,
-} from "./components/hooks/useTransitioningValue";
-export { default as useWeakRef } from "./components/hooks/useWeakRef";
+} from "./components/hooks/useTransitioningValue.js";
+export { default as useWeakRef } from "./components/hooks/useWeakRef.js";

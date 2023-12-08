@@ -1,5 +1,5 @@
-import { EntityOfEvent, Event, EventType, TypeOfEvent } from "./event";
-import { attachmentIngestEventReducer } from "./eventReducers/attachmentReducers";
+import { EntityOfEvent, Event, EventType, TypeOfEvent } from "./event.js";
+import { attachmentIngestEventReducer } from "./eventReducers/attachmentReducers.js";
 import {
   taskIngestEventReducer,
   taskRepetitionEventReducer,
@@ -8,7 +8,7 @@ import {
   taskUpdateProvenanceEventReducer,
   taskUpdateSpecEventReducer,
   taskUpdateMetadataEventReducer,
-} from "./eventReducers/taskReducers";
+} from "./eventReducers/taskReducers.js";
 
 const reducers: {
   [T in Event as TypeOfEvent<T>]: (

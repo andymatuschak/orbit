@@ -15,7 +15,7 @@ import {
   TaskSpecType,
 } from "@withorbit/core";
 import { EmbeddedScreenRecord } from "@withorbit/embedded-support";
-import { OrbitPromptElement } from "./OrbitPromptElement";
+import { OrbitPromptElement } from "./OrbitPromptElement.js";
 import { v5 as uuidV5, parse as uuidParse } from "uuid";
 import fastJSONStableStringify from "fast-json-stable-stringify";
 

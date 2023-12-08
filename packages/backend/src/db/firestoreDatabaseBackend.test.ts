@@ -5,8 +5,8 @@ import firebase from "firebase-admin";
 import {
   createTestAdminFirebaseApp,
   terminateTestFirebaseApp,
-} from "../__tests__/firebaseTesting";
-import { FirestoreDatabaseBackend } from "./firestoreDatabaseBackend";
+} from "../__tests__/firebaseTesting.js";
+import { FirestoreDatabaseBackend } from "./firestoreDatabaseBackend.js";
 
 class TestFirestoreDatabaseBackend extends FirestoreDatabaseBackend {
   private _app: firebase.app.App;

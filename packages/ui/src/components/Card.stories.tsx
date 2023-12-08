@@ -3,11 +3,11 @@ import { Story } from "@storybook/react";
 import { testClozeSpec, testQASpec } from "@withorbit/sample-data";
 import React, { ReactNode, useState } from "react";
 import { Button, View } from "react-native";
-import { ReviewAreaItem } from "../reviewAreaItem";
+import { ReviewAreaItem } from "../reviewAreaItem.js";
 import { colors, layout } from "../styles";
-import { productKeyColor } from "../styles/colors";
-import Card from "./Card";
-import DebugGrid from "./DebugGrid";
+import { productKeyColor } from "../styles/colors.js";
+import Card from "./Card.js";
+import DebugGrid from "./DebugGrid.js";
 import {
   AttachmentID,
   AttachmentMIMEType,

@@ -1,11 +1,11 @@
-import { SQLMetadataTableKey, SQLTableName } from "./tables";
-import { execReadTransaction } from "./transactionUtils";
+import { SQLMetadataTableKey, SQLTableName } from "./tables.js";
+import { execReadTransaction } from "./transactionUtils.js";
 import {
   SQLDatabase,
   SQLStatementCallback,
   SQLStatementErrorCallback,
   SQLTransaction,
-} from "./types";
+} from "./types.js";
 
 export async function getMetadataValues<
   Key extends SQLMetadataTableKey | string,

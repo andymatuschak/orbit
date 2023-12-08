@@ -1,5 +1,5 @@
-import { TaskComponentState } from "./entities/task";
-import { TaskRepetitionOutcome } from "./event";
+import { TaskComponentState } from "./entities/task.js";
+import { TaskRepetitionOutcome } from "./event.js";
 
 export interface Scheduler {
   computeNextDueIntervalMillisForRepetition(

@@ -1,7 +1,7 @@
-import { isRunningInEmulator } from "../util/isRunningInEmulator";
-import { bigQueryLoggingService } from "./bigQuery";
-import { dummyLoggingService } from "./dummy";
-import { LoggingService } from "./interface";
+import { isRunningInEmulator } from "../util/isRunningInEmulator.js";
+import { bigQueryLoggingService } from "./bigQuery.js";
+import { dummyLoggingService } from "./dummy.js";
+import { LoggingService } from "./interface.js";
 
 let sharedLoggingService: LoggingService = isRunningInEmulator
   ? dummyLoggingService

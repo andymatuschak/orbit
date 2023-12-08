@@ -1,8 +1,8 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import unreachableCaseError from "../util/unreachableCaseError";
-import { IconName, IconPosition, IconProps, iconSize } from "./IconShared";
-import TintedSVG from "./TintedSVG";
+import unreachableCaseError from "../util/unreachableCaseError.js";
+import { IconName, IconPosition, IconProps, iconSize } from "./IconShared.js";
+import TintedSVG from "./TintedSVG.js";
 
 function getIconAsset(
   name: IconName,

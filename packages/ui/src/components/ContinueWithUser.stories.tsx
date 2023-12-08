@@ -2,7 +2,7 @@ import { Story } from "@storybook/react";
 import React from "react";
 import { View } from "react-native";
 import { colors } from "../styles";
-import ContinueWithUser from "./ContinueWithUser";
+import ContinueWithUser from "./ContinueWithUser.js";
 
 export default {
   title: "ContinueWithUser",

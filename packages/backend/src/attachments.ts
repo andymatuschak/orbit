@@ -7,7 +7,7 @@ import {
 import fetch, * as Fetch from "node-fetch";
 import URL from "url";
 import { sharedFileStorageService } from "./fileStorageService";
-import { FileStorageResolution } from "./fileStorageService/fileStorageService";
+import { FileStorageResolution } from "./fileStorageService/fileStorageService.js";
 
 const attachmentSizeLimitBytes = 10 * 1024 * 1024;
 

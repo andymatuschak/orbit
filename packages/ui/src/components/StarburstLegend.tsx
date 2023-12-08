@@ -1,13 +1,13 @@
 import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core";
 import React, { useMemo } from "react";
 import { Animated, View } from "react-native";
-import { generateIntervalSequence } from "../util/generateIntervalSequence";
+import { generateIntervalSequence } from "../util/generateIntervalSequence.js";
 import { layout, type } from "../styles";
-import { useTransitioningValue } from "./hooks/useTransitioningValue";
+import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
 import {
   getStarburstRayLength,
   getStarburstRayValueForInterval,
-} from "./Starburst";
+} from "./Starburst.js";
 
 const StarburstLegendEntry = React.memo(function StarburstLegendEntry({
   label,

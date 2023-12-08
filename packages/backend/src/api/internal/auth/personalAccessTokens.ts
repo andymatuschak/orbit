@@ -1,6 +1,6 @@
 import express from "express";
 import { sharedServerDatabase } from "../../../db";
-import { authenticateRequest } from "../../util/authenticateRequest";
+import { authenticateRequest } from "../../util/authenticateRequest.js";
 
 interface CreatePersonalAccessTokenResponse {
   token: string;

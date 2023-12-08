@@ -1,10 +1,10 @@
 import * as dateFns from "date-fns";
-import { generateDueTasks } from "./__fixtures__/generateDueTasks";
+import { generateDueTasks } from "./__fixtures__/generateDueTasks.js";
 import {
   _getUserNotificationAction,
   _updateSessionNotificationStateForNewNotification,
-} from "./processUserNotification";
-import { UserMetadata } from "../db/userMetadata";
+} from "./processUserNotification.js";
+import { UserMetadata } from "../db/userMetadata.js";
 
 describe("_updateSessionNotificationStateForNewNotification", () => {
   test("reminder", () => {

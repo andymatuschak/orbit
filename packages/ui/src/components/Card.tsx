@@ -16,15 +16,15 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { ReviewAreaItem } from "../reviewAreaItem";
+import { ReviewAreaItem } from "../reviewAreaItem.js";
 import { colors, layout, type } from "../styles";
-import Button from "./Button";
-import FadeView from "./FadeView";
+import Button from "./Button.js";
+import FadeView from "./FadeView.js";
 import {
   AnimatedTransitionTiming,
   useTransitioningValue,
-} from "./hooks/useTransitioningValue";
-import CardField, { clozeBlankSentinel } from "./PromptFieldRenderer";
+} from "./hooks/useTransitioningValue.js";
+import CardField, { clozeBlankSentinel } from "./PromptFieldRenderer.js";
 
 function getQAPromptContents<TC extends QATaskContent | ClozeTaskContent>(
   reviewItem: ReviewAreaItem<TC>,

@@ -1,5 +1,5 @@
 import firebase from "firebase-admin";
-import { getApp } from "../firebase";
+import { getApp } from "../firebase.js";
 
 let _database: firebase.firestore.Firestore | null = null;
 

@@ -4,7 +4,7 @@ import {
   mainTaskComponentID,
 } from "@withorbit/core";
 import { testQASpec } from "@withorbit/sample-data";
-import { ReviewAreaItem } from "../../reviewAreaItem";
+import { ReviewAreaItem } from "../../reviewAreaItem.js";
 import * as styles from "../../styles";
 
 export function generateReviewItem(

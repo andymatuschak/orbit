@@ -1,7 +1,7 @@
 import React from "react";
 import { Image } from "react-native";
-import unreachableCaseError from "../util/unreachableCaseError";
-import { getLogoSize, LogoProps } from "./LogoShared";
+import unreachableCaseError from "../util/unreachableCaseError.js";
+import { getLogoSize, LogoProps } from "./LogoShared.js";
 
 function getLogoAsset(units: LogoProps["units"]): number {
   switch (units) {

@@ -9,16 +9,16 @@ import {
   testCard,
   testCollection,
   testNote,
-} from "./__fixtures__/testAnkiData";
-import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
+} from "./__fixtures__/testAnkiData.js";
+import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection.js";
 import { CardQueue, Collection } from "./ankiPkg";
 import {
   createImportPlan,
   createRescheduleEventForCard,
   createSpecForNote,
   getComponentID,
-} from "./importPlan";
-import { ModelMapping } from "./modelMapping";
+} from "./importPlan.js";
+import { ModelMapping } from "./modelMapping.js";
 
 describe("createSpecForNote", () => {
   const cache: { [p: number]: ModelMapping } = {};

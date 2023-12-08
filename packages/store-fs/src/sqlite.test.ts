@@ -11,16 +11,16 @@ import {
   constructListEntitySQLQuery,
   constructListEventSQLQuery,
   SQLDatabaseBackend,
-} from "./sqlite";
-import { getSchemaVersionNumber } from "./sqlite/migration";
+} from "./sqlite.js";
+import { getSchemaVersionNumber } from "./sqlite/migration.js";
 import { latestSchemaVersionNumber } from "./sqlite/migrations";
 import {
   SQLEntityTableColumn,
   SQLEventTableColumn,
   SQLTableName,
-} from "./sqlite/tables";
-import { execReadStatement } from "./sqlite/transactionUtils";
-import { SQLDatabase } from "./sqlite/types";
+} from "./sqlite/tables.js";
+import { execReadStatement } from "./sqlite/transactionUtils.js";
+import { SQLDatabase } from "./sqlite/types.js";
 
 const testTasks: DatabaseBackendEntityRecord<Task>[] = [
   {

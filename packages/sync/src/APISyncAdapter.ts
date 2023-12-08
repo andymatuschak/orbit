@@ -5,7 +5,7 @@ import {
   Event,
   EventID,
 } from "@withorbit/core";
-import { SyncAdapter } from "./syncAdapter";
+import { SyncAdapter } from "./syncAdapter.js";
 
 export class APISyncAdapter implements SyncAdapter {
   id: string;

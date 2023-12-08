@@ -22,15 +22,15 @@ import {
 import Markdown, * as MarkdownDisplay from "react-native-markdown-display";
 
 import { colors, type, layout } from "../styles";
-import { getVariantStyles } from "../styles/type";
-import usePrevious from "./hooks/usePrevious";
-import useWeakRef from "./hooks/useWeakRef";
-import { useMarkdownItInstance } from "./PromptFieldRenderer/markdown";
+import { getVariantStyles } from "../styles/type.js";
+import usePrevious from "./hooks/usePrevious.js";
+import useWeakRef from "./hooks/useWeakRef.js";
+import { useMarkdownItInstance } from "./PromptFieldRenderer/markdown.js";
 import {
   renderBlockMath,
   renderInlineMath,
-} from "./PromptFieldRenderer/markdownLatexSupport";
-import { SawtoothPattern } from "./SawtoothPattern";
+} from "./PromptFieldRenderer/markdownLatexSupport.js";
+import { SawtoothPattern } from "./SawtoothPattern.js";
 import { AttachmentID, TaskContentField } from "@withorbit/core";
 
 const sizeVariantCount = 5;

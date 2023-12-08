@@ -1,4 +1,4 @@
-import { InfoPageProps } from "./InfoPageShared";
+import { InfoPageProps } from "./InfoPageShared.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function InfoPage(props: InfoPageProps): null {

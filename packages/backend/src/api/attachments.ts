@@ -4,14 +4,14 @@ import {
   EventType,
   generateUniqueID,
 } from "@withorbit/core";
-import { authenticatedRequestHandler } from "./util/authenticateRequest";
-import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";
-import { putAndLogEvents } from "./util/putAndLogEvents";
+import { authenticatedRequestHandler } from "./util/authenticateRequest.js";
+import { CachePolicy, TypedRouteHandler } from "./util/typedRouter.js";
+import { putAndLogEvents } from "./util/putAndLogEvents.js";
 import {
   resolveAttachment,
   storeAttachment as _storeAttachment,
   storeAttachmentAtURLIfNecessary,
-} from "../attachments";
+} from "../attachments.js";
 
 export const getAttachment: TypedRouteHandler<
   OrbitAPI.Spec,

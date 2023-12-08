@@ -1,5 +1,5 @@
-import { isRunningInEmulator } from "./util/isRunningInEmulator";
-import { isRunningInTest } from "./util/isRunningInTest";
+import { isRunningInEmulator } from "./util/isRunningInEmulator.js";
+import { isRunningInTest } from "./util/isRunningInTest.js";
 
 const shouldMockValue = isRunningInEmulator || isRunningInTest;
 import functions from "firebase-functions";

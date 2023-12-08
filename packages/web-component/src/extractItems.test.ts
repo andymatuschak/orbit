@@ -5,7 +5,7 @@ import {
   QATaskContent,
   TaskContentType,
 } from "@withorbit/core";
-import { extractItems } from "./extractItems";
+import { extractItems } from "./extractItems.js";
 
 function getTestElement(reviewAreaInnerHTML: string): HTMLElement {
   document.body.innerHTML = `

@@ -9,10 +9,10 @@ import {
 import {
   DatabaseBackend,
   DatabaseBackendEntityRecord,
-} from "./databaseBackend";
-import { DatabaseEntityQuery, DatabaseEventQuery } from "./databaseQuery";
-import { AjvEventsValidator } from "./validation/AjvEventsValidator";
-import { EventsValidator } from "./validation/eventsValidator";
+} from "./databaseBackend.js";
+import { DatabaseEntityQuery, DatabaseEventQuery } from "./databaseQuery.js";
+import { AjvEventsValidator } from "./validation/AjvEventsValidator.js";
+import { EventsValidator } from "./validation/eventsValidator.js";
 
 const _ajvEventValidator = new AjvEventsValidator();
 

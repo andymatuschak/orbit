@@ -1,8 +1,8 @@
 import OrbitAPIClient from "@withorbit/api-client";
 import { ReviewItem, Task, TaskID } from "@withorbit/core";
 import { useEffect, useState } from "react";
-import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost";
-import { EmbeddedAuthenticationState } from "./useEmbeddedAuthenticationState";
+import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost.js";
+import { EmbeddedAuthenticationState } from "./useEmbeddedAuthenticationState.js";
 
 export function useRemoteTaskStates({
   apiClient,

@@ -7,8 +7,8 @@ import OrbitStoreFS from "@withorbit/store-fs";
 import { OrbitStore } from "@withorbit/store-shared";
 import os from "os";
 import path from "path";
-import { OrbitStoreSyncAdapter } from "./orbitStoreSyncAdapter";
-import { syncOrbitStore } from "./sync";
+import { OrbitStoreSyncAdapter } from "./orbitStoreSyncAdapter.js";
+import { syncOrbitStore } from "./sync.js";
 
 async function prepTestStore(
   prepFn: (store: OrbitStore) => Promise<Event[]>,

@@ -1,6 +1,6 @@
-import { TaskComponentState } from "../entities/task";
-import { TaskRepetitionOutcome } from "../event";
-import { Scheduler, SchedulerOutput } from "../scheduler";
+import { TaskComponentState } from "../entities/task.js";
+import { TaskRepetitionOutcome } from "../event.js";
+import { Scheduler, SchedulerOutput } from "../scheduler.js";
 
 export const defaultSpacedRepetitionSchedulerConfiguration = {
   intervalGrowthFactor: 2.3,

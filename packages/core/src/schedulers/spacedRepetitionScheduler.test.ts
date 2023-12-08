@@ -1,9 +1,9 @@
-import { TaskComponentState } from "../entities/task";
-import { TaskRepetitionOutcome } from "../event";
+import { TaskComponentState } from "../entities/task.js";
+import { TaskRepetitionOutcome } from "../event.js";
 import {
   createSpacedRepetitionScheduler,
   defaultSpacedRepetitionSchedulerConfiguration,
-} from "./spacedRepetitionScheduler";
+} from "./spacedRepetitionScheduler.js";
 
 const scheduler = createSpacedRepetitionScheduler();
 

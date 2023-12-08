@@ -2,8 +2,8 @@ import { Ingestible } from "@withorbit/ingester";
 import fs from "fs";
 import path from "path";
 import { MarkdownInterpreter } from "../interpreters";
-import { InterpretableFile, Interpreter } from "../interpreter";
-import { CryptoBase64Hasher } from "../hasher/CryptoBase64Hasher";
+import { InterpretableFile, Interpreter } from "../interpreter.js";
+import { CryptoBase64Hasher } from "../hasher/CryptoBase64Hasher.js";
 
 async function run(
   noteDirectory: string,

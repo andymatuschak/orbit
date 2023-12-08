@@ -1,5 +1,5 @@
 import { Schema } from "ajv";
-import { AjvAPIValidator } from "./ajvAPIValidator";
+import { AjvAPIValidator } from "./ajvAPIValidator.js";
 
 type Apple = { isSliced: boolean };
 type Flour = { mass: number };

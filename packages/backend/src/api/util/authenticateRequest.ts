@@ -6,7 +6,7 @@ import {
   TypedRequest,
   TypedResponse,
   TypedRouteHandler,
-} from "./typedRouter";
+} from "./typedRouter.js";
 
 export async function authenticateRequest(
   request: express.Request,

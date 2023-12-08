@@ -1,7 +1,7 @@
 import React from "react";
 import { TextInputProps, View } from "react-native";
-import DebugGrid from "./DebugGrid";
-import TextInput from "./TextInput";
+import DebugGrid from "./DebugGrid.js";
+import TextInput from "./TextInput.js";
 import { Story } from "@storybook/react";
 import { colors } from "../styles";
 

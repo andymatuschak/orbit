@@ -1,7 +1,7 @@
 import * as Authentication from "../authentication";
 import React from "react";
-import { createLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel";
-import useByrefCallback from "../util/useByrefCallback";
+import { createLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel.js";
+import useByrefCallback from "../util/useByrefCallback.js";
 
 declare global {
   interface Document {

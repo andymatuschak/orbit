@@ -1,11 +1,11 @@
 import OrbitAPIClient from "@withorbit/api-client";
 import { useCallback, useEffect, useState } from "react";
-import useByrefCallback from "../util/useByrefCallback";
+import useByrefCallback from "../util/useByrefCallback.js";
 import {
   EmbeddedActionsRecord,
   mergePendingActionsRecords,
-} from "./markingActions";
-import { EmbeddedAuthenticationStatus } from "./useEmbeddedAuthenticationState";
+} from "./markingActions.js";
+import { EmbeddedAuthenticationStatus } from "./useEmbeddedAuthenticationState.js";
 
 async function submitPendingActionsRecord(
   actionsRecord: EmbeddedActionsRecord,

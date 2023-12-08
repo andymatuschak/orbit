@@ -1,8 +1,8 @@
 import { API, OrbitAPI, OrbitAPIValidator } from "@withorbit/api";
 import { AttachmentID, AttachmentMIMEType, TaskID } from "@withorbit/core";
-import { APIConfig, defaultAPIConfig } from "./apiConfig";
-import { AuthenticationConfig, RequestManager } from "./requestManager";
-import { createBlobFromBuffer, getBytesFromBlobLike } from "./util/fetch";
+import { APIConfig, defaultAPIConfig } from "./apiConfig.js";
+import { AuthenticationConfig, RequestManager } from "./requestManager.js";
+import { createBlobFromBuffer, getBytesFromBlobLike } from "./util/fetch.js";
 
 const ajvValidator = new OrbitAPIValidator({
   allowUnsupportedRoute: true,

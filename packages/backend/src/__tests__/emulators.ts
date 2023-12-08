@@ -1,10 +1,10 @@
 import fs from "fs";
-import { LocalFileStorageService } from "../fileStorageService/localFileStorageService";
+import { LocalFileStorageService } from "../fileStorageService/localFileStorageService.js";
 import {
   clearFirestoreData,
   startFirebaseTestingEmulator,
   stopFirebaseTestingEmulator,
-} from "./firebaseTesting";
+} from "./firebaseTesting.js";
 
 export async function startLocalEmulators() {
   await startFirebaseTestingEmulator();

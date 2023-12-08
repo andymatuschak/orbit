@@ -1,8 +1,8 @@
 import { OrbitAPI } from "@withorbit/api";
 import { Task, TaskID } from "@withorbit/core";
 import { sharedServerDatabase } from "../db";
-import { authenticateTypedRequest } from "./util/authenticateRequest";
-import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";
+import { authenticateTypedRequest } from "./util/authenticateRequest.js";
+import { CachePolicy, TypedRouteHandler } from "./util/typedRouter.js";
 
 export const bulkGetTasks: TypedRouteHandler<
   OrbitAPI.Spec,

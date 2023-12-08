@@ -3,8 +3,8 @@ import OrbitAPIClient, {
   emulatorAPIConfig,
 } from "@withorbit/api-client";
 import OrbitStoreFS from "@withorbit/store-fs";
-import { APISyncAdapter } from "../APISyncAdapter";
-import { syncOrbitStore } from "../sync";
+import { APISyncAdapter } from "../APISyncAdapter.js";
+import { syncOrbitStore } from "../sync.js";
 
 (async () => {
   const personalAccessToken = process.env["ORBIT_TOKEN"];

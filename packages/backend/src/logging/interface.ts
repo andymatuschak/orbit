@@ -1,5 +1,5 @@
 import { Entity, Event } from "@withorbit/core";
-import { EmailSpec } from "../email/types";
+import { EmailSpec } from "../email/types.js";
 
 export interface LoggingService {
   logPageView(log: PageViewLog): Promise<unknown>;

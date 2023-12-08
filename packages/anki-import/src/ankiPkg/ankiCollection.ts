@@ -5,7 +5,7 @@ import path from "path";
 import * as sqlite from "sqlite";
 import * as sqlite3 from "sqlite3";
 import unzip, { Entry } from "unzipper";
-import { Card, Collection, Log, Note } from "./ankiDBTypes";
+import { Card, Collection, Log, Note } from "./ankiDBTypes.js";
 
 async function readRows<R>(
   handle: AnkiCollectionDBHandle,

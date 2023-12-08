@@ -10,7 +10,7 @@ import {
   TaskID,
   TaskIngestEvent,
 } from "@withorbit/core";
-import { testClozeSpec } from "./testClozeSpec";
+import { testClozeSpec } from "./testClozeSpec.js";
 
 export const testTask: Task = {
   id: "a" as TaskID,

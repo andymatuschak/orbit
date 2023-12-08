@@ -1,5 +1,5 @@
-import { AttachmentReference } from "./entities/attachmentReference";
-import { Task } from "./entities/task";
+import { AttachmentReference } from "./entities/attachmentReference.js";
+import { Task } from "./entities/task.js";
 
 // An Entity is an object with a stable identity. Entity records aren't created or manipulated directly; they're computed from a sequence of Events. An entity data structure represents a snapshot of that entity's state up to a particular event.
 export type Entity = Task | AttachmentReference;

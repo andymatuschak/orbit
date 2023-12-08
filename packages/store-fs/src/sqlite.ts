@@ -15,17 +15,17 @@ import {
   DatabaseQueryOptions,
   DatabaseQueryPredicate,
 } from "@withorbit/store-shared";
-import { bufferToSQLBlob, openDatabase } from "./sqlite/binding";
-import { getMetadataValues, setMetadataValues } from "./sqlite/metadata";
-import { performMigration } from "./sqlite/migration";
+import { bufferToSQLBlob, openDatabase } from "./sqlite/binding.js";
+import { getMetadataValues, setMetadataValues } from "./sqlite/metadata.js";
+import { performMigration } from "./sqlite/migration.js";
 import {
   SQLAttachmentTableColumn,
   SQLEntityTableColumn,
   SQLEventTableColumn,
   SQLTableName,
-} from "./sqlite/tables";
-import { execReadStatement, execTransaction } from "./sqlite/transactionUtils";
-import { SQLDatabase, SQLTransaction } from "./sqlite/types";
+} from "./sqlite/tables.js";
+import { execReadStatement, execTransaction } from "./sqlite/transactionUtils.js";
+import { SQLDatabase, SQLTransaction } from "./sqlite/types.js";
 
 /*
 

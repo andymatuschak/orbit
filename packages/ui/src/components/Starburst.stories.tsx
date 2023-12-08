@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import seedrandom from "seedrandom";
 import { colors } from "../styles";
-import lerp from "../util/lerp";
-import Starburst from "./Starburst";
+import lerp from "../util/lerp.js";
+import Starburst from "./Starburst.js";
 
 export default {
   title: "Starburst",

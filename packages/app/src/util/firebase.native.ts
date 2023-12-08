@@ -1,6 +1,6 @@
 import firebaseAuth from "@react-native-firebase/auth";
 import type firebase from "firebase/app";
-import serviceConfig from "../../serviceConfig";
+import serviceConfig from "../../serviceConfig.js";
 
 export function getFirebaseAuth(): firebase.auth.Auth {
   const auth = firebaseAuth();

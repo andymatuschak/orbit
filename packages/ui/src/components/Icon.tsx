@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, ImageStyle, StyleProp, StyleSheet, View } from "react-native";
-import unreachableCaseError from "../util/unreachableCaseError";
-import { IconName, IconPosition, IconProps, iconSize } from "./IconShared";
+import unreachableCaseError from "../util/unreachableCaseError.js";
+import { IconName, IconPosition, IconProps, iconSize } from "./IconShared.js";
 
 function getIconAsset(
   name: IconName,

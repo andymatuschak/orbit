@@ -1,7 +1,7 @@
-import { ColorPaletteName } from "../colorPaletteName";
-import { EntityBase, EntityType } from "../entity";
-import { AttachmentID } from "./attachmentReference";
-export { parseSingleCurlyBraceClozePromptMarkup } from "./util/parseClozeMarkup";
+import { ColorPaletteName } from "../colorPaletteName.js";
+import { EntityBase, EntityType } from "../entity.js";
+import { AttachmentID } from "./attachmentReference.js";
+export { parseSingleCurlyBraceClozePromptMarkup } from "./util/parseClozeMarkup.js";
 
 // The Task entity stores the "spec" which describes a task's behavior and content, as well as the task's ongoing state and associated metadata.
 export interface Task<TC extends TaskContent = TaskContent>

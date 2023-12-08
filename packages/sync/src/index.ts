@@ -1,3 +1,3 @@
-export { syncOrbitStore } from "./sync";
-export { APISyncAdapter } from "./APISyncAdapter";
-export type { SyncAdapter } from "./syncAdapter";
+export { syncOrbitStore } from "./sync.js";
+export { APISyncAdapter } from "./APISyncAdapter.js";
+export type { SyncAdapter } from "./syncAdapter.js";

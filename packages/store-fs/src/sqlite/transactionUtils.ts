@@ -1,4 +1,4 @@
-import { SQLDatabase, SQLResultSet, SQLTransactionCallback } from "./types";
+import { SQLDatabase, SQLResultSet, SQLTransactionCallback } from "./types.js";
 
 // Convert callback-style transaction API to promises.
 export function execTransaction(

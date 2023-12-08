@@ -1,6 +1,6 @@
 import unist from "unist";
 import mdast from "mdast";
-import { processor } from "../markdown";
+import { processor } from "../markdown.js";
 
 export function getNoteTitle(noteRoot: mdast.Root): string | null {
   if (noteRoot.children.length > 0) {

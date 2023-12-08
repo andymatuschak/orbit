@@ -1,4 +1,4 @@
-import { createIngestibleValidator } from "./validateIngestible";
+import { createIngestibleValidator } from "./validateIngestible.js";
 
 it("accepts valid schema", () => {
   const validator = createIngestibleValidator({

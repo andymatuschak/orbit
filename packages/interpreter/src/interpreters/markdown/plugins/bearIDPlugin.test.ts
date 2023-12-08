@@ -2,7 +2,7 @@ import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 import { selectAll } from "unist-util-select";
-import bearIDPlugin, { bearIDNodeType } from "./bearIDPlugin";
+import bearIDPlugin, { bearIDNodeType } from "./bearIDPlugin.js";
 
 const processor = unified()
   .use(remarkParse)

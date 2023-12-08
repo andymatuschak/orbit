@@ -1,5 +1,5 @@
 import { EntityType } from "@withorbit/core";
-import { SQLMigration } from "./migrationType";
+import { SQLMigration } from "./migrationType.js";
 
 const migration: SQLMigration = {
   version: 20230726103155,

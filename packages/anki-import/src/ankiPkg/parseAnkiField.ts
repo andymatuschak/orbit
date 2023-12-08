@@ -4,7 +4,7 @@ import rehype2Remark from "rehype-remark";
 import remarkStringify from "remark-stringify";
 import { unified, Processor } from "unified";
 import { selectAll } from "unist-util-select";
-import { AnkiAttachmentReference } from "./ankiAttachmentReference";
+import { AnkiAttachmentReference } from "./ankiAttachmentReference.js";
 
 export function stripImages(this: Processor) {
   const data = this.data();

@@ -30,29 +30,29 @@ import {
 import React, { useEffect, useMemo, useState } from "react";
 import { Animated, Text, View } from "react-native";
 
-import { useAuthenticationClient } from "../authentication/authContext";
-import { ReviewSessionContainer } from "../ReviewSessionContainer";
+import { useAuthenticationClient } from "../authentication/authContext.js";
+import { ReviewSessionContainer } from "../ReviewSessionContainer.js";
 import {
   ReviewSessionManagerState,
   useReviewSessionManager,
-} from "../reviewSessionManager";
-import { useAPIClient } from "../util/useAPIClient";
-import useByrefCallback from "../util/useByrefCallback";
-import EmbeddedBanner from "./EmbeddedBanner";
-import { useEmbeddedNetworkQueue } from "./embeddedNetworkQueue";
-import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost";
-import { useEmbeddedHostState } from "./ipc/useEmbeddedHostState";
-import { getActionsRecordForMarking } from "./markingActions";
-import OnboardingModalWeb from "./OnboardingModal.web";
-import { TestModeBanner } from "./TestModeBanner";
+} from "../reviewSessionManager.js";
+import { useAPIClient } from "../util/useAPIClient.js";
+import useByrefCallback from "../util/useByrefCallback.js";
+import EmbeddedBanner from "./EmbeddedBanner.js";
+import { useEmbeddedNetworkQueue } from "./embeddedNetworkQueue.js";
+import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost.js";
+import { useEmbeddedHostState } from "./ipc/useEmbeddedHostState.js";
+import { getActionsRecordForMarking } from "./markingActions.js";
+import OnboardingModalWeb from "./OnboardingModal.web.js";
+import { TestModeBanner } from "./TestModeBanner.js";
 import {
   EmbeddedAuthenticationState,
   useEmbeddedAuthenticationState,
-} from "./useEmbeddedAuthenticationState";
-import { useRemoteTaskStates } from "./useRemoteTaskStates";
-import { findItemsToRetry } from "./util/findItemsToRetry";
-import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette";
-import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL";
+} from "./useEmbeddedAuthenticationState.js";
+import { useRemoteTaskStates } from "./useRemoteTaskStates.js";
+import { findItemsToRetry } from "./util/findItemsToRetry.js";
+import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette.js";
+import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL.js";
 
 function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
   return sessionItems.map((item) => {

@@ -1,9 +1,9 @@
 import { OrbitAPI } from "@withorbit/api";
 import { Event } from "@withorbit/core";
 import { sharedServerDatabase } from "../db";
-import { authenticatedRequestHandler } from "./util/authenticateRequest";
-import { CachePolicy, TypedRouteHandler } from "./util/typedRouter";
-import { putAndLogEvents } from "./util/putAndLogEvents";
+import { authenticatedRequestHandler } from "./util/authenticateRequest.js";
+import { CachePolicy, TypedRouteHandler } from "./util/typedRouter.js";
+import { putAndLogEvents } from "./util/putAndLogEvents.js";
 
 export const storeEvents: TypedRouteHandler<OrbitAPI.Spec, "/events", "PATCH"> =
   authenticatedRequestHandler(async (request, userID) => {

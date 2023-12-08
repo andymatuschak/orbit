@@ -1,6 +1,6 @@
 import mdast from "mdast";
 import * as unistUtilSelect from "unist-util-select";
-import { BearIDNode, bearIDNodeType } from "../plugins/bearIDPlugin";
+import { BearIDNode, bearIDNodeType } from "../plugins/bearIDPlugin.js";
 
 function getOpenURLForBearID(bearID: string): string {
   return `bear://x-callback-url/open-note?id=${bearID}`;

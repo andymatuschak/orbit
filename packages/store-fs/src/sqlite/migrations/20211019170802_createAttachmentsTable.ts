@@ -1,4 +1,4 @@
-import { SQLMigration } from "./migrationType";
+import { SQLMigration } from "./migrationType.js";
 
 const migration: SQLMigration = {
   version: 20211019170802,

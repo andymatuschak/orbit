@@ -1,7 +1,7 @@
 import React from "react";
 import * as MarkdownDisplay from "react-native-markdown-display";
-import { clozeParsePlugin } from "./clozeParsePlugin";
-import { addLatexSupport } from "./markdownLatexSupport";
+import { clozeParsePlugin } from "./clozeParsePlugin.js";
+import { addLatexSupport } from "./markdownLatexSupport.js";
 
 export function useMarkdownItInstance(
   withLatexSupport: boolean,

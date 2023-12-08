@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { gridUnit } from "../styles/layout";
+import { gridUnit } from "../styles/layout.js";
 
 export interface SpacerProps {
   units: number;

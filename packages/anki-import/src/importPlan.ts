@@ -18,9 +18,9 @@ import {
 import fs from "fs";
 import * as Anki from "./ankiPkg";
 import { Card, CardQueue, Collection } from "./ankiPkg";
-import { convertAnkiID } from "./convertAnkiID";
-import { getModelMapping, ModelMapping } from "./modelMapping";
-import { mapNoteToTaskSpec } from "./noteMapping";
+import { convertAnkiID } from "./convertAnkiID.js";
+import { getModelMapping, ModelMapping } from "./modelMapping.js";
+import { mapNoteToTaskSpec } from "./noteMapping.js";
 
 interface ImportPlan {
   events: Event[];

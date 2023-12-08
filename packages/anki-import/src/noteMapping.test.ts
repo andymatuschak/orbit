@@ -1,5 +1,5 @@
 import { ClozeTaskContent, TaskContentType } from "@withorbit/core";
-import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection";
+import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection.js";
 import {
   AnkiCollectionDBHandle,
   Note,
@@ -10,8 +10,8 @@ import {
   BasicModelMapping,
   ClozeModelMapping,
   ModelMappingType,
-} from "./modelMapping";
-import { mapNoteToTaskSpec } from "./noteMapping";
+} from "./modelMapping.js";
+import { mapNoteToTaskSpec } from "./noteMapping.js";
 
 const notes: Note[] = [];
 beforeAll(async () => {

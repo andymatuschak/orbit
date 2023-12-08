@@ -1,7 +1,7 @@
 import * as dateFns from "date-fns";
 import firebase from "firebase-admin";
-import { getApp } from "../firebase";
-import { getDatabase } from "./firestore";
+import { getApp } from "../firebase.js";
+import { getDatabase } from "./firestore.js";
 
 let _auth: firebase.auth.Auth | null = null;
 

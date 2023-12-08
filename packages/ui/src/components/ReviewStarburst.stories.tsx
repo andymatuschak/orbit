@@ -6,14 +6,14 @@ import {
 } from "@withorbit/core";
 import React from "react";
 import { View } from "react-native";
-import { generateIntervalSequence } from "../util/generateIntervalSequence";
+import { generateIntervalSequence } from "../util/generateIntervalSequence.js";
 import { colors } from "../styles";
-import useLayout from "./hooks/useLayout";
-import ReviewStarburst, { ReviewStarburstItem } from "./ReviewStarburst";
+import useLayout from "./hooks/useLayout.js";
+import ReviewStarburst, { ReviewStarburstItem } from "./ReviewStarburst.js";
 import {
   getStarburstQuillInnerRadius,
   getStarburstQuillOuterRadius,
-} from "./Starburst";
+} from "./Starburst.js";
 
 export default {
   title: "ReviewStarburst",

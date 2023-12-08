@@ -2,8 +2,8 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
-import { resetLocalEmulators } from "../__tests__/emulators";
-import { LocalFileStorageService } from "./localFileStorageService";
+import { resetLocalEmulators } from "../__tests__/emulators.js";
+import { LocalFileStorageService } from "./localFileStorageService.js";
 
 afterEach(async () => {
   await resetLocalEmulators();

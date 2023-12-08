@@ -10,7 +10,7 @@ import {
   DexieMetadataKeys,
   DexieMetadataRow,
   DexieTable,
-} from "./tables";
+} from "./tables.js";
 
 export class DexieDatabase extends Dexie {
   [DexieTable.Events]: Dexie.Table<DexieEventRow, number>;

@@ -2,9 +2,9 @@ import * as dateFns from "date-fns";
 import express from "express";
 import functions from "firebase-functions";
 import { sharedServerDatabase } from "../db";
-import serviceConfig from "../serviceConfig";
-import { authenticateRequest } from "../api/util/authenticateRequest";
-import { UserMetadata } from "../db/userMetadata";
+import serviceConfig from "../serviceConfig.js";
+import { authenticateRequest } from "../api/util/authenticateRequest.js";
+import { UserMetadata } from "../db/userMetadata.js";
 
 export type UpdateNotificationSettingsAction = "unsubscribe" | "snooze1Week";
 

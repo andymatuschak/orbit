@@ -1,7 +1,7 @@
 import * as dateFns from "date-fns";
-import { SessionNotificationState } from "../db/userMetadata";
-import { EmailSpec } from "../email/types";
-import serviceConfig from "../serviceConfig";
+import { SessionNotificationState } from "../db/userMetadata.js";
+import { EmailSpec } from "../email/types.js";
+import serviceConfig from "../serviceConfig.js";
 
 export function shouldSendReminderEmail(
   nowTimestampMillis: number,

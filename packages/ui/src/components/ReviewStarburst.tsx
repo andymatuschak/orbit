@@ -7,12 +7,12 @@ import {
 import React, { useMemo } from "react";
 import { Animated, Easing, View } from "react-native";
 import { colors, layout } from "../styles";
-import { useTransitioningValue } from "./hooks/useTransitioningValue";
+import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
 import Starburst, {
   getStarburstQuillOuterRadius,
   getStarburstRayValueForInterval,
-} from "./Starburst";
-import StarburstLegend from "./StarburstLegend";
+} from "./Starburst.js";
+import StarburstLegend from "./StarburstLegend.js";
 
 export interface ReviewStarburstProps {
   config: SpacedRepetitionSchedulerConfiguration;

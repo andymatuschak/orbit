@@ -1,5 +1,5 @@
-import { AttachmentStore } from "./attachmentStore";
-import { Database } from "./database";
+import { AttachmentStore } from "./attachmentStore.js";
+import { Database } from "./database.js";
 
 export interface OrbitStore {
   database: Database;

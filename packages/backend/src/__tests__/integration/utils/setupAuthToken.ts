@@ -1,6 +1,6 @@
 import OrbitAPIClient, { emulatorAPIConfig } from "@withorbit/api-client";
-import { UserMetadata } from "../../../db/userMetadata";
-import { createTestAdminFirebaseApp } from "../../firebaseTesting";
+import { UserMetadata } from "../../../db/userMetadata.js";
+import { createTestAdminFirebaseApp } from "../../firebaseTesting.js";
 
 export async function setupAuthToken(
   name: string,

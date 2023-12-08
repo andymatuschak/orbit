@@ -1,6 +1,6 @@
 import functions from "firebase-functions";
 import { sharedServerDatabase } from "../../db";
-import { UserMetadata } from "../../db/userMetadata";
+import { UserMetadata } from "../../db/userMetadata.js";
 import * as notifications from "../../notifications";
 
 export const processUserNotificationTopic = "processUserNotification";

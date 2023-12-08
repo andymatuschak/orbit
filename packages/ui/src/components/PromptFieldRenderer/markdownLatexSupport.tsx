@@ -3,7 +3,7 @@ import * as MarkdownItTexMath from "markdown-it-texmath";
 import React from "react";
 import * as MarkdownDisplay from "react-native-markdown-display";
 import MathJax from "react-native-mathjax-svg";
-import * as colors from "../../styles/colors";
+import * as colors from "../../styles/colors.js";
 
 export async function addLatexSupport(
   markdownIt: MarkdownDisplay.MarkdownIt, // eslint-disable-line @typescript-eslint/no-unused-vars

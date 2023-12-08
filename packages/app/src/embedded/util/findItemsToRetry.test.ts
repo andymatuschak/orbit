@@ -1,6 +1,6 @@
 import { ReviewItem, Task } from "@withorbit/core";
 import { EmbeddedScreenRecord } from "@withorbit/embedded-support";
-import { findItemsToRetry } from "./findItemsToRetry";
+import { findItemsToRetry } from "./findItemsToRetry.js";
 
 // null here indicates the item hasn't yet been reviewed; false means it has and doesn't need retry
 function makeItem(needsRetry: boolean | null): ReviewItem {

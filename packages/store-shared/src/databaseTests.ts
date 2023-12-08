@@ -14,9 +14,9 @@ import {
   TaskIngestEvent,
 } from "@withorbit/core";
 import { testTask } from "@withorbit/sample-data";
-import { Database, EventReducer } from "./database";
-import { AjvEventsValidator } from "./validation/AjvEventsValidator";
-import { EventsValidator } from "./validation/eventsValidator";
+import { Database, EventReducer } from "./database.js";
+import { AjvEventsValidator } from "./validation/AjvEventsValidator.js";
+import { EventsValidator } from "./validation/eventsValidator.js";
 
 // n.b. these tests are not actually run as part of this package: they're run in the implementation packages.
 

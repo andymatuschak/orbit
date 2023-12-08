@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import FirebaseAuthenticationClient from "./firebaseAuthenticationClient";
-import { AuthenticationClient, UserRecord } from "./index";
+import FirebaseAuthenticationClient from "./firebaseAuthenticationClient.js";
+import { AuthenticationClient, UserRecord } from "./index.js";
 
 export const AuthenticationClientContext =
   React.createContext<FirebaseAuthenticationClient | null>(null);

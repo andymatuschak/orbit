@@ -4,8 +4,8 @@ import {
   EventReducer,
   OrbitStore,
 } from "@withorbit/store-shared";
-import { AttachmentStoreFS } from "./attachmentStoreFS";
-import { SQLDatabaseBackend } from "./sqlite";
+import { AttachmentStoreFS } from "./attachmentStoreFS.js";
+import { SQLDatabaseBackend } from "./sqlite.js";
 
 // An in-memory implementation of OrbitStore, compatible with Node.js and React Native.
 export class OrbitStoreInMemory implements OrbitStore {

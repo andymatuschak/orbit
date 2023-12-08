@@ -1,8 +1,8 @@
-import { getMetadataValues, setMetadataValues } from "./metadata";
+import { getMetadataValues, setMetadataValues } from "./metadata.js";
 import { latestSchemaVersionNumber, migrations } from "./migrations";
-import { SQLMetadataTableKey, SQLTableName } from "./tables";
-import { execReadStatement, execTransaction } from "./transactionUtils";
-import { SQLDatabase } from "./types";
+import { SQLMetadataTableKey, SQLTableName } from "./tables.js";
+import { execReadStatement, execTransaction } from "./transactionUtils.js";
+import { SQLDatabase } from "./types.js";
 
 export async function performMigration(
   db: SQLDatabase,

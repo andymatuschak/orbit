@@ -1,4 +1,4 @@
-import clamp from "./clamp";
+import clamp from "./clamp.js";
 
 export default function lerp(
   value: number,

@@ -1,9 +1,9 @@
 import { boolean } from "@storybook/addon-knobs";
 import React from "react";
 import { Text, TextStyle, View } from "react-native";
-import { layout, type } from "./index";
-import { getVariantStyles } from "./type";
-import DebugGrid from "../components/DebugGrid";
+import { layout, type } from "./index.js";
+import { getVariantStyles } from "./type.js";
+import DebugGrid from "../components/DebugGrid.js";
 
 export default {
   title: "Style/Type",

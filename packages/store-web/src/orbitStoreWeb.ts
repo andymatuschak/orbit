@@ -1,6 +1,6 @@
 import { Database, EventReducer, OrbitStore } from "@withorbit/store-shared";
-import { AttachmentStoreWeb } from "./attachmentStoreWeb";
-import { IDBDatabaseBackend } from "./indexedDB";
+import { AttachmentStoreWeb } from "./attachmentStoreWeb.js";
+import { IDBDatabaseBackend } from "./indexedDB.js";
 
 export class OrbitStoreWeb implements OrbitStore {
   database: Database;

@@ -2,7 +2,7 @@ import { NativeEventEmitter, NativeModules } from "react-native";
 import {
   handleIngestEventWithDefaultStore,
   IngestEventEmitterType,
-} from "./handleIngestEvent";
+} from "./handleIngestEvent.js";
 
 const { IngestEventEmitter } = NativeModules as {
   IngestEventEmitter: IngestEventEmitterType;

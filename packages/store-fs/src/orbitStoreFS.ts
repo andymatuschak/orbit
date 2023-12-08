@@ -1,6 +1,6 @@
 import { Database, OrbitStore } from "@withorbit/store-shared";
-import { AttachmentStoreFS } from "./attachmentStoreFS";
-import { SQLDatabaseBackend } from "./sqlite";
+import { AttachmentStoreFS } from "./attachmentStoreFS.js";
+import { SQLDatabaseBackend } from "./sqlite.js";
 
 /*
 An on-disk Orbit store is a folder containing both a database of event / entity data and also a folder of on-disk attachment files.

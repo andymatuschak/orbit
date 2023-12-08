@@ -1,9 +1,9 @@
 import { Bucket } from "@google-cloud/storage";
-import { getApp } from "../firebase";
+import { getApp } from "../firebase.js";
 import {
   FileStorageResolution,
   FileStorageService,
-} from "./fileStorageService";
+} from "./fileStorageService.js";
 
 export const storageBucketName = "metabook-system.appspot.com";
 export const storageAttachmentsPathComponent = "attachments";

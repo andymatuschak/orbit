@@ -13,10 +13,10 @@ import {
   View,
 } from "react-native";
 import { colors, layout, type } from "../styles";
-import Hoverable from "./Hoverable";
-import Icon from "./Icon";
-import { IconName, IconPosition } from "./IconShared";
-import Spacer from "./Spacer";
+import Hoverable from "./Hoverable.js";
+import Icon from "./Icon.js";
+import { IconName, IconPosition } from "./IconShared.js";
+import Spacer from "./Spacer.js";
 
 export type ButtonPendingActivationState = "hover" | "pressed" | null;
 

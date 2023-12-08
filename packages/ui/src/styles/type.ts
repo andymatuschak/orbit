@@ -1,5 +1,5 @@
 import { Platform, TextStyle } from "react-native";
-import * as colors from "./colors";
+import * as colors from "./colors.js";
 
 const type = {
   label: {

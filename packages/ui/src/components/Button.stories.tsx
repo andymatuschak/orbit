@@ -1,9 +1,9 @@
 import { Story } from "@storybook/react";
 import React from "react";
 import { colors } from "../styles";
-import Button, { ButtonProps } from "./Button";
+import Button, { ButtonProps } from "./Button.js";
 import { View } from "react-native";
-import { IconName } from "./IconShared";
+import { IconName } from "./IconShared.js";
 
 const palette = colors.palettes.red;
 

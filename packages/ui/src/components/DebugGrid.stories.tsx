@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import DebugGrid from "./DebugGrid";
+import DebugGrid from "./DebugGrid.js";
 
 export default {
   title: "Style/Grid",

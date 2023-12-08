@@ -8,10 +8,10 @@ import {
   TaskSpecType,
 } from "@withorbit/core";
 import { Note, splitAnkiDBNoteFields } from "./ankiPkg";
-import { AnkiAttachmentReference } from "./ankiPkg/ankiAttachmentReference";
-import parseAnkiField from "./ankiPkg/parseAnkiField";
-import { convertAnkiID } from "./convertAnkiID";
-import { ModelMapping, ModelMappingType } from "./modelMapping";
+import { AnkiAttachmentReference } from "./ankiPkg/ankiAttachmentReference.js";
+import parseAnkiField from "./ankiPkg/parseAnkiField.js";
+import { convertAnkiID } from "./convertAnkiID.js";
+import { ModelMapping, ModelMappingType } from "./modelMapping.js";
 
 export function mapNoteToTaskSpec(
   note: Note,

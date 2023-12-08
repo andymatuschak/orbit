@@ -1,5 +1,5 @@
-import { RequestManager } from "./requestManager";
-import { MockOrbitAPIValidation } from "./util/mockAPIValiation";
+import { RequestManager } from "./requestManager.js";
+import { MockOrbitAPIValidation } from "./util/mockAPIValiation.js";
 
 const testAPIConfig = { baseURL: "https://localhost" };
 

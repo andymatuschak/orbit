@@ -30,12 +30,12 @@ import { AuthenticationClient } from "../authentication";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
-} from "../authentication/authContext";
-import { DatabaseManager as DatabaseManager2 } from "../model2/databaseManager";
-import { ReviewSessionContainer } from "../ReviewSessionContainer";
-import { useReviewSessionManager } from "../reviewSessionManager";
-import { useAPIClient } from "../util/useAPIClient";
-import { LoadingScreen } from "./LoadingScreen";
+} from "../authentication/authContext.js";
+import { DatabaseManager as DatabaseManager2 } from "../model2/databaseManager.js";
+import { ReviewSessionContainer } from "../ReviewSessionContainer.js";
+import { useReviewSessionManager } from "../reviewSessionManager.js";
+import { useAPIClient } from "../util/useAPIClient.js";
+import { LoadingScreen } from "./LoadingScreen.js";
 
 export function useDatabaseManager(
   authenticationClient: AuthenticationClient,

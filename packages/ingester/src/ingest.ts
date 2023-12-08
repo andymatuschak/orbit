@@ -16,7 +16,7 @@ import {
   IngestibleItem,
   IngestibleItemIdentifier,
   IngestibleSource,
-} from "./ingestible";
+} from "./ingestible.js";
 
 type IngestOptions = {
   ingestDateMillis: number;

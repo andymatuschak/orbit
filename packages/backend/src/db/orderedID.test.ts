@@ -1,4 +1,4 @@
-import { OrderedIDGenerator } from "./orderedID";
+import { OrderedIDGenerator } from "./orderedID.js";
 
 test("generates predictably", () => {
   const gen1 = new OrderedIDGenerator(() => 0.5);

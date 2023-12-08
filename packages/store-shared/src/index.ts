@@ -1,12 +1,12 @@
-export type { AttachmentStore } from "./attachmentStore";
+export type { AttachmentStore } from "./attachmentStore.js";
 
-export { Database } from "./database";
-export type { EventReducer } from "./database";
+export { Database } from "./database.js";
+export type { EventReducer } from "./database.js";
 
 export type {
   DatabaseBackend,
   DatabaseBackendEntityRecord,
-} from "./databaseBackend";
+} from "./databaseBackend.js";
 
 export type {
   DatabaseEntityQuery,
@@ -15,10 +15,10 @@ export type {
   DatabaseQueryPredicate,
   DatabaseQueryPredicateRelation,
   DatabaseTaskQueryPredicate,
-} from "./databaseQuery";
+} from "./databaseQuery.js";
 
-export { encodeDataURL } from "./encodeDataURL";
+export { encodeDataURL } from "./encodeDataURL.js";
 
-export type { OrbitStore } from "./orbitStore";
+export type { OrbitStore } from "./orbitStore.js";
 
-export { runDatabaseTests } from "./databaseTests";
+export { runDatabaseTests } from "./databaseTests.js";

@@ -1,2 +1,2 @@
-export { notificationScheduler } from "./notificationScheduler";
-export { processUserNotificationSubscriber } from "./processUserNotificationSubscriber";
+export { notificationScheduler } from "./notificationScheduler.js";
+export { processUserNotificationSubscriber } from "./processUserNotificationSubscriber.js";

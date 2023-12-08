@@ -7,7 +7,7 @@ import {
   TaskSpec,
 } from "@withorbit/core";
 import crypto from "crypto";
-import { Hasher } from "./hasher";
+import { Hasher } from "./hasher.js";
 
 // normalize each of the objects into an array of strings to ensure
 // that the hash is not sensitive to key ordering

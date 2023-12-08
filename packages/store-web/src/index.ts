@@ -1,1 +1,1 @@
-export { OrbitStoreWeb as default } from "./orbitStoreWeb";
+export { OrbitStoreWeb as default } from "./orbitStoreWeb.js";

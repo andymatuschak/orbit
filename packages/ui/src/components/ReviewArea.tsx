@@ -1,16 +1,16 @@
 import { AttachmentID, TaskRepetitionOutcome } from "@withorbit/core";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { ReviewAreaItem } from "../reviewAreaItem";
+import { ReviewAreaItem } from "../reviewAreaItem.js";
 import { colors, layout } from "../styles";
-import { SizeClass } from "../styles/layout";
-import { Size } from "../util/Size";
-import Card, { CardProps } from "./Card";
-import FadeView from "./FadeView";
-import useLayout from "./hooks/useLayout";
-import usePrevious from "./hooks/usePrevious";
-import { useTransitioningValue } from "./hooks/useTransitioningValue";
-import ReviewButtonBar from "./ReviewButtonBar";
+import { SizeClass } from "../styles/layout.js";
+import { Size } from "../util/Size.js";
+import Card, { CardProps } from "./Card.js";
+import FadeView from "./FadeView.js";
+import useLayout from "./hooks/useLayout.js";
+import usePrevious from "./hooks/usePrevious.js";
+import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
+import ReviewButtonBar from "./ReviewButtonBar.js";
 
 export type ReviewAreaMarkingRecord = {
   reviewAreaItem: ReviewAreaItem;

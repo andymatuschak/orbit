@@ -14,13 +14,13 @@ import {
   ingestSources,
   INGEST_ITEM_IDENTIFIER_KEY,
   MissingItemIdentifierError,
-} from "./ingest";
+} from "./ingest.js";
 import {
   IngestibleItem,
   IngestibleItemIdentifier,
   IngestibleSource,
   IngestibleSourceIdentifier,
-} from "./ingestible";
+} from "./ingestible.js";
 
 let store: OrbitStoreInMemory;
 beforeEach(() => {

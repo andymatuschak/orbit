@@ -1,14 +1,14 @@
 import { boolean, number, text, withKnobs } from "@storybook/addon-knobs";
 import React, { useCallback, useMemo, useState } from "react";
 import { Animated, Easing, View } from "react-native";
-import { ReviewAreaItem } from "../reviewAreaItem";
+import { ReviewAreaItem } from "../reviewAreaItem.js";
 import { colors } from "../styles";
-import { getWidthSizeClass } from "../styles/layout";
-import { generateReviewItem } from "./__fixtures__/generateReviewItem";
-import DebugGrid from "./DebugGrid";
-import useLayout from "./hooks/useLayout";
-import { useTransitioningColorValue } from "./hooks/useTransitioningValue";
-import ReviewArea from "./ReviewArea";
+import { getWidthSizeClass } from "../styles/layout.js";
+import { generateReviewItem } from "./__fixtures__/generateReviewItem.js";
+import DebugGrid from "./DebugGrid.js";
+import useLayout from "./hooks/useLayout.js";
+import { useTransitioningColorValue } from "./hooks/useTransitioningValue.js";
+import ReviewArea from "./ReviewArea.js";
 import { AttachmentID } from "@withorbit/core";
 
 // noinspection JSUnusedGlobalSymbols

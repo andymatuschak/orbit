@@ -7,10 +7,10 @@ import {
   View,
 } from "react-native";
 import { colors, layout } from "../styles";
-import { ColorPalette } from "../styles/colors";
-import Button from "./Button";
-import FadeView from "./FadeView";
-import usePrevious from "./hooks/usePrevious";
+import { ColorPalette } from "../styles/colors.js";
+import Button from "./Button.js";
+import FadeView from "./FadeView.js";
+import usePrevious from "./hooks/usePrevious.js";
 
 export interface MenuProps {
   isVisible: boolean;
