@@ -63,14 +63,14 @@ describe("task components", () => {
 
     expect(filteredResults.length).toBe(2);
     expect(filteredResults[0]).toMatchInlineSnapshot(`
-      Object {
+      {
         "componentID": "a",
         "dueTimestampMillis": 50,
         "taskID": "a",
       }
     `);
     expect(filteredResults[1]).toMatchInlineSnapshot(`
-      Object {
+      {
         "componentID": "b",
         "dueTimestampMillis": 50,
         "taskID": "a",
@@ -116,7 +116,7 @@ describe("task components", () => {
 
     expect(filteredResults.length).toBe(1);
     expect(filteredResults[0]).toMatchInlineSnapshot(`
-      Object {
+      {
         "componentID": "a",
         "dueTimestampMillis": 300,
         "taskID": "a",

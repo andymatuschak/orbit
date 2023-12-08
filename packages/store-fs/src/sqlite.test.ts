@@ -80,14 +80,14 @@ describe("task components", () => {
     );
     expect(results.rows.length).toBe(2);
     expect(results.rows.item(0)).toMatchInlineSnapshot(`
-      Object {
+      {
         "componentID": "a",
         "dueTimestampMillis": 50,
         "taskID": "a",
       }
     `);
     expect(results.rows.item(1)).toMatchInlineSnapshot(`
-      Object {
+      {
         "componentID": "b",
         "dueTimestampMillis": 50,
         "taskID": "a",
@@ -117,7 +117,7 @@ describe("task components", () => {
     );
     expect(results.rows.length).toBe(1);
     expect(results.rows.item(0)).toMatchInlineSnapshot(`
-      Object {
+      {
         "componentID": "a",
         "dueTimestampMillis": 300,
         "taskID": "a",
@@ -155,8 +155,8 @@ describe("indexing", () => {
       ),
     );
     expect(plan).toMatchInlineSnapshot(`
-      Array [
-        "SEARCH TABLE entities USING INDEX sqlite_autoindex_entities_1 (id=?)",
+      [
+        "SEARCH entities USING INDEX sqlite_autoindex_entities_1 (id=?)",
       ]
     `);
   });
@@ -172,8 +172,8 @@ describe("indexing", () => {
       ),
     );
     expect(plan).toMatchInlineSnapshot(`
-      Array [
-        "SEARCH TABLE events USING INDEX sqlite_autoindex_events_1 (id=?)",
+      [
+        "SEARCH events USING INDEX sqlite_autoindex_events_1 (id=?)",
       ]
     `);
   });
@@ -190,10 +190,10 @@ describe("indexing", () => {
       query.args,
     );
     expect(plan).toMatchInlineSnapshot(`
-      Array [
-        "SEARCH TABLE entities USING INDEX entities_type (entityType=? AND rowid>?)",
+      [
+        "SEARCH entities USING INDEX entities_type (entityType=? AND rowid>?)",
         "SCALAR SUBQUERY 1",
-        "SEARCH TABLE entities USING COVERING INDEX sqlite_autoindex_entities_1 (id=?)",
+        "SEARCH entities USING COVERING INDEX sqlite_autoindex_entities_1 (id=?)",
       ]
     `);
   });
@@ -210,12 +210,12 @@ describe("indexing", () => {
       query.args,
     );
     expect(plan).toMatchInlineSnapshot(`
-Array [
-  "SEARCH TABLE derived_taskComponents AS dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
-  "SEARCH TABLE entities AS e USING INDEX sqlite_autoindex_entities_1 (id=?)",
-  "USE TEMP B-TREE FOR DISTINCT",
-]
-`);
+      [
+        "SEARCH dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
+        "SEARCH e USING INDEX sqlite_autoindex_entities_1 (id=?)",
+        "USE TEMP B-TREE FOR DISTINCT",
+      ]
+    `);
 
     const queryWithSeek = constructListEntitySQLQuery({
       entityType: EntityType.Task,
@@ -229,15 +229,15 @@ Array [
       queryWithSeek.args,
     );
     expect(planWithSeek).toMatchInlineSnapshot(`
-Array [
-  "SEARCH TABLE derived_taskComponents AS dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
-  "SEARCH TABLE entities AS e USING INDEX sqlite_autoindex_entities_1 (id=? AND rowid>?)",
-  "SCALAR SUBQUERY 1",
-  "SEARCH TABLE entities AS e USING COVERING INDEX sqlite_autoindex_entities_1 (id=?)",
-  "SEARCH TABLE derived_taskComponents AS dt USING COVERING INDEX sqlite_autoindex_derived_taskComponents_1 (taskID=?)",
-  "USE TEMP B-TREE FOR DISTINCT",
-]
-`);
+      [
+        "SEARCH dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
+        "SEARCH e USING INDEX sqlite_autoindex_entities_1 (id=? AND rowid>?)",
+        "SCALAR SUBQUERY 1",
+        "SEARCH e USING COVERING INDEX sqlite_autoindex_entities_1 (id=?)",
+        "SEARCH dt USING COVERING INDEX sqlite_autoindex_derived_taskComponents_1 (taskID=?)",
+        "USE TEMP B-TREE FOR DISTINCT",
+      ]
+    `);
   });
 
   test("list events by entity ID", async () => {
@@ -252,10 +252,10 @@ Array [
       query.args,
     );
     expect(plan).toMatchInlineSnapshot(`
-      Array [
-        "SEARCH TABLE events USING INDEX events_entityID (entityID=? AND rowid>?)",
+      [
+        "SEARCH events USING INDEX events_entityID (entityID=? AND rowid>?)",
         "SCALAR SUBQUERY 1",
-        "SEARCH TABLE events USING COVERING INDEX sqlite_autoindex_events_1 (id=?)",
+        "SEARCH events USING COVERING INDEX sqlite_autoindex_events_1 (id=?)",
       ]
     `);
   });
