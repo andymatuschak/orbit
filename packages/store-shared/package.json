@@ -17,11 +17,11 @@
   },
   "dependencies": {
     "@withorbit/core": "0.0.1",
-    "@withorbit/sample-data": "0.0.1",
     "ajv": "^8.6.2"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",
+    "@withorbit/sample-data": "0.0.1",
     "typescript": "^5.3.3",
     "typescript-json-schema": "^0.50.1"
   }
