@@ -1,7 +1,7 @@
 import { PubSub } from "@google-cloud/pubsub";
-import admin from "firebase-admin";
+import { Timestamp } from "firebase-admin/firestore";
 import functions from "firebase-functions";
-import { sharedServerDatabase } from "../../db";
+import { sharedServerDatabase } from "../../db/index.js";
 import { UserEnumerationRecord } from "../../db/firebaseAccountData.js";
 import { shouldEvaluateUserForNotification } from "../../notifications/shouldEvaluateUserForNotification.js";
 import {
@@ -16,8 +16,8 @@ const pubsub = new PubSub();
 const notificationTopic = pubsub.topic(processUserNotificationTopic);
 
 // firebase-admin's implementation of Timestamp doesn't implement toJSON, so we need to transform them to JSON-encode them appropriately.
-function jsonEncodeServerTimestamps(key: string, value: unknown): unknown {
-  if (value instanceof admin.firestore.Timestamp) {
+function jsonEncodeServerTimestamps(_key: string, value: unknown): unknown {
+  if (value instanceof Timestamp) {
     return { seconds: value.seconds, nanoseconds: value.nanoseconds };
   } else {
     return value;

@@ -12,7 +12,7 @@ import {
   TextProps,
   View,
 } from "react-native";
-import { colors, layout, type } from "../styles";
+import { colors, layout, type } from "../styles/index.js";
 import Hoverable from "./Hoverable.js";
 import Icon from "./Icon.js";
 import { IconName, IconPosition } from "./IconShared.js";

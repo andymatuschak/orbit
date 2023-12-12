@@ -4,4 +4,4 @@ export { updateNotificationSettings } from "./firebaseFunctions/updateNotificati
 
 export { api } from "./firebaseFunctions/api.js";
 
-export * from "./firebaseFunctions/notifier";
+export * from "./firebaseFunctions/notifier/index.js";

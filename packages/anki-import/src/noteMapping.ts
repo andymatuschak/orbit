@@ -7,7 +7,7 @@ import {
   TaskSpec,
   TaskSpecType,
 } from "@withorbit/core";
-import { Note, splitAnkiDBNoteFields } from "./ankiPkg";
+import { Note, splitAnkiDBNoteFields } from "./ankiPkg/index.js";
 import { AnkiAttachmentReference } from "./ankiPkg/ankiAttachmentReference.js";
 import parseAnkiField from "./ankiPkg/parseAnkiField.js";
 import { convertAnkiID } from "./convertAnkiID.js";

@@ -1,6 +1,6 @@
 import { OrbitAPI } from "@withorbit/api";
 import { Task, TaskID } from "@withorbit/core";
-import { sharedServerDatabase } from "../db";
+import { sharedServerDatabase } from "../db/index.js";
 import { authenticateTypedRequest } from "./util/authenticateRequest.js";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter.js";
 

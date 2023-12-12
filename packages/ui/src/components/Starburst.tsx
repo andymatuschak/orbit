@@ -1,7 +1,7 @@
 import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core";
 import React, { useRef } from "react";
 import { Animated } from "react-native";
-import Svg, { ClipPath, G, Path } from "react-native-svg";
+import { Svg, ClipPath, G, Path } from "react-native-svg";
 import { generateIntervalSequence } from "../util/generateIntervalSequence.js";
 import clamp from "../util/clamp.js";
 import lerp from "../util/lerp.js";

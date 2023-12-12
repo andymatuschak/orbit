@@ -1,23 +1,23 @@
 import { eventReducer, TaskIngestEvent } from "@withorbit/core";
 import { createTestTaskIngestEvents } from "@withorbit/sample-data";
 import { Database, runDatabaseTests } from "@withorbit/store-shared";
-import firebase from "firebase-admin";
+import type { App } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { resetLocalEmulators } from "../__tests__/emulators.js";
 import {
-  createTestAdminFirebaseApp,
+  getTestFirebaseAdminApp,
   terminateTestFirebaseApp,
 } from "../__tests__/firebaseTesting.js";
 import { FirestoreDatabaseBackend } from "./firestoreDatabaseBackend.js";
 
 class TestFirestoreDatabaseBackend extends FirestoreDatabaseBackend {
-  private _app: firebase.app.App;
-  constructor(app: firebase.app.App) {
-    super("testUser", app.firestore());
-    this._app = app;
+  constructor(app: App) {
+    super("testUser", getFirestore(app));
   }
 
   async close() {
     await super.close();
-    await terminateTestFirebaseApp(this._app);
+    await terminateTestFirebaseApp();
   }
 }
 
@@ -25,7 +25,8 @@ describe("database tests", () => {
   runDatabaseTests(
     "Firestore",
     async (eventReducer, eventValidator) => {
-      const currentFirebaseApp = createTestAdminFirebaseApp();
+      await resetLocalEmulators();
+      const currentFirebaseApp = getTestFirebaseAdminApp();
       const backend = new TestFirestoreDatabaseBackend(currentFirebaseApp);
       return new Database(backend, eventReducer, eventValidator);
     },
@@ -34,7 +35,7 @@ describe("database tests", () => {
 });
 
 test("duplicate events aren't returned from putEvents", async () => {
-  const currentFirebaseApp = createTestAdminFirebaseApp();
+  const currentFirebaseApp = getTestFirebaseAdminApp();
   const backend = new TestFirestoreDatabaseBackend(currentFirebaseApp);
   const db = new Database(backend, eventReducer);
 

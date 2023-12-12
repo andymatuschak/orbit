@@ -1,27 +1,13 @@
 import fs from "fs";
 import { LocalFileStorageService } from "../fileStorageService/localFileStorageService.js";
-import {
-  clearFirestoreData,
-  startFirebaseTestingEmulator,
-  stopFirebaseTestingEmulator,
-} from "./firebaseTesting.js";
-
-export async function startLocalEmulators() {
-  await startFirebaseTestingEmulator();
-  await deleteLocalFileServiceData();
-}
-
-export async function stopLocalEmulators() {
-  await stopFirebaseTestingEmulator();
-  await deleteLocalFileServiceData();
-}
+import { clearFirestoreData } from "./firebaseTesting.js";
 
 export async function resetLocalEmulators() {
   await clearFirestoreData();
-  await deleteLocalFileServiceData();
+  await resetLocalFileServiceData();
 }
 
-async function deleteLocalFileServiceData() {
+export async function resetLocalFileServiceData() {
   await fs.promises
     .rm(LocalFileStorageService.getTestStorageLocation(), {
       recursive: true,

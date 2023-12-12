@@ -5,7 +5,7 @@ import {
 } from "@withorbit/core";
 import { testQASpec } from "@withorbit/sample-data";
 import { ReviewAreaItem } from "../../reviewAreaItem.js";
-import * as styles from "../../styles";
+import * as styles from "../../styles/index.js";
 
 export function generateReviewItem(
   questionText: string,

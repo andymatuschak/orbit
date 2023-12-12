@@ -1,4 +1,4 @@
-import Ajv, {
+import AjvModule, {
   ErrorObject as AjvErrorObject,
   Schema as AjvSchema,
   ValidateFunction as AjvValidationFunction,
@@ -8,6 +8,9 @@ import {
   APIValidatorError,
   APIValidator,
 } from "./apiValidator.js";
+
+// TODO: remove when https://github.com/ajv-validator/ajv/issues/2047 is fixed
+const Ajv = AjvModule.default;
 
 export type AjvAPIValidatorConfig = {
   mutateWithDefaultValues: boolean;

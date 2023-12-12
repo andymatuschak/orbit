@@ -142,7 +142,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         .where(`[${DexieEntityKeys.EntityType}+${DexieEntityKeys.RowID}]`)
         .between(
           [query.entityType, afterRowID === null ? 0 : afterRowID + 1],
-          [query.entityType, Dexie.maxKey],
+          [query.entityType, Dexie.Dexie.maxKey],
         );
       // We don't need to explicitly sort the result, because rowID is the final column of this compound index.
       request = applyOptionalLimit(baseQuery, query.limit).toArray();
@@ -174,7 +174,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
           .where(`[${query.predicate[0]}+${DexieEventKeys.SequenceNumber}]`)
           .between(
             [query.predicate[2], afterSequenceNumber + 1],
-            [query.predicate[2], Dexie.maxKey],
+            [query.predicate[2], Dexie.Dexie.maxKey],
           );
 
         request = applyOptionalLimit(baseQuery, query.limit).toArray();
@@ -274,7 +274,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
             ...(rowID !== undefined && { rowID }),
           });
 
-          this._onEntityUpdate(
+          await this._onEntityUpdate(
             oldEntityRecordMap.get(id)?.entity ?? null,
             record.entity,
           );
@@ -345,7 +345,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
     key: string,
     value: IndexableType,
   ): Promise<PK> {
-    // there will never be more then one key
+    // there will never be more than one key
     const afterRowPrimaryKeys = await table
       .where(key)
       .equals(value)

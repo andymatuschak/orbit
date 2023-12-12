@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors, layout, type } from "../styles";
+import { colors, layout, type } from "../styles/index.js";
 import Button from "./Button.js";
 import { IconName } from "./IconShared.js";
 import Logo from "./Logo.js";

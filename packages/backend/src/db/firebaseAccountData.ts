@@ -1,5 +1,5 @@
 import firebase from "firebase-admin";
-import admin from "firebase-admin";
+import { getAuth } from "./firebaseAuth.js";
 import { getDatabase } from "./firestore.js";
 
 import { UserMetadata } from "./userMetadata.js";
@@ -21,8 +21,7 @@ export async function getUserMetadata(
 }
 
 export async function getUserEmail(userID: string): Promise<string | null> {
-  const userRecord = await admin
-    .auth()
+  const userRecord = await getAuth()
     .getUser(userID)
     .catch(() => null);
   return userRecord?.email ?? null;
@@ -48,9 +47,7 @@ export async function enumerateUsers(
   let pageToken: string | undefined = undefined;
   const db = getDatabase();
   do {
-    const listUsersResult: admin.auth.ListUsersResult = await admin
-      .auth()
-      .listUsers(1000, pageToken);
+    const listUsersResult = await getAuth().listUsers(1000, pageToken);
 
     const userMetadataRefs = listUsersResult.users.map((userRecord) =>
       getUserMetadataReference(db, userRecord.uid),

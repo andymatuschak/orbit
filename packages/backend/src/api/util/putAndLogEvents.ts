@@ -1,6 +1,6 @@
 import { Event } from "@withorbit/core";
-import { sharedServerDatabase } from "../../db";
-import { sharedLoggingService } from "../../logging";
+import { sharedServerDatabase } from "../../db/index.js";
+import { sharedLoggingService } from "../../logging/index.js";
 
 export async function putAndLogEvents(
   userID: string,

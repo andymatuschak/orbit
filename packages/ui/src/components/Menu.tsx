@@ -6,7 +6,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { colors, layout } from "../styles";
+import { colors, layout } from "../styles/index.js";
 import { ColorPalette } from "../styles/colors.js";
 import Button from "./Button.js";
 import FadeView from "./FadeView.js";

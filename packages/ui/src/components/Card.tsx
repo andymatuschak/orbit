@@ -17,7 +17,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem.js";
-import { colors, layout, type } from "../styles";
+import { colors, layout, type } from "../styles/index.js";
 import Button from "./Button.js";
 import FadeView from "./FadeView.js";
 import {

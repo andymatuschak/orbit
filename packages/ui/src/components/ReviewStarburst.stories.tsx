@@ -7,7 +7,7 @@ import {
 import React from "react";
 import { View } from "react-native";
 import { generateIntervalSequence } from "../util/generateIntervalSequence.js";
-import { colors } from "../styles";
+import { colors } from "../styles/index.js";
 import useLayout from "./hooks/useLayout.js";
 import ReviewStarburst, { ReviewStarburstItem } from "./ReviewStarburst.js";
 import {

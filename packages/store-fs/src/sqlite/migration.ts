@@ -1,5 +1,5 @@
 import { getMetadataValues, setMetadataValues } from "./metadata.js";
-import { latestSchemaVersionNumber, migrations } from "./migrations";
+import { latestSchemaVersionNumber, migrations } from "./migrations/index.js";
 import { SQLMetadataTableKey, SQLTableName } from "./tables.js";
 import { execReadStatement, execTransaction } from "./transactionUtils.js";
 import { SQLDatabase } from "./types.js";

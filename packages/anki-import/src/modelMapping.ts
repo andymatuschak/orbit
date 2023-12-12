@@ -1,4 +1,4 @@
-import { Collection, ModelType } from "./ankiPkg";
+import { Collection, ModelType } from "./ankiPkg/index.js";
 
 export interface BasicModelMapping {
   type: ModelMappingType.Basic;

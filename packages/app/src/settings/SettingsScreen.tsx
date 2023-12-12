@@ -2,7 +2,7 @@ import { Link, Spacer, styles } from "@withorbit/ui";
 import React from "react";
 import { Platform, Text, View } from "react-native";
 import serviceConfig from "../../serviceConfig.js";
-import { FirebaseOpaqueIDToken } from "../authentication";
+import { FirebaseOpaqueIDToken } from "../authentication/index.js";
 import { useAuthenticationClient } from "../authentication/authContext.js";
 import { useEmbeddedAuthenticationState } from "../embedded/useEmbeddedAuthenticationState.js";
 

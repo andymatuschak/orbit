@@ -2,7 +2,7 @@ import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core";
 import React, { useMemo } from "react";
 import { Animated, View } from "react-native";
 import { generateIntervalSequence } from "../util/generateIntervalSequence.js";
-import { layout, type } from "../styles";
+import { layout, type } from "../styles/index.js";
 import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
 import {
   getStarburstRayLength,

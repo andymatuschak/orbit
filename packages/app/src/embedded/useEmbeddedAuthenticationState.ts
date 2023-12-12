@@ -1,4 +1,4 @@
-import * as Authentication from "../authentication";
+import * as Authentication from "../authentication/index.js";
 import React from "react";
 import { createLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel.js";
 import useByrefCallback from "../util/useByrefCallback.js";

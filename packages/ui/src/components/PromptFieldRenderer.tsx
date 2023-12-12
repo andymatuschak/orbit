@@ -19,9 +19,9 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import Markdown, * as MarkdownDisplay from "react-native-markdown-display";
+import * as MarkdownDisplay from "react-native-markdown-display";
 
-import { colors, type, layout } from "../styles";
+import { colors, type, layout } from "../styles/index.js";
 import { getVariantStyles } from "../styles/type.js";
 import usePrevious from "./hooks/usePrevious.js";
 import useWeakRef from "./hooks/useWeakRef.js";
@@ -164,14 +164,14 @@ const ClozeUnderline =
 const getMarkdownRenderRules = (
   onLayout: (event: LayoutChangeEvent) => void,
 ): MarkdownDisplay.RenderRules => ({
-  body(node, children, parent, styles) {
+  body(node, children, _parent, styles) {
     return (
       <View key={node.key} style={styles._VIEW_SAFE_body} onLayout={onLayout}>
         {children}
       </View>
     );
   },
-  clozeHighlight(node, children, parent, styles, inheritedStyles = {}) {
+  clozeHighlight(node, children, _parent, styles, inheritedStyles = {}) {
     return (
       <Text key={node.key} style={[styles.clozeHighlight, inheritedStyles]}>
         {children}
@@ -195,7 +195,7 @@ const getMarkdownRenderRules = (
     );
   },
 
-  text(node, children, parent, styles, inheritedStyles = {}) {
+  text(node, _children, _parent, styles, inheritedStyles = {}) {
     const parsedChildren: React.ReactNode[] = [];
     let content = node.content as string;
     for (
@@ -435,7 +435,7 @@ export default React.memo(function PromptFieldRenderer(props: {
           height: isLayoutReady ? undefined : 10000,
         }}
       >
-        <Markdown
+        <MarkdownDisplay.Markdown
           rules={useMemo(
             () =>
               getMarkdownRenderRules((event) =>
@@ -455,7 +455,7 @@ export default React.memo(function PromptFieldRenderer(props: {
           markdownit={markdownItInstance}
         >
           {promptField.text}
-        </Markdown>
+        </MarkdownDisplay.Markdown>
       </View>
       {shouldClipContent && (
         <View

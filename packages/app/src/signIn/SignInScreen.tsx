@@ -1,7 +1,7 @@
 import { ContinueWithUser, styles } from "@withorbit/ui";
 import React from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
-import { AuthenticationClient } from "../authentication";
+import { AuthenticationClient } from "../authentication/index.js";
 import { useAuthenticationClient } from "../authentication/authContext.js";
 import { createLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel.js";
 import SignInForm from "./SignInForm.js";

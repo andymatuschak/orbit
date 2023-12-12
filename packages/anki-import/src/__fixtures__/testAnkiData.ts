@@ -9,7 +9,7 @@ import {
   ModelType,
   Note,
   ReviewLogType,
-} from "../ankiPkg";
+} from "../ankiPkg/index.js";
 
 export const testBasicModel: Model = {
   id: "101",

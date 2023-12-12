@@ -8,7 +8,8 @@
     "skipLibCheck": true,
     "outDir": "./dist",
     "importHelpers": true,
-    "removeComments": true
+    "removeComments": true,
+    "moduleResolution": "Node"
   },
   "include": [
     "./src/**/*.tsx",

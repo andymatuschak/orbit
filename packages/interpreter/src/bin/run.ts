@@ -1,7 +1,7 @@
 import { Ingestible } from "@withorbit/ingester";
 import fs from "fs";
 import path from "path";
-import { MarkdownInterpreter } from "../interpreters";
+import { MarkdownInterpreter } from "../interpreters/index.js";
 import { InterpretableFile, Interpreter } from "../interpreter.js";
 import { CryptoBase64Hasher } from "../hasher/CryptoBase64Hasher.js";
 

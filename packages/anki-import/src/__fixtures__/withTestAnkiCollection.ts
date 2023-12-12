@@ -3,7 +3,7 @@ import {
   AnkiCollectionDBHandle,
   MediaManifest,
   readAnkiCollectionPackage,
-} from "../ankiPkg";
+} from "../ankiPkg/index.js";
 
 export default function withTestAnkiCollection<R>(
   continuation: (

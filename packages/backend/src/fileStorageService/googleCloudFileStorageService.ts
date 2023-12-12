@@ -1,19 +1,19 @@
-import { Bucket } from "@google-cloud/storage";
-import { getApp } from "../firebase.js";
-import {
+import { getStorage } from "firebase-admin/storage";
+import { getApp } from "../firebaseApp.js";
+import type {
   FileStorageResolution,
   FileStorageService,
 } from "./fileStorageService.js";
 
+// TODO: move to serviceConfig.ts
 export const storageBucketName = "metabook-system.appspot.com";
-export const storageAttachmentsPathComponent = "attachments";
 
 export class GoogleCloudFileStorageService implements FileStorageService {
-  private readonly _bucket: Bucket;
+  private readonly _bucket: ReturnType<ReturnType<typeof getStorage>["bucket"]>;
   private readonly _bucketName: string = storageBucketName;
 
   constructor(
-    storage = getApp().storage(),
+    storage = getStorage(getApp()),
     bucketName: string = storageBucketName,
   ) {
     this._bucket = storage.bucket(bucketName);
@@ -57,7 +57,7 @@ export class GoogleCloudFileStorageService implements FileStorageService {
   async getMIMEType(subpath: string): Promise<string | null> {
     try {
       const [metadata] = await this._bucket.file(subpath).getMetadata();
-      return metadata["contentType"];
+      return metadata["contentType"] ?? null;
     } catch {
       return null;
     }

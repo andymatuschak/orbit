@@ -1,5 +1,5 @@
 import mdast from "mdast";
-import unified from "unified";
+import * as unified from "unified";
 import unist from "unist";
 import { parents } from "unist-util-parents";
 import * as unistUtilSelect from "unist-util-select";

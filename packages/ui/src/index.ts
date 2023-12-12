@@ -1,6 +1,6 @@
 export type { ReviewAreaItem } from "./reviewAreaItem.js";
 
-export * as styles from "./styles";
+export * as styles from "./styles/index.js";
 
 export { default as Button, openURL } from "./components/Button.js";
 export type { ButtonProps } from "./components/Button.js";

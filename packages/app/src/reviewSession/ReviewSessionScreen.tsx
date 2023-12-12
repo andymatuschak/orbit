@@ -1,6 +1,6 @@
 import React from "react";
 import { Platform } from "react-native";
-import { AuthenticationClient } from "../authentication";
+import { AuthenticationClient } from "../authentication/index.js";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,

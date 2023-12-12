@@ -1,5 +1,5 @@
 import { ReviewItem, Task } from "@withorbit/core";
-import { EmbeddedScreenConfiguration } from ".";
+import { EmbeddedScreenConfiguration } from "./index.js";
 
 // Messages from host to embedded:
 //================================

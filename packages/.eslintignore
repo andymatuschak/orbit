@@ -1,4 +1,3 @@
-note-sync/vendor/**/*
 web-component/build/**/*
 app/index.js
 app/.expo/**/*

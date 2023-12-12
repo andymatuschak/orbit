@@ -1,18 +1,10 @@
 import { createTestTaskIngestEvents } from "@withorbit/sample-data";
 import { resetLocalEmulators } from "../emulators.js";
+import { setupAuthToken } from "../firebaseTesting.js";
 import { fetchRoute } from "./utils/fetchRoute.js";
-import { setupAuthToken } from "./utils/setupAuthToken.js";
-
-beforeAll(() => {
-  // Spinning up the Cloud Function sometimes takes a few seconds...
-  jest.setTimeout(30 * 1000);
-});
-
-afterEach(async () => {
-  await resetLocalEmulators();
-});
 
 beforeEach(async () => {
+  await resetLocalEmulators();
   await setupAuthToken("test");
 });
 

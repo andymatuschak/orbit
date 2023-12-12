@@ -1,6 +1,7 @@
 import MarkdownIt, { Delimiter } from "markdown-it/lib";
-import Token from "markdown-it/lib/token";
+import Token from "markdown-it/lib/token.js";
 
+// TODO: This is awfully sketchy. If the prompt had braces in its text--as many prompts with LaTeX do--this strategy of inserting braces to set off clozes will fail badly. We should use some other approach.
 export function clozeParsePlugin(md: MarkdownIt) {
   const startDelimiterCode = "{".charCodeAt(0);
   const endDelimiterCode = "}".charCodeAt(0);

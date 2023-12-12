@@ -1,5 +1,5 @@
 import React from "react";
-import Svg, { Path, Pattern, Rect } from "react-native-svg";
+import { Svg, Path, Pattern, Rect } from "react-native-svg";
 
 type SawtoothPatternProps = {
   fillColor: string;

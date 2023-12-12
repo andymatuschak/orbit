@@ -1,7 +1,7 @@
 import { boolean, number } from "@storybook/addon-knobs";
 import React from "react";
 import { View, Text } from "react-native";
-import Svg, { Circle, Text as SVGText } from "react-native-svg";
+import { Svg, Circle, Text as SVGText } from "react-native-svg";
 import Button from "../components/Button.js";
 import { IconName } from "../components/IconShared.js";
 import Spacer from "../components/Spacer.js";

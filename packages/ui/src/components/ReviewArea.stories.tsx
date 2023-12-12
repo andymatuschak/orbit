@@ -2,7 +2,7 @@ import { boolean, number, text, withKnobs } from "@storybook/addon-knobs";
 import React, { useCallback, useMemo, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem.js";
-import { colors } from "../styles";
+import { colors } from "../styles/index.js";
 import { getWidthSizeClass } from "../styles/layout.js";
 import { generateReviewItem } from "./__fixtures__/generateReviewItem.js";
 import DebugGrid from "./DebugGrid.js";

@@ -11,7 +11,7 @@ import {
   testNote,
 } from "./__fixtures__/testAnkiData.js";
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection.js";
-import { CardQueue, Collection } from "./ankiPkg";
+import { CardQueue, Collection } from "./ankiPkg/index.js";
 import {
   createImportPlan,
   createRescheduleEventForCard,

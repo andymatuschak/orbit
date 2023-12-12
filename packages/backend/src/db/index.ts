@@ -6,8 +6,8 @@ import * as auth from "./firebaseAuth.js";
 // Currently there's only a Firestore / Firebase Auth-based implementation.
 interface OrbitServerDatabase {
   getUserDatabase(userID: string): Database;
-  accounts: typeof import("./firebaseAccountData");
-  auth: typeof import("./firebaseAuth");
+  accounts: typeof import("./firebaseAccountData.js");
+  auth: typeof import("./firebaseAuth.js");
 }
 
 let _sharedServerDatabase: OrbitServerDatabase | null = null;

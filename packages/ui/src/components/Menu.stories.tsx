@@ -1,7 +1,7 @@
 import { Story } from "@storybook/react";
 import React, { useRef, useState } from "react";
 import { View } from "react-native";
-import { colors } from "../styles";
+import { colors } from "../styles/index.js";
 import Button from "./Button.js";
 import { IconName } from "./IconShared.js";
 import { LogoProps } from "./LogoShared.js";

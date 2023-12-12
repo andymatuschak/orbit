@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import Svg, { Line, Rect } from "react-native-svg";
+import { Svg, Line, Rect } from "react-native-svg";
 import * as layout from "../styles/layout.js";
 
 export default function DebugGrid({

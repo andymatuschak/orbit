@@ -13,7 +13,7 @@ import {
   SQLDatabaseBackend,
 } from "./sqlite.js";
 import { getSchemaVersionNumber } from "./sqlite/migration.js";
-import { latestSchemaVersionNumber } from "./sqlite/migrations";
+import { latestSchemaVersionNumber } from "./sqlite/migrations/index.js";
 import {
   SQLEntityTableColumn,
   SQLEventTableColumn,

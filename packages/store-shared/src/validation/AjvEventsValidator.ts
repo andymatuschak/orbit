@@ -1,7 +1,10 @@
 import { Event } from "@withorbit/core";
 import { EventsValidator, EventsValidatorError } from "./eventsValidator.js";
-import Ajv, { ValidateFunction as AjvValidationFunction } from "ajv";
-import DatabaseEventsSchema from "./events.json";
+import AjvModule, { ValidateFunction as AjvValidationFunction } from "ajv";
+import DatabaseEventsSchema from "./events.json" assert { type: "json" };
+
+// FIXME: https://github.com/ajv-validator/ajv/issues/2047
+const Ajv = AjvModule.default;
 
 export class AjvEventsValidator implements EventsValidator {
   private readonly validator: AjvValidationFunction;

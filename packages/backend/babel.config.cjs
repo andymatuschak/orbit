@@ -11,5 +11,11 @@ module.exports = {
     ],
     "@babel/preset-typescript",
   ],
+  plugins: [
+    [
+      "@babel/plugin-syntax-import-attributes",
+      // TODO remove when we move to Node 22 and update import assert to import with
+      { deprecatedAssertSyntax: true },
+    ],
+  ],
 };
-

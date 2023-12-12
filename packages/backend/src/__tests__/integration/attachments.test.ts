@@ -4,12 +4,12 @@ import {
   generateUniqueID,
 } from "@withorbit/core";
 import { resetLocalEmulators } from "../emulators.js";
-import { setupTestOrbitAPIClient } from "./utils/setupAuthToken.js";
+import { setupTestOrbitAPIClient } from "../firebaseTesting.js";
 
 const testAttachmentBase64Data = "VGVzdA==";
 const testID = generateUniqueID<AttachmentID>();
 
-afterEach(async () => {
+beforeEach(async () => {
   await resetLocalEmulators();
 });
 

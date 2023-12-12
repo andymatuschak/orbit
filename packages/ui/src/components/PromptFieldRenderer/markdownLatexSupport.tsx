@@ -19,13 +19,13 @@ export const renderInlineMath: MarkdownDisplay.RenderFunction = (
   inheritedStyles = {}, // eslint-disable-line @typescript-eslint/no-unused-vars
 ) => {
   return (
-    <MathJax
+    <MathJax.default
       fontSize={inheritedStyles.fontSize * 0.83}
       color={colors.ink}
       display={false}
     >
       {node.content}
-    </MathJax>
+    </MathJax.default>
   );
 };
 
@@ -37,12 +37,12 @@ export const renderBlockMath: MarkdownDisplay.RenderFunction = (
   inheritedStyles = {}, // eslint-disable-line @typescript-eslint/no-unused-vars
 ) => {
   return (
-    <MathJax
+    <MathJax.default
       fontSize={inheritedStyles.fontSize * 0.83}
       color={colors.ink}
       display={true}
     >
       {node.content}
-    </MathJax>
+    </MathJax.default>
   );
 };

@@ -2,7 +2,7 @@ import { browserName, detectOS } from "detect-browser";
 import type { Request, Response } from "express";
 import isBot from "isbot-fast";
 import requestIp from "request-ip";
-import { sharedLoggingService } from "../../logging";
+import { sharedLoggingService } from "../../logging/index.js";
 import crypto from "crypto";
 import { startOfMonth } from "date-fns";
 import serviceConfig from "../../serviceConfig.js";

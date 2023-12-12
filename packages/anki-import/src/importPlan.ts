@@ -16,8 +16,8 @@ import {
   TaskSpec,
 } from "@withorbit/core";
 import fs from "fs";
-import * as Anki from "./ankiPkg";
-import { Card, CardQueue, Collection } from "./ankiPkg";
+import * as Anki from "./ankiPkg/index.js";
+import { Card, CardQueue, Collection } from "./ankiPkg/index.js";
 import { convertAnkiID } from "./convertAnkiID.js";
 import { getModelMapping, ModelMapping } from "./modelMapping.js";
 import { mapNoteToTaskSpec } from "./noteMapping.js";

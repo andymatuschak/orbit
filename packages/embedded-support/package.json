@@ -12,6 +12,6 @@
     "@withorbit/core": "0.0.1"
   },
   "devDependencies": {
-    "typescript": "^4.2.4"
+    "typescript": "^5.3.3"
   }
 }

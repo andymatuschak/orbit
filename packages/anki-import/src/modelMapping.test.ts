@@ -1,5 +1,9 @@
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection.js";
-import { AnkiCollectionDBHandle, Collection, readCollection } from "./ankiPkg";
+import {
+  AnkiCollectionDBHandle,
+  Collection,
+  readCollection,
+} from "./ankiPkg/index.js";
 import { getModelMapping } from "./modelMapping.js";
 
 let collection: Collection;

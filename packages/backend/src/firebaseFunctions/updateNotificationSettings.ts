@@ -1,7 +1,7 @@
 import * as dateFns from "date-fns";
 import express from "express";
 import functions from "firebase-functions";
-import { sharedServerDatabase } from "../db";
+import { sharedServerDatabase } from "../db/index.js";
 import serviceConfig from "../serviceConfig.js";
 import { authenticateRequest } from "../api/util/authenticateRequest.js";
 import { UserMetadata } from "../db/userMetadata.js";

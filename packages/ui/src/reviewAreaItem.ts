@@ -5,7 +5,7 @@ import {
   TaskID,
   TaskProvenance,
 } from "@withorbit/core";
-import { colors } from "./styles";
+import { colors } from "./styles/index.js";
 
 export interface ReviewAreaItem<TC extends TaskContent = TaskContent> {
   taskID: TaskID;

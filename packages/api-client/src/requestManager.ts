@@ -1,6 +1,5 @@
 import { API, APIValidator, APIValidatorError } from "@withorbit/api";
 import { APIConfig } from "./apiConfig.js";
-import * as Network from "./util/fetch.js";
 
 const enableDebugTrace = !!process.env["ORBIT_REQUEST_DEBUG"];
 function debugTrace(...args: any[]) {
@@ -29,7 +28,7 @@ export class RequestManager<API extends API.Spec> {
     Method extends Extract<keyof API[Path], API.HTTPMethod>,
   >(
     path: Path,
-    method: Method,
+    _method: Method,
     requestData: API.RouteRequestData<API[Path][Method]>,
   ): string {
     const url = new URL(`${this.config.baseURL}${path}`);
@@ -92,10 +91,9 @@ export class RequestManager<API extends API.Spec> {
     };
 
     debugTrace("Requesting", url, method, headers, wireBody?.body);
-    const response = await (this.config.fetch ?? Network.fetch)(url, {
+    const response = await (this.config.fetch ?? fetch)(url, {
       method,
       headers,
-      compress: true,
       body: wireBody?.body as any,
     });
     debugTrace("Got response", url, method, response.status, [
@@ -170,11 +168,11 @@ function getWireBody<
   Method extends Extract<keyof API[Path], API.HTTPMethod>,
 >(
   requestData: API.RouteRequestData<API[Path][Method]>,
-): { body: Network.FormData | string; contentType: string } | null {
+): { body: FormData | string; contentType: string } | null {
   if (requestData.body) {
     switch (requestData.contentType) {
       case "multipart/form-data":
-        const formData = new Network.FormData();
+        const formData = new FormData();
         for (const name of Object.keys(requestData.body)) {
           formData.append(name, requestData.body[name]);
         }

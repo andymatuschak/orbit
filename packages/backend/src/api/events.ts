@@ -1,6 +1,6 @@
 import { OrbitAPI } from "@withorbit/api";
 import { Event } from "@withorbit/core";
-import { sharedServerDatabase } from "../db";
+import { sharedServerDatabase } from "../db/index.js";
 import { authenticatedRequestHandler } from "./util/authenticateRequest.js";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter.js";
 import { putAndLogEvents } from "./util/putAndLogEvents.js";

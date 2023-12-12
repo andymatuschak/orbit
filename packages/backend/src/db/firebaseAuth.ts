@@ -1,13 +1,14 @@
 import * as dateFns from "date-fns";
-import firebase from "firebase-admin";
-import { getApp } from "../firebase.js";
+import { Auth, getAuth as _getAuth } from "firebase-admin/auth";
+import { CollectionReference, Timestamp } from "firebase-admin/firestore";
+import { getApp } from "../firebaseApp.js";
 import { getDatabase } from "./firestore.js";
 
-let _auth: firebase.auth.Auth | null = null;
+let _auth: Auth | null = null;
 
-function getAuth(): firebase.auth.Auth {
+export function getAuth(): Auth {
   if (!_auth) {
-    _auth = getApp().auth();
+    _auth = _getAuth(getApp());
   }
   return _auth;
 }
@@ -46,7 +47,7 @@ export async function createCustomLoginToken(userID: string): Promise<string> {
 type OneTimeAccessCodeRecord = {
   type: typeof AccessCodeRecordType.OneTime;
   userID: string;
-  expirationTimestamp: firebase.firestore.Timestamp;
+  expirationTimestamp: Timestamp;
 };
 
 type PersonalAccessTokenRecord = {
@@ -61,11 +62,9 @@ enum AccessCodeRecordType {
   PersonalAccessToken = "personalAccessToken",
 }
 
-function getAccessCodeCollection(): firebase.firestore.CollectionReference<AccessCodeRecord> {
+function getAccessCodeCollection(): CollectionReference<AccessCodeRecord> {
   const db = getDatabase();
-  return db.collection(
-    "accessCodes",
-  ) as firebase.firestore.CollectionReference<AccessCodeRecord>;
+  return db.collection("accessCodes") as CollectionReference<AccessCodeRecord>;
 }
 
 // Creates an access code which can be used once to sign in.
@@ -77,7 +76,7 @@ export async function createOneTimeAccessCode(
   const accessCodeDoc = getAccessCodeCollection().doc();
   await accessCodeDoc.set({
     userID,
-    expirationTimestamp: firebase.firestore.Timestamp.fromDate(
+    expirationTimestamp: Timestamp.fromDate(
       dateFns.addDays(nowTimestampMillis, daysValid),
     ),
     type: AccessCodeRecordType.OneTime,
@@ -111,7 +110,7 @@ export async function consumeAccessCode(
       const record = snapshot.data()!;
       if (!record.type || record.type === AccessCodeRecordType.OneTime) {
         if (record.expirationTimestamp.toMillis() > nowTimestampMillis) {
-          await transaction.delete(documentRef);
+          transaction.delete(documentRef);
           return record.userID;
         } else {
           throw new Error("Access code has expired");

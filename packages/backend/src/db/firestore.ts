@@ -1,11 +1,12 @@
-import firebase from "firebase-admin";
-import { getApp } from "../firebase.js";
+import { getFirestore } from "firebase-admin/firestore";
+import type { Firestore } from "firebase-admin/firestore";
+import { getApp } from "../firebaseApp.js";
 
-let _database: firebase.firestore.Firestore | null = null;
+let _database: Firestore | null = null;
 
-export function getDatabase(): firebase.firestore.Firestore {
+export function getDatabase(): Firestore {
   if (!_database) {
-    _database = getApp().firestore();
+    _database = getFirestore(getApp());
   }
   return _database;
 }

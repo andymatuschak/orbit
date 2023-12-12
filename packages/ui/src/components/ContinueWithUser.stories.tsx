@@ -1,7 +1,7 @@
 import { Story } from "@storybook/react";
 import React from "react";
 import { View } from "react-native";
-import { colors } from "../styles";
+import { colors } from "../styles/index.js";
 import ContinueWithUser from "./ContinueWithUser.js";
 
 export default {

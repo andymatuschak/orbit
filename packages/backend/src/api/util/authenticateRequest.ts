@@ -1,6 +1,6 @@
 import { API as ApiType } from "@withorbit/api";
 import express from "express";
-import { sharedServerDatabase } from "../../db";
+import { sharedServerDatabase } from "../../db/index.js";
 import {
   CachePolicy,
   TypedRequest,

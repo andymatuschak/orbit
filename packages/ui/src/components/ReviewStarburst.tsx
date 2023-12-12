@@ -6,7 +6,7 @@ import {
 } from "@withorbit/core";
 import React, { useMemo } from "react";
 import { Animated, Easing, View } from "react-native";
-import { colors, layout } from "../styles";
+import { colors, layout } from "../styles/index.js";
 import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
 import Starburst, {
   getStarburstQuillOuterRadius,

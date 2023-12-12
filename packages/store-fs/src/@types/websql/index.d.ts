@@ -4,8 +4,8 @@ declare module "websql" {
     version: string,
     description: string,
     size: number,
-  ): import("../../sqlite/types").SQLDatabase;
-  export = openDatabase;
+  ): import("../../sqlite/types.js").SQLDatabase;
+  export default openDatabase;
 }
 
 declare module "websql/custom" {
@@ -46,6 +46,6 @@ declare module "websql/custom" {
     version: string,
     description: string,
     size: number,
-  ) => import("../../sqlite/types").SQLDatabase;
-  export = customOpenDatabase;
+  ) => import("../../sqlite/types.js").SQLDatabase;
+  export default customOpenDatabase;
 }

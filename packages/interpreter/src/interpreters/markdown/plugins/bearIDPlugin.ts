@@ -1,5 +1,5 @@
 import mdast from "mdast";
-import unified from "unified";
+import * as unified from "unified";
 import unist from "unist";
 import { map as unistUtilMap } from "unist-util-map";
 

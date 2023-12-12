@@ -1,5 +1,5 @@
 import express from "express";
-import { sharedServerDatabase } from "../../../db";
+import { sharedServerDatabase } from "../../../db/index.js";
 import { getSessionCookieOptions, sessionCookieName } from "./sessionCookie.js";
 
 export async function createLoginToken(

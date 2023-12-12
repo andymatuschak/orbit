@@ -2,7 +2,7 @@ import { AttachmentID, TaskRepetitionOutcome } from "@withorbit/core";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem.js";
-import { colors, layout } from "../styles";
+import { colors, layout } from "../styles/index.js";
 import { SizeClass } from "../styles/layout.js";
 import { Size } from "../util/Size.js";
 import Card, { CardProps } from "./Card.js";

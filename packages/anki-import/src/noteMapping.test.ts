@@ -5,7 +5,7 @@ import {
   Note,
   readNotes,
   splitAnkiDBNoteFields,
-} from "./ankiPkg";
+} from "./ankiPkg/index.js";
 import {
   BasicModelMapping,
   ClozeModelMapping,

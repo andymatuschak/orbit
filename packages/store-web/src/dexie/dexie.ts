@@ -12,7 +12,7 @@ import {
   DexieTable,
 } from "./tables.js";
 
-export class DexieDatabase extends Dexie {
+export class DexieDatabase extends Dexie.Dexie {
   [DexieTable.Events]: Dexie.Table<DexieEventRow, number>;
   [DexieTable.Entities]: Dexie.Table<DexieEntityRow, number>;
   [DexieTable.DerivedTaskComponents]: Dexie.Table<

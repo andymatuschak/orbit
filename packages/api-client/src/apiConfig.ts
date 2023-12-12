@@ -1,9 +1,9 @@
-import * as Network from "./util/fetch.js";
+/// <reference lib="dom" />
 
 export interface APIConfig {
   baseURL: string; // no trailing slash
 
-  fetch?: typeof Network.fetch;
+  fetch?: typeof fetch;
 }
 
 export const defaultAPIConfig: APIConfig = {

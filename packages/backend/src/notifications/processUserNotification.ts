@@ -1,10 +1,10 @@
 import { EntityType, Task } from "@withorbit/core";
 import dateFns from "date-fns";
-import { sharedServerDatabase } from "../db";
+import { sharedServerDatabase } from "../db/index.js";
 import { SessionNotificationState, UserMetadata } from "../db/userMetadata.js";
-import getDefaultEmailService from "../email";
+import getDefaultEmailService from "../email/index.js";
 import { EmailSpec } from "../email/types.js";
-import { sharedLoggingService } from "../logging";
+import { sharedLoggingService } from "../logging/index.js";
 import {
   getReviewSessionEmailSpec,
   shouldSendReminderEmail,

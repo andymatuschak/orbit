@@ -1,8 +1,8 @@
 import functions from "firebase-functions";
 import { updateUserMetadata } from "../db/firebaseAccountData.js";
-import getDefaultEmailService from "../email";
+import getDefaultEmailService from "../email/index.js";
 import { EmailSpec } from "../email/types.js";
-import { sharedLoggingService } from "../logging";
+import { sharedLoggingService } from "../logging/index.js";
 
 // TODO: we'll need to send a different welcome email if they sign up outside the context of a reading
 const welcomeEmailSpec: EmailSpec = {

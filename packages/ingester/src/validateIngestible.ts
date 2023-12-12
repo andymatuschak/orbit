@@ -1,6 +1,9 @@
-import Ajv from "ajv";
-import schema from "./ingestible.json";
+import AjvModule from "ajv";
+import schema from "./ingestible.json" assert { type: "json" };
 import { Ingestible } from "./ingestible.js";
+
+// FIXME: https://github.com/ajv-validator/ajv/issues/2047
+const Ajv = AjvModule.default;
 
 type ValidationError = { path: string; message: string | null };
 export interface IngestibleValidator {

@@ -167,7 +167,7 @@ Q. A question *prompt*. A. An answer prompt
 Some more text`;
     const ast = processor.runSync(processor.parse(input));
     const qaPromptNode = select(qaPromptNodeType, ast)! as QAPromptNode;
-    expect(qaPromptNode).toBeNull();
+    expect(qaPromptNode).toBeUndefined();
   });
 
   test("fake QA prompt", () => {
@@ -178,7 +178,7 @@ A. An answer prompt
 Some more text`;
     const ast = processor.runSync(processor.parse(input));
     const qaPromptNode = select(qaPromptNodeType, ast)! as QAPromptNode;
-    expect(qaPromptNode).toBeNull();
+    expect(qaPromptNode).toBeUndefined();
   });
 
   test("multiple prompts", () => {

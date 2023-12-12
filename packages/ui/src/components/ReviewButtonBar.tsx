@@ -1,7 +1,7 @@
 import { TaskContentType, TaskRepetitionOutcome } from "@withorbit/core";
 import React, { useRef } from "react";
 import { View } from "react-native";
-import { colors, layout } from "../styles";
+import { colors, layout } from "../styles/index.js";
 import { ColorPalette } from "../styles/colors.js";
 import { SizeClass } from "../styles/layout.js";
 import Button, { ButtonPendingActivationState } from "./Button.js";

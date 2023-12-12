@@ -1,7 +1,7 @@
 import functions from "firebase-functions";
-import { sharedServerDatabase } from "../../db";
+import { sharedServerDatabase } from "../../db/index.js";
 import { UserMetadata } from "../../db/userMetadata.js";
-import * as notifications from "../../notifications";
+import * as notifications from "../../notifications/index.js";
 
 export const processUserNotificationTopic = "processUserNotification";
 
