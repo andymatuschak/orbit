@@ -1,4 +1,6 @@
 web-component/build/**/*
+web-component/test/**/*
+web-component/orbit-web-component-prod.js*
 app/index.js
 app/.expo/**/*
 app/web-build/**/*

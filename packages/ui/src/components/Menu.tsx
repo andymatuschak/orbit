@@ -106,6 +106,7 @@ export function Menu({
             {items.map((item, index) =>
               item.title === menuItemDividerSpec.title ? (
                 <View
+                  key={index}
                   style={{
                     height: 3,
                     backgroundColor: colorPalette.secondaryTextColor,

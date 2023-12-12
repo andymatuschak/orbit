@@ -1,11 +1,10 @@
 module.exports = {
   parser: "@typescript-eslint/parser",
-  plugins: ["react", "react-hooks", "@typescript-eslint", "prettier"],
+  plugins: ["react", "react-hooks", "@typescript-eslint"],
   extends: [
     "plugin:react/recommended",
     "plugin:@typescript-eslint/recommended",
     "prettier",
-    "plugin:prettier/recommended",
     "plugin:react-hooks/recommended",
   ],
   rules: {
@@ -26,8 +25,6 @@ module.exports = {
     "react-hooks/exhaustive-deps": "warn",
 
     "react/prop-types": "off",
-
-    "prettier/prettier": "error",
   },
   overrides: [
     {

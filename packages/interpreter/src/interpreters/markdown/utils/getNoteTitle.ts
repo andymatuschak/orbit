@@ -1,4 +1,3 @@
-import unist from "unist";
 import mdast from "mdast";
 import { processor } from "../markdown.js";
 
