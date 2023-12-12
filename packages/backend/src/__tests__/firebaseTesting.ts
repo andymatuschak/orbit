@@ -5,6 +5,11 @@ import { UserMetadata } from "../db/userMetadata.js";
 
 const projectID = "metabook-system";
 const firestoreEmulatorHost = "127.0.0.1:8080";
+const firebaseAuthEmulatorHost = "127.0.0.1:9099";
+
+process.env["FIRESTORE_EMULATOR_HOST"] = firestoreEmulatorHost;
+process.env["FIREBASE_STORAGE_EMULATOR_HOST"] = "127.0.0.1:9199";
+process.env["FIREBASE_AUTH_EMULATOR_HOST"] = firebaseAuthEmulatorHost;
 
 let app: App | null = null;
 
@@ -16,7 +21,7 @@ export async function terminateTestFirebaseApp() {
 }
 
 export async function clearFirestoreData() {
-  const result = await fetch(
+  let result = await fetch(
     `http://${firestoreEmulatorHost}/emulator/v1/projects/${projectID}/databases/(default)/documents`,
     {
       method: "DELETE",
@@ -25,6 +30,18 @@ export async function clearFirestoreData() {
   if (!result.ok) {
     throw new Error(
       `Couldn't clear database data: ${result.status} ${await result.text()}`,
+    );
+  }
+
+  result = await fetch(
+    `http://${firebaseAuthEmulatorHost}/emulator/v1/projects/${projectID}/accounts`,
+    {
+      method: "DELETE",
+    },
+  );
+  if (!result.ok) {
+    throw new Error(
+      `Couldn't clear auth data: ${result.status} ${await result.text()}`,
     );
   }
 }
