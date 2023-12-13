@@ -1,6 +1,9 @@
 const path = require("path");
 
 module.exports = {
+  core: {
+    builder: "webpack5",
+  },
   stories: ["../src/**/*.stories.tsx"],
   addons: ["@storybook/addon-essentials", "@storybook/addon-knobs"],
   webpackFinal: async (config) => {

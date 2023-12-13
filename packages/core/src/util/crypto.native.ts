@@ -1,13 +1,16 @@
-import { crypto as _crypto } from "./crypto.web.js";
-export const crypto = _crypto;
+// eslint-disable-next-line @typescript-eslint/no-namespace, @typescript-eslint/prefer-namespace-keyword
+declare module globalThis {
+  const crypto: WebCrypto;
+}
+type WebCrypto = typeof import("node:crypto").webcrypto;
 
-if (!crypto.getRandomValues) {
+if (!globalThis.crypto.getRandomValues) {
   throw new Error(
-    "Need to import react-native-get-random-values before importing this",
+    "Need to shim crypto.getRandomValues before importing this (e.g. with expo-crypto)",
   );
 }
-if (!crypto.randomUUID) {
+if (!globalThis.crypto.randomUUID) {
   throw new Error(
-    "Need to import react-native-randomUUID before importing this",
+    "Need to shim crypto.randomUUID before importing this (e.g. with expo-crypto)",
   );
 }

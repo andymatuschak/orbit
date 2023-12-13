@@ -52,7 +52,7 @@ export function useTransitioningColorValue({
   value,
   timing,
   onEndCallback,
-}: AnimatedTransitionConfig<string>): Animated.AnimatedInterpolation {
+}: AnimatedTransitionConfig<string>): Animated.AnimatedInterpolation<string> {
   // This implementation will "jump" in color if interrupted, rather than smoothly redirecting the old animation to the new one. To do that, I think we'd have to use a complex scheme of additive animations.
 
   const animatedValue = useRef(new Animated.Value(0));

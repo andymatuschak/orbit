@@ -1,4 +1,4 @@
-import { StyleProp, ViewStyle } from "react-native";
+import { ImageStyle, StyleProp, ViewStyle } from "react-native";
 
 export enum IconName {
   Check = "check",
@@ -23,7 +23,7 @@ export interface IconProps {
   name: IconName;
   position: IconPosition;
   tintColor: string;
-  style?: StyleProp<ViewStyle>;
+  style?: StyleProp<ImageStyle>;
   accentColor?: string;
 }
 

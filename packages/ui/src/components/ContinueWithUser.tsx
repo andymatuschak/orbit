@@ -1,10 +1,10 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, layout, type } from "../styles/index.js";
-import Button from "./Button.js";
+import Button from "./Button.jsx";
 import { IconName } from "./IconShared.js";
-import Logo from "./Logo.js";
-import Spacer from "./Spacer.js";
+import Logo from "./Logo.jsx";
+import Spacer from "./Spacer.jsx";
 
 export interface ContinueWithUserProps {
   colorPalette: colors.ColorPalette;

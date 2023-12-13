@@ -1,24 +1,23 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Image, ImageRequireSource, StyleSheet, View } from "react-native";
 import unreachableCaseError from "../util/unreachableCaseError.js";
 import { IconName, IconPosition, IconProps, iconSize } from "./IconShared.js";
-import TintedSVG from "./TintedSVG.js";
 
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: false,
-): string;
+): ImageRequireSource;
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: true,
-): string | null;
+): ImageRequireSource | null;
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: boolean,
-): string | null {
+): ImageRequireSource | null {
   switch (name) {
     case IconName.Check:
       if (accent) return null;
@@ -177,14 +176,14 @@ export default React.memo(function Icon(props: IconProps) {
           style,
         ]}
       >
-        <TintedSVG
+        <Image
           width={iconSize}
           height={iconSize}
           source={baseIcon}
           tintColor={tintColor}
           style={StyleSheet.absoluteFill}
         />
-        <TintedSVG
+        <Image
           width={iconSize}
           height={iconSize}
           source={accent}
@@ -195,7 +194,7 @@ export default React.memo(function Icon(props: IconProps) {
     );
   } else {
     return (
-      <TintedSVG
+      <Image
         width={iconSize}
         height={iconSize}
         source={baseIcon}

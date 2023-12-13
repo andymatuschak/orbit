@@ -14,9 +14,9 @@ import {
 } from "react-native";
 import { colors, layout, type } from "../styles/index.js";
 import Hoverable from "./Hoverable.js";
-import Icon from "./Icon.js";
+import Icon from "./Icon.jsx";
 import { IconName, IconPosition } from "./IconShared.js";
-import Spacer from "./Spacer.js";
+import Spacer from "./Spacer.jsx";
 
 export type ButtonPendingActivationState = "hover" | "pressed" | null;
 
@@ -140,8 +140,8 @@ export default React.memo(function Button(props: ButtonProps) {
     const activationState = isPressed.current
       ? "pressed"
       : isHovered.current
-      ? "hover"
-      : null;
+        ? "hover"
+        : null;
     if (lastDispatchedPendingInteractionState.current !== activationState) {
       lastDispatchedPendingInteractionState.current = activationState;
       props.onPendingInteractionStateDidChange?.(activationState);

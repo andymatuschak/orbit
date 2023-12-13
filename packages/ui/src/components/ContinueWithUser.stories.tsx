@@ -2,7 +2,7 @@ import { Story } from "@storybook/react";
 import React from "react";
 import { View } from "react-native";
 import { colors } from "../styles/index.js";
-import ContinueWithUser from "./ContinueWithUser.js";
+import ContinueWithUser from "./ContinueWithUser.jsx";
 
 export default {
   title: "ContinueWithUser",
@@ -23,7 +23,7 @@ const Template: Story<{
   return (
     <View
       style={{
-        height: "100vh",
+        height: "100%",
         backgroundColor: colorPalette.backgroundColor,
         justifyContent: "center",
         alignItems: "center",

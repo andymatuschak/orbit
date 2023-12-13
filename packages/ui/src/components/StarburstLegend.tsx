@@ -7,7 +7,7 @@ import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
 import {
   getStarburstRayLength,
   getStarburstRayValueForInterval,
-} from "./Starburst.js";
+} from "./Starburst.jsx";
 
 const StarburstLegendEntry = React.memo(function StarburstLegendEntry({
   label,
@@ -137,8 +137,8 @@ export default React.memo(function StarburstLegend({
             index < currentSequenceIndex
               ? "past"
               : index === currentSequenceIndex
-              ? "present"
-              : "future"
+                ? "present"
+                : "future"
           }
           label={label}
           pastLabelColor={pastLabelColor}

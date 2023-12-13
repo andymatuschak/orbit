@@ -6,7 +6,7 @@ import { Button, View } from "react-native";
 import { ReviewAreaItem } from "../reviewAreaItem.js";
 import { colors, layout } from "../styles/index.js";
 import { productKeyColor } from "../styles/colors.js";
-import Card from "./Card.js";
+import Card from "./Card.jsx";
 import DebugGrid from "./DebugGrid.js";
 import {
   AttachmentID,

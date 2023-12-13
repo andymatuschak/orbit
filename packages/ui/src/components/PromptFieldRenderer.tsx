@@ -30,7 +30,7 @@ import {
   renderBlockMath,
   renderInlineMath,
 } from "./PromptFieldRenderer/markdownLatexSupport.js";
-import { SawtoothPattern } from "./SawtoothPattern.js";
+import { SawtoothPattern } from "./SawtoothPattern.jsx";
 import { AttachmentID, TaskContentField } from "@withorbit/core";
 
 const sizeVariantCount = 5;
@@ -398,7 +398,13 @@ export default React.memo(function PromptFieldRenderer(props: {
         }
       });
     }
-  }, [markdownHeight, containerSize, imageURL, imageSize, smallestSizeVariantIndex]);
+  }, [
+    markdownHeight,
+    containerSize,
+    imageURL,
+    imageSize,
+    smallestSizeVariantIndex,
+  ]);
 
   const sizeVariantRef = useWeakRef(sizeVariantIndex);
   useEffect(() => {
@@ -426,7 +432,7 @@ export default React.memo(function PromptFieldRenderer(props: {
         overflow: isLayoutReady && !shouldClipContent ? "visible" : "hidden",
         justifyContent: "space-between",
       }}
-      onLayout={useCallback((event) => {
+      onLayout={useCallback((event: LayoutChangeEvent) => {
         setContainerSize(event.nativeEvent.layout);
       }, [])}
     >

@@ -9,11 +9,11 @@ import { View } from "react-native";
 import { generateIntervalSequence } from "../util/generateIntervalSequence.js";
 import { colors } from "../styles/index.js";
 import useLayout from "./hooks/useLayout.js";
-import ReviewStarburst, { ReviewStarburstItem } from "./ReviewStarburst.js";
+import ReviewStarburst, { ReviewStarburstItem } from "./ReviewStarburst.jsx";
 import {
   getStarburstQuillInnerRadius,
   getStarburstQuillOuterRadius,
-} from "./Starburst.js";
+} from "./Starburst.jsx";
 
 export default {
   title: "ReviewStarburst",
@@ -61,7 +61,7 @@ const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
       onLayout={onLayout}
       style={{
         width: "100%",
-        height: "100vh",
+        height: "100%",
         backgroundColor: colors.palettes.cyan.backgroundColor,
       }}
     >

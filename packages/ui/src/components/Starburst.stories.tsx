@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 import seedrandom from "seedrandom";
 import { colors } from "../styles/index.js";
 import lerp from "../util/lerp.js";
-import Starburst from "./Starburst.js";
+import Starburst from "./Starburst.jsx";
 
 export default {
   title: "Starburst",
@@ -200,7 +200,7 @@ export function Sandbox() {
   return (
     <View
       style={{
-        height: "100vh",
+        height: "100%",
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#eee",

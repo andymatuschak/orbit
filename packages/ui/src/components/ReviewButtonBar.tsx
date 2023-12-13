@@ -4,7 +4,7 @@ import { View } from "react-native";
 import { colors, layout } from "../styles/index.js";
 import { ColorPalette } from "../styles/colors.js";
 import { SizeClass } from "../styles/layout.js";
-import Button, { ButtonPendingActivationState } from "./Button.js";
+import Button, { ButtonPendingActivationState } from "./Button.jsx";
 import { useKeyDown } from "./hooks/useKey.js";
 import useLayout from "./hooks/useLayout.js";
 import { IconName } from "./IconShared.js";
@@ -134,8 +134,8 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
       forgottenButtonPendingState.current === "pressed"
         ? TaskRepetitionOutcome.Forgotten
         : rememberedButtonPendingState.current === "pressed"
-        ? TaskRepetitionOutcome.Remembered
-        : null,
+          ? TaskRepetitionOutcome.Remembered
+          : null,
     );
   }
 

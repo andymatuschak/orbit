@@ -1,7 +1,7 @@
 import { Story } from "@storybook/react";
 import React from "react";
 import { colors } from "../styles/index.js";
-import Button, { ButtonProps } from "./Button.js";
+import Button, { ButtonProps } from "./Button.jsx";
 import { View } from "react-native";
 import { IconName } from "./IconShared.js";
 

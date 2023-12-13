@@ -8,8 +8,8 @@ import {
 } from "react-native";
 import { colors, layout } from "../styles/index.js";
 import { ColorPalette } from "../styles/colors.js";
-import Button from "./Button.js";
-import FadeView from "./FadeView.js";
+import Button from "./Button.jsx";
+import FadeView from "./FadeView.jsx";
 import usePrevious from "./hooks/usePrevious.js";
 
 export interface MenuProps {

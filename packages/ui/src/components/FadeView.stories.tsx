@@ -1,7 +1,7 @@
 import { action } from "@storybook/addon-actions";
 
 import React, { useState } from "react";
-import FadeView from "./FadeView.js";
+import FadeView from "./FadeView.jsx";
 import { Button, View } from "react-native";
 
 export default {

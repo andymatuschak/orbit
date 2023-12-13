@@ -11,7 +11,7 @@ import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
 import Starburst, {
   getStarburstQuillOuterRadius,
   getStarburstRayValueForInterval,
-} from "./Starburst.js";
+} from "./Starburst.jsx";
 import StarburstLegend from "./StarburstLegend.js";
 
 export interface ReviewStarburstProps {

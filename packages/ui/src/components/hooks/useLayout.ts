@@ -39,7 +39,7 @@ export default function useLayout(): Layout & { onLayout: OnLayout } {
     height: 0,
   });
 
-  const onLayout = useCallback((e) => setLayout(e.nativeEvent.layout), []);
+  const onLayout = useCallback((e: LayoutChangeEvent) => setLayout(e.nativeEvent.layout), []);
 
   return {
     onLayout,

@@ -5,8 +5,8 @@ import { ReviewAreaItem } from "../reviewAreaItem.js";
 import { colors, layout } from "../styles/index.js";
 import { SizeClass } from "../styles/layout.js";
 import { Size } from "../util/Size.js";
-import Card, { CardProps } from "./Card.js";
-import FadeView from "./FadeView.js";
+import Card, { CardProps } from "./Card.jsx";
+import FadeView from "./FadeView.jsx";
 import useLayout from "./hooks/useLayout.js";
 import usePrevious from "./hooks/usePrevious.js";
 import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
@@ -36,8 +36,8 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
       displayState === "disappearing"
         ? -1
         : displayState === "displayed"
-        ? 0
-        : 1,
+          ? 0
+          : 1,
     timing: {
       type: "spring",
       useNativeDriver: true,
@@ -106,7 +106,7 @@ function PromptStack({
   const [departedCardCount, setDepartedCardCount] = useState(0);
   const departingPromptItems = useRef<ReviewAreaItem[]>([]);
 
-  const onPromptDidDisappear = useCallback((item) => {
+  const onPromptDidDisappear = useCallback((item: ReviewAreaItem) => {
     const itemIndex = departingPromptItems.current.indexOf(item);
     if (itemIndex === -1) {
       throw new Error("Unknown prompt disappeared");
@@ -160,8 +160,8 @@ function PromptStack({
               renderedStackIndex < 0
                 ? "disappearing"
                 : renderedStackIndex === 0
-                ? "displayed"
-                : "hidden";
+                  ? "displayed"
+                  : "hidden";
 
             return (
               <PromptLayoutContainer

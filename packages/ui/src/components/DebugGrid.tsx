@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { LayoutChangeEvent, StyleSheet, View } from "react-native";
 import { Svg, Line, Rect } from "react-native-svg";
 import * as layout from "../styles/layout.js";
 
@@ -50,11 +50,8 @@ export default function DebugGrid({
         zIndex: -1,
       }}
       onLayout={useCallback(
-        ({
-          nativeEvent: {
-            layout: { width, height },
-          },
-        }) => {
+        (e: LayoutChangeEvent) => {
+          const {nativeEvent: {layout: {width, height}}} = e;
           setSize([width, height]);
         },
         [],

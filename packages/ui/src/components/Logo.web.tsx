@@ -1,9 +1,9 @@
 import React from "react";
+import { Image, ImageRequireSource } from "react-native";
 import unreachableCaseError from "../util/unreachableCaseError.js";
 import { getLogoSize, LogoProps } from "./LogoShared.js";
-import TintedSVG from "./TintedSVG.js";
 
-function getLogoAsset(units: LogoProps["units"]): string {
+function getLogoAsset(units: LogoProps["units"]): ImageRequireSource {
   switch (units) {
     case 2:
       return require("../../assets/logo/16.svg");
@@ -19,7 +19,7 @@ function getLogoAsset(units: LogoProps["units"]): string {
 export default React.memo(function Logo(props: LogoProps) {
   const { width, height } = getLogoSize(props.units);
   return (
-    <TintedSVG
+    <Image
       source={getLogoAsset(props.units)}
       width={width}
       height={height}

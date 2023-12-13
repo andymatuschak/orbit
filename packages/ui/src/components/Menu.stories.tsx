@@ -2,10 +2,10 @@ import { Story } from "@storybook/react";
 import React, { useRef, useState } from "react";
 import { View } from "react-native";
 import { colors } from "../styles/index.js";
-import Button from "./Button.js";
+import Button from "./Button.jsx";
 import { IconName } from "./IconShared.js";
 import { LogoProps } from "./LogoShared.js";
-import { Menu, menuItemDividerSpec } from "./Menu.js";
+import { Menu, menuItemDividerSpec } from "./Menu.jsx";
 
 export default {
   title: "Menu",
@@ -25,7 +25,7 @@ const Template: Story<LogoProps> = (args) => {
         backgroundColor: colors.palettes.red.backgroundColor,
         alignItems: "center",
         justifyContent: "center",
-        height: "100vh",
+        height: "100%",
       }}
     >
       <View ref={buttonRef}>

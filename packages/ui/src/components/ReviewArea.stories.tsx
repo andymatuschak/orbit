@@ -8,7 +8,7 @@ import { generateReviewItem } from "./__fixtures__/generateReviewItem.js";
 import DebugGrid from "./DebugGrid.js";
 import useLayout from "./hooks/useLayout.js";
 import { useTransitioningColorValue } from "./hooks/useTransitioningValue.js";
-import ReviewArea from "./ReviewArea.js";
+import ReviewArea from "./ReviewArea.jsx";
 import { AttachmentID } from "@withorbit/core";
 
 // noinspection JSUnusedGlobalSymbols
@@ -71,7 +71,7 @@ function ReviewAreaTemplate({
     <Animated.View
       style={{
         backgroundColor,
-        height: "100vh",
+        height: "100%",
       }}
       onLayout={onLayout}
     >

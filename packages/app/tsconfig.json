@@ -1,56 +1,6 @@
 {
-  "extends": "../tsconfig.base",
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "jsx": "react-native",
-    "lib": ["dom", "esnext"],
-    "types": ["jest"],
-    "module": "esnext",
-    "skipLibCheck": true,
-    "outDir": "./dist",
-    "importHelpers": true,
-    "removeComments": true,
-    "moduleResolution": "Node"
-  },
-  "include": [
-    "./src/**/*.tsx",
-    "./src/**/*.ts",
-    "./App.tsx",
-    "./serviceConfig.*js",
-    "../@types/**/*.d.ts"
-  ],
-  "references": [
-    {
-      "path": "../api"
-    },
-    {
-      "path": "../api-client"
-    },
-    {
-      "path": "../core"
-    },
-    {
-      "path": "../embedded-support"
-    },
-    {
-      "path": "../sample-data"
-    },
-    {
-      "path": "../store-shared"
-    },
-    {
-      "path": "../store-fs"
-    },
-    {
-      "path": "../store-web"
-    },
-    {
-      "path": "../ingester"
-    },
-    {
-      "path": "../sync"
-    },
-    {
-      "path": "../ui"
-    }
-  ]
+    "strict": true
+  }
 }

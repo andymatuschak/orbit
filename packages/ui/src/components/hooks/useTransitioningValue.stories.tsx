@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Animated, Easing } from "react-native";
 import { colors } from "../../styles/index.js";
-import Button from "../Button.js";
+import Button from "../Button.jsx";
 import { useTransitioningColorValue } from "./useTransitioningValue.js";
 
 export default {

@@ -1,9 +1,0 @@
-rootProject.name = 'metabookapp'
-
-apply from: '../../../node_modules/react-native-unimodules/gradle.groovy'
-includeUnimodulesProjects([modulesPaths: ["../../../../node_modules"]]) // relative to /app, so it gets an extra ../
-
-apply from: file("../../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle");
-applyNativeModulesSettingsGradle(settings)
-
-include ':app'

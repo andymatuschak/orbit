@@ -1,26 +1,34 @@
 {
   "expo": {
-    "name": "Orbit",
+    "name": "orbit",
     "slug": "orbit",
-    "privacy": "unlisted",
     "version": "1.0.0",
-    "assetBundlePatterns": ["**/*"],
-    "platforms": ["ios", "android", "web"],
-    "packagerOpts": {
-      "config": "metro.config.js"
+    "orientation": "portrait",
+    "icon": "./assets2/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets2/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "bundleIdentifier": "com.withorbit.native"
+      "supportsTablet": true
     },
     "android": {
-      "package": "com.withorbit.app"
+      "adaptiveIcon": {
+        "foregroundImage": "./assets2/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
     },
     "web": {
+      "favicon": "./assets2/favicon.png",
       "build": {
         "babel": {
-          "include": "@withorbit/api-client"
+          "include": ["@withorbit/ui"]
         }
-      }
+      },
+      "bundler": "metro"
     }
   }
 }
