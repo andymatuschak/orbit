@@ -1,44 +1,40 @@
-// Firebase cloud function deployment doesn't really support monorepos: the environment won't have access to the other packages. So we bundle them into tarballs and ship them off to the cloud.
-// Adapted from https://github.com/firebase/firebase-tools/issues/653#issuecomment-1731081401
+// Firebase cloud function deployment doesn't really support monorepos: the environment won't have access to the other packages.
+// So we use a tool called "isolate", which produces a special isolated version of the backend package.
+// See https://github.com/0x80/isolate-package#lockfiles.
 import { execSync } from "child_process";
 import path from "path";
 import fs from "fs";
+import {
+  firebaseJSONPath,
+  isolatedFolderName,
+  isolatedPath,
+  packageRoot,
+} from "./deployShared.js";
 
-const tarballPath = path.join(import.meta.dir, "../deploy");
-fs.mkdirSync(tarballPath, { recursive: true });
-
-const packageNamesToFilenames = {};
-const createTarballs = (packagePath) => {
-  // Navigate to the folder in which the package is located
-  process.chdir(path.join(import.meta.dir, packagePath), { recursive: true });
-
-  const packageJSON = JSON.parse(fs.readFileSync("package.json", "utf-8"));
-  const packageName = packageJSON.name;
-
-  // Compile the package into JS and then pack it
-  // This iwill create a .tgz (tarball) file inside the package folder
-  execSync("npm run build && npm pack", { stdio: "inherit" });
-
-  // Move the .tgz file to the functions folder
-  const tgzFile = fs.readdirSync("./").find((file) => file.endsWith(".tgz"));
-  if (tgzFile) {
-    fs.renameSync(tgzFile, path.join(tarballPath, tgzFile));
-    packageNamesToFilenames[packageName] = tgzFile;
-  } else {
-    throw new Error(`No tarball file found for ${packagePath}`);
-  }
-};
-
-// Make sure the list in postdeploy.js matches.
-let packagePaths = ["../../api", "../../core", "../../store-shared"];
-
-packagePaths.forEach((p) => createTarballs(p));
-
-const packageJsonPath = path.join(import.meta.dir, "../package.json");
-const packageJsonData = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
-for (const packageName of Object.keys(packageNamesToFilenames)) {
-  packageJsonData.dependencies[
-    packageName
-  ] = `file:./deploy/${packageNamesToFilenames[packageName]}`;
+const workspaceRoot = path.join(packageRoot, "../..");
+if (fs.existsSync(isolatedPath)) {
+  throw new Error("isolate directory already exists--clear it first");
 }
-fs.writeFileSync(packageJsonPath, JSON.stringify(packageJsonData, null, 2));
+
+// Ensure that git is clean:
+const gitStatus = execSync("git status --porcelain").toString();
+if (gitStatus !== "") {
+  throw new Error("git status is not clean");
+}
+
+// Produce a yarn-compatible lockfile we can use to pin our dependency versions:
+execSync("bun install -y");
+
+execSync("bunx isolate");
+
+// Move our yarn lockfile to the isolated package directory.
+execSync(`mv ${path.join(workspaceRoot, "yarn.lock")} ${isolatedPath}`);
+
+// Re-run yarn against that package to remove any dependencies in that lockfile which aren't used by this package and its dependencies (otherwise the deploy will fail).
+execSync(`yarn --cwd ${isolatedPath} install`);
+
+// Rewrite firebase.json to point to the isolated output.
+fs.copyFileSync(firebaseJSONPath, `${firebaseJSONPath}.bak`);
+const firebaseJSON = JSON.parse(fs.readFileSync(firebaseJSONPath, "utf-8"));
+firebaseJSON.functions.source = `./${isolatedFolderName}`;
+fs.writeFileSync(firebaseJSONPath, JSON.stringify(firebaseJSON), "utf-8");
