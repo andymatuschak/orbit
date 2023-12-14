@@ -1,7 +1,6 @@
 import { API, APIValidator } from "@withorbit/api";
 import Busboy from "busboy";
 import express from "express";
-import Blob from "fetch-blob";
 import { Writable } from "stream";
 
 // Adapted from https://github.com/rawrmaan/restyped-express-async

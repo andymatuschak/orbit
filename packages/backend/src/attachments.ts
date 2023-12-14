@@ -4,7 +4,6 @@ import {
   getAttachmentMIMETypeForFilename,
   getFileExtensionForAttachmentMIMEType,
 } from "@withorbit/core";
-import fetch, * as Fetch from "node-fetch";
 import URL from "url";
 import { sharedFileStorageService } from "./fileStorageService/index.js";
 import { FileStorageResolution } from "./fileStorageService/fileStorageService.js";
@@ -36,7 +35,7 @@ export function _getAttachmentMIMETypeFromResourceMetadata(
 }
 
 export function _validateAttachmentResponse(
-  response: Fetch.Response,
+  response: Response,
   url: string,
 ): AttachmentMIMEType | Error {
   if (response.status < 200 || response.status >= 300) {
@@ -81,8 +80,8 @@ export async function storeAttachmentAtURLIfNecessary(
       throw mimeType;
     }
 
-    const contents = await response.buffer();
-    await storeAttachment(userID, id, contents, mimeType);
+    const contents = await response.arrayBuffer();
+    await storeAttachment(userID, id, new Uint8Array(contents), mimeType);
     return { mimeType, status: "stored" };
   }
 }
