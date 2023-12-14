@@ -49,7 +49,7 @@ async function readFile(path: string): Promise<string> {
   const noteDirectory = process.argv[2];
   const outJsonFilePath = process.argv[3];
   if (!noteDirectory || !outJsonFilePath) {
-    console.error("Usage: yarn interpret /path/to/notes /path/to/json-file");
+    console.error("Usage: bun run interpret /path/to/notes /path/to/json-file");
     process.exit(1);
   }
 

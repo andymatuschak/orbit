@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc -b",
     "test": "jest",
-    "sync": "yarn build; node --experimental-specifier-resolution=node dist/bin/run.js"
+    "sync": "bun src/bin/run.ts"
   },
   "devDependencies": {
     "@babel/core": "^7.14.6",

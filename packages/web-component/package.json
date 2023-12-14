@@ -27,7 +27,7 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --config webpack.config.cjs",
     "dev": "(cd test; serve -S) & cross-env NODE_ENV=development webpack -w --config webpack.config.cjs",
-    "predeploy": "yarn run build",
+    "predeploy": "bun run build",
     "deploy": "firebase deploy",
     "test": "jest"
   },

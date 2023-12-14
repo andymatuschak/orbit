@@ -16,15 +16,14 @@ mkdir -p TestNotes
 echo "# Test note\nThis is a {test cloze} note." > TestNotes/note.md
 
 # Extract the prompts from a folder of Markdown notes and write a record of them to prompts.json.
-yarn interpret TestNotes prompts.json
+# Here assuming you're at the orbit repo root!
+bun run --cwd packages/interpreter interpret TestNotes prompts.json
 
 # Sync a local Orbit database with that data source.
-cd ../ingester
-yarn ingest ~/myOrbitDB.orbitStore prompts.json 
+bun run --cwd packages/ingester ingest ~/myOrbitDB.orbitStore prompts.json 
 
 # Optional: sync that local Orbit database with Orbit's server. (see documentation in ../sync/Readme.md for more)
-cd ../sync
-ORBIT_TOKEN=myUserToken ORBIT_ENV=production yarn sync ~/myOrbitDB.orbitStore
+ORBIT_TOKEN=myUserToken ORBIT_ENV=production bun run --cwd packages/sync sync ~/myOrbitDB.orbitStore
 ```
 
 ## Markdown prompt syntax
@@ -76,7 +75,8 @@ While the system will happily track prompts if you rename notes or move prompts 
 `interpreter` and `ingester` replace the older `@withorbit/note-sync` package with a more maintainable and flexible implementation. **⚠️ Before using these tools**, you should make a copy of your Orbit database, then run this command to migrate it:
 
 ```
-yarn migrateNoteSync ~/myOrbitDB.orbitStore
+# (from this package's folder)
+bun run migrateNoteSync ~/myOrbitDB.orbitStore
 ```
 
 If you don't run this tool, the old `note-sync` prompts will stick around, but new duplicates will be added with no review history.

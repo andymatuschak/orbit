@@ -8,11 +8,11 @@ To that end, most of the important elements are implemented as a normal REST API
 
 ## Usage
 
-* To build the backend: `yarn build`
-* To run the local backend emulator: `yarn dev`
+* To build the backend: `bun run build`
+* To run the local backend emulator: `bun run dev`
   * Note that this includes a test user: `test@test.com` with password `testtest`. This user has a personal access token configured with value: `TEST`.
-* To run the tests: `yarn test`
-* To deploy the functions: `yarn deploy`
+* To run the tests: `bun run test`
+* To deploy the functions: `bun run deploy`
 
 ## Configuration
 

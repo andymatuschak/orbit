@@ -9,8 +9,8 @@
   "scripts": {
     "build": "tsc -b",
     "test": "jest",
-    "interpret": "yarn build; node --experimental-specifier-resolution=node dist/bin/run.js",
-    "migrateNoteSync": "yarn build; node --experimental-specifier-resolution=node dist/bin/migrateNoteSync.js"
+    "interpret": "bun src/bin/run.ts",
+    "migrateNoteSync": "bun src/bin/migrateNoteSync.ts"
   },
   "dependencies": {
     "@withorbit/core": "0.0.1",

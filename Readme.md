@@ -10,7 +10,7 @@ If you’re an author interested in using Orbit in your own texts, please view [
 
 ## Packages
 
-This is Orbit's mono-repo, comprising many modular packages. You'll want to run `yarn install` in the root to install dependencies before doing anything else.
+This is Orbit's mono-repo, comprising many modular packages. You'll want to run `bun install` in the root to install dependencies before doing anything else. (We use [Bun](https://bun.sh) as our package manager and script runner.) From there, `bun build` will build all the packages, and `bun test` will run all the tests.
 
 While everything is written in Typescript, components of Orbit must run in Node, web browsers, and react-native environments, which can require some care. See the table below for an overview, and see Readme files in individual package folders for details on each package.
 

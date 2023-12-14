@@ -23,7 +23,7 @@ import { syncOrbitStore } from "../sync.js";
   const orbitStorePath = process.argv[2];
   if (!orbitStorePath) {
     console.error(
-      "Usage: ORBIT_TOKEN=your_personal_access_token ORBIT_ENV=[development/production] yarn sync pathToLocalStore.orbitStore",
+      "Usage: ORBIT_TOKEN=your_personal_access_token ORBIT_ENV=[development/production] bun run sync pathToLocalStore.orbitStore",
     );
     process.exit(0);
   }

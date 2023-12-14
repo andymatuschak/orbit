@@ -6,8 +6,8 @@ To support offline-first workflows, Orbit is built using an event sourcing model
 
 This package runs on Node.js, browser, and React Native environments. 
 
-* To build: `yarn build`
-* To run tests: `yarn test`
+* To build: `bun run build`
+* To run tests: `bun run test`
 
 ```
 Copyright 2020 Andy Matuschak

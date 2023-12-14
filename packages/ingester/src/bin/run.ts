@@ -22,7 +22,9 @@ const validator = createIngestibleValidator({ mutateWithDefaultValues: true });
   const orbitStorePath = process.argv[2];
   const jsonFilePath = process.argv[3];
   if (!orbitStorePath || !jsonFilePath) {
-    console.error("Usage: yarn ingest /path/to/orbit-store /path/to/json-file");
+    console.error(
+      "Usage: bun run ingest /path/to/orbit-store /path/to/json-file",
+    );
     process.exit(1);
   }
 

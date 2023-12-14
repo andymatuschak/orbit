@@ -10,8 +10,8 @@ For usage details, see [the Orbit documentation](https://docs.withorbit.com).
 
 This package is built into a single ES Module and deployed to a separate Firebase hosting site (`js.withorbit.com`) which permits cross-origin script execution.
 
-* To build: `yarn build`
-* To deploy: `yarn deploy`
+* To build: `bun run build`
+* To deploy: `bun run deploy`
 
 ```
 Copyright 2020 Andy Matuschak

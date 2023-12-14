@@ -1,12 +1,12 @@
 {
   "private": true,
   "scripts": {
-    "build": "tsc -b packages/tsconfig.json && (cd packages/backend; yarn build:local)",
+    "build": "tsc -b packages/tsconfig.json",
     "watch": "tsc -b -w packages/tsconfig.json",
-    "test": "cd packages; jest --projects anki-import api-client ingester core web-component api store-fs store-web interpreter; cd backend; yarn run test",
+    "test": "cd packages; jest --projects anki-import api-client ingester core web-component api store-fs store-web interpreter; cd backend; bun run test",
     "lint": "cd packages; eslint .",
     "lint:fix": "cd packages; eslint --fix .",
-    "checkall": "yarn run lint && yarn run build && yarn run test"
+    "checkall": "bun run lint && bun run build && bun run test"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.14.0",
