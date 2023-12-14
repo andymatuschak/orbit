@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
-import KeyEvent from "react-native-keyevent";
+import { useEffect } from "react";
 import { Platform } from "react-native";
+import KeyEvent from "react-native-keyevent";
 
 type KeydownEvent = {
   key: string;
@@ -11,7 +11,7 @@ export function useKeyDown(onKeyDown: (event: KeydownEvent) => void) {
   useEffect(() => {
     if (Platform.OS !== "web") return;
 
-    const listener = (e: React.KeyboardEvent) => {
+    const listener = (e: KeyboardEvent) => {
       onKeyDown(e);
     };
 

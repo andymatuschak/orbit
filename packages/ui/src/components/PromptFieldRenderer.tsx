@@ -36,6 +36,11 @@ import { AttachmentID, TaskContentField } from "@withorbit/core";
 const sizeVariantCount = 5;
 const defaultSmallestSizeVariant = 4;
 
+// @ts-ignore react-native-markdown-display is using an older version of @react/types, which is causing a type-checking conflict. But I promise it's OK.
+const Markdown: React.ComponentType<
+  React.PropsWithChildren<MarkdownDisplay.MarkdownProps>
+> = MarkdownDisplay.default;
+
 interface SizeVariant {
   style: TextStyle;
   maximumLineCount?: number;
@@ -441,7 +446,7 @@ export default React.memo(function PromptFieldRenderer(props: {
           height: isLayoutReady ? undefined : 10000,
         }}
       >
-        <MarkdownDisplay.Markdown
+        <Markdown
           rules={useMemo(
             () =>
               getMarkdownRenderRules((event) =>
@@ -461,7 +466,7 @@ export default React.memo(function PromptFieldRenderer(props: {
           markdownit={markdownItInstance}
         >
           {promptField.text}
-        </MarkdownDisplay.Markdown>
+        </Markdown>
       </View>
       {shouldClipContent && (
         <View

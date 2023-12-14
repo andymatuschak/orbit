@@ -1,15 +1,17 @@
-import React from "react";
-import { Story } from "@storybook/react";
-import Logo from "./Logo.jsx";
+import { Meta, StoryObj } from "@storybook/react";
 import { colors } from "../styles/index.js";
-import { LogoProps } from "./LogoShared.js";
+import Logo from "./Logo.jsx";
 
-export default {
+const meta = {
   title: "Logo",
-};
+  component: Logo,
+  args: {
+    tintColor: colors.productKeyColor,
+  },
+} satisfies Meta<typeof Logo>;
+export default meta;
 
-const Template: Story<LogoProps> = (args) => <Logo {...args} />;
-Template.args = { tintColor: colors.productKeyColor };
-
-export const Basic = Template.bind({});
-Basic.args = { ...Template.args, units: 2 };
+type Story = StoryObj<typeof meta>;
+export const Basic = {
+  args: { units: 2 },
+} satisfies Story;

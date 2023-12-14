@@ -1,4 +1,4 @@
-import { Story } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/react";
 import {
   defaultSpacedRepetitionSchedulerConfiguration,
   SpacedRepetitionSchedulerConfiguration,
@@ -15,31 +15,13 @@ import {
   getStarburstQuillOuterRadius,
 } from "./Starburst.jsx";
 
-export default {
-  title: "ReviewStarburst",
-  component: ReviewStarburst,
-};
-
-interface StoryArgs {
+const ReviewStarburstStory = ({
+  itemCount,
+  hasSeenItems,
+}: {
   itemCount: number;
   hasSeenItems: boolean;
-}
-
-function generatePromptState(
-  config: SpacedRepetitionSchedulerConfiguration,
-): TaskComponentState {
-  const sequence = generateIntervalSequence(config);
-  const intervalMillis =
-    sequence[Math.floor(Math.random() * (sequence.length - 1))].interval;
-  return {
-    createdAtTimestampMillis: 0,
-    lastRepetitionTimestampMillis: Date.now() - intervalMillis,
-    intervalMillis,
-    dueTimestampMillis: 0,
-  };
-}
-
-const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
+}) => {
   const { width, height, onLayout } = useLayout();
   const itemStates = Array.from(new Array(itemCount).keys()).map(() =>
     hasSeenItems
@@ -61,7 +43,7 @@ const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
       onLayout={onLayout}
       style={{
         width: "100%",
-        height: "100%",
+        height: 500,
         backgroundColor: colors.palettes.cyan.backgroundColor,
       }}
     >
@@ -83,12 +65,34 @@ const Template: Story<StoryArgs> = ({ itemCount, hasSeenItems }) => {
   );
 };
 
-Template.args = {
-  itemCount: 25,
-};
+const meta = {
+  title: "ReviewStarburst",
+  component: ReviewStarburstStory,
+  args: {
+    itemCount: 25,
+  },
+} satisfies Meta<typeof ReviewStarburstStory>;
+export default meta;
 
-export const NewItems = Template.bind({});
-NewItems.args = { ...Template.args, hasSeenItems: false };
+function generatePromptState(
+  config: SpacedRepetitionSchedulerConfiguration,
+): TaskComponentState {
+  const sequence = generateIntervalSequence(config);
+  const intervalMillis =
+    sequence[Math.floor(Math.random() * (sequence.length - 1))].interval;
+  return {
+    createdAtTimestampMillis: 0,
+    lastRepetitionTimestampMillis: Date.now() - intervalMillis,
+    intervalMillis,
+    dueTimestampMillis: 0,
+  };
+}
 
-export const OldItems = Template.bind({});
-OldItems.args = { ...Template.args, hasSeenItems: true };
+type Story = StoryObj<typeof meta>;
+export const NewItems = {
+  args: { hasSeenItems: false },
+} satisfies Story;
+
+export const OldItems = {
+  args: { hasSeenItems: true },
+} satisfies Story;

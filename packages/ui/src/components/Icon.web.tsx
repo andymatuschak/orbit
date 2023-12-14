@@ -1,5 +1,11 @@
 import React from "react";
-import { Image, ImageRequireSource, StyleSheet, View } from "react-native";
+import {
+  Image,
+  ImageRequireSource,
+  ImageURISource,
+  StyleSheet,
+  View,
+} from "react-native";
 import unreachableCaseError from "../util/unreachableCaseError.js";
 import { IconName, IconPosition, IconProps, iconSize } from "./IconShared.js";
 
@@ -7,17 +13,17 @@ function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: false,
-): ImageRequireSource;
+): ImageRequireSource | ImageURISource;
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: true,
-): ImageRequireSource | null;
+): ImageRequireSource | ImageURISource | null;
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: boolean,
-): ImageRequireSource | null {
+): ImageRequireSource | ImageURISource | null {
   switch (name) {
     case IconName.Check:
       if (accent) return null;
@@ -177,15 +183,11 @@ export default React.memo(function Icon(props: IconProps) {
         ]}
       >
         <Image
-          width={iconSize}
-          height={iconSize}
           source={baseIcon}
           tintColor={tintColor}
           style={StyleSheet.absoluteFill}
         />
         <Image
-          width={iconSize}
-          height={iconSize}
           source={accent}
           tintColor={accentColor ?? tintColor}
           style={StyleSheet.absoluteFill}
@@ -195,11 +197,9 @@ export default React.memo(function Icon(props: IconProps) {
   } else {
     return (
       <Image
-        width={iconSize}
-        height={iconSize}
         source={baseIcon}
         tintColor={tintColor}
-        style={style}
+        style={[{ width: iconSize, height: iconSize }, style]}
       />
     );
   }

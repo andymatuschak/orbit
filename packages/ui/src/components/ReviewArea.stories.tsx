@@ -71,7 +71,7 @@ function ReviewAreaTemplate({
     <Animated.View
       style={{
         backgroundColor,
-        height: "100%",
+        height: 1000,
       }}
       onLayout={onLayout}
     >

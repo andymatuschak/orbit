@@ -1,47 +1,45 @@
-import { Story } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/react";
 import React from "react";
-import { View } from "react-native";
+import { orderedPaletteNames } from "../styles/colors.js";
 import { colors } from "../styles/index.js";
 import ContinueWithUser from "./ContinueWithUser.jsx";
 
-export default {
+const meta: Meta<typeof ContinueWithUser> = {
   title: "ContinueWithUser",
   component: ContinueWithUser,
+  argTypes: {
+    colorPalette: {
+      options: orderedPaletteNames,
+      mapping: Object.fromEntries(
+        orderedPaletteNames.map((name) => [name, colors.palettes[name]]),
+      ),
+    },
+  },
+  decorators: [
+    (Story, context) => (
+      <div
+        style={{
+          height: "100vh",
+          backgroundColor: context.args.colorPalette.backgroundColor,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
 };
+export default meta;
 
-const Template: Story<{
-  colorPaletteIndex: number;
-  email: string;
-}> = (args) => {
-  const colorPalette =
-    colors.palettes[colors.orderedPaletteNames[args.colorPaletteIndex]];
+type Story = StoryObj<typeof meta>;
 
-  const handleContinueWithUser = () => {
-    console.log("Continue with user!");
-  };
-
-  return (
-    <View
-      style={{
-        height: "100%",
-        backgroundColor: colorPalette.backgroundColor,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <ContinueWithUser
-        colorPalette={colorPalette}
-        email={args.email}
-        onContinueWithUser={handleContinueWithUser}
-      />
-    </View>
-  );
-};
-
-Template.args = {
-  colorPaletteIndex: 5,
-  email: "test@test.com",
-};
-
-export const Basic = Template.bind({});
-Basic.args = { ...Template.args };
+export const Basic = {
+  args: {
+    colorPalette: colors.palettes.red,
+    onContinueWithUser: () => {
+      alert("Continue");
+    },
+    email: "test@test.com",
+  },
+} satisfies Story;

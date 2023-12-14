@@ -1,13 +1,11 @@
-import { Story } from "@storybook/react";
-import React from "react";
+import { Meta, StoryObj } from "@storybook/react";
 import { colors } from "../styles/index.js";
-import Button, { ButtonProps } from "./Button.jsx";
-import { View } from "react-native";
+import Button from "./Button.jsx";
 import { IconName } from "./IconShared.js";
 
 const palette = colors.palettes.red;
 
-export default {
+const meta = {
   title: "Controls/Button",
   component: Button,
   argTypes: {
@@ -21,74 +19,76 @@ export default {
       values: [{ name: "colorful", value: palette.backgroundColor }],
     },
   },
+} satisfies Meta<typeof Button>;
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+const Template: Story = {
+  args: {
+    title: "Button",
+    onPress: () => {
+      alert("button pressed");
+    },
+    accentColor: colors.productKeyColor,
+    style: { width: 250 },
+  },
 };
 
-const Template: Story<ButtonProps> = (args) => (
-  <View>
-    <Button {...args} />
-  </View>
-);
-Template.args = {
-  title: "Button",
-  accentColor: colors.productKeyColor,
-  href: undefined,
-  style: { width: 250 },
-};
+export const Basic = {
+  args: {
+    ...Template.args,
+  },
+} satisfies Story;
 
-export const Basic = Template.bind({});
-Basic.args = Template.args;
+export const Link = {
+  args: {
+    ...Template.args,
+    href: "https://google.com",
+  },
+} satisfies Story;
 
-export const Link = Template.bind({});
-Link.args = {
-  ...Template.args,
-  onPress: undefined,
-  href: "https://google.com",
-};
+export const Tiny = {
+  args: {
+    ...Template.args,
+    size: "tiny",
+  },
+} satisfies Story;
 
-export const Tiny = Template.bind({});
-Tiny.args = {
-  ...Template.args,
-  size: "tiny",
-};
+export const Disabled = {
+  args: { ...Template.args, disabled: true },
+} satisfies Story;
 
-export const Disabled = Template.bind({});
-Disabled.args = { ...Template.args, disabled: true };
+export const IconAndTitle = {
+  args: { ...Template.args, iconName: IconName.Check },
+} satisfies Story;
 
-export const IconAndTitle = Template.bind({});
-IconAndTitle.args = { ...Template.args, iconName: IconName.Check };
+export const Background = {
+  args: {
+    ...IconAndTitle.args,
+    accentColor: palette.accentColor,
+    backgroundColor: palette.secondaryBackgroundColor,
+    color: colors.white,
+  },
+} satisfies Story;
 
-export const Background = Template.bind({});
-Background.args = {
-  ...IconAndTitle.args,
-  accentColor: palette.accentColor,
-  backgroundColor: palette.secondaryBackgroundColor,
-  color: colors.white,
-};
-Background.parameters = {
-  backgrounds: { default: "colorful" },
-};
+export const SmallBackground = {
+  args: {
+    ...Background.args,
+    size: "small",
+    alignment: "right",
+  },
+} satisfies Story;
 
-export const SmallBackground = Template.bind({});
-SmallBackground.args = {
-  ...Background.args,
-  size: "small",
-  alignment: "right",
-};
-SmallBackground.parameters = {
-  backgrounds: { default: "colorful" },
-};
-
-export const Icon = Template.bind({});
-Icon.args = {
-  ...Template.args,
-  title: "dummy",
-  accentColor: palette.accentColor,
-  color: colors.white,
-  backgroundColor: palette.secondaryBackgroundColor,
-  iconName: IconName.ArrowRight,
-  style: {},
-};
-Icon.parameters = {
-  backgrounds: { default: "colorful" },
-};
-delete Icon.args.title;
+export const Icon = {
+  args: {
+    ...Template.args,
+    title: "",
+    accentColor: palette.accentColor,
+    color: colors.white,
+    backgroundColor: palette.secondaryBackgroundColor,
+    iconName: IconName.ArrowRight,
+  },
+  parameters: {
+    backgrounds: { default: "colorful" },
+  },
+} satisfies Story;

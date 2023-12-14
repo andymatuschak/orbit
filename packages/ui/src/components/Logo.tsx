@@ -22,8 +22,6 @@ export default React.memo(function Logo(props: LogoProps) {
     <Image
       source={getLogoAsset(props.units)}
       style={{ width, height, margin: -8 }}
-      width={width}
-      height={height}
     />
   );
 });

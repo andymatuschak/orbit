@@ -21,10 +21,8 @@ export default React.memo(function Logo(props: LogoProps) {
   return (
     <Image
       source={getLogoAsset(props.units)}
-      width={width}
-      height={height}
       tintColor={props.tintColor}
-      style={{ margin: -8 }}
+      style={{ width, height, margin: -8 }}
     />
   );
 });

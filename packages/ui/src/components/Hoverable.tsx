@@ -30,11 +30,6 @@ function disableHover() {
   }
 }
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const document: any;
-}
-
 function _initializeHoverStateIfNeeded() {
   if (!_hasInitializedHoverState) {
     _hasInitializedHoverState = true;

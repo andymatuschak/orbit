@@ -1,5 +1,12 @@
 import React from "react";
-import { Image, ImageStyle, StyleProp, StyleSheet, View } from "react-native";
+import {
+  Image,
+  ImageRequireSource,
+  ImageStyle,
+  StyleProp,
+  StyleSheet,
+  View,
+} from "react-native";
 import unreachableCaseError from "../util/unreachableCaseError.js";
 import { IconName, IconPosition, IconProps, iconSize } from "./IconShared.js";
 
@@ -7,17 +14,17 @@ function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: false,
-): number;
+): ImageRequireSource;
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: true,
-): number | null;
+): ImageRequireSource | null;
 function getIconAsset(
   name: IconName,
   iconPosition: IconPosition,
   accent: boolean,
-): number | null {
+): ImageRequireSource | null {
   switch (name) {
     case IconName.Check:
       if (accent) return null;
