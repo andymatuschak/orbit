@@ -1,6 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/no-namespace, @typescript-eslint/prefer-namespace-keyword
+/// <reference lib="dom" />
+
 declare module globalThis {
-  const crypto: WebCrypto;
+  const crypto: Crypto;
 }
-type WebCrypto = typeof import("node:crypto").webcrypto;
-export const crypto = globalThis.crypto as WebCrypto;
+export const crypto = globalThis.crypto;

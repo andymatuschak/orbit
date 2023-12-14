@@ -1,3 +1,5 @@
-export const parameters = {
-  layout: "fullscreen",
+module.exports = {
+  parameters: {
+    layout: "fullscreen",
+  },
 };
