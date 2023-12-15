@@ -1,1 +1,1 @@
-../build/orbit-web-component.js
+../build/orbit-web-component-dev.js

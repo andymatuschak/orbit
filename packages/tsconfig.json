@@ -13,7 +13,8 @@
     { "path": "./sample-data" },
     { "path": "./store-fs" },
     { "path": "./store-shared" },
-    { "path": "./store-web" }
+    { "path": "./store-web" },
+    { "path": "./web-component" }
   ],
   "files": []
 }

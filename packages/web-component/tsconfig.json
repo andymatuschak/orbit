@@ -1,9 +1,8 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["dom", "es2020"],
+    "lib": ["es2023", "dom"],
     "types": ["jest"],
-    "composite": true,
     "outDir": "./dist",
     "rootDir": "./src"
   },

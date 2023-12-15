@@ -11,6 +11,7 @@ For usage details, see [the Orbit documentation](https://docs.withorbit.com).
 This package is built into a single ES Module and deployed to a separate Firebase hosting site (`js.withorbit.com`) which permits cross-origin script execution.
 
 * To build: `bun run build`
+* To run a local test server: `bun run dev` (then visit http://localhost:3000)
 * To deploy: `bun run deploy`
 
 ```
