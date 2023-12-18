@@ -5,9 +5,9 @@ import {
   useAuthenticationClient,
   useCurrentUserRecord,
 } from "../authentication/authContext.js";
-import SignInScreen from "../signIn/SignInScreen.js";
-import { LoadingScreen } from "./LoadingScreen.js";
-import ReviewSession from "./ReviewSession.js";
+import Login from "./login.js";
+import { LoadingScreen } from "../reviewSession/LoadingScreen.js";
+import ReviewSession from "../reviewSession/ReviewSession.js";
 
 function extractAccessCode(): string | null {
   if (Platform.OS === "web") {
@@ -53,7 +53,7 @@ function useAccessCode(authenticationClient: AuthenticationClient): boolean {
   return isPendingAccessCode;
 }
 
-export default function ReviewSessionScreen() {
+export default function ReviewSessionPage() {
   const authenticationClient = useAuthenticationClient();
   const isPendingAccessCode = useAccessCode(authenticationClient);
   const userRecord = useCurrentUserRecord(authenticationClient);
@@ -61,7 +61,7 @@ export default function ReviewSessionScreen() {
   if (userRecord) {
     return <ReviewSession />;
   } else if (userRecord === null && !isPendingAccessCode) {
-    return <SignInScreen />;
+    return <Login />;
   } else {
     return <LoadingScreen />;
   }

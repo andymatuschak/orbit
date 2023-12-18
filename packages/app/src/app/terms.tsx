@@ -3,7 +3,7 @@ import { Link, Logo, Spacer, styles } from "@withorbit/ui";
 import { View, Text } from "react-native";
 
 const palette = styles.colors.palettes.green;
-export default function TermsOfServiceScreenWeb() {
+export default function Terms() {
   return (
     <View
       style={{

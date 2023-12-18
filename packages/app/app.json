@@ -5,9 +5,8 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./app-assets/starburst-icon.png",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
+    "scheme": "com.withorbit.native",
     "ios": {
       "bundleIdentifier": "com.withorbit.native"
     },
@@ -17,10 +16,7 @@
     "web": {
       "build": {
         "babel": {
-          "include": [
-            "@withorbit/ui",
-            "@withorbit/api-client"
-          ]
+          "include": ["@withorbit/ui", "@withorbit/api-client"]
         }
       },
       "bundler": "metro"
@@ -46,7 +42,17 @@
         }
       ],
       "./expoPlugin/expoPlugin.js",
-      "sentry-expo"
+      "sentry-expo",
+      [
+        "expo-router",
+        {
+          "origin": "https://acme.com",
+          "asyncRoutes": {
+            "web": true,
+            "default": "development"
+          }
+        }
+      ]
     ]
   }
 }

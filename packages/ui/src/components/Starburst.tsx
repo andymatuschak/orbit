@@ -1,15 +1,29 @@
 import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core";
 import React, { useRef } from "react";
 import { Animated } from "react-native";
-import { Svg, ClipPath, G, Path } from "react-native-svg";
+import { Svg, ClipPath, G, Path, GProps, PathProps } from "react-native-svg";
 import { generateIntervalSequence } from "../util/generateIntervalSequence.js";
 import clamp from "../util/clamp.js";
 import lerp from "../util/lerp.js";
 import usePrevious from "./hooks/usePrevious.js";
 import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
 
-const AnimatedG = Animated.createAnimatedComponent(G);
-const AnimatedPath = Animated.createAnimatedComponent(Path);
+// Workaround for spurious warning: https://github.com/software-mansion/react-native-svg/issues/1484
+class GWithoutCollapsable extends React.Component<GProps> {
+  render() {
+    return <G {...this.props} collapsable={undefined} />;
+  }
+}
+
+class PathWithoutCollapsable extends React.Component<PathProps> {
+  render() {
+    // @ts-ignore
+    return <Path {...this.props} collapsable={undefined} />;
+  }
+}
+
+const AnimatedG = Animated.createAnimatedComponent(GWithoutCollapsable);
+const AnimatedPath = Animated.createAnimatedComponent(PathWithoutCollapsable);
 
 // Returns the distance from the center of the starburst to the point of each ray's tapered quill.
 export function getStarburstQuillInnerRadius(
@@ -37,7 +51,7 @@ export function getStarburstQuillOuterRadius(
     return thickness * 2;
   }
 
-  const outerRadiusSpacing = thickness / 2.75; // The number of pixels space between between spokes at their thickest points.
+  const outerRadiusSpacing = thickness / 2.75; // The number of pixels space between spokes at their thickest points.
   const segmentAngle = (2 * Math.PI) / rayCount;
   return Math.min(
     (thickness + outerRadiusSpacing * 2.0) / Math.sin(segmentAngle),

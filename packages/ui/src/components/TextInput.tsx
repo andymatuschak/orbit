@@ -64,7 +64,7 @@ const TextInput = React.forwardRef<RNTextInput, TextInputProps>(
       },
     ];
     if (props.style) {
-      style = StyleSheet.compose(style, props.style);
+      style = [style, props.style];
     }
 
     return (

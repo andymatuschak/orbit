@@ -83,7 +83,7 @@ Treat this like a password: anyone who has this token can access your account.`}
 };
 
 const palette = styles.colors.palettes.lime;
-export default function SettingsScreen() {
+export default function SettingsPage() {
   const { message, headline } = React.useMemo(() => {
     const url = new URL(location.href);
     const params = url.searchParams;

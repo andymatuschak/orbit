@@ -38,21 +38,21 @@ import {
 } from "../reviewSessionManager.js";
 import { useAPIClient } from "../util/useAPIClient.js";
 import useByrefCallback from "../util/useByrefCallback.js";
-import EmbeddedBanner from "./EmbeddedBanner.js";
-import { useEmbeddedNetworkQueue } from "./embeddedNetworkQueue.js";
-import { sendUpdatedReviewItemToHost } from "./ipc/sendUpdatedReviewItemToHost.js";
-import { useEmbeddedHostState } from "./ipc/useEmbeddedHostState.js";
-import { getActionsRecordForMarking } from "./markingActions.js";
-import OnboardingModalWeb from "./OnboardingModal.web.js";
-import { TestModeBanner } from "./TestModeBanner.js";
+import EmbeddedBanner from "../embedded/EmbeddedBanner.js";
+import { useEmbeddedNetworkQueue } from "../embedded/embeddedNetworkQueue.js";
+import { sendUpdatedReviewItemToHost } from "../embedded/ipc/sendUpdatedReviewItemToHost.js";
+import { useEmbeddedHostState } from "../embedded/ipc/useEmbeddedHostState.js";
+import { getActionsRecordForMarking } from "../embedded/markingActions.js";
+import OnboardingModalWeb from "../embedded/OnboardingModal.web.js";
+import { TestModeBanner } from "../embedded/TestModeBanner.js";
 import {
   EmbeddedAuthenticationState,
   useEmbeddedAuthenticationState,
-} from "./useEmbeddedAuthenticationState.js";
-import { useRemoteTaskStates } from "./useRemoteTaskStates.js";
-import { findItemsToRetry } from "./util/findItemsToRetry.js";
-import getEmbeddedColorPalette from "./util/getEmbeddedColorPalette.js";
-import getEmbeddedScreenConfigurationFromURL from "./util/getEmbeddedScreenConfigurationFromURL.js";
+} from "../embedded/useEmbeddedAuthenticationState.js";
+import { useRemoteTaskStates } from "../embedded/useRemoteTaskStates.js";
+import { findItemsToRetry } from "../embedded/util/findItemsToRetry.js";
+import getEmbeddedColorPalette from "../embedded/util/getEmbeddedColorPalette.js";
+import getEmbeddedScreenConfigurationFromURL from "../embedded/util/getEmbeddedScreenConfigurationFromURL.js";
 
 function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
   return sessionItems.map((item) => {
@@ -299,7 +299,7 @@ function getEmbeddedReviewAreaItemsFromReviewItems(
   }));
 }
 
-function EmbeddedScreen({
+function EmbeddedPage({
   configuration,
 }: {
   configuration: EmbeddedScreenConfiguration;
@@ -485,7 +485,7 @@ function EmbeddedScreen({
   );
 }
 
-export default function EmbeddedScreenDataWrapper() {
+export default function EmbeddedPageDataWrapper() {
   // For debug and development purposes, the configuration information can be supplied in a URL query parameter.
   const [configuration, setConfiguration] =
     useState<EmbeddedScreenConfiguration | null>(
@@ -518,5 +518,5 @@ export default function EmbeddedScreenDataWrapper() {
     }
   }, [configuration]);
 
-  return configuration && <EmbeddedScreen configuration={configuration} />;
+  return configuration && <EmbeddedPage configuration={configuration} />;
 }

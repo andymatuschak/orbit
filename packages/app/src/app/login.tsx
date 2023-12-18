@@ -4,7 +4,7 @@ import { ActivityIndicator, Platform, View } from "react-native";
 import { AuthenticationClient } from "../authentication/index.js";
 import { useAuthenticationClient } from "../authentication/authContext.js";
 import { createLoginTokenBroadcastChannel } from "../authentication/loginTokenBroadcastChannel.js";
-import SignInForm from "./SignInForm.js";
+import SignInForm from "../signIn/SignInForm.js";
 
 type LoginTokenTarget = "opener" | "channel";
 function getCurrentLoginTokenTarget(): LoginTokenTarget | null {
@@ -117,7 +117,7 @@ function getOverrideEmailAddress() {
   }
 }
 
-export default function SignInScreen() {
+export default function Login() {
   const colorPalette: styles.colors.ColorPalette = styles.colors.palettes.red; // TODO;
   const overrideEmailAddress = React.useMemo(getOverrideEmailAddress, []);
 

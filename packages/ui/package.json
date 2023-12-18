@@ -48,7 +48,7 @@
     "react-native-keyevent": "^0.3.2",
     "react-native-markdown-display": "^7.0.2",
     "react-native-mathjax-svg": "andymatuschak/react-native-mathjax-svg",
-    "react-native-svg": "^14.1.0"
+    "react-native-svg": "14.0.0"
   },
   "scripts": {
     "build": "tsc -b",

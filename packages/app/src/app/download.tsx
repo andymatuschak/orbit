@@ -25,7 +25,7 @@ function Contents() {
   );
 }
 
-export default function LearnMoreScreen() {
+export default function DownloadPage() {
   return (
     <InfoPage
       contents={<Contents />}
