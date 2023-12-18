@@ -1,5 +1,6 @@
 import { EntityType, Task } from "@withorbit/core";
-import Dexie from "dexie";
+import * as Dexie from "dexie";
+import { Dexie as DexieDB } from "dexie";
 import {
   DexieDerivedTaskComponentKeys,
   DexieDerivedTaskComponentRow,
@@ -12,7 +13,7 @@ import {
   DexieTable,
 } from "./tables.js";
 
-export class DexieDatabase extends Dexie.Dexie {
+export class DexieDatabase extends DexieDB {
   [DexieTable.Events]: Dexie.Table<DexieEventRow, number>;
   [DexieTable.Entities]: Dexie.Table<DexieEntityRow, number>;
   [DexieTable.DerivedTaskComponents]: Dexie.Table<

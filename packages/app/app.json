@@ -1,34 +1,52 @@
 {
   "expo": {
-    "name": "orbit",
+    "name": "Orbit",
     "slug": "orbit",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets2/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets2/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": ["**/*"],
+    "icon": "./app-assets/starburst-icon.png",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.withorbit.native"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets2/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+      "package": "com.withorbit.app"
     },
     "web": {
-      "favicon": "./assets2/favicon.png",
       "build": {
         "babel": {
-          "include": ["@withorbit/ui"]
+          "include": [
+            "@withorbit/ui",
+            "@withorbit/api-client"
+          ]
         }
       },
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/dr-bold.otf",
+            "./assets/fonts/dr-bolditalic.otf",
+            "./assets/fonts/dr-extrabold.otf",
+            "./assets/fonts/dr-extraboldItalic.otf",
+            "./assets/fonts/dr-extralight.otf",
+            "./assets/fonts/dr-extralightitalic.otf",
+            "./assets/fonts/dr-italic.otf",
+            "./assets/fonts/dr-light.otf",
+            "./assets/fonts/dr-lightitalic.otf",
+            "./assets/fonts/dr-medium.otf",
+            "./assets/fonts/dr-mediumitalic.otf",
+            "./assets/fonts/dr-regular.otf"
+          ]
+        }
+      ],
+      "./expoPlugin/expoPlugin.js",
+      "sentry-expo"
+    ]
   }
 }

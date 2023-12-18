@@ -11,7 +11,7 @@
   "dependencies": {
     "@withorbit/core": "0.0.1",
     "@withorbit/store-shared": "0.0.1",
-    "dexie": "^3.0.3"
+    "dexie": "^3.2.4"
   },
   "scripts": {
     "build": "tsc -b",

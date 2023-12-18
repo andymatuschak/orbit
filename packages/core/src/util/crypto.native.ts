@@ -14,3 +14,7 @@ if (!globalThis.crypto.randomUUID) {
     "Need to shim crypto.randomUUID before importing this (e.g. with expo-crypto)",
   );
 }
+
+const getRandomValues = globalThis.crypto.getRandomValues;
+const randomUUID = globalThis.crypto.randomUUID;
+export const crypto = { getRandomValues, randomUUID };

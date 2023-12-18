@@ -1,6 +1,49 @@
 {
-  "extends": "expo/tsconfig.base",
+  "extends": ["../tsconfig.base.json", "expo/tsconfig.base"],
   "compilerOptions": {
-    "strict": true
-  }
+    "module": "commonjs",
+    "types": ["jest"]
+  },
+  "include": [
+    "./src/**/*.tsx",
+    "./src/**/*.ts",
+    "./App.tsx",
+    "./serviceConfig.*js",
+    "../@types/**/*.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../api"
+    },
+    {
+      "path": "../api-client"
+    },
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../embedded-support"
+    },
+    {
+      "path": "../sample-data"
+    },
+    {
+      "path": "../store-shared"
+    },
+    {
+      "path": "../store-fs"
+    },
+    {
+      "path": "../store-web"
+    },
+    {
+      "path": "../ingester"
+    },
+    {
+      "path": "../sync"
+    },
+    {
+      "path": "../ui"
+    }
+  ]
 }

@@ -1,4 +1,4 @@
-import { ImageStyle, StyleProp, ViewStyle } from "react-native";
+import { ImageStyle, StyleProp } from "react-native";
 
 export enum IconName {
   Check = "check",

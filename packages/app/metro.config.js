@@ -4,15 +4,21 @@ const { getDefaultConfig } = require("expo/metro-config");
 const path = require("path");
 const fs = require("fs");
 
-// MONOREPO SUPPORT (https://docs.expo.dev/guides/monorepos/)
-// ================
-
-// Find the project and workspace directories
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, "../..");
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
+
+// Remove unused code based on Platform (https://docs.expo.dev/guides/customizing-metro/#tree-shaking-by-platform)
+config.transformer.getTransformOptions = async () => ({
+  transform: {
+    experimentalImportSupport: true,
+  },
+});
+
+// MONOREPO SUPPORT (https://docs.expo.dev/guides/monorepos/)
+// ================
 
 // 1. Watch all files within the monorepo
 config.watchFolders = [workspaceRoot];

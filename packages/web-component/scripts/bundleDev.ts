@@ -33,9 +33,7 @@ const server = Bun.serve({
 });
 
 process.on("SIGINT", () => {
-  // close watcher when Ctrl-C is pressed
-  console.log("Closing watcher...");
   watcher.close();
-
+  server.stop();
   process.exit(0);
 });

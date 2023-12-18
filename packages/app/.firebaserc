@@ -1,0 +1,16 @@
+{
+  "projects": {
+    "default": "metabook-system"
+  },
+  "targets": {
+    "metabook-system": {
+      "hosting": {
+        "orbit-app": ["orbit-app"],
+        "orbit-docs": [
+          "orbit-docs"
+        ],
+        "orbit-cdn": ["orbit-cdn"]
+      }
+    }
+  }
+}

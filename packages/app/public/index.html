@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1.00001, viewport-fit=cover"
+    />
+    <script
+      src="https://js.sentry-cdn.com/7a9cba7e96b54da4bae2c6eb9b8d7b18.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <title>%WEB_TITLE%</title>
+    <style>
+      /**
+       * Extend the react-native-web reset:
+       * https://github.com/necolas/react-native-web/blob/master/packages/react-native-web/src/exports/StyleSheet/initialRules.js
+       */
+      html,
+      body,
+      #root {
+        width: 100%;
+        /* To smooth any scrolling behavior */
+        -webkit-overflow-scrolling: touch;
+        margin: 0px;
+        padding: 0px;
+        /* Allows content to fill the viewport and go beyond the bottom */
+        min-height: 100%;
+      }
+      #root {
+        flex-shrink: 0;
+        flex-basis: auto;
+        flex-grow: 1;
+        display: flex;
+        flex: 1;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        /* Prevent text size change on orientation change https://gist.github.com/tfausak/2222823#file-ios-8-web-app-html-L138 */
+        -webkit-text-size-adjust: 100%;
+        height: 100%;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        /* Allows you to scroll below the viewport; default value is visible */
+        overflow-y: auto;
+        overscroll-behavior-y: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        -ms-overflow-style: scrollbar;
+      }
+
+      @font-face {
+        font-display: block;
+        font-family: "dr-bold";
+        src: url("/fonts/drweb-bold.eot");
+        src: url("/fonts/drweb-bold.eot?#iefix") format("embedded-opentype"),
+        url("/fonts/drweb-bold.woff") format("woff");
+      }
+      /*@font-face {
+      font-display: block;
+        font-family: "dr-bolditalic";
+        src: url("/fonts/drweb-bolditalic.eot");
+        src: url("/fonts/drweb-bolditalic.eot?#iefix") format("embedded-opentype"),
+        url("/fonts/drweb-bolditalic.woff") format("woff");
+      }*/
+      @font-face {
+        font-display: block;
+        font-family: "dr-extrabold";
+        src: url("/fonts/drweb-extrabold.eot");
+        src: url("/fonts/drweb-extrabold.eot?#iefix") format("embedded-opentype"),
+        url("/fonts/drweb-extrabold.woff") format("woff");
+      }
+      /*@font-face {
+      font-display: block;
+        font-family: "dr-extrabolditalic";
+        src: url("/fonts/drweb-extrabolditalic.eot");
+        src: url("/fonts/drweb-extrabolditalic.eot?#iefix")
+        format("embedded-opentype"),
+        url("/fonts/drweb-extrabolditalic.woff") format("woff");
+      }*/
+      /*@font-face {
+      font-display: block;
+        font-family: "dr-extralight";
+        src: url("/fonts/drweb-extralight.eot");
+        src: url("/fonts/drweb-extralight.eot?#iefix") format("embedded-opentype"),
+        url("/fonts/drweb-extralight.woff") format("woff");
+      }*/
+      /*@font-face {
+      font-display: block;
+        font-family: "dr-extralightitalic";
+        src: url("/fonts/drweb-extralightitalic.eot");
+        src: url("/fonts/drweb-extralightitalic.eot?#iefix")
+        format("embedded-opentype"),
+        url("/fonts/drweb-extralightitalic.woff") format("woff");
+      }*/
+      @font-face {
+        font-display: block;
+        font-family: "dr-italic";
+        src: url("/fonts/drweb-italic.eot");
+        src: url("/fonts/drweb-italic.eot?#iefix") format("embedded-opentype"),
+        url("/fonts/drweb-italic.woff") format("woff");
+      }
+      @font-face {
+        font-display: block;
+        font-family: "dr-light";
+        src: url("/fonts/drweb-light.eot");
+        src: url("/fonts/drweb-light.eot?#iefix") format("embedded-opentype"),
+        url("/fonts/drweb-light.woff") format("woff");
+      }
+      @font-face {
+        font-display: block;
+        font-family: "dr-lightitalic";
+        src: url("/fonts/drweb-lightitalic.eot");
+        src: url("/fonts/drweb-lightitalic.eot?#iefix") format("embedded-opentype"),
+        url("/fonts/drweb-lightitalic.woff") format("woff");
+      }
+      @font-face {
+        font-display: block;
+        font-family: "dr-medium";
+        src: url("/fonts/drweb-medium.eot");
+        src: url("/fonts/drweb-medium.eot?#iefix") format("embedded-opentype"),
+        url("/fonts/drweb-medium.woff") format("woff");
+      }
+      @font-face {
+        font-display: block;
+        font-family: "dr-mediumitalic";
+        src: url("/fonts/drweb-mediumitalic.eot");
+        src: url("/fonts/drweb-mediumitalic.eot?#iefix") format("embedded-opentype"),
+        url("/fonts/drweb-mediumitalic.woff") format("woff");
+      }
+      @font-face {
+        font-display: block;
+        font-family: "dr-regular";
+        src: url("/fonts/drweb-regular.eot");
+        src: url("/fonts/drweb-regular.eot?#iefix") format("embedded-opentype"),
+        url("/fonts/drweb-regular.woff") format("woff");
+      }
+      @font-face {
+        font-display: block;
+        font-family: "Raptor Premium Regular";
+        src: url("/fonts/RaptorPremium-Regular.woff2") format("woff2"), url("/fonts/RaptorPremium-Regular.woff") format("woff");
+      }
+      @font-face {
+        font-display: block;
+        font-family: "Raptor Premium Regular";
+        font-style: italic;
+        src: url("/fonts/RaptorPremium-Slanted.woff2") format("woff2"), url("/fonts/RaptorPremium-Slanted.woff") format("woff");
+      }
+
+      .firebase-emulator-warning {
+        display: none;
+      }
+
+      .katex {
+        line-height: 0px !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>
+      <form
+        action=""
+        style="
+          background-color: #fff;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 9999;
+        "
+      >
+        <div
+          style="
+            font-size: 18px;
+            font-family: Helvetica, sans-serif;
+            line-height: 24px;
+            margin: 10%;
+            width: 80%;
+          "
+        >
+          <p>Orbit requires JavaScript to display its interactive elements.</p>
+          <p style="margin: 20px 0;">
+            <button
+              type="submit"
+              style="
+                background-color: #4630eb;
+                border-radius: 100px;
+                border: none;
+                box-shadow: none;
+                color: #fff;
+                cursor: pointer;
+                font-weight: bold;
+                line-height: 20px;
+                padding: 6px 16px;
+              "
+            >
+              Reload
+            </button>
+          </p>
+        </div>
+      </form>
+    </noscript>
+    <div id="browser-error" style="
+      box-sizing: border-box;
+      display: none;
+      visibility: hidden;
+      width: 100%;
+      background-color: #ff5252;
+      padding: 8px 16px;
+    ">
+      <div style="
+        width: 100%;
+      ">
+        <svg width="22px" height="22px" viewBox="0 0 22 22" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="vertical-align: text-bottom;">
+          <title>Error Symbol</title>
+          <g fill-rule="evenodd">
+            <path d="M11,0 C17.0751322,0 22,4.92486775 22,11 C22,17.0751322 17.0751322,22 11,22 C4.92486775,22 0,17.0751322 0,11 C0,4.92486775 4.92486775,0 11,0 Z M12.140625,14.7421875 L9.8125,14.7421875 L9.8125,17 L12.140625,17 L12.140625,14.7421875 Z M12.203125,5.5234375 L9.7578125,5.5234375 L9.7578125,8.4453125 L10.40625,13.8203125 L11.5703125,13.8203125 L12.203125,8.4453125 L12.203125,5.5234375 Z" fill="white"></path>
+          </g>
+        </svg>
+        <span style="
+          font-size: 18px;
+          font-family: Helvetica, sans-serif;
+          font-weight: bold;
+          margin-left: 8px;
+          color: white;
+        ">
+          Current browser is incompatible with Orbit</span>
+      </div>
+      <p style="
+          font-size: 16x;
+          font-family: Helvetica, sans-serif;
+          line-height: 24px;
+          color: white;
+      ">Orbit requires a more recent browser version to display its interactive element. Please update your browser to resolve this issue.</p>
+    </div>
+    <script src="./browserCompatibility.js"></script>
+    <script>
+      if (!supportedBrowserRegex.test(navigator.userAgent)) {
+        document.getElementById("browser-error").style.display = "block";
+        document.getElementById("browser-error").style.visibility = "visible";
+      }
+    </script>
+    <div id="root"></div>
+  </body>
+</html>

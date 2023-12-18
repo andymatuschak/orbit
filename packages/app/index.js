@@ -1,4 +1,4 @@
-import "./shims.js";
+import "./src/shims.js";
 import { registerRootComponent } from "expo";
 
 import App from "./App.tsx";

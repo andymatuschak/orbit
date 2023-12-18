@@ -2,15 +2,16 @@
 // This file supplies the implementation used when running in a React Native  environment.
 
 import { SQLDatabase } from "./types.js";
-import "react-native-quick-sqlite";
+import { open, QuickSQLiteConnection } from "react-native-quick-sqlite";
 import CustomWebSQLDatabase from "websql/custom";
 
 class RNSQLiteDatabase {
   private readonly _name: string;
+  private readonly _db: QuickSQLiteConnection;
 
   constructor(name: string) {
     this._name = name;
-    sqlite.open(name);
+    this._db = open({ name });
   }
 
   exec(
@@ -25,7 +26,10 @@ class RNSQLiteDatabase {
 
     queries.forEach((query, i) => {
       try {
-        const result = sqlite.executeSql(this._name, query.sql, query.args);
+        const result = this._db.execute(query.sql, query.args);
+        if (!result.rows) {
+          throw new Error("SQL query failure");
+        }
         results[i] = {
           insertId: result.insertId,
           rowsAffected: result.rowsAffected,

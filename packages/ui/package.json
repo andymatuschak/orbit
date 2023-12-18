@@ -22,7 +22,7 @@
     "@storybook/types": "^7.6.4",
     "@types/lodash.isequal": "^4.5.5",
     "@types/markdown-it": "^0.0.9",
-    "@types/react": "~18.0.14",
+    "@types/react": "~18.2.45",
     "@types/react-native": "^0.72.8",
     "@types/seedrandom": "^2.4.28",
     "@types/webpack": "^4.41.25",
@@ -30,13 +30,13 @@
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react-dom": "18.2.0",
     "seedrandom": "^3.0.5",
     "storybook": "^7.6.4",
     "typescript": "^5.3.3"
   },
   "peerDependencies": {
-    "@types/react": "~18.0.14",
+    "@types/react": "~18.2.45",
     "react": "^18.2.0",
     "react-native": "0.73.0"
   },
