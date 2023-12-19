@@ -46,9 +46,9 @@
       [
         "expo-router",
         {
-          "origin": "https://acme.com",
+          "origin": "https://withorbit.com",
           "asyncRoutes": {
-            "web": true,
+            "web": false,
             "default": "development"
           }
         }

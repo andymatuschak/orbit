@@ -1,7 +1,7 @@
 {
   "name": "@withorbit/app",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "./index.js",
   "scripts": {
     "start": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo start",
     "ios": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo run:ios",
