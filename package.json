@@ -3,7 +3,8 @@
   "scripts": {
     "build": "tsc -b packages/tsconfig.json",
     "watch": "tsc -b -w packages/tsconfig.json",
-    "test": "cd packages; jest --projects anki-import api-client ingester core web-component api store-fs store-web interpreter; cd backend; bun run test",
+    "test:unit": "cd packages; jest --projects anki-import api-client ingester core web-component api store-fs store-web interpreter",
+    "test": "bun run test:unit; bun run --cwd packages/backend test",
     "lint": "cd packages; eslint .",
     "lint:fix": "cd packages; eslint --fix .",
     "checkall": "bun run lint && bun run build && bun run test"
