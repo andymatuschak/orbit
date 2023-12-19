@@ -255,6 +255,23 @@ export const MultilineClozePrompt = {
   },
 } satisfies Story;
 
+export const ClozePromptWithStrayBrace = {
+  args: {
+    ...cardTemplateArgs,
+    reviewItem: {
+      ...defaultReviewAreaItem,
+      spec: {
+        ...testClozeSpec,
+        content: {
+          ...testClozeSpec.content,
+          body: { text: "This is a test} *cloze prompt*.", attachments: [] },
+        },
+      },
+      componentID: Object.entries(testClozeSpec.content.components)[0][0],
+    },
+  },
+} satisfies Story;
+
 export const ImageQuestion = {
   args: {
     ...cardTemplateArgs,

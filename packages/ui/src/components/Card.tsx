@@ -25,6 +25,10 @@ import {
   useTransitioningValue,
 } from "./hooks/useTransitioningValue.js";
 import CardField, { clozeBlankSentinel } from "./PromptFieldRenderer.js";
+import {
+  clozeEndHighlightSentinel,
+  clozeStartHighlightSentinel,
+} from "./PromptFieldRenderer/clozeHighlightPlugin.js";
 
 function getQAPromptContents<TC extends QATaskContent | ClozeTaskContent>(
   reviewItem: ReviewAreaItem<TC>,
@@ -163,9 +167,9 @@ function formatClozePromptContents(
     if (isRevealed) {
       mutatingText =
         mutatingText.slice(0, range.startIndex) +
-        "{" +
+        clozeStartHighlightSentinel +
         mutatingText.slice(range.startIndex, range.startIndex + range.length) +
-        "}" +
+        clozeEndHighlightSentinel +
         mutatingText.slice(range.startIndex + range.length);
     } else {
       mutatingText =

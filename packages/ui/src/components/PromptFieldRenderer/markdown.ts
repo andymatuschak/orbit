@@ -1,6 +1,6 @@
 import React from "react";
 import * as MarkdownDisplay from "react-native-markdown-display";
-import { clozeParsePlugin } from "./clozeParsePlugin.js";
+import { clozeHighlightPlugin } from "./clozeHighlightPlugin.js";
 import { addLatexSupport } from "./markdownLatexSupport.js";
 
 export function useMarkdownItInstance(
@@ -9,7 +9,7 @@ export function useMarkdownItInstance(
   const instance = React.useRef(
     MarkdownDisplay.MarkdownIt({
       typographer: true,
-    }).use(clozeParsePlugin),
+    }).use(clozeHighlightPlugin),
   );
 
   const hasRequestedLatex = React.useRef(false);
