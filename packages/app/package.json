@@ -7,7 +7,7 @@
     "ios": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo run:ios",
     "web": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo start --web -p 19006",
     "android": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo run:android",
-    "build:web": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo export -p web --output-dir web-build",
+    "build:web": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo export -p web --output-dir web-build --source-maps",
     "deploy:web": "EXPO_USE_METRO_WORKSPACE_ROOT=1 scripts/deploy_web.sh",
     "generateBrowserCompatibility": "scripts/generate_browser_compatibility_regex.sh"
   },
