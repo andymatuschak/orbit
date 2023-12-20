@@ -1,16 +1,17 @@
+import * as Mdast from "mdast";
 import * as MdastUtilFromMarkdown from "mdast-util-from-markdown";
 import * as MdastUtilToMarkdown from "mdast-util-to-markdown";
-import * as Mdast from "mdast";
-import { resolveAll } from "micromark-util-resolve-all";
+import { parse } from "micromark";
+import { markdownLineEnding } from "micromark-util-character";
 // @ts-ignore
-import { codes, types } from "micromark-util-symbol";
+import { codes, constants, types } from "micromark-util-symbol";
 import * as Micromark from "micromark-util-types";
 import { Processor } from "unified";
 import { clozeNodeType, ClozePromptNode } from "../markdown.js";
 
-// TODO: don't match clozes inside html blocks
 const clozeOpenToken = "clozeOpenToken";
 const clozeCloseToken = "clozeCloseToken";
+
 const clozeToken = "clozeToken";
 
 declare module "micromark-util-types" {
@@ -34,17 +35,14 @@ declare module "mdast-util-to-markdown" {
   }
 }
 
+const clozeConstruct = {
+  tokenize: tokenizeOpen,
+  resolveTo: resolveClozeNode,
+};
+
 const micromarkClozeExtension: Micromark.Extension = {
   text: {
-    [codes.leftCurlyBrace]: {
-      tokenize: tokenizeOpen,
-      resolveAll: resolveAllCloze,
-    },
-    [codes.rightCurlyBrace]: {
-      tokenize: tokenizeClose,
-      resolveTo: resolveToCloseCloze,
-      resolveAll: resolveAllCloze,
-    },
+    [codes.leftCurlyBrace]: clozeConstruct,
   },
 };
 
@@ -52,127 +50,138 @@ function tokenizeOpen(
   this: Micromark.TokenizeContext,
   effects: Micromark.Effects,
   ok: Micromark.State,
-) {
-  return (code: Micromark.Code) => {
-    effects.enter(clozeOpenToken);
-    effects.consume(code);
-    effects.exit(clozeOpenToken);
-    return ok;
-  };
-}
-
-function tokenizeClose(
-  this: Micromark.TokenizeContext,
-  effects: Micromark.Effects,
-  ok: Micromark.State,
   nok: Micromark.State,
 ) {
-  const self = this;
-  let clozeStart: Micromark.Token | null = null;
-  let index = self.events.length;
-  while (index--) {
-    if (
-      self.events[index][1].type === clozeOpenToken &&
-      !self.events[index][1]._balanced
-    ) {
-      clozeStart = self.events[index][1];
-      break;
-    }
-  }
-
-  return function (code: Micromark.Code) {
-    if (!clozeStart) {
-      return nok;
-    }
-
-    // We've now balanced an earlier inactivated cloze.
-    if (clozeStart._inactive) {
-      clozeStart._balanced = true;
-      return nok(code);
-    }
-
-    effects.enter(clozeCloseToken);
-    effects.consume(code);
-    effects.exit(clozeCloseToken);
-    return ok;
+  return (code: Micromark.Code) => {
+    effects.enter(clozeToken);
+    return effects.attempt(
+      { tokenize: tokenizeClozeInterior, partial: true },
+      finish,
+      nok,
+    )(code);
   };
-}
 
-// Find all the unmatched open and close braces and mark them as plain data, so that they'll be emitted as plaintext.
-function resolveAllCloze(events: Micromark.Event[]) {
-  let index = -1;
+  // adapted from https://github.com/micromark/micromark-extension-directive/blob/main/dev/lib/factory-label.js
+  function tokenizeClozeInterior(
+    this: Micromark.TokenizeContext,
+    effects: Micromark.Effects,
+    ok: Micromark.State,
+    nok: Micromark.State,
+  ) {
+    let previous: Micromark.Token | undefined = undefined;
+    let balance = 0;
 
-  while (++index < events.length) {
-    const token = events[index][1];
+    return start;
 
-    if (token.type === clozeOpenToken || token.type === clozeCloseToken) {
-      token.type = types.data;
-      index++;
+    function start(code: Micromark.Code) {
+      effects.enter(clozeOpenToken);
+      effects.consume(code);
+      effects.exit(clozeOpenToken);
+      return afterStart;
     }
-  }
 
-  return events;
-}
-
-function resolveToCloseCloze(
-  events: Micromark.Event[],
-  context: Micromark.TokenizeContext,
-) {
-  const close = events.length - 1;
-  if (events[close][1].type !== clozeCloseToken) {
-    throw new Error(
-      "Unexpected resolution state: last token should be cloze close token",
-    );
-  }
-  let index = close - 1;
-  let open: number | null = null;
-
-  // Find the oldest unmatched opening cloze event.
-  while (index--) {
-    const token = events[index][1];
-    if (open !== null) {
-      if (token.type === clozeOpenToken && token._inactive) {
-        // A cloze containing a cloze, which we've already inactivated.
-        break;
+    function afterStart(code: Micromark.Code) {
+      if (code === codes.rightCurlyBrace) {
+        // No empty clozes.
+        return nok;
       }
-      // Mark earlier cloze openings as inactive: no clozes in clozes.
-      if (events[index][0] === "enter" && token.type === clozeOpenToken) {
-        token._inactive = true;
+
+      return lineStart(code);
+    }
+
+    function lineStart(code: Micromark.Code) {
+      if (code === codes.rightCurlyBrace && balance === 0) {
+        return atClosingBrace(code);
       }
-    } else {
+      const token = effects.enter(types.chunkText, {
+        contentType: constants.contentTypeText,
+        previous,
+      });
+      if (previous) previous.next = token;
+      previous = token;
+      return data(code);
+    }
+
+    function data(code: Micromark.Code) {
+      if (code === codes.eof) {
+        return nok(code);
+      }
+
+      if (code === codes.leftCurlyBrace) {
+        balance++;
+      }
+
+      if (code === codes.rightCurlyBrace) {
+        if (balance === 0) {
+          effects.exit(types.chunkText);
+          return atClosingBrace(code);
+        } else {
+          balance -= 1;
+        }
+      }
+
+      if (markdownLineEnding(code)) {
+        effects.consume(code);
+        effects.exit(types.chunkText);
+        return lineStart;
+      }
+
+      effects.consume(code);
+      return code === codes.backslash ? dataEscape : data;
+    }
+
+    function dataEscape(code: Micromark.Code) {
       if (
-        events[index][0] === "enter" &&
-        token.type === clozeOpenToken &&
-        !token._balanced
+        code === codes.leftCurlyBrace ||
+        code === codes.backslash ||
+        codes.rightCurlyBrace
       ) {
-        open = index;
+        effects.consume(code);
+        return data;
       }
+
+      return data(code);
+    }
+
+    function atClosingBrace(code: Micromark.Code) {
+      effects.enter(clozeCloseToken);
+      effects.consume(code);
+      effects.exit(clozeCloseToken);
+      return ok;
     }
   }
 
-  if (open === null) {
-    throw new Error("No opening cloze marker found; should be unreachable");
+  function finish(code: Micromark.Code) {
+    effects.exit(clozeToken);
+    return ok(code);
   }
+}
 
-  const clozeGroup: Micromark.Token = {
-    type: clozeToken,
-    start: Object.assign({}, events[open][1].start),
-    end: Object.assign({}, events[events.length - 1][1].end),
-  };
-
-  const clozeEvents: Micromark.Event[] = [["enter", clozeGroup, context]];
-
-  const nullConstruct = context.parser.constructs.insideSpan.null;
-  if (!nullConstruct) {
-    throw new Error("insideSpan parser unexpectedly missing");
+function resolveClozeNode(events: Micromark.Event[]) {
+  // Remove the cloze-parsing construct from the parsers used by nested cloze tokens: we don't parse nested cloze deletions.
+  for (const event of events) {
+    if (event[0] === "enter" && event[1].type === types.chunkText) {
+      const context = event[2];
+      event[2] = {
+        ...context,
+        parser: parse({
+          extensions: [
+            {
+              ...context.parser.constructs,
+              text: {
+                ...context.parser.constructs.text,
+                [codes.leftCurlyBrace]: [
+                  context.parser.constructs.text[codes.leftCurlyBrace] ?? [],
+                ]
+                  .flat()
+                  .filter((c) => c !== clozeConstruct),
+              },
+            },
+          ],
+        }),
+      };
+    }
   }
-  clozeEvents.push(
-    ...resolveAll(nullConstruct, events.slice(open + 2, close - 1), context),
-  );
-
-  clozeEvents.push(["exit", clozeGroup, context]);
-
-  events.splice(open, events.length, ...clozeEvents);
   return events;
 }
 
@@ -186,6 +195,10 @@ export default function clozePlugin(this: Processor) {
     handlers: {
       [clozeNodeType]: clozeToMarkdown,
     },
+    unsafe: [
+      { character: "{", inConstruct: [clozeNodeType] },
+      { character: "}", inConstruct: [clozeNodeType] },
+    ],
   });
 
   if (!data.micromarkExtensions) {

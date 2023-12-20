@@ -18,7 +18,7 @@
     "@withorbit/store-fs": "0.0.1",
     "mdast-util-from-markdown": "^2.0.0",
     "mdast-util-heading-range": "^4.0.0",
-    "micromark-util-resolve-all": "^2.0.0",
+    "micromark-util-character": "^2.0.1",
     "micromark-util-symbol": "^2.0.0",
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
