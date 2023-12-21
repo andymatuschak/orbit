@@ -12,7 +12,7 @@ This package contains the main Orbit GUI app for the web, iOS, Android, and macO
     * To run the Orbit iOS app on an attached device: `bun run ios --device [device name]`
     * To run the Orbit macOS app:
       * Run `bunx expo prebuild -p ios` to generate the iOS project.
-      * Run `bunx expo start` to start the Metro bundler.
+      * Run `bun run start` to start the Metro bundler.
       * Open the Xcode workspace, change the device to "My Mac", and run.
 * Deployment
     * To deploy the Orbit web app: `bun run deploy:web`

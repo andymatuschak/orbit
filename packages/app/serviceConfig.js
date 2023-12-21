@@ -14,5 +14,5 @@ module.exports = {
     : "https://withorbit.com/api",
   shouldUseLocalBackend,
 
-  appleDevelopmentTeam: "MQ22N839N8",
+  appleDevelopmentTeamID: "MQ22N839N8",
 };

@@ -24,7 +24,7 @@
     "@withorbit/ui": "0.0.1",
     "expo": "next",
     "expo-application": "~5.8.0",
-    "expo-constants": "~15.4.1",
+    "expo-constants": "~15.4.2",
     "expo-crypto": "~12.8.0",
     "expo-device": "~5.9.0",
     "expo-font": "^11.10.0",

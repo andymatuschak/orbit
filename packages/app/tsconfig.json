@@ -2,6 +2,8 @@
   "extends": ["../tsconfig.base.json", "expo/tsconfig.base"],
   "compilerOptions": {
     "module": "commonjs",
+    "jsx": "react-native",
+    "noEmit": true,
     "types": ["jest"]
   },
   "include": [

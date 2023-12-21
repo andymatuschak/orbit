@@ -7,11 +7,11 @@ import { AuthenticationClientContext } from "../authentication/authContext";
 import * as Authentication from "../authentication/index";
 import { initializeReporter } from "../errorReporting";
 import { getFirebaseAuth } from "../util/firebaseAuth";
+import { initIntentHandlers } from "../util/intents/IntentHandler.js";
 import usePageViewTracking from "../util/usePageViewTracking";
 
 if (Platform.OS === "ios" || Platform.OS === "macos") {
-  // TODO 2023-12-15
-  // initIntentHandlers();
+  initIntentHandlers();
 }
 
 export default function RootLayout() {
