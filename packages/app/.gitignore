@@ -1,8 +1,8 @@
-.expo
-web-build
-public/fonts
-.firebase
+/.expo
+/web-build
+/public/fonts
+/.firebase
 
 # These native directories should be generated on-demand using expo's Continuous Native Generation feature.
-ios
-android
+/ios
+/android
