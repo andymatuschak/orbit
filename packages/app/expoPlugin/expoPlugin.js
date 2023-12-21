@@ -1,8 +1,9 @@
 const { withPlugins } = require("expo/config-plugins");
 const serviceConfig = require("../serviceConfig");
-const withSQLImageURLLoader = require("./withSQLImageURLLoader");
 const withCatalystSupport = require("./withCatalystSupport");
 const withIngestIntent = require("./withIngestIntent");
+const withReactNativeKeyEventSupport = require("./withReactNativeKeyEventSupport");
+const withSQLImageURLLoader = require("./withSQLImageURLLoader");
 
 module.exports = function withOrbitExpoConfigPlugin(config) {
   return withPlugins(config, [
@@ -10,7 +11,8 @@ module.exports = function withOrbitExpoConfigPlugin(config) {
       withCatalystSupport,
       { developmentTeamID: serviceConfig.appleDevelopmentTeamID },
     ],
-    withSQLImageURLLoader,
     withIngestIntent,
+    withSQLImageURLLoader,
+    withReactNativeKeyEventSupport,
   ]);
 };
