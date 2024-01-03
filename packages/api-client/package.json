@@ -21,7 +21,7 @@
   "dependencies": {
     "@withorbit/api": "0.0.1",
     "@withorbit/core": "0.0.1",
-    "base64-js": "^1.5.1"
+    "react-native-blob-jsi-helper": "^0.3.1"
   },
   "scripts": {
     "build": "tsc -b",

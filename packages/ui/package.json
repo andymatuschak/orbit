@@ -38,7 +38,7 @@
   "peerDependencies": {
     "@types/react": "~18.2.45",
     "react": "^18.2.0",
-    "react-native": "0.73.0"
+    "react-native": "0.73.1"
   },
   "dependencies": {
     "@withorbit/core": "0.0.1",

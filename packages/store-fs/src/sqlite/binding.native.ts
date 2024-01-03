@@ -2,12 +2,12 @@
 // This file supplies the implementation used when running in a React Native  environment.
 
 import { SQLDatabase } from "./types.js";
-import { open, QuickSQLiteConnection } from "react-native-quick-sqlite";
+import { open, OPSQLiteConnection } from "@op-engineering/op-sqlite";
 import CustomWebSQLDatabase from "websql/custom";
 
 class RNSQLiteDatabase {
   private readonly _name: string;
-  private readonly _db: QuickSQLiteConnection;
+  private readonly _db: OPSQLiteConnection;
 
   constructor(name: string) {
     this._name = name;

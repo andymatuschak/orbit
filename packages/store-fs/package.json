@@ -9,9 +9,9 @@
   "exports": "./dist/index.js",
   "sideEffects": false,
   "dependencies": {
+    "@op-engineering/op-sqlite": "^2.0.13",
     "@withorbit/core": "0.0.1",
     "@withorbit/store-shared": "0.0.1",
-    "react-native-quick-sqlite": "^8.0.6",
     "websql": "^2.0.2"
   },
   "scripts": {

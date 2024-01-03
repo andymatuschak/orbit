@@ -29,6 +29,6 @@
   ],
   "name": "@withorbit/umbrella",
   "resolutions": {
-    "expo": "50.0.0-preview.4"
+    "expo": "50.0.0-preview.7"
   }
 }

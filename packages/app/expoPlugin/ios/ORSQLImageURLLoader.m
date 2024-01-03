@@ -6,7 +6,7 @@
 //
 
 #import "ORSQLImageURLLoader.h"
-#import <react-native-quick-sqlite/sqlite3.h>
+#import <op-sqlite/sqlite3.h>
 
 // We store user images as BLOBs in a SQLite database. This module allows them to be loaded and displayed via a special URL scheme.
 
@@ -20,14 +20,29 @@ RCT_EXPORT_MODULE();
 }
 
 - (NSString *)pathForDatabaseWithName:(NSString *)name {
-  // HACK: react-native-quick-sqlite (for now) assumes that databases are located within the app container's Documents directory. So these URLs are not full paths, but rather relative paths within the Documents directory. This code is therefore coupled with the semantics defined in react-native-quick-sqlite/Sequel.mm.
+  // HACK: op-sqlite (for now) assumes that databases are located within the app container's Documents directory. So these URLs are not full paths, but rather relative paths within the Documents directory. This code is therefore coupled with the semantics defined in OPSQLite.mm.
 
   static NSString *documentDirectoryPath;
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
-    // Get the app's document directory (to safely store database .sqlite3 file)
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-    documentDirectoryPath = [paths objectAtIndex:0];
+    // Get appGroupID value from Info.plist using key "AppGroup"
+    NSString *appGroupID = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"OPSQLite_AppGroup"];
+    NSString *documentPath;
+
+    if (appGroupID != nil) {
+      // Get the app groups container storage url
+      NSFileManager *fileManager = [NSFileManager defaultManager];
+      NSURL *storeUrl = [fileManager containerURLForSecurityApplicationGroupIdentifier:appGroupID];
+
+      if (storeUrl == nil) {
+        [NSException raise:NSGenericException format:@"OP-SQLite: Invalid AppGroup ID provided (%@). Check the value of \"AppGroup\" in your Info.plist file", appGroupID];
+      }
+
+      documentDirectoryPath = [storeUrl path];
+    } else {
+      NSArray *paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, true);
+      documentDirectoryPath = [paths objectAtIndex:0];
+    }
   });
   return [documentDirectoryPath stringByAppendingPathComponent:name];
 }

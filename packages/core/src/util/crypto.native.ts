@@ -4,12 +4,12 @@ declare module globalThis {
 }
 type WebCrypto = typeof import("node:crypto").webcrypto;
 
-if (!globalThis.crypto.getRandomValues) {
+if (!globalThis.crypto?.getRandomValues) {
   throw new Error(
     "Need to shim crypto.getRandomValues before importing this (e.g. with expo-crypto)",
   );
 }
-if (!globalThis.crypto.randomUUID) {
+if (!globalThis.crypto?.randomUUID) {
   throw new Error(
     "Need to shim crypto.randomUUID before importing this (e.g. with expo-crypto)",
   );
