@@ -19,8 +19,7 @@ import {
   SQLEventTableColumn,
   SQLTableName,
 } from "./sqlite/tables.js";
-import { execReadStatement } from "./sqlite/transactionUtils.js";
-import { SQLDatabase } from "./sqlite/types.js";
+import { SQLDatabaseBinding } from "./sqlite/types.js";
 
 const testTasks: DatabaseBackendEntityRecord<Task>[] = [
   {
@@ -73,20 +72,20 @@ async function putEntities(
 describe("task components", () => {
   test("created on insert", async () => {
     await putEntities(backend, testTasks);
-    const results = await execReadStatement(
-      await backend.__accessDBForTesting(),
+    const db = await backend.__accessDBForTesting();
+    const results = await db.executeSql(
       `SELECT * FROM derived_taskComponents WHERE taskID=? ORDER BY componentID`,
       ["a"],
     );
     expect(results.rows.length).toBe(2);
-    expect(results.rows.item(0)).toMatchInlineSnapshot(`
+    expect(results.rows[0]).toMatchInlineSnapshot(`
       {
         "componentID": "a",
         "dueTimestampMillis": 50,
         "taskID": "a",
       }
     `);
-    expect(results.rows.item(1)).toMatchInlineSnapshot(`
+    expect(results.rows[1]).toMatchInlineSnapshot(`
       {
         "componentID": "b",
         "dueTimestampMillis": 50,
@@ -110,13 +109,13 @@ describe("task components", () => {
     };
     await putEntities(backend, [updatedRecord]);
 
-    const results = await execReadStatement(
-      await backend.__accessDBForTesting(),
+    const db = await backend.__accessDBForTesting();
+    const results = await db.executeSql(
       `SELECT * FROM derived_taskComponents WHERE taskID=? ORDER BY componentID`,
       ["a"],
     );
     expect(results.rows.length).toBe(1);
-    expect(results.rows.item(0)).toMatchInlineSnapshot(`
+    expect(results.rows[0]).toMatchInlineSnapshot(`
       {
         "componentID": "a",
         "dueTimestampMillis": 300,
@@ -133,8 +132,8 @@ describe("task components", () => {
       lastEventTimestampMillis: 20,
     };
     await putEntities(backend, [updatedRecord]);
-    const results = await execReadStatement(
-      await backend.__accessDBForTesting(),
+    const db = await backend.__accessDBForTesting();
+    const results = await db.executeSql(
       `SELECT * FROM derived_taskComponents WHERE taskID=? ORDER BY componentID`,
       ["a"],
     );
@@ -281,28 +280,30 @@ describe("20230726103155_derived_taskComponents_whenNotDeleted", () => {
         })),
       );
       const oldCount = (
-        await execReadStatement(
-          await backend.__accessDBForTesting(),
-          `SELECT * FROM derived_taskComponents`,
-        )
+        await (
+          await backend.__accessDBForTesting()
+        ).executeSql(`SELECT * FROM derived_taskComponents`)
       ).rows.length;
       await backend.close();
 
       backend = new SQLDatabaseBackend(tempPath);
-      const results = await execReadStatement(
-        await backend.__accessDBForTesting(),
-        `SELECT * FROM derived_taskComponents`,
-      );
+      const results = await (
+        await backend.__accessDBForTesting()
+      ).executeSql(`SELECT * FROM derived_taskComponents`);
       expect(results.rows.length).toBe(isDeleted ? 0 : oldCount);
     },
   );
 });
 
-async function getQueryPlan(db: SQLDatabase, statement: string, args?: any[]) {
+async function getQueryPlan(
+  db: SQLDatabaseBinding,
+  statement: string,
+  args?: any[],
+) {
   return new Promise((resolve, reject) => {
     // HACK: Relying on internals of node-websql because it won't naturally let us run EXPLAIN QUERY PLAN (which is not in the WebSQL standard).
     // @ts-ignore
-    db._db._db.all(
+    db._db.all(
       "EXPLAIN QUERY PLAN " + statement,
       args,
       // @ts-ignore

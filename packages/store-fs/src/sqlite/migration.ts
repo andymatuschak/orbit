@@ -1,11 +1,10 @@
 import { getMetadataValues, setMetadataValues } from "./metadata.js";
 import { latestSchemaVersionNumber, migrations } from "./migrations/index.js";
 import { SQLMetadataTableKey, SQLTableName } from "./tables.js";
-import { execReadStatement, execTransaction } from "./transactionUtils.js";
-import { SQLDatabase } from "./types.js";
+import { SQLDatabaseBinding } from "./types.js";
 
 export async function performMigration(
-  db: SQLDatabase,
+  db: SQLDatabaseBinding,
   logProgress?: boolean,
   throughSchemaVersionNumber?: number,
 ): Promise<void> {
@@ -17,7 +16,7 @@ export async function performMigration(
     }
   };
 
-  await execTransaction(db, (tx) => {
+  await db.transaction((tx) => {
     const targetVersionNumber =
       throughSchemaVersionNumber ?? latestSchemaVersionNumber;
     if (currentVersion < targetVersionNumber) {
@@ -53,10 +52,11 @@ export async function performMigration(
   });
 }
 
-export async function getSchemaVersionNumber(db: SQLDatabase): Promise<number> {
+export async function getSchemaVersionNumber(
+  db: SQLDatabaseBinding,
+): Promise<number> {
   // First we check to see if the configuration table exists at all.
-  const tableCheckResults = await execReadStatement(
-    db,
+  const tableCheckResults = await db.executeSql(
     `SELECT name FROM sqlite_master WHERE type='table' AND name='${SQLTableName.Metadata}';`,
   );
 

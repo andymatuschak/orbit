@@ -1,11 +1,14 @@
 // This file and databaseBinding.ts provide a unified binding for the external SQLite database APIs we use on those platforms.
-// This file supplies the implementation used when running in a React Native  environment.
+// This file supplies the implementation used when running in a React Native environment.
 
-import { SQLDatabase } from "./types.js";
-import { open, OPSQLiteConnection } from "@op-engineering/op-sqlite";
-import CustomWebSQLDatabase from "websql/custom";
+import {
+  open,
+  OPSQLiteConnection,
+  SQLBatchTuple,
+} from "@op-engineering/op-sqlite";
+import { SQLDatabaseBinding, SQLResult, SQLTransaction } from "./types.js";
 
-class RNSQLiteDatabase {
+class RNSQLiteDatabase implements SQLDatabaseBinding {
   private readonly _name: string;
   private readonly _db: OPSQLiteConnection;
 
@@ -14,45 +17,36 @@ class RNSQLiteDatabase {
     this._db = open({ name });
   }
 
-  exec(
-    queries: CustomWebSQLDatabase.WebSQLQuery[],
-    readOnly: boolean,
-    callback: (err: any, results: CustomWebSQLDatabase.WebSQLResult[]) => void,
-  ) {
-    // TODO: check queries vs. readOnly flag
-    const results = new Array<CustomWebSQLDatabase.WebSQLResult>(
-      queries.length,
-    );
+  async executeSql(sqlStatement: string, args?: any[]): Promise<SQLResult> {
+    const result = await this._db.executeAsync(sqlStatement, args);
+    if (!result.rows) {
+      throw new Error("SQL query failure");
+    }
+    return {
+      rows: result.rows._array,
+    };
+  }
 
-    queries.forEach((query, i) => {
-      try {
-        const result = this._db.execute(query.sql, query.args);
-        if (!result.rows) {
-          throw new Error("SQL query failure");
+  async transaction(callback: (tx: SQLTransaction) => void): Promise<void> {
+    const statements: SQLBatchTuple[] = [];
+    callback({
+      executeSql: (sqlStatement: string, args?: any[]): void => {
+        if (args) {
+          statements.push([sqlStatement, args]);
+        } else {
+          statements.push([sqlStatement]);
         }
-        results[i] = {
-          insertId: result.insertId,
-          rowsAffected: result.rowsAffected,
-          rows: result.rows._array,
-          error: undefined,
-        };
-      } catch (error) {
-        results[i] = {
-          error: error instanceof Error ? error : new Error(String(error)),
-          rows: undefined,
-          rowsAffected: undefined,
-          insertId: undefined,
-        };
-      }
+      },
     });
-    callback(null, results);
+
+    if (statements.length > 0) {
+      await this._db.executeBatchAsync(statements);
+    }
   }
 }
 
-const openRNSQLiteDatabase = CustomWebSQLDatabase(RNSQLiteDatabase);
-
-export function openDatabase(subpath: string): SQLDatabase {
-  return openRNSQLiteDatabase(subpath, "", "", 1);
+export function openDatabase(subpath: string): SQLDatabaseBinding {
+  return new RNSQLiteDatabase(subpath);
 }
 
 // Convert a Uint8Array into the representation expected by this SQLite implementation for BLOB columns.

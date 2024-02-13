@@ -24,8 +24,7 @@ import {
   SQLEventTableColumn,
   SQLTableName,
 } from "./sqlite/tables.js";
-import { execReadStatement, execTransaction } from "./sqlite/transactionUtils.js";
-import { SQLDatabase, SQLTransaction } from "./sqlite/types.js";
+import { SQLDatabaseBinding, SQLTransaction } from "./sqlite/types.js";
 
 /*
 
@@ -38,7 +37,7 @@ Running list of implementation problems / gotchas:
  */
 
 export class SQLDatabaseBackend implements DatabaseBackend {
-  private _db: SQLDatabase | null;
+  private _db: SQLDatabaseBinding | null;
   private readonly _migrationPromise: Promise<void>;
   private readonly _path: string;
 
@@ -117,7 +116,8 @@ export class SQLDatabaseBackend implements DatabaseBackend {
       ]);
     }
 
-    await execTransaction(await this._ensureDB(), (transaction) => {
+    const db = await this._ensureDB();
+    await db.transaction((transaction) => {
       if (events.length > 0) {
         SQLDatabaseBackend._put({
           transaction,
@@ -183,14 +183,11 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     query: DatabaseEntityQuery<E>,
   ): Promise<DatabaseBackendEntityRecord<E>[]> {
     const sqlQuery = constructListEntitySQLQuery(query);
-    const results = await execReadStatement(
-      await this._ensureDB(),
-      sqlQuery.statement,
-      sqlQuery.args,
-    );
+    const db = await this._ensureDB();
+    const results = await db.executeSql(sqlQuery.statement, sqlQuery.args);
     const output: DatabaseBackendEntityRecord<E>[] = [];
     for (let i = 0; i < results.rows.length; i++) {
-      const row = results.rows.item(i);
+      const row = results.rows[i];
       output.push({
         entity: JSON.parse(row[SQLEntityTableColumn.Data]),
         lastEventID: row[SQLEntityTableColumn.LastEventID],
@@ -203,18 +200,12 @@ export class SQLDatabaseBackend implements DatabaseBackend {
 
   async listEvents(query: DatabaseEventQuery): Promise<Event[]> {
     const sqlQuery = constructListEventSQLQuery(query);
-    const results = await execReadStatement(
-      await this._ensureDB(),
-      sqlQuery.statement,
-      sqlQuery.args,
-    );
+    const db = await this._ensureDB();
+    const results = await db.executeSql(sqlQuery.statement, sqlQuery.args);
 
-    const output: Event[] = [];
-    for (let i = 0; i < results.rows.length; i++) {
-      const row = results.rows.item(i);
-      output.push(JSON.parse(row[SQLEventTableColumn.Data]));
-    }
-    return output;
+    return results.rows.map(
+      (row) => JSON.parse(row[SQLEventTableColumn.Data]) as Event,
+    );
   }
 
   async getMetadataValues<Key extends string>(
@@ -226,8 +217,8 @@ export class SQLDatabaseBackend implements DatabaseBackend {
 
   async setMetadataValues(values: Map<string, string | null>): Promise<void> {
     const db = await this._ensureDB();
-    await execTransaction(db, async (tx) => {
-      await setMetadataValues(tx, values);
+    await db.transaction(async (tx) => {
+      setMetadataValues(tx, values);
     });
   }
 
@@ -237,7 +228,7 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     type: AttachmentMIMEType,
   ): Promise<void> {
     const db = await this._ensureDB();
-    await execTransaction(db, async (transaction) => {
+    await db.transaction((transaction) => {
       SQLDatabaseBackend._put({
         transaction,
         tableName: SQLTableName.Attachments,
@@ -348,22 +339,21 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     rowMapping: (row: { [C in Column]: any }) => [id: ID, value: Output],
   ): Promise<Map<ID, Output>> {
     const db = await this._ensureDB();
-    const resultSet = await execReadStatement(
-      db,
+    const resultSet = await db.executeSql(
       constructGetByIDSQLQuery(tableName, idColumnName, columnNames, ids),
       ids,
     );
     const { rows } = resultSet;
 
     const output: Map<ID, Output> = new Map();
-    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-      const [id, value] = rowMapping(rows.item(rowIndex));
+    for (const row of rows) {
+      const [id, value] = rowMapping(row);
       output.set(id, value);
     }
     return output;
   }
 
-  private async _ensureDB(): Promise<SQLDatabase> {
+  private async _ensureDB(): Promise<SQLDatabaseBinding> {
     if (this._db) {
       await this._migrationPromise;
       return this._db;
@@ -372,7 +362,7 @@ export class SQLDatabaseBackend implements DatabaseBackend {
     }
   }
 
-  async __accessDBForTesting(): Promise<SQLDatabase> {
+  async __accessDBForTesting(): Promise<SQLDatabaseBinding> {
     return this._ensureDB();
   }
 }

@@ -1,43 +1,27 @@
 import { SQLMetadataTableKey, SQLTableName } from "./tables.js";
-import { execReadTransaction } from "./transactionUtils.js";
-import {
-  SQLDatabase,
-  SQLStatementCallback,
-  SQLStatementErrorCallback,
-  SQLTransaction,
-} from "./types.js";
+import { SQLDatabaseBinding, SQLTransaction } from "./types.js";
 
 export async function getMetadataValues<
   Key extends SQLMetadataTableKey | string,
->(db: SQLDatabase, keys: Key[]): Promise<Map<Key, string>> {
+>(db: SQLDatabaseBinding, keys: Key[]): Promise<Map<Key, string>> {
   const results: Map<Key, string> = new Map();
-  await execReadTransaction(db, (tx) => {
-    for (const key of keys) {
-      tx.executeSql(
-        `SELECT value FROM ${SQLTableName.Metadata} WHERE key=?`,
-        [key],
-        (transaction, resultSet) => {
-          if (resultSet.rows.length > 0) {
-            const value = resultSet.rows.item(0)["value"];
-            if (value !== null) {
-              results.set(key, value);
-            }
-          }
-        },
-        (transaction, error) => {
-          throw error;
-        },
-      );
+  const resultSet = await db.executeSql(
+    `SELECT key,value from ${SQLTableName.Metadata} WHERE key IN (${keys
+      .map(() => "?")
+      .join(",")})`,
+    keys,
+  );
+  for (const row of resultSet.rows) {
+    if (row.value) {
+      results.set(row.key, row.value);
     }
-  });
+  }
   return results;
 }
 
 export function setMetadataValues<Key extends SQLMetadataTableKey | string>(
   tx: SQLTransaction,
   keys: Map<Key, string | null>,
-  successCallback?: SQLStatementCallback,
-  errorCallback?: SQLStatementErrorCallback,
 ): void {
   const entries = [...keys.entries()];
   const placeholderString = entries.map(() => `(?,?)`).join(",");
@@ -45,7 +29,5 @@ export function setMetadataValues<Key extends SQLMetadataTableKey | string>(
   tx.executeSql(
     `REPLACE INTO ${SQLTableName.Metadata} (key, value) VALUES ${placeholderString}`,
     entries.flat(),
-    successCallback,
-    errorCallback,
   );
 }
