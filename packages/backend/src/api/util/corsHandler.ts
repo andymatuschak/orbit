@@ -7,6 +7,7 @@ const corsHandler: express.RequestHandler = cors({
     /^https?:\/\/localhost(:\d+)?$/,
     // HACK for fall 2022 prototype
     "https://orbit-app--fall-2022-yzhqe6jr.web.app",
+    "https://orbit-mk.vercel.app",
   ],
 });
 export default corsHandler;
