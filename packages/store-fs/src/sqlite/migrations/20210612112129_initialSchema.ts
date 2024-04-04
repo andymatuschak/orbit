@@ -42,19 +42,19 @@ const migration: SQLMigration = {
     `
     CREATE TRIGGER entities_taskComponents_insert AFTER INSERT ON entities BEGIN
       INSERT INTO derived_taskComponents (taskID, componentID, dueTimestampMillis)
-      SELECT new.id, key, json_extract(value, "$.dueTimestampMillis") FROM json_each(json_extract(new.data, "$.componentStates")) WHERE new.entityType = "${EntityType.Task}";
+      SELECT new.id, key, json_extract(value, '$.dueTimestampMillis') FROM json_each(json_extract(new.data, '$.componentStates')) WHERE new.entityType = '${EntityType.Task}';
     END
     `,
     `
     CREATE TRIGGER entities_taskComponents_update AFTER UPDATE ON entities BEGIN
-      DELETE FROM derived_taskComponents WHERE taskID = old.id AND old.entityType = "${EntityType.Task}";
+      DELETE FROM derived_taskComponents WHERE taskID = old.id AND old.entityType = '${EntityType.Task}';
       INSERT INTO derived_taskComponents (taskID, componentID, dueTimestampMillis)
-      SELECT new.id, key, json_extract(value, "$.dueTimestampMillis") FROM json_each(json_extract(new.data, "$.componentStates")) WHERE new.entityType = "${EntityType.Task}";
+      SELECT new.id, key, json_extract(value, '$.dueTimestampMillis') FROM json_each(json_extract(new.data, '$.componentStates')) WHERE new.entityType = '${EntityType.Task}';
     END
     `,
     `
     CREATE TRIGGER entities_taskComponents_delete AFTER DELETE ON entities BEGIN
-      DELETE FROM derived_taskComponents WHERE taskID = old.id AND old.entityType = "${EntityType.Task}";
+      DELETE FROM derived_taskComponents WHERE taskID = old.id AND old.entityType = '${EntityType.Task}';
     END
     `,
     `CREATE INDEX derived_taskComponents_dueTimestampMillis ON derived_taskComponents (dueTimestampMillis)`,

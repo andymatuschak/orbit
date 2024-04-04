@@ -12,7 +12,7 @@
     "@op-engineering/op-sqlite": "^2.0.13",
     "@withorbit/core": "0.0.1",
     "@withorbit/store-shared": "0.0.1",
-    "sqlite3": "^5.1.7"
+    "better-sqlite3": "^9.4.5"
   },
   "scripts": {
     "build": "tsc -b",
@@ -23,6 +23,7 @@
     "@babel/plugin-syntax-import-attributes": "^7.23.3",
     "@babel/preset-env": "^7.14.7",
     "@babel/preset-typescript": "^7.14.5",
+    "@types/better-sqlite3": "^7.6.9",
     "@types/jest": "^29.5.5",
     "@types/node": "^20.10.4",
     "@withorbit/sample-data": "0.0.1",

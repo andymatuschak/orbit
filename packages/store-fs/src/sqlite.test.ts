@@ -1,4 +1,4 @@
-import { Entity, EntityType, EventID, Task, TaskID } from "@withorbit/core";
+import { EntityType, EventID, EventType, Task, TaskID } from "@withorbit/core";
 import { createTestTask } from "@withorbit/sample-data";
 import {
   DatabaseBackend,
@@ -59,19 +59,26 @@ test("DB automatically migrates", async () => {
   expect(await getSchemaVersionNumber(db)).toBe(latestSchemaVersionNumber);
 });
 
-async function putEntities(
+async function putTasks(
   backend: DatabaseBackend,
-  entities: DatabaseBackendEntityRecord<Entity>[],
+  entities: DatabaseBackendEntityRecord<Task>[],
 ) {
   await backend.updateEntities(
-    [],
+    entities.map((e) => ({
+      id: e.lastEventID,
+      type: EventType.TaskIngest,
+      spec: e.entity.spec,
+      entityID: e.entity.id,
+      timestampMillis: e.lastEventTimestampMillis,
+      provenance: null,
+    })),
     async () => new Map(entities.map((e) => [e.entity.id, e])),
   );
 }
 
 describe("task components", () => {
   test("created on insert", async () => {
-    await putEntities(backend, testTasks);
+    await putTasks(backend, testTasks);
     const db = await backend.__accessDBForTesting();
     const results = await db.executeSql(
       `SELECT * FROM derived_taskComponents WHERE taskID=? ORDER BY componentID`,
@@ -95,7 +102,7 @@ describe("task components", () => {
   });
 
   test("modified on update", async () => {
-    await putEntities(backend, testTasks);
+    await putTasks(backend, testTasks);
 
     const updatedTask = createTestTask({
       id: "a",
@@ -107,7 +114,7 @@ describe("task components", () => {
       lastEventID: "y" as EventID,
       lastEventTimestampMillis: 20,
     };
-    await putEntities(backend, [updatedRecord]);
+    await putTasks(backend, [updatedRecord]);
 
     const db = await backend.__accessDBForTesting();
     const results = await db.executeSql(
@@ -125,13 +132,13 @@ describe("task components", () => {
   });
 
   test("removed when deleted", async () => {
-    await putEntities(backend, testTasks);
+    await putTasks(backend, testTasks);
     const updatedRecord: DatabaseBackendEntityRecord<Task> = {
       entity: { ...testTasks[0].entity, isDeleted: true },
       lastEventID: "y" as EventID,
       lastEventTimestampMillis: 20,
     };
-    await putEntities(backend, [updatedRecord]);
+    await putTasks(backend, [updatedRecord]);
     const db = await backend.__accessDBForTesting();
     const results = await db.executeSql(
       `SELECT * FROM derived_taskComponents WHERE taskID=? ORDER BY componentID`,
@@ -152,6 +159,7 @@ describe("indexing", () => {
         [SQLEntityTableColumn.Data],
         ["test"],
       ),
+      ["test"],
     );
     expect(plan).toMatchInlineSnapshot(`
       [
@@ -169,6 +177,7 @@ describe("indexing", () => {
         [SQLEventTableColumn.Data],
         ["test"],
       ),
+      ["test"],
     );
     expect(plan).toMatchInlineSnapshot(`
       [
@@ -272,7 +281,7 @@ describe("20230726103155_derived_taskComponents_whenNotDeleted", () => {
       backend = new SQLDatabaseBackend(tempPath, {
         schemaVersion: 20211019170802,
       });
-      await putEntities(
+      await putTasks(
         backend,
         testTasks.map((record) => ({
           ...record,
@@ -300,20 +309,6 @@ async function getQueryPlan(
   statement: string,
   args?: any[],
 ) {
-  return new Promise((resolve, reject) => {
-    // HACK: Relying on internals of node-websql because it won't naturally let us run EXPLAIN QUERY PLAN (which is not in the WebSQL standard).
-    // @ts-ignore
-    db._db.all(
-      "EXPLAIN QUERY PLAN " + statement,
-      args,
-      // @ts-ignore
-      (error, rows) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(rows.map(({ detail }: { detail: string }) => detail));
-        }
-      },
-    );
-  });
+  const result = await db.executeSql("EXPLAIN QUERY PLAN " + statement, args);
+  return result.rows.map(({ detail }: { detail: string }) => detail);
 }
