@@ -10,7 +10,7 @@
     "build": "tsc -b",
     "test": "jest",
     "interpret": "bun src/bin/run.ts",
-    "migrateNoteSync": "bun src/bin/migrateNoteSync.ts"
+    "migrateNoteSync": "node dist/bin/migrateNoteSync.js"
   },
   "dependencies": {
     "@withorbit/core": "0.0.1",

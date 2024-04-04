@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc -b",
     "test": "jest",
-    "sync": "bun src/bin/run.ts"
+    "sync": "node dist/bin/run.js"
   },
   "devDependencies": {
     "@babel/core": "^7.14.6",

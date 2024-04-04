@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc -b",
     "test": "jest",
-    "ingest": "bun src/bin/run.ts",
+    "ingest": "node dist/bin/run.js",
     "generateSchema": "typescript-json-schema src/ingestible.ts Ingestible -o src/ingestible.json --noExtraProps --required --ignoreErrors --strictNullChecks"
   },
   "dependencies": {
