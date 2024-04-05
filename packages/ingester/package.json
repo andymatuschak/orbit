@@ -16,7 +16,8 @@
     "@withorbit/core": "0.0.1",
     "@withorbit/store-fs": "0.0.1",
     "@withorbit/store-shared": "0.0.1",
-    "ajv": "^8.6.2"
+    "ajv": "^8.6.2",
+    "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
     "@babel/plugin-syntax-import-attributes": "^7.23.3",

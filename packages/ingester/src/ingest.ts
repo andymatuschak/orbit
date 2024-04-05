@@ -17,6 +17,7 @@ import {
   IngestibleItemIdentifier,
   IngestibleSource,
 } from "./ingestible.js";
+import isEqual from "lodash.isequal";
 
 type IngestOptions = {
   ingestDateMillis: number;
@@ -43,6 +44,7 @@ export async function ingestSources(
     IngestibleItemIdentifier,
     TaskUpdateDeletedEvent
   >();
+  const updateProvenanceEvents: TaskUpdateProvenanceEvent[] = [];
 
   // TODO: create a new query or extend the entity query such that
   // we can filter on only sources that would have used this ingester
@@ -58,25 +60,36 @@ export async function ingestSources(
   const timeMillis = opts.ingestDateMillis;
 
   for (const source of sources) {
-    const existingEntity = existingGroupedEntities.get(source.identifier);
-    if (existingEntity) {
+    const existingEntities = existingGroupedEntities.get(source.identifier);
+    const provenance = createProvenanceForSource(source);
+    if (existingEntities) {
       // determine which tasks are new and which have been deleted
       const existingEntitiesByItemIdentifiers =
-        mapEntitiesByItemIdentifier(existingEntity);
+        mapEntitiesByItemIdentifier(existingEntities);
       const ingestibleItemsByItemIdentifiers =
         mapIngestibleItemsByItemIdentifier(source.items);
 
       // determine which tasks are newly added
       for (const [key, potentialNewItem] of ingestibleItemsByItemIdentifiers) {
-        if (!existingEntitiesByItemIdentifiers.get(key)) {
+        const existingEntity = existingEntitiesByItemIdentifiers.get(key);
+        if (existingEntity) {
+          // task exists
+          if (!isEqual(provenance, existingEntity.provenance)) {
+            // task has been updated
+            updateProvenanceEvents.push(
+              createUpdateProvenanceEvent(
+                existingEntity.id,
+                timeMillis,
+                provenance,
+              ),
+            );
+          }
+        } else {
           // task is new
           ingestEvents.set(
             key,
             createIngestTaskForSource(source, timeMillis)(potentialNewItem),
           );
-        } else {
-          // task exists
-          // TODO: we should make sure the content is up to date
         }
       }
 
@@ -100,7 +113,6 @@ export async function ingestSources(
   }
 
   // check if the inserts / deletes are really just moves
-  const updateProvenanceEvents: TaskUpdateProvenanceEvent[] = [];
   for (const [ingestedEventItemIdentifier, ingestEvent] of ingestEvents) {
     const deleteEvent = deleteEvents.get(ingestedEventItemIdentifier);
     if (deleteEvent) {
@@ -108,8 +120,15 @@ export async function ingestSources(
       // delete the old events and generate an update provenance event instead
       deleteEvents.delete(ingestedEventItemIdentifier);
       ingestEvents.delete(ingestedEventItemIdentifier);
+      if (!ingestEvent.provenance) {
+        throw new Error("all ingest tasks should have provenance");
+      }
       updateProvenanceEvents.push(
-        createUpdateProvenanceEvent(deleteEvent.entityID, ingestEvent),
+        createUpdateProvenanceEvent(
+          deleteEvent.entityID,
+          ingestEvent.timestampMillis,
+          ingestEvent.provenance,
+        ),
       );
     }
   }
@@ -165,10 +184,7 @@ function mapIngestibleItemsByItemIdentifier(items: IngestibleItem[]) {
   return mapping;
 }
 
-function createIngestTaskForSource(
-  source: IngestibleSource,
-  insertTimestampMilis: number,
-): (item: IngestibleItem) => TaskIngestEvent {
+function createProvenanceForSource(source: IngestibleSource) {
   const provenance: TaskProvenance = {
     identifier: source.identifier,
     title: source.title,
@@ -177,6 +193,14 @@ function createIngestTaskForSource(
       ? { colorPaletteName: source.colorPaletteName }
       : {}),
   };
+  return provenance;
+}
+
+function createIngestTaskForSource(
+  source: IngestibleSource,
+  insertTimestampMilis: number,
+): (item: IngestibleItem) => TaskIngestEvent {
+  const provenance = createProvenanceForSource(source);
   return (item) => {
     return {
       id: generateUniqueID(),
@@ -209,13 +233,14 @@ function createDeleteTaskEvent(
 
 function createUpdateProvenanceEvent(
   originalEntityId: TaskID,
-  ingestEvent: TaskIngestEvent,
+  timestampMillis: number,
+  provenance: TaskProvenance,
 ): TaskUpdateProvenanceEvent {
   return {
     type: EventType.TaskUpdateProvenanceEvent,
     id: generateUniqueID(),
     entityID: originalEntityId,
-    timestampMillis: ingestEvent.timestampMillis,
-    provenance: ingestEvent.provenance,
+    timestampMillis,
+    provenance,
   };
 }

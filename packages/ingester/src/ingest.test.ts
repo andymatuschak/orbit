@@ -215,6 +215,38 @@ it("only ingests specified sources", async () => {
   expect(events).toHaveLength(0);
 });
 
+it("updates provenance when source metadata changes", async () => {
+  const mockIngestEvent = mockQATask({
+    body: "Question",
+    answer: "Answer",
+    provenance: { identifier: "source_identifier", title: "Existing Source" },
+  });
+  await store.database.putEvents([mockIngestEvent]);
+  const sources: IngestibleSource[] = [
+    {
+      identifier: "source_identifier" as IngestibleSourceIdentifier,
+      title: "Renamed Source",
+      items: [
+        {
+          identifier: "Question+Answer" as IngestibleItemIdentifier,
+          spec: mockIngestEvent.spec,
+        },
+      ],
+    },
+  ];
+
+  const events = await ingestSources(sources, store);
+  expect(events).toHaveLength(1);
+  expect(events[0].type).toBe(EventType.TaskUpdateProvenanceEvent);
+  const event = events[0] as TaskUpdateProvenanceEvent;
+
+  expect(event.entityID).toEqual(mockIngestEvent.entityID);
+  expect(event.provenance).toEqual({
+    identifier: "source_identifier",
+    title: "Renamed Source",
+  });
+});
+
 it("moves entities across sources", async () => {
   const mockIngestEvent = mockQATask({
     body: "Question",
