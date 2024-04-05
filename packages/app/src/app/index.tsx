@@ -1,1 +1,1 @@
-export { default } from "./review.js";
+export { default } from "../homeRedirect/homeRedirect.js";
