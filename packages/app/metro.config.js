@@ -10,13 +10,6 @@ const workspaceRoot = path.resolve(projectRoot, "../..");
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-// Remove unused code based on Platform (https://docs.expo.dev/guides/customizing-metro/#tree-shaking-by-platform)
-config.transformer.getTransformOptions = async () => ({
-  transform: {
-    experimentalImportSupport: true,
-  },
-});
-
 // MONOREPO SUPPORT (https://docs.expo.dev/guides/monorepos/)
 // ================
 
