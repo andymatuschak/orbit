@@ -48,11 +48,14 @@
         {
           "origin": "https://withorbit.com",
           "asyncRoutes": {
-            "web": false,
+            "web": true,
             "default": "development"
           }
         }
       ]
-    ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }
