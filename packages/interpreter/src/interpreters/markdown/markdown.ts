@@ -4,6 +4,7 @@ import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
 import remarkWikiLink from "remark-wiki-link";
+import remarkFrontmatter from "remark-frontmatter";
 import { unified } from "unified";
 import unist from "unist";
 import { parents } from "unist-util-parents";
@@ -59,6 +60,7 @@ export const markdownProcessor = unified()
     rule: "-",
     ruleSpaces: false,
   })
+  .use(remarkFrontmatter)
   .use(remarkMath);
 
 export const processor = markdownProcessor()

@@ -3,7 +3,8 @@ import { processor } from "../markdown.js";
 
 export function getNoteTitle(noteRoot: mdast.Root): string | null {
   if (noteRoot.children.length > 0) {
-    const firstNode = noteRoot.children[0];
+    // filter out yaml frontmatter
+    const firstNode = noteRoot.children.filter((n) => n.type !== "yaml")[0];
     if (firstNode.type === "heading") {
       return processor
         .stringify({

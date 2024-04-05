@@ -23,4 +23,13 @@ More text`;
     const tree = processor.runSync(processor.parse("")) as mdast.Root;
     expect(getNoteTitle(tree)).toBeNull();
   });
+
+  test("skips frontmatter", () => {
+    const input = `---
+x: y
+---
+# Title`;
+    const tree = processor.runSync(processor.parse(input)) as mdast.Root;
+    expect(getNoteTitle(tree)).toEqual("Title");
+  });
 });
