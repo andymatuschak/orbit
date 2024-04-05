@@ -7,6 +7,7 @@
     "ios": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo run:ios",
     "web": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo start --web -p 19006",
     "android": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo run:android",
+    "analyze:web": "source-map-explorer 'web-build/_expo/static/js/web/*.js' 'web-build/_expo/static/js/web/*.js.map'",
     "build:web": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo export -p web --output-dir web-build --source-maps",
     "deploy:web": "EXPO_USE_METRO_WORKSPACE_ROOT=1 scripts/deploy_web.sh",
     "generateBrowserCompatibility": "scripts/generate_browser_compatibility_regex.sh"
@@ -53,6 +54,7 @@
     "@types/react": "~18.2.45",
     "@withorbit/sample-data": "0.0.1",
     "expo-dev-client": "~3.3.4",
+    "source-map-explorer": "^2.5.3",
     "typescript": "^5.1.3"
   },
   "private": true
