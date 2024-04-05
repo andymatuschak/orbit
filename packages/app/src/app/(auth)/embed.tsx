@@ -30,29 +30,29 @@ import {
 import React, { useEffect, useMemo, useState } from "react";
 import { Animated, Text, View } from "react-native";
 
-import { useAuthenticationClient } from "../authentication/authContext.js";
-import { ReviewSessionContainer } from "../ReviewSessionContainer.js";
+import { useAuthenticationClient } from "../../authentication/authContext.js";
+import { ReviewSessionContainer } from "../../ReviewSessionContainer.js";
 import {
   ReviewSessionManagerState,
   useReviewSessionManager,
-} from "../reviewSessionManager.js";
-import { useAPIClient } from "../util/useAPIClient.js";
-import useByrefCallback from "../util/useByrefCallback.js";
-import EmbeddedBanner from "../embedded/EmbeddedBanner.js";
-import { useEmbeddedNetworkQueue } from "../embedded/embeddedNetworkQueue.js";
-import { sendUpdatedReviewItemToHost } from "../embedded/ipc/sendUpdatedReviewItemToHost.js";
-import { useEmbeddedHostState } from "../embedded/ipc/useEmbeddedHostState.js";
-import { getActionsRecordForMarking } from "../embedded/markingActions.js";
-import OnboardingModalWeb from "../embedded/OnboardingModal.web.js";
-import { TestModeBanner } from "../embedded/TestModeBanner.js";
+} from "../../reviewSessionManager.js";
+import { useAPIClient } from "../../util/useAPIClient.js";
+import useByrefCallback from "../../util/useByrefCallback.js";
+import EmbeddedBanner from "../../embedded/EmbeddedBanner.js";
+import { useEmbeddedNetworkQueue } from "../../embedded/embeddedNetworkQueue.js";
+import { sendUpdatedReviewItemToHost } from "../../embedded/ipc/sendUpdatedReviewItemToHost.js";
+import { useEmbeddedHostState } from "../../embedded/ipc/useEmbeddedHostState.js";
+import { getActionsRecordForMarking } from "../../embedded/markingActions.js";
+import OnboardingModalWeb from "../../embedded/OnboardingModal.web.js";
+import { TestModeBanner } from "../../embedded/TestModeBanner.js";
 import {
   EmbeddedAuthenticationState,
   useEmbeddedAuthenticationState,
-} from "../embedded/useEmbeddedAuthenticationState.js";
-import { useRemoteTaskStates } from "../embedded/useRemoteTaskStates.js";
-import { findItemsToRetry } from "../embedded/util/findItemsToRetry.js";
-import getEmbeddedColorPalette from "../embedded/util/getEmbeddedColorPalette.js";
-import getEmbeddedScreenConfigurationFromURL from "../embedded/util/getEmbeddedScreenConfigurationFromURL.js";
+} from "../../embedded/useEmbeddedAuthenticationState.js";
+import { useRemoteTaskStates } from "../../embedded/useRemoteTaskStates.js";
+import { findItemsToRetry } from "../../embedded/util/findItemsToRetry.js";
+import getEmbeddedColorPalette from "../../embedded/util/getEmbeddedColorPalette.js";
+import getEmbeddedScreenConfigurationFromURL from "../../embedded/util/getEmbeddedScreenConfigurationFromURL.js";
 
 function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
   return sessionItems.map((item) => {

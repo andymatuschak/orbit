@@ -1,13 +1,13 @@
 import React from "react";
 import { Platform } from "react-native";
-import { AuthenticationClient } from "../authentication/index.js";
+import { AuthenticationClient } from "../../authentication/index.js";
 import {
   useAuthenticationClient,
   useCurrentUserRecord,
-} from "../authentication/authContext.js";
+} from "../../authentication/authContext.js";
 import Login from "./login.js";
-import { LoadingScreen } from "../reviewSession/LoadingScreen.js";
-import ReviewSession from "../reviewSession/ReviewSession.js";
+import { LoadingScreen } from "../../reviewSession/LoadingScreen.js";
+import ReviewSession from "../../reviewSession/ReviewSession.js";
 
 function extractAccessCode(): string | null {
   if (Platform.OS === "web") {
