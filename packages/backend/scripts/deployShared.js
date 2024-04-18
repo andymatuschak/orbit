@@ -1,4 +1,3 @@
-// We need to undo our change to firebase.json.
 import path from "path";
 
 export const packageRoot = path.join(import.meta.dir, "..");
