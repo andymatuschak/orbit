@@ -25,7 +25,7 @@ export const listEvents: TypedRouteHandler<OrbitAPI.Spec, "/events", "GET"> =
       predicate: query.entityID ? ["entityID", "=", query.entityID] : undefined,
     });
 
-    let results: OrbitAPI.ResponseList2<Event>;
+    let results: OrbitAPI.ResponseList<Event>;
     if (query.limit === undefined) {
       results = {
         type: "list",
