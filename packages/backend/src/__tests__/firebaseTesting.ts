@@ -1,6 +1,7 @@
 import OrbitAPIClient, { emulatorAPIConfig } from "@withorbit/api-client";
 import { App, deleteApp, initializeApp } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getUserMetadata } from "../db/firebaseAccountData.js";
 import { UserMetadata } from "../db/userMetadata.js";
 
 const projectID = "metabook-system";
@@ -47,23 +48,58 @@ export async function clearFirestoreData() {
 }
 
 export async function setupAuthToken(
-  name: string,
+  authToken: string,
+  userID = "testUserID",
   userMetadata: Partial<UserMetadata> = {},
 ) {
   const app = getTestFirebaseAdminApp();
   const firestore = getFirestore(app);
   await firestore
     .collection("users")
-    .doc("WvLvv9uDtFha1jVTyxObVl00gPFN")
+    .doc(userID)
     .set({
       registrationTimestampMillis: 1615510817519,
       ...userMetadata,
     });
 
-  await firestore.collection("accessCodes").doc(name).set({
+  await firestore.collection("accessCodes").doc(authToken).set({
     type: "personalAccessToken",
-    userID: "WvLvv9uDtFha1jVTyxObVl00gPFN",
+    userID,
   });
+}
+
+export async function setupAccessCode(
+  accessCode: string,
+  userID = "testUserID",
+  userMetadata: Partial<UserMetadata> = {},
+  expirationDate: Date = new Date(Date.now() + 1000 * 60),
+) {
+  const app = getTestFirebaseAdminApp();
+  const firestore = getFirestore(app);
+  await firestore
+    .collection("users")
+    .doc(userID)
+    .set({
+      registrationTimestampMillis: 1615510817519,
+      ...userMetadata,
+    });
+
+  await firestore
+    .collection("accessCodes")
+    .doc(accessCode)
+    .set({
+      type: "oneTime",
+      userID,
+      expirationTimestamp: Timestamp.fromDate(expirationDate),
+    });
+}
+
+export async function getTestUserMetadata(
+  userID: string,
+): Promise<UserMetadata | null> {
+  const app = getTestFirebaseAdminApp();
+  const firestore = getFirestore(app);
+  return await getUserMetadata(userID, firestore);
 }
 
 export async function setupTestOrbitAPIClient(): Promise<OrbitAPIClient> {

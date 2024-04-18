@@ -30,7 +30,7 @@ export type ValidatableSpec = {
          */
         entityID?: EntityID;
       };
-      response?: ResponseList2<Event>;
+      response?: ResponseList<Event>;
     };
 
     PATCH?: {
@@ -54,7 +54,6 @@ export type ValidatableSpec = {
     /**
      * encode with multipart/form-data, with the file in part named "file"
      * make sure to include Content-Type heading for your attachment
-     * returns application/json encoded ResponseObject<"attachmentIDReference", AttachmentID, AttachmentIDReference>
      */
     POST?: {
       // NOTE: Content-type must use regex to be validated since additional data,
@@ -92,38 +91,15 @@ export type ValidatableSpec = {
     POST?: {
       contentType: "application/json";
       body: TaskID[];
-      response?: ResponseList2<Task>;
+      response?: ResponseList<Task>;
     };
   };
 };
 
 export type Spec = RequiredSpec<ValidatableSpec>;
 
-export type ResponseList<
-  ObjectTypeString extends string,
-  IDType extends string,
-  DataType,
-> = {
-  objectType: "list";
-  hasMore: boolean;
-  data: ResponseObject<ObjectTypeString, IDType, DataType>[];
-};
-
-export type ResponseList2<ItemType> = {
+export type ResponseList<ItemType> = {
   type: "list";
   hasMore: boolean;
   items: ItemType[];
-};
-
-export type ResponseObject<
-  ObjectType extends string,
-  IDType extends string,
-  DataType,
-> = {
-  objectType: ObjectType;
-  /**
-   * @TJS-type string
-   */
-  id: IDType;
-  data: DataType;
 };

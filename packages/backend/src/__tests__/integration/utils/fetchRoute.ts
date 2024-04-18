@@ -24,9 +24,18 @@ export async function fetchRoute(
     redirect: args.followRedirects === false ? "manual" : "follow",
   });
   // helper to avoid having this boilerplate unwrapping within the tests
-  let body: any = undefined;
-  try {
-    body = await result.json();
-  } catch {}
+  let body: any;
+  const contentType = result.headers.get("Content-Type");
+  if (contentType === null) {
+    body = undefined;
+  } else if (contentType?.startsWith("application/json")) {
+    try {
+      body = await result.json();
+    } catch {}
+  } else if (contentType?.startsWith("text/plain")) {
+    body = await result.text();
+  } else {
+    throw new Error(`Unsupported response content type ${contentType}`);
+  }
   return { status: result.status, body, headers: result.headers };
 }

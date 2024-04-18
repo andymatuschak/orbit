@@ -2,18 +2,19 @@ import { OrbitAPI, OrbitAPIValidator } from "@withorbit/api";
 import cookieParser from "cookie-parser";
 import express from "express";
 import morganBody from "morgan-body";
-import { listEvents, storeEvents } from "./api/events.js";
-import { bulkGetTasks } from "./api/tasks.js";
 import {
   getAttachment,
   ingestAttachmentsFromURLs,
   storeAttachment,
 } from "./api/attachments.js";
+import { listEvents, storeEvents } from "./api/events.js";
 import { consumeAccessCode } from "./api/internal/auth/consumeAccessCode.js";
 import { createLoginToken } from "./api/internal/auth/createLoginToken.js";
 import { personalAccessTokens } from "./api/internal/auth/personalAccessTokens.js";
 import { refreshSessionCookie } from "./api/internal/auth/refreshSessionCookie.js";
 import { recordPageView } from "./api/internal/recordPageView.js";
+import { InternalAPISpec } from "./api/internalSpec.js";
+import { bulkGetTasks } from "./api/tasks.js";
 import corsHandler from "./api/util/corsHandler.js";
 import createTypedRouter from "./api/util/typedRouter.js";
 
@@ -57,11 +58,21 @@ export function createAPIApp(): express.Application {
     },
   });
 
-  app.post("/internal/auth/personalAccessTokens", personalAccessTokens);
+  createTypedRouter<InternalAPISpec>(
+    app,
+    {
+      // TODO validate internal API calls
+      validateRequest: () => true,
+      validateResponse: () => true,
+    },
+    {
+      "/internal/auth/consumeAccessCode": { GET: consumeAccessCode },
+      "/internal/auth/personalAccessTokens": { POST: personalAccessTokens },
+    },
+  );
 
   // These older auth APIs need some rethinking...
   app.get("/internal/auth/createLoginToken", createLoginToken);
-  app.get("/internal/auth/consumeAccessCode", consumeAccessCode);
   app.get("/internal/auth/refreshSessionCookie", refreshSessionCookie);
 
   app.post("/internal/recordPageView", recordPageView);

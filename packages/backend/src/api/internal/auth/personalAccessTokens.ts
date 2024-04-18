@@ -1,23 +1,20 @@
-import express from "express";
 import { sharedServerDatabase } from "../../../db/index.js";
-import { authenticateRequest } from "../../util/authenticateRequest.js";
+import { InternalAPISpec } from "../../internalSpec.js";
+import { authenticatedRequestHandler } from "../../util/authenticateRequest.js";
+import { CachePolicy, TypedRouteHandler } from "../../util/typedRouter.js";
 
-interface CreatePersonalAccessTokenResponse {
-  token: string;
-}
-
-export async function personalAccessTokens(
-  request: express.Request,
-  response: express.Response,
-) {
-  await authenticateRequest(request, response, async (userID) => {
-    const token = await sharedServerDatabase().auth.createPersonalAccessToken(
-      userID,
-    );
-
-    const responseJSON: CreatePersonalAccessTokenResponse = {
+export const personalAccessTokens: TypedRouteHandler<
+  InternalAPISpec,
+  "/internal/auth/personalAccessTokens",
+  "POST"
+> = authenticatedRequestHandler(async (request, userID) => {
+  const token =
+    await sharedServerDatabase().auth.createPersonalAccessToken(userID);
+  return {
+    status: 200,
+    cachePolicy: CachePolicy.NoStore,
+    json: {
       token,
-    };
-    response.json(responseJSON);
-  });
-}
+    },
+  };
+});

@@ -15,8 +15,9 @@ function getUserMetadataReference(
 
 export async function getUserMetadata(
   userID: string,
+  database: firebase.firestore.Firestore = getDatabase(),
 ): Promise<UserMetadata | null> {
-  const snapshot = await getUserMetadataReference(getDatabase(), userID).get();
+  const snapshot = await getUserMetadataReference(database, userID).get();
   return snapshot.data() ?? null;
 }
 

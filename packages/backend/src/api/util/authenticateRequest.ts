@@ -1,24 +1,10 @@
 import { API as ApiType } from "@withorbit/api";
-import express from "express";
 import { sharedServerDatabase } from "../../db/index.js";
 import {
-  CachePolicy,
   TypedRequest,
   TypedResponse,
   TypedRouteHandler,
 } from "./typedRouter.js";
-
-export async function authenticateRequest(
-  request: express.Request,
-  response: express.Response,
-  next: (userID: string) => void,
-): Promise<void> {
-  await authenticateTypedRequest(request, async (userID) => {
-    next(userID);
-    // HACK Not actually used:
-    return { status: 200, json: undefined, cachePolicy: CachePolicy.NoStore };
-  });
-}
 
 export async function authenticateTypedRequest<
   API extends ApiType.Spec,

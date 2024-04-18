@@ -36,13 +36,11 @@ export type TypedRouteHandler<
 ) => Promise<TypedResponse<API.RouteResponseData<API[Path][Method]>>>;
 
 export type TypedResponse<Data> = (
-  | { status: 200 | 201; json: Data; cachePolicy: CachePolicy }
-  | {
-      status: 200 | 201;
-      data: Uint8Array;
-      mimeType: string;
-      cachePolicy: CachePolicy;
-    }
+  | ({ status: 200 | 201; cachePolicy: CachePolicy } & (
+      | { json: Data }
+      | { data: Uint8Array; mimeType: string }
+      | { text: string }
+    ))
   | { status: 204 }
   | { status: 301 | 302; redirectURL: string; cachePolicy: CachePolicy }
   | { status: 400 | 401 | 404 }
@@ -103,30 +101,7 @@ export default function createTypedRouter<API extends API.Spec>(
         request as TypedRequest<Exclude<API[Path][Method], undefined>>,
       )
         .then((result) => {
-          response.status(result.status);
-
-          for (const [name, value] of Object.entries(result.headers ?? {})) {
-            response.setHeader(name, value);
-          }
-
-          if (result.status === 301 || result.status === 302) {
-            response.header("Location", result.redirectURL);
-          }
-
-          if ("cachePolicy" in result) {
-            response.header("Cache-Control", result.cachePolicy);
-          }
-
-          if (result.status === 200) {
-            if ("json" in result) {
-              response.json(result.json);
-            } else {
-              response.contentType(result.mimeType);
-              response.send(result.data);
-            }
-          } else {
-            response.send();
-          }
+          sendStructuredResponse(response, result);
         })
         .catch((err) => {
           console.error("Error executing handler: ", err.name, err.message);
@@ -231,4 +206,46 @@ function validateURLPathParams(
     }
   }
   return { status: "success" };
+}
+
+export function sendStructuredResponse<
+  API extends API.Spec,
+  Path extends Extract<keyof API, string>,
+  Method extends Extract<keyof API[Path], API.HTTPMethod>,
+>(
+  response: express.Response,
+  result: TypedResponse<API.RouteResponseData<API[Path][Method]>>,
+) {
+  response.status(result.status);
+
+  for (const [name, value] of Object.entries(result.headers ?? {})) {
+    response.setHeader(name, value);
+  }
+
+  if (result.status === 301 || result.status === 302) {
+    response.header("Location", result.redirectURL);
+  }
+
+  if ("cachePolicy" in result) {
+    response.header("Cache-Control", result.cachePolicy);
+  }
+
+  if (result.status === 200) {
+    if ("json" in result) {
+      response.json(result.json);
+    } else if ("data" in result) {
+      response.contentType(result.mimeType);
+      response.send(result.data);
+    } else if ("text" in result) {
+      response.contentType("text/plain");
+      response.send(result.text);
+    } else {
+      function unreachable(_: never): never {
+        throw new Error("unreachable");
+      }
+      unreachable(result);
+    }
+  } else {
+    response.end();
+  }
 }

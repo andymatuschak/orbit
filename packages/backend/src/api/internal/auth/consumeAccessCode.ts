@@ -1,15 +1,19 @@
-import express from "express";
 import { sharedServerDatabase } from "../../../db/index.js";
-import { authenticateRequest } from "../../util/authenticateRequest.js";
+import { InternalAPISpec } from "../../internalSpec.js";
+import { authenticatedRequestHandler } from "../../util/authenticateRequest.js";
+import { CachePolicy, TypedRouteHandler } from "../../util/typedRouter.js";
 
-export async function consumeAccessCode(
-  request: express.Request,
-  response: express.Response,
-) {
-  await authenticateRequest(request, response, async (userID) => {
-    const loginToken = await sharedServerDatabase().auth.createCustomLoginToken(
-      userID,
-    );
-    response.send(loginToken);
-  });
-}
+export const consumeAccessCode: TypedRouteHandler<
+  InternalAPISpec,
+  "/internal/auth/consumeAccessCode",
+  "GET"
+> = authenticatedRequestHandler(async (request, userID) => {
+  const loginToken =
+    await sharedServerDatabase().auth.createCustomLoginToken(userID);
+
+  return {
+    status: 200,
+    text: loginToken,
+    cachePolicy: CachePolicy.NoStore,
+  };
+});
