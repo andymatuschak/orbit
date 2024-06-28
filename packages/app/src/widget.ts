@@ -4,6 +4,7 @@ import {
   EventType,
   generateUniqueID,
   getReviewQueueFuzzyDueTimestampThreshold,
+  ReviewItem,
   Task,
   TaskID,
   TaskRepetitionEvent,
@@ -21,7 +22,7 @@ async function getStore() {
   return _store;
 }
 
-async function generateReviewQueue(): Promise<Task[]> {
+async function generateReviewQueue(): Promise<ReviewItem[]> {
   console.log("REQUEST REVIEW QUEUE");
   const store = await getStore();
   console.log("GOT STORE");
@@ -35,7 +36,7 @@ async function generateReviewQueue(): Promise<Task[]> {
   const reviewQueue = createReviewQueue(dueTasks);
 
   console.log("Review queue length:", reviewQueue.length);
-  return reviewQueue.map((item) => item.task);
+  return reviewQueue;
 }
 
 async function recordReview(
