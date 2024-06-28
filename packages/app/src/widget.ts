@@ -41,6 +41,7 @@ async function generateReviewQueue(): Promise<ReviewItem[]> {
 
 async function recordReview(
   taskID: TaskID,
+  componentID: string,
   outcome: TaskRepetitionOutcome,
   timestampMillis: number,
 ) {
@@ -50,7 +51,7 @@ async function recordReview(
     id: generateUniqueID(),
     entityID: taskID,
     reviewSessionID: "WIDGET", // TODO pass from widget
-    componentID: "main", // TODO pass from widget
+    componentID, // TODO pass from widget
     timestampMillis,
     outcome,
   };
