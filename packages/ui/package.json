@@ -23,7 +23,7 @@
     "@types/lodash.isequal": "^4.5.5",
     "@types/markdown-it": "^0.0.9",
     "@types/react": "~18.2.45",
-    "@types/react-native": "^0.72.8",
+    "@types/react-native": "^0.73.0",
     "@types/seedrandom": "^2.4.28",
     "@types/webpack": "^4.41.25",
     "@withorbit/sample-data": "0.0.1",
@@ -38,7 +38,7 @@
   "peerDependencies": {
     "@types/react": "~18.2.45",
     "react": "^18.2.0",
-    "react-native": "0.73.1"
+    "react-native": "0.74.3"
   },
   "dependencies": {
     "@withorbit/core": "0.0.1",
@@ -48,7 +48,7 @@
     "react-native-keyevent": "^0.3.2",
     "react-native-markdown-display": "^7.0.2",
     "react-native-mathjax-svg": "andymatuschak/react-native-mathjax-svg",
-    "react-native-svg": "14.0.0"
+    "react-native-svg": "15.2.0"
   },
   "scripts": {
     "build": "tsc -b",

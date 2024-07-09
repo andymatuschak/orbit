@@ -24,14 +24,16 @@ function addFile(config, name, fn) {
 }
 
 function addSourceFile(config, name) {
+  const target = config.modResults.getFirstTarget().uuid;
   addFile(config, name, (path, key) => {
-    config.modResults.addSourceFile(path, null, key);
+    config.modResults.addSourceFile(path, { target }, key);
   });
 }
 
 function addResourceFile(config, filename) {
+  const target = config.modResults.getFirstTarget().uuid;
   addFile(config, filename, (path, key) => {
-    config.modResults.addResourceFile(path, null, key);
+    config.modResults.addResourceFile(path, target, key);
   });
 }
 

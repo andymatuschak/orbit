@@ -1,0 +1,9 @@
+{
+  "type": "widget",
+  "name": "OrbitWidget",
+  "icon": "../../app-assets/starburst-icon.png",
+  "entitlements": {
+    "com.apple.security.application-groups": ["group.com.withorbit.native"]
+  },
+  "deploymentTarget": "17.0"
+}

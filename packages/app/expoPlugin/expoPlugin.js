@@ -4,6 +4,7 @@ const withCatalystSupport = require("./withCatalystSupport");
 const withIngestIntent = require("./withIngestIntent");
 const withReactNativeKeyEventSupport = require("./withReactNativeKeyEventSupport");
 const withSQLImageURLLoader = require("./withSQLImageURLLoader");
+const withWidgetPluginFixes = require("./withWidgetPluginFixes");
 
 module.exports = function withOrbitExpoConfigPlugin(config) {
   return withPlugins(config, [
@@ -14,5 +15,6 @@ module.exports = function withOrbitExpoConfigPlugin(config) {
     withIngestIntent,
     withSQLImageURLLoader,
     withReactNativeKeyEventSupport,
+    withWidgetPluginFixes,
   ]);
 };

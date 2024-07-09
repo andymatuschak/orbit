@@ -29,6 +29,7 @@ config.resolver.nodeModulesPaths = [
 // TypeScript 5 does not rewrite import specifiers. So if you have a.ts and b.ts, you import the latter from the former with `import "./b.js"`. We have to teach Metro about these semantics, at least until https://github.com/facebook/metro/issues/886 is resolved. Unfortunately, we also have to teach it about React Native's special platform prefixes. *And* we have to deal with the extra complication that TypeScript compiles ".tsx" files to ".js" (not .jsx!) when its `target` is `react-native`.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (
+    platform &&
     (moduleName.startsWith(".") || moduleName.includes("@withorbit")) &&
     /\.jsx?$/.test(moduleName)
   ) {
@@ -38,6 +39,11 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       ios: [".ios", ".native", ""],
       android: [".android", ".native", ""],
     }[platform];
+    if (!platformPrefixes) {
+      throw new Error(
+        `Couldn't read platform prefixes for ${platform}, ${moduleName}`,
+      );
+    }
     const alternateExtensions = {
       ".js": [".js", ".jsx", ".ts", ".tsx"],
       ".jsx": [".jsx", ".js", ".tsx", ".ts"],

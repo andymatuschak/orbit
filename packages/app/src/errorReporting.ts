@@ -1,4 +1,4 @@
-import * as Sentry from "sentry-expo";
+import * as Sentry from "@sentry/react-native";
 import serviceConfig from "../serviceConfig.js";
 
 const useSentryInDevelopment = false;
@@ -6,7 +6,7 @@ const useSentryInDevelopment = false;
 export function initializeReporter() {
   Sentry.init({
     dsn: serviceConfig.sentryDSN,
-    enableInExpoDevelopment: useSentryInDevelopment,
+    enabled: useSentryInDevelopment,
     debug: __DEV__,
   });
 }

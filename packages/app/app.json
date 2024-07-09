@@ -8,7 +8,13 @@
     "assetBundlePatterns": ["**/*"],
     "scheme": "com.withorbit.native",
     "ios": {
-      "bundleIdentifier": "com.withorbit.native"
+      "bundleIdentifier": "com.withorbit.native",
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.withorbit.native"]
+      },
+      "infoPlist": {
+        "OPSQLite_AppGroup": "group.com.withorbit.native"
+      }
     },
     "android": {
       "package": "com.withorbit.app"
@@ -21,6 +27,7 @@
       },
       "bundler": "metro"
     },
+
     "plugins": [
       [
         "expo-font",
@@ -41,7 +48,6 @@
           ]
         }
       ],
-      "./expoPlugin/expoPlugin.js",
       "sentry-expo",
       [
         "expo-router",
@@ -51,6 +57,13 @@
             "web": true,
             "default": "development"
           }
+        }
+      ],
+      "./expoPlugin/expoPlugin.js",
+      [
+        "@bacons/apple-targets",
+        {
+          "appleTeamId": "MQ22N839N8"
         }
       ]
     ],
