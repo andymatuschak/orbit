@@ -5,5 +5,5 @@
   "entitlements": {
     "com.apple.security.application-groups": ["group.com.withorbit.native"]
   },
-  "deploymentTarget": "17.0"
+  "deploymentTarget": "18.0"
 }
