@@ -40,6 +40,8 @@ struct OrbitTask {
   let id: TaskID
   let provenance: TaskProvenance?
   let spec: TaskSpec
+
+  let componentStates: [String: TaskComponentState]
 }
 
 extension OrbitTask {
@@ -51,6 +53,8 @@ extension OrbitTask {
       provenance = nil
     }
     spec = try TaskSpec(decoding: try decodeProperty(obj, "spec"))
+    let componentsDict: [String: Any] = try decodeProperty(obj, "componentStates")
+    componentStates = Dictionary(uniqueKeysWithValues: try componentsDict.map { (id, stateJSON) in (id, try TaskComponentState(decoding: stateJSON)) })
   }
 }
 
@@ -61,7 +65,10 @@ extension OrbitTask {
     spec: .memory(
       .qa(
         body: TaskContentField(text: "Example question with a long string that will wrap onto multiple lines and will make for a small text size because it's so long"),
-        answer: TaskContentField(text: "Example answer")))
+        answer: TaskContentField(text: "Example answer"))),
+    componentStates: [
+      OrbitReviewItem.mainTaskComponentID: TaskComponentState(createdAtTimestampMillis: 0, lastRepetitionTimestampMillis: 0, intervalMillis: 0, dueTimestampMillis: 0)
+    ]
   )
 
   static let clozePlaceholder = OrbitTask(
@@ -75,7 +82,10 @@ extension OrbitTask {
           "b": ClozeTaskComponent(order: 1, ranges: [ClozeTaskRange(startIndex: 2, length: 2, hint: nil)]),
         ]
       )
-    )
+    ),
+    componentStates: [
+      OrbitReviewItem.mainTaskComponentID: TaskComponentState(createdAtTimestampMillis: 0, lastRepetitionTimestampMillis: 0, intervalMillis: 0, dueTimestampMillis: 0)
+    ]
   )
 }
 
@@ -170,6 +180,22 @@ struct TaskContentField {
 extension TaskContentField {
   init(decoding obj: Any) throws {
     text = try decodeProperty(obj, "text")
+  }
+}
+
+struct TaskComponentState {
+  let createdAtTimestampMillis: TimeInterval
+  let lastRepetitionTimestampMillis: TimeInterval?;
+  let intervalMillis: TimeInterval;
+  let dueTimestampMillis: TimeInterval;
+}
+
+extension TaskComponentState {
+  init(decoding obj: Any) throws {
+    createdAtTimestampMillis = try decodeProperty(obj, "createdAtTimestampMillis")
+    lastRepetitionTimestampMillis = try decodeOptionalProperty(obj, "lastRepetitionTimestampMillis")
+    intervalMillis = try decodeProperty(obj, "intervalMillis")
+    dueTimestampMillis = try decodeProperty(obj, "dueTimestampMillis")
   }
 }
 

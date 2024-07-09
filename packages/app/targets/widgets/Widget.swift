@@ -282,13 +282,21 @@ struct PromptView: View {
   }
 }
 
+func colorPalette(for item: OrbitReviewItem) -> ColorPalette {
+  if let colorPalette = item.task.provenance?.colorPaletteName?.colorPalette {
+    return colorPalette
+  } else {
+    let componentState = item.task.componentStates[item.componentID]!
+    return ColorPaletteName.fromTimestamp(componentState.createdAtTimestampMillis).colorPalette
+  }
+}
+
 struct OrbitHomeScreen: Widget {
   let kind: String = "OrbitHomeScreen"
 
   var body: some WidgetConfiguration {
     AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
-      let task = entry.item.task
-      let colorPalette = task.provenance?.colorPaletteName?.colorPalette ?? .red
+      let colorPalette = colorPalette(for: entry.item)
       PromptView(item: entry.item, isShowingAnswer: entry.isShowingAnswer)
         .containerBackground(colorPalette.backgroundColor, for: .widget)
         .environment(\.colorPalette, colorPalette)

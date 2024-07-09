@@ -184,3 +184,10 @@ extension Color {
     self.init(red: red, green: green, blue: blue)
   }
 }
+
+extension ColorPaletteName: CaseIterable {
+  static func fromTimestamp(_ timestampMillis: TimeInterval) -> ColorPaletteName {
+    // Dupe of ReviewSession.tsx:getColorPaletteForReviewItem
+    return ColorPaletteName.allCases[Int(timestampMillis.rounded(.down)) % ColorPaletteName.allCases.count]
+  }
+}
