@@ -136,8 +136,6 @@ struct PromptContent: View {
 }
 
 struct PromptTextStyle: ViewModifier {
-//  typealias Body = ModifiedContent<Text, Self>
-
   let text: String
   init(text: String) {
     self.text = text
@@ -269,27 +267,6 @@ struct PromptView: View {
         WidgetButton(intent: TogglePromptIntent(), iconName: "reveal-center", alignment: .center)
       }
     }
-  }
-}
-
-struct PromptToggleStyle: ToggleStyle {
-  let item: OrbitReviewItem
-  func makeBody(configuration: Configuration) -> some View {
-    return PromptView(item: item, isShowingAnswer: configuration.isOn)
-  }
-}
-
-struct OrbitHomeScreenEntryView: View {
-  var entry: Provider.Entry
-
-  var body: some View {
-    VStack {
-      //      PromptView(task: entry.item.task, isShowingAnswer: entry.isShowingAnswer)
-      Toggle("Reveal answer", isOn: entry.isShowingAnswer, intent: TogglePromptIntent())
-        .toggleStyle(PromptToggleStyle(item: entry.item))
-        .id(entry.item.task.id)
-    }
-    .environment(\.colorPalette, entry.item.task.provenance.colorPaletteName.colorPalette)
   }
 }
 
