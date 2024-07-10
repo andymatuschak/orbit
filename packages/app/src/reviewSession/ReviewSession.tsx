@@ -6,6 +6,7 @@ import {
   getReviewQueueFuzzyDueTimestampThreshold,
   ReviewItem,
   Task,
+  TaskID,
   TaskRepetitionEvent,
   TaskRepetitionOutcome,
 } from "@withorbit/core";
@@ -23,6 +24,7 @@ import {
   styles,
   useWeakRef,
 } from "@withorbit/ui";
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -213,6 +215,39 @@ export default function ReviewSession() {
       );
     }
   }, [initialQueue, weakReviewSessionManager]);
+
+  const searchParams = useLocalSearchParams();
+  const [pendingReviewItemRequest, setPendingReviewItemRequest] = useState<{
+    taskID: TaskID;
+    componentID: string;
+  } | null>(null);
+  useEffect(() => {
+    if (
+      searchParams.taskID &&
+      searchParams.componentID &&
+      typeof searchParams.taskID === "string" &&
+      typeof searchParams.componentID === "string"
+    ) {
+      setPendingReviewItemRequest({
+        taskID: searchParams.taskID as TaskID,
+        componentID: searchParams.componentID,
+      });
+    }
+  }, [searchParams.taskID, searchParams.componentID]);
+  useEffect(() => {
+    if (pendingReviewItemRequest) {
+      const sessionItemIndex = sessionItems.findIndex((item) => {
+        return (
+          item.task.id === pendingReviewItemRequest.taskID &&
+          item.componentID === pendingReviewItemRequest.componentID
+        );
+      });
+      if (sessionItemIndex >= 0) {
+        setPendingReviewItemRequest(null);
+        weakReviewSessionManager.current.jumpToItem(sessionItemIndex);
+      }
+    }
+  }, [pendingReviewItemRequest, sessionItems, weakReviewSessionManager]);
 
   if (initialQueue === null) {
     return <LoadingScreen />;

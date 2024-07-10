@@ -37,6 +37,8 @@ export interface ReviewSessionManagerActions {
   ): void;
 
   deleteCurrentItem(): void;
+
+  jumpToItem(sessionItemIndex: number): void;
 }
 
 function findSessionItemIndex(
@@ -216,6 +218,74 @@ function reviewSessionManagerPushReviewAreaQueueItems(
   }
 }
 
+function reviewSessionManagerJumpToItem(
+  state: ReviewSessionManagerState,
+  sessionItemIndex: number,
+): ReviewSessionManagerState {
+  if (sessionItemIndex >= state.reviewAreaQueue.length) {
+    console.error(
+      `Attempting to jump to review item index ${sessionItemIndex} which is out of bounds`,
+    );
+    return state;
+  }
+  if (
+    state.currentReviewAreaQueueIndex === null ||
+    state.currentSessionItemIndex === null
+  ) {
+    console.error(
+      `Attempting to jump to review item index ${sessionItemIndex} when current review area queue index or current session item index is null`,
+    );
+    return state;
+  }
+
+  const sessionItem = state.sessionItems[sessionItemIndex];
+  const queueIndex = state.reviewAreaQueue.findLastIndex(
+    (reviewAreaItem) =>
+      reviewAreaItem.taskID === sessionItem.task.id &&
+      reviewAreaItem.componentID === sessionItem.componentID,
+  );
+  if (queueIndex === -1) {
+    console.error(`Item not found in remaining queue`);
+    return state;
+  }
+
+  const remainingReviewAreaQueue = state.reviewAreaQueue.slice(
+    state.currentReviewAreaQueueIndex,
+  );
+  const remainingQueueIndex = queueIndex - state.currentReviewAreaQueueIndex;
+  if (remainingQueueIndex >= 0) {
+    console.log("Jumping to item", sessionItemIndex, remainingQueueIndex);
+    // Rotate the queue so that the item we're jumping to is at the front.
+    const rotatedRemainingQueue = [
+      ...remainingReviewAreaQueue.slice(remainingQueueIndex),
+      ...remainingReviewAreaQueue.slice(0, remainingQueueIndex),
+    ];
+    return {
+      ...state,
+      reviewAreaQueue: [
+        ...state.reviewAreaQueue.slice(0, state.currentReviewAreaQueueIndex),
+        ...rotatedRemainingQueue,
+      ],
+      currentReviewAreaQueueIndex: state.currentReviewAreaQueueIndex,
+      currentSessionItemIndex: sessionItemIndex,
+      topUndoItem: null, // jumping resets the undo stack for now...
+    };
+  } else {
+    console.log("Item not in remaining queue; adding to front");
+    return {
+      ...state,
+      reviewAreaQueue: [
+        ...state.reviewAreaQueue.slice(0, state.currentReviewAreaQueueIndex),
+        state.reviewAreaQueue[queueIndex],
+        ...state.reviewAreaQueue.slice(state.currentReviewAreaQueueIndex + 1),
+      ],
+      currentReviewAreaQueueIndex: state.currentReviewAreaQueueIndex,
+      currentSessionItemIndex: sessionItemIndex,
+      topUndoItem: null, // jumping resets the undo stack for now...
+    };
+  }
+}
+
 const initialReviewSessionManagerState: ReviewSessionManagerState = {
   reviewAreaQueue: [],
   currentReviewAreaQueueIndex: null,
@@ -272,6 +342,12 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
 
       deleteCurrentItem() {
         setState((state) => reviewSessionManagerDeleteCurrentItem(state));
+      },
+
+      jumpToItem(sessionItemIndex: number) {
+        setState((state) =>
+          reviewSessionManagerJumpToItem(state, sessionItemIndex),
+        );
       },
     }),
     [],

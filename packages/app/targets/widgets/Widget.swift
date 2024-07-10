@@ -299,6 +299,7 @@ struct OrbitHomeScreen: Widget {
       let colorPalette = colorPalette(for: entry.item)
       PromptView(item: entry.item, isShowingAnswer: entry.isShowingAnswer)
         .containerBackground(colorPalette.backgroundColor, for: .widget)
+        .widgetURL(URL(string: "com.withorbit.native://review?taskID=\(entry.item.task.id)&componentID=\(entry.item.componentID)")!)
         .environment(\.colorPalette, colorPalette)
     }
     .supportedFamilies([.systemMedium, .systemLarge])
