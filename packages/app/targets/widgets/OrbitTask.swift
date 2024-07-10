@@ -61,7 +61,7 @@ extension OrbitTask {
 extension OrbitTask {
   static let placeholder = OrbitTask(
     id: "xxx",
-    provenance: TaskProvenance(title: "Source article with an awfully long name that probably won't fit in the widget", colorPaletteName: .red),
+    provenance: TaskProvenance(title: "Source article with an awfully long name that probably won't fit in the widget", url: "https://www.example.com", colorPaletteName: .red),
     spec: .memory(
       .qa(
         body: TaskContentField(text: "Example question with a long string that will wrap onto multiple lines and will make for a small text size because it's so long"),
@@ -73,7 +73,7 @@ extension OrbitTask {
 
   static let clozePlaceholder = OrbitTask(
     id: "xxx",
-    provenance: TaskProvenance(title: "Test", colorPaletteName: .orange),
+    provenance: TaskProvenance(title: "Test", url: nil, colorPaletteName: .orange),
     spec: .memory(
       .cloze(
         body: TaskContentField(text: "This is a test cloze prompt."),
@@ -91,6 +91,7 @@ extension OrbitTask {
 
 struct TaskProvenance {
   let title: String
+  let url: String?
   let colorPaletteName: ColorPaletteName?
 }
 
@@ -102,6 +103,7 @@ extension TaskProvenance {
       colorPaletteName = nil
     }
     title = try decodeProperty(obj, "title")
+    url = try decodeOptionalProperty(obj, "url")
   }
 }
 
