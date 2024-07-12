@@ -27,38 +27,42 @@ struct ReviewState {
 var transientState = ReviewState()
 let bridge = Bridge()
 
-struct Provider: AppIntentTimelineProvider {
+struct Provider: TimelineProvider {
+  func getSnapshot(in context: Context, completion: @escaping @Sendable (Entry) -> Void) {
+    Task {
+      let queue = await bridge.generateReviewQueue()
+      completion(Entry(item: queue[0], isShowingAnswer: false, date: Date()))
+    }
+  }
+  
+  func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<Entry>) -> Void) {
+    Task {
+      var entries: [Entry] = []
+      print("REFRESH TIMELINE")
+
+//      if transientState.queue == nil {
+        transientState.queue = await bridge.generateReviewQueue()
+//      }
+
+      let queue = transientState.queue!.filter { item in !transientState.reviewedTaskIDs.contains(item.task.id) }
+
+      let currentDate = Date()
+      for hourOffset in 0..<min(50, queue.count) {
+        let entryDate = Calendar.current.date(byAdding: .minute, value: 5, to: currentDate)!
+        let entry = Entry(
+          item: queue[hourOffset],
+          isShowingAnswer: transientState.isShowingAnswer,
+          date: entryDate
+        )
+        entries.append(entry)
+      }
+
+      completion(Timeline(entries: entries, policy: .after(Calendar.current.date(byAdding: .hour, value: 1, to: currentDate)!)))
+    }
+  }
+  
   func placeholder(in context: Context) -> Entry {
     Entry(item: .placeholder, isShowingAnswer: false, date: Date())
-  }
-
-  func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> Entry {
-    Entry(item: .placeholder, isShowingAnswer: false, date: Date())
-  }
-
-  func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<Entry> {
-    var entries: [Entry] = []
-    print("REFRESH TIMELINE")
-
-    //    transientState.queue = [.placeholder, .placeholder]
-    if transientState.queue == nil {
-      transientState.queue = await bridge.generateReviewQueue()
-    }
-
-    let queue = transientState.queue!.filter { item in !transientState.reviewedTaskIDs.contains(item.task.id) }
-
-    let currentDate = Date()
-    for hourOffset in 0..<min(50, queue.count) {
-      let entryDate = Calendar.current.date(byAdding: .minute, value: 5, to: currentDate)!
-      let entry = Entry(
-        item: queue[hourOffset],
-        isShowingAnswer: transientState.isShowingAnswer,
-        date: entryDate
-      )
-      entries.append(entry)
-    }
-
-    return Timeline(entries: entries, policy: .after(Calendar.current.date(byAdding: .hour, value: 1, to: currentDate)!))
   }
 }
 
@@ -158,7 +162,7 @@ struct PromptTextStyle: ViewModifier {
   let fontStyle: OrbitFont.Type
   init(text: String) {
     self.fontStyle = switch text.count {
-    case 0 ... 80:
+    case 0 ... 70:
       OrbitPromptMedium.self
     default:
       OrbitPromptSmall.self
@@ -295,7 +299,7 @@ struct OrbitHomeScreen: Widget {
   let kind: String = "OrbitHomeScreen"
 
   var body: some WidgetConfiguration {
-    AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
+    StaticConfiguration(kind: kind, provider: Provider()) { entry in
       let colorPalette = colorPalette(for: entry.item)
       PromptView(item: entry.item, isShowingAnswer: entry.isShowingAnswer)
         .containerBackground(colorPalette.backgroundColor, for: .widget)

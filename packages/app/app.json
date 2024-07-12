@@ -48,6 +48,14 @@
           ]
         }
       ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "17.0"
+          }
+        }
+      ],
       "sentry-expo",
       [
         "expo-router",

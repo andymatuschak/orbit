@@ -28,6 +28,7 @@
     "base-64": "^1.0.0",
     "expo": "~51.0.17",
     "expo-application": "~5.9.1",
+    "expo-build-properties": "^0.12.3",
     "expo-constants": "~16.0.2",
     "expo-crypto": "~13.0.2",
     "expo-device": "~6.0.2",

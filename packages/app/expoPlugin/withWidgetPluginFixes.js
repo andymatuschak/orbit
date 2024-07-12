@@ -1,7 +1,18 @@
-const { withMod } = require("expo/config-plugins");
+const { withMod, withXcodeProject } = require("expo/config-plugins");
 const { PBXBuildFile, PBXShellScriptBuildPhase } = require("@bacons/xcode");
 const path = require("path");
+const { addSourceFile } = require("./util");
 module.exports = function withWidgetPluginFixes(config) {
+  config = withXcodeProject(config, async (config) => {
+    for (const file of [
+      "ORWidgetReloadBridge.m",
+      "ORWidgetReloadBridge.swift",
+    ]) {
+      addSourceFile(config, file);
+    }
+    return config;
+  });
+
   config = withMod(config, {
     platform: "ios",
     // Bit of a hack: we're hooking into @bacons/apple-target's mod here. This string must match the one in https://github.com/EvanBacon/expo-apple-targets/blob/afd63577f43aa50665f2c31ed4ed14c052bc57bd/packages/apple-targets/src/withXcparse.ts.
