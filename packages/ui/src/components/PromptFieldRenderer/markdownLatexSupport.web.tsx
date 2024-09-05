@@ -5,8 +5,7 @@ import * as MarkdownDisplay from "react-native-markdown-display";
 
 // TODO: Make Katex async again once expo/webpack-config supports webpack@5
 import _katex from "katex";
-// @ts-ignore
-import "katex/dist/katex.css";
+import "../../../assets/katex.css";
 // let _katex: typeof import("katex") | null = null;
 export async function addLatexSupport(
   markdownIt: MarkdownDisplay.MarkdownIt,

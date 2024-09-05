@@ -197,6 +197,7 @@ export default React.memo(function Button(props: ButtonProps) {
           href={href}
           hitSlop={props.hitSlop}
           style={[
+            // @ts-ignore react-native-web adds cursor.
             props.disabled && {
               opacity: 0.3,
               ...(Platform.OS === "web" && { cursor: "not-allowed" }),
