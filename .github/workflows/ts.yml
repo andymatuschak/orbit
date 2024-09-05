@@ -21,53 +21,62 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js 14.x
-        uses: actions/setup-node@v2
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 14.x
+          bun-version: latest
+      - uses: actions/checkout@v2
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
       - name: "install dependencies"
-        run: yarn install
+        run: bun install
       - name: "run lint"
-        run: "yarn lint"
+        run: "bun run lint"
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js 14.x
-        uses: actions/setup-node@v2
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 14.x
+          bun-version: latest
+      - uses: actions/checkout@v2
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
       - name: "install dependencies"
-        run: yarn install
+        run: bun install
       - name: "run build"
-        run: "yarn build"
+        run: "bun run build"
       - name: "run test"
-        run: "yarn test"
+        run: "bun run test"
   stale-api-schema:
     name: Generated API schema matches source interfaces
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js 14.x
-        uses: actions/setup-node@v2
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 14.x
+          bun-version: latest
+      - uses: actions/checkout@v2
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
       - name: "install dependencies"
-        run: yarn install
+        run: bun install
       - name: "run build"
-        run: "yarn build"
+        run: "bun run build"
       - name: "run generateSchema for the API"
         working-directory: packages/api
-        run: "yarn generateSchema"
+        run: "bun run generateSchema"
       - name: "check if changes are pending"
         run: "git diff --exit-code"
       - name: "run generateSchema for the events validator"
         working-directory: packages/store-shared
-        run: "yarn generateSchema"
+        run: "bun run generateSchema"
       - name: "run generateSchema for the ingester validator"
         working-directory: packages/ingester
-        run: "yarn generateSchema"
+        run: "bun run generateSchema"
       - name: "check if changes are pending"
         run: "git diff --exit-code"
         working-directory: packages
