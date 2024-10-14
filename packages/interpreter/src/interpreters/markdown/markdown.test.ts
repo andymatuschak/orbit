@@ -68,12 +68,12 @@ test("cloze in backlink section", () => {
   expect(prompts).toHaveLength(0);
 });
 
-test("QA prompt in blockquote", () => {
+test("QA prompts aren't recognized in blockquote", () => {
   const prompts = getPrompts(`# Heading
 
 > Q. Test.
 > A. Answer.
 `);
 
-  expect(prompts).toHaveLength(1);
+  expect(prompts).toHaveLength(0);
 });

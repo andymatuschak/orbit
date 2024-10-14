@@ -11,7 +11,7 @@ import {
   IngestibleSource,
   IngestibleSourceIdentifier,
 } from "@withorbit/ingester";
-import mdast, * as Mdast from "mdast";
+import * as Mdast from "mdast";
 import { selectAll } from "unist-util-select";
 import { Hasher } from "../../hasher/hasher.js";
 import { InterpretableFile, Interpreter } from "../../interpreter.js";
@@ -78,13 +78,13 @@ function convertInterpreterPromptToIngestible(prompt: Prompt): TaskSpec {
         type: TaskContentType.QA,
         body: {
           text: processor
-            .stringify(prompt.question as unknown as mdast.Root)
+            .stringify({ type: "root", children: prompt.question })
             .trimEnd(),
           attachments: [],
         },
         answer: {
           text: processor
-            .stringify(prompt.answer as unknown as mdast.Root)
+            .stringify({ type: "root", children: prompt.answer })
             .trimEnd(),
           attachments: [],
         },

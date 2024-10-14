@@ -26,10 +26,10 @@ export interface ClozePrompt extends JsonMap {
 }
 
 export const qaPromptType = "qaPrompt";
-export interface QAPrompt extends JsonMap {
+export interface QAPrompt {
   type: typeof qaPromptType;
-  question: mdast.RootContent & JsonMap;
-  answer: mdast.RootContent & JsonMap;
+  question: mdast.RootContent[];
+  answer: mdast.RootContent[];
 }
 
 export type Prompt = ClozePrompt | QAPrompt;
@@ -43,8 +43,8 @@ export interface ClozePromptNode extends unist.Node {
 export const qaPromptNodeType = "qaPrompt";
 export interface QAPromptNode extends unist.Node {
   type: typeof qaPromptNodeType;
-  question: mdast.RootContent;
-  answer: mdast.RootContent;
+  question: mdast.RootContent[];
+  answer: mdast.RootContent[];
 }
 
 type NodeWithParent = mdast.Nodes & {
@@ -104,8 +104,8 @@ export function findAllPrompts(tree: mdast.Root): Prompt[] {
     const qaPromptNode = n as QAPromptNode;
     const qaPrompt: QAPrompt = {
       type: "qaPrompt",
-      question: qaPromptNode.question as mdast.RootContent & JsonMap,
-      answer: qaPromptNode.answer as mdast.RootContent & JsonMap,
+      question: qaPromptNode.question,
+      answer: qaPromptNode.answer,
     };
     return qaPrompt;
   });

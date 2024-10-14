@@ -46,7 +46,34 @@ For example, here's an excerpt of some notes I wrote as I was studying Service W
 >
 > A. Two.
 
-The empty line between the question and answer is optional. The question and answer cannot currently span multiple paragraphs: the paragraph including `Q. ` or `A. ` is extracted as that field.
+The empty line between the question and answer is optional. So you can also write it like this, with a newline separating the question and answer.
+
+> Q. How many dimensions are in a qubit's vector space? \
+> A. Two.
+
+If you'd like to make the question or answer field span multiple Markdown blocks, add a newline after the `Q.` or `A.` prefix, like this:
+
+```
+Q.
+What is this a picture of?
+
+1. Apples
+2. Bananas
+3. Pears
+
+A.
+Apples
+
+
+Q. How to do the hokey pokey?
+A.
+1. You put your right foot in
+2. You put your right foot out
+3. You put your right foot in
+4. And you shake it all about
+```
+
+As shown above, you can mix and match the "multi-block" style with the "single-line" style. In "multi-block" mode, all the content after the prefix will be included in the field, until the next question, heading, or horizontal rule (`---`).
 
 #### Creating cloze deletion prompts
 
