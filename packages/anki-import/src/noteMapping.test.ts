@@ -1,4 +1,5 @@
 import { ClozeTaskContent, TaskContentType } from "@withorbit/core";
+import { expect, test } from "bun:test";
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection.js";
 import {
   AnkiCollectionDBHandle,
@@ -12,6 +13,7 @@ import {
   ModelMappingType,
 } from "./modelMapping.js";
 import { mapNoteToTaskSpec } from "./noteMapping.js";
+import { beforeAll } from "bun:test";
 
 const notes: Note[] = [];
 beforeAll(async () => {
@@ -77,29 +79,29 @@ test("mapping cloze note", () => {
   });
   expect((result.spec.content as ClozeTaskContent).components)
     .toMatchInlineSnapshot(`
-    {
-      "0": {
-        "order": 0,
-        "ranges": [
-          {
-            "hint": null,
-            "length": 5,
-            "startIndex": 5,
-          },
-        ],
+{
+  "0": {
+    "order": 0,
+    "ranges": [
+      {
+        "hint": null,
+        "length": 5,
+        "startIndex": 5,
       },
-      "1": {
-        "order": 1,
-        "ranges": [
-          {
-            "hint": null,
-            "length": 6,
-            "startIndex": 20,
-          },
-        ],
+    ],
+  },
+  "1": {
+    "order": 1,
+    "ranges": [
+      {
+        "hint": null,
+        "length": 6,
+        "startIndex": 20,
       },
-    }
-  `);
+    ],
+  },
+}
+`);
   expect(result.issues).toHaveLength(1);
 });
 
@@ -107,26 +109,26 @@ test("mapping note with image", () => {
   const imageNote = notes.find((note) => note.flds.includes("<img"))!;
   const result = mapNoteToTaskSpec(imageNote, basicMapping);
   expect(result).toMatchInlineSnapshot(`
-    {
-      "issues": [],
-      "spec": {
-        "content": {
-          "answer": {
-            "attachments": [
-              "pyN-ng4VX1K49oL1eATILg",
-            ],
-            "text": "Test answer with an image",
-          },
-          "body": {
-            "attachments": [
-              "O1FLbMewV1yCmV2vzCfVxg",
-            ],
-            "text": "Test question with an image",
-          },
-          "type": "qa",
-        },
-        "type": "memory",
+{
+  "issues": [],
+  "spec": {
+    "content": {
+      "answer": {
+        "attachments": [
+          "pyN-ng4VX1K49oL1eATILg",
+        ],
+        "text": "Test answer with an image",
       },
-    }
-  `);
+      "body": {
+        "attachments": [
+          "O1FLbMewV1yCmV2vzCfVxg",
+        ],
+        "text": "Test question with an image",
+      },
+      "type": "qa",
+    },
+    "type": "memory",
+  },
+}
+`);
 });

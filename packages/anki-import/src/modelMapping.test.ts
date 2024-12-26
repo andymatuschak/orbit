@@ -1,3 +1,4 @@
+import { expect, test } from "bun:test";
 import withTestAnkiCollection from "./__fixtures__/withTestAnkiCollection.js";
 import {
   AnkiCollectionDBHandle,
@@ -5,6 +6,7 @@ import {
   readCollection,
 } from "./ankiPkg/index.js";
 import { getModelMapping } from "./modelMapping.js";
+import { beforeAll } from "bun:test";
 
 let collection: Collection;
 beforeAll(async () => {
@@ -24,31 +26,31 @@ function getModelByName(modelName: string): number {
 test("basic model maps", () => {
   expect(getModelMapping(collection, getModelByName("Basic")))
     .toMatchInlineSnapshot(`
-    {
-      "answerFieldIndex": 1,
-      "questionFieldIndex": 0,
-      "type": "basic",
-    }
-  `);
+{
+  "answerFieldIndex": 1,
+  "questionFieldIndex": 0,
+  "type": "basic",
+}
+`);
   expect(
     getModelMapping(collection, getModelByName("Basic (type in the answer)")),
   ).toMatchInlineSnapshot(`
-    {
-      "answerFieldIndex": 1,
-      "questionFieldIndex": 0,
-      "type": "basic",
-    }
-  `);
+{
+  "answerFieldIndex": 1,
+  "questionFieldIndex": 0,
+  "type": "basic",
+}
+`);
 });
 
 test("cloze model maps", () => {
   expect(getModelMapping(collection, getModelByName("Cloze")))
     .toMatchInlineSnapshot(`
-    {
-      "contentsFieldIndex": 0,
-      "type": "cloze",
-    }
-  `);
+{
+  "contentsFieldIndex": 0,
+  "type": "cloze",
+}
+`);
 });
 
 test("basic with reverse doesn't map", () => {

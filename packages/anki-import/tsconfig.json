@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["node", "jest", "mdast"]
+    "types": ["node", "bun", "mdast"]
   },
   "include": ["./src/**/*.ts"],
   "references": [

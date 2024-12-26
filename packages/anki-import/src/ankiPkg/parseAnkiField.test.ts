@@ -1,3 +1,4 @@
+import { expect, test } from "bun:test";
 import parseAnkiField from "./parseAnkiField.js";
 
 test("translates divs into paragraphs", () => {

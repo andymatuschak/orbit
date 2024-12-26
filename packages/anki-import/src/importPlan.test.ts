@@ -5,6 +5,7 @@ import {
   TaskID,
   TaskRescheduleEvent,
 } from "@withorbit/core";
+import { describe, expect, test } from "bun:test";
 import {
   testCard,
   testCollection,
@@ -24,7 +25,7 @@ describe("createSpecForNote", () => {
   const cache: { [p: number]: ModelMapping } = {};
   const result = createSpecForNote(testNote, testCollection, cache);
   if (result instanceof Error) {
-    fail();
+    throw result;
   }
   const { spec } = result;
   test("uncached model", () => {
@@ -34,7 +35,7 @@ describe("createSpecForNote", () => {
   test("cached model", () => {
     const secondResult = createSpecForNote(testNote, {} as Collection, cache);
     if (secondResult instanceof Error) {
-      fail();
+      throw secondResult;
     }
     expect(result.spec).toEqual(spec);
   });

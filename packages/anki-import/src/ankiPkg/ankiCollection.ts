@@ -2,8 +2,7 @@ import events from "events";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import * as sqlite from "sqlite";
-import * as sqlite3 from "sqlite3";
+import Database from "@farjs/better-sqlite3-wrapper";
 import unzip, { Entry } from "unzipper";
 import { Card, Collection, Log, Note } from "./ankiDBTypes.js";
 
@@ -12,17 +11,8 @@ async function readRows<R>(
   tableName: string,
   processRow: (row: R) => Promise<void>,
 ): Promise<unknown> {
-  const promises: Promise<unknown>[] = [];
-  await (handle as sqlite.Database).each(
-    `SELECT * FROM ${tableName}`,
-    (error: Error, row: R) => {
-      if (error) {
-        throw error;
-      } else {
-        promises.push(processRow(row));
-      }
-    },
-  );
+  const rows = handle.prepare(`SELECT * FROM ${tableName}`).all() as R[];
+  const promises = rows.map((row: R) => processRow(row));
   return Promise.all(promises);
 }
 
@@ -47,12 +37,11 @@ export function readLogs(
   return readRows(handle, "revlog", visitor);
 }
 
-export type AnkiCollectionDBHandle = unknown;
+export type AnkiCollectionDBHandle = Database.Database;
 export async function readCollection(
   handle: AnkiCollectionDBHandle,
 ): Promise<Collection> {
-  const database = handle as sqlite.Database;
-  const rawCollection = await database.get("SELECT * FROM col");
+  const rawCollection = handle.prepare("SELECT * FROM col").get() as any;
   for (const key of ["conf", "models", "decks", "dconf"]) {
     try {
       rawCollection[key] = JSON.parse(rawCollection[key]);
@@ -67,12 +56,12 @@ async function withCollectionDatabase<R = undefined>(
   ankiCollectionPath: string,
   continuation: (handle: AnkiCollectionDBHandle) => Promise<R>,
 ): Promise<R> {
-  const database = await sqlite.open({
-    filename: ankiCollectionPath,
-    mode: 1,
-    driver: sqlite3.Database,
-  });
-  return continuation(database);
+  const database = new Database(ankiCollectionPath, { readonly: true });
+  try {
+    return await continuation(database);
+  } finally {
+    database.close();
+  }
 }
 
 export interface MediaManifest {

@@ -1,3 +1,4 @@
+import { expect, test } from "bun:test";
 import splitAnkiDBNoteFields from "./splitAnkiDBNoteFields.js";
 
 test("parse Anki DB field with two entries", () => {
