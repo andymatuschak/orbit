@@ -1,3 +1,4 @@
+import { describe, test, expect } from "bun:test";
 import { ReviewItem, Task } from "@withorbit/core";
 import { EmbeddedScreenRecord } from "@withorbit/embedded-support";
 import { findItemsToRetry } from "./findItemsToRetry.js";
@@ -16,18 +17,18 @@ function makeItem(needsRetry: boolean | null): ReviewItem {
                 createdAtTimestampMillis: 0,
               }
             : needsRetry
-            ? {
-                lastRepetitionTimestampMillis: 10,
-                intervalMillis: 0,
-                dueTimestampMillis: 10,
-                createdAtTimestampMillis: 0,
-              }
-            : {
-                lastRepetitionTimestampMillis: 10,
-                intervalMillis: 1000,
-                dueTimestampMillis: 1010,
-                createdAtTimestampMillis: 0,
-              },
+              ? {
+                  lastRepetitionTimestampMillis: 10,
+                  intervalMillis: 0,
+                  dueTimestampMillis: 10,
+                  createdAtTimestampMillis: 0,
+                }
+              : {
+                  lastRepetitionTimestampMillis: 10,
+                  intervalMillis: 1000,
+                  dueTimestampMillis: 1010,
+                  createdAtTimestampMillis: 0,
+                },
       },
     } as unknown as Task,
     componentID: "a",

@@ -18,7 +18,7 @@
     "deployCORS": "gsutil cors set ../backend/firebase-storage-cors.json gs://metabook-system.appspot.com",
     "deployFirestoreConfig": "firebase deploy --only firestore",
     "fetchFirestoreIndexes": "firebase firestore:indexes > ../backend/firestore.indexes.json",
-    "test": "firebase emulators:exec 'jest --runInBand'"
+    "test": "firebase emulators:exec 'bun test src"
   },
   "license": "AGPL-3.0-or-later OR BUSL-1.1",
   "dependencies": {
@@ -45,23 +45,17 @@
     "node": "20"
   },
   "devDependencies": {
-    "@babel/plugin-syntax-import-attributes": "^7.23.3",
-    "@babel/preset-env": "^7.23.5",
-    "@babel/preset-typescript": "^7.23.3",
     "@types/bun": "^1.1.14",
     "@types/busboy": "^0.2.3",
     "@types/cookie-parser": "^1.4.2",
     "@types/cors": "^2.8.8",
     "@types/date-fns": "^2.6.0",
     "@types/detect-browser": "^4.0.0",
-    "@types/jest": "^29.5.5",
     "@types/node": "^20.10.4",
     "@types/node-mailjet": "^3.3.4",
     "@types/request-ip": "^0.0.35",
-    "babel-jest": "^29.7.0",
     "firebase-tools": "^13.29.1",
     "isolate-package": "^1.6.2",
-    "jest": "^29.7.0",
     "typescript": "^5.3.3"
   }
 }
