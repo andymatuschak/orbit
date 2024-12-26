@@ -23,5 +23,5 @@ test("after downloading URL resolves", async () => {
 
   const { contents, type } = await store.getAttachment(testID);
   expect(contents).toEqual(testContents);
-  expect(type).toEqual("image/png");
+  expect(type).toEqual(AttachmentMIMEType.PNG);
 });

@@ -22,19 +22,24 @@ import fastJSONStableStringify from "fast-json-stable-stringify";
 export function extractItems(parentElement: HTMLElement): EmbeddedScreenRecord {
   const reviewItems: ReviewItem[] = [];
   const attachmentIDsToURLs: { [AttachmentID: string]: string } = {};
-  parentElement
-    .querySelectorAll<OrbitPromptElement>(":scope > orbit-prompt")
-    .forEach((element) => {
-      const { content, attachmentIDsToURLs: elementAttachmentMap } =
-        extractContent(element);
-      reviewItems.push(generateTaskReviewItem(content));
+  console.log("children", parentElement.outerHTML);
+  const children = parentElement.children;
+  for (let i = 0; i < children.length; i++) {
+    const element = children.item(i)!;
+    if (element.tagName !== "ORBIT-PROMPT") {
+      continue;
+    }
 
-      if (elementAttachmentMap) {
-        for (const [attachmentID, url] of elementAttachmentMap) {
-          attachmentIDsToURLs[attachmentID] = url;
-        }
+    const { content, attachmentIDsToURLs: elementAttachmentMap } =
+      extractContent(element as OrbitPromptElement);
+    reviewItems.push(generateTaskReviewItem(content));
+
+    if (elementAttachmentMap) {
+      for (const [attachmentID, url] of elementAttachmentMap) {
+        attachmentIDsToURLs[attachmentID] = url;
       }
-    });
+    }
+  }
   return { reviewItems, attachmentIDsToURLs };
 }
 

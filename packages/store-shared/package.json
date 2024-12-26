@@ -6,7 +6,10 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./databaseTests": "./dist/databaseTests.js"
+  },
   "files": [
     "dist"
   ],

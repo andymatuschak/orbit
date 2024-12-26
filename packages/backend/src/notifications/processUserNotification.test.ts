@@ -1,11 +1,11 @@
-import { beforeEach, describe } from "bun:test";
+import { beforeEach, describe, expect, test, jest } from "bun:test";
 import * as dateFns from "date-fns";
+import { UserMetadata } from "../db/userMetadata.js";
 import { generateDueTasks } from "./__fixtures__/generateDueTasks.js";
 import {
   _getUserNotificationAction,
   _updateSessionNotificationStateForNewNotification,
 } from "./processUserNotification.js";
-import { UserMetadata } from "../db/userMetadata.js";
 
 describe("_updateSessionNotificationStateForNewNotification", () => {
   test("reminder", () => {
@@ -89,7 +89,9 @@ describe("_getUserNotificationAction", () => {
             lastNotificationTimestampMillis: testTimestamp - 1000,
           },
         },
-        jest.fn().mockImplementation(() => fail("Should not be called")),
+        jest.fn().mockImplementation(() => {
+          throw new Error("Should not be called");
+        }),
         emailAccessMock,
       ),
     ).toBeNull();

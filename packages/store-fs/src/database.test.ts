@@ -1,5 +1,6 @@
 import { describe } from "bun:test";
-import { Database, runDatabaseTests } from "@withorbit/store-shared";
+import { Database } from "@withorbit/store-shared";
+import { runDatabaseTests } from "@withorbit/store-shared/databaseTests";
 import { SQLDatabaseBackend } from "./sqlite.js";
 
 describe("database tests", () => {

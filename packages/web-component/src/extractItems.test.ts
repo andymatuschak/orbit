@@ -1,3 +1,4 @@
+import { describe, test, expect } from "bun:test";
 import {
   ClozeTaskContent,
   mainTaskComponentID,
@@ -6,6 +7,13 @@ import {
   TaskContentType,
 } from "@withorbit/core";
 import { extractItems } from "./extractItems.js";
+
+// TODO remove when https://github.com/oven-sh/bun/issues/15863 is fixed
+declare module "bun:test" {
+  interface Matchers<T = unknown> {
+    toMatchInlineSnapshot(snapshot?: string | null): Promise<MatcherResult>;
+  }
+}
 
 function getTestElement(reviewAreaInnerHTML: string): HTMLElement {
   document.body.innerHTML = `

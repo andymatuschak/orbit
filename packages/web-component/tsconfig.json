@@ -2,7 +2,7 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["es2023", "dom"],
-    "types": ["jest"],
+    "types": ["bun"],
     "outDir": "./dist",
     "rootDir": "./src"
   },

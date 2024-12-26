@@ -20,5 +20,3 @@ export type {
 export { encodeDataURL } from "./encodeDataURL.js";
 
 export type { OrbitStore } from "./orbitStore.js";
-
-export { runDatabaseTests } from "./databaseTests.js";

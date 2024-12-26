@@ -1,3 +1,4 @@
+import { describe, test, expect } from "bun:test";
 import { generateDueTasks } from "./__fixtures__/generateDueTasks.js";
 import { evaluateReviewSessionSchedule } from "./reviewSessionScheduling.js";
 

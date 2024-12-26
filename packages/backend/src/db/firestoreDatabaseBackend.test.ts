@@ -1,6 +1,8 @@
 import { eventReducer, TaskIngestEvent } from "@withorbit/core";
 import { createTestTaskIngestEvents } from "@withorbit/sample-data";
-import { Database, runDatabaseTests } from "@withorbit/store-shared";
+import { Database } from "@withorbit/store-shared";
+import { runDatabaseTests } from "@withorbit/store-shared/databaseTests";
+import { describe, expect, test } from "bun:test";
 import type { App } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { resetLocalEmulators } from "../__tests__/emulators.js";

@@ -1,4 +1,4 @@
-import { beforeEach } from "bun:test";
+import { describe, test, expect, beforeEach } from "bun:test";
 import { UpdateNotificationSettingsAction } from "../../firebaseFunctions/updateNotificationSettings.js";
 import { resetLocalEmulators } from "../emulators.js";
 import { getTestUserMetadata, setupAuthToken } from "../firebaseTesting.js";

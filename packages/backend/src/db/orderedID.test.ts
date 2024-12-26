@@ -1,3 +1,4 @@
+import { expect, test, jest } from "bun:test";
 import { OrderedIDGenerator } from "./orderedID.js";
 
 test("generates predictably", () => {

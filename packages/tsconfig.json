@@ -16,5 +16,7 @@
     { "path": "./store-web" },
     { "path": "./web-component" }
   ],
-  "files": []
+  "compilerOptions": {
+    "noEmit": true
+  }
 }

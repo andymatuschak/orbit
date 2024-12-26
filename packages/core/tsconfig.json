@@ -5,5 +5,6 @@
     "rootDir": "./src",
     "types": ["bun", "node"]
   },
-  "include": ["./src/**/*.ts", "./@types/**/*.d.ts"]
+  "include": ["./src/**/*.ts", "./@types/**/*.d.ts"],
+  "exclude": ["./src/**/*.test.ts"]
 }

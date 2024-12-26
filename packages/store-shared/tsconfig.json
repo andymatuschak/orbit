@@ -6,6 +6,7 @@
     "types": ["bun"]
   },
   "include": ["./src/**/*.ts", "./@types/**/*.d.ts", "./src/**/*.json"],
+  "exclude": ["./src/**/*.test.ts"],
   "references": [
     {
       "path": "../core"
