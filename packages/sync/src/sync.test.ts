@@ -1,3 +1,4 @@
+import { expect, test } from "bun:test";
 import { AttachmentIngestEvent, Event } from "@withorbit/core";
 import {
   createTestAttachmentIngestEvents,

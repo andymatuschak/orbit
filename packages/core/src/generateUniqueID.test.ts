@@ -1,3 +1,4 @@
+import { test, expect } from "bun:test";
 import {
   encodeUUIDBytesToWebSafeBase64ID,
   generateUniqueID,

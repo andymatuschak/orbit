@@ -10,7 +10,8 @@
     "analyze:web": "source-map-explorer 'web-build/_expo/static/js/web/*.js' 'web-build/_expo/static/js/web/*.js.map'",
     "build:web": "EXPO_USE_METRO_WORKSPACE_ROOT=1 expo export -p web --output-dir web-build --source-maps",
     "deploy:web": "EXPO_USE_METRO_WORKSPACE_ROOT=1 scripts/deploy_web.sh",
-    "generateBrowserCompatibility": "scripts/generate_browser_compatibility_regex.sh"
+    "generateBrowserCompatibility": "scripts/generate_browser_compatibility_regex.sh",
+    "test": "bun test src"
   },
   "dependencies": {
     "@bacons/xcode": "^1.0.0-alpha.14",
@@ -55,7 +56,7 @@
     "@bacons/apple-targets": "^0.0.4",
     "@expo/metro-runtime": "~3.2.1",
     "@types/base-64": "^1.0.2",
-    "@types/bun": "^1.1.5",
+    "@types/bun": "^1.1.14",
     "@types/react": "~18.2.45",
     "@withorbit/sample-data": "0.0.1",
     "expo-dev-client": "~4.0.19",

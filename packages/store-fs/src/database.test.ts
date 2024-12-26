@@ -1,3 +1,4 @@
+import { describe } from "bun:test";
 import { Database, runDatabaseTests } from "@withorbit/store-shared";
 import { SQLDatabaseBackend } from "./sqlite.js";
 

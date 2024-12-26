@@ -1,3 +1,4 @@
+import { expect, test, describe } from "bun:test";
 import {
   testClozeSpec,
   testClozeTask,
@@ -27,21 +28,21 @@ describe("ingest reducer", () => {
     expect(task.isDeleted).toBe(false);
     expect(task.spec).toEqual(testClozeSpec);
     expect(task.componentStates).toMatchInlineSnapshot(`
-      {
-        "a": {
-          "createdAtTimestampMillis": 100,
-          "dueTimestampMillis": 100,
-          "intervalMillis": 0,
-          "lastRepetitionTimestampMillis": null,
-        },
-        "b": {
-          "createdAtTimestampMillis": 100,
-          "dueTimestampMillis": 100,
-          "intervalMillis": 0,
-          "lastRepetitionTimestampMillis": null,
-        },
-      }
-    `);
+{
+  "a": {
+    "createdAtTimestampMillis": 100,
+    "dueTimestampMillis": 100,
+    "intervalMillis": 0,
+    "lastRepetitionTimestampMillis": null,
+  },
+  "b": {
+    "createdAtTimestampMillis": 100,
+    "dueTimestampMillis": 100,
+    "intervalMillis": 0,
+    "lastRepetitionTimestampMillis": null,
+  },
+}
+`);
   });
 
   test("no-op with a base state", () => {

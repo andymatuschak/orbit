@@ -9,7 +9,7 @@ import {
   TaskUpdateProvenanceEvent,
 } from "@withorbit/core";
 import { OrbitStoreInMemory } from "@withorbit/store-fs";
-import { beforeEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import {
   DuplicateItemIdentifierError,
   INGEST_ITEM_IDENTIFIER_KEY,
@@ -28,8 +28,8 @@ beforeEach(() => {
   store = new OrbitStoreInMemory();
 });
 
-afterEach(() => {
-  store.database.close();
+afterEach(async () => {
+  await store.database.close();
 });
 
 it("ingest new prompts from unknown source", async () => {
@@ -74,9 +74,9 @@ it("ingest new prompts from unknown source", async () => {
     title: "Brand new source",
   });
   expect(event.spec).toEqual({
-    type: "memory",
+    type: TaskSpecType.Memory,
     content: {
-      type: "qa",
+      type: TaskContentType.QA,
       body: { text: "Question", attachments: [] },
       answer: { text: "Answer", attachments: [] },
     },
@@ -132,9 +132,9 @@ it("ingest new prompts from known source", async () => {
     title: "Existing Source",
   });
   expect(event.spec).toEqual({
-    type: "memory",
+    type: TaskSpecType.Memory,
     content: {
-      type: "qa",
+      type: TaskContentType.QA,
       body: { text: "New Question", attachments: [] },
       answer: { text: "New Answer", attachments: [] },
     },
@@ -519,8 +519,8 @@ describe("throws", () => {
 
 // These need the following format or else the putEvents will fail the schema validation
 // check for events
-const MOCK_EVENT_ID = "bbbbbbbbbbbbbbbbbbbbbb";
-const MOCK_ENTITY_ID = "yyyyyyyyyyyyyyyyyyyyyy";
+const MOCK_EVENT_ID = "bbbbbbbbbbbbbbbbbbbbbb" as EventID;
+const MOCK_ENTITY_ID = "yyyyyyyyyyyyyyyyyyyyyy" as TaskID;
 
 function mockQATask(args: {
   eventID?: string;

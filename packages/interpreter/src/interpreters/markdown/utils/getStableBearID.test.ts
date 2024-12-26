@@ -1,3 +1,4 @@
+import { describe, test, expect } from "bun:test";
 import mdast from "mdast";
 import { processor } from "../markdown.js";
 import { getStableBearID } from "./getStableBearID.js";

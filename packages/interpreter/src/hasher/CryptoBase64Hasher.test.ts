@@ -1,4 +1,5 @@
 import { TaskContentType, TaskSpec, TaskSpecType } from "@withorbit/core";
+import { expect, it } from "bun:test";
 import { CryptoBase64Hasher } from "./CryptoBase64Hasher.js";
 
 it("hashes", () => {

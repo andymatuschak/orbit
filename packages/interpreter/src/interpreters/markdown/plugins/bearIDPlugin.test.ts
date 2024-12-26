@@ -1,3 +1,4 @@
+import { expect, test } from "bun:test";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
 import { unified } from "unified";

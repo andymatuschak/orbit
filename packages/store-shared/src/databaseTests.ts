@@ -66,8 +66,8 @@ export function runDatabaseTests(
       const result = await db.getEvents(["a", "c"] as EventID[]);
       expect(result).toEqual(
         new Map([
-          ["a", testEvents[0]],
-          ["c", testEvents[2]],
+          ["a" as EventID, testEvents[0]],
+          ["c" as EventID, testEvents[2]],
         ]),
       );
     });
@@ -269,7 +269,7 @@ export function runDatabaseTests(
           limit: 1,
         });
         expect(entities.length).toBe(1);
-        expect(entities[0].id).toBe("q");
+        expect(entities[0].id).toBe("q" as EntityID);
       });
 
       test("after", async () => {
@@ -278,8 +278,8 @@ export function runDatabaseTests(
           afterID: "a" as TaskID,
         });
         expect(entities.length).toBe(2);
-        expect(entities[0].id).toBe("b");
-        expect(entities[1].id).toBe("c");
+        expect(entities[0].id).toBe("b" as EntityID);
+        expect(entities[1].id).toBe("c" as EntityID);
       });
 
       test("tasks by due timestamp", async () => {
@@ -288,8 +288,8 @@ export function runDatabaseTests(
           predicate: ["dueTimestampMillis", "<=", 100],
         });
         expect(entities.length).toBe(2);
-        expect(entities[0].id).toBe("a");
-        expect(entities[1].id).toBe("b");
+        expect(entities[0].id).toBe("a" as EntityID);
+        expect(entities[1].id).toBe("b" as EntityID);
       });
 
       test("tasks by due timestamp, limit", async () => {
@@ -299,7 +299,7 @@ export function runDatabaseTests(
           predicate: ["dueTimestampMillis", "<=", 100],
         });
         expect(entities.length).toBe(1);
-        expect(entities[0].id).toBe("a");
+        expect(entities[0].id).toBe("a" as EntityID);
       });
 
       test("tasks by due timestamp, afterID", async () => {
@@ -309,8 +309,8 @@ export function runDatabaseTests(
           predicate: ["dueTimestampMillis", "<=", 150],
         });
         expect(entities.length).toBe(2);
-        expect(entities[0].id).toBe("b");
-        expect(entities[1].id).toBe("c");
+        expect(entities[0].id).toBe("b" as EntityID);
+        expect(entities[1].id).toBe("c" as EntityID);
       });
 
       test("tasks by due timestamp, afterID, limit", async () => {
@@ -321,7 +321,7 @@ export function runDatabaseTests(
           predicate: ["dueTimestampMillis", "<=", 150],
         });
         expect(entities.length).toBe(1);
-        expect(entities[0].id).toBe("b");
+        expect(entities[0].id).toBe("b" as EntityID);
       });
 
       test("attachment references", async () => {
@@ -329,8 +329,8 @@ export function runDatabaseTests(
           entityType: EntityType.AttachmentReference,
         });
         expect(entities.length).toBe(2);
-        expect(entities[0].id).toBe("a_a");
-        expect(entities[1].id).toBe("b_a");
+        expect(entities[0].id).toBe("a_a" as EntityID);
+        expect(entities[1].id).toBe("b_a" as EntityID);
       });
     });
 

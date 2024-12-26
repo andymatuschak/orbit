@@ -1,4 +1,5 @@
 import { Schema } from "ajv";
+import { describe, expect, it } from "bun:test";
 import { AjvAPIValidator } from "./ajvAPIValidator.js";
 
 type Apple = { isSliced: boolean };
@@ -212,6 +213,7 @@ describe("AjvAPIValidator", () => {
       null,
     );
     expect(result).toEqual(true);
+    // @ts-ignore
     expect(body).toEqual({ ids: ["id1"] });
   });
 });

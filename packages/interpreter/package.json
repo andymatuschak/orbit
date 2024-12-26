@@ -8,7 +8,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsc -b",
-    "test": "jest",
+    "test": "bun test src",
     "interpret": "bun src/bin/run.ts",
     "migrateNoteSync": "node dist/bin/migrateNoteSync.js"
   },
@@ -32,13 +32,10 @@
     "unist-util-select": "^5.0.0"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.16.11",
-    "@types/jest": "^29.5.5",
+    "@types/bun": "^1.1.14",
     "@types/mdast": "^4.0.1",
     "@types/node": "^20.10.4",
     "@types/unist": "^3.0.0",
-    "babel-jest": "^29.7.0",
-    "jest": "^29.7.0",
     "micromark-util-types": "^2.0.0",
     "typescript": "^5.3.3"
   }

@@ -1,3 +1,4 @@
+import { expect, test, describe } from "bun:test";
 import { Task } from "./entities/task.js";
 import { testClozeTask } from "./__tests__/testTasks.js";
 import { createReviewQueue } from "./reviewQueue.js";

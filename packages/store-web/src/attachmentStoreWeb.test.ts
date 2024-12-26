@@ -1,5 +1,5 @@
 import { AttachmentID, AttachmentMIMEType } from "@withorbit/core";
-import { beforeEach } from "bun:test";
+import { beforeEach, expect, test } from "bun:test";
 // @ts-ignore Looks like there is no @types for this library
 import FDBFactory from "fake-indexeddb/lib/FDBFactory";
 import { AttachmentStoreWeb } from "./attachmentStoreWeb.js";

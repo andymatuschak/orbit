@@ -1,3 +1,4 @@
+import { expect, test, describe } from "bun:test";
 import { TaskComponentState } from "../entities/task.js";
 import { TaskRepetitionOutcome } from "../event.js";
 import {
@@ -6,6 +7,13 @@ import {
 } from "./spacedRepetitionScheduler.js";
 
 const scheduler = createSpacedRepetitionScheduler();
+
+// TODO remove when https://github.com/oven-sh/bun/issues/15863 is fixed
+declare module "bun:test" {
+  interface Matchers<T = unknown> {
+    toMatchInlineSnapshot(snapshot?: string | null): Promise<MatcherResult>;
+  }
+}
 
 describe("first repetition", () => {
   const state: TaskComponentState = {

@@ -1,3 +1,4 @@
+import { expect, test } from "bun:test";
 import mdast from "mdast";
 import { selectAll } from "unist-util-select";
 import {

@@ -7,6 +7,7 @@
     "@babel/core": "^7.23.5",
     "@babel/preset-env": "^7.23.5",
     "@babel/preset-typescript": "^7.23.3",
+    "@happy-dom/global-registrator": "^15.11.7",
     "@types/uuid": "^8.3.1",
     "@withorbit/core": "0.0.1",
     "@withorbit/embedded-support": "0.0.1",

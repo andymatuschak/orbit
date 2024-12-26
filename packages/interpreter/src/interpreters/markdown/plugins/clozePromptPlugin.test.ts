@@ -1,3 +1,4 @@
+import { expect, test } from "bun:test";
 import { clozeNodeType, markdownProcessor } from "../markdown.js";
 import promptProcessorPlugin from "./clozePromptPlugin.js";
 
@@ -137,7 +138,7 @@ test("doesn't parse clozes inside html blocks", () => {
 });
 
 // This test fails: the cloze parser removes trailing whitespace from the cloze. This happens because of our strategy for parsing the cloze interior: we emit a chunkText-type token for the interior. Then the tokenizer is run recursively over that interior. It turns the trailing whitespace into a lineSuffix node. That woudl be appropriate if the nested string were in fact a line, but of course it's not. This isn't important enough to me to fix right now.
-test.failing("it leaves leading/trailing whitespace", () => {
+test.skip("it leaves leading/trailing whitespace", () => {
   const markdown = "{ test }";
   const ast = processor.parse(markdown);
   expect(ast).toMatchObject({

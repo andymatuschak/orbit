@@ -1,4 +1,4 @@
-import { beforeEach } from "bun:test";
+import { beforeEach, describe, test, expect } from "bun:test";
 import { Entity, EventID, EventType, Task, TaskID } from "@withorbit/core";
 import { createTestTask } from "@withorbit/sample-data";
 import {
@@ -10,6 +10,13 @@ import FDBFactory from "fake-indexeddb/lib/FDBFactory";
 import { IDBDatabaseBackend } from "./indexedDB.js";
 
 let backend: IDBDatabaseBackend;
+
+// TODO remove when https://github.com/oven-sh/bun/issues/15863 is fixed
+declare module "bun:test" {
+  interface Matchers<T = unknown> {
+    toMatchInlineSnapshot(snapshot?: string | null): Promise<MatcherResult>;
+  }
+}
 
 const testTasks: DatabaseBackendEntityRecord<Task>[] = [
   {
@@ -39,7 +46,7 @@ const testTasks: DatabaseBackendEntityRecord<Task>[] = [
 ];
 
 beforeEach(() => {
-  indexedDB = new FDBFactory();
+  global.indexedDB = new FDBFactory();
   backend = new IDBDatabaseBackend("OrbitDatabase", indexedDB);
 });
 
@@ -64,19 +71,19 @@ describe("task components", () => {
 
     expect(filteredResults.length).toBe(2);
     expect(filteredResults[0]).toMatchInlineSnapshot(`
-      {
-        "componentID": "a",
-        "dueTimestampMillis": 50,
-        "taskID": "a",
-      }
-    `);
+{
+  "componentID": "a",
+  "dueTimestampMillis": 50,
+  "taskID": "a",
+}
+`);
     expect(filteredResults[1]).toMatchInlineSnapshot(`
-      {
-        "componentID": "b",
-        "dueTimestampMillis": 50,
-        "taskID": "a",
-      }
-    `);
+{
+  "componentID": "b",
+  "dueTimestampMillis": 50,
+  "taskID": "a",
+}
+`);
   });
 
   test("modified on update", async () => {
@@ -117,12 +124,12 @@ describe("task components", () => {
 
     expect(filteredResults.length).toBe(1);
     expect(filteredResults[0]).toMatchInlineSnapshot(`
-      {
-        "componentID": "a",
-        "dueTimestampMillis": 300,
-        "taskID": "a",
-      }
-    `);
+{
+  "componentID": "a",
+  "dueTimestampMillis": 300,
+  "taskID": "a",
+}
+`);
   });
 });
 

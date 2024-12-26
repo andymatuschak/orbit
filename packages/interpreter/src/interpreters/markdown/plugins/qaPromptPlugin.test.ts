@@ -1,3 +1,4 @@
+import { describe, test, expect } from "bun:test";
 import { select, selectAll } from "unist-util-select";
 import { markdownProcessor } from "../markdown.js";
 import { QAPromptNode, qaPromptNodeType } from "../markdown.js";
