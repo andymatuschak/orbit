@@ -4,6 +4,7 @@ import {
   AttachmentReference,
   EntityType,
 } from "@withorbit/core";
+import { beforeEach, describe, expect, test } from "bun:test";
 import fs from "fs";
 import os from "os";
 import path from "path";

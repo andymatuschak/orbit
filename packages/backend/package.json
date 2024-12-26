@@ -48,6 +48,7 @@
     "@babel/plugin-syntax-import-attributes": "^7.23.3",
     "@babel/preset-env": "^7.23.5",
     "@babel/preset-typescript": "^7.23.3",
+    "@types/bun": "^1.1.14",
     "@types/busboy": "^0.2.3",
     "@types/cookie-parser": "^1.4.2",
     "@types/cors": "^2.8.8",

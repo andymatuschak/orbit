@@ -14,6 +14,7 @@ import {
   TaskIngestEvent,
 } from "@withorbit/core";
 import { testTask } from "@withorbit/sample-data";
+import { beforeEach, afterEach, describe, expect, test } from "bun:test";
 import { Database, EventReducer } from "./database.js";
 import { AjvEventsValidator } from "./validation/AjvEventsValidator.js";
 import { EventsValidator } from "./validation/eventsValidator.js";
@@ -416,7 +417,7 @@ function transformTestEventsToHaveValidIDs(events: Event[]): Event[] {
         ...event,
         id: createValidID(event.id),
         entityID: createValidID(event.entityID),
-      } as Event),
+      }) as Event,
   );
 }
 

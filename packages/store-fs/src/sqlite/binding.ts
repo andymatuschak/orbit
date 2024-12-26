@@ -1,7 +1,7 @@
 // This file and databaseBinding.ts provide a unified binding for the external SQLite database APIs we use on those platforms.
 // This file supplies the implementation used when running in a Node environment.
 
-import SQLiteDatabase from "better-sqlite3";
+import SQLiteDatabase from "@farjs/better-sqlite3-wrapper";
 import { SQLDatabaseBinding, SQLResult, SQLTransaction } from "./types.js";
 
 class NodeSQLDatabaseBinding {

@@ -4,6 +4,7 @@ import {
   DatabaseBackend,
   DatabaseBackendEntityRecord,
 } from "@withorbit/store-shared";
+import { beforeEach, test, describe, expect } from "bun:test";
 import { tmpdir } from "os";
 import path from "path";
 import {
@@ -81,24 +82,27 @@ describe("task components", () => {
     await putTasks(backend, testTasks);
     const db = await backend.__accessDBForTesting();
     const results = await db.executeSql(
-      `SELECT * FROM derived_taskComponents WHERE taskID=? ORDER BY componentID`,
+      `SELECT *
+       FROM derived_taskComponents
+       WHERE taskID = ?
+       ORDER BY componentID`,
       ["a"],
     );
     expect(results.rows.length).toBe(2);
     expect(results.rows[0]).toMatchInlineSnapshot(`
-      {
-        "componentID": "a",
-        "dueTimestampMillis": 50,
-        "taskID": "a",
-      }
-    `);
+{
+  "componentID": "a",
+  "dueTimestampMillis": 50,
+  "taskID": "a",
+}
+`);
     expect(results.rows[1]).toMatchInlineSnapshot(`
-      {
-        "componentID": "b",
-        "dueTimestampMillis": 50,
-        "taskID": "a",
-      }
-    `);
+{
+  "componentID": "b",
+  "dueTimestampMillis": 50,
+  "taskID": "a",
+}
+`);
   });
 
   test("modified on update", async () => {
@@ -118,17 +122,20 @@ describe("task components", () => {
 
     const db = await backend.__accessDBForTesting();
     const results = await db.executeSql(
-      `SELECT * FROM derived_taskComponents WHERE taskID=? ORDER BY componentID`,
+      `SELECT *
+       FROM derived_taskComponents
+       WHERE taskID = ?
+       ORDER BY componentID`,
       ["a"],
     );
     expect(results.rows.length).toBe(1);
     expect(results.rows[0]).toMatchInlineSnapshot(`
-      {
-        "componentID": "a",
-        "dueTimestampMillis": 300,
-        "taskID": "a",
-      }
-    `);
+{
+  "componentID": "a",
+  "dueTimestampMillis": 300,
+  "taskID": "a",
+}
+`);
   });
 
   test("removed when deleted", async () => {
@@ -141,7 +148,10 @@ describe("task components", () => {
     await putTasks(backend, [updatedRecord]);
     const db = await backend.__accessDBForTesting();
     const results = await db.executeSql(
-      `SELECT * FROM derived_taskComponents WHERE taskID=? ORDER BY componentID`,
+      `SELECT *
+       FROM derived_taskComponents
+       WHERE taskID = ?
+       ORDER BY componentID`,
       ["a"],
     );
     expect(results.rows.length).toBe(0);
@@ -162,10 +172,10 @@ describe("indexing", () => {
       ["test"],
     );
     expect(plan).toMatchInlineSnapshot(`
-      [
-        "SEARCH entities USING INDEX sqlite_autoindex_entities_1 (id=?)",
-      ]
-    `);
+[
+  "SEARCH entities USING INDEX sqlite_autoindex_entities_1 (id=?)",
+]
+`);
   });
 
   test("get events by ID", async () => {
@@ -180,10 +190,10 @@ describe("indexing", () => {
       ["test"],
     );
     expect(plan).toMatchInlineSnapshot(`
-      [
-        "SEARCH events USING INDEX sqlite_autoindex_events_1 (id=?)",
-      ]
-    `);
+[
+  "SEARCH events USING INDEX sqlite_autoindex_events_1 (id=?)",
+]
+`);
   });
 
   test("list entities", async () => {
@@ -198,12 +208,12 @@ describe("indexing", () => {
       query.args,
     );
     expect(plan).toMatchInlineSnapshot(`
-      [
-        "SEARCH entities USING INDEX entities_type (entityType=? AND rowid>?)",
-        "SCALAR SUBQUERY 1",
-        "SEARCH entities USING COVERING INDEX sqlite_autoindex_entities_1 (id=?)",
-      ]
-    `);
+[
+  "SEARCH entities USING INDEX entities_type (entityType=? AND rowid>?)",
+  "SCALAR SUBQUERY 1",
+  "SEARCH entities USING COVERING INDEX sqlite_autoindex_entities_1 (id=?)",
+]
+`);
   });
 
   test("list tasks by due timestamp", async () => {
@@ -218,12 +228,12 @@ describe("indexing", () => {
       query.args,
     );
     expect(plan).toMatchInlineSnapshot(`
-      [
-        "SEARCH dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
-        "SEARCH e USING INDEX sqlite_autoindex_entities_1 (id=?)",
-        "USE TEMP B-TREE FOR DISTINCT",
-      ]
-    `);
+[
+  "SEARCH dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
+  "SEARCH e USING INDEX sqlite_autoindex_entities_1 (id=?)",
+  "USE TEMP B-TREE FOR DISTINCT",
+]
+`);
 
     const queryWithSeek = constructListEntitySQLQuery({
       entityType: EntityType.Task,
@@ -237,15 +247,15 @@ describe("indexing", () => {
       queryWithSeek.args,
     );
     expect(planWithSeek).toMatchInlineSnapshot(`
-      [
-        "SEARCH dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
-        "SEARCH e USING INDEX sqlite_autoindex_entities_1 (id=? AND rowid>?)",
-        "SCALAR SUBQUERY 1",
-        "SEARCH e USING COVERING INDEX sqlite_autoindex_entities_1 (id=?)",
-        "SEARCH dt USING COVERING INDEX sqlite_autoindex_derived_taskComponents_1 (taskID=?)",
-        "USE TEMP B-TREE FOR DISTINCT",
-      ]
-    `);
+[
+  "SEARCH dt USING INDEX derived_taskComponents_dueTimestampMillis (dueTimestampMillis<?)",
+  "SEARCH e USING INDEX sqlite_autoindex_entities_1 (id=? AND rowid>?)",
+  "SCALAR SUBQUERY 1",
+  "SEARCH e USING COVERING INDEX sqlite_autoindex_entities_1 (id=?)",
+  "SEARCH dt USING COVERING INDEX sqlite_autoindex_derived_taskComponents_1 (taskID=?)",
+  "USE TEMP B-TREE FOR DISTINCT",
+]
+`);
   });
 
   test("list events by entity ID", async () => {
@@ -260,12 +270,12 @@ describe("indexing", () => {
       query.args,
     );
     expect(plan).toMatchInlineSnapshot(`
-      [
-        "SEARCH events USING INDEX events_entityID (entityID=? AND rowid>?)",
-        "SCALAR SUBQUERY 1",
-        "SEARCH events USING COVERING INDEX sqlite_autoindex_events_1 (id=?)",
-      ]
-    `);
+[
+  "SEARCH events USING INDEX events_entityID (entityID=? AND rowid>?)",
+  "SCALAR SUBQUERY 1",
+  "SEARCH events USING COVERING INDEX sqlite_autoindex_events_1 (id=?)",
+]
+`);
   });
 });
 
@@ -291,14 +301,16 @@ describe("20230726103155_derived_taskComponents_whenNotDeleted", () => {
       const oldCount = (
         await (
           await backend.__accessDBForTesting()
-        ).executeSql(`SELECT * FROM derived_taskComponents`)
+        ).executeSql(`SELECT *
+                      FROM derived_taskComponents`)
       ).rows.length;
       await backend.close();
 
       backend = new SQLDatabaseBackend(tempPath);
       const results = await (
         await backend.__accessDBForTesting()
-      ).executeSql(`SELECT * FROM derived_taskComponents`);
+      ).executeSql(`SELECT *
+                    FROM derived_taskComponents`);
       expect(results.rows.length).toBe(isDeleted ? 0 : oldCount);
     },
   );

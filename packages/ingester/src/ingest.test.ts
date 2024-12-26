@@ -9,10 +9,11 @@ import {
   TaskUpdateProvenanceEvent,
 } from "@withorbit/core";
 import { OrbitStoreInMemory } from "@withorbit/store-fs";
+import { beforeEach } from "bun:test";
 import {
   DuplicateItemIdentifierError,
-  ingestSources,
   INGEST_ITEM_IDENTIFIER_KEY,
+  ingestSources,
   MissingItemIdentifierError,
 } from "./ingest.js";
 import {

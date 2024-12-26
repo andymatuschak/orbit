@@ -3,6 +3,7 @@ import {
   AttachmentMIMEType,
   generateUniqueID,
 } from "@withorbit/core";
+import { beforeEach } from "bun:test";
 import { resetLocalEmulators } from "../emulators.js";
 import { setupTestOrbitAPIClient } from "../firebaseTesting.js";
 
