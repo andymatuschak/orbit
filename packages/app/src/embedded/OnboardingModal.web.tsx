@@ -4,10 +4,12 @@ import {
   Spacer,
   styles,
   textFieldHorizontalPadding,
+  useOrbitLocale,
   TextInput,
 } from "@withorbit/ui";
 import React from "react";
 import { Text, View } from "react-native";
+import { getEmbeddedStrings } from "./localization.js";
 
 export interface OnboardingModalProps {
   colorPalette: styles.colors.ColorPalette;
@@ -17,7 +19,7 @@ export interface OnboardingModalProps {
 // Obviously not exhaustive, but good enough for this purpose.
 const emailRegexp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
-function onSubmit(email: string) {
+function onSubmit(email: string, invalidEmailMessage: string) {
   if (emailRegexp.test(email)) {
     const tokenTarget = "opener"; // As of macOS 13, Safari claims to support broadcast channels in embedded iframes, but messages seem to silently fail?
     // const tokenTarget = supportsLoginTokenBroadcastChannel()
@@ -29,7 +31,7 @@ function onSubmit(email: string) {
       "width=375,height=500",
     );
   } else {
-    alert("Please enter a valid email address.");
+    alert(invalidEmailMessage);
   }
 }
 
@@ -38,6 +40,7 @@ export default function OnboardingModalWeb({
   sizeClass,
 }: OnboardingModalProps) {
   const [email, setEmail] = React.useState("");
+  const copy = getEmbeddedStrings(useOrbitLocale()).onboarding;
 
   const proseStyle =
     sizeClass === "regular"
@@ -69,7 +72,7 @@ export default function OnboardingModalWeb({
             { color: styles.colors.white },
           ]}
         >
-          Sign in to bring these ideas into your&nbsp;Orbit
+          {copy.heading}
         </Text>
         <Spacer units={2} />
         <View
@@ -84,8 +87,8 @@ export default function OnboardingModalWeb({
             colorPalette={colorPalette}
             placeholder={
               sizeClass === "regular"
-                ? "Enter your email address to sign in"
-                : "Enter your email address"
+                ? copy.emailPlaceholder
+                : copy.emailPlaceholderCompact
             }
             autoCorrect={false}
             importantForAutofill="yes"
@@ -99,9 +102,9 @@ export default function OnboardingModalWeb({
             value={email}
             onChangeText={setEmail}
             onSubmitEditing={() => {
-              onSubmit(email);
+              onSubmit(email, copy.invalidEmail);
             }}
-            returnKeyLabel="Sign in"
+            returnKeyLabel={copy.signIn}
             returnKeyType="done"
           />
           <Spacer units={1} />
@@ -110,29 +113,26 @@ export default function OnboardingModalWeb({
             backgroundColor={colorPalette.secondaryBackgroundColor}
             color={colorPalette.accentColor}
             accentColor={colorPalette.accentColor}
-            accessibilityLabel="Continue"
+            accessibilityLabel={copy.continue}
             onPress={() => {
-              onSubmit(email);
+              onSubmit(email, copy.invalidEmail);
             }}
           />
         </View>
         <Spacer units={3} />
-        <Text style={proseStyle}>
-          We read so much but remember so little. Orbit helps you deeply
-          internalize what you read through periodic review.
-        </Text>
+        <Text style={proseStyle}>{copy.explanation}</Text>
         <Spacer units={3} />
         <Text style={proseStyle}>
-          Sign in to get started or{" "}
+          {copy.callToActionPrefix}
           <a
             href="https://withorbit.com"
             rel="noreferrer"
             target="_blank"
             style={{ color: "inherit" }}
           >
-            click here to learn more
+            {copy.learnMore}
           </a>
-          .
+          {copy.callToActionSuffix}
         </Text>
         <Spacer units={2} />
       </View>

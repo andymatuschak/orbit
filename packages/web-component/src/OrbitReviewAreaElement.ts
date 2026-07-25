@@ -10,6 +10,7 @@ import {
 } from "@withorbit/embedded-support";
 import { extractItems } from "./extractItems.js";
 import { getSharedMetadataMonitor } from "./metadataMonitor.js";
+import { getInheritedLanguage } from "./getInheritedLanguage.js";
 
 declare global {
   // supplied by Webpack
@@ -204,6 +205,7 @@ export class OrbitReviewAreaElement extends HTMLElement {
         ...(colorOverride && { colorPaletteName: colorOverride }),
       },
       sessionStartTimestampMillis,
+      locale: getInheritedLanguage(this),
       isDebug: pageIsDebug() || this.hasAttribute("debug"),
     };
   }

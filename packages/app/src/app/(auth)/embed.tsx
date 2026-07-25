@@ -17,6 +17,7 @@ import {
 } from "@withorbit/embedded-support";
 import {
   FadeView,
+  OrbitLocaleProvider,
   ReviewArea,
   ReviewAreaItem,
   ReviewAreaMarkingRecord,
@@ -24,6 +25,7 @@ import {
   ReviewStarburstItem,
   styles,
   useLayout,
+  useOrbitLocale,
   useTransitioningValue,
 } from "@withorbit/ui";
 
@@ -53,6 +55,10 @@ import { useRemoteTaskStates } from "../../embedded/useRemoteTaskStates.js";
 import { findItemsToRetry } from "../../embedded/util/findItemsToRetry.js";
 import getEmbeddedColorPalette from "../../embedded/util/getEmbeddedColorPalette.js";
 import getEmbeddedScreenConfigurationFromURL from "../../embedded/util/getEmbeddedScreenConfigurationFromURL.js";
+import {
+  getEmbeddedStrings,
+  getEndOfTaskLabel,
+} from "../../embedded/localization.js";
 
 function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
   return sessionItems.map((item) => {
@@ -63,21 +69,6 @@ function getStarburstItems(sessionItems: ReviewItem[]): ReviewStarburstItem[] {
         componentState.lastRepetitionTimestampMillis === null,
     };
   });
-}
-
-function getEndOfTaskLabel(
-  starburstItems: ReviewStarburstItem[],
-  hasPeerStates: boolean,
-): string {
-  const promptString = starburstItems.length > 1 ? "prompts" : "prompt";
-  if (hasPeerStates) {
-    const collectedCount = starburstItems.filter(
-      (state) => !state.isPendingForSession,
-    ).length;
-    return `${collectedCount} of ${starburstItems.length} prompts on page collected`;
-  } else {
-    return `${starburstItems.length} ${promptString} collected`;
-  }
 }
 
 interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
@@ -111,6 +102,8 @@ function EmbeddedScreenRenderer({
   reviewAreaQueue,
   wasInitiallyComplete,
 }: EmbeddedScreenRendererProps) {
+  const locale = useOrbitLocale();
+  const copy = getEmbeddedStrings(locale);
   const [pendingOutcome, setPendingOutcome] =
     useState<TaskRepetitionOutcome | null>(null);
 
@@ -217,7 +210,13 @@ function EmbeddedScreenRenderer({
               },
             ]}
           >
-            {getEndOfTaskLabel(starburstItems, !!hostState)}
+            {getEndOfTaskLabel(locale, {
+              collectedPromptCount: starburstItems.filter(
+                (item) => !item.isPendingForSession,
+              ).length,
+              totalPromptCount: starburstItems.length,
+              hasPeerStates: !!hostState,
+            })}
           </Text>
         </FadeView>
         <FadeView
@@ -236,7 +235,7 @@ function EmbeddedScreenRenderer({
               },
             ]}
           >
-            Saved to your account:
+            {copy.savedToAccount}
             <br />
             {authenticationState.userRecord?.emailAddress}
           </Text>
@@ -452,36 +451,38 @@ function EmbeddedPage({
   }
 
   return (
-    <View style={{ height: "100%", width: "100%", overflow: "hidden" }}>
-      <ReviewSessionContainer colorPalette={colorPalette}>
-        {({ containerSize }) => {
-          const { currentReviewAreaQueueIndex, currentSessionItemIndex } =
-            reviewSessionManager;
-          if (
-            currentReviewAreaQueueIndex === null ||
-            currentSessionItemIndex === null
-          ) {
-            return null;
-          }
-          return (
-            <EmbeddedScreenRenderer
-              {...reviewSessionManager}
-              currentReviewAreaQueueIndex={currentReviewAreaQueueIndex}
-              currentSessionItemIndex={currentSessionItemIndex}
-              onMark={onMark}
-              containerSize={containerSize}
-              authenticationState={authenticationState}
-              colorPalette={colorPalette}
-              hostState={hostState}
-              hasUncommittedActions={hasUncommittedActions}
-              isDebug={configuration.isDebug}
-              wasInitiallyComplete={wasInitiallyComplete}
-              getURLForAttachmentID={getURLForAttachmentIDAsync}
-            />
-          );
-        }}
-      </ReviewSessionContainer>
-    </View>
+    <OrbitLocaleProvider locale={configuration.locale}>
+      <View style={{ height: "100%", width: "100%", overflow: "hidden" }}>
+        <ReviewSessionContainer colorPalette={colorPalette}>
+          {({ containerSize }) => {
+            const { currentReviewAreaQueueIndex, currentSessionItemIndex } =
+              reviewSessionManager;
+            if (
+              currentReviewAreaQueueIndex === null ||
+              currentSessionItemIndex === null
+            ) {
+              return null;
+            }
+            return (
+              <EmbeddedScreenRenderer
+                {...reviewSessionManager}
+                currentReviewAreaQueueIndex={currentReviewAreaQueueIndex}
+                currentSessionItemIndex={currentSessionItemIndex}
+                onMark={onMark}
+                containerSize={containerSize}
+                authenticationState={authenticationState}
+                colorPalette={colorPalette}
+                hostState={hostState}
+                hasUncommittedActions={hasUncommittedActions}
+                isDebug={configuration.isDebug}
+                wasInitiallyComplete={wasInitiallyComplete}
+                getURLForAttachmentID={getURLForAttachmentIDAsync}
+              />
+            );
+          }}
+        </ReviewSessionContainer>
+      </View>
+    </OrbitLocaleProvider>
   );
 }
 

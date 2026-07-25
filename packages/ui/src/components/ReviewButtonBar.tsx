@@ -2,6 +2,8 @@ import { TaskContentType, TaskRepetitionOutcome } from "@withorbit/core";
 import React, { useRef } from "react";
 import { View } from "react-native";
 import { colors, layout } from "../styles/index.js";
+import { useReviewStrings } from "../OrbitLocaleContext.js";
+import type { ReviewStrings } from "../localization.js";
 import { ColorPalette } from "../styles/colors.js";
 import { SizeClass } from "../styles/layout.js";
 import Button, { ButtonPendingActivationState } from "./Button.jsx";
@@ -43,24 +45,25 @@ function getButtonTitle(
   promptType: TaskContentType,
   outcome: TaskRepetitionOutcome.Remembered | TaskRepetitionOutcome.Forgotten,
   isVeryNarrow: boolean,
+  strings: ReviewStrings,
 ) {
   switch (outcome) {
     case TaskRepetitionOutcome.Remembered:
       switch (promptType) {
         case TaskContentType.QA:
         case TaskContentType.Cloze:
-          return isVeryNarrow ? "Succeeded" : "Remembered";
+          return isVeryNarrow ? strings.rememberedNarrow : strings.remembered;
         case TaskContentType.Plain:
-          return "Succeeded";
+          return strings.succeeded;
       }
       break;
     case TaskRepetitionOutcome.Forgotten:
       switch (promptType) {
         case TaskContentType.QA:
         case TaskContentType.Cloze:
-          return isVeryNarrow ? "Needs Work" : "Forgotten";
+          return isVeryNarrow ? strings.forgottenNarrow : strings.forgotten;
         case TaskContentType.Plain:
-          return "Needs Practice";
+          return strings.needsPractice;
       }
   }
 }
@@ -101,6 +104,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
 }) {
   const { width, onLayout } = useLayout();
   const isVeryNarrow = width > 0 && width <= 320;
+  const strings = useReviewStrings();
 
   const shortcuts = getShortcuts(isShowingAnswer, onMark, onReveal);
 
@@ -162,7 +166,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
           size="small"
           onPress={() => onMark(TaskRepetitionOutcome.Skipped)}
           iconName={IconName.DoubleArrowRight}
-          title="Skip"
+          title={strings.skip}
           alignment="right"
         />
       </View>
@@ -180,6 +184,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
               promptType,
               TaskRepetitionOutcome.Forgotten,
               isVeryNarrow,
+              strings,
             )}
             onPendingInteractionStateDidChange={(pendingActivationState) => {
               forgottenButtonPendingState.current = pendingActivationState;
@@ -196,6 +201,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
               promptType,
               TaskRepetitionOutcome.Remembered,
               isVeryNarrow,
+              strings,
             )}
             onPendingInteractionStateDidChange={(pendingActivationState) => {
               rememberedButtonPendingState.current = pendingActivationState;
@@ -213,7 +219,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
             {...sharedButtonProps}
             onPress={onReveal}
             iconName={IconName.Reveal}
-            title={"Show Answer"}
+            title={strings.showAnswer}
             key={"Show answer"}
             hitSlop={firstButtonSlop}
           />

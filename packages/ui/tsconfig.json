@@ -12,7 +12,8 @@
         "react-native-markdown-display"
       ]
     },
-    "lib": ["es2023", "dom"]
+    "lib": ["es2023", "dom"],
+    "types": ["jest"]
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx"],
   "references": [

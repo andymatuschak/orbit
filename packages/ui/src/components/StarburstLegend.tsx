@@ -2,6 +2,7 @@ import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core";
 import React, { useMemo } from "react";
 import { Animated, View } from "react-native";
 import { generateIntervalSequence } from "../util/generateIntervalSequence.js";
+import { useReviewStrings } from "../OrbitLocaleContext.js";
 import { layout, type } from "../styles/index.js";
 import { useTransitioningValue } from "./hooks/useTransitioningValue.js";
 import {
@@ -111,6 +112,7 @@ export default React.memo(function StarburstLegend({
   futureTickColor,
   backgroundColor,
 }: StarburstLegendProps) {
+  const strings = useReviewStrings();
   const sequence = generateIntervalSequence(config).slice(1);
   const nextSequenceIndex = sequence.findIndex(
     ({ interval }) => interval > activeInterval * 1.1,
@@ -140,7 +142,7 @@ export default React.memo(function StarburstLegend({
                 ? "present"
                 : "future"
           }
-          label={label}
+          label={strings.formatIntervalLabel(label)}
           pastLabelColor={pastLabelColor}
           presentLabelColor={presentLabelColor}
           futureLabelColor={futureLabelColor}

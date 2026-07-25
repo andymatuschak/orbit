@@ -6,6 +6,8 @@ export interface EmbeddedScreenConfiguration {
   attachmentIDsToURLs: { [AttachmentID: string]: string };
   embeddedHostMetadata: EmbeddedHostMetadata;
   sessionStartTimestampMillis: number;
+  /** BCP 47 language tag for interface chrome. Omitted by older hosts. */
+  locale?: string;
   isDebug?: boolean;
 }
 
