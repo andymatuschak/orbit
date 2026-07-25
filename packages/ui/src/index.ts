@@ -1,6 +1,17 @@
 export type { ReviewAreaItem } from "./reviewAreaItem.js";
 
 export * as styles from "./styles/index.js";
+export {
+  OrbitLocaleProvider,
+  useOrbitLocale,
+  useReviewStrings,
+} from "./OrbitLocaleContext.js";
+export { getReviewStrings, resolveOrbitLocale } from "./localization.js";
+export type {
+  OrbitLocale,
+  ReviewIntervalLabel,
+  ReviewStrings,
+} from "./localization.js";
 
 export { default as Button, openURL } from "./components/Button.jsx";
 export type { ButtonProps } from "./components/Button.jsx";

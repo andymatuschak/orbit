@@ -1,4 +1,5 @@
 import { SpacedRepetitionSchedulerConfiguration } from "@withorbit/core";
+import type { ReviewIntervalLabel } from "../localization.js";
 
 type ReviewIntervalMilliseconds = number;
 
@@ -8,7 +9,7 @@ const days: ReviewIntervalMilliseconds = minutes * 60 * 24;
 
 export function generateIntervalSequence(
   config: SpacedRepetitionSchedulerConfiguration,
-) {
+): { interval: number; label: ReviewIntervalLabel }[] {
   // hard-coded values for the current default configuration. If this configuration changes
   // the sequence below must be updated accordingly.
   if (

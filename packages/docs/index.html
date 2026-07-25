@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
@@ -113,8 +113,7 @@
       &gt;&lt;/orbit-prompt&gt;
     &lt;/orbit-reviewarea&gt;
   &lt;/body&gt;
-&lt;/html&gt;</pre
-    >
+&lt;/html&gt;</pre>
 
     <p>Here's a live demo of the review area that code would produce:</p>
     <orbit-reviewarea color="red" debug id="reviewArea">
@@ -187,7 +186,12 @@
       The <code>question</code> and <code>answer</code> attributes support a
       subset of Markdown formatting. In particular, you can use inline styling
       and multiple paragraphs. You can use LaTeX by enclosing inline math in $
-        symbols and display blocks in $$ symbols, as in the example above. Reserved HTML characters (like &gt;, &amp;, and &lt;) will need to be escaped using <a href="https://en.wikipedia.org/wiki/Character_encodings_in_HTML">entity encodings</a>: for instance, &gt; is written as <code>&amp;gt;</code>.
+      symbols and display blocks in $$ symbols, as in the example above.
+      Reserved HTML characters (like &gt;, &amp;, and &lt;) will need to be
+      escaped using
+      <a href="https://en.wikipedia.org/wiki/Character_encodings_in_HTML"
+        >entity encodings</a
+      >: for instance, &gt; is written as <code>&amp;gt;</code>.
     </p>
 
     <p>
@@ -197,8 +201,8 @@
       may omit the <code>question</code> or <code>answer</code> attributes if an
       attachment is present. Note that you must supply an absolute URL, not a
       relative URL like <code>/toffoli.png</code>. Your image will be cached on
-      Orbit's servers, and changes to its contents may not propagate reliably. If
-      you need to update an image, you should also change its URL.
+      Orbit's servers, and changes to its contents may not propagate reliably.
+      If you need to update an image, you should also change its URL.
     </p>
     <p>
       Support for videos, multiple images, and custom layouts is forthcoming.
@@ -269,8 +273,7 @@
     &lt;link rel="canonical" href="https://ourworldindata.org/obesity"&gt;
     &lt;meta property="og:title" content="Obesity"&gt;
     &lt;meta property="og:site_name" content="Our World in Data"&gt;
-&lt;/head&gt;</pre
-    >
+&lt;/head&gt;</pre>
 
     <h3>You can include multiple review areas on a single page</h3>
 
@@ -295,8 +298,32 @@
     <pre>
 &lt;head&gt;
   &lt;meta property=&quot;orbit:color&quot; content=&quot;violet&quot; /&gt;
-&lt;/head&gt;</pre
-    >
+&lt;/head&gt;</pre>
+
+    <h3>Review areas follow your page's language</h3>
+
+    <p>
+      The review interface—buttons like "Show Answer," the banner, and the
+      interval legend—is rendered in the language of the surrounding page. Orbit
+      reads the nearest <code>lang</code> attribute, so a page which already
+      declares <code>&lt;html lang=&quot;zh-TW&quot;&gt;</code> needs no extra
+      configuration. To override that for a particular review area, set
+      <code>lang</code> on the tag itself:
+    </p>
+    <pre>
+&lt;orbit-reviewarea lang=&quot;zh-TW&quot;&gt;
+  &lt;orbit-prompt question=&quot;……&quot; answer=&quot;……&quot;&gt;&lt;/orbit-prompt&gt;
+&lt;/orbit-reviewarea&gt;</pre>
+
+    <p>
+      Traditional Chinese (<code>zh-TW</code>, <code>zh-Hant</code>,
+      <code>zh-HK</code>, <code>zh-MO</code>) is currently the only language
+      besides English; anything else falls back to English. Note that this
+      affects only Orbit's own interface—your <code>question</code> and
+      <code>answer</code> text is always shown exactly as you write it. If you'd
+      like to see another language supported, please
+      <a href="mailto:andy@andymatuschak.org">let me know</a>.
+    </p>
 
     <h3>The current prompt type is meant for memory practice</h3>
 

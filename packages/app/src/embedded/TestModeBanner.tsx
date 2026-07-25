@@ -1,10 +1,12 @@
-import { styles } from "@withorbit/ui";
+import { styles, useOrbitLocale } from "@withorbit/ui";
 import React from "react";
 import { Text, View } from "react-native";
+import { getEmbeddedStrings } from "./localization.js";
 
 export function TestModeBanner(props: {
   colorPalette: styles.colors.ColorPalette;
 }) {
+  const copy = getEmbeddedStrings(useOrbitLocale());
   /* HACK HACK HACK */
   return (
     <View
@@ -24,7 +26,7 @@ export function TestModeBanner(props: {
           { color: props.colorPalette.secondaryTextColor },
         ]}
       >
-        TEST MODE: Actions will not be saved.
+        {copy.testMode}
       </Text>
     </View>
   );
