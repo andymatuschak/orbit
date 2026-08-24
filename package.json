@@ -32,5 +32,8 @@
   "workspaces": [
     "packages/*"
   ],
-  "name": "@withorbit/umbrella"
+  "name": "@withorbit/umbrella",
+  "patchedDependencies": {
+    "expo-device@6.0.2": "patches/expo-device@6.0.2.patch"
+  }
 }

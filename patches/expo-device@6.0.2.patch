@@ -1,0 +1,17 @@
+diff --git a/ios/UIDevice.swift b/ios/UIDevice.swift
+index 7d58ee87b966d08aaae27c84b0f9fada832736ed..37fc6d9fc544305d0c83e283a76f1a41ca7b4c88 100644
+--- a/ios/UIDevice.swift
++++ b/ios/UIDevice.swift
+@@ -185,7 +185,11 @@ public extension UIDevice {
+ 
+   // Credit: https://github.com/developerinsider/isJailBroken/blob/master/IsJailBroken/Extension/UIDevice%2BJailBroken.swift
+   var isSimulator: Bool {
+-    return TARGET_OS_SIMULATOR != 0
++    #if targetEnvironment(simulator)
++    return true
++    #else
++    return false
++    #endif
+   }
+ 
+   var isJailbroken: Bool {

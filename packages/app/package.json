@@ -17,7 +17,7 @@
     "@bacons/xcode": "^1.0.0-alpha.14",
     "@op-engineering/op-sqlite": "^2.0.13",
     "@react-native-async-storage/async-storage": "1.23.1",
-    "@sentry/react-native": "~5.24.1",
+    "@sentry/react-native": "6.10.0",
     "@withorbit/api-client": "0.0.1",
     "@withorbit/core": "0.0.1",
     "@withorbit/embedded-support": "0.0.1",
