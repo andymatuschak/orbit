@@ -45,7 +45,7 @@ export default function DebugGrid({
   return (
     <View
       style={{
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         marginTop: -1,
         zIndex: -1,
       }}

@@ -23,9 +23,9 @@
     "ajv": "^8.6.2"
   },
   "devDependencies": {
-    "@types/bun": "^1.1.14",
+    "@types/bun": "1.4.0",
     "@withorbit/sample-data": "0.0.1",
-    "typescript": "^5.3.3",
+    "typescript": "6.0.3",
     "typescript-json-schema": "^0.50.1"
   }
 }

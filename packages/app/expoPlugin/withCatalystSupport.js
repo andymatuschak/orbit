@@ -3,18 +3,15 @@ const {
   withXcodeProject,
 } = require("expo/config-plugins");
 
-module.exports = function withCatalystSupport(config, { developmentTeamID }) {
+module.exports = function withCatalystSupport(config) {
   config = withXcodeProject(config, async (config) => {
     const xcodeProject = config.modResults;
     // Enable Catalyst builds:
-    xcodeProject.addToBuildSettings("DEVELOPMENT_TEAM", developmentTeamID);
     xcodeProject.addToBuildSettings("SUPPORTS_MACCATALYST", "YES");
     xcodeProject.addToBuildSettings(
       "SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD",
       "NO",
     );
-    xcodeProject.addToBuildSettings("TARGETED_DEVICE_FAMILY", `"1,2,6"`);
-
     return config;
   });
 

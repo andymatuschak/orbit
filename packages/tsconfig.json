@@ -1,8 +1,10 @@
 {
+  "files": [],
   "references": [
     { "path": "./anki-import" },
     { "path": "./api" },
     { "path": "./api-client" },
+    { "path": "./app" },
     { "path": "./backend" },
     { "path": "./core" },
     { "path": "./embedded-support" },
@@ -13,6 +15,7 @@
     { "path": "./store-fs" },
     { "path": "./store-shared" },
     { "path": "./store-web" },
+    { "path": "./sync" },
     { "path": "./web-component" }
   ],
   "compilerOptions": {

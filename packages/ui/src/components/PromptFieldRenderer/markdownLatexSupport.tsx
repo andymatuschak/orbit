@@ -1,5 +1,5 @@
 import _katex from "katex";
-import * as MarkdownItTexMath from "markdown-it-texmath";
+import { use as createTexMathPlugin } from "markdown-it-texmath";
 import React from "react";
 import * as MarkdownDisplay from "react-native-markdown-display";
 import * as MathJax from "react-native-mathjax-svg";
@@ -11,7 +11,10 @@ const MathjaxComponent: JSX.ElementType = MathJax.default;
 export async function addLatexSupport(
   markdownIt: MarkdownDisplay.MarkdownIt, // eslint-disable-line @typescript-eslint/no-unused-vars
 ): Promise<void> {
-  markdownIt.use(MarkdownItTexMath.use(_katex));
+  const plugin = createTexMathPlugin(_katex) as unknown as Parameters<
+    MarkdownDisplay.MarkdownIt["use"]
+  >[0];
+  markdownIt.use(plugin);
 }
 
 export const renderInlineMath: MarkdownDisplay.RenderFunction = (

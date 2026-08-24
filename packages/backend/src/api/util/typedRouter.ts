@@ -123,10 +123,10 @@ export default function createTypedRouter<API extends API.Spec>(
   };
 
   for (const path of Object.keys(handlers) as (keyof typeof handlers)[]) {
-    const methods = handlers[path] as TypedRouteList<API, typeof path>;
+    const _methods = handlers[path] as TypedRouteList<API, typeof path>;
     for (const method of Object.keys(
       handlers[path],
-    ) as (keyof typeof methods)[]) {
+    ) as (keyof typeof _methods)[]) {
       createRoute(path, baseRouteMatchers[method], handlers[path][method]);
     }
   }
@@ -160,7 +160,8 @@ function extractMultipartFormData(request: express.Request): Promise<{
 
         const promise = new Promise((resolve, reject) => {
           file.on("end", () => {
-            uploads[fieldname] = new Blob(chunks, { type: mimetype });
+            const contents = Uint8Array.from(Buffer.concat(chunks)).buffer;
+            uploads[fieldname] = new Blob([contents], { type: mimetype });
           });
           writable.on("finish", resolve);
           writable.on("error", reject);

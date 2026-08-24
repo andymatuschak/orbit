@@ -8,15 +8,14 @@
   "types": "./dist/index.d.ts",
   "sideEffects": false,
   "devDependencies": {
-    "@types/bun": "^1.1.14",
-    "@types/node": "^20.10.4",
+    "@types/bun": "1.4.0",
+    "@types/node": "24.10.1",
     "@withorbit/sample-data": "0.0.1",
-    "typescript": "^5.3.3"
+    "typescript": "6.0.3"
   },
   "dependencies": {
     "@withorbit/api": "0.0.1",
-    "@withorbit/core": "0.0.1",
-    "react-native-blob-jsi-helper": "^0.3.1"
+    "@withorbit/core": "0.0.1"
   },
   "scripts": {
     "build": "tsc -b",

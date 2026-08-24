@@ -19,7 +19,7 @@ export function useTransitioningValue({
   onEndCallback,
 }: AnimatedTransitionConfig<number>): Animated.Value {
   const animatedValue = useRef(new Animated.Value(value));
-  const oldValue = useRef<number>();
+  const oldValue = useRef<number | undefined>(undefined);
 
   const timingRef = useWeakRef(timing);
   const onEndCallbackRef = useWeakRef(onEndCallback);
@@ -56,8 +56,8 @@ export function useTransitioningColorValue({
   // This implementation will "jump" in color if interrupted, rather than smoothly redirecting the old animation to the new one. To do that, I think we'd have to use a complex scheme of additive animations.
 
   const animatedValue = useRef(new Animated.Value(0));
-  const fromColor = useRef<string>();
-  const targetColor = useRef<string>();
+  const fromColor = useRef<string | undefined>(undefined);
+  const targetColor = useRef<string | undefined>(undefined);
 
   // It's not great to have side effects on render like this, but unfortunately, I don't see how to implement this with useEffect without creating jumps.
   if (targetColor.current !== undefined && targetColor.current !== value) {

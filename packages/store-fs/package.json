@@ -10,7 +10,7 @@
   "sideEffects": false,
   "dependencies": {
     "@farjs/better-sqlite3-wrapper": "^2.0.0",
-    "@op-engineering/op-sqlite": "^2.0.13",
+    "@op-engineering/op-sqlite": "18.1.4",
     "@withorbit/core": "0.0.1",
     "@withorbit/store-shared": "0.0.1",
     "better-sqlite3": "^9.4.5"
@@ -21,9 +21,9 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.9",
-    "@types/bun": "^1.1.14",
-    "@types/node": "^20.10.4",
+    "@types/bun": "1.4.0",
+    "@types/node": "24.10.1",
     "@withorbit/sample-data": "0.0.1",
-    "typescript": "^5.3.3"
+    "typescript": "6.0.3"
   }
 }

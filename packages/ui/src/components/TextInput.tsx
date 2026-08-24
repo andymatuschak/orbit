@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
       outlineStyle: "none",
     }),
     ...type.label.typeStyle,
-  },
+  } as TextStyle,
 
   focused: {
     borderWidth: 1,

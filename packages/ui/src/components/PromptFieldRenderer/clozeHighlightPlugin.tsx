@@ -1,5 +1,5 @@
-import MarkdownIt from "markdown-it/lib";
-import Token from "markdown-it/lib/token.js";
+import Token from "markdown-it/lib/token.mjs";
+import type { MarkdownIt } from "react-native-markdown-display";
 
 // When a cloze is revealed, we hackily designate that to the Markdown renderer by surrounding it with sentinels. This plugin finds those sentinels and replaces them with proper tokens which will be rendered with the appropriate styling.
 
@@ -61,5 +61,6 @@ export function clozeHighlightPlugin(md: MarkdownIt) {
         new Token("clozeHighlight_close", "clozeHighlight", -1),
       );
     }
+    return true;
   });
 }

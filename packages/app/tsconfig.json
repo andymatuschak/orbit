@@ -11,7 +11,7 @@
     "./src/**/*.ts",
     "./scripts/*.ts",
     "./App.tsx",
-    "./serviceConfig.*js",
+    "./serviceConfig.ts",
     "../@types/**/*.d.ts",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"

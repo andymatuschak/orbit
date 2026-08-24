@@ -1,5 +1,5 @@
 import React from "react";
-import * as MarkdownItTexMath from "markdown-it-texmath";
+import { use as createTexMathPlugin } from "markdown-it-texmath";
 import { StyleSheet } from "react-native";
 import * as MarkdownDisplay from "react-native-markdown-display";
 
@@ -15,7 +15,10 @@ export async function addLatexSupport(
     // @ts-ignore
     // await import("katex/dist/katex.css");
   }
-  markdownIt.use(MarkdownItTexMath.use(_katex));
+  const plugin = createTexMathPlugin(_katex) as unknown as Parameters<
+    MarkdownDisplay.MarkdownIt["use"]
+  >[0];
+  markdownIt.use(plugin);
 }
 
 export const renderInlineMath: MarkdownDisplay.RenderFunction = (

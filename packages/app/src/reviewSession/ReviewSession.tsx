@@ -24,9 +24,10 @@ import {
   styles,
   useWeakRef,
 } from "@withorbit/ui";
+import { ExtensionStorage } from "@bacons/apple-targets";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { NativeModules, Platform, Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AuthenticationClient } from "../authentication/index.js";
 import {
@@ -38,8 +39,6 @@ import { ReviewSessionContainer } from "../ReviewSessionContainer.js";
 import { useReviewSessionManager } from "../reviewSessionManager.js";
 import { useAPIClient } from "../util/useAPIClient.js";
 import { LoadingScreen } from "./LoadingScreen.js";
-
-const { WidgetReloadBridge } = NativeModules;
 
 export function useDatabaseManager(
   authenticationClient: AuthenticationClient,
@@ -94,7 +93,7 @@ function persistMarking({
     .recordEvents([event])
     .then(() => {
       console.log("[Performance] Log written", Date.now() / 1000.0);
-      WidgetReloadBridge.reloadTimelines();
+      ExtensionStorage.reloadWidget("OrbitHomeScreen");
     })
     .catch((error) => {
       console.error("Couldn't commit", reviewItem.task.id, error);
@@ -307,7 +306,7 @@ export default function ReviewSession() {
       ])
       .then(() => {
         console.log("Wrote delete event", Date.now() / 1000.0);
-        WidgetReloadBridge.reloadTimelines();
+        ExtensionStorage.reloadWidget("OrbitHomeScreen");
       })
       .catch((error) => {
         console.error("Couldn't commit delete event", error);

@@ -42,9 +42,8 @@ export type ValidatableSpec = {
 
   "/attachments/:id"?: {
     GET?: {
-      // allow empty to indicate it takes no query values
-      // eslint-disable-next-line @typescript-eslint/ban-types
-      query: {};
+      // An empty record indicates that this route takes no query values.
+      query: Record<string, never>;
       params: {
         id: AttachmentID;
       };

@@ -7,7 +7,7 @@
 
 #import <Intents/Intents.h>
 #import "IngestEventHandler.h"
-#import "AppDelegate.h"
+#import "Orbit-Swift.h"
 
 @implementation AppDelegate (Intents)
 

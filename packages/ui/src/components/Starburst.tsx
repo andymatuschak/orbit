@@ -203,7 +203,7 @@ export default React.memo(function Starburst({
   const previousEntries = usePrevious(entries);
   const canAnimateEntries =
     previousEntries && entries.length === previousEntries.length;
-  const animationState = useRef<AnimationState>();
+  const animationState = useRef<AnimationState | undefined>(undefined);
 
   const radius = diameter / 2;
   const unitThickness = thickness / radius;

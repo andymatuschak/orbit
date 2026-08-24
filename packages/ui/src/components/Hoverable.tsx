@@ -49,7 +49,7 @@ export function isHoverEnabled(): boolean {
 export interface HoverableProps {
   onHoverIn?: () => void;
   onHoverOut?: () => void;
-  children: (isHovered: boolean) => JSX.Element;
+  children: (isHovered: boolean) => React.ReactElement;
 }
 
 export default function Hoverable({
@@ -89,7 +89,11 @@ export default function Hoverable({
     }
   }, [onHoverOut]);
 
-  return React.cloneElement(children(isHovered), {
+  const child = children(isHovered) as React.ReactElement<{
+    onMouseEnter?: React.MouseEventHandler;
+    onMouseLeave?: React.MouseEventHandler;
+  }>;
+  return React.cloneElement(child, {
     onMouseEnter: handleMouseEnter,
     onMouseLeave: handleMouseLeave,
   });

@@ -71,7 +71,7 @@ export function Menu({
     >
       <Pressable
         style={{
-          ...StyleSheet.absoluteFillObject,
+          ...StyleSheet.absoluteFill,
         }}
         onPress={onClose}
       >

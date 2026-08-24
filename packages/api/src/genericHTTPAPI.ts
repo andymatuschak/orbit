@@ -73,7 +73,6 @@ export interface BlobLike<T> {
    */
   size: number;
 
-  // React Native doesn't support either of these.
   arrayBuffer?(): Promise<ArrayBuffer>;
   stream?(): any;
 }

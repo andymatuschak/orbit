@@ -68,17 +68,12 @@ export interface Collection {
   models: { [key: string]: Model }; // keys are model IDs
   decks: { [key: string]: Deck }; // keys are deck IDs;
   dconf: {
-    [key: string]: {
-      // TODO
-    };
+    [key: string]: Record<string, unknown>;
   };
   tags: { [key: string]: number }; // cache of tags used in the collection (not sure what the numbers are)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface Configuration {
-  // TODO
-}
+type Configuration = Record<string, unknown>;
 
 export interface Model {
   css: string; // CSS for templates

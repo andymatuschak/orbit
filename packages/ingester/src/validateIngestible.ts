@@ -1,5 +1,5 @@
 import AjvModule from "ajv";
-import schema from "./ingestible.json" assert { type: "json" };
+import schema from "./ingestible.json" with { type: "json" };
 import { Ingestible } from "./ingestible.js";
 
 // FIXME: https://github.com/ajv-validator/ajv/issues/2047

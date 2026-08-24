@@ -24,10 +24,10 @@
     "test": "bun test src"
   },
   "devDependencies": {
-    "@types/bun": "^1.1.14",
+    "@types/bun": "1.4.0",
     "@types/mdast": "^4.0.1",
-    "@types/node": "^20.10.4",
+    "@types/node": "24.10.1",
     "@types/unzipper": "^0.10.3",
-    "typescript": "^5.3.3"
+    "typescript": "6.0.3"
   }
 }

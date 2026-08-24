@@ -13,5 +13,6 @@ export function createBlobFromBuffer(
   buffer: Uint8Array,
   mimeType: string,
 ): Blob {
-  return new Blob([buffer], { type: mimeType });
+  const contents = Uint8Array.from(buffer).buffer;
+  return new Blob([contents], { type: mimeType });
 }

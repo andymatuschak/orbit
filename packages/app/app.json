@@ -9,6 +9,8 @@
     "scheme": "com.withorbit.native",
     "ios": {
       "bundleIdentifier": "com.withorbit.native",
+      "appleTeamId": "MQ22N839N8",
+      "supportsTablet": true,
       "entitlements": {
         "com.apple.security.application-groups": ["group.com.withorbit.native"]
       },
@@ -67,12 +69,7 @@
         }
       ],
       "./expoPlugin/expoPlugin.js",
-      [
-        "@bacons/apple-targets",
-        {
-          "appleTeamId": "MQ22N839N8"
-        }
-      ]
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true

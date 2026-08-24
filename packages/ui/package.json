@@ -21,34 +21,39 @@
     "@storybook/react-webpack5": "^7.6.4",
     "@storybook/types": "^7.6.4",
     "@types/lodash.isequal": "^4.5.5",
-    "@types/markdown-it": "^0.0.9",
-    "@types/react": "~18.2.45",
-    "@types/react-native": "^0.73.0",
+    "@types/markdown-it": "14.1.2",
+    "@types/react": "~19.2.2",
     "@types/seedrandom": "^2.4.28",
     "@types/webpack": "^4.41.25",
     "@withorbit/sample-data": "0.0.1",
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-class-properties": "^6.24.1",
-    "react": "^18.2.0",
-    "react-dom": "18.2.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
     "seedrandom": "^3.0.5",
     "storybook": "^7.6.4",
-    "typescript": "^5.3.3"
+    "typescript": "6.0.3"
   },
   "peerDependencies": {
-    "@types/react": "~18.2.45",
-    "react": "^18.2.0",
-    "react-native": "0.74.3"
+    "@types/react": "~19.2.2",
+    "expo": "~57.0.16",
+    "react": "19.2.3",
+    "react-native": "0.86.2"
+  },
+  "peerDependenciesMeta": {
+    "expo": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@withorbit/core": "0.0.1",
     "isemail": "^3.2.0",
     "lodash.isequal": "^4.5.0",
+    "markdown-it": "14.1.0",
     "markdown-it-texmath": "^1.0.0",
-    "react-native-keyevent": "^0.3.2",
     "react-native-markdown-display": "^7.0.2",
     "react-native-mathjax-svg": "andymatuschak/react-native-mathjax-svg",
-    "react-native-svg": "15.2.0"
+    "react-native-svg": "15.15.4"
   },
   "scripts": {
     "build": "tsc -b",
