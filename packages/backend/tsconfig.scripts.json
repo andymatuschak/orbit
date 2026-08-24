@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "noEmit": true,
+    "types": ["bun", "node"]
+  },
+  "include": ["scripts/**/*.ts"]
+}

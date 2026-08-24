@@ -11,6 +11,8 @@
   "type": "module",
   "scripts": {
     "dev": "rm -rf \"$TMPDIR/orbit-file-storage-emulator\"; firebase emulators:start --import emulator-data",
+    "seed:simulator": "bun scripts/seedSimulator.ts",
+    "typecheck:scripts": "tsc -p tsconfig.scripts.json",
     "build": "tsc -b",
     "predeploy": "bun run build && bun scripts/predeploy.js",
     "deploy": "firebase deploy --only functions",
@@ -18,7 +20,8 @@
     "deployCORS": "gsutil cors set ../backend/firebase-storage-cors.json gs://metabook-system.appspot.com",
     "deployFirestoreConfig": "firebase deploy --only firestore",
     "fetchFirestoreIndexes": "firebase firestore:indexes > ../backend/firestore.indexes.json",
-    "test": "firebase emulators:exec 'bun test src'"
+    "test:seed:simulator": "bun run typecheck:scripts && bun test scripts/seedSimulator.test.ts",
+    "test": "bun run typecheck:scripts && firebase emulators:exec 'bun test src scripts/seedSimulator.test.ts'"
   },
   "license": "AGPL-3.0-or-later OR BUSL-1.1",
   "dependencies": {
