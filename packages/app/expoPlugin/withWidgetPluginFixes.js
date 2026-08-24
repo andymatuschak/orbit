@@ -22,6 +22,11 @@ module.exports = function withWidgetPluginFixes(config) {
     if (!widgetTarget) {
       throw new Error(`Could not find ${WIDGET_TARGET_NAME} target`);
     }
+    widgetTarget.setBuildSetting("SWIFT_VERSION", "6.0");
+    widgetTarget.setBuildSetting(
+      "SWIFT_ACTIVE_COMPILATION_CONDITIONS",
+      "$(inherited) ORBIT_WIDGET_EXTENSION",
+    );
 
     const resourcesPhase = widgetTarget.getResourcesBuildPhase();
 

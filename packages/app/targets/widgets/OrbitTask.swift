@@ -10,11 +10,12 @@ import Foundation
 
 typealias TaskID = String
 
-struct OrbitReviewItem {
+struct OrbitReviewItem: Sendable {
   let task: OrbitTask
   let componentID: String
 
   static let mainTaskComponentID = "main"
+  static let clozePlaceholderComponentID = "a"
 }
 
 extension OrbitReviewItem {
@@ -25,6 +26,11 @@ extension OrbitReviewItem {
 }
 
 extension OrbitReviewItem {
+  static let empty = OrbitReviewItem(
+    task: .empty,
+    componentID: OrbitReviewItem.mainTaskComponentID
+  )
+
   static let placeholder = OrbitReviewItem(
     task: .placeholder,
     componentID: OrbitReviewItem.mainTaskComponentID
@@ -32,11 +38,11 @@ extension OrbitReviewItem {
 
   static let clozePlaceholder = OrbitReviewItem(
     task: .clozePlaceholder,
-    componentID: "a"
+    componentID: clozePlaceholderComponentID
   )
 }
 
-struct OrbitTask {
+struct OrbitTask: Sendable {
   let id: TaskID
   let provenance: TaskProvenance?
   let spec: TaskSpec
@@ -59,6 +65,18 @@ extension OrbitTask {
 }
 
 extension OrbitTask {
+  static let empty = OrbitTask(
+    id: "",
+    provenance: nil,
+    spec: .memory(
+      .qa(
+        body: TaskContentField(text: "You're all caught up."),
+        answer: TaskContentField(text: "You're all caught up."))),
+    componentStates: [
+      OrbitReviewItem.mainTaskComponentID: TaskComponentState(createdAtTimestampMillis: 0, lastRepetitionTimestampMillis: 0, intervalMillis: 0, dueTimestampMillis: 0)
+    ]
+  )
+
   static let placeholder = OrbitTask(
     id: "xxx",
     provenance: TaskProvenance(title: "Source article with an awfully long name that probably won't fit in the widget", url: "https://www.example.com", colorPaletteName: .red),
@@ -84,12 +102,12 @@ extension OrbitTask {
       )
     ),
     componentStates: [
-      OrbitReviewItem.mainTaskComponentID: TaskComponentState(createdAtTimestampMillis: 0, lastRepetitionTimestampMillis: 0, intervalMillis: 0, dueTimestampMillis: 0)
+      OrbitReviewItem.clozePlaceholderComponentID: TaskComponentState(createdAtTimestampMillis: 0, lastRepetitionTimestampMillis: 0, intervalMillis: 0, dueTimestampMillis: 0)
     ]
   )
 }
 
-struct TaskProvenance {
+struct TaskProvenance: Sendable {
   let title: String
   let url: String?
   let colorPaletteName: ColorPaletteName?
@@ -107,7 +125,7 @@ extension TaskProvenance {
   }
 }
 
-enum TaskSpec {
+enum TaskSpec: Sendable {
   case memory(TaskContent)
 }
 
@@ -123,7 +141,7 @@ extension TaskSpec {
   }
 }
 
-enum TaskContent {
+enum TaskContent: Sendable {
   case qa(body: TaskContentField, answer: TaskContentField)
   case cloze(body: TaskContentField, components: [String: ClozeTaskComponent])
 }
@@ -148,7 +166,7 @@ extension TaskContent {
   }
 }
 
-struct ClozeTaskComponent {
+struct ClozeTaskComponent: Sendable {
   let order: Int
   let ranges: [ClozeTaskRange]
 }
@@ -161,7 +179,7 @@ extension ClozeTaskComponent {
   }
 }
 
-struct ClozeTaskRange {
+struct ClozeTaskRange: Sendable {
   let startIndex: Int
   let length: Int
   let hint: String?
@@ -175,7 +193,7 @@ extension ClozeTaskRange {
   }
 }
 
-struct TaskContentField {
+struct TaskContentField: Sendable {
   let text: String
 }
 
@@ -185,7 +203,7 @@ extension TaskContentField {
   }
 }
 
-struct TaskComponentState {
+struct TaskComponentState: Sendable {
   let createdAtTimestampMillis: TimeInterval
   let lastRepetitionTimestampMillis: TimeInterval?;
   let intervalMillis: TimeInterval;
@@ -201,10 +219,10 @@ extension TaskComponentState {
   }
 }
 
-enum DecodeError: Error {
-  case unexpectedType(value: Any, expectedType: Any.Type)
-  case missingProperty(object: NSDictionary, propertyName: String)
-  case invalidValue(value: Any)
+enum DecodeError: Error, Sendable {
+  case unexpectedType(value: String, expectedType: String)
+  case missingProperty(object: String, propertyName: String)
+  case invalidValue(value: String)
 }
 
 private func decodeProperty<T>(_ obj: Any, _ propertyName: String) throws -> T {
@@ -213,13 +231,22 @@ private func decodeProperty<T>(_ obj: Any, _ propertyName: String) throws -> T {
       if let typedValue = value as? T {
         return typedValue
       } else {
-        throw DecodeError.unexpectedType(value: value, expectedType: T.self)
+        throw DecodeError.unexpectedType(
+          value: String(describing: value),
+          expectedType: String(describing: T.self)
+        )
       }
     } else {
-      throw DecodeError.missingProperty(object: dict, propertyName: propertyName)
+      throw DecodeError.missingProperty(
+        object: String(describing: dict),
+        propertyName: propertyName
+      )
     }
   } else {
-    throw DecodeError.unexpectedType(value: obj, expectedType: NSDictionary.self)
+    throw DecodeError.unexpectedType(
+      value: String(describing: obj),
+      expectedType: String(describing: NSDictionary.self)
+    )
   }
 }
 
@@ -231,17 +258,23 @@ private func decodeOptionalProperty<T>(_ obj: Any, _ propertyName: String) throw
       } else if value is NSNull {
         return nil
       } else {
-        throw DecodeError.unexpectedType(value: value, expectedType: T.self)
+        throw DecodeError.unexpectedType(
+          value: String(describing: value),
+          expectedType: String(describing: T.self)
+        )
       }
     } else {
       return nil
     }
   } else {
-    throw DecodeError.unexpectedType(value: obj, expectedType: NSDictionary.self)
+    throw DecodeError.unexpectedType(
+      value: String(describing: obj),
+      expectedType: String(describing: NSDictionary.self)
+    )
   }
 }
 
-enum TaskRepetitionOutcome: String {
+enum TaskRepetitionOutcome: String, Sendable {
   case remembered
   case forgotten
 }

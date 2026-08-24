@@ -9,81 +9,135 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-struct ReviewState {
-  var isShowingAnswer = false
-  var reviewedTaskIDs: Set<TaskID> = []
-  var queue: [OrbitReviewItem]? = nil
+@MainActor
+private enum WidgetReviewState {
+  private static let revealedReviewItemKey = "OrbitWidget.revealedReviewItem"
+  private static let defaults: UserDefaults = {
+    guard
+      let appGroupID = Bundle.main.object(forInfoDictionaryKey: "OPSQLite_AppGroup") as? String,
+      let defaults = UserDefaults(suiteName: appGroupID)
+    else {
+      preconditionFailure("The widget's shared app group isn't configured")
+    }
+    return defaults
+  }()
 
-  mutating func recordReview(taskID: TaskID) {
-    reviewedTaskIDs.insert(taskID)
-    isShowingAnswer = false
+  static func isShowingAnswer(taskID: TaskID, componentID: String) -> Bool {
+    defaults.stringArray(forKey: revealedReviewItemKey) == [taskID, componentID]
+  }
 
-    if queue!.allSatisfy({ item in reviewedTaskIDs.contains(item.task.id) }) {
-      reviewedTaskIDs.removeAll()
+  static func toggleAnswer(taskID: TaskID, componentID: String) {
+    if isShowingAnswer(taskID: taskID, componentID: componentID) {
+      defaults.removeObject(forKey: revealedReviewItemKey)
+    } else {
+      defaults.set([taskID, componentID], forKey: revealedReviewItemKey)
     }
   }
-}
 
-var transientState = ReviewState()
-let bridge = Bridge()
+  static func hideAnswer(taskID: TaskID, componentID: String) {
+    guard isShowingAnswer(taskID: taskID, componentID: componentID) else { return }
+    defaults.removeObject(forKey: revealedReviewItemKey)
+  }
+}
 
 struct Provider: TimelineProvider {
   func getSnapshot(in context: Context, completion: @escaping @Sendable (Entry) -> Void) {
-    Task {
-      let queue = await bridge.generateReviewQueue()
-      completion(Entry(item: queue[0], isShowingAnswer: false, date: Date()))
+    Task { @MainActor in
+      let pendingItem = await Bridge.shared.generateReviewQueue().first
+      let item = pendingItem ?? .placeholder
+      completion(
+        Entry(
+          item: item,
+          isShowingAnswer: pendingItem.map {
+            WidgetReviewState.isShowingAnswer(
+              taskID: $0.task.id,
+              componentID: $0.componentID
+            )
+          } ?? false,
+          hasReviewItem: pendingItem != nil,
+          date: .now
+        )
+      )
     }
   }
-  
+
   func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<Entry>) -> Void) {
-    Task {
-      var entries: [Entry] = []
-      print("REFRESH TIMELINE")
+    Task { @MainActor in
+      let currentDate = Date.now
+      let queue = await Bridge.shared.generateReviewQueue()
+      let entries: [Entry]
 
-//      if transientState.queue == nil {
-        transientState.queue = await bridge.generateReviewQueue()
-//      }
-
-      let queue = transientState.queue!.filter { item in !transientState.reviewedTaskIDs.contains(item.task.id) }
-
-      let currentDate = Date()
-      for hourOffset in 0..<min(50, queue.count) {
-        let entryDate = Calendar.current.date(byAdding: .minute, value: 5, to: currentDate)!
-        let entry = Entry(
-          item: queue[hourOffset],
-          isShowingAnswer: transientState.isShowingAnswer,
-          date: entryDate
-        )
-        entries.append(entry)
+      if queue.isEmpty {
+        entries = [
+          Entry(
+            item: .empty,
+            isShowingAnswer: false,
+            hasReviewItem: false,
+            date: currentDate
+          )
+        ]
+      } else {
+        entries = queue.prefix(50).enumerated().map { offset, item in
+          Entry(
+            item: item,
+            isShowingAnswer: WidgetReviewState.isShowingAnswer(
+              taskID: item.task.id,
+              componentID: item.componentID
+            ),
+            hasReviewItem: true,
+            date: currentDate.addingTimeInterval(TimeInterval(offset * 5 * 60))
+          )
+        }
       }
 
-      completion(Timeline(entries: entries, policy: .after(Calendar.current.date(byAdding: .hour, value: 1, to: currentDate)!)))
+      completion(
+        Timeline(
+          entries: entries,
+          policy: .after(currentDate.addingTimeInterval(60 * 60))
+        )
+      )
     }
   }
-  
+
   func placeholder(in context: Context) -> Entry {
-    Entry(item: .placeholder, isShowingAnswer: false, date: Date())
+    Entry(
+      item: .placeholder,
+      isShowingAnswer: false,
+      hasReviewItem: false,
+      date: .now
+    )
   }
 }
 
-struct Entry: TimelineEntry {
+struct Entry: TimelineEntry, Sendable {
   let item: OrbitReviewItem
   let isShowingAnswer: Bool
+  let hasReviewItem: Bool
   let date: Date
 }
 
 struct TogglePromptIntent: AppIntent {
-  static var title: LocalizedStringResource = "Toggle the front/back of the current prompt"
+  static let title: LocalizedStringResource = "Toggle the front/back of the current prompt"
+  static let isDiscoverable = false
+  @Parameter(title: "Task ID") var taskID: String
+  @Parameter(title: "Component ID") var componentID: String
+
+  init() {}
+
+  init(taskID: TaskID, componentID: String) {
+    self.taskID = taskID
+    self.componentID = componentID
+  }
 
   func perform() async throws -> some IntentResult {
-    print("Toggle")
-    transientState.isShowingAnswer.toggle()
+    await WidgetReviewState.toggleAnswer(taskID: taskID, componentID: componentID)
     return .result()
   }
 }
 
 struct MarkPromptIntent: AppIntent {
-  static var title: LocalizedStringResource = "Record a review of the current prompt"
+  static let title: LocalizedStringResource = "Record a review of the current prompt"
+  static let isDiscoverable = false
   @Parameter(title: "Task ID") var taskID: String
   @Parameter(title: "Component ID") var componentID: String
   @Parameter(title: "Outcome") var outcome: TaskRepetitionOutcome
@@ -97,12 +151,13 @@ struct MarkPromptIntent: AppIntent {
   }
 
   func perform() async throws -> some IntentResult {
-    print("Mark \(taskID) \(outcome)")
-    transientState.recordReview(taskID: taskID)
-    Task {
-      await bridge.recordReview(taskID: taskID, componentID: componentID, outcome: outcome, date: Date.now)
-      print("Recorded review")
-    }
+    try await Bridge.shared.recordReview(
+      taskID: taskID,
+      componentID: componentID,
+      outcome: outcome,
+      date: .now
+    )
+    await WidgetReviewState.hideAnswer(taskID: taskID, componentID: componentID)
     return .result()
   }
 }
@@ -126,8 +181,6 @@ struct PromptContent: View {
   @Environment(\.colorPalette) var colorPalette: ColorPalette
 
   var body: some View {
-    let _ = print(margins.leading)
-
     let spec = item.task.spec
 
     VStack(alignment: .leading, spacing: 0) {
@@ -143,13 +196,20 @@ struct PromptContent: View {
         let text = isShowingAnswer ? a.text : q.text
         Text(text)
           .modifier(PromptTextStyle(text: text))
-          .animation(.linear(duration: 0.05), value: text)
+          .widgetAccentable(isShowingAnswer)
+          .animation(.linear(duration: 0.05), value: isShowingAnswer)
           .frame(maxHeight: .infinity, alignment: .bottom)
 
       case .memory(.cloze(let body, let components)):
-        buildClozeText(text: body.text, ranges: components[item.componentID]!.ranges, colorPalette: colorPalette, isShowingAnswer: isShowingAnswer)
+        buildClozeText(
+          text: body.text,
+          ranges: components[item.componentID]?.ranges ?? [],
+          colorPalette: colorPalette,
+          isShowingAnswer: isShowingAnswer
+        )
           .modifier(PromptTextStyle(text: body.text))
-          .animation(.linear(duration: 0.05), value: body.text)
+          .widgetAccentable(isShowingAnswer)
+          .animation(.linear(duration: 0.05), value: isShowingAnswer)
           .frame(maxHeight: .infinity, alignment: .bottom)
       }
     }
@@ -178,28 +238,54 @@ struct PromptTextStyle: ViewModifier {
       .font(fontStyle.font)
       .kerning(fontStyle.kerning)
       .foregroundStyle(ink)
-      .lineSpacing(0)
-      .environment(\._lineHeightMultiple, 1)
+      .lineHeight(.exact(points: fontStyle.lineHeight))
       .contentTransition(.opacity)
   }
 }
 
 func buildClozeText(text: String, ranges: [ClozeTaskRange], colorPalette: ColorPalette, isShowingAnswer: Bool) -> some View {
-  func substr(_ str: String, _ offset: Int, _ length: Int) -> String {
-    return String(str[String.Index(utf16Offset: offset, in: str) ..< String.Index(utf16Offset: offset + length, in: str)])
+  func substring(_ string: String, utf16Offset: Int, length: Int) -> String {
+    guard utf16Offset >= 0, length >= 0 else { return "" }
+
+    let utf16 = string.utf16
+    guard
+      let lowerUTF16Index = utf16.index(
+        utf16.startIndex,
+        offsetBy: utf16Offset,
+        limitedBy: utf16.endIndex
+      ),
+      let upperUTF16Index = utf16.index(
+        lowerUTF16Index,
+        offsetBy: length,
+        limitedBy: utf16.endIndex
+      ),
+      let lowerIndex = String.Index(lowerUTF16Index, within: string),
+      let upperIndex = String.Index(upperUTF16Index, within: string)
+    else {
+      return ""
+    }
+
+    return String(string[lowerIndex ..< upperIndex])
   }
 
   var output = Text("")
   for (prev, curr) in zip([nil] + ranges, ranges + [nil]) {
     let startIdx = (prev?.startIndex ?? 0) + (prev?.length ?? 0)
     if let curr = curr {
-      output = output + Text(substr(text, startIdx, curr.startIndex - startIdx))
+      let precedingText = Text(
+        substring(text, utf16Offset: startIdx, length: curr.startIndex - startIdx)
+      )
+      output = Text("\(output)\(precedingText)")
       if isShowingAnswer {
-        output = output + Text(substr(text, curr.startIndex, curr.length))
+        let answer = Text(
+          substring(text, utf16Offset: curr.startIndex, length: curr.length)
+        )
           .foregroundStyle(colorPalette.accentColor)
+        output = Text("\(output)\(answer)")
       } else {
-        output = output + Text("______")
+        let blank = Text("______")
           .customAttribute(ClozeBlankAttribute())
+        output = Text("\(output)\(blank)")
       }
     }
   }
@@ -209,7 +295,14 @@ func buildClozeText(text: String, ranges: [ClozeTaskRange], colorPalette: ColorP
   } else {
     finalStartIdx = 0
   }
-  output = output + Text(substr(text, finalStartIdx, text.count - finalStartIdx))
+  let trailingText = Text(
+    substring(
+      text,
+      utf16Offset: finalStartIdx,
+      length: text.utf16.count - finalStartIdx
+    )
+  )
+  output = Text("\(output)\(trailingText)")
   return output.textRenderer(ClozeBlankRenderer(color: colorPalette.accentColor))
 }
 
@@ -237,6 +330,7 @@ struct ClozeBlankRenderer: TextRenderer {
 struct WidgetButton: View {
   @Environment(\.widgetContentMargins) var margins
   @Environment(\.colorPalette) var colorPalette
+  @Environment(\.widgetRenderingMode) private var renderingMode
   let intent: any AppIntent
   let iconName: String
   let alignment: Alignment
@@ -244,19 +338,25 @@ struct WidgetButton: View {
   var body: some View {
     // bit of a hack: the images have 4px padding in them (oops)
     let insets = EdgeInsets(top: margins.top - 4, leading: margins.leading - 4, bottom: margins.bottom - 4 + 1.5, trailing: margins.trailing - 4)
+    let backgroundColor = renderingMode == .fullColor
+      ? colorPalette.secondaryBackgroundColor
+      : Color.white.opacity(0.18)
 
     Button(intent: intent) {
       ZStack {
         Image(iconName)
-          .foregroundColor(colorPalette.accentColor)
-        if iconName == "reveal-center" {
-          Image("reveal-accent-center").foregroundColor(.white)
+          .widgetAccentedRenderingMode(.accented)
+          .foregroundStyle(colorPalette.accentColor)
+        if iconName == "reveal-center", renderingMode == .fullColor {
+          Image("reveal-accent-center")
+            .widgetAccentedRenderingMode(.fullColor)
+            .foregroundStyle(.white)
         }
       }
       .frame(maxHeight: .infinity, alignment: alignment)
       .padding(insets)
     }
-    .background(colorPalette.secondaryBackgroundColor)
+    .background(backgroundColor)
     .buttonStyle(.plain)
   }
 }
@@ -266,21 +366,29 @@ struct PromptView: View {
 
   let item: OrbitReviewItem
   let isShowingAnswer: Bool
+  let hasReviewItem: Bool
 
   var body: some View {
     HStack(spacing: 8) {
       HStack() {
         PromptContent(item: item, isShowingAnswer: isShowingAnswer)
+          .invalidatableContent()
         Spacer()
       }
 
-      if isShowingAnswer {
-        VStack(spacing: 4) {
-          WidgetButton(intent: MarkPromptIntent(taskID: item.task.id, componentID: item.componentID, outcome: .forgotten), iconName: "cross-center", alignment: .bottom)
-          WidgetButton(intent: MarkPromptIntent(taskID: item.task.id, componentID: item.componentID,  outcome: .remembered), iconName: "check-center", alignment: .bottom)
+      if hasReviewItem {
+        if isShowingAnswer {
+          VStack(spacing: 4) {
+            WidgetButton(intent: MarkPromptIntent(taskID: item.task.id, componentID: item.componentID, outcome: .forgotten), iconName: "cross-center", alignment: .bottom)
+            WidgetButton(intent: MarkPromptIntent(taskID: item.task.id, componentID: item.componentID,  outcome: .remembered), iconName: "check-center", alignment: .bottom)
+          }
+        } else {
+          WidgetButton(
+            intent: TogglePromptIntent(taskID: item.task.id, componentID: item.componentID),
+            iconName: "reveal-center",
+            alignment: .bottom
+          )
         }
-      } else {
-        WidgetButton(intent: TogglePromptIntent(), iconName: "reveal-center", alignment: .bottom)
       }
     }
   }
@@ -289,10 +397,12 @@ struct PromptView: View {
 func colorPalette(for item: OrbitReviewItem) -> ColorPalette {
   if let colorPalette = item.task.provenance?.colorPaletteName?.colorPalette {
     return colorPalette
-  } else {
-    let componentState = item.task.componentStates[item.componentID]!
-    return ColorPaletteName.fromTimestamp(componentState.createdAtTimestampMillis).colorPalette
   }
+
+  guard let componentState = item.task.componentStates[item.componentID] else {
+    return .red
+  }
+  return ColorPaletteName.fromTimestamp(componentState.createdAtTimestampMillis).colorPalette
 }
 
 struct OrbitHomeScreen: Widget {
@@ -301,9 +411,17 @@ struct OrbitHomeScreen: Widget {
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: kind, provider: Provider()) { entry in
       let colorPalette = colorPalette(for: entry.item)
-      PromptView(item: entry.item, isShowingAnswer: entry.isShowingAnswer)
+      PromptView(
+        item: entry.item,
+        isShowingAnswer: entry.isShowingAnswer,
+        hasReviewItem: entry.hasReviewItem
+      )
         .containerBackground(colorPalette.backgroundColor, for: .widget)
-        .widgetURL(URL(string: "com.withorbit.native://review?taskID=\(entry.item.task.id)&componentID=\(entry.item.componentID)")!)
+        .widgetURL(
+          entry.hasReviewItem
+            ? URL(string: "com.withorbit.native://review?taskID=\(entry.item.task.id)&componentID=\(entry.item.componentID)")
+            : nil
+        )
         .environment(\.colorPalette, colorPalette)
     }
     .supportedFamilies([.systemMedium, .systemLarge])
@@ -314,7 +432,8 @@ struct OrbitHomeScreen: Widget {
 #Preview(as: .systemMedium) {
   OrbitHomeScreen()
 } timeline: {
-  Entry(item: .placeholder, isShowingAnswer: false, date: .now)
-  Entry(item: .clozePlaceholder, isShowingAnswer: false, date: .now)
-  Entry(item: .clozePlaceholder, isShowingAnswer: true, date: .now)
+  Entry(item: .empty, isShowingAnswer: false, hasReviewItem: false, date: .now)
+  Entry(item: .placeholder, isShowingAnswer: false, hasReviewItem: true, date: .now)
+  Entry(item: .clozePlaceholder, isShowingAnswer: false, hasReviewItem: true, date: .now)
+  Entry(item: .clozePlaceholder, isShowingAnswer: true, hasReviewItem: true, date: .now)
 }

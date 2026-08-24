@@ -9,7 +9,9 @@
     "scheme": "com.withorbit.native",
     "ios": {
       "bundleIdentifier": "com.withorbit.native",
+      "buildNumber": "10",
       "appleTeamId": "MQ22N839N8",
+      "deploymentTarget": "26.0",
       "supportsTablet": true,
       "entitlements": {
         "com.apple.security.application-groups": ["group.com.withorbit.native"]
@@ -48,14 +50,6 @@
             "./assets/fonts/dr-mediumitalic.otf",
             "./assets/fonts/dr-regular.otf"
           ]
-        }
-      ],
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "deploymentTarget": "17.0"
-          }
         }
       ],
       [

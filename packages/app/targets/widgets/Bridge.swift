@@ -9,11 +9,28 @@ import Foundation
 import JavaScriptCore
 import SQLite3
 
-class Bridge {
+private enum BridgeError: LocalizedError, Sendable {
+  case missingFunction(String)
+  case invalidReviewQueue
+
+  var errorDescription: String? {
+    switch self {
+    case .missingFunction(let name):
+      "The widget JavaScript bundle doesn't define \(name)"
+    case .invalidReviewQueue:
+      "The widget JavaScript bundle returned an invalid review queue"
+    }
+  }
+}
+
+@MainActor
+final class Bridge {
+  static let shared = Bridge()
+
   private let context = JSContext()!
 
-  init() {
-    let bundleURL = Bundle(for: type(of: self))
+  private init() {
+    let bundleURL = Bundle.main
       .url(forResource: "widget", withExtension: "js")!
     let bundleSource = try! String(contentsOf: bundleURL, encoding: .utf8)
     context.exceptionHandler = { context, exception in
@@ -46,48 +63,92 @@ class Bridge {
   }
 
   func generateReviewQueue() async -> [OrbitReviewItem] {
-    let fn = context.globalObject.objectForKeyedSubscript(
-      "generateReviewQueue")!
-    let jsQueue = try! await fn.callAsync()
-    let wrappedTasks = jsQueue.toArray()!
-    let tasks = wrappedTasks.compactMap({
-      do {
-        return try OrbitReviewItem.init(decoding: $0)
-      } catch {
-        print(error)
-        return nil
+    guard
+      let fn = context.globalObject.objectForKeyedSubscript("generateReviewQueue"),
+      !fn.isUndefined
+    else {
+      print(BridgeError.missingFunction("generateReviewQueue"))
+      return []
+    }
+
+    do {
+      return try await fn.callAsync { jsQueue in
+        guard let wrappedTasks = jsQueue.toArray() else {
+          throw BridgeError.invalidReviewQueue
+        }
+
+        return wrappedTasks.compactMap {
+          do {
+            return try OrbitReviewItem(decoding: $0)
+          } catch {
+            print(error)
+            return nil
+          }
+        }
       }
-    })
-    return tasks
+    } catch {
+      print("Couldn't generate the widget review queue: \(error)")
+      return []
+    }
   }
 
-  func recordReview(taskID: TaskID, componentID: String, outcome: TaskRepetitionOutcome, date: Date) async {
-    let fn = context.globalObject.objectForKeyedSubscript(
-      "recordReview")!
-    _ = try! await fn.callAsync(withArguments: [taskID, componentID, outcome.rawValue, date.timeIntervalSince1970 * 1000.0])
+  func recordReview(taskID: TaskID, componentID: String, outcome: TaskRepetitionOutcome, date: Date) async throws {
+    guard
+      let fn = context.globalObject.objectForKeyedSubscript("recordReview"),
+      !fn.isUndefined
+    else {
+      throw BridgeError.missingFunction("recordReview")
+    }
+
+    try await fn.callAsync(
+      withArguments: [taskID, componentID, outcome.rawValue, date.timeIntervalSince1970 * 1000.0]
+    ) { _ in () }
   }
 
 }
 
 extension JSValue {
-  func callAsync(withArguments: [Any] = []) async throws -> JSValue {
+  @MainActor
+  func callAsync<Result: Sendable>(
+    withArguments: [Any] = [],
+    transform: @escaping @MainActor @Sendable (JSValue) throws -> Result
+  ) async throws -> Result {
     try await withCheckedThrowingContinuation { continuation in
-      let onFulfilled: @convention(block) (JSValue) -> Void = {
-        continuation.resume(returning: $0)
+      let onFulfilled: @convention(block) (JSValue) -> Void = { value in
+        do {
+          continuation.resume(returning: try transform(value))
+        } catch {
+          continuation.resume(throwing: error)
+        }
       }
       let onRejected: @convention(block) (JSValue) -> Void = { error in
+        let errorDescription = if error.isObject {
+          String(describing: error.toObject())
+        } else {
+          error.toString() ?? "Unknown JavaScript error"
+        }
         let error = NSError(
           domain: "JSError", code: 0,
-          userInfo: [NSLocalizedDescriptionKey: "Rejected promise: \(error.isObject ? error.toObject()! : error.toString()!)"])
+          userInfo: [NSLocalizedDescriptionKey: "Rejected promise: \(errorDescription)"]
+        )
         continuation.resume(throwing: error)
       }
       let promiseArgs = [
-        unsafeBitCast(onFulfilled, to: JSValue.self),
-        unsafeBitCast(onRejected, to: JSValue.self),
+        JSValue(object: onFulfilled, in: context)!,
+        JSValue(object: onRejected, in: context)!,
       ]
 
-      let promise = self.call(withArguments: withArguments)
-      promise?.invokeMethod("then", withArguments: promiseArgs)
+      guard let promise = self.call(withArguments: withArguments) else {
+        continuation.resume(
+          throwing: NSError(
+            domain: "JSError",
+            code: 0,
+            userInfo: [NSLocalizedDescriptionKey: "JavaScript call returned no promise"]
+          )
+        )
+        return
+      }
+      promise.invokeMethod("then", withArguments: promiseArgs)
     }
   }
 }

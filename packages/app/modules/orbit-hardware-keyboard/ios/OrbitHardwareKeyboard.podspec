@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
   s.author = 'Orbit'
   s.homepage = 'https://withorbit.com'
   s.license = { :type => 'AGPL-3.0-or-later OR BUSL-1.1' }
-  s.platforms = { :ios => '16.4' }
+  s.platforms = { :ios => '26.0' }
   s.swift_version = '6.0'
   s.source = { :git => 'https://github.com/andymatuschak/orbit.git' }
   s.static_framework = true

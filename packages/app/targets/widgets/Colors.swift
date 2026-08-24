@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-enum ColorPaletteName: String {
+enum ColorPaletteName: String, Sendable {
   case red
   case orange
   case brown
@@ -162,20 +162,11 @@ extension ColorPaletteName {
 
 extension Color {
   init?(hex: String) {
-    var cleanedHexString = hex.uppercased()
-
-    // Remove the '#' prefix if it exists
-    if cleanedHexString.hasPrefix("#") {
-      cleanedHexString.remove(at: cleanedHexString.startIndex)
-    }
-
-    // Check that the cleaned string is a valid hex color code
-    guard cleanedHexString.count == 6 else { return nil }
-    guard cleanedHexString.range(of: "^[0-9A-F]{6}$", options: .regularExpression) != nil else { return nil }
-
-    // Extract RGB components
-    var rgbValue: UInt64 = 0
-    Scanner(string: cleanedHexString).scanHexInt64(&rgbValue)
+    let cleanedHexString = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
+    guard
+      cleanedHexString.count == 6,
+      let rgbValue = UInt64(cleanedHexString, radix: 16)
+    else { return nil }
 
     let red = Double((rgbValue & 0xFF0000) >> 16) / 255.0
     let green = Double((rgbValue & 0x00FF00) >> 8) / 255.0

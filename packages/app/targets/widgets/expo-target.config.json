@@ -2,8 +2,10 @@
   "type": "widget",
   "name": "OrbitWidget",
   "icon": "../../app-assets/starburst-icon.png",
-  "entitlements": {
-    "com.apple.security.application-groups": ["group.com.withorbit.native"]
+  "colors": {
+    "$accent": "#ffcb2e",
+    "$widgetBackground": "#ff5252"
   },
-  "deploymentTarget": "18.0"
+  "entitlements": {},
+  "deploymentTarget": "26.0"
 }

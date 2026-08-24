@@ -15,15 +15,6 @@ protocol OrbitFont {
   static var kerning: CGFloat { get }
 }
 
-extension OrbitFont {
-  static var paragraphStyle: NSParagraphStyle {
-    let paragraphStyle = NSMutableParagraphStyle()
-    paragraphStyle.maximumLineHeight = lineHeight
-    paragraphStyle.minimumLineHeight = lineHeight
-    return paragraphStyle
-  }
-}
-
 struct OrbitPromptSmall: OrbitFont {
   static let font = Font.custom("Dr", fixedSize: fontSize).weight(fontWeight)
   static let fontSize: CGFloat = 18

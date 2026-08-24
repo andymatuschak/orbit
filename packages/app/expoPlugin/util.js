@@ -30,11 +30,4 @@ function addSourceFile(config, name) {
   });
 }
 
-function addResourceFile(config, filename) {
-  const target = config.modResults.getFirstTarget().uuid;
-  addFile(config, filename, (path, key) => {
-    config.modResults.addResourceFile(path, target, key);
-  });
-}
-
-module.exports = { addSourceFile, addResourceFile };
+module.exports = { addSourceFile };

@@ -4,47 +4,48 @@ import GameController
 
 private let onKeyDownEvent = "onKeyDown"
 
-public final class OrbitHardwareKeyboardModule: Module {
+@MainActor
+public final class OrbitHardwareKeyboardModule: Module, @unchecked Sendable {
   private var keyboardInput: GCKeyboardInput?
-  private var connectionObserver: OrbitKeyboardConnectionObserver?
+  private var connectionObservers: [NotificationCenter.ObservationToken] = []
 
-  public func definition() -> ModuleDefinition {
+  nonisolated public func definition() -> ModuleDefinition {
     Name("OrbitHardwareKeyboard")
     Events(onKeyDownEvent)
 
     OnStartObserving(onKeyDownEvent) {
-      startObservingKeyboard()
+      Task { @MainActor [weak self] in
+        self?.startObservingKeyboard()
+      }
     }
 
     OnStopObserving(onKeyDownEvent) {
-      stopObservingKeyboard()
+      Task { @MainActor [weak self] in
+        self?.stopObservingKeyboard()
+      }
     }
 
     OnDestroy {
-      stopObservingKeyboard()
+      Task { @MainActor [self] in
+        stopObservingKeyboard()
+      }
     }
   }
 
   private func startObservingKeyboard() {
-    guard connectionObserver == nil else {
+    guard connectionObservers.isEmpty else {
       return
     }
 
-    let observer = OrbitKeyboardConnectionObserver(module: self)
-    connectionObserver = observer
-
-    NotificationCenter.default.addObserver(
-      observer,
-      selector: #selector(OrbitKeyboardConnectionObserver.keyboardDidChange(_:)),
-      name: .GCKeyboardDidConnect,
-      object: nil
-    )
-    NotificationCenter.default.addObserver(
-      observer,
-      selector: #selector(OrbitKeyboardConnectionObserver.keyboardDidChange(_:)),
-      name: .GCKeyboardDidDisconnect,
-      object: nil
-    )
+    let center = NotificationCenter.default
+    connectionObservers = [
+      center.addObserver(of: GCKeyboard.self, for: .didConnect) {
+        [weak self] _ in self?.refreshKeyboard()
+      },
+      center.addObserver(of: GCKeyboard.self, for: .didDisconnect) {
+        [weak self] _ in self?.refreshKeyboard()
+      },
+    ]
 
     refreshKeyboard()
   }
@@ -53,13 +54,14 @@ public final class OrbitHardwareKeyboardModule: Module {
     keyboardInput?.keyChangedHandler = nil
     keyboardInput = nil
 
-    if let connectionObserver {
-      NotificationCenter.default.removeObserver(connectionObserver)
-      self.connectionObserver = nil
+    let center = NotificationCenter.default
+    for observer in connectionObservers {
+      center.removeObserver(observer)
     }
+    connectionObservers.removeAll()
   }
 
-  fileprivate func refreshKeyboard() {
+  private func refreshKeyboard() {
     keyboardInput?.keyChangedHandler = nil
     keyboardInput = GCKeyboard.coalesced?.keyboardInput
 
@@ -111,17 +113,5 @@ public final class OrbitHardwareKeyboardModule: Module {
   private func isShiftPressed(on keyboard: GCKeyboardInput) -> Bool {
     keyboard.button(forKeyCode: .leftShift)?.isPressed == true ||
       keyboard.button(forKeyCode: .rightShift)?.isPressed == true
-  }
-}
-
-private final class OrbitKeyboardConnectionObserver: NSObject {
-  private weak var module: OrbitHardwareKeyboardModule?
-
-  init(module: OrbitHardwareKeyboardModule) {
-    self.module = module
-  }
-
-  @objc func keyboardDidChange(_ notification: Notification) {
-    module?.refreshKeyboard()
   }
 }
