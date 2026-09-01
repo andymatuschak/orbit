@@ -238,7 +238,7 @@ struct PromptTextStyle: ViewModifier {
       .font(fontStyle.font)
       .kerning(fontStyle.kerning)
       .foregroundStyle(ink)
-      .lineHeight(.exact(points: fontStyle.lineHeight))
+      .lineHeight(.variable)
       .contentTransition(.opacity)
   }
 }
