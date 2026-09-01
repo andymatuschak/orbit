@@ -17,6 +17,6 @@
     "typescript": "6.0.3"
   },
   "scripts": {
-    "build": "tsc -b"
+    "build": "node ../../node_modules/@typescript/native/bin/tsc -b"
   }
 }

@@ -8,13 +8,6 @@ import {
 } from "./ankiCollection.js";
 import { Card, Note } from "./ankiDBTypes.js";
 
-// TODO remove when https://github.com/oven-sh/bun/issues/15863 is fixed
-declare module "bun:test" {
-  interface Matchers {
-    toMatchInlineSnapshot(snapshot?: string | null): Promise<MatcherResult>;
-  }
-}
-
 test("manifest contains two test images", async () => {
   await withTestAnkiCollection(async (handle, manifest) => {
     expect(manifest).toMatchInlineSnapshot(`

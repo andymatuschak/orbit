@@ -15,7 +15,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -b",
+    "build": "node ../../node_modules/@typescript/native/bin/tsc -b",
     "generateSchema": "typescript-json-schema src/validation/eventsValidator.ts Events -o src/validation/events.json --noExtraProps --required --ignoreErrors --strictNullChecks"
   },
   "dependencies": {

@@ -8,13 +8,6 @@ import {
 
 const scheduler = createSpacedRepetitionScheduler();
 
-// TODO remove when https://github.com/oven-sh/bun/issues/15863 is fixed
-declare module "bun:test" {
-  interface Matchers {
-    toMatchInlineSnapshot(snapshot?: string | null): Promise<MatcherResult>;
-  }
-}
-
 describe("first repetition", () => {
   const state: TaskComponentState = {
     createdAtTimestampMillis: 1000,

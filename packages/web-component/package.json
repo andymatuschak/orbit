@@ -15,7 +15,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsc -b && bun run bundle",
+    "build": "node ../../node_modules/@typescript/native/bin/tsc -b && bun run bundle",
     "dev": "bun scripts/bundleDev.ts",
     "bundle": "bun scripts/bundleProd.ts",
     "predeploy": "bun scripts/bundleProd.ts",

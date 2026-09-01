@@ -1,15 +1,16 @@
 {
   "private": true,
   "scripts": {
-    "build": "tsc -b packages/tsconfig.json",
-    "watch": "tsc -b -w packages/tsconfig.json",
+    "build": "node node_modules/@typescript/native/bin/tsc -b packages/tsconfig.json",
+    "watch": "node node_modules/@typescript/native/bin/tsc -b -w packages/tsconfig.json",
     "test:unit": "bun --filter \"!@withorbit/backend\" test",
-    "test": "bun run test:unit; bun run --cwd packages/backend test",
+    "test": "bun run test:unit && bun run --cwd packages/backend test",
     "lint": "cd packages; eslint .",
     "lint:fix": "cd packages; eslint --fix .",
     "checkall": "bun run lint && bun run build && bun run test"
   },
   "devDependencies": {
+    "@typescript/native": "npm:typescript@7.0.2",
     "@types/bun": "1.4.0",
     "@types/node": "24.10.1",
     "@typescript-eslint/eslint-plugin": "8.67.0",

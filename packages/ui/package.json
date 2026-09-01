@@ -56,8 +56,8 @@
     "react-native-svg": "15.15.4"
   },
   "scripts": {
-    "build": "tsc -b",
-    "watch": "tsc -w",
+    "build": "node ../../node_modules/@typescript/native/bin/tsc -b",
+    "watch": "node ../../node_modules/@typescript/native/bin/tsc -w",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build"
   }

@@ -12,8 +12,8 @@
   "scripts": {
     "dev": "rm -rf \"$TMPDIR/orbit-file-storage-emulator\"; firebase emulators:start --import emulator-data",
     "seed:simulator": "bun scripts/seedSimulator.ts",
-    "typecheck:scripts": "tsc -p tsconfig.scripts.json",
-    "build": "tsc -b",
+    "typecheck:scripts": "node ../../node_modules/@typescript/native/bin/tsc -p tsconfig.scripts.json",
+    "build": "node ../../node_modules/@typescript/native/bin/tsc -b",
     "predeploy": "bun run build && bun scripts/predeploy.js",
     "deploy": "firebase deploy --only functions",
     "postdeploy": "bun scripts/postdeploy.js",

@@ -7,7 +7,7 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -b",
+    "build": "node ../../node_modules/@typescript/native/bin/tsc -b",
     "test": "bun test src",
     "ingest": "node dist/bin/run.js",
     "generateSchema": "typescript-json-schema src/ingestible.ts Ingestible -o src/ingestible.json --noExtraProps --required --ignoreErrors --strictNullChecks"

@@ -18,8 +18,8 @@
     "@withorbit/core": "0.0.1"
   },
   "scripts": {
-    "build": "tsc -b",
-    "watch": "tsc -w",
+    "build": "node ../../node_modules/@typescript/native/bin/tsc -b",
+    "watch": "node ../../node_modules/@typescript/native/bin/tsc -w",
     "test": "bun test src"
   }
 }

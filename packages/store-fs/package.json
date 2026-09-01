@@ -16,7 +16,7 @@
     "better-sqlite3": "^9.4.5"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "node ../../node_modules/@typescript/native/bin/tsc -b",
     "test": "bun test src"
   },
   "devDependencies": {

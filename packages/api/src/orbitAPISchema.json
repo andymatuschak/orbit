@@ -155,6 +155,10 @@
             ],
             "type": "object"
         },
+        "Record<string,never>": {
+            "additionalProperties": false,
+            "type": "object"
+        },
         "Task<TaskContent>": {
             "additionalProperties": false,
             "properties": {
@@ -717,9 +721,7 @@
                             "type": "object"
                         },
                         "query": {
-                            "properties": {
-                            },
-                            "type": "object"
+                            "$ref": "#/definitions/Record<string,never>"
                         },
                         "response": {
                             "additionalProperties": true,
@@ -735,7 +737,7 @@
                 },
                 "POST": {
                     "additionalProperties": false,
-                    "description": "encode with multipart/form-data, with the file in part named \"file\"\nmake sure to include Content-Type heading for your attachment\nreturns application/json encoded ResponseObject<\"attachmentIDReference\", AttachmentID, AttachmentIDReference>",
+                    "description": "encode with multipart/form-data, with the file in part named \"file\"\nmake sure to include Content-Type heading for your attachment",
                     "properties": {
                         "body": {
                             "additionalProperties": false,

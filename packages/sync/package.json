@@ -14,7 +14,7 @@
     "@withorbit/store-shared": "0.0.1"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "node ../../node_modules/@typescript/native/bin/tsc -b",
     "test": "bun test src",
     "sync": "node dist/bin/run.js"
   },

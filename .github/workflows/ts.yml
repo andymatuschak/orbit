@@ -9,6 +9,10 @@ on:
       - "**/*.tsx"
       - "**/*.js"
       - "**/*.jsx"
+      - "**/package.json"
+      - "**/tsconfig*.json"
+      - "bun.lockb"
+      - ".github/workflows/ts.yml"
   pull_request:
     branches:
       - master
@@ -17,6 +21,10 @@ on:
       - "**/*.tsx"
       - "**/*.js"
       - "**/*.jsx"
+      - "**/package.json"
+      - "**/tsconfig*.json"
+      - "bun.lockb"
+      - ".github/workflows/ts.yml"
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -30,7 +38,7 @@ jobs:
         with:
           node-version: 20.x
       - name: "install dependencies"
-        run: bun install
+        run: bun install --frozen-lockfile
       - name: "run lint"
         run: "bun run lint"
   test:
@@ -45,7 +53,7 @@ jobs:
         with:
           node-version: 20.x
       - name: "install dependencies"
-        run: bun install
+        run: bun install --frozen-lockfile
       - name: "run build"
         run: "bun run build"
       - name: "run test"
@@ -63,7 +71,7 @@ jobs:
         with:
           node-version: 20.x
       - name: "install dependencies"
-        run: bun install
+        run: bun install --frozen-lockfile
       - name: "run build"
         run: "bun run build"
       - name: "run generateSchema for the API"

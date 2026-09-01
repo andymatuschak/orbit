@@ -11,13 +11,6 @@ import { IDBDatabaseBackend } from "./indexedDB.js";
 
 let backend: IDBDatabaseBackend;
 
-// TODO remove when https://github.com/oven-sh/bun/issues/15863 is fixed
-declare module "bun:test" {
-  interface Matchers {
-    toMatchInlineSnapshot(snapshot?: string | null): Promise<MatcherResult>;
-  }
-}
-
 const testTasks: DatabaseBackendEntityRecord<Task>[] = [
   {
     entity: createTestTask({
