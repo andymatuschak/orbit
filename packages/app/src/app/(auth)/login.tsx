@@ -1,4 +1,4 @@
-import { ContinueWithUser, styles } from "@withorbit/ui";
+import { ContinueWithUser, styles } from "../../ui/index.js";
 import React from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { AuthenticationClient } from "../../authentication/index.js";

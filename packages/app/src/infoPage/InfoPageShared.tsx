@@ -1,4 +1,4 @@
-import { styles } from "@withorbit/ui";
+import { styles } from "../ui/index.js";
 import React, { ReactNode } from "react";
 import { StyleSheet, Text } from "react-native";
 

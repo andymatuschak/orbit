@@ -1,5 +1,5 @@
 import { EmbeddedScreenConfiguration } from "@withorbit/embedded-support";
-import { styles } from "@withorbit/ui";
+import { styles } from "../../ui/index.js";
 
 // Simple string hash, just for choosing palettes from the URL.
 // https://stackoverflow.com/a/52171480

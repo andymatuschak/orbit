@@ -1,4 +1,4 @@
-import { Logo, styles, useLayout } from "@withorbit/ui";
+import { Logo, styles, useLayout } from "../ui/index.js";
 import React, { ReactNode } from "react";
 import { Image, Text, View } from "react-native";
 import { InfoPageProps, SizeContextProvider } from "./InfoPageShared.js";

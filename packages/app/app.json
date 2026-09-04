@@ -26,7 +26,7 @@
     "web": {
       "build": {
         "babel": {
-          "include": ["@withorbit/ui", "@withorbit/api-client"]
+          "include": ["@withorbit/api-client"]
         }
       },
       "bundler": "metro"
@@ -58,7 +58,7 @@
           "origin": "https://withorbit.com",
           "asyncRoutes": {
             "web": true,
-            "default": "development"
+            "default": false
           }
         }
       ],

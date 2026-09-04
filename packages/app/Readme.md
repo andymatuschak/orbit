@@ -19,9 +19,13 @@ This package contains the main Orbit GUI app for the web, iOS, Android, and macO
 
 Unsure what a device's name is? Run `xctrace list devices`.
 
-You'll need to copy Orbit's commercial fonts into `/web/fonts` and `/android/app/src/main/assets`. Those fonts are non-free, and their licenses don't permit me to distribute them with the repository. For your local testing purposes only, you can find a demo distribution of the primary interface font, Dr, [here](https://www.productiontype.com/family/dr).
+You'll need to copy Orbit's licensed proprietary app/native font files into `packages/app/assets/fonts`. Storybook serves the app-owned `packages/app/assets` directory, so its `/fonts/*` URLs resolve from `packages/app/assets/fonts`. For Expo web, stage the web-compatible font files in the ignored `packages/app/public/fonts` directory so its `/fonts/*` URLs resolve. These proprietary files must remain ignored and uncommitted: the fonts are non-free, and their licenses don't permit me to distribute them with the repository. For your local testing purposes only, you can find a demo distribution of the primary interface font, Dr, [here](https://www.productiontype.com/family/dr).
 
 (At some point we should probably make a "no-trade-dress" flag you can set to get a "generic" build of Orbit.)
+
+## Licensing
+
+This app, including its internal UI source subtree at `src/ui`, is licensed under `AGPL-3.0-or-later OR BUSL-1.1`. Proprietary DR and Raptor font files under `assets/fonts` are not distributed with the repository and remain subject to their separate licenses.
 
 ---
 

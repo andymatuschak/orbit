@@ -7,7 +7,7 @@ import {
   styles,
   textFieldHorizontalPadding,
   TextInput,
-} from "@withorbit/ui";
+} from "../ui/index.js";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,

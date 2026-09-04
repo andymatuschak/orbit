@@ -1,5 +1,5 @@
 import { EmbeddedScreenConfiguration } from "@withorbit/embedded-support";
-import { styles } from "@withorbit/ui";
+import { styles } from "../../ui/index.js";
 
 export default function getEmbeddedScreenConfigurationFromURL(
   href: string,

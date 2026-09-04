@@ -1,4 +1,4 @@
-import { Link, styles } from "@withorbit/ui";
+import { Link, styles } from "../ui/index.js";
 import React from "react";
 import { InfoPage } from "../infoPage/InfoPage.js";
 import { Heading, Paragraph } from "../infoPage/InfoPageShared.js";

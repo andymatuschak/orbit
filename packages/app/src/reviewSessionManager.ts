@@ -7,7 +7,7 @@ import {
   ReviewItem,
   Task,
 } from "@withorbit/core";
-import { ReviewAreaItem } from "@withorbit/ui";
+import { ReviewAreaItem } from "./ui/index.js";
 import { useMemo, useState } from "react";
 
 export interface ReviewSessionManagerState {

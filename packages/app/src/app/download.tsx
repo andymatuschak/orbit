@@ -1,4 +1,4 @@
-import { Button, IconName, Spacer, styles } from "@withorbit/ui";
+import { Button, IconName, Spacer, styles } from "../ui/index.js";
 import React from "react";
 import { InfoPage } from "../infoPage/InfoPage.js";
 import { Heading, Paragraph } from "../infoPage/InfoPageShared.js";

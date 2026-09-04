@@ -1,4 +1,4 @@
-import { useWeakRef } from "@withorbit/ui";
+import { useWeakRef } from "../ui/index.js";
 import React from "react";
 
 export function useAsyncResult<T>(initializer: () => Promise<T>): T | null {

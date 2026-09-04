@@ -23,7 +23,7 @@ import {
   ReviewStarburst,
   styles,
   useWeakRef,
-} from "@withorbit/ui";
+} from "../ui/index.js";
 import { ExtensionStorage } from "@bacons/apple-targets";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";

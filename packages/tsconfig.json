@@ -10,7 +10,6 @@
     { "path": "./embedded-support" },
     { "path": "./ingester" },
     { "path": "./interpreter" },
-    { "path": "./ui" },
     { "path": "./sample-data" },
     { "path": "./store-fs" },
     { "path": "./store-shared" },

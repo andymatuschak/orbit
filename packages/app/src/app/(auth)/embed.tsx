@@ -25,7 +25,7 @@ import {
   styles,
   useLayout,
   useTransitioningValue,
-} from "@withorbit/ui";
+} from "../../ui/index.js";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Animated, Text, View } from "react-native";
