@@ -26,10 +26,7 @@ import { getVariantStyles } from "../styles/type.js";
 import usePrevious from "./hooks/usePrevious.js";
 import useWeakRef from "./hooks/useWeakRef.js";
 import { useMarkdownItInstance } from "./PromptFieldRenderer/markdown.js";
-import {
-  renderBlockMath,
-  renderInlineMath,
-} from "./PromptFieldRenderer/markdownLatexSupport.js";
+import { getLatexRenderRules } from "./PromptFieldRenderer/markdownLatexSupport.js";
 import { SawtoothPattern } from "./SawtoothPattern.jsx";
 import { AttachmentID, TaskContentField } from "@withorbit/core";
 
@@ -168,6 +165,7 @@ const ClozeUnderline =
 
 const getMarkdownRenderRules = (
   onLayout: (event: LayoutChangeEvent) => void,
+  maximumMathWidth?: number,
 ): MarkdownDisplay.RenderRules => ({
   body(node, children, _parent, styles) {
     return (
@@ -244,10 +242,7 @@ const getMarkdownRenderRules = (
     );
   },
 
-  math_inline: renderInlineMath,
-  math_inline_double: renderInlineMath,
-
-  math_block: renderBlockMath,
+  ...getLatexRenderRules(maximumMathWidth),
 });
 
 function useImageSize(
@@ -449,10 +444,11 @@ export default React.memo(function PromptFieldRenderer(props: {
         <Markdown
           rules={useMemo(
             () =>
-              getMarkdownRenderRules((event) =>
-                setMarkdownHeight(event.nativeEvent.layout.height),
+              getMarkdownRenderRules(
+                (event) => setMarkdownHeight(event.nativeEvent.layout.height),
+                containerSize?.width,
               ),
-            [],
+            [containerSize?.width],
           )}
           style={useMemo(
             () =>

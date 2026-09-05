@@ -66,3 +66,16 @@ export const renderBlockMath: MarkdownDisplay.RenderFunction = (
     />
   );
 };
+
+export function getLatexRenderRules(
+  _maximumWidth?: number,
+): Pick<
+  MarkdownDisplay.RenderRules,
+  "math_inline" | "math_inline_double" | "math_block"
+> {
+  return {
+    math_inline: renderInlineMath,
+    math_inline_double: renderInlineMath,
+    math_block: renderBlockMath,
+  };
+}
