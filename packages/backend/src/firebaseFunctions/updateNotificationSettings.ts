@@ -46,24 +46,85 @@ function getAction(
   return actionTable[action] ? action : null;
 }
 
-// TODO: rewrite this as an internal API endpoint which the page calls onload
+function renderConfirmationPage(action: UpdateNotificationSettingsAction) {
+  const copy =
+    action === "unsubscribe"
+      ? {
+          title: "Unsubscribe from review notifications?",
+          button: "Unsubscribe",
+        }
+      : {
+          title: "Snooze review notifications for a week?",
+          button: "Snooze for a week",
+        };
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>${copy.title}</title>
+    <style>
+      body { background: #f5f7e8; color: #25271f; font: 20px/1.5 system-ui, sans-serif; margin: 0; }
+      main { margin: 12vh auto; max-width: 32rem; padding: 2rem; }
+      h1 { font-size: 2rem; line-height: 1.2; }
+      button { background: #25271f; border: 0; border-radius: 0.25rem; color: white; cursor: pointer; font: inherit; padding: 0.7rem 1rem; }
+      a { color: inherit; margin-left: 1rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>${copy.title}</h1>
+      <form method="post">
+        <button type="submit">${copy.button}</button>
+        <a href="${serviceConfig.webBaseURL}">Cancel</a>
+      </form>
+    </main>
+  </body>
+</html>`;
+}
+
 const app = express();
 app.use(async (request, response) => {
+  const action = getAction(request);
+  const accessCode = request.query["accessCode"];
+
+  if (!action) {
+    response.status(400).send();
+    return;
+  }
+
+  if (request.method === "GET") {
+    if (!accessCode || typeof accessCode !== "string") {
+      response.status(401).send();
+      return;
+    }
+
+    response
+      .status(200)
+      .set({
+        "Cache-Control": CachePolicy.NoStore,
+        "Content-Security-Policy":
+          "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'",
+      })
+      .type("html")
+      .send(renderConfirmationPage(action));
+    return;
+  }
+
+  if (request.method !== "POST") {
+    response.status(405).set("Allow", "GET, POST").send();
+    return;
+  }
+
   try {
     const result = await authenticateTypedRequest(request, async (userID) => {
-      const action = getAction(request);
-      if (action) {
-        const metadataUpdate = actionTable[action](Date.now());
-        await sharedServerDatabase().accounts.updateUserMetadata(
-          userID,
-          metadataUpdate,
-        );
-      } else {
-        console.log("Missing or unknown action", action);
-        return {
-          status: 400,
-        };
-      }
+      const metadataUpdate = actionTable[action](Date.now());
+      await sharedServerDatabase().accounts.updateUserMetadata(
+        userID,
+        metadataUpdate,
+      );
       return {
         status: 302,
         redirectURL: getRedirectURL(action),

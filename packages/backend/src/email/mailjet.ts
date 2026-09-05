@@ -21,27 +21,29 @@ export default class MailjetEmailService implements EmailService {
         `[Suppressing emails]. Would have sent to ${recipientEmailAddress}:\nSubject: ${subject}\n${text}\n\nHTML:\n\n${html}`,
       );
     } else {
-      return this.mailjetClient.post("send", { version: "v3.1" }).request({
-        Messages: [
+      const message = {
+        From: {
+          Email: serviceConfig.notificationEmails.sender.email,
+          Name: serviceConfig.notificationEmails.sender.name,
+        },
+        ReplyTo: {
+          Email: serviceConfig.notificationEmails.replyTo.email,
+          Name: serviceConfig.notificationEmails.replyTo.name,
+        },
+        To: [
           {
-            From: {
-              Email: serviceConfig.notificationEmails.sender.email,
-              Name: serviceConfig.notificationEmails.sender.name,
-            },
-            ReplyTo: {
-              Email: serviceConfig.notificationEmails.replyTo.email,
-              Name: serviceConfig.notificationEmails.replyTo.name,
-            },
-            To: [
-              {
-                Email: recipientEmailAddress,
-              },
-            ],
-            Subject: subject,
-            TextPart: text,
-            HTMLPart: html,
+            Email: recipientEmailAddress,
           },
         ],
+        Subject: subject,
+        TextPart: text,
+        HTMLPart: html,
+        // Tracking redirects obscure Orbit's URLs and can be blocked by mail
+        // clients. More importantly, these emails contain sensitive action URLs.
+        TrackClicks: "disabled",
+      };
+      return this.mailjetClient.post("send", { version: "v3.1" }).request({
+        Messages: [message],
       });
     }
   }

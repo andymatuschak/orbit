@@ -34,6 +34,8 @@ export async function fetchRoute(
     } catch {}
   } else if (contentType?.startsWith("text/plain")) {
     body = await result.text();
+  } else if (contentType?.startsWith("text/html")) {
+    body = await result.text();
   } else {
     throw new Error(`Unsupported response content type ${contentType}`);
   }

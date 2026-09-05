@@ -1,7 +1,11 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import { UpdateNotificationSettingsAction } from "../../firebaseFunctions/updateNotificationSettings.js";
 import { resetLocalEmulators } from "../emulators.js";
-import { getTestUserMetadata, setupAuthToken } from "../firebaseTesting.js";
+import {
+  getTestUserMetadata,
+  setupAccessCode,
+  setupAuthToken,
+} from "../firebaseTesting.js";
 import { fetchRoute } from "./utils/fetchRoute.js";
 
 beforeEach(async () => {
@@ -13,13 +17,40 @@ async function attemptUpdate(
   token: string | null,
 ) {
   return await fetchRoute(`/updateNotificationSettings?action=${action}`, {
-    method: "GET",
+    method: "POST",
+    json: {},
     authorization: token ? { token } : undefined,
     followRedirects: false,
   });
 }
 
 describe("/updateNotificationSettings", () => {
+  test("GET asks for confirmation without consuming the access code", async () => {
+    await setupAccessCode("oneTimeCode", "testUserID");
+    const path =
+      "/updateNotificationSettings?action=unsubscribe&accessCode=oneTimeCode";
+
+    const confirmation = await fetchRoute(path);
+    expect(confirmation.status).toBe(200);
+    expect(confirmation.body).toContain(
+      "Unsubscribe from review notifications?",
+    );
+    expect(await getTestUserMetadata("testUserID")).not.toHaveProperty(
+      "isUnsubscribedFromSessionNotifications",
+    );
+
+    const result = await fetchRoute(path, {
+      method: "POST",
+      json: {},
+      followRedirects: false,
+    });
+    expect(result.status).toBe(302);
+    expect(
+      (await getTestUserMetadata("testUserID"))!
+        .isUnsubscribedFromSessionNotifications,
+    ).toBe(true);
+  });
+
   test("fails without auth", async () => {
     const { status, body } = await attemptUpdate("unsubscribe", null);
     expect(status).toBe(401);
