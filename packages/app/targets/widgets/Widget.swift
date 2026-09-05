@@ -194,23 +194,46 @@ struct PromptContent: View {
       switch spec {
       case .memory(.qa(let q, let a)):
         let text = isShowingAnswer ? a.text : q.text
-        Text(text)
-          .modifier(PromptTextStyle(text: text))
-          .widgetAccentable(isShowingAnswer)
-          .animation(.linear(duration: 0.05), value: isShowingAnswer)
-          .frame(maxHeight: .infinity, alignment: .bottom)
+        Group {
+          if containsLaTeX(text) {
+            PromptLaTeXText(text: text)
+          } else {
+            Text(text)
+              .modifier(PromptTextStyle(text: text))
+          }
+        }
+        .widgetAccentable(isShowingAnswer)
+        .animation(.linear(duration: 0.05), value: isShowingAnswer)
+        .frame(maxHeight: .infinity, alignment: .bottom)
 
       case .memory(.cloze(let body, let components)):
-        buildClozeText(
-          text: body.text,
-          ranges: components[item.componentID]?.ranges ?? [],
-          colorPalette: colorPalette,
-          isShowingAnswer: isShowingAnswer
-        )
-          .modifier(PromptTextStyle(text: body.text))
-          .widgetAccentable(isShowingAnswer)
-          .animation(.linear(duration: 0.05), value: isShowingAnswer)
-          .frame(maxHeight: .infinity, alignment: .bottom)
+        let ranges = components[item.componentID]?.ranges ?? []
+        if containsLaTeX(body.text) {
+          PromptLaTeXText(
+            text: buildLaTeXClozeText(
+              text: body.text,
+              ranges: ranges,
+              isShowingAnswer: isShowingAnswer
+            ),
+            fontSizingText: body.text,
+            highlightedRanges: isShowingAnswer ? ranges : [],
+            highlightColor: colorPalette.accentColor
+          )
+            .widgetAccentable(isShowingAnswer)
+            .animation(.linear(duration: 0.05), value: isShowingAnswer)
+            .frame(maxHeight: .infinity, alignment: .bottom)
+        } else {
+          buildClozeText(
+            text: body.text,
+            ranges: ranges,
+            colorPalette: colorPalette,
+            isShowingAnswer: isShowingAnswer
+          )
+            .modifier(PromptTextStyle(text: body.text))
+            .widgetAccentable(isShowingAnswer)
+            .animation(.linear(duration: 0.05), value: isShowingAnswer)
+            .frame(maxHeight: .infinity, alignment: .bottom)
+        }
       }
     }
     .frame(maxHeight: .infinity, alignment: .top)
