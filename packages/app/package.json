@@ -7,6 +7,7 @@
     "ios": "expo run:ios",
     "ios:release": "expo run:ios --scheme Orbit --configuration Release --no-bundler",
     "web": "expo start --web -p 19006",
+    "smoke:web": "bun scripts/webSmoke.ts",
     "android": "expo run:android",
     "analyze:web": "source-map-explorer 'web-build/_expo/static/js/web/*.js' 'web-build/_expo/static/js/web/*.js.map'",
     "build:web": "expo export -p web --output-dir web-build --source-maps",

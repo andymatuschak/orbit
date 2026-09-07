@@ -7,6 +7,7 @@ This package contains the main Orbit GUI app for the web, iOS, Android, and macO
     * Install [`watchman`](https://facebook.github.io/watchman/docs/nodejs.html) with `brew install watchman` (the pure-JS file watcher will run out of file handles).
     * Start up a local instance of the backend: see `packages/backend/Readme.md` for details.
     * To run the Orbit web app: `bun run web`
+    * To smoke-test the embedded web flow against the local Firebase emulators: `bun run smoke:web`. This starts its own Expo web server when needed and tests a signed-out review both when creating a new account and when merging into the existing local test account. It uses Bun's experimental WebView with Chrome, so Chrome (or another browser Bun can detect as its Chrome backend) must be installed.
     * To run the Orbit iOS app on the simulator: `bun run ios`
        * (You'll need to `cd ios; EXPO_USE_SOURCE=1 pod install` first; see [this issue](https://github.com/expo/expo/issues/12040) for background on the Expo workaround)
     * To run the Orbit iOS app on an attached device: `bun run ios --device [device name]`
