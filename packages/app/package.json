@@ -6,6 +6,8 @@
     "start": "expo start",
     "ios": "expo run:ios",
     "ios:release": "expo run:ios --scheme Orbit --configuration Release --no-bundler",
+    "deploy:ios:testflight": "scripts/deploy_ios_testflight.sh",
+    "eas-build-post-install": "cd ../.. && bun run build",
     "web": "expo start --web -p 19006",
     "smoke:web": "bun scripts/webSmoke.ts",
     "android": "expo run:android",

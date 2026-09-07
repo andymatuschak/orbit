@@ -16,6 +16,7 @@ This package contains the main Orbit GUI app for the web, iOS, Android, and macO
       * Run `bun run start` to start the Metro bundler.
       * Open the Xcode workspace, change the device to "My Mac", and run.
 * Deployment
+    * To build locally and deploy a new iOS build to internal TestFlight: `bun run deploy:ios:testflight`
     * To deploy the Orbit web app: `bun run deploy:web`
 
 Unsure what a device's name is? Run `xctrace list devices`.

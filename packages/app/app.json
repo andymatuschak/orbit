@@ -17,7 +17,8 @@
         "com.apple.security.application-groups": ["group.com.withorbit.native"]
       },
       "infoPlist": {
-        "OPSQLite_AppGroup": "group.com.withorbit.native"
+        "OPSQLite_AppGroup": "group.com.withorbit.native",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -67,6 +68,28 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "bundleIdentifier": "com.withorbit.native.widget",
+                  "targetName": "OrbitWidget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.withorbit.native"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "ec5dfb63-54a0-4217-844d-032fa90bb844"
+      }
     }
   }
 }
