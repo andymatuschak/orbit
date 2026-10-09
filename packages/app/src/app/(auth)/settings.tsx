@@ -5,6 +5,7 @@ import serviceConfig from "../../../serviceConfig.js";
 import { FirebaseOpaqueIDToken } from "../../authentication/index.js";
 import { useAuthenticationClient } from "../../authentication/authContext.js";
 import { useEmbeddedAuthenticationState } from "../../embedded/useEmbeddedAuthenticationState.js";
+import { updateHostedReminderSettings } from "../../sync/updateHostedReminderSettings.js";
 
 const Unsubscribe = () => (
   <>
@@ -83,10 +84,67 @@ Treat this like a password: anyone who has this token can access your account.`}
 };
 
 const palette = styles.colors.palettes.lime;
+const CompleteHostedReminderAction = ({
+  action,
+  accessCode,
+}: {
+  action: "unsubscribe" | "snooze1Week";
+  accessCode: string;
+}) => {
+  const authentication = useAuthenticationClient();
+  const operation = React.useRef<Promise<void> | null>(null);
+  const [status, setStatus] = React.useState<"pending" | "success" | "error">(
+    "pending",
+  );
+  React.useEffect(() => {
+    let disposed = false;
+    const url = new URL(location.href);
+    url.searchParams.delete("accessCode");
+    history.replaceState(null, "", url);
+    operation.current ??= updateHostedReminderSettings({
+      authentication,
+      action,
+      accessCode,
+      serviceOrigin: serviceConfig.hostedSyncServiceOrigin,
+    });
+    void operation.current.then(
+      () => {
+        if (!disposed) setStatus("success");
+      },
+      () => {
+        if (!disposed) setStatus("error");
+      },
+    );
+    return () => {
+      disposed = true;
+    };
+  }, [authentication, action, accessCode]);
+  if (status === "pending") return <>One moment…</>;
+  if (status === "error") return <Problem />;
+  return action === "unsubscribe" ? <Unsubscribe /> : <Snooze />;
+};
+
 export default function SettingsPage() {
   const { message, headline } = React.useMemo(() => {
     const url = new URL(location.href);
     const params = url.searchParams;
+    const notificationAction = params.get("notificationAction");
+    const accessCode = params.get("accessCode");
+    if (
+      accessCode &&
+      (notificationAction === "unsubscribe" ||
+        notificationAction === "snooze1Week")
+    ) {
+      return {
+        headline: "Review notifications",
+        message: (
+          <CompleteHostedReminderAction
+            action={notificationAction}
+            accessCode={accessCode}
+          />
+        ),
+      };
+    }
     const action = params.get("completedAction");
     switch (action) {
       case "unsubscribe":

@@ -1,12 +1,8 @@
 import {
   AttachmentID,
   encodeUUIDBytesToWebSafeBase64ID,
-  EntityType,
   mainTaskComponentID,
   parseSingleCurlyBraceClozePromptMarkup,
-  ReviewItem,
-  Task,
-  TaskComponentState,
   TaskContent,
   TaskContentField,
   TaskContentType,
@@ -14,13 +10,25 @@ import {
   TaskSpec,
   TaskSpecType,
 } from "@withorbit/core";
-import { EmbeddedScreenRecord } from "@withorbit/embedded-support";
+import type {
+  EmbeddedReviewItemSeed,
+  EmbeddedScreenRecord,
+  EmbeddedTaskSeed,
+} from "@withorbit/embedded-support";
 import { OrbitPromptElement } from "./OrbitPromptElement.js";
-import { v5 as uuidV5, parse as uuidParse } from "uuid";
+import { v5 as uuidV5 } from "uuid";
 import fastJSONStableStringify from "fast-json-stable-stringify";
 
-export function extractItems(parentElement: HTMLElement): EmbeddedScreenRecord {
-  const reviewItems: ReviewItem[] = [];
+export interface ExtractedEmbeddedItems extends EmbeddedScreenRecord {
+  /** Publisher-private sources. Never include these URLs in iframe messages. */
+  attachmentIDsToURLs: Record<string, string>;
+}
+
+export function extractItems(
+  parentElement: HTMLElement,
+): ExtractedEmbeddedItems {
+  const tasks: EmbeddedTaskSeed[] = [];
+  const reviewItems: EmbeddedReviewItemSeed[] = [];
   const attachmentIDsToURLs: { [AttachmentID: string]: string } = {};
   console.log("children", parentElement.outerHTML);
   const children = parentElement.children;
@@ -32,7 +40,16 @@ export function extractItems(parentElement: HTMLElement): EmbeddedScreenRecord {
 
     const { content, attachmentIDsToURLs: elementAttachmentMap } =
       extractContent(element as OrbitPromptElement);
-    reviewItems.push(generateTaskReviewItem(content));
+    const spec: TaskSpec = {
+      type: TaskSpecType.Memory,
+      content,
+    };
+    const taskID = generateTaskIDForSpec(spec);
+    tasks.push({ taskID, spec });
+    reviewItems.push({
+      taskID,
+      componentID: getComponentIDForEmbeddedReview(content),
+    });
 
     if (elementAttachmentMap) {
       for (const [attachmentID, url] of elementAttachmentMap) {
@@ -40,29 +57,12 @@ export function extractItems(parentElement: HTMLElement): EmbeddedScreenRecord {
       }
     }
   }
-  return { reviewItems, attachmentIDsToURLs };
-}
-
-function generateInitialComponentStates(content: TaskContent) {
-  const now = Date.now();
-  const initialComponentState: TaskComponentState = {
-    dueTimestampMillis: now,
-    intervalMillis: 0,
-    createdAtTimestampMillis: now,
-    lastRepetitionTimestampMillis: null,
+  return {
+    tasks,
+    reviewItems,
+    attachmentIDs: Object.keys(attachmentIDsToURLs) as AttachmentID[],
+    attachmentIDsToURLs,
   };
-  switch (content.type) {
-    case TaskContentType.QA:
-    case TaskContentType.Plain:
-      return { [mainTaskComponentID]: initialComponentState };
-    case TaskContentType.Cloze:
-      return Object.fromEntries(
-        Object.keys(content.components).map((id) => [
-          id,
-          initialComponentState,
-        ]),
-      );
-  }
 }
 
 function getComponentIDForEmbeddedReview(content: TaskContent): string {
@@ -76,28 +76,6 @@ function getComponentIDForEmbeddedReview(content: TaskContent): string {
       entries.sort((a, b) => a[1].order - b[1].order);
       return entries[0][0];
   }
-}
-
-function generateTaskReviewItem(content: TaskContent): ReviewItem {
-  const spec: TaskSpec = {
-    type: TaskSpecType.Memory,
-    content,
-  };
-  const task: Task = {
-    type: EntityType.Task,
-    id: generateTaskIDForSpec(spec),
-    spec,
-    // TODO consider moving provenance generation from `app` to here.
-    provenance: null, // Will be generated in the app
-    createdAtTimestampMillis: Date.now(),
-    componentStates: generateInitialComponentStates(content),
-    isDeleted: false,
-    metadata: {},
-  };
-  return {
-    task,
-    componentID: getComponentIDForEmbeddedReview(content),
-  };
 }
 
 function extractContent(element: OrbitPromptElement): {
@@ -164,16 +142,10 @@ function generateAttachmentIDForURL(url: string): AttachmentID {
   return encodeUUIDBytesToWebSafeBase64ID(bytes) as AttachmentID;
 }
 
-let _orbitEmbeddedTaskNamespaceUUID: ArrayLike<number> | null = null;
+const orbitEmbeddedTaskNamespaceUUID = "354182c0-33a8-4763-bbad-960bf679b4a1";
 
 export function generateTaskIDForSpec(spec: TaskSpec): TaskID {
-  if (!_orbitEmbeddedTaskNamespaceUUID) {
-    _orbitEmbeddedTaskNamespaceUUID = uuidParse(
-      "354182c0-33a8-4763-bbad-960bf679b4a1",
-    );
-  }
-
   const bytes = new Uint8Array(16);
-  uuidV5(fastJSONStableStringify(spec), _orbitEmbeddedTaskNamespaceUUID, bytes);
+  uuidV5(fastJSONStableStringify(spec), orbitEmbeddedTaskNamespaceUUID, bytes);
   return encodeUUIDBytesToWebSafeBase64ID(bytes) as TaskID;
 }

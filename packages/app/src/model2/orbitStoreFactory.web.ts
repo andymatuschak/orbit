@@ -1,6 +1,8 @@
 import { OrbitStore } from "@withorbit/store-shared";
 import OrbitStoreWeb from "@withorbit/store-web";
 
+const legacyDatabaseName = "shared.orbitStore";
+
 export async function createOrbitStore(
   databaseName: string,
 ): Promise<OrbitStore> {
@@ -8,5 +10,5 @@ export async function createOrbitStore(
 }
 
 export async function createDefaultOrbitStore(): Promise<OrbitStore> {
-  return createOrbitStore("shared.orbitStore");
+  return createOrbitStore(legacyDatabaseName);
 }

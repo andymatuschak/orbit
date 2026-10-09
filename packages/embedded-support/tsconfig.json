@@ -7,6 +7,9 @@
   "include": ["./src/**/*.ts"],
   "references": [
     {
+      "path": "../api"
+    },
+    {
       "path": "../core"
     }
   ]

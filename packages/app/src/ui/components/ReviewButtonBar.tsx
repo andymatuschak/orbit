@@ -87,6 +87,7 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   promptType,
   isShowingAnswer,
   insetBottom,
+  onInitialLayoutReady,
 }: {
   colorPalette: ColorPalette | null;
   sizeClass: SizeClass;
@@ -98,8 +99,12 @@ const ReviewButtonBar = React.memo(function ReviewButtonArea({
   ) => void;
   isShowingAnswer: boolean;
   insetBottom?: number;
+  onInitialLayoutReady?: () => void;
 }) {
   const { width, onLayout } = useLayout();
+  React.useEffect(() => {
+    if (width > 0) onInitialLayoutReady?.();
+  }, [width, onInitialLayoutReady]);
   const isVeryNarrow = width > 0 && width <= 320;
 
   const shortcuts = getShortcuts(isShowingAnswer, onMark, onReveal);

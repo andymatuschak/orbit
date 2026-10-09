@@ -1,11 +1,12 @@
 import {
-  Event,
-  EventForEntity,
-  eventReducer,
-  EventType,
+  createOrbitSchedulerAdapter,
+  defaultOrbitSchedulerPolicy,
   generateUniqueID,
   ReviewItem,
   Task,
+  type ReviewObservation,
+  type VaultMutation,
+  type VaultMutationID,
 } from "@withorbit/core";
 import { ReviewAreaItem } from "./ui/index.js";
 import { useMemo, useState } from "react";
@@ -22,7 +23,7 @@ export interface ReviewSessionManagerState {
 
 export interface ReviewSessionManagerActions {
   markCurrentItem(
-    events: EventForEntity<Task>[],
+    mutations: readonly RecordReviewMutation[],
     continuation?: (newState: ReviewSessionManagerState) => void,
   ): void;
 
@@ -31,6 +32,11 @@ export interface ReviewSessionManagerActions {
   ): void;
 
   pushReviewAreaQueueItems(items: ReviewAreaItem[]): void;
+
+  reconcileReviewQueue(
+    reviewItems: ReviewItem[],
+    reviewAreaItems: ReviewAreaItem[],
+  ): void;
 
   undo(
     continuation?: (undoItem: ReviewSessionManagerUndoStackItem) => void,
@@ -46,7 +52,9 @@ function findSessionItemIndex(
   sessionItems: ReviewItem[],
 ): number {
   const index = sessionItems.findIndex(
-    (sessionItem) => sessionItem.task.id === reviewAreaItem.taskID,
+    (sessionItem) =>
+      sessionItem.task.id === reviewAreaItem.taskID &&
+      sessionItem.componentID === reviewAreaItem.componentID,
   );
 
   if (index === -1) {
@@ -64,7 +72,7 @@ function findSessionItemIndex(
 
 function reviewSessionManagerMarkCurrentItem(
   state: ReviewSessionManagerState,
-  events: EventForEntity<Task>[],
+  mutations: readonly RecordReviewMutation[],
 ): ReviewSessionManagerState {
   if (
     state.currentSessionItemIndex === null ||
@@ -75,12 +83,12 @@ function reviewSessionManagerMarkCurrentItem(
     );
   }
 
-  // Update the Task in our session items list with the events.
+  // Apply the same typed reviews optimistically that the database receives.
   const newSessionItems = [...state.sessionItems];
   newSessionItems[state.currentSessionItemIndex] = {
     ...newSessionItems[state.currentSessionItemIndex],
-    task: events.reduce(
-      (task, event) => eventReducer(task, event),
+    task: mutations.reduce(
+      (task, mutation) => applyReviewMutation(task, mutation),
       state.sessionItems[state.currentSessionItemIndex].task,
     ),
   };
@@ -102,7 +110,8 @@ function reviewSessionManagerMarkCurrentItem(
     currentReviewAreaQueueIndex: newReviewAreaQueueIndex,
     sessionItems: newSessionItems,
     currentSessionItemIndex: newSessionItemIndex,
-    topUndoItem: { previousState: state, getUndoEvents: () => [] },
+    // Automerge reviews are append-only, so do not offer a local-only undo.
+    topUndoItem: null,
   };
 }
 
@@ -137,15 +146,17 @@ function reviewSessionManagerDeleteCurrentItem(
           : newSessionItems.length - 1,
       topUndoItem: {
         previousState: state,
-        getUndoEvents: () => [
-          {
-            type: EventType.TaskUpdateDeleted,
-            timestampMillis: Date.now(),
-            id: generateUniqueID(),
-            entityID: deletedTaskID,
-            isDeleted: false,
-          },
-        ],
+        getUndoMutations: () => {
+          const eventID = generateUniqueID();
+          return [
+            {
+              kind: "setTaskDeleted" as const,
+              mutationID: `task-restore/${eventID}` as VaultMutationID,
+              taskID: deletedTaskID,
+              isDeleted: false,
+            },
+          ];
+        },
       },
     };
   } else {
@@ -216,6 +227,83 @@ function reviewSessionManagerPushReviewAreaQueueItems(
       topUndoItem: state.topUndoItem,
     };
   }
+}
+
+export function reviewSessionManagerReconcileReviewQueue(
+  state: ReviewSessionManagerState,
+  reviewItems: ReviewItem[],
+  reviewAreaItems: ReviewAreaItem[],
+): ReviewSessionManagerState {
+  if (reviewItems.length !== reviewAreaItems.length) {
+    throw new Error("Review queue projections have different lengths");
+  }
+  if (state.currentReviewAreaQueueIndex === null) {
+    return reviewSessionManagerPushReviewAreaQueueItems(
+      { ...state, sessionItems: reviewItems },
+      reviewAreaItems,
+    );
+  }
+
+  const completedThrough = Math.min(
+    state.currentReviewAreaQueueIndex,
+    state.reviewAreaQueue.length,
+  );
+  const preservedQueue = state.reviewAreaQueue.slice(0, completedThrough);
+  const currentItem = state.reviewAreaQueue[state.currentReviewAreaQueueIndex];
+  const incomingKeys = new Set(reviewAreaItems.map(reviewAreaItemKey));
+  // Keep an on-screen prompt stable while unrelated remote changes replace
+  // the unseen tail. If another client reviewed or deleted that prompt, it is
+  // absent from the authoritative queue and must not remain visible locally.
+  if (currentItem && incomingKeys.has(reviewAreaItemKey(currentItem))) {
+    preservedQueue.push(currentItem);
+  }
+  const preservedKeys = new Set(preservedQueue.map(reviewAreaItemKey));
+  const reconciledReviewItems = reviewItems.filter(
+    (item) => !preservedKeys.has(reviewItemKey(item)),
+  );
+  const reconciledReviewAreaItems = reviewAreaItems.filter(
+    (item) => !preservedKeys.has(reviewAreaItemKey(item)),
+  );
+
+  const preservedSessionItems = state.sessionItems.filter((item) =>
+    preservedKeys.has(reviewItemKey(item)),
+  );
+  const sessionItems = [...preservedSessionItems, ...reconciledReviewItems];
+  const reviewAreaQueue = [...preservedQueue, ...reconciledReviewAreaItems];
+
+  if (state.currentReviewAreaQueueIndex >= reviewAreaQueue.length) {
+    return {
+      ...state,
+      sessionItems,
+      reviewAreaQueue,
+      currentReviewAreaQueueIndex: reviewAreaQueue.length,
+      currentSessionItemIndex:
+        sessionItems.length === 0
+          ? null
+          : Math.min(
+              state.currentSessionItemIndex ?? 0,
+              sessionItems.length - 1,
+            ),
+    };
+  }
+
+  return {
+    ...state,
+    sessionItems,
+    reviewAreaQueue,
+    currentSessionItemIndex: findSessionItemIndex(
+      reviewAreaQueue[state.currentReviewAreaQueueIndex],
+      sessionItems,
+    ),
+  };
+}
+
+function reviewItemKey(item: ReviewItem): string {
+  return `${item.task.id}\u0000${item.componentID}`;
+}
+
+function reviewAreaItemKey(item: ReviewAreaItem): string {
+  return `${item.taskID}\u0000${item.componentID}`;
 }
 
 function reviewSessionManagerJumpToItem(
@@ -298,7 +386,7 @@ const initialReviewSessionManagerState: ReviewSessionManagerState = {
 
 type ReviewSessionManagerUndoStackItem = {
   previousState: ReviewSessionManagerState;
-  getUndoEvents: () => Event[];
+  getUndoMutations: () => VaultMutation[];
 };
 
 export function useReviewSessionManager(): ReviewSessionManagerActions &
@@ -309,19 +397,25 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
 
   const reviewSessionManagerActions: ReviewSessionManagerActions = useMemo(
     () => ({
-      markCurrentItem: (events, continuation) => {
-        setState((state) => reviewSessionManagerMarkCurrentItem(state, events));
-        // This is a pretty heinous abuse. Clients need to access the new state, so we invoke the reducer again but return its input (making it a no-op) to call the continuation with the correct context.
-        if (continuation) {
-          setState((newState) => {
-            continuation(newState);
-            return newState;
-          });
-        }
+      markCurrentItem: (mutations, continuation) => {
+        setState((state) => {
+          const next = reviewSessionManagerMarkCurrentItem(state, mutations);
+          continuation?.(next);
+          return next;
+        });
       },
       pushReviewAreaQueueItems: (queueItems) =>
         setState((state) =>
           reviewSessionManagerPushReviewAreaQueueItems(state, queueItems),
+        ),
+
+      reconcileReviewQueue: (reviewItems, reviewAreaItems) =>
+        setState((state) =>
+          reviewSessionManagerReconcileReviewQueue(
+            state,
+            reviewItems,
+            reviewAreaItems,
+          ),
         ),
 
       updateSessionItems: (mutator) =>
@@ -354,4 +448,37 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
   );
 
   return { ...reviewSessionManagerActions, ...state };
+}
+
+type RecordReviewMutation = Extract<VaultMutation, { kind: "recordReview" }>;
+
+const optimisticScheduler = createOrbitSchedulerAdapter(
+  defaultOrbitSchedulerPolicy,
+);
+
+function applyReviewMutation(task: Task, mutation: RecordReviewMutation): Task {
+  if (mutation.taskID !== task.id) {
+    throw new Error("Review mutation does not match the current task");
+  }
+  const state = task.componentStates[mutation.componentID];
+  if (!state)
+    throw new Error("Review mutation references an unknown component");
+  const observation: ReviewObservation = {
+    kind: "review",
+    taskID: mutation.taskID,
+    componentID: mutation.componentID,
+    reviewSessionID: mutation.reviewSessionID,
+    outcome: mutation.outcome,
+    occurredAtTimestampMillis: mutation.occurredAtTimestampMillis,
+  };
+  return {
+    ...task,
+    componentStates: {
+      ...task.componentStates,
+      [mutation.componentID]: optimisticScheduler.applyReview(
+        state,
+        observation,
+      ),
+    },
+  };
 }

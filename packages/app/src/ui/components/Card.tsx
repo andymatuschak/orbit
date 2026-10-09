@@ -205,6 +205,7 @@ export interface CardProps {
   getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
 
   accentColor?: string;
+  onFrontReady?: () => void;
 }
 
 type QAPromptRendererType = Omit<CardProps, "reviewItem"> & {
@@ -216,6 +217,7 @@ function QAPromptRenderer({
   accentColor,
   reviewItem,
   getURLForAttachmentID,
+  onFrontReady,
 }: QAPromptRendererType) {
   const animatingStyles = useAnimatingStyles(backIsRevealed);
   const contents = getQAPromptContents(reviewItem);
@@ -300,6 +302,7 @@ function QAPromptRenderer({
             promptField={contents.body}
             getURLForAttachmentID={getURLForAttachmentID}
             onLayout={setFrontSizeVariantIndex}
+            onReady={onFrontReady}
           />
         </View>
       </FadeView>
@@ -316,6 +319,7 @@ function ClozePromptRenderer({
   accentColor,
   reviewItem,
   getURLForAttachmentID,
+  onFrontReady,
 }: ClozePromptRendererProps) {
   const {
     componentID,
@@ -369,6 +373,7 @@ function ClozePromptRenderer({
             promptField={front}
             getURLForAttachmentID={getURLForAttachmentID}
             colorPalette={reviewItem.colorPalette}
+            onReady={onFrontReady}
           />
         </FadeView>
       </View>

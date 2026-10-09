@@ -16,6 +16,10 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
   ],
+  "exclude": [
+    "./scripts/ios_hosted_fetch_smoke_server.ts",
+    "./scripts/seed_ios_hosted_fetch_smoke.ts"
+  ],
   "references": [
     {
       "path": "../api"
@@ -34,6 +38,9 @@
     },
     {
       "path": "../store-shared"
+    },
+    {
+      "path": "../store-automerge"
     },
     {
       "path": "../store-fs"

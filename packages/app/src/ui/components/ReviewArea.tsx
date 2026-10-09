@@ -26,6 +26,7 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
   reviewItem,
   backIsRevealed,
   getURLForAttachmentID,
+  onFrontReady,
 }: {
   size: Size;
   displayState: PromptContainerState;
@@ -84,6 +85,7 @@ const PromptLayoutContainer = React.memo(function PromptLayoutContainer({
           reviewItem={reviewItem}
           accentColor={reviewItem.colorPalette.accentColor}
           backIsRevealed={backIsRevealed}
+          onFrontReady={displayState === "displayed" ? onFrontReady : undefined}
         />
       )}
     </FadeView>
@@ -95,6 +97,7 @@ interface PromptStackProps {
   currentItemIndex: number;
   isShowingAnswer: boolean;
   getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
+  onInitialLayoutReady?: () => void;
 }
 
 function PromptStack({
@@ -102,6 +105,7 @@ function PromptStack({
   currentItemIndex,
   isShowingAnswer,
   getURLForAttachmentID,
+  onInitialLayoutReady,
 }: PromptStackProps) {
   const [departedCardCount, setDepartedCardCount] = useState(0);
   const departingPromptItems = useRef<ReviewAreaItem[]>([]);
@@ -175,6 +179,7 @@ function PromptStack({
                   (isShowingAnswer && displayState === "displayed") ||
                   displayState === "disappearing"
                 }
+                onFrontReady={onInitialLayoutReady}
               />
             );
           },
@@ -191,6 +196,7 @@ export interface ReviewAreaProps {
     pendingOutcome: TaskRepetitionOutcome | null,
   ) => void;
   getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
+  onInitialLayoutReady?: () => void;
 
   sizeClass: SizeClass;
   insetBottom?: number;
@@ -206,12 +212,20 @@ export default React.memo(function ReviewArea({
   forceShowAnswer,
   onPendingOutcomeChange,
   getURLForAttachmentID,
+  onInitialLayoutReady,
   sizeClass,
   insetBottom = 0,
 }: ReviewAreaProps) {
   // console.debug("[Performance - ReviewArea] Render", Date.now() / 1000.0);
 
   const [isShowingAnswer, setShowingAnswer] = useState(!!forceShowAnswer);
+  const [promptReady, setPromptReady] = useState(false);
+  const [buttonsReady, setButtonsReady] = useState(false);
+  const markPromptReady = useCallback(() => setPromptReady(true), []);
+  const markButtonsReady = useCallback(() => setButtonsReady(true), []);
+  React.useEffect(() => {
+    if (promptReady && buttonsReady) onInitialLayoutReady?.();
+  }, [promptReady, buttonsReady, onInitialLayoutReady]);
 
   const previousTaskID = usePrevious(items[currentItemIndex]?.taskID);
   if (previousTaskID && items[currentItemIndex]?.taskID !== previousTaskID) {
@@ -237,7 +251,7 @@ export default React.memo(function ReviewArea({
 
   const currentColorPalette =
     items.length > 0
-      ? currentItem?.colorPalette ?? items[items.length - 1].colorPalette
+      ? (currentItem?.colorPalette ?? items[items.length - 1].colorPalette)
       : colors.palettes.red;
 
   return (
@@ -247,9 +261,11 @@ export default React.memo(function ReviewArea({
         currentItemIndex={currentItemIndex}
         isShowingAnswer={isShowingAnswer}
         items={items}
+        onInitialLayoutReady={markPromptReady}
       />
       {currentItem && (
         <ReviewButtonBar
+          onInitialLayoutReady={markButtonsReady}
           colorPalette={currentColorPalette}
           sizeClass={sizeClass}
           onMark={handleMark}

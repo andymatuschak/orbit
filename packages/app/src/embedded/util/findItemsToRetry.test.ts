@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { ReviewItem, Task } from "@withorbit/core";
+import { ReviewItem, Task, type TaskID } from "@withorbit/core";
 import { EmbeddedScreenRecord } from "@withorbit/embedded-support";
 import { findItemsToRetry } from "./findItemsToRetry.js";
 
@@ -36,9 +36,16 @@ function makeItem(needsRetry: boolean | null): ReviewItem {
 }
 
 function makeScreenRecord(needsRetry: boolean | null): EmbeddedScreenRecord {
+  void needsRetry;
   return {
-    reviewItems: [makeItem(needsRetry)],
-    attachmentIDsToURLs: {},
+    tasks: [],
+    reviewItems: [
+      {
+        taskID: "task000000000000000000" as TaskID,
+        componentID: "a",
+      },
+    ],
+    attachmentIDs: [],
   };
 }
 

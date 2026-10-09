@@ -1,30 +1,15 @@
-import {
-  EmbeddedHostEventType,
-  EmbeddedHostState,
-  EmbeddedHostUpdateEvent,
-} from "@withorbit/embedded-support";
+import { EmbeddedHostState } from "@withorbit/embedded-support";
 import { useEffect, useState } from "react";
+import { EmbeddedHostBridge } from "../embeddedHostBridge.js";
 
-export function useEmbeddedHostState(): EmbeddedHostState | null {
+export function useEmbeddedHostState(
+  bridge: EmbeddedHostBridge,
+): EmbeddedHostState | null {
   const [hostState, setHostState] = useState<EmbeddedHostState | null>(null);
 
   useEffect(() => {
-    function onMessage(event: MessageEvent) {
-      if (
-        event.source === parent &&
-        event.data &&
-        event.data.type === EmbeddedHostEventType.HostUpdate
-      ) {
-        const updateEvent: EmbeddedHostUpdateEvent = event.data;
-        setHostState(updateEvent.state);
-      }
-    }
-
-    window.addEventListener("message", onMessage);
-    return () => {
-      window.removeEventListener("message", onMessage);
-    };
-  }, []);
+    return bridge.subscribeToHostState(setHostState);
+  }, [bridge]);
 
   return hostState;
 }

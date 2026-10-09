@@ -1,6 +1,7 @@
 import { styles, useLayout, useTransitioningColorValue } from "./ui/index.js";
 import React from "react";
-import { Animated, Easing, Insets, View } from "react-native";
+import { Animated, Easing, Insets, StyleSheet, View } from "react-native";
+import { LoadingScreen } from "./reviewSession/LoadingScreen.js";
 
 export interface ReviewSessionWrapperProps {
   colorPalette: styles.colors.ColorPalette;
@@ -8,12 +9,14 @@ export interface ReviewSessionWrapperProps {
     containerSize: { width: number; height: number };
   }) => React.ReactNode;
   insets?: Insets;
+  showLoadingOverlay?: boolean;
 }
 
 export function ReviewSessionContainer({
   colorPalette,
   children,
   insets,
+  showLoadingOverlay = false,
 }: ReviewSessionWrapperProps) {
   const backgroundColor = useTransitioningColorValue({
     value: colorPalette.backgroundColor,
@@ -43,6 +46,8 @@ export function ReviewSessionContainer({
       }}
     >
       <View
+        pointerEvents={showLoadingOverlay ? "none" : "auto"}
+        accessibilityElementsHidden={showLoadingOverlay}
         style={{
           flex: 1,
           width: "100%",
@@ -58,6 +63,11 @@ export function ReviewSessionContainer({
             })
           : null}
       </View>
+      {showLoadingOverlay && (
+        <View style={StyleSheet.absoluteFill}>
+          <LoadingScreen />
+        </View>
+      )}
     </Animated.View>
   );
 }

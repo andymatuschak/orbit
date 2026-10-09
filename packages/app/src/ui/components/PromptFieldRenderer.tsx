@@ -325,6 +325,7 @@ export default React.memo(function PromptFieldRenderer(props: {
   clipContent?: boolean;
 
   onLayout?: (sizeVariant: number) => void;
+  onReady?: () => void;
   largestSizeVariantIndex?: number;
   smallestSizeVariantIndex?: number; // TODO: use better types.
 }) {
@@ -333,6 +334,7 @@ export default React.memo(function PromptFieldRenderer(props: {
     getURLForAttachmentID,
     colorPalette,
     onLayout,
+    onReady,
     largestSizeVariantIndex,
     smallestSizeVariantIndex,
   } = props;
@@ -407,6 +409,9 @@ export default React.memo(function PromptFieldRenderer(props: {
   ]);
 
   const sizeVariantRef = useWeakRef(sizeVariantIndex);
+  useEffect(() => {
+    if (isLayoutReady) onReady?.();
+  }, [isLayoutReady, onReady]);
   useEffect(() => {
     onLayout?.(sizeVariantRef.current);
   }, [isLayoutReady, onLayout, sizeVariantRef]);

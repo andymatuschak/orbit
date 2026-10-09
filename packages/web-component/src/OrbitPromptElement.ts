@@ -27,6 +27,12 @@ export class OrbitPromptElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ["question", "answer"];
+    return [
+      "question",
+      "question-attachments",
+      "answer",
+      "answer-attachments",
+      "cloze",
+    ];
   }
 }

@@ -1,5 +1,6 @@
 /.expo
 /web-build
+/web-dogfood
 /public/fonts
 /.firebase
 

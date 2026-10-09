@@ -1,14 +1,13 @@
 import {
   defaultSpacedRepetitionSchedulerConfiguration,
-  EventForEntity,
-  EventType,
   generateUniqueID,
   getReviewQueueFuzzyDueTimestampThreshold,
   ReviewItem,
-  Task,
   TaskID,
-  TaskRepetitionEvent,
   TaskRepetitionOutcome,
+  type ObservationID,
+  type VaultMutation,
+  type VaultMutationID,
 } from "@withorbit/core";
 import {
   Button,
@@ -21,105 +20,232 @@ import {
   ReviewAreaItem,
   ReviewAreaMarkingRecord,
   ReviewStarburst,
+  Spacer,
   styles,
   useWeakRef,
 } from "../ui/index.js";
-import { ExtensionStorage } from "@bacons/apple-targets";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AuthenticationClient } from "../authentication/index.js";
+import { useAuthenticationClient } from "../authentication/authContext.js";
 import {
-  useAuthenticationClient,
-  useCurrentUserRecord,
-} from "../authentication/authContext.js";
-import { DatabaseManager as DatabaseManager2 } from "../model2/databaseManager.js";
+  openReviewDatabase,
+  type ReviewDatabase,
+} from "../model2/openReviewDatabase.js";
 import { ReviewSessionContainer } from "../ReviewSessionContainer.js";
 import { useReviewSessionManager } from "../reviewSessionManager.js";
 import { useAPIClient } from "../util/useAPIClient.js";
 import { LoadingScreen } from "./LoadingScreen.js";
 
-export function useDatabaseManager(
-  authenticationClient: AuthenticationClient,
-): DatabaseManager2 | null {
-  const [databaseManager, setDatabaseManager] =
-    useState<DatabaseManager2 | null>(null);
-
-  // Close the database on unmount.
-  useEffect(() => {
-    return () => {
-      databaseManager?.close();
-    };
-  }, [databaseManager]);
-
-  // Once we're signed in, create the database manager.
-  // TODO handle switching users etc
-  const userRecord = useCurrentUserRecord(authenticationClient);
-  const apiClient = useAPIClient(authenticationClient);
-  useEffect(() => {
-    if (userRecord) {
-      setDatabaseManager(new DatabaseManager2(apiClient));
-    }
-  }, [userRecord, apiClient]);
-
-  return databaseManager;
+interface ReviewDatabaseState {
+  accountID: string | null;
+  database: ReviewDatabase | null;
+  openError: Error | null;
 }
 
-function persistMarking({
-  databaseManager,
+export function useReviewDatabase(
+  authenticationClient: AuthenticationClient,
+  userID: string,
+): ReviewDatabaseState & {
+  retry(): void;
+} {
+  const [state, setState] = useState<ReviewDatabaseState>({
+    accountID: null,
+    database: null,
+    openError: null,
+  });
+  const [openAttempt, setOpenAttempt] = useState(0);
+  const apiClient = useAPIClient(authenticationClient);
+
+  // A database owns one account namespace. Signing out or switching accounts
+  // closes that namespace before the next effect installs another database.
+  useEffect(() => {
+    let isCanceled = false;
+    let openedDatabase: ReviewDatabase | null = null;
+    setState({ accountID: userID, database: null, openError: null });
+    void openReviewDatabase(apiClient, userID, {
+      authenticationClient,
+      allowCachedBeforeAuth: Platform.OS === "ios",
+    }).then(
+      (database) => {
+        if (isCanceled) {
+          void database.close();
+          return;
+        }
+        openedDatabase = database;
+        setState({
+          accountID: userID,
+          database,
+          openError: null,
+        });
+      },
+      (error: unknown) => {
+        if (isCanceled) return;
+        console.error("Could not open review vault", error);
+        setState({
+          accountID: userID,
+          database: null,
+          openError: error instanceof Error ? error : new Error(String(error)),
+        });
+      },
+    );
+    return () => {
+      isCanceled = true;
+      void openedDatabase?.close();
+    };
+  }, [userID, apiClient, authenticationClient, openAttempt]);
+
+  // Effects close the old database after a user transition. Hide it during the
+  // intervening render so one account's queue is never shown under another.
+  const currentState = state.accountID === userID ? state : null;
+  return {
+    accountID: currentState?.accountID ?? null,
+    database: currentState?.database ?? null,
+    openError: currentState?.openError ?? null,
+    retry: () => setOpenAttempt((value) => value + 1),
+  };
+}
+
+function createReviewMutation({
   reviewItem,
   outcome,
   reviewSessionStartTimestampMillis,
 }: {
-  databaseManager: DatabaseManager2;
   reviewItem: ReviewItem;
   outcome: TaskRepetitionOutcome;
   reviewSessionStartTimestampMillis: number;
-}): EventForEntity<Task>[] {
+}): Extract<VaultMutation, { kind: "recordReview" }> {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
-  const event: TaskRepetitionEvent = {
-    type: EventType.TaskRepetition,
-    id: generateUniqueID(),
-    entityID: reviewItem.task.id,
+  const id = generateUniqueID();
+  const mutation: Extract<VaultMutation, { kind: "recordReview" }> = {
+    kind: "recordReview",
+    mutationID: `review/${id}` as VaultMutationID,
+    observationID: `review/${id}` as ObservationID,
+    taskID: reviewItem.task.id,
     reviewSessionID: `review/${Platform.OS}/${reviewSessionStartTimestampMillis}`,
     componentID: reviewItem.componentID,
-    outcome: outcome,
-    timestampMillis: Date.now(),
-  } as const;
+    outcome,
+    occurredAtTimestampMillis: Date.now(),
+  };
 
-  databaseManager
-    .recordEvents([event])
-    .then(() => {
-      console.log("[Performance] Log written", Date.now() / 1000.0);
-      ExtensionStorage.reloadWidget("OrbitHomeScreen");
-    })
-    .catch((error) => {
-      console.error("Couldn't commit", reviewItem.task.id, error);
-    });
-
-  return [event];
+  return mutation;
 }
 
-function useReviewItemQueue(
-  databaseManager: DatabaseManager2 | null,
-): ReviewItem[] | null {
-  const [queue, setQueue] = useState<ReviewItem[] | null>(null);
+function useReviewItemQueue(database: ReviewDatabase | null): {
+  queue: ReviewItem[] | null;
+  error: Error | null;
+} {
+  const [state, setState] = useState<{
+    queue: ReviewItem[] | null;
+    error: Error | null;
+  }>({ queue: null, error: null });
   useEffect(() => {
-    if (!databaseManager) return;
+    setState({ queue: null, error: null });
+    if (!database) return;
 
     let isCanceled = false;
-    databaseManager.fetchReviewQueue().then((queue) => {
+    let pushedRevision = 0;
+    const unsubscribe = database.subscribeToReviewQueue((queue) => {
       if (isCanceled) return;
-      setQueue(queue);
+      pushedRevision++;
+      setState({ queue, error: null });
     });
+    const startingRevision = pushedRevision;
+    void database.fetchReviewQueue().then(
+      (queue) => {
+        if (isCanceled || pushedRevision !== startingRevision) return;
+        setState({ queue, error: null });
+      },
+      (error: unknown) => {
+        if (isCanceled) return;
+        console.error("Could not load review queue", error);
+        setState({
+          queue: null,
+          error: error instanceof Error ? error : new Error(String(error)),
+        });
+      },
+    );
     return () => {
       isCanceled = true;
+      unsubscribe();
     };
-  }, [databaseManager]);
+  }, [database]);
 
-  return queue;
+  return state;
+}
+
+function VaultOpenErrorScreen({
+  accountLabel,
+  authenticationClient,
+  retry,
+}: {
+  accountLabel: string;
+  authenticationClient: AuthenticationClient;
+  retry(): void;
+}) {
+  const palette = styles.colors.palettes.red;
+  const [isPending, setPending] = useState(false);
+  const [actionError, setActionError] = useState<Error | null>(null);
+
+  const run = (operation: () => Promise<void>) => {
+    setPending(true);
+    setActionError(null);
+    void operation()
+      .catch((value: unknown) => {
+        setActionError(
+          value instanceof Error ? value : new Error(String(value)),
+        );
+      })
+      .finally(() => setPending(false));
+  };
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: styles.layout.edgeMargin,
+        backgroundColor: palette.backgroundColor,
+      }}
+    >
+      <View style={{ width: "100%", maxWidth: 500 }}>
+        <Text style={styles.type.headline.layoutStyle}>Vault unavailable</Text>
+        <Spacer units={3} />
+        <Text style={styles.type.runningText.layoutStyle}>
+          {`Orbit couldn't open the vault for ${accountLabel}. Your local data has not been replaced.`}
+        </Text>
+        {actionError && (
+          <>
+            <Spacer units={2} />
+            <Text style={styles.type.runningText.layoutStyle}>
+              {actionError.message}
+            </Text>
+          </>
+        )}
+        <Spacer units={4} />
+        <Button
+          title="Try again"
+          disabled={isPending}
+          backgroundColor={palette.secondaryBackgroundColor}
+          onPress={() => {
+            retry();
+          }}
+        />
+        <Spacer units={2} />
+        <Button
+          title="Sign out"
+          disabled={isPending}
+          onPress={() =>
+            run(async () => void (await authenticationClient.signOut()))
+          }
+        />
+      </View>
+    </View>
+  );
 }
 
 export function getColorPaletteForReviewItem(
@@ -188,12 +314,24 @@ function ReviewMenuButton({
   );
 }
 
-export default function ReviewSession() {
+export default function ReviewSession({
+  accountID,
+  accountLabel,
+}: {
+  accountID: string;
+  accountLabel: string;
+}) {
   const insets = useSafeAreaInsets();
   const reviewSessionStartTimestampMillis = useRef(Date.now());
+  const reviewWriteIsInFlight = useRef(false);
 
   const [pendingOutcome, setPendingOutcome] =
     useState<TaskRepetitionOutcome | null>(null);
+  const [initialReviewReady, setInitialReviewReady] = useState(false);
+  const markInitialReviewReady = React.useCallback(
+    () => setInitialReviewReady(true),
+    [],
+  );
 
   const {
     sessionItems,
@@ -204,15 +342,34 @@ export default function ReviewSession() {
   } = useReviewSessionManager();
 
   const authenticationClient = useAuthenticationClient();
-  const databaseManager = useDatabaseManager(authenticationClient);
-  const initialQueue = useReviewItemQueue(databaseManager);
+  const { database, openError, retry } = useReviewDatabase(
+    authenticationClient,
+    accountID,
+  );
+  const { queue: initialQueue, error: queueError } =
+    useReviewItemQueue(database);
+  const hasInitialCard =
+    initialQueue !== null &&
+    initialQueue.length > 0 &&
+    currentReviewAreaQueueIndex !== null;
+  React.useEffect(() => {
+    if (!hasInitialCard || initialReviewReady) return;
+    const timeout = setTimeout(() => {
+      // A broken attachment or renderer must not trap the review UI behind
+      // its loading cover indefinitely.
+      console.warn("Initial review layout did not become ready");
+      setInitialReviewReady(true);
+    }, 3_000);
+    return () => clearTimeout(timeout);
+  }, [hasInitialCard, initialReviewReady]);
 
-  // When the initial queue becomes available, add it to the review session manager.
+  // Keep the prompt already on screen stable while remote merges replace the
+  // not-yet-seen tail of the queue and append newly due work.
   const weakReviewSessionManager = useWeakRef(reviewSessionManager);
   useEffect(() => {
     if (initialQueue !== null) {
-      weakReviewSessionManager.current.updateSessionItems(() => initialQueue);
-      weakReviewSessionManager.current.pushReviewAreaQueueItems(
+      weakReviewSessionManager.current.reconcileReviewQueue(
+        initialQueue,
         getReviewAreaItemsFromReviewItems(initialQueue),
       );
     }
@@ -251,7 +408,23 @@ export default function ReviewSession() {
     }
   }, [pendingReviewItemRequest, sessionItems, weakReviewSessionManager]);
 
-  if (initialQueue === null) {
+  const loadError = openError ?? queueError;
+  if (loadError) {
+    return (
+      <VaultOpenErrorScreen
+        accountLabel={accountLabel}
+        authenticationClient={authenticationClient}
+        retry={retry}
+      />
+    );
+  }
+
+  // Reconciliation runs after the queue arrives. Keep the loading surface up
+  // until the first card and its palette are selected together.
+  if (
+    initialQueue === null ||
+    (initialQueue.length > 0 && currentReviewAreaQueueIndex === null)
+  ) {
     return <LoadingScreen />;
   }
 
@@ -265,28 +438,42 @@ export default function ReviewSession() {
     if (currentSessionItemIndex === null) {
       throw new Error("onMark called with no valid current item index");
     }
-    const events = persistMarking({
-      databaseManager: databaseManager!,
+    if (reviewWriteIsInFlight.current) return;
+    const reviewItem = sessionItems[currentSessionItemIndex];
+    const mutation = createReviewMutation({
       reviewItem: sessionItems[currentSessionItemIndex],
       outcome: markingRecord.outcome,
       reviewSessionStartTimestampMillis:
         reviewSessionStartTimestampMillis.current,
     });
-    reviewSessionManager.markCurrentItem(events, (newState) => {
-      // Refill queue with items to retry if we're at the end.
-      if (
-        newState.currentReviewAreaQueueIndex !== null &&
-        newState.currentReviewAreaQueueIndex >= newState.reviewAreaQueue.length
-      ) {
-        const itemsToRetry = newState.sessionItems.filter(itemIsStillDue);
-        if (itemsToRetry.length > 0) {
-          console.log("Pushing items to retry", itemsToRetry);
-          reviewSessionManager.pushReviewAreaQueueItems(
-            getReviewAreaItemsFromReviewItems(itemsToRetry),
-          );
-        }
-      }
-    });
+    reviewWriteIsInFlight.current = true;
+    void database!
+      .apply([mutation])
+      .then(() => {
+        console.log("[Performance] Log written", Date.now() / 1000.0);
+        reviewSessionManager.markCurrentItem([mutation], (newState) => {
+          // Refill queue with items to retry if we're at the end.
+          if (
+            newState.currentReviewAreaQueueIndex !== null &&
+            newState.currentReviewAreaQueueIndex >=
+              newState.reviewAreaQueue.length
+          ) {
+            const itemsToRetry = newState.sessionItems.filter(itemIsStillDue);
+            if (itemsToRetry.length > 0) {
+              console.log("Pushing items to retry", itemsToRetry);
+              reviewSessionManager.pushReviewAreaQueueItems(
+                getReviewAreaItemsFromReviewItems(itemsToRetry),
+              );
+            }
+          }
+        });
+      })
+      .catch((error) => {
+        console.error("Couldn't commit", reviewItem.task.id, error);
+      })
+      .finally(() => {
+        reviewWriteIsInFlight.current = false;
+      });
   }
 
   function onDelete() {
@@ -294,19 +481,18 @@ export default function ReviewSession() {
       throw new Error("No current review item");
     }
     reviewSessionManager.deleteCurrentItem();
-    databaseManager!
-      .recordEvents([
+    const eventID = generateUniqueID();
+    database!
+      .apply([
         {
-          type: EventType.TaskUpdateDeleted,
-          id: generateUniqueID(),
-          timestampMillis: Date.now(),
-          entityID: reviewAreaQueue[currentReviewAreaQueueIndex].taskID,
+          kind: "setTaskDeleted",
+          mutationID: `task-delete/${eventID}` as VaultMutationID,
+          taskID: reviewAreaQueue[currentReviewAreaQueueIndex].taskID,
           isDeleted: true,
         },
       ])
       .then(() => {
         console.log("Wrote delete event", Date.now() / 1000.0);
-        ExtensionStorage.reloadWidget("OrbitHomeScreen");
       })
       .catch((error) => {
         console.error("Couldn't commit delete event", error);
@@ -315,11 +501,11 @@ export default function ReviewSession() {
 
   const canUndo = !!reviewSessionManager.topUndoItem;
   function onUndo() {
-    reviewSessionManager.undo(({ getUndoEvents }) => {
-      const undoEvents = getUndoEvents();
-      if (undoEvents.length > 0) {
-        databaseManager!
-          .recordEvents(undoEvents)
+    reviewSessionManager.undo(({ getUndoMutations }) => {
+      const undoMutations = getUndoMutations();
+      if (undoMutations.length > 0) {
+        database!
+          .apply(undoMutations)
           .then(() => {
             console.log("Wrote undo events", Date.now() / 1000.0);
           })
@@ -354,10 +540,11 @@ export default function ReviewSession() {
     <ReviewSessionContainer
       insets={{ top: insets.top }}
       colorPalette={currentColorPalette}
+      showLoadingOverlay={initialQueue.length > 0 && !initialReviewReady}
     >
       {({ containerSize }) => {
         if (
-          databaseManager &&
+          database &&
           currentReviewAreaQueueIndex !== null &&
           currentSessionItemIndex !== null &&
           currentReviewAreaQueueIndex < reviewAreaQueue.length
@@ -419,18 +606,19 @@ export default function ReviewSession() {
                 </View>
               </View>
               <ReviewArea
+                onInitialLayoutReady={markInitialReviewReady}
                 items={reviewAreaQueue}
                 currentItemIndex={currentReviewAreaQueueIndex}
                 onMark={(markingRecord) => onMark(markingRecord)}
                 onPendingOutcomeChange={setPendingOutcome}
                 getURLForAttachmentID={(id) =>
-                  databaseManager.getURLForAttachmentID(id)
+                  database.getURLForAttachmentID(id)
                 }
                 insetBottom={
                   // So long as the container isn't tall enough to be centered, we consume the bottom insets in the button bar's padding, extending the background down through the safe area.
                   containerSize.height === styles.layout.maximumContentHeight
                     ? 0
-                    : insets.bottom ?? 0
+                    : (insets.bottom ?? 0)
                 }
                 sizeClass={styles.layout.getWidthSizeClass(containerSize.width)}
               />
@@ -446,9 +634,9 @@ export default function ReviewSession() {
                 justifyContent: "center",
               }}
             >
-              <Text
-                style={styles.type.headline.layoutStyle}
-              >{`All caught up!\nNothing's due for review.`}</Text>
+              <Text style={styles.type.headline.layoutStyle}>
+                No more prompts in this session.
+              </Text>
             </View>
           );
         }

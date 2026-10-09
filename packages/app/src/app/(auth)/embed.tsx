@@ -1,19 +1,13 @@
 import {
   AttachmentID,
   defaultSpacedRepetitionSchedulerConfiguration,
-  EventForEntity,
+  generateUniqueID,
   ReviewItem,
-  Task,
-  TaskID,
   TaskRepetitionOutcome,
 } from "@withorbit/core";
 import {
-  EmbeddedHostEventType,
-  EmbeddedHostInitialConfigurationEvent,
-  EmbeddedHostState,
-  EmbeddedScreenConfiguration,
-  EmbeddedScreenEventType,
-  EmbeddedScreenOnLoadEvent,
+  type EmbeddedHostState,
+  type EmbeddedScreenConfiguration,
 } from "@withorbit/embedded-support";
 import {
   FadeView,
@@ -27,7 +21,7 @@ import {
   useTransitioningValue,
 } from "../../ui/index.js";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Text, View } from "react-native";
 
 import { useAuthenticationClient } from "../../authentication/authContext.js";
@@ -36,20 +30,17 @@ import {
   ReviewSessionManagerState,
   useReviewSessionManager,
 } from "../../reviewSessionManager.js";
-import { useAPIClient } from "../../util/useAPIClient.js";
 import useByrefCallback from "../../util/useByrefCallback.js";
 import EmbeddedBanner from "../../embedded/EmbeddedBanner.js";
-import { useEmbeddedNetworkQueue } from "../../embedded/embeddedNetworkQueue.js";
-import { sendUpdatedReviewItemToHost } from "../../embedded/ipc/sendUpdatedReviewItemToHost.js";
+import { EmbeddedHostBridge } from "../../embedded/embeddedHostBridge.js";
 import { useEmbeddedHostState } from "../../embedded/ipc/useEmbeddedHostState.js";
-import { getActionsRecordForMarking } from "../../embedded/markingActions.js";
 import OnboardingModalWeb from "../../embedded/OnboardingModal.web.js";
 import { TestModeBanner } from "../../embedded/TestModeBanner.js";
 import {
   EmbeddedAuthenticationState,
   useEmbeddedAuthenticationState,
 } from "../../embedded/useEmbeddedAuthenticationState.js";
-import { useRemoteTaskStates } from "../../embedded/useRemoteTaskStates.js";
+import { useEmbeddedReviewSession } from "../../embedded/useEmbeddedReviewSession.js";
 import { findItemsToRetry } from "../../embedded/util/findItemsToRetry.js";
 import getEmbeddedColorPalette from "../../embedded/util/getEmbeddedColorPalette.js";
 import getEmbeddedScreenConfigurationFromURL from "../../embedded/util/getEmbeddedScreenConfigurationFromURL.js";
@@ -87,6 +78,7 @@ interface EmbeddedScreenRendererProps extends ReviewSessionManagerState {
   colorPalette: styles.colors.ColorPalette;
   hostState: EmbeddedHostState | null;
   hasUncommittedActions: boolean;
+  isSaving: boolean;
   isDebug?: boolean;
   getURLForAttachmentID: (id: AttachmentID) => Promise<string | null>;
 
@@ -103,6 +95,7 @@ function EmbeddedScreenRenderer({
   colorPalette,
   hostState,
   hasUncommittedActions,
+  isSaving,
   isDebug,
   getURLForAttachmentID,
   currentSessionItemIndex,
@@ -131,6 +124,23 @@ function EmbeddedScreenRenderer({
     }
   }, [wasInitiallyComplete]);
 
+  const reviewQueueIsComplete =
+    wasInitiallyComplete ||
+    currentReviewAreaQueueIndex >= reviewAreaQueue.length;
+  useEffect(() => {
+    if (!reviewQueueIsComplete) return;
+    const completionTimeout = setTimeout(() => setComplete(true), 350);
+    const onboardingTimeout = setTimeout(() => {
+      if (authenticationState.status !== "signedIn") {
+        setShouldShowOnboardingModal(true);
+      }
+    }, 750);
+    return () => {
+      clearTimeout(completionTimeout);
+      clearTimeout(onboardingTimeout);
+    };
+  }, [authenticationState.status, reviewQueueIsComplete]);
+
   const widthSizeClass = styles.layout.getWidthSizeClass(containerSize.width);
   const interiorY = useTransitioningValue({
     value: isComplete
@@ -157,16 +167,6 @@ function EmbeddedScreenRenderer({
       useNativeDriver: true,
     },
   });
-
-  if (currentReviewAreaQueueIndex >= reviewAreaQueue.length && !isComplete) {
-    setTimeout(() => setComplete(true), 350);
-    setTimeout(() => {
-      // There are bugs with RNW's implementation of delay with spring animations, alas.
-      if (authenticationState.status !== "signedIn") {
-        setShouldShowOnboardingModal(true);
-      }
-    }, 750);
-  }
 
   const starburstItems = useMemo(
     () => getStarburstItems(sessionItems),
@@ -221,9 +221,7 @@ function EmbeddedScreenRenderer({
           </Text>
         </FadeView>
         <FadeView
-          isVisible={
-            isComplete && !wasInitiallyComplete && !hasUncommittedActions
-          }
+          isVisible={isComplete && !wasInitiallyComplete}
           delayMillis={750}
           removeFromLayoutWhenHidden
         >
@@ -236,24 +234,30 @@ function EmbeddedScreenRenderer({
               },
             ]}
           >
-            Saved to your account:
-            <br />
-            {authenticationState.userRecord?.emailAddress}
+            {isDebug
+              ? "Preview only—progress is not saved"
+              : authenticationState.status === "signedIn"
+                ? hasUncommittedActions
+                  ? "Not yet saved—keep this page open and try again"
+                  : `Saved to your account: ${authenticationState.userRecord.emailAddress}`
+                : "Sign in to save these prompts and your progress"}
           </Text>
         </FadeView>
       </Animated.View>
       {!isComplete && (
-        <ReviewArea
-          items={reviewAreaQueue}
-          currentItemIndex={currentReviewAreaQueueIndex}
-          onMark={onMark}
-          onPendingOutcomeChange={(newPendingOutcome) => {
-            setPendingOutcome(newPendingOutcome);
-          }}
-          insetBottom={0}
-          sizeClass={widthSizeClass}
-          getURLForAttachmentID={getURLForAttachmentID}
-        />
+        <View style={{ flex: 1 }} pointerEvents={isSaving ? "none" : "auto"}>
+          <ReviewArea
+            items={reviewAreaQueue}
+            currentItemIndex={currentReviewAreaQueueIndex}
+            onMark={onMark}
+            onPendingOutcomeChange={(newPendingOutcome) => {
+              setPendingOutcome(newPendingOutcome);
+            }}
+            insetBottom={0}
+            sizeClass={widthSizeClass}
+            getURLForAttachmentID={getURLForAttachmentID}
+          />
+        </View>
       )}
       {isComplete && (
         <>
@@ -277,15 +281,6 @@ function EmbeddedScreenRenderer({
   );
 }
 
-function getSessionReviewItemsFromHostState(
-  hostState: EmbeddedHostState,
-): ReviewItem[] {
-  const itemLists = hostState.orderedScreenRecords.map(
-    (screenRecord) => screenRecord?.reviewItems ?? [],
-  );
-  return itemLists.reduce((whole, part) => whole.concat(part), []);
-}
-
 function getEmbeddedReviewAreaItemsFromReviewItems(
   reviewItems: ReviewItem[],
   colorPalette: styles.colors.ColorPalette,
@@ -301,129 +296,158 @@ function getEmbeddedReviewAreaItemsFromReviewItems(
 
 function EmbeddedPage({
   configuration,
+  hostBridge,
 }: {
   configuration: EmbeddedScreenConfiguration;
+  hostBridge: EmbeddedHostBridge;
 }) {
   const colorPalette = useMemo(
     () => getEmbeddedColorPalette(configuration),
     [configuration],
   );
+  return (
+    <EmbeddedReadyPage
+      configuration={configuration}
+      hostBridge={hostBridge}
+      colorPalette={colorPalette}
+    />
+  );
+}
 
+function EmbeddedReadyPage({
+  configuration,
+  hostBridge,
+  colorPalette,
+}: {
+  configuration: EmbeddedScreenConfiguration;
+  hostBridge: EmbeddedHostBridge;
+  colorPalette: styles.colors.ColorPalette;
+}) {
   const authenticationClient = useAuthenticationClient();
   const authenticationState =
     useEmbeddedAuthenticationState(authenticationClient);
-  const apiClient = useAPIClient(authenticationClient);
+  const hostState = useEmbeddedHostState(hostBridge);
+  const session = useEmbeddedReviewSession(
+    configuration,
+    hostBridge,
+    hostState,
+    authenticationClient,
+    authenticationState,
+  );
+  const pageItems = useMemo(() => {
+    const tasks = new Map(session.tasks.map((task) => [task.id, task]));
+    const seeds = hostState
+      ? hostState.orderedScreenRecords.flatMap(
+          (record) => record?.reviewItems ?? [],
+        )
+      : configuration.reviewItems;
+    return seeds.flatMap((seed) => {
+      const task = tasks.get(seed.taskID);
+      return task ? [{ task, componentID: seed.componentID }] : [];
+    });
+  }, [configuration, hostState, session.tasks]);
+
+  return (
+    <EmbeddedReviewView
+      key={authenticationState.userRecord?.userID ?? "anonymous"}
+      configuration={configuration}
+      colorPalette={colorPalette}
+      authenticationState={authenticationState}
+      hostState={hostState}
+      session={session}
+      pageItems={pageItems}
+    />
+  );
+}
+
+function EmbeddedReviewView({
+  configuration,
+  colorPalette,
+  authenticationState,
+  hostState,
+  session,
+  pageItems,
+}: {
+  configuration: EmbeddedScreenConfiguration;
+  colorPalette: styles.colors.ColorPalette;
+  authenticationState: EmbeddedAuthenticationState;
+  hostState: EmbeddedHostState | null;
+  session: ReturnType<typeof useEmbeddedReviewSession>;
+  pageItems: ReviewItem[];
+}) {
+  const didInitializeSession = useRef(false);
+  const hasMarked = useRef(false);
+  const markInFlight = useRef(false);
+  const unfinishedMark = useRef<{
+    record: ReviewAreaMarkingRecord;
+    requestID: string;
+  } | null>(null);
+  const [isSaving, setSaving] = useState(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  const initialReviewItems = useRef(pageItems);
 
   const reviewSessionManager = useReviewSessionManager();
 
-  // Add the initial queue to the review session manager.
-  const enqueueInitialItems = useByrefCallback(
-    (embeddedReviewItems: ReviewItem[]) => {
-      reviewSessionManager.updateSessionItems(() => embeddedReviewItems);
+  useEffect(() => {
+    if (!didInitializeSession.current) {
+      didInitializeSession.current = true;
+      const ownItems = initialReviewItems.current.filter((item) =>
+        configuration.reviewItems.some(
+          (seed) =>
+            seed.taskID === item.task.id &&
+            seed.componentID === item.componentID,
+        ),
+      );
+      reviewSessionManager.updateSessionItems(() => initialReviewItems.current);
+      const uncollectedItems = ownItems.filter(
+        (item) =>
+          item.task.componentStates[item.componentID]
+            ?.lastRepetitionTimestampMillis == null,
+      );
       reviewSessionManager.pushReviewAreaQueueItems(
         getEmbeddedReviewAreaItemsFromReviewItems(
-          embeddedReviewItems,
+          uncollectedItems.length > 0 ? uncollectedItems : ownItems,
           colorPalette,
         ),
       );
-    },
-  );
-  useEffect(() => {
-    enqueueInitialItems(configuration.reviewItems);
-  }, [configuration.reviewItems, enqueueInitialItems]);
-
-  // Update the review session manager when we get a new set of items from the host.
-  const hostState = useEmbeddedHostState();
-  const updateSessionItemsFromHostState = useByrefCallback(
-    (hostState: EmbeddedHostState) => {
-      reviewSessionManager.updateSessionItems(() =>
-        getSessionReviewItemsFromHostState(hostState),
-      );
-    },
-  );
-  useEffect(() => {
-    if (hostState && hostState.orderedScreenRecords[hostState.receiverIndex]) {
-      updateSessionItemsFromHostState(hostState);
     }
-  }, [hostState, updateSessionItemsFromHostState]);
+  }, [colorPalette, configuration.reviewItems, reviewSessionManager]);
 
-  // Load the states for these tasks as they exist on the server and merge into our local session state.
-  const remoteTaskStates = useRemoteTaskStates({
-    apiClient,
-    authenticationState,
-    embeddedReviewItems: configuration.reviewItems,
+  const updateSessionItems = useByrefCallback((reviewItems: ReviewItem[]) => {
+    reviewSessionManager.updateSessionItems(() => reviewItems);
   });
-
-  // TODO: account for tasks which need retry
-  const wasInitiallyComplete = useMemo(
-    () =>
-      remoteTaskStates
-        ? configuration.reviewItems.every((item) =>
-            remoteTaskStates.has(item.task.id),
-          )
-        : false,
-    [remoteTaskStates, configuration.reviewItems],
-  );
-
-  const updateSessionItemsFromRemoteTaskStates = useByrefCallback(
-    (remoteTaskStates: Map<TaskID, Task>) => {
-      // Potential races abound here, but in practice I don't think they actually matter.
-      reviewSessionManager.updateSessionItems((sessionItems) =>
-        sessionItems.map((item) => {
-          const initialTaskState = remoteTaskStates.get(item.task.id);
-          return initialTaskState ? { ...item, task: initialTaskState } : item;
-        }),
-      );
-    },
-  );
   useEffect(() => {
-    if (remoteTaskStates) {
-      updateSessionItemsFromRemoteTaskStates(remoteTaskStates);
-    }
-  }, [remoteTaskStates, updateSessionItemsFromRemoteTaskStates]);
-
-  const getURLForAttachmentID = useByrefCallback((id: AttachmentID) => {
-    let url: string | undefined = configuration.attachmentIDsToURLs[id];
-    if (url) return url;
-    for (const record of hostState?.orderedScreenRecords ?? []) {
-      url = record?.attachmentIDsToURLs[id];
-      if (url) return url;
-    }
-    return null;
-  });
-  const getURLForAttachmentIDAsync = useByrefCallback(
-    async (id: AttachmentID) => getURLForAttachmentID(id),
-  );
-
-  const { commitActionsRecord, hasUncommittedActions } =
-    useEmbeddedNetworkQueue(authenticationState.status, apiClient);
+    updateSessionItems(pageItems);
+  }, [pageItems, updateSessionItems]);
+  const wasInitiallyComplete =
+    !hasMarked.current &&
+    reviewSessionManager.currentReviewAreaQueueIndex === 0 &&
+    configuration.reviewItems.every((seed) =>
+      pageItems.some(
+        (item) =>
+          item.task.id === seed.taskID &&
+          item.componentID === seed.componentID &&
+          item.task.componentStates[seed.componentID]
+            ?.lastRepetitionTimestampMillis != null,
+      ),
+    );
 
   function onMark(markingRecord: ReviewAreaMarkingRecord) {
     const { currentSessionItemIndex, sessionItems } = reviewSessionManager;
     if (currentSessionItemIndex === null) {
       throw new Error("Marking without valid currentSessionItemIndex");
     }
-    const actionsRecord = getActionsRecordForMarking({
-      hostMetadata: configuration.embeddedHostMetadata,
-      outcome: markingRecord.outcome,
-      reviewItem: sessionItems[currentSessionItemIndex],
-      sessionStartTimestampMillis: configuration.sessionStartTimestampMillis,
-      getURLForAttachmentID,
-    });
-
-    // Update our local records for this item.
-    reviewSessionManager.markCurrentItem(
-      actionsRecord.events.filter(
-        (e): e is EventForEntity<Task> =>
-          e.entityID === markingRecord.reviewAreaItem.taskID,
-      ),
-      (newState) => {
-        // Propagate those updates to peer embedded screens.
-        sendUpdatedReviewItemToHost(
-          newState.sessionItems[currentSessionItemIndex].task,
-        );
-
-        // If we were at the end of our queue, refill it with items needing retry.
+    if (markInFlight.current) return;
+    hasMarked.current = true;
+    const reviewItem = sessionItems[currentSessionItemIndex];
+    const finishMark = () => {
+      reviewSessionManager.markCurrentItem([], (newState) => {
         if (
           newState.currentReviewAreaQueueIndex !== null &&
           newState.currentReviewAreaQueueIndex >=
@@ -434,7 +458,6 @@ function EmbeddedPage({
             newState.sessionItems,
             hostState,
           );
-          console.log("Pushing items to retry", itemsToRetry);
           reviewSessionManager.pushReviewAreaQueueItems(
             getEmbeddedReviewAreaItemsFromReviewItems(
               itemsToRetry,
@@ -442,13 +465,48 @@ function EmbeddedPage({
             ),
           );
         }
-      },
-    );
-
-    // Send the update to the server.
-    if (!configuration.isDebug) {
-      commitActionsRecord(actionsRecord);
+      });
+    };
+    if (markingRecord.outcome === TaskRepetitionOutcome.Skipped) {
+      finishMark();
+      return;
     }
+
+    markInFlight.current = true;
+    setSaving(true);
+    unfinishedMark.current ??= {
+      record: markingRecord,
+      requestID: generateUniqueID(),
+    };
+    void session
+      .mark(
+        reviewItem.task.id,
+        reviewItem.componentID,
+        markingRecord.outcome,
+        unfinishedMark.current.requestID,
+      )
+      .then((result) => {
+        if (!mounted.current) return;
+        unfinishedMark.current = null;
+        const acceptedTask = result.task;
+        reviewSessionManager.updateSessionItems((sessionItems) =>
+          sessionItems.map((item) =>
+            item.task.id === acceptedTask.id
+              ? { ...item, task: acceptedTask }
+              : item,
+          ),
+        );
+        // The returned projection already includes the mark; only advance here.
+        finishMark();
+      })
+      .catch((error) => {
+        console.error("Could not save embedded mark", error);
+      })
+      .finally(() => {
+        if (!mounted.current) return;
+        markInFlight.current = false;
+        setSaving(false);
+      });
   }
 
   return (
@@ -473,50 +531,80 @@ function EmbeddedPage({
               authenticationState={authenticationState}
               colorPalette={colorPalette}
               hostState={hostState}
-              hasUncommittedActions={hasUncommittedActions}
+              hasUncommittedActions={session.hasPendingReviews}
+              isSaving={isSaving}
               isDebug={configuration.isDebug}
               wasInitiallyComplete={wasInitiallyComplete}
-              getURLForAttachmentID={getURLForAttachmentIDAsync}
+              getURLForAttachmentID={session.getURLForAttachmentID}
             />
           );
         }}
       </ReviewSessionContainer>
+      {/* Focus can fail a background read during a press. Keep status out of
+          the bottom controls without moving their layout between down/up. */}
+      {(session.error || isSaving) && (
+        <View
+          pointerEvents="box-none"
+          style={{
+            position: "absolute",
+            zIndex: 2,
+            top: 0,
+            height: styles.layout.gridUnit * 6,
+            left: styles.layout.edgeMargin,
+            right: styles.layout.edgeMargin,
+            backgroundColor: colorPalette.backgroundColor,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: styles.layout.gridUnit,
+          }}
+        >
+          <View pointerEvents="none" style={{ flex: 1 }}>
+            <Text numberOfLines={2} style={{ color: styles.colors.white }}>
+              {isSaving
+                ? "Saving…"
+                : `Orbit couldn't save or load your progress: ${session.error?.message}. Keep this page open and try again.`}
+            </Text>
+          </View>
+          {session.error && !isSaving && (
+            <button
+              type="button"
+              onClick={() => {
+                if (unfinishedMark.current)
+                  onMark(unfinishedMark.current.record);
+                else void session.refresh();
+              }}
+            >
+              Try again
+            </button>
+          )}
+        </View>
+      )}
     </View>
   );
 }
 
 export default function EmbeddedPageDataWrapper() {
-  // For debug and development purposes, the configuration information can be supplied in a URL query parameter.
+  const [bridge] = useState(
+    () =>
+      new EmbeddedHostBridge(
+        getEmbeddedScreenConfigurationFromURL(window.location.href),
+      ),
+  );
   const [configuration, setConfiguration] =
-    useState<EmbeddedScreenConfiguration | null>(
-      getEmbeddedScreenConfigurationFromURL(window.location.href),
-    );
-
-  // But normally we'll request it from the host on load.
+    useState<EmbeddedScreenConfiguration | null>(null);
   useEffect(() => {
-    if (configuration === null) {
-      function onMessage(event: MessageEvent) {
-        if (
-          event.source === parent &&
-          event.data &&
-          event.data.type === EmbeddedHostEventType.InitialConfiguration
-        ) {
-          const updateEvent: EmbeddedHostInitialConfigurationEvent = event.data;
-          setConfiguration(updateEvent.configuration);
-        }
-      }
-      window.addEventListener("message", onMessage);
+    let disposed = false;
+    void bridge.configuration().then((value) => {
+      if (!disposed) setConfiguration(value);
+    });
+    return () => {
+      disposed = true;
+    };
+  }, [bridge]);
 
-      const onLoadEvent: EmbeddedScreenOnLoadEvent = {
-        type: EmbeddedScreenEventType.OnLoad,
-      };
-      parent.postMessage(onLoadEvent, "*");
-
-      return () => {
-        window.removeEventListener("message", onMessage);
-      };
-    }
-  }, [configuration]);
-
-  return configuration && <EmbeddedPage configuration={configuration} />;
+  return (
+    configuration && (
+      <EmbeddedPage configuration={configuration} hostBridge={bridge} />
+    )
+  );
 }

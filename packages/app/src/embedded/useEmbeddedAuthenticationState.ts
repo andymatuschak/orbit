@@ -63,12 +63,14 @@ function useLoginTokenSubscription(
           event.origin.endsWith(".withorbit.com")) &&
         event.data.loginToken
       ) {
-        console.debug(
-          "Received broadcasted login token",
-          event.data,
-          event.target,
-          event.origin,
-        );
+        // Never include event.data here: it contains the Firebase custom token.
+        console.debug("Received broadcasted login token", {
+          origin: event.origin,
+          transport:
+            event.target instanceof BroadcastChannel
+              ? "broadcastChannel"
+              : "postMessage",
+        });
         const { loginToken } = event.data;
 
         // If this token arrived via postMessage(), we relay login tokens from the popup to our sibling iframes via a broadcast channel if supported.
@@ -76,8 +78,8 @@ function useLoginTokenSubscription(
           channel.postMessage(event.data);
         }
 
-        authenticationClient.signInWithLoginToken(loginToken).catch((error) => {
-          console.error(`Couldn't login with provided token: ${error}`);
+        authenticationClient.signInWithLoginToken(loginToken).catch(() => {
+          console.error("Couldn't sign in with the provided login token");
         });
       }
     }
