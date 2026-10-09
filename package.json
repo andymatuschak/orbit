@@ -3,7 +3,7 @@
   "scripts": {
     "build": "node node_modules/@typescript/native/bin/tsc -b packages/tsconfig.json",
     "watch": "node node_modules/@typescript/native/bin/tsc -b -w packages/tsconfig.json",
-    "test:unit": "bun --filter \"!@withorbit/backend\" test",
+    "test:unit": "bun --filter \"!@withorbit/backend\" --sequential test",
     "test": "bun run test:unit && bun run --cwd packages/backend test",
     "lint": "cd packages; eslint .",
     "lint:fix": "cd packages; eslint --fix .",
@@ -25,14 +25,19 @@
   },
   "overrides": {
     "@expo/metro-runtime": "57.0.15",
-    "expo": "57.0.20",
+    "brace-expansion": "2.1.4",
+    "cross-spawn": "7.0.6",
+    "expo": "57.0.23",
     "expo-constants": "57.0.17",
     "expo-dev-client": "57.0.18",
     "expo-file-system": "57.0.6",
     "expo-font": "57.0.3",
     "expo-linking": "57.0.9",
     "expo-router": "57.0.19",
-    "react-native": "0.86.3"
+    "glob": "10.5.0",
+    "jws": "4.0.1",
+    "react-native": "0.86.3",
+    "websocket-driver": "0.7.5"
   },
   "trustedDependencies": [
     "@sentry/cli",

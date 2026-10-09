@@ -4,5 +4,8 @@ web-component/orbit-web-component-prod.js*
 app/index.js
 app/expoPlugin/**/*
 app/.expo/**/*
+app/ios/build/**/*
 app/web-build/**/*
+app/public/automerge.wasm
+app/public/embedded-vault-shared-worker.js*
 */dist/**/*

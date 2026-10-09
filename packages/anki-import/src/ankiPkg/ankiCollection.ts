@@ -76,57 +76,62 @@ export async function readAnkiCollectionPackage<R>(
     attachmentIDsToExtractedPaths: { [key: string]: string },
   ) => Promise<R>,
 ): Promise<R> {
-  const workingDir = path.resolve(os.tmpdir(), `anki-import-${Date.now()}`);
-  await fs.promises.mkdir(workingDir, { recursive: true });
+  const workingDir = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), "anki-import-"),
+  );
 
-  let ankiCollectionWritePath: string | null = null;
-  let mediaManifest: MediaManifest | null = null;
-  const attachmentIDsToExtractedPaths: { [key: string]: string } = {};
-  const promises: Promise<unknown>[] = [];
+  try {
+    let ankiCollectionWritePath: string | null = null;
+    let mediaManifest: MediaManifest | null = null;
+    const attachmentIDsToExtractedPaths: { [key: string]: string } = {};
+    const promises: Promise<unknown>[] = [];
 
-  function queueExtractEntry(entry: Entry): string {
-    const targetPath = path.resolve(workingDir, entry.path);
-    const writeStream = fs.createWriteStream(targetPath);
-    entry.pipe(writeStream);
-    promises.push(events.once(writeStream, "close"));
-    return targetPath;
-  }
+    function queueExtractEntry(entry: Entry): string {
+      const targetPath = path.resolve(workingDir, entry.path);
+      const writeStream = fs.createWriteStream(targetPath);
+      entry.pipe(writeStream);
+      promises.push(events.once(writeStream, "close"));
+      return targetPath;
+    }
 
-  const collectionReadStream = fs
-    .createReadStream(collectionPath)
-    .pipe(unzip.Parse())
-    .on("entry", (entry: unzip.Entry) => {
-      if (entry.path === "collection.anki2") {
-        ankiCollectionWritePath = queueExtractEntry(entry);
-      } else if (entry.path === "media") {
-        entry.setEncoding("utf-8");
-        let mediaManifestContents = "";
-        entry.on("data", (chunk: string) => {
-          mediaManifestContents += chunk;
-        });
-        promises.push(
-          events.once(entry, "end").then(() => {
-            mediaManifest = JSON.parse(mediaManifestContents);
-          }),
-        );
-      } else {
-        if (isNaN(Number.parseInt(entry.path))) {
-          entry.autodrain();
+    const collectionReadStream = fs
+      .createReadStream(collectionPath)
+      .pipe(unzip.Parse())
+      .on("entry", (entry: unzip.Entry) => {
+        if (entry.path === "collection.anki2") {
+          ankiCollectionWritePath = queueExtractEntry(entry);
+        } else if (entry.path === "media") {
+          entry.setEncoding("utf-8");
+          let mediaManifestContents = "";
+          entry.on("data", (chunk: string) => {
+            mediaManifestContents += chunk;
+          });
+          promises.push(
+            events.once(entry, "end").then(() => {
+              mediaManifest = JSON.parse(mediaManifestContents);
+            }),
+          );
         } else {
-          attachmentIDsToExtractedPaths[entry.path] = queueExtractEntry(entry);
+          if (isNaN(Number.parseInt(entry.path))) {
+            entry.autodrain();
+          } else {
+            attachmentIDsToExtractedPaths[entry.path] = queueExtractEntry(entry);
+          }
         }
-      }
-    });
-  promises.push(events.once(collectionReadStream, "close"));
-  await Promise.all(promises);
+      });
+    await events.once(collectionReadStream, "close");
+    await Promise.all(promises);
 
-  if (ankiCollectionWritePath) {
-    return await withCollectionDatabase(ankiCollectionWritePath, (handle) =>
-      continuation(handle, mediaManifest, attachmentIDsToExtractedPaths),
-    );
-  } else {
-    throw new Error(
-      `${collectionPath} did not contain a collection database (probable version mismatch)`,
-    );
+    if (ankiCollectionWritePath) {
+      return await withCollectionDatabase(ankiCollectionWritePath, (handle) =>
+        continuation(handle, mediaManifest, attachmentIDsToExtractedPaths),
+      );
+    } else {
+      throw new Error(
+        `${collectionPath} did not contain a collection database (probable version mismatch)`,
+      );
+    }
+  } finally {
+    await fs.promises.rm(workingDir, { recursive: true, force: true });
   }
 }

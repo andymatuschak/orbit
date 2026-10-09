@@ -1,5 +1,8 @@
 # Created by .ignore support plugin (hsz.mobi)
 tsconfig.tsbuildinfo
+.codex/
+# Retired benchmark checkout may still contain private inputs and generated builds.
+/prototypes/catalog-index/
 
 .DS_Store
 
@@ -108,4 +111,3 @@ dist
 
 # TernJS port file
 .tern-port
-

@@ -15,7 +15,8 @@ import {
   DatabaseQueryPredicate,
   DatabaseQueryPredicateRelation,
 } from "@withorbit/store-shared";
-import Dexie, {
+import {
+  Dexie,
   Collection,
   IndexableType,
   PromiseExtended,
@@ -142,7 +143,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
         .where(`[${DexieEntityKeys.EntityType}+${DexieEntityKeys.RowID}]`)
         .between(
           [query.entityType, afterRowID === null ? 0 : afterRowID + 1],
-          [query.entityType, Dexie.Dexie.maxKey],
+          [query.entityType, Dexie.maxKey],
         );
       // We don't need to explicitly sort the result, because rowID is the final column of this compound index.
       request = applyOptionalLimit(baseQuery, query.limit).toArray();
@@ -174,7 +175,7 @@ export class IDBDatabaseBackend implements DatabaseBackend {
           .where(`[${query.predicate[0]}+${DexieEventKeys.SequenceNumber}]`)
           .between(
             [query.predicate[2], afterSequenceNumber + 1],
-            [query.predicate[2], Dexie.Dexie.maxKey],
+            [query.predicate[2], Dexie.maxKey],
           );
 
         request = applyOptionalLimit(baseQuery, query.limit).toArray();
