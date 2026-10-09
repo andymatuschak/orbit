@@ -1,0 +1,193 @@
+[
+  {
+    "task": {
+      "id": "widget-smoke-b-1",
+      "provenance": null,
+      "spec": {
+        "type": "memory",
+        "content": {
+          "type": "qa",
+          "body": {
+            "text": "Widget layout smoke gate"
+          },
+          "answer": {
+            "text": "Widget smoke: first answer"
+          }
+        }
+      },
+      "componentStates": {
+        "main": {
+          "createdAtTimestampMillis": 1,
+          "lastRepetitionTimestampMillis": null,
+          "intervalMillis": 0,
+          "dueTimestampMillis": -3
+        }
+      }
+    },
+    "componentID": "main"
+  },
+  {
+    "task": {
+      "id": "widget-smoke-b-2",
+      "provenance": null,
+      "spec": {
+        "type": "memory",
+        "content": {
+          "type": "qa",
+          "body": {
+            "text": "Widget layout smoke gate two"
+          },
+          "answer": {
+            "text": "Widget layout gate two answer"
+          }
+        }
+      },
+      "componentStates": {
+        "main": {
+          "createdAtTimestampMillis": 1,
+          "lastRepetitionTimestampMillis": null,
+          "intervalMillis": 0,
+          "dueTimestampMillis": -2
+        }
+      }
+    },
+    "componentID": "main"
+  },
+  {
+    "task": {
+      "id": "widget-smoke-b-3",
+      "provenance": null,
+      "spec": {
+        "type": "memory",
+        "content": {
+          "type": "qa",
+          "body": {
+            "text": "Widget layout smoke gate three"
+          },
+          "answer": {
+            "text": "Widget layout gate three answer"
+          }
+        }
+      },
+      "componentStates": {
+        "main": {
+          "createdAtTimestampMillis": 1,
+          "lastRepetitionTimestampMillis": null,
+          "intervalMillis": 0,
+          "dueTimestampMillis": -1
+        }
+      }
+    },
+    "componentID": "main"
+  },
+  {
+    "task": {
+      "id": "widget-layout-cloze",
+      "provenance": null,
+      "spec": {
+        "type": "memory",
+        "content": {
+          "type": "cloze",
+          "body": {
+            "text": "Constitution: 11th Amendment\n\n  \n\n\n1795::year - citizens cannot sue states (for most reasons) in federal courts without that state's consent (!)\n\n  \n\n\n_The Judicial power of the United States shall not be construed to extend to any suit in law or equity, commenced or prosecuted against one of the United States by Citizens of another State, or by Citizens or Subjects of any Foreign State._"
+          },
+          "components": {
+            "1": {
+              "order": 0,
+              "ranges": [
+                {
+                  "startIndex": 35,
+                  "length": 10,
+                  "hint": null
+                }
+              ]
+            }
+          }
+        }
+      },
+      "componentStates": {
+        "1": {
+          "createdAtTimestampMillis": 1,
+          "lastRepetitionTimestampMillis": null,
+          "intervalMillis": 0,
+          "dueTimestampMillis": 1
+        }
+      }
+    },
+    "componentID": "1"
+  },
+  {
+    "task": {
+      "id": "widget-layout-about-face",
+      "provenance": null,
+      "spec": {
+        "type": "memory",
+        "content": {
+          "type": "cloze",
+          "body": {
+            "text": "About Face requirements definition process\n\n  \n\n\n1\\. Create problem + vision statements\n\n2\\. Explore and brainstorm\n\n3\\. Identify persona expectations\n\n4\\. Construct context scenarios\n\n5\\. Identify design requirements"
+          },
+          "components": {
+            "0": {
+              "order": 0,
+              "ranges": [
+                {
+                  "startIndex": 53,
+                  "length": 34,
+                  "hint": null
+                }
+              ]
+            }
+          }
+        }
+      },
+      "componentStates": {
+        "0": {
+          "createdAtTimestampMillis": 1,
+          "lastRepetitionTimestampMillis": null,
+          "intervalMillis": 0,
+          "dueTimestampMillis": 2
+        }
+      }
+    },
+    "componentID": "0"
+  },
+  {
+    "task": {
+      "id": "widget-layout-link",
+      "provenance": {
+        "title": "Using Artificial Intelligence to Augment Human Intelligence"
+      },
+      "spec": {
+        "type": "memory",
+        "content": {
+          "type": "cloze",
+          "body": {
+            "text": "The opposite of the cognitive outsourcing model is the augmentation model. [↗](https://hyp.is/TXYH3GogEe-AAN8JanCiXg/distill.pub/2017/aia)"
+          },
+          "components": {
+            "1": {
+              "order": 0,
+              "ranges": [
+                {
+                  "startIndex": 55,
+                  "length": 12,
+                  "hint": null
+                }
+              ]
+            }
+          }
+        }
+      },
+      "componentStates": {
+        "1": {
+          "createdAtTimestampMillis": 1,
+          "lastRepetitionTimestampMillis": null,
+          "intervalMillis": 0,
+          "dueTimestampMillis": 3
+        }
+      }
+    },
+    "componentID": "1"
+  }
+]

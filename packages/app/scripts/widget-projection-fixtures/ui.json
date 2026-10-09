@@ -1,0 +1,83 @@
+[
+  {
+    "task": {
+      "id": "widget-smoke-b-1",
+      "provenance": null,
+      "spec": {
+        "type": "memory",
+        "content": {
+          "type": "qa",
+          "body": {
+            "text": "Widget smoke: first prompt"
+          },
+          "answer": {
+            "text": "Widget smoke: first answer"
+          }
+        }
+      },
+      "componentStates": {
+        "main": {
+          "createdAtTimestampMillis": 1,
+          "lastRepetitionTimestampMillis": null,
+          "intervalMillis": 0,
+          "dueTimestampMillis": 1
+        }
+      }
+    },
+    "componentID": "main"
+  },
+  {
+    "task": {
+      "id": "widget-smoke-b-2",
+      "provenance": null,
+      "spec": {
+        "type": "memory",
+        "content": {
+          "type": "qa",
+          "body": {
+            "text": "Widget smoke: second prompt"
+          },
+          "answer": {
+            "text": "Widget smoke: second answer"
+          }
+        }
+      },
+      "componentStates": {
+        "main": {
+          "createdAtTimestampMillis": 1,
+          "lastRepetitionTimestampMillis": null,
+          "intervalMillis": 0,
+          "dueTimestampMillis": 1
+        }
+      }
+    },
+    "componentID": "main"
+  },
+  {
+    "task": {
+      "id": "widget-smoke-b-3",
+      "provenance": null,
+      "spec": {
+        "type": "memory",
+        "content": {
+          "type": "qa",
+          "body": {
+            "text": "Widget smoke: third prompt"
+          },
+          "answer": {
+            "text": "Widget smoke: third answer"
+          }
+        }
+      },
+      "componentStates": {
+        "main": {
+          "createdAtTimestampMillis": 1,
+          "lastRepetitionTimestampMillis": null,
+          "intervalMillis": 0,
+          "dueTimestampMillis": 1
+        }
+      }
+    },
+    "componentID": "main"
+  }
+]

@@ -1,0 +1,40 @@
+[
+  {
+    "task": {
+      "id": "widget-layout-link",
+      "provenance": {
+        "title": "Using Artificial Intelligence to Augment Human Intelligence"
+      },
+      "spec": {
+        "type": "memory",
+        "content": {
+          "type": "cloze",
+          "body": {
+            "text": "The opposite of the cognitive outsourcing model is the augmentation model. [↗](https://hyp.is/TXYH3GogEe-AAN8JanCiXg/distill.pub/2017/aia)"
+          },
+          "components": {
+            "1": {
+              "order": 0,
+              "ranges": [
+                {
+                  "startIndex": 55,
+                  "length": 12,
+                  "hint": null
+                }
+              ]
+            }
+          }
+        }
+      },
+      "componentStates": {
+        "1": {
+          "createdAtTimestampMillis": 1,
+          "lastRepetitionTimestampMillis": null,
+          "intervalMillis": 0,
+          "dueTimestampMillis": 3
+        }
+      }
+    },
+    "componentID": "1"
+  }
+]
