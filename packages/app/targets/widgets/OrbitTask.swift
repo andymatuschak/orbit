@@ -5,7 +5,6 @@
 //  Created by Andy Matuschak on 2023-12-26.
 //
 
-import AppIntents
 import Foundation
 
 typealias TaskID = String
@@ -73,7 +72,7 @@ extension OrbitTask {
         body: TaskContentField(text: "You're all caught up."),
         answer: TaskContentField(text: "You're all caught up."))),
     componentStates: [
-      OrbitReviewItem.mainTaskComponentID: TaskComponentState(createdAtTimestampMillis: 0, lastRepetitionTimestampMillis: 0, intervalMillis: 0, dueTimestampMillis: 0)
+      OrbitReviewItem.mainTaskComponentID: TaskComponentState(createdAtTimestampMillis: 0)
     ]
   )
 
@@ -85,7 +84,7 @@ extension OrbitTask {
         body: TaskContentField(text: "Example question with a long string that will wrap onto multiple lines and will make for a small text size because it's so long"),
         answer: TaskContentField(text: "Example answer"))),
     componentStates: [
-      OrbitReviewItem.mainTaskComponentID: TaskComponentState(createdAtTimestampMillis: 0, lastRepetitionTimestampMillis: 0, intervalMillis: 0, dueTimestampMillis: 0)
+      OrbitReviewItem.mainTaskComponentID: TaskComponentState(createdAtTimestampMillis: 0)
     ]
   )
 
@@ -96,19 +95,19 @@ extension OrbitTask {
       .cloze(
         body: TaskContentField(text: "This is a test cloze prompt."),
         components: [
-          "a": ClozeTaskComponent(order: 0, ranges: [ClozeTaskRange(startIndex: 5, length: 4, hint: nil), ClozeTaskRange(startIndex: 15, length: 5, hint: nil)]),
-          "b": ClozeTaskComponent(order: 1, ranges: [ClozeTaskRange(startIndex: 2, length: 2, hint: nil)]),
+          "a": ClozeTaskComponent(ranges: [ClozeTaskRange(startIndex: 5, length: 4, hint: nil), ClozeTaskRange(startIndex: 15, length: 5, hint: nil)]),
+          "b": ClozeTaskComponent(ranges: [ClozeTaskRange(startIndex: 2, length: 2, hint: nil)]),
         ]
       )
     ),
     componentStates: [
-      OrbitReviewItem.clozePlaceholderComponentID: TaskComponentState(createdAtTimestampMillis: 0, lastRepetitionTimestampMillis: 0, intervalMillis: 0, dueTimestampMillis: 0)
+      OrbitReviewItem.clozePlaceholderComponentID: TaskComponentState(createdAtTimestampMillis: 0)
     ]
   )
 }
 
 struct TaskProvenance: Sendable {
-  let title: String
+  let title: String?
   let url: String?
   let colorPaletteName: ColorPaletteName?
 }
@@ -120,7 +119,7 @@ extension TaskProvenance {
     } else {
       colorPaletteName = nil
     }
-    title = try decodeProperty(obj, "title")
+    title = try decodeOptionalProperty(obj, "title")
     url = try decodeOptionalProperty(obj, "url")
   }
 }
@@ -167,13 +166,11 @@ extension TaskContent {
 }
 
 struct ClozeTaskComponent: Sendable {
-  let order: Int
   let ranges: [ClozeTaskRange]
 }
 
 extension ClozeTaskComponent {
   init(decoding obj: Any) throws {
-    order = try decodeProperty(obj, "order")
     let rangesJSON: [Any] = try decodeProperty(obj, "ranges")
     ranges = try rangesJSON.map { try ClozeTaskRange(decoding: $0) }
   }
@@ -205,17 +202,11 @@ extension TaskContentField {
 
 struct TaskComponentState: Sendable {
   let createdAtTimestampMillis: TimeInterval
-  let lastRepetitionTimestampMillis: TimeInterval?;
-  let intervalMillis: TimeInterval;
-  let dueTimestampMillis: TimeInterval;
 }
 
 extension TaskComponentState {
   init(decoding obj: Any) throws {
     createdAtTimestampMillis = try decodeProperty(obj, "createdAtTimestampMillis")
-    lastRepetitionTimestampMillis = try decodeOptionalProperty(obj, "lastRepetitionTimestampMillis")
-    intervalMillis = try decodeProperty(obj, "intervalMillis")
-    dueTimestampMillis = try decodeProperty(obj, "dueTimestampMillis")
   }
 }
 
@@ -277,14 +268,4 @@ private func decodeOptionalProperty<T>(_ obj: Any, _ propertyName: String) throw
 enum TaskRepetitionOutcome: String, Sendable {
   case remembered
   case forgotten
-}
-
-extension TaskRepetitionOutcome: AppEnum {
-  static var typeDisplayRepresentation: TypeDisplayRepresentation {
-    return TypeDisplayRepresentation(name: "Outcome")
-  }
-
-  static var caseDisplayRepresentations: [TaskRepetitionOutcome: DisplayRepresentation] {
-    return [.remembered: "Remembered", .forgotten: "Forgotten"]
-  }
 }

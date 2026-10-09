@@ -43,10 +43,12 @@ private enum WidgetReviewState {
 struct Provider: TimelineProvider {
   func getSnapshot(in context: Context, completion: @escaping @Sendable (Entry) -> Void) {
     Task { @MainActor in
-      let pendingItem = await Bridge.shared.generateReviewQueue().first
+      let queue = await Bridge.shared.generateReviewQueue()
+      let pendingItem = queue.items.first
       let item = pendingItem ?? .placeholder
       completion(
         Entry(
+          vaultID: queue.vaultID,
           item: item,
           isShowingAnswer: pendingItem.map {
             WidgetReviewState.isShowingAnswer(
@@ -65,34 +67,26 @@ struct Provider: TimelineProvider {
     Task { @MainActor in
       let currentDate = Date.now
       let queue = await Bridge.shared.generateReviewQueue()
-      let entries: [Entry]
-
-      if queue.isEmpty {
-        entries = [
-          Entry(
-            item: .empty,
-            isShowingAnswer: false,
-            hasReviewItem: false,
-            date: currentDate
+      let currentItem = queue.items.first
+      // Future entries would replace an unanswered prompt on a timer, even
+      // while the user is revealing it. Advance only after a review changes
+      // the projection (or when WidgetKit asks for a fresh timeline).
+      let entry = Entry(
+        vaultID: queue.vaultID,
+        item: currentItem ?? .empty,
+        isShowingAnswer: currentItem.map {
+          WidgetReviewState.isShowingAnswer(
+            taskID: $0.task.id,
+            componentID: $0.componentID
           )
-        ]
-      } else {
-        entries = queue.prefix(50).enumerated().map { offset, item in
-          Entry(
-            item: item,
-            isShowingAnswer: WidgetReviewState.isShowingAnswer(
-              taskID: item.task.id,
-              componentID: item.componentID
-            ),
-            hasReviewItem: true,
-            date: currentDate.addingTimeInterval(TimeInterval(offset * 5 * 60))
-          )
-        }
-      }
+        } ?? false,
+        hasReviewItem: currentItem != nil,
+        date: currentDate
+      )
 
       completion(
         Timeline(
-          entries: entries,
+          entries: [entry],
           policy: .after(currentDate.addingTimeInterval(60 * 60))
         )
       )
@@ -101,6 +95,7 @@ struct Provider: TimelineProvider {
 
   func placeholder(in context: Context) -> Entry {
     Entry(
+      vaultID: nil,
       item: .placeholder,
       isShowingAnswer: false,
       hasReviewItem: false,
@@ -110,6 +105,7 @@ struct Provider: TimelineProvider {
 }
 
 struct Entry: TimelineEntry, Sendable {
+  let vaultID: String?
   let item: OrbitReviewItem
   let isShowingAnswer: Bool
   let hasReviewItem: Bool
@@ -140,22 +136,28 @@ struct MarkPromptIntent: AppIntent {
   static let isDiscoverable = false
   @Parameter(title: "Task ID") var taskID: String
   @Parameter(title: "Component ID") var componentID: String
-  @Parameter(title: "Outcome") var outcome: TaskRepetitionOutcome
+  @Parameter(title: "Outcome") var outcome: String
+  @Parameter(title: "Vault ID") var vaultID: String
 
   init() {}
 
-  init(taskID: TaskID, componentID: String, outcome: TaskRepetitionOutcome) {
+  init(vaultID: String, taskID: TaskID, componentID: String, outcome: TaskRepetitionOutcome) {
+    self.vaultID = vaultID
     self.taskID = taskID
     self.componentID = componentID
-    self.outcome = outcome
+    self.outcome = outcome.rawValue
   }
 
   func perform() async throws -> some IntentResult {
+    guard let outcome = TaskRepetitionOutcome(rawValue: outcome) else {
+      throw WidgetProjectionStoreError.invalidInput("unsupported review outcome")
+    }
     try await Bridge.shared.recordReview(
       taskID: taskID,
       componentID: componentID,
       outcome: outcome,
-      date: .now
+      date: .now,
+      expectedVaultID: vaultID
     )
     await WidgetReviewState.hideAnswer(taskID: taskID, componentID: componentID)
     return .result()
@@ -184,8 +186,8 @@ struct PromptContent: View {
     let spec = item.task.spec
 
     VStack(alignment: .leading, spacing: 0) {
-      if let provenance = item.task.provenance {
-        Text(provenance.title)
+      if let provenanceTitle = item.task.provenance?.title {
+        Text(provenanceTitle)
           .lineLimit(1)
           .foregroundStyle(colorPalette.secondaryTextColor)
           .modifier(PromptTextStyle(fontStyle: OrbitLabelSmall.self))
@@ -193,12 +195,12 @@ struct PromptContent: View {
 
       switch spec {
       case .memory(.qa(let q, let a)):
-        let text = isShowingAnswer ? a.text : q.text
+        let text = compactPromptText(isShowingAnswer ? a.text : q.text).text
         Group {
           if containsLaTeX(text) {
             PromptLaTeXText(text: text)
           } else {
-            Text(text)
+            Text(inlineMarkdown(text))
               .modifier(PromptTextStyle(text: text))
           }
         }
@@ -208,15 +210,16 @@ struct PromptContent: View {
 
       case .memory(.cloze(let body, let components)):
         let ranges = components[item.componentID]?.ranges ?? []
-        if containsLaTeX(body.text) {
+        let compacted = compactPromptText(body.text, ranges: ranges)
+        if containsLaTeX(compacted.text) {
           PromptLaTeXText(
             text: buildLaTeXClozeText(
-              text: body.text,
-              ranges: ranges,
+              text: compacted.text,
+              ranges: compacted.ranges,
               isShowingAnswer: isShowingAnswer
             ),
-            fontSizingText: body.text,
-            highlightedRanges: isShowingAnswer ? ranges : [],
+            fontSizingText: compacted.text,
+            highlightedRanges: isShowingAnswer ? compacted.ranges : [],
             highlightColor: colorPalette.accentColor
           )
             .widgetAccentable(isShowingAnswer)
@@ -224,12 +227,12 @@ struct PromptContent: View {
             .frame(maxHeight: .infinity, alignment: .bottom)
         } else {
           buildClozeText(
-            text: body.text,
-            ranges: ranges,
+            text: compacted.text,
+            ranges: compacted.ranges,
             colorPalette: colorPalette,
             isShowingAnswer: isShowingAnswer
           )
-            .modifier(PromptTextStyle(text: body.text))
+            .modifier(PromptTextStyle(text: compacted.text))
             .widgetAccentable(isShowingAnswer)
             .animation(.linear(duration: 0.05), value: isShowingAnswer)
             .frame(maxHeight: .infinity, alignment: .bottom)
@@ -239,6 +242,108 @@ struct PromptContent: View {
     .frame(maxHeight: .infinity, alignment: .top)
     .padding(EdgeInsets(top: margins.top, leading: margins.leading, bottom: margins.bottom, trailing: 0))
   }
+}
+
+private struct CompactPromptText {
+  let text: String
+  let ranges: [ClozeTaskRange]
+}
+
+/// Orbit prompt fields contain Markdown paragraph spacing. The React Native
+/// card renderer interprets those blank lines structurally, but SwiftUI's
+/// plain `Text` preserves every source newline, which can spend most of a
+/// widget's height on invisible Markdown whitespace. Keep one visible line per
+/// non-empty source line and remap cloze offsets to that compact text.
+private func compactPromptText(
+  _ text: String,
+  ranges: [ClozeTaskRange] = []
+) -> CompactPromptText {
+  let input = Array(text.utf16)
+  var output: [UInt16] = []
+  var boundaryMap = [Int?](repeating: nil, count: input.count + 1)
+
+  var lineStart = 0
+  while lineStart <= input.count {
+    let lineEnd = input[lineStart...].firstIndex(of: 10) ?? input.count
+    var contentStart = lineStart
+    var contentEnd = lineEnd
+    while contentStart < contentEnd,
+      input[contentStart] == 9 || input[contentStart] == 13
+        || input[contentStart] == 32
+    {
+      contentStart += 1
+    }
+    while contentEnd > contentStart,
+      input[contentEnd - 1] == 9 || input[contentEnd - 1] == 13
+        || input[contentEnd - 1] == 32
+    {
+      contentEnd -= 1
+    }
+
+    if contentStart < contentEnd {
+      if !output.isEmpty { output.append(10) }
+      var inputIndex = contentStart
+      while inputIndex < contentEnd {
+        boundaryMap[inputIndex] = output.count
+        output.append(input[inputIndex])
+        inputIndex += 1
+        boundaryMap[inputIndex] = output.count
+      }
+    }
+
+    guard lineEnd < input.count else { break }
+    lineStart = lineEnd + 1
+  }
+
+  let compactedRanges = ranges.compactMap { range -> ClozeTaskRange? in
+    let rangeEnd = range.startIndex + range.length
+    guard
+      range.startIndex >= 0,
+      rangeEnd >= range.startIndex,
+      rangeEnd < boundaryMap.count,
+      let compactedStart = boundaryMap[range.startIndex],
+      let compactedEnd = boundaryMap[rangeEnd],
+      compactedEnd >= compactedStart
+    else {
+      return nil
+    }
+    return ClozeTaskRange(
+      startIndex: compactedStart,
+      length: compactedEnd - compactedStart,
+      hint: range.hint
+    )
+  }
+
+  return CompactPromptText(
+    text: String(decoding: output, as: UTF16.self),
+    ranges: compactedRanges
+  )
+}
+
+private func inlineMarkdown(_ source: String) -> AttributedString {
+  let options = AttributedString.MarkdownParsingOptions(
+    interpretedSyntax: .inlineOnlyPreservingWhitespace,
+    failurePolicy: .returnPartiallyParsedIfPossible
+  )
+  var rendered = (try? AttributedString(markdown: source, options: options))
+    ?? AttributedString(source)
+
+  // Match Orbit's main prompt renderer: links retain the prompt's ink color
+  // and are distinguished from surrounding prose with an underline. Strip
+  // the URL action after parsing: this interactive widget already contains
+  // AppIntent buttons and a widgetURL, and WidgetKit cannot archive a nested
+  // AttributedString link action in that hierarchy. Tapping the prompt still
+  // opens the corresponding review in Orbit.
+  let linkRanges = rendered.runs.compactMap { run in
+    run.link == nil ? nil : run.range
+  }
+  for range in linkRanges {
+    rendered[range].foregroundColor = ink
+    rendered[range].underlineStyle = Text.LineStyle(pattern: .solid)
+    rendered[range].link = nil
+  }
+
+  return rendered
 }
 
 struct PromptTextStyle: ViewModifier {
@@ -266,66 +371,103 @@ struct PromptTextStyle: ViewModifier {
   }
 }
 
-func buildClozeText(text: String, ranges: [ClozeTaskRange], colorPalette: ColorPalette, isShowingAnswer: Bool) -> some View {
-  func substring(_ string: String, utf16Offset: Int, length: Int) -> String {
-    guard utf16Offset >= 0, length >= 0 else { return "" }
+private let clozeBlankSentinel: Character = "\u{F0000}"
+private let clozeHighlightStartSentinel: Character = "\u{F0001}"
+private let clozeHighlightEndSentinel: Character = "\u{F0002}"
 
-    let utf16 = string.utf16
-    guard
-      let lowerUTF16Index = utf16.index(
-        utf16.startIndex,
-        offsetBy: utf16Offset,
-        limitedBy: utf16.endIndex
-      ),
-      let upperUTF16Index = utf16.index(
-        lowerUTF16Index,
-        offsetBy: length,
-        limitedBy: utf16.endIndex
-      ),
-      let lowerIndex = String.Index(lowerUTF16Index, within: string),
-      let upperIndex = String.Index(upperUTF16Index, within: string)
-    else {
-      return ""
-    }
-
-    return String(string[lowerIndex ..< upperIndex])
+private func stringRange(for range: ClozeTaskRange, in source: String) -> Range<String.Index>? {
+  guard range.startIndex >= 0, range.length >= 0 else { return nil }
+  let utf16 = source.utf16
+  guard
+    let lowerUTF16Index = utf16.index(
+      utf16.startIndex,
+      offsetBy: range.startIndex,
+      limitedBy: utf16.endIndex
+    ),
+    let upperUTF16Index = utf16.index(
+      lowerUTF16Index,
+      offsetBy: range.length,
+      limitedBy: utf16.endIndex
+    ),
+    let lowerIndex = String.Index(lowerUTF16Index, within: source),
+    let upperIndex = String.Index(upperUTF16Index, within: source)
+  else {
+    return nil
   }
+  return lowerIndex ..< upperIndex
+}
 
-  var output = Text("")
-  for (prev, curr) in zip([nil] + ranges, ranges + [nil]) {
-    let startIdx = (prev?.startIndex ?? 0) + (prev?.length ?? 0)
-    if let curr = curr {
-      let precedingText = Text(
-        substring(text, utf16Offset: startIdx, length: curr.startIndex - startIdx)
+private func markClozeRanges(
+  in source: String,
+  ranges: [ClozeTaskRange],
+  isShowingAnswer: Bool
+) -> String {
+  var output = source
+  for range in ranges.sorted(by: { $0.startIndex < $1.startIndex }).reversed() {
+    guard let markedRange = stringRange(for: range, in: output) else { continue }
+    if isShowingAnswer {
+      let answer = output[markedRange]
+      output.replaceSubrange(
+        markedRange,
+        with: String(clozeHighlightStartSentinel)
+          + answer
+          + String(clozeHighlightEndSentinel)
       )
-      output = Text("\(output)\(precedingText)")
-      if isShowingAnswer {
-        let answer = Text(
-          substring(text, utf16Offset: curr.startIndex, length: curr.length)
-        )
-          .foregroundStyle(colorPalette.accentColor)
-        output = Text("\(output)\(answer)")
-      } else {
-        let blank = Text("______")
-          .customAttribute(ClozeBlankAttribute())
-        output = Text("\(output)\(blank)")
-      }
+    } else {
+      output.replaceSubrange(markedRange, with: String(clozeBlankSentinel))
     }
   }
-  let finalStartIdx: Int
-  if let lastRange = ranges.last {
-    finalStartIdx = lastRange.startIndex + lastRange.length
-  } else {
-    finalStartIdx = 0
-  }
-  let trailingText = Text(
-    substring(
-      text,
-      utf16Offset: finalStartIdx,
-      length: text.utf16.count - finalStartIdx
-    )
+  return output
+}
+
+func buildClozeText(text: String, ranges: [ClozeTaskRange], colorPalette: ColorPalette, isShowingAnswer: Bool) -> some View {
+  let marked = markClozeRanges(
+    in: text,
+    ranges: ranges,
+    isShowingAnswer: isShowingAnswer
   )
-  output = Text("\(output)\(trailingText)")
+  let markdown = inlineMarkdown(marked)
+  var output = Text("")
+  var segmentStart = markdown.startIndex
+  var cursor = markdown.startIndex
+  var highlightDepth = 0
+
+  func appendMarkdown(through end: AttributedString.Index) {
+    guard segmentStart < end else { return }
+    var fragment = Text(AttributedString(markdown[segmentStart ..< end]))
+    if highlightDepth > 0 {
+      fragment = fragment.foregroundStyle(colorPalette.accentColor)
+    }
+    output = Text("\(output)\(fragment)")
+  }
+
+  while cursor < markdown.endIndex {
+    let character = markdown.characters[cursor]
+    let next = markdown.characters.index(after: cursor)
+    guard character == clozeBlankSentinel
+      || character == clozeHighlightStartSentinel
+      || character == clozeHighlightEndSentinel
+    else {
+      cursor = next
+      continue
+    }
+
+    appendMarkdown(through: cursor)
+    switch character {
+    case clozeBlankSentinel:
+      output = Text("\(output)\(Text("______").customAttribute(ClozeBlankAttribute()))")
+    case clozeHighlightStartSentinel:
+      highlightDepth += 1
+    case clozeHighlightEndSentinel:
+      highlightDepth = max(0, highlightDepth - 1)
+    default:
+      break
+    }
+    segmentStart = next
+    cursor = next
+  }
+
+  appendMarkdown(through: markdown.endIndex)
   return output.textRenderer(ClozeBlankRenderer(color: colorPalette.accentColor))
 }
 
@@ -390,20 +532,20 @@ struct PromptView: View {
   let item: OrbitReviewItem
   let isShowingAnswer: Bool
   let hasReviewItem: Bool
+  let vaultID: String?
 
   var body: some View {
     HStack(spacing: 8) {
       HStack() {
         PromptContent(item: item, isShowingAnswer: isShowingAnswer)
-          .invalidatableContent()
         Spacer()
       }
 
-      if hasReviewItem {
+      if hasReviewItem, let vaultID {
         if isShowingAnswer {
           VStack(spacing: 4) {
-            WidgetButton(intent: MarkPromptIntent(taskID: item.task.id, componentID: item.componentID, outcome: .forgotten), iconName: "cross-center", alignment: .bottom)
-            WidgetButton(intent: MarkPromptIntent(taskID: item.task.id, componentID: item.componentID,  outcome: .remembered), iconName: "check-center", alignment: .bottom)
+            WidgetButton(intent: MarkPromptIntent(vaultID: vaultID, taskID: item.task.id, componentID: item.componentID, outcome: .forgotten), iconName: "cross-center", alignment: .bottom)
+            WidgetButton(intent: MarkPromptIntent(vaultID: vaultID, taskID: item.task.id, componentID: item.componentID, outcome: .remembered), iconName: "check-center", alignment: .bottom)
           }
         } else {
           WidgetButton(
@@ -437,7 +579,8 @@ struct OrbitHomeScreen: Widget {
       PromptView(
         item: entry.item,
         isShowingAnswer: entry.isShowingAnswer,
-        hasReviewItem: entry.hasReviewItem
+        hasReviewItem: entry.hasReviewItem,
+        vaultID: entry.vaultID
       )
         .containerBackground(colorPalette.backgroundColor, for: .widget)
         .widgetURL(
@@ -455,8 +598,8 @@ struct OrbitHomeScreen: Widget {
 #Preview(as: .systemMedium) {
   OrbitHomeScreen()
 } timeline: {
-  Entry(item: .empty, isShowingAnswer: false, hasReviewItem: false, date: .now)
-  Entry(item: .placeholder, isShowingAnswer: false, hasReviewItem: true, date: .now)
-  Entry(item: .clozePlaceholder, isShowingAnswer: false, hasReviewItem: true, date: .now)
-  Entry(item: .clozePlaceholder, isShowingAnswer: true, hasReviewItem: true, date: .now)
+  Entry(vaultID: nil, item: .empty, isShowingAnswer: false, hasReviewItem: false, date: .now)
+  Entry(vaultID: "preview", item: .placeholder, isShowingAnswer: false, hasReviewItem: true, date: .now)
+  Entry(vaultID: "preview", item: .clozePlaceholder, isShowingAnswer: false, hasReviewItem: true, date: .now)
+  Entry(vaultID: "preview", item: .clozePlaceholder, isShowingAnswer: true, hasReviewItem: true, date: .now)
 }
