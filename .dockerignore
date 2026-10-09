@@ -1,0 +1,10 @@
+.codex
+.git
+**/.expo
+**/.local
+**/build
+**/dist
+**/coverage
+**/node_modules
+packages/app/ios
+prototypes

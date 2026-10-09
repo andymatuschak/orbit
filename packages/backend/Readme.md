@@ -43,6 +43,19 @@ Use three terminals from the repository root:
 
 Agents and automation must not use the generic `booted` target: another booted Simulator may contain unrelated app data. Sign in with `test@test.com` / `testtest`. The seeded prompt begins “Orbit simulator smoke test”. Only Debug development builds route to the loopback Firebase emulators; Release and Archive builds route to production. Every post-review cycle requires both restarting the imported emulator suite and uninstalling/reinstalling Orbit on the dedicated Simulator; restarting Terminal 1 alone leaves stale app-side SQLite, auth, and sync cursor state.
 
+For the native Automerge review-write gate, use the same dedicated Simulator
+and running emulator suite, but run `bun --cwd packages/app ios:review-smoke`.
+The harness installs a normal Debug app, authenticates against the Firebase
+emulator, and seeds Firebase's persisted-user record, three prompts in Repo
+Swift's ordinary-file store, and the device-local vault registry while the
+app is stopped. It then uses AXe to complete two consecutive reviews through
+the unchanged production UI. The third prompt must remain current after a process
+restart, and an external read of the ordinary-file store must contain exactly
+two durable review observations. A loopback HTTP stub acknowledges reminder-plan
+requests so Expo's Debug error overlay cannot intercept taps; it serves no
+WebSocket sync. There are no fixture flags or fixture-only branches in
+application code.
+
 ## Configuration
 
 `/serviceConfig.ts` contains `withorbit.com`-specific configuration you'll need to change if self-hosting.

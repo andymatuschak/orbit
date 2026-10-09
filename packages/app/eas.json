@@ -13,9 +13,29 @@
     },
     "production": {
       "autoIncrement": true
+    },
+    "dogfood": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_AUTOMERGE_HOSTED_SYNC": "true",
+        "EXPO_PUBLIC_AUTOMERGE_HOSTED_SYNC_ORIGIN": "https://136-69-77-9.sslip.io"
+      }
+    },
+    "dogfood-adhoc": {
+      "extends": "dogfood",
+      "distribution": "internal"
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "1593907598"
+      }
+    },
+    "dogfood": {
+      "ios": {
+        "ascAppId": "1593907598"
+      }
+    }
   }
 }

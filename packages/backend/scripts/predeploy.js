@@ -23,7 +23,15 @@ if (gitStatus !== "") {
 }
 
 // Produce a yarn-compatible lockfile we can use to pin our dependency versions:
-execSync("bun install -y");
+const bunLockPath = path.join(workspaceRoot, "bun.lockb");
+const bunLockContents = fs.readFileSync(bunLockPath);
+try {
+  execSync("bun install -y");
+} finally {
+  // Newer Bun releases rewrite the binary lock while generating yarn.lock.
+  // Deployment packaging must leave the reviewed workspace lock unchanged.
+  fs.writeFileSync(bunLockPath, bunLockContents);
+}
 
 execSync("bunx isolate");
 
@@ -32,6 +40,13 @@ execSync(`mv ${path.join(workspaceRoot, "yarn.lock")} ${isolatedPath}`);
 
 // Re-run yarn against that package to remove any dependencies in that lockfile which aren't used by this package and its dependencies (otherwise the deploy will fail).
 execSync(`yarn --cwd ${isolatedPath} install`);
+// Firebase installs from the pruned lockfile remotely. Keeping this local
+// node_modules tree would enlarge the upload and introduces executable symlinks
+// which current Firebase deploys reject.
+fs.rmSync(path.join(isolatedPath, "node_modules"), {
+  recursive: true,
+  force: true,
+});
 
 // Rewrite firebase.json to point to the isolated output.
 fs.copyFileSync(firebaseJSONPath, `${firebaseJSONPath}.bak`);

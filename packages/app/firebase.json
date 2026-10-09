@@ -2,7 +2,7 @@
   "hosting": {
     "target": "orbit-app",
     "public": "web-build",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "*.map", "**/*.map"],
     "rewrites": [
       {
         "source": "/api/**",
