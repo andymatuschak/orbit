@@ -1,6 +1,6 @@
 export type InternalAPISpec = {
   "/internal/auth/consumeAccessCode": {
-    GET: {
+    POST: {
       response: string;
     };
   };

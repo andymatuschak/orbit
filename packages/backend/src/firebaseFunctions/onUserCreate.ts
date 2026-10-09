@@ -1,5 +1,7 @@
 import functions from "firebase-functions";
 import { updateUserMetadata } from "../db/firebaseAccountData.js";
+import { provisionHostedVaultAccount } from "../db/hostedVaultAccounts.js";
+import { getApp } from "../firebaseApp.js";
 import getDefaultEmailService from "../email/index.js";
 import { EmailSpec } from "../email/types.js";
 import { sharedLoggingService } from "../logging/index.js";
@@ -19,20 +21,48 @@ const onUserCreate = functions.auth.user().onCreate(async (user, context) => {
   if (!user.email) {
     throw new Error(`New user has no email address: ${userID}`);
   }
+  const emailAddress = user.email;
 
   const registrationTimestampMillis = Date.parse(context.timestamp);
+  const projectID = getApp().options.projectId ?? process.env.GCLOUD_PROJECT;
+  if (!projectID) throw new Error("Firebase project ID is unavailable");
 
-  await updateUserMetadata(userID, {
-    registrationTimestampMillis,
-  });
-
-  await sharedLoggingService.logUserEvent({
-    userID: userID,
-    timestamp: registrationTimestampMillis,
-    eventName: "registration",
-    emailAddress: user.email,
-  });
-  await getDefaultEmailService().sendEmail(user.email, welcomeEmailSpec);
+  // Keep account bootstrap and today's welcome-email behavior independent:
+  // either side is attempted even if the other fails. Trigger redelivery has
+  // the same possible duplicate-email window as before Phase 3.
+  const results = await Promise.allSettled([
+    provisionHostedVaultAccount({
+      authIssuer: `https://securetoken.google.com/${projectID}`,
+      authSubject: userID,
+      emailAddress,
+      registrationTimestampMillis,
+      mode:
+        process.env.ORBIT_AUTOMERGE_NEW_ACCOUNTS === "true"
+          ? "new-automerge"
+          : "legacy",
+    }),
+    (async () => {
+      await updateUserMetadata(userID, {
+        registrationTimestampMillis,
+      });
+      await sharedLoggingService.logUserEvent({
+        userID,
+        timestamp: registrationTimestampMillis,
+        eventName: "registration",
+        emailAddress,
+      });
+      await getDefaultEmailService().sendEmail(emailAddress, welcomeEmailSpec);
+    })(),
+  ]);
+  const failures = results.filter(
+    (result): result is PromiseRejectedResult => result.status === "rejected",
+  );
+  if (failures.length > 0) {
+    const reason = failures[0].reason;
+    throw reason instanceof Error
+      ? reason
+      : new Error("New-account provisioning did not fully complete");
+  }
 });
 
 export default onUserCreate;

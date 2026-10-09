@@ -6,7 +6,7 @@ import { CachePolicy, TypedRouteHandler } from "../../util/typedRouter.js";
 export const consumeAccessCode: TypedRouteHandler<
   InternalAPISpec,
   "/internal/auth/consumeAccessCode",
-  "GET"
+  "POST"
 > = authenticatedRequestHandler(async (request, userID) => {
   const loginToken =
     await sharedServerDatabase().auth.createCustomLoginToken(userID);

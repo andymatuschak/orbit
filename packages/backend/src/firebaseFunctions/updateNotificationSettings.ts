@@ -7,6 +7,7 @@ import {
   sendStructuredResponse,
 } from "../api/util/typedRouter.js";
 import { sharedServerDatabase } from "../db/index.js";
+import { getHostedVaultAccount } from "../db/hostedVaultAccounts.js";
 import { UserMetadata } from "../db/userMetadata.js";
 import serviceConfig from "../serviceConfig.js";
 
@@ -120,10 +121,24 @@ app.use(async (request, response) => {
 
   try {
     const result = await authenticateTypedRequest(request, async (userID) => {
-      const metadataUpdate = actionTable[action](Date.now());
+      const nowTimestampMillis = Date.now();
+      const account = await getHostedVaultAccount(userID);
+      if (account?.notificationMode === "server") {
+        // Older emails retain their confirmation page and identity boundary,
+        // but the setting now belongs to the vault, not legacy user metadata.
+        const code = await sharedServerDatabase().auth.createOneTimeAccessCode(
+          userID,
+          nowTimestampMillis,
+        );
+        return {
+          status: 302,
+          redirectURL: `${serviceConfig.webBaseURL}/settings?notificationAction=${action}&accessCode=${encodeURIComponent(code)}`,
+          cachePolicy: CachePolicy.NoStore,
+        };
+      }
       await sharedServerDatabase().accounts.updateUserMetadata(
         userID,
-        metadataUpdate,
+        actionTable[action](nowTimestampMillis),
       );
       return {
         status: 302,

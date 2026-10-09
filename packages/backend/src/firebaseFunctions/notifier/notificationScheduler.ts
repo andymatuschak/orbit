@@ -4,6 +4,7 @@ import functions from "firebase-functions";
 import { sharedServerDatabase } from "../../db/index.js";
 import { UserEnumerationRecord } from "../../db/firebaseAccountData.js";
 import { shouldEvaluateUserForNotification } from "../../notifications/shouldEvaluateUserForNotification.js";
+import { isLegacyNotificationAuthoritative } from "../../db/hostedVaultAccounts.js";
 import {
   ProcessUserNotificationData,
   processUserNotificationTopic,
@@ -30,6 +31,7 @@ async function scheduleUserNotificationIfNeeded(
 ) {
   console.log(`Evaluating ${record.userID}`);
   if (
+    (await isLegacyNotificationAuthoritative(record.userID)) &&
     shouldEvaluateUserForNotification(
       record.userMetadata,
       evaluationTimestampMillis,

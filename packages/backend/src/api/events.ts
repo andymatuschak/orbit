@@ -4,11 +4,19 @@ import { sharedServerDatabase } from "../db/index.js";
 import { authenticatedRequestHandler } from "./util/authenticateRequest.js";
 import { CachePolicy, TypedRouteHandler } from "./util/typedRouter.js";
 import { putAndLogEvents } from "./util/putAndLogEvents.js";
+import { LegacyWritesDisabledError } from "../db/hostedVaultAccounts.js";
 
 export const storeEvents: TypedRouteHandler<OrbitAPI.Spec, "/events", "PATCH"> =
   authenticatedRequestHandler(async (request, userID) => {
-    await putAndLogEvents(userID, request.body);
-    return { status: 204 };
+    try {
+      await putAndLogEvents(userID, request.body);
+      return { status: 204 };
+    } catch (error) {
+      if (error instanceof LegacyWritesDisabledError) {
+        return { status: 409 };
+      }
+      throw error;
+    }
   });
 
 export const listEvents: TypedRouteHandler<OrbitAPI.Spec, "/events", "GET"> =

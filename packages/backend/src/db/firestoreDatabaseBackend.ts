@@ -25,6 +25,7 @@ import {
   OrderedIDGenerator,
 } from "./orderedID.js";
 import { UserMetadata } from "./userMetadata.js";
+import { assertLegacyWritesPermittedInTransaction } from "./hostedVaultAccounts.js";
 
 export class FirestoreDatabaseBackend implements DatabaseBackend {
   private readonly _userID: string;
@@ -230,6 +231,12 @@ export class FirestoreDatabaseBackend implements DatabaseBackend {
     ) => Promise<Map<IDOfEntity<E>, DatabaseBackendEntityRecord<E>>>,
   ): Promise<void> {
     await this._database.runTransaction(async (tx) => {
+      await assertLegacyWritesPermittedInTransaction(
+        this._userID,
+        tx,
+        this._database,
+      );
+
       // Get the old entity records.
       const entityIDs = new Set(events.map(({ entityID }) => entityID));
       const entityDocs = await this._getByID<EntityDocumentBase<E>>(

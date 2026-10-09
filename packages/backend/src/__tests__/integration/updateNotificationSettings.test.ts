@@ -5,7 +5,10 @@ import {
   getTestUserMetadata,
   setupAccessCode,
   setupAuthToken,
+  getTestFirebaseAdminApp,
 } from "../firebaseTesting.js";
+import { getFirestore } from "firebase-admin/firestore";
+import { newHostedVaultAccountRecord } from "../../db/hostedVaultAccounts.js";
 import { fetchRoute } from "./utils/fetchRoute.js";
 
 beforeEach(async () => {
@@ -25,6 +28,45 @@ async function attemptUpdate(
 }
 
 describe("/updateNotificationSettings", () => {
+  test("old email action for a server-managed account forwards to its vault, not legacy metadata", async () => {
+    await setupAccessCode("oldEmailCode", "testUserID");
+    const database = getFirestore(getTestFirebaseAdminApp());
+    const account = newHostedVaultAccountRecord(
+      {
+        authIssuer: "https://securetoken.google.com/metabook-system",
+        authSubject: "testUserID",
+        emailAddress: "reader@example.test",
+        registrationTimestampMillis: Date.now(),
+        mode: "new-automerge",
+      },
+      "vault",
+    );
+    await database
+      .doc("hostedVaultAccounts/testUserID")
+      .set({ ...account, notificationMode: "server" });
+    const response = await fetchRoute(
+      "/updateNotificationSettings?action=unsubscribe&accessCode=oldEmailCode",
+      {
+        method: "POST",
+        json: {},
+        followRedirects: false,
+      },
+    );
+    expect(response.status).toBe(302);
+    const redirect = new URL(response.headers.get("location")!);
+    expect(redirect.pathname).toBe("/settings");
+    expect(redirect.searchParams.get("notificationAction")).toBe("unsubscribe");
+    const code = redirect.searchParams.get("accessCode")!;
+    expect(
+      (await database.doc(`accessCodes/${code}`).get()).data()?.userID,
+    ).toBe("testUserID");
+    expect((await database.doc("accessCodes/oldEmailCode").get()).exists).toBe(
+      false,
+    );
+    expect(await getTestUserMetadata("testUserID")).not.toHaveProperty(
+      "isUnsubscribedFromSessionNotifications",
+    );
+  });
   test("GET asks for confirmation without consuming the access code", async () => {
     await setupAccessCode("oneTimeCode", "testUserID");
     const path =

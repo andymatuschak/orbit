@@ -43,7 +43,7 @@ export type TypedResponse<Data> = (
     ))
   | { status: 204 }
   | { status: 301 | 302; redirectURL: string; cachePolicy: CachePolicy }
-  | { status: 400 | 401 | 404 }
+  | { status: 400 | 401 | 404 | 409 }
 ) & { headers?: { [name: string]: string } };
 
 // We use a simplified set of caching policies.

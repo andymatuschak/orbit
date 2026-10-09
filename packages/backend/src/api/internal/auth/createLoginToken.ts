@@ -6,12 +6,12 @@ export async function createLoginToken(
   request: express.Request,
   response: express.Response,
 ) {
-  const idToken = request.query["idToken"];
+  const idToken = idTokenFromAuthorization(request.header("Authorization"));
   const sessionCookie = request.cookies[sessionCookieName];
   const db = sharedServerDatabase();
   try {
     let userID: string | null = null;
-    if (idToken && typeof idToken === "string") {
+    if (idToken) {
       userID = await db.auth.validateIDToken(idToken);
       const { sessionCookie, sessionCookieExpirationDate } =
         await db.auth.createSessionCookie(idToken);
@@ -26,12 +26,21 @@ export async function createLoginToken(
 
     if (userID) {
       const customLoginToken = await db.auth.createCustomLoginToken(userID);
-      response.send(customLoginToken);
+      response
+        .set({
+          "Cache-Control": "no-store, max-age=0",
+          "Referrer-Policy": "no-referrer",
+        })
+        .send(customLoginToken);
     } else {
-      response.status(400).send();
+      response.status(401).send();
     }
-  } catch (error) {
-    console.trace("Encountered error while creating token", error);
-    response.status(401).send(error);
+  } catch {
+    console.error("Encountered an error while creating a login token");
+    response.status(401).send();
   }
+}
+
+function idTokenFromAuthorization(value: string | undefined) {
+  return value?.match(/^ID ([^\s]+)$/)?.[1] ?? null;
 }

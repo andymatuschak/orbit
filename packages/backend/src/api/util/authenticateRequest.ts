@@ -19,21 +19,21 @@ export async function authenticateTypedRequest<
   const db = sharedServerDatabase();
   const authorizationHeader = request.header("Authorization");
   if (authorizationHeader) {
-    const match = authorizationHeader.match(/ID (.+)/);
+    const match = authorizationHeader.match(/^ID ([^\s]+)$/);
     if (match) {
       try {
         return next(await db.auth.validateIDToken(match[1]));
-      } catch (error) {
-        console.error(`Couldn't validate ID token: ${error}`);
+      } catch {
+        console.error("Couldn't validate the supplied ID token");
         return { status: 401 };
       }
     } else {
-      const match = authorizationHeader.match(/Token (.+)/);
+      const match = authorizationHeader.match(/^Token ([^\s]+)$/);
       if (match) {
         try {
           return next(await db.auth.consumeAccessCode(match[1]));
-        } catch (error) {
-          console.error(`Couldn't consume access token: ${error}`);
+        } catch {
+          console.error("Couldn't consume the supplied access token");
           return { status: 401 };
         }
       } else {
@@ -47,8 +47,8 @@ export async function authenticateTypedRequest<
       let userID: string;
       try {
         userID = await db.auth.consumeAccessCode(accessCode, Date.now());
-      } catch (error) {
-        console.error(`Couldn't consume access code ${accessCode}: ${error}`);
+      } catch {
+        console.error("Couldn't consume the supplied access code");
         return { status: 401 };
       }
       return next(userID);

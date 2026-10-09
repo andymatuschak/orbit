@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from "react";
-import FirebaseAuthenticationClient from "./firebaseAuthenticationClient.js";
-import { AuthenticationClient, UserRecord } from "./index.js";
+import type {
+  AuthenticationClient,
+  FirebaseOpaqueIDToken,
+  FirebaseOpaqueLoginToken,
+  UserRecord,
+} from "./index.js";
+
+type AppAuthenticationClient = AuthenticationClient<
+  FirebaseOpaqueLoginToken,
+  FirebaseOpaqueIDToken
+>;
 
 export const AuthenticationClientContext =
-  React.createContext<FirebaseAuthenticationClient | null>(null);
+  React.createContext<AppAuthenticationClient | null>(null);
 
-export function useAuthenticationClient(): FirebaseAuthenticationClient {
+export function useAuthenticationClient(): AppAuthenticationClient {
   const client = React.useContext(AuthenticationClientContext);
   if (!client) {
     throw new Error(

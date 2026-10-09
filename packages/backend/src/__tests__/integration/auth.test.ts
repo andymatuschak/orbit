@@ -10,7 +10,8 @@ beforeEach(async () => {
 
 async function consumeAccessCode(accessCode: string) {
   return await fetchRoute(`/api/internal/auth/consumeAccessCode`, {
-    method: "GET",
+    method: "POST",
+    json: {},
     authorization: { token: accessCode },
   });
 }
@@ -26,7 +27,8 @@ describe("/internal/auth/consumeAccessCode", () => {
     const { status, body } = await fetchRoute(
       `/api/internal/auth/consumeAccessCode`,
       {
-        method: "GET",
+        method: "POST",
+        json: {},
       },
     );
     expect(status).toBe(401);

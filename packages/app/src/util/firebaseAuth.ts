@@ -11,8 +11,8 @@ export function getFirebaseAuth(): Auth {
     _auth = initializeAuth(getDefaultFirebaseApp(), {
       persistence: getReactNativePersistence(ReactNativeAsyncStorage),
     });
-    if (__DEV__ && serviceConfig.shouldUseLocalBackend) {
-      connectAuthEmulator(_auth, "http://localhost:9099/");
+    if (serviceConfig.firebaseAuthEmulatorOrigin) {
+      connectAuthEmulator(_auth, serviceConfig.firebaseAuthEmulatorOrigin);
     }
   }
   return _auth;

@@ -1,7 +1,12 @@
 import { createTestTaskIngestEvents } from "@withorbit/sample-data";
 import { beforeEach, describe, it, test, expect } from "bun:test";
+import { getFirestore } from "firebase-admin/firestore";
+import { newHostedVaultAccountRecord } from "../../db/hostedVaultAccounts.js";
 import { resetLocalEmulators } from "../emulators.js";
-import { setupAuthToken } from "../firebaseTesting.js";
+import {
+  getTestFirebaseAdminApp,
+  setupAuthToken,
+} from "../firebaseTesting.js";
 import { fetchRoute } from "./utils/fetchRoute.js";
 
 beforeEach(async () => {
@@ -35,6 +40,45 @@ test("round-trip request", async () => {
     hasMore: false,
     items: testEvents,
   });
+});
+
+test("rejects an event transaction while the account is migrating", async () => {
+  const firestore = getFirestore(getTestFirebaseAdminApp());
+  const account = newHostedVaultAccountRecord(
+    {
+      authIssuer: "https://securetoken.google.com/metabook-system",
+      authSubject: "testUserID",
+      emailAddress: "user@example.test",
+      registrationTimestampMillis: 1_615_510_817_519,
+      mode: "legacy",
+    },
+    "hosted-test-account",
+  );
+  await firestore.doc("hostedVaultAccounts/testUserID").set({
+    ...account,
+    migration: {
+      mode: "migrating",
+      jobID: "migration-test",
+      startedAtTimestampMillis: Date.now(),
+      sourceWatermarkOrderedID: null,
+    },
+  });
+  const events = createTestTaskIngestEvents(1);
+
+  expect(
+    (
+      await fetchRoute(`/api/events`, {
+        method: "PATCH",
+        json: events,
+        authorization: { token: "test" },
+      })
+    ).status,
+  ).toBe(409);
+  const listed = await fetchRoute(`/api/events`, {
+    method: "GET",
+    authorization: { token: "test" },
+  });
+  expect(listed.body.items).toEqual([]);
 });
 
 describe("[GET] validation", () => {

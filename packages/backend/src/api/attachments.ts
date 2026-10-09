@@ -12,6 +12,10 @@ import {
   storeAttachment as _storeAttachment,
   storeAttachmentAtURLIfNecessary,
 } from "../attachments.js";
+import {
+  LegacyWritesDisabledError,
+  legacyWritesPermitted,
+} from "../db/hostedVaultAccounts.js";
 
 export const getAttachment: TypedRouteHandler<
   OrbitAPI.Spec,
@@ -40,6 +44,7 @@ export const ingestAttachmentsFromURLs: TypedRouteHandler<
   "/attachments/ingestFromURLs",
   "POST"
 > = authenticatedRequestHandler(async (request, userID) => {
+  if (!(await legacyWritesPermitted(userID))) return { status: 409 };
   const entries = request.body;
   const ingestEvents: AttachmentIngestEvent[] = [];
   for (const { url, id } of entries) {
@@ -61,7 +66,14 @@ export const ingestAttachmentsFromURLs: TypedRouteHandler<
     }
   }
 
-  await putAndLogEvents(userID, ingestEvents);
+  try {
+    await putAndLogEvents(userID, ingestEvents);
+  } catch (error) {
+    if (error instanceof LegacyWritesDisabledError) {
+      return { status: 409 };
+    }
+    throw error;
+  }
 
   return {
     status: 204,
@@ -73,6 +85,7 @@ export const storeAttachment: TypedRouteHandler<
   "/attachments/:id",
   "POST"
 > = authenticatedRequestHandler(async (request, userID) => {
+  if (!(await legacyWritesPermitted(userID))) return { status: 409 };
   // TODO: rate limit storage...
   const mimeType = request.body.file.type;
   const buffer = new Uint8Array(await request.body.file.arrayBuffer!());

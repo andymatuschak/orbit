@@ -39,6 +39,9 @@ export function createAPIApp(): express.Application {
   morganBody(app, {
     maxBodyLength: 10000,
     noColors: true,
+    // Auth routes exchange opaque access, Firebase, and login tokens. Their
+    // status is observable without ever serializing either side of the body.
+    skip: (request) => shouldSkipBodyLogging(request.path),
   }); // Log request and response data.
 
   createTypedRouter<OrbitAPI.Spec>(app, routeValidator, {
@@ -66,16 +69,20 @@ export function createAPIApp(): express.Application {
       validateResponse: () => true,
     },
     {
-      "/internal/auth/consumeAccessCode": { GET: consumeAccessCode },
+      "/internal/auth/consumeAccessCode": { POST: consumeAccessCode },
       "/internal/auth/personalAccessTokens": { POST: personalAccessTokens },
     },
   );
 
   // These older auth APIs need some rethinking...
-  app.get("/internal/auth/createLoginToken", createLoginToken);
-  app.get("/internal/auth/refreshSessionCookie", refreshSessionCookie);
+  app.post("/internal/auth/createLoginToken", createLoginToken);
+  app.post("/internal/auth/refreshSessionCookie", refreshSessionCookie);
 
   app.post("/internal/recordPageView", recordPageView);
 
   return app;
+}
+
+export function shouldSkipBodyLogging(path: string) {
+  return path === "/internal/auth" || path.startsWith("/internal/auth/");
 }

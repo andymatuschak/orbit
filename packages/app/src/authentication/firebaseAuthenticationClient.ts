@@ -39,10 +39,10 @@ export class FirebaseOpaqueIDToken {
   }
 }
 
-export default class FirebaseAuthenticationClient
-  implements
-    AuthenticationClient<FirebaseOpaqueLoginToken, FirebaseOpaqueIDToken>
-{
+export default class FirebaseAuthenticationClient implements AuthenticationClient<
+  FirebaseOpaqueLoginToken,
+  FirebaseOpaqueIDToken
+> {
   private _auth: FirebaseAuth; // access through auth()
   private authConfigurationPromise: Promise<void>;
 
@@ -94,6 +94,9 @@ export default class FirebaseAuthenticationClient
 
   async getUserAuthState(): Promise<UserRecord | null> {
     const auth = await this.auth();
+    // A selected on-disk vault may open before Firebase restores its user.
+    // Null during restoration is not an account change or an explicit logout.
+    await auth.authStateReady();
     return FirebaseAuthenticationClient.getUserRecordForFirebaseUser(
       auth.currentUser,
     );
@@ -127,6 +130,7 @@ export default class FirebaseAuthenticationClient
 
   async getCurrentIDToken(): Promise<FirebaseOpaqueIDToken> {
     const auth = await this.auth();
+    await auth.authStateReady();
     const currentUser = auth.currentUser;
     if (currentUser) {
       const idToken = await currentUser.getIdToken(true);
@@ -139,6 +143,7 @@ export default class FirebaseAuthenticationClient
   async getLoginTokenUsingSessionCookie(): Promise<FirebaseOpaqueLoginToken> {
     const fetchResult = await fetch(
       `${serviceConfig.httpsAPIBaseURLString}/internal/auth/createLoginToken`,
+      { method: "POST" },
     );
     if (fetchResult.ok) {
       const loginToken = await fetchResult.text();
@@ -156,7 +161,11 @@ export default class FirebaseAuthenticationClient
     idToken: FirebaseOpaqueIDToken,
   ): Promise<FirebaseOpaqueLoginToken> {
     const fetchResult = await fetch(
-      `${serviceConfig.httpsAPIBaseURLString}/internal/auth/createLoginToken?idToken=${idToken._token}`,
+      `${serviceConfig.httpsAPIBaseURLString}/internal/auth/createLoginToken`,
+      {
+        method: "POST",
+        headers: { Authorization: `ID ${idToken._token}` },
+      },
     );
     if (fetchResult.ok) {
       const loginToken = await fetchResult.text();
@@ -180,7 +189,11 @@ export default class FirebaseAuthenticationClient
 
   async getLoginTokenUsingAccessCode(accessCode: string) {
     const fetchResult = await fetch(
-      `${serviceConfig.httpsAPIBaseURLString}/internal/auth/consumeAccessCode?accessCode=${accessCode}`,
+      `${serviceConfig.httpsAPIBaseURLString}/internal/auth/consumeAccessCode`,
+      {
+        method: "POST",
+        headers: { Authorization: `Token ${accessCode}` },
+      },
     );
     if (fetchResult.ok) {
       const loginToken = await fetchResult.text();
@@ -196,7 +209,11 @@ export default class FirebaseAuthenticationClient
 
   async refreshSessionCookie(idToken: FirebaseOpaqueIDToken): Promise<unknown> {
     const fetchResult = await fetch(
-      `${serviceConfig.httpsAPIBaseURLString}/internal/auth/refreshSessionCookie?idToken=${idToken._token}`,
+      `${serviceConfig.httpsAPIBaseURLString}/internal/auth/refreshSessionCookie`,
+      {
+        method: "POST",
+        headers: { Authorization: `ID ${idToken._token}` },
+      },
     );
     if (!fetchResult.ok) {
       throw new Error(
