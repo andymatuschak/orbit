@@ -192,3 +192,75 @@ candidate exactly, and the working tree must be clean. Local `master` and
 `codex/automerge-pre-final-review-20261009` remain intact. This is a review
 history operation, not a deployment or proof that every intermediate commit
 passed the full suite.
+
+## Build 56 opening reproduction (2026-10-10)
+
+Chonk still had build 56 installed; the cleanup candidate had not been deployed.
+A read-only copy of its Repo files and selected vault registry contained 74
+readable Automerge documents, including the root, a 10,867-entry catalog, and
+71 task documents. Original build-56 decoders accepted the root, every catalog
+entry, and every cached task; current decoders accepted the tasks too. No
+root, catalog-entry, or task conflicts were found. Three of the first 50
+selected task documents were absent locally.
+
+With those captured bytes, the original TypeScript repository/bootstrap fails
+opening when connection fails, or when connection succeeds but those three
+fetches fail. The current shared repository/bootstrap displays the 47 cached
+reviews under both conditions without writing anything. This proves the
+complete-working-set startup problem and the candidate's local-first behavior;
+it does not identify the actual online fetch failure or reproduce Repo Swift's
+internal fetch state.
+
+Release requires updated native, browser, and server readers before new catalog
+writes. The candidate omits obsolete `nextComponentID` and
+`legacyImportReceipts` fields; build 56 and the old server/browser decoders
+require them. New readers accept the existing extra fields, so the vault files,
+root binding, and review history can remain unchanged. An old-image-only
+rollback after new writes is not a safe compatibility assumption.
+
+The public publisher check also found a mismatched deployed pair:
+`js.withorbit.com/orbit-web-component.js` still uses the 2021 unversioned
+`onLoad` protocol and points to `withorbit.com/embed`, which already serves a
+protocol-1 iframe. The new protocol-1 publisher must accompany the thin iframe;
+legacy-account API tests alone do not prove publisher wire compatibility.
+Firebase multi-site publication is coordinated, not atomic, so both served
+artifacts require verification after release. Old open pages need reloading.
+
+### Prepared artifacts
+
+These artifacts are local candidates, not deployment or device acceptance:
+
+- Orbit 1.0.0 (57), native runtime from `40088612`: app and widget both carry
+  build 57, their ad-hoc profiles include Chonk, and signature verification
+  passes. IPA SHA-256:
+  `95aecce0e05d8a68a2143a369371559c2f23c8031a9d80642ea9503361e36f3a`.
+- The app web export enables hosted sync for Andy only at the existing
+  `sslip.io` origin. Its 68 publishable files total 8,740,452 bytes; source maps
+  are excluded. The ordered path/content manifest SHA-256 is
+  `7ad495551ae3de2982529d6846d97ce2b10557273fdcdfbf20a440750c026957`.
+- The matching publisher script is 17,743 bytes, SHA-256
+  `8b0608556987b55ee12abb2ecba1bbe662d54d9d984887084eb75bdd14b8ba7e`;
+  its source map is excluded from publication.
+- Server runtime from `1db3131f`, local image ID
+  `sha256:9d7eda65b27c3bc3ba34603a47da4f7e33f43de183f5e076e803a8349aaa8cec`:
+  Linux/AMD64, Node 22.23.3, non-root UID 65532. This is a local image ID, not
+  a published registry digest. Updated OpenSSL runtime, grpc-js, and
+  brace-expansion pins clear the four fixed HIGH findings. The fresh scan
+  reports no fixed HIGH/CRITICAL findings or secrets. The patched modules are
+  absent from the client runtime bundles, so native/web artifacts are unchanged.
+
+After those dependency updates, frozen install, workspace build, lint, all 439
+non-backend unit tests (one existing skip), and all 94 emulator-backed backend
+tests passed. The exact image passed all 32 integrations and both
+old-extra-field/current catalog codec checks. Native release preflight and the
+Swift widget writer regression also passed. The existing live vault and its
+root binding have not changed.
+
+Actual Chrome also passed the byte-identical frozen publisher/iframe pair:
+bootstrap, attachment-byte image display, anonymous reviews/retry across
+sections, and progress discarded on reload. Requests and analytics were
+intercepted locally; no live review writes occurred, and no Worker/SharedWorker
+or Orbit review database was opened. The legacy-account emulator gate passed
+reminder-link cases and new/existing-account submission with independent
+attachment API verification. These are local release gates, not served-artifact
+or physical-device acceptance.

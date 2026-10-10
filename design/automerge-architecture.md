@@ -131,12 +131,13 @@ not a user-facing reload requirement. There is no live account-state broadcast,
 WebSocket subscription, or polling loop in an embed. Ordinary `/review` and the
 native app keep their local-first Repo synchronization.
 
-The updated publisher component is needed for article-wide anonymous relay.
-Protocol version 1 retains the existing ready/configuration/order/attachment
-shapes; an older cached publisher can still bootstrap a thin iframe and supply
-attachments, but cannot provide the new page-wide progress relay. Release the
-publisher component and embed app together for the complete behavior. Previously
-stored anonymous journals are intentionally ignored, not converted or drained.
+Release the protocol-1 publisher component and embed app together. Earlier
+protocol-1 publishers retain bootstrap/order/attachment compatibility but do not
+relay anonymous progress across sections. The public 2021 publisher uses a
+different, unversioned `onLoad` protocol and cannot bootstrap a protocol-1
+iframe; cached or already-open copies need a page reload after the script cache
+expires. Previously stored anonymous journals are intentionally ignored, not
+converted or drained.
 
 ### Launch performance baseline
 
