@@ -25,7 +25,8 @@
   },
   "overrides": {
     "@expo/metro-runtime": "57.0.15",
-    "brace-expansion": "2.1.4",
+    "@grpc/grpc-js": "1.14.5",
+    "brace-expansion": "2.1.6",
     "cross-spawn": "7.0.6",
     "expo": "57.0.23",
     "expo-constants": "57.0.17",

@@ -43,7 +43,7 @@ COPY packages/automerge-sync-server/src packages/automerge-sync-server/src
 RUN node node_modules/@typescript/native/bin/tsc -b packages/sample-data/tsconfig.json
 RUN node node_modules/@typescript/native/bin/tsc -b packages/automerge-sync-server/tsconfig.json
 
-FROM gcr.io/distroless/nodejs22-debian13:nonroot@sha256:5e9868cc8ef163e86378ff90de23ca031f5bb8b2023d4f3288a5e740698919d4
+FROM gcr.io/distroless/nodejs22-debian13:nonroot@sha256:7b0a2b9262b3d1d57e139e08fe11bccb0a7d426ca515eab0cd6abcaf2016ae5c
 WORKDIR /srv/orbit
 ENV NODE_ENV=production
 COPY --from=dependencies /srv/orbit/node_modules node_modules
