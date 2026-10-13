@@ -1,314 +1,134 @@
-# Automerge validation record
+# Orbit Lab validation record
 
-These dated checks apply to the source tested at each stage, not automatically
-to later commits or the deployed service. The final review history presents the
-current implementation; this record retains the experiment's validation and
-measurement boundaries. Start with [the review guide](automerge-review-guide.md)
-for the code reading order and current regression gates.
+This is the personal fork's evidence ledger, not the public migration's incident
+history. Public/cloud releases, old build incidents, experiments, and the
+2026-10-12 publisher repair remain preserved on
+`codex/automerge-phase-3-native:design/automerge-validation-record.md`.
+That service remains unchanged by Lab work. Start with
+[the review guide](automerge-review-guide.md) for the current reading path.
 
-Pre-cleanup source and prior history remain recoverable through
-`codex/automerge-pre-final-review-20261009`. Earlier released-build identities
-are retained through `automerge-dogfood-pre-review-20261006` and
-`codex/automerge-pre-review-cleanup-20261006`.
+## 2026-10-13: source and platform boundaries
 
-## Earlier candidate checks
+Implemented the independent paired client and single-user server. Client
+runtime no longer imports Firebase, legacy stores/sync, embeds, reminder
+settings, analytics, or public API fallback. The saved selection uses a fresh
+Lab namespace and is the only startup source. Native sync uses the paired
+Bearer header; browser admission precedes Repo bytes. Shortcuts ingestion and
+the SQL image loader were removed; the widget uses `OrbitAppGroup` and its
+existing shared JSON helper.
 
-Baseline verification before this consolidation (2026-10-06): full workspace build, app typecheck,
-lint, frozen offline install, 374 non-backend tests, 94 emulator-backed backend
-tests, 14 real-server integration cases, the actual Chrome hosted lifecycle
-suite, and the Release Simulator hosted-fetch/convergence/repair gate passed.
-The production AMD64 image is also built from clean source, not local `dist`.
-This is evidence for the cleaned tree, not a claim about intermediate commits
-or the currently deployed candidate.
+Confirmed checks:
 
-Shared-store/JSON consolidation verification on 2026-10-08: workspace build,
-app typecheck, lint, 401 non-backend tests, 16 real-server integration cases,
-the five-case durability/convergence subset, and the actual Chrome hosted
-lifecycle suite passed. Release Simulator gates passed cold loading, durable
-reviews, warm remote convergence, pre-connection catalog repair, and offline
-widget-review import/acknowledgement verified by an independent file reader.
-An additional install-over-data check recovered the exact pending review that
-first exposed the uncached-tail bug, with exactly one durable observation and
-no reseed or journal clearing. Actual
-Home Screen WidgetKit tests passed two Reveal/review pairs, Markdown layout,
-and link rendering. Swift 6 tests exercised coordinated independent-process
-writes, interruption/replay, selective acknowledgement, and old-widget recovery.
-This is local source validation, not a deployment or new Chonk measurement.
+- App typecheck and app/plugin lint passed.
+- 82 app/plugin tests passed, including review reconciliation, admission,
+  native local-first opening, widget import/acknowledgement, and math layout.
+- The browser Repo test cold-opens cached prompts without a reachable peer,
+  durably records an offline review, shuts down, reopens, and reads its exact
+  observation. A catalog with no local prompts reports unavailable data rather
+  than a false empty queue.
+- Scene lifecycle tests passed. Changed Swift sources parse and the widget
+  Info.plist validates.
+- The real Swift JSON writer and three-process handoff suite passed: publication/
+  review races, eight interrupted writes, acceptance/import crash replay,
+  selective acknowledgement, and malformed-journal preservation. Foundation
+  temporary-file writes required a narrow sandbox exception; no app/vault data
+  was touched by those tests.
 
-Bounded deletion/ownership pass on 2026-10-08: runtime-source inventory fell
-from 39,323 to 38,086 physical lines (including comments and blanks), a net
-reduction of 1,237. This inventory includes untracked source and classifies
-tests, fixtures, tools, and documentation separately. Local `master` has
-22,179 runtime lines, so the branch still adds 15,907; this pass does not prove
-the migration is a net complexity reduction. Its substantive gains were fewer
-authorities: one domain repository, one review facade, and the coordinated widget
-JSON handoff. That snapshot still contained the worker-owned embed subsystem,
-which the subsequent thin-client integration removes.
+Native acceptance below extends these component proofs. Home Screen interaction
+and Chonk installation remain separate gates.
 
-The pass retained accepted-review durability and legacy-account compatibility,
-removed unsupported API branches rather than adding replacement abstractions,
-and fixed missed notifications, delayed widget-ack ordering, registration
-retry suppression, and double legacy scheduling application after ambiguous
-acknowledgement. Unsupported schedulers still fail before document creation.
-The server convergence test now waits for exact task/catalog head parity on
-both replicas: task convergence alone is not an atomic catalog-sync boundary.
-The per-task offline convergence case passed five consecutive independent runs.
+## Data boundary
 
-Pre-thin-embed local gates: workspace build, app typecheck, lint, 425 non-backend tests,
-16 server integration cases, the five-case durability/convergence subset,
-actual Chrome legacy and hosted flows (including two-area peer retries in both
-owner modes), Swift widget reader/writer/multiprocess handoff checks, and the
-Release Simulator cold/warm, repair, and offline widget-import gate passed.
-The final browser artifact builds and its exported reminder-link gate passes.
-No deployment, commit, history rewrite, or new Chonk measurement occurred.
+The original service was captured read-only and independently validated:
+10,867 tasks, 109,970 observations, and 69 attachments (about 9.17 MB of attachment
+bytes). A read-only Chonk capture contained 76 task documents and 1,772
+observations; its captured review tail was already included in the server corpus.
+The independent seed preserves those counts, recent review IDs, scheduling,
+definitions, and verified attachment bytes, while creating new vault and document
+identities. Its semantic SHA-256 matches the capture:
+`0a95a383d5d15948660d834802f26888bf4c57389e52937ff9f3bf6c546f5f16`.
+A quiesced snapshot restored into a new temporary directory and exported with
+that same digest. The protected data/configuration/recovery directory is
+`~/Library/Application Support/Orbit Lab`; no live bridge exists. The old phone
+Repo, selection record, and complete reachable App Group were captured without
+clearing them. CoreDevice exports only the App Group's Library/Documents/tmp
+directories: its restriction prevents independently reading the root-level
+handoff JSON, so absence from that capture does not establish an empty outbox.
+The handoff file was not deleted; the shared writer preserves pending entries
+when publishing the new vault's queue.
 
-Consolidated local candidate (2026-10-09): the thin embed and direct-Repo ownership
-changes are in the main source tree. Workspace build, app typecheck, lint, frozen
-offline install, 430 non-backend tests (one existing skip), 16 Node server
-integration cases, the five-case durability/convergence subset, actual Chrome
-legacy and hosted flows, production web export, and exported reminder-link
-fallback passed locally. The browser gate includes single-click focus/reveal,
-offline failure/online retry with exactly one stored review, image upload,
-existing-account preservation, CRUD, and immediate cold reopening after catalog
-rollover. The Release Simulator gate passed cold working-set loading, real
-Reveal/Remembered interactions, remote convergence, catalog repair, and offline
-widget-review import/acknowledgement against independently reopened Repo files.
-It was rerun after clean Expo/Pods regeneration removed old-widget build wiring,
-with dependency pins unchanged. Swift checks passed current JSON reads/writes,
-independent-process races, interruption/replay, and selective acknowledgement.
-No UI fixture branches or production account writes were used.
+## Local end-to-end proofs
 
-The exported embed route does not load the Automerge/Wasm chunk; ordinary
-`/review` still uses it. The shared Expo/auth/UI entry bundle remains substantial,
-so the thin-client change is not a claim that the whole web artifact is small.
-The thin embed removed roughly 2,000 net runtime lines. The subsequent direct-Repo,
-shared-server ownership, quota-queue, and old-format deletion pass removed another
-652, from 36,154 to 35,502 physical runtime lines, including untracked source.
-Local `master` (`1873018d`) has 22,179; the branch still adds 13,323 runtime lines,
-excluding tests, tools, and docs. No deployment, commit, or new Chonk measurement
-occurred.
+- The retained build, app typecheck, lint, 177 unit/operator tests, and 13 server/
+  update integration tests pass. Test servers use disposable loopback data.
+- The browser smoke passed twice in fresh real Chrome contexts: ordinary pairing,
+  Reveal/Remembered, backend shutdown, cold page reopen and offline review,
+  restart/reconnect, and exact observation delivery. Public HTTP/WebSocket calls
+  were blocked and none were attempted.
+  The final pass also observes browser-level script/image/font traffic, not only
+  fetch/WebSocket calls. It passed after removing the obsolete public Sentry HTML
+  template.
+- The Release Simulator binary cold-launches its embedded bundle with Metro and
+  the backend absent. Two UI-driven reviews survive restart in ordinary files.
+- Expo downloaded checkpoint A and cold-launched it with the backend stopped.
+  Checkpoint B's visible JavaScript menu change appeared through explicit reload,
+  without reinstalling the app. Native cache IDs and successful-launch counters
+  confirm which bundle ran; there is no custom bundle loader.
+- Candidate C's native 20 MiB asset transfer was interrupted after 10,878,976
+  bytes. Expo kept C unlaunchable and cold-launched completed B offline. An
+  incompatible runtime received no-update and downloaded zero assets.
+- Clean checkpoints use private Tailscale HTTPS assets and have successfully
+  launched in the Simulator. Actual iOS export/publication measured roughly
+  10–24 seconds. Updates are never automatically applied mid-session.
+- In a separate three-task fixture, the actual Repo Swift bridge syncs an ordinary
+  UI review to an independent JavaScript Repo; a JavaScript review advances the
+  already-open native queue. A cached PNG task remains reviewable offline. Its
+  third review and verified PNG bytes survive process death; reconnect delivers
+  all three exact observation IDs once to a fresh JavaScript peer.
+- The checked-in `run_ios_review_smoke.sh` repeated that full three-task gate
+  successfully using AXe controls and disposable ordinary Repo files. It also
+  checked visible image pixels, verified the native bytes independently, and
+  restored the previous Simulator selection. No personal reviews were created.
+- `lab:dev` ran against the private corpus. Two source edits triggered sequential
+  compiler/watch restarts; each new backend acquired the released writer lock.
+  Graceful stop removed the lock, and restarting kept the same Repo storage
+  identity. The normal private route was restored after the disposable test.
+- Private Tailscale Serve is configured at `https://slab.tail0da701.ts.net` for
+  sync/updates and port 8443 for Metro/web. Chonk is confirmed online on Andy's
+  personal tailnet. Public Funnel is not enabled.
 
-Final bounded ownership/enrollment pass (2026-10-09): the database opens directly,
-the native document adapter owns its subscriptions, and hosted opening carries
-one registry entry. Unused repository APIs and forwarding wrappers are gone.
-Explicit, one-account reminder enrollment is separate from routine startup;
-malformed optional mail configuration does not take down sync, while a corrupt
-reminder database still fails. Workspace build, app typecheck, lint, 434
-non-backend unit tests (one existing skip), 20 real-server integration cases,
-the five-case durability/convergence subset, actual Chrome legacy/hosted flows,
-production web export, and exported reminder-link fallback passed. The Release Simulator
-gate passed real review controls, cold working-set fetch, warm remote updates,
-pre-connection catalog repair, and independently verified offline widget import.
-Runtime inventory fell another 161 lines, from 35,502 to 35,341; the branch still
-adds 13,162 runtime lines over local `master`. Android's legacy behavior was not
-changed. No deployment, live enrollment, commit, or Chonk measurement occurred.
+These prove native offline code/data and convergence in the Simulator, not
+physical Home Screen WidgetKit acceptance. The locally signed iPhone shell has
+the existing team, bundle ID, App Group, private update URL, matching runtime,
+and a profile permitting Chonk. It was installed over build 56 without an
+uninstall, after priming a new store with 50 due tasks and all 69 attachments
+(121 verified ordinary-file snapshots, about 10.06 MB). The old selection
+records/files remain; Andy confirmed the app and existing widget display prompts.
+Physical review/rollover/offline acceptance is not inferred from that confirmation.
+Chonk's copied Expo database confirms checkpoint
+`5fb0b238-d732-4248-a549-790ce3adfa58` is fully downloaded; its actual launch is
+still a separate check.
 
-## Community Repo Swift patch evaluation (2026-10-09)
+## Source reduction
 
-Tested [the community fix for failed peerless fetches](https://github.com/holosinc/automerge-repo-swift/commit/f0d70f05f38f4047dda34cb5124c49c0d406319a)
-against Orbit's pinned upstream `0.3.2` (`cdeb8053c3aa2510189429d717ab09e70f134716`).
-The source and added test matched the exact commit; temporary checkouts kept
-Orbit's dependency pin and runtime source unchanged.
+The preserved migration branch remains available; Lab removes those retired
+responsibilities rather than disabling a second product behind flags. Counting
+tracked package TS/TSX/JS/MJS/Swift lines (including comments/blanks), excluding
+scripts, Expo plugins, tests, fixtures, stories, and testing helpers, the retained
+runtime decreases from 37,375 to 17,284 lines. This is a whole-tree measurement,
+not the size of newly added Automerge code. Generated/ignored build artifacts and
+private vaults are not part of the count or the commits.
 
-- The added regression assertion fails on baseline and passes with the patch.
-  Both focused `RepoFindTest` cases pass with the patch.
-- Existing `testFind_nonsharing` and `testFindFail` pass on baseline but crash
-  under the patch's debug assertions. A peer's unavailable response already
-  transitions the handle; the new catch transitions it again, violating
-  `markDocUnavailable`'s requirement that the handle still be requesting.
-- A failed peerless lookup still cannot be retried after connecting to a peer
-  that serves documents only on request. A fresh URL fetch succeeds, but the
-  previously attempted URL remains unavailable without sending a new request.
-- The original baseline suite completed 41 tests: 40 passed and one existing
-  `testFind_sharing` observer timeout failed. That timeout is not evidence of a
-  patch regression; the deterministic assertion failures above are.
-- The patched Release Simulator gate passed cold fetching from a 10,867-entry
-  catalog, real review controls, warm convergence, remote-only catalog conflict
-  repair, and independently verified offline widget import. Orbit's
-  connect-before-remote-fetch guard remained intact throughout this gate.
+## Gates still open
 
-Do not adopt this patch as-is or remove the guard on this evidence. The fix is
-useful evidence for [upstream issue #126](https://github.com/automerge/automerge-repo-swift/issues/126),
-but its new repeated-unavailable transition needs correction. Explicit retry
-remains a separate limitation that prevents removing Orbit's fetch-order guard.
-It also does not address the separate local-handle discovery/reconnect behavior.
-No Chonk testing or deployment occurred in this experiment.
+- Run the actual Home Screen widget Reveal/review flow on the Lab binary.
+- Repeat physical-device bidirectional/offline/widget and native checkpoint tests
+  on the installed Lab app.
+- Finish the physical edit/checkpoint/download/refresh loop on Chonk.
+- Retire the old cloud dogfood serving stack after these physical cutover gates,
+  as explicitly approved in the plan; preserve recovery data and public Firebase.
 
-## Final review candidate (2026-10-09)
-
-The bounded final cleanup removed unused attachment-head output, binary-store
-listeners, catalog component ordering, widget render scheduling fields, and a
-test-only coordinator API. Attachment verification remains shared and checks
-the decoded bytes, hash, length, and MIME type. Current catalogs containing an
-extra obsolete component field remain readable without a migration.
-
-Admission regressions first reproduced stalled native token verification and
-account lookup exceeding the configured deadline. Browser late results also
-double-counted rejection. Both admission forms now share deadline/cleanup
-handling; late completion cannot attach closed sockets. Normal native header
-authentication and eager Repo `join` are unchanged.
-
-Checks on the final runtime source passed:
-
-- Workspace build, app typecheck, lint, and frozen offline install.
-- 439 non-backend unit tests, with one existing skip; 94 emulator-backed
-  backend tests with mocked email.
-- All 32 real-server integration cases (including nested admission cases and
-  their parent tests), plus the five-case durability/convergence subset.
-- Actual Chrome legacy and hosted flows: normal review UI, page-memory
-  anonymous reload/retry/relay, new/existing-account submission, independent
-  store and attachment verification, CRUD, and immediate cold reopening after
-  catalog rollover.
-- Production web export and actual Chrome exported reminder-link fallback and
-  stable URL cleanup.
-- Release Simulator cold working-set fetch, warm remote convergence,
-  pre-connection remote-only catalog repair, and offline widget review
-  import/acknowledgement verified by an independent reader.
-- Swift reader/writer and cross-process JSON handoff tests: races, eight
-  interrupted writes, crash replay, selective account acknowledgement, and
-  malformed-journal preservation.
-- Actual Home Screen WidgetKit gates on the same Release Simulator build:
-  Reveal remained on each prompt, two reviews advanced to the third prompt
-  with matching outbox records, Constitution/About Face Markdown used the
-  available space, and a Markdown link rendered its underlined label without
-  raw URL or Markdown syntax.
-
-The Simulator used the clean pinned upstream Repo Swift `0.3.2` checkout
-(`cdeb8053c3aa2510189429d717ab09e70f134716`), not the temporary community patch.
-No deployed image, released build, live account, or Chonk data changed.
-
-A consistent final inventory counts physical TS/JS/Swift runtime lines,
-including comments and blanks, and separates tests, scripts/fixtures, operator
-tools, and documentation. Local `master` has 22,235 runtime lines; the
-pre-final-review snapshot has 35,447; this candidate has 35,333. The bounded
-pass removes 114 runtime lines and leaves a net addition of 13,098 over local
-`master`. Earlier dated figures used a slightly different classification and
-remain historical measurements, not directly comparable totals.
-
-The final source is preserved on `codex/automerge-final-candidate-20261009`.
-The linear reconstruction uses only baseline-to-final file changes, omitting
-discarded branch-only implementations. Its final Git tree must match that
-candidate exactly, and the working tree must be clean. Local `master` and
-`codex/automerge-pre-final-review-20261009` remain intact. This is a review
-history operation, not a deployment or proof that every intermediate commit
-passed the full suite.
-
-## Build 56 opening reproduction (2026-10-10)
-
-Chonk still had build 56 installed; the cleanup candidate had not been deployed.
-A read-only copy of its Repo files and selected vault registry contained 74
-readable Automerge documents, including the root, a 10,867-entry catalog, and
-71 task documents. Original build-56 decoders accepted the root, every catalog
-entry, and every cached task; current decoders accepted the tasks too. No
-root, catalog-entry, or task conflicts were found. Three of the first 50
-selected task documents were absent locally.
-
-With those captured bytes, the original TypeScript repository/bootstrap fails
-opening when connection fails, or when connection succeeds but those three
-fetches fail. The current shared repository/bootstrap displays the 47 cached
-reviews under both conditions without writing anything. This proves the
-complete-working-set startup problem and the candidate's local-first behavior;
-it does not identify the actual online fetch failure or reproduce Repo Swift's
-internal fetch state.
-
-Release requires updated native, browser, and server readers before new catalog
-writes. The candidate omits obsolete `nextComponentID` and
-`legacyImportReceipts` fields; build 56 and the old server/browser decoders
-require them. New readers accept the existing extra fields, so the vault files,
-root binding, and review history can remain unchanged. An old-image-only
-rollback after new writes is not a safe compatibility assumption.
-
-The public publisher check also found a mismatched deployed pair:
-`js.withorbit.com/orbit-web-component.js` still uses the 2021 unversioned
-`onLoad` protocol and points to `withorbit.com/embed`, which already serves a
-protocol-1 iframe. The new protocol-1 publisher must accompany the thin iframe;
-legacy-account API tests alone do not prove publisher wire compatibility.
-Firebase multi-site publication is coordinated, not atomic, so both served
-artifacts require verification after release. Old open pages need reloading.
-
-### Prepared artifacts
-
-These artifacts are local candidates, not deployment or device acceptance:
-
-- Orbit 1.0.0 (57), native runtime from `40088612`: app and widget both carry
-  build 57, their ad-hoc profiles include Chonk, and signature verification
-  passes. IPA SHA-256:
-  `95aecce0e05d8a68a2143a369371559c2f23c8031a9d80642ea9503361e36f3a`.
-- The app web export enables hosted sync for Andy only at the existing
-  `sslip.io` origin. Its 68 publishable files total 8,740,452 bytes; source maps
-  are excluded. The ordered path/content manifest SHA-256 is
-  `7ad495551ae3de2982529d6846d97ce2b10557273fdcdfbf20a440750c026957`.
-- The matching publisher script is 17,743 bytes, SHA-256
-  `8b0608556987b55ee12abb2ecba1bbe662d54d9d984887084eb75bdd14b8ba7e`;
-  its source map is excluded from publication.
-- Server runtime from `1db3131f`, local image ID
-  `sha256:9d7eda65b27c3bc3ba34603a47da4f7e33f43de183f5e076e803a8349aaa8cec`:
-  Linux/AMD64, Node 22.23.3, non-root UID 65532. This is a local image ID, not
-  a published registry digest. Updated OpenSSL runtime, grpc-js, and
-  brace-expansion pins clear the four fixed HIGH findings. The fresh scan
-  reports no fixed HIGH/CRITICAL findings or secrets. The patched modules are
-  absent from the client runtime bundles, so native/web artifacts are unchanged.
-
-After those dependency updates, frozen install, workspace build, lint, all 439
-non-backend unit tests (one existing skip), and all 94 emulator-backed backend
-tests passed. The exact image passed all 32 integrations and both
-old-extra-field/current catalog codec checks. Native release preflight and the
-Swift widget writer regression also passed. The existing live vault and its
-root binding have not changed.
-
-Actual Chrome also passed the byte-identical frozen publisher/iframe pair:
-bootstrap, attachment-byte image display, anonymous reviews/retry across
-sections, and progress discarded on reload. Requests and analytics were
-intercepted locally; no live review writes occurred, and no Worker/SharedWorker
-or Orbit review database was opened. The legacy-account emulator gate passed
-reminder-link cases and new/existing-account submission with independent
-attachment API verification. These are local release gates, not served-artifact
-or physical-device acceptance.
-
-## Public publisher repair (2026-10-12)
-
-[Issue #300](https://github.com/andymatuschak/orbit/issues/300) exposed the
-deployed mismatch recorded above: the 2021 publisher waited for `onLoad`, while
-the live iframe sent protocol-1 `ready`. The iframe never received its initial
-configuration. This was a served-pair release failure, not evidence that a
-user's vault was corrupt.
-
-Published **only `orbit-js`**, using publisher and IPC sources from `95ddb616`
-with unchanged shared helpers and installed build dependencies. The latest
-thin publisher was not suitable for this narrow repair: its fallback path is
-incompatible with the currently served heavyweight iframe. No app/iframe,
-native, server, IAM, or account data changed.
-
-Acceptance also found a second bug in the historical publisher: its registered
-prompt guard compared raw `JSON.stringify` results. Persistence reordered spec
-keys, so the guard rejected valid post-review updates and cross-section retries
-did not advance. The deployed amendment imports the already-bundled
-`fast-json-stable-stringify` and uses it on both specs in
-`isRegisteredTaskForElement`; it adds no dependency or active legacy code to
-the current thin implementation.
-
-Release receipt:
-
-- Publisher: 26,180 bytes, SHA-256
-  `353fe807811fe23f8a3ca60dc5b1534a34a06ddc7af1f737cd54c53ea5d54913`.
-- Hosting version `6c1f2e464b816b13`, release `1791841413157000`, published
-  `2026-10-12T21:43:33.157Z`. Previous version `a072382351756974` remains
-  available for rollback; the obsolete public source map was omitted.
-- Existing CORS and cache policy preserved: origin `*`;
-  `public, max-age=300, s-maxage=31536000`.
-
-Actual Chrome passed the public publisher/live iframe pair **without artifact
-substitution**, both with SharedWorker and with SharedWorker disabled: two
-sections bootstrap; image bytes render; Reveal, Forgotten, and Remembered
-work; a forgotten prompt is retried across sections; completing it updates
-both sections; and anonymous progress survives reload. Fresh isolated browser
-contexts blocked external POSTs and sockets, so no live account writes were
-made. The controls were tested with both sections visible in a tall viewport;
-scrolled, shorter-viewport input delivery was not verified.
-
-The reporter's current Qni page now uses its own quiz implementation and no
-longer requests the Orbit publisher or iframe, so that page cannot validate
-this repair. The served-pair fixture reproduces the original embedding shape.
-The newer thin candidate still requires a coordinated publisher/iframe release,
-with actual public-URL acceptance as a release gate. Existing open pages need
-reloading to use the repaired publisher.
+No Lab TestFlight/Firebase publication or cloud decommissioning is implied by
+this record. The locally signed phone installation above is explicit. Update
+the record with concrete receipts as
+each gate completes; do not reuse old public-release acceptance as Lab proof.

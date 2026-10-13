@@ -1,6 +1,6 @@
 # Personal Orbit Lab implementation plan
 
-Proposed scope, 2026-10-13. Orbit Lab is Andy's single-user iOS and web fork,
+Approved scope, 2026-10-13. Orbit Lab is Andy's single-user iOS and web fork,
 served by his laptop over Tailscale. Public Orbit stays on its existing
 deployment. The goal is a short edit, test, and try loop with reliable offline
 phone reviews, not a general self-hosting distribution or another public
@@ -10,6 +10,12 @@ Lab replaces Orbit on Chonk. It has an independent vault seeded from a one-time
 export, no live bridge to the original service, and no reminder service.
 Batch export back to the original system remains a possible future operation,
 not a runtime responsibility.
+
+The independent fork is implemented and installed on Chonk. Browser and actual
+Release Simulator durability/convergence/update gates have passed; Andy confirmed
+the app and existing widget display the private queue. Physical review/widget/
+offline/update checks and cloud retirement remain open. See the
+[dated validation record](automerge-validation-record.md) for precise boundaries.
 
 ## Target architecture
 
@@ -307,11 +313,21 @@ Use coherent commits describing the private server, direct client, offline code
 updates, and deletions. Fold temporary scaffolding into the final responsibilities
 so Andy need not review discarded implementations.
 
-The cloud dogfood VM and its existing reminder enrollment stay untouched during
-setup. Decommissioning them is a separate, explicit final action after the
-private export and real-device gates pass. Retained snapshots can remain for
-recovery. Public Orbit's other users and deployed publisher/iframe are out of
-scope for Lab changes.
+### 7 Retire the cloud dogfood deployment
+
+Approved by Andy on 2026-10-13. The cloud dogfood service costs approximately
+$1–2 per day and will have no users after the Lab cutover. Keep it unchanged
+during setup, then shut it down after the private export and real-device gates
+pass. Stop its reminder sender and sync VM, remove the dogfood-only load balancer
+and serving resources that continue to incur charges, and retire the associated
+resource-monitoring automation. Audit exact resource ownership before removal;
+public Orbit's Firebase deployment, publisher/iframe, and other users are out of
+scope. Stopped rollback VMs have no compute charge but their retained disks do.
+
+Preserve the verified offline vault export and recovery snapshot before removing
+any cloud data. Record what was stopped or removed, the remaining recovery
+storage cost, and how the captured vault could be restored. Do not retain an idle
+serving stack merely as rollback material.
 
 ## Completion criteria
 
