@@ -104,10 +104,21 @@ and a profile permitting Chonk. It was installed over build 56 without an
 uninstall, after priming a new store with 50 due tasks and all 69 attachments
 (121 verified ordinary-file snapshots, about 10.06 MB). The old selection
 records/files remain; Andy confirmed the app and existing widget display prompts.
-Physical review/rollover/offline acceptance is not inferred from that confirmation.
+Physical acceptance is not inferred from that display confirmation alone.
 Chonk's copied Expo database confirms checkpoint
-`5fb0b238-d732-4248-a549-790ce3adfa58` is fully downloaded; its actual launch is
-still a separate check.
+`5fb0b238-d732-4248-a549-790ce3adfa58` cold-launched successfully (three launches,
+zero failures). A temporary private read-only JS audit, using the existing native
+widget reader, then ran as checkpoint `db7a7afb-4a21-45c3-afdc-21d0e97881d7`.
+It confirmed zero pending entries for both the old public vault and the Lab vault.
+No original handoff data was changed; the audit was removed from source and
+replaced by a clean checkpoint.
+
+With the private sync/update route disconnected, Andy completed one app review
+and one widget Reveal/review and confirmed both advanced. Independent decoding
+of Chonk's captured ordinary files confirms two new observations on distinct
+tasks, with distinct stable IDs and the expected app/`WIDGET` session origins.
+The app was then stopped; the bytes remain present. iOS denied its cold relaunch
+while locked, so remote delivery remains to be verified after the next open.
 
 ## Source reduction
 
@@ -127,6 +138,16 @@ private vaults are not part of the count or the commits.
 - Finish the physical edit/checkpoint/download/refresh loop on Chonk.
 - Retire the old cloud dogfood serving stack after these physical cutover gates,
   as explicitly approved in the plan; preserve recovery data and public Firebase.
+
+The old cloud stack has been inventoried read-only. Operator access works and
+public Cloud Functions do not use its dedicated network/service account. Its
+exact running image was streamed into the protected local recovery directory:
+97,260,782 compressed bytes, SHA-256
+`1223244193cf766ddbb7892e51965fef9447d4b1c91801eff30b88528db9d8bd`.
+The image configuration and all 35 layer hashes match; no local Docker image was
+loaded. No cloud container/VM, load balancer, disk, registry, IAM binding, or
+monitoring automation has been changed. A final quiesced source capture and READY
+cutover snapshot are required before destructive retirement.
 
 No Lab TestFlight/Firebase publication or cloud decommissioning is implied by
 this record. The locally signed phone installation above is explicit. Update
