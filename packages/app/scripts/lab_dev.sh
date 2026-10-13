@@ -31,12 +31,15 @@ if curl --silent --max-time 1 "http://127.0.0.1:$service_port/_health" >/dev/nul
 fi
 compiler_pid=""
 backend_pid=""
+metro_pid=""
 cleanup() {
   local status="$?"
   trap - EXIT INT TERM
+  [[ -z "$metro_pid" ]] || kill -TERM "$metro_pid" 2>/dev/null || true
   [[ -z "$compiler_pid" ]] || kill -TERM "$compiler_pid" 2>/dev/null || true
   [[ -z "$backend_pid" ]] || kill -TERM "$backend_pid" 2>/dev/null || true
   [[ -z "$compiler_pid" ]] || wait "$compiler_pid" 2>/dev/null || true
+  [[ -z "$metro_pid" ]] || wait "$metro_pid" 2>/dev/null || true
   # Node's watch supervisor waits for the writer's graceful shutdown before
   # restarting or exiting; don't layer another restart/kill supervisor over it.
   [[ -z "$backend_pid" ]] || wait "$backend_pid" 2>/dev/null || true
@@ -64,4 +67,8 @@ if [[ "$ready" != true ]]; then
 fi
 cd -- "$app_directory"
 node "$repository_directory/node_modules/expo/bin/cli" start \
-  --web --dev-client --host lan --port "$metro_port"
+  --web --dev-client --host lan --port "$metro_port" &
+metro_pid="$!"
+# A builtin wait lets TERM/INT run cleanup immediately; a foreground external
+# command makes Bash defer the trap until Metro eventually exits on its own.
+wait "$metro_pid"

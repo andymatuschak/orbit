@@ -73,6 +73,13 @@ was not run: its Bear/reMarkable and website-publishing stages are outside this
 cutover. No public upload or legacy event-store/cursor changes occurred. Lab's
 loopback and private Tailscale readiness checks pass after restart.
 
+The quiesced check also exposed a development-loop shutdown issue: Bash deferred
+its signal trap while Metro ran as a foreground external command. `lab:dev` now
+tracks Metro and uses builtin `wait`, letting TERM/INT enter cleanup immediately
+and wait for the writer's normal flush. A fresh real loop released its writer
+lock naturally after TERM (about 0.9 seconds); it was restarted and readiness
+checked again. No live lock was deleted or second writer allowed.
+
 ## 2026-10-13: source and platform boundaries
 
 Implemented the independent paired client and single-user server. Client
