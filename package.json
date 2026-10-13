@@ -3,11 +3,21 @@
   "scripts": {
     "build": "node node_modules/@typescript/native/bin/tsc -b packages/tsconfig.json",
     "watch": "node node_modules/@typescript/native/bin/tsc -b -w packages/tsconfig.json",
-    "test:unit": "bun --filter \"!@withorbit/backend\" --sequential test",
-    "test": "bun run test:unit && bun run --cwd packages/backend test",
+    "test:unit": "bun --filter '*' --sequential test",
+    "test": "bun run test:unit && bun run test:integration",
+    "test:integration": "cd packages/automerge-sync-server && bun run test:integration",
     "lint": "cd packages; eslint .",
     "lint:fix": "cd packages; eslint --fix .",
-    "checkall": "bun run lint && bun run build && bun run test"
+    "checkall": "bun run lint && bun run build && bun run test",
+    "lab:checkpoint": "bun packages/app/scripts/lab_checkpoint.ts",
+    "lab:server": "node packages/automerge-sync-server/dist/index.js",
+    "lab:dev": "bash packages/app/scripts/lab_dev.sh",
+    "lab:install": "bash packages/app/scripts/lab_install.sh",
+    "lab:seed": "bun packages/automerge-sync-server/scripts/labSeed.ts seed",
+    "lab:export": "bun packages/automerge-sync-server/scripts/labSeed.ts export",
+    "lab:snapshot": "bun packages/automerge-sync-server/scripts/labSnapshot.ts snapshot",
+    "lab:restore": "bun packages/automerge-sync-server/scripts/labSnapshot.ts restore",
+    "smoke:web": "bun packages/app/scripts/lab_web_smoke.mjs"
   },
   "devDependencies": {
     "@typescript/native": "npm:typescript@7.0.2",
@@ -38,16 +48,13 @@
     "glob": "10.5.0",
     "jws": "4.0.1",
     "react-native": "0.86.3",
-    "websocket-driver": "0.7.5"
+    "websocket-driver": "0.7.5",
+    "expo-updates": "57.0.22"
   },
   "trustedDependencies": [
-    "@sentry/cli",
-    "better-sqlite3",
     "core-js",
     "esbuild",
-    "protobufjs",
-    "remark-wiki-link",
-    "sqlite3"
+    "remark-wiki-link"
   ],
   "workspaces": [
     "packages/*"

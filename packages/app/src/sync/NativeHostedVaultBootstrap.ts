@@ -6,12 +6,12 @@ import {
 } from "@withorbit/store-shared/perTaskRepository";
 import { openNativePerTaskDocuments } from "../vault/createRepo.js";
 import type { NativePerTaskDocuments } from "../vault/nativePerTaskDocuments.js";
-import type { HostedVaultRegistryEntry } from "../vault/vaultRegistry.js";
+import type { LabConnection } from "../vault/labConnection.js";
 import { NativeHostedSyncTransport } from "./NativeHostedSyncTransport.js";
 import { hostedSyncWebSocketURL } from "./HostedVaultClient.js";
 
 export async function openBoundNativeHostedVault(input: {
-  entry: HostedVaultRegistryEntry;
+  entry: LabConnection;
   requestCredential: () => Promise<HostedSyncCredential>;
   transportFactory?: typeof createTransport;
   documentTimeoutMillis?: number;
@@ -130,7 +130,7 @@ export async function openBoundNativeHostedVault(input: {
 }
 
 async function tryOpenNativeVault(
-  entry: HostedVaultRegistryEntry,
+  entry: LabConnection,
   documents: NativePerTaskDocuments,
 ) {
   try {
@@ -155,7 +155,7 @@ async function openNativeVault(
 
 function createTransport(input: {
   documents: NativePerTaskDocuments;
-  entry: HostedVaultRegistryEntry;
+  entry: LabConnection;
   websocketURL: string;
   requestCredential: () => Promise<HostedSyncCredential>;
   documentTimeoutMillis?: number;

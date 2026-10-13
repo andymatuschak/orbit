@@ -9,10 +9,6 @@ repository_directory="$(cd -- "$script_directory/../../.." && pwd)"
 # local-first review acknowledgement boundary and native widget projection
 # before spending time signing or uploading an iOS build.
 cd -- "$repository_directory"
-# Keep the Firebase restoration regression's native-module mock isolated from
-# the other unit tests. A cached root must not turn transient auth null into a
-# failed cold working-set fetch.
-bun test packages/app/src/authentication/firebaseAuthenticationClient.test.ts
 bun test \
   packages/app/src/sync/openHostedReviewDatabase.test.ts \
   packages/app/src/sync/NativeHostedSyncTransport.test.ts \

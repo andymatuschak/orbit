@@ -1,15 +1,13 @@
-import type {
-  HostedReviewDatabaseResult,
-  OpenHostedReviewDatabaseInput,
-} from "../sync/openHostedReviewDatabase.types.js";
+import type { LabConnection } from "./labConnection.js";
+import type { ReviewDatabase } from "../model2/openReviewDatabase.js";
 import { NativePerTaskDocuments } from "./nativePerTaskDocuments.js";
 
-export async function tryOpenHostedReviewDatabase(
-  input: OpenHostedReviewDatabaseInput,
-): Promise<HostedReviewDatabaseResult> {
+export async function openLabReviewDatabase(
+  connection: LabConnection,
+): Promise<ReviewDatabase> {
   return (
     await import("../sync/openHostedReviewDatabase.js")
-  ).tryOpenHostedReviewDatabase(input);
+  ).openLabReviewDatabase(connection);
 }
 
 export async function openNativePerTaskDocuments(

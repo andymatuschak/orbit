@@ -35,9 +35,8 @@ const webSocketConnecting = 0;
 const webSocketOpen = 1;
 
 /**
- * Browser Repo adapter which authenticates with a Firebase ID token before
- * sending any Automerge protocol bytes. Every reconnect requests a fresh token
- * from the authenticated view realm.
+ * Admission precedes all Repo protocol bytes; a paired credential is never
+ * included in the WebSocket URL or Automerge messages.
  */
 export class AuthenticatedWebSocketNetworkAdapter extends NetworkAdapter {
   private socket: WebSocket | null = null;
@@ -146,7 +145,7 @@ export class AuthenticatedWebSocketNetworkAdapter extends NetworkAdapter {
     const frame: HostedSyncAdmissionFrame = {
       type: "orbit-sync-admission",
       protocolVersion: 1,
-      firebaseIDToken: credential.token,
+      token: credential.token,
     };
     socket.send(JSON.stringify(frame));
   };

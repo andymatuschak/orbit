@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 import { decodePerTaskVaultCatalog } from "./perTaskCodec.js";
 
-test.each([{}, { nextComponentID: "main", extraField: "ignored" }])(
-  "catalog decoding accepts entries with or without obsolete extra fields: %j",
+test.each([{}, { extraField: "ignored" }])(
+  "catalog decoding ignores additional derived fields: %j",
   (extraFields) => {
     const entry = {
       documentURL: "automerge:task",
@@ -20,7 +20,7 @@ test.each([{}, { nextComponentID: "main", extraField: "ignored" }])(
       entries: { task: packed },
     };
     expect(decodePerTaskVaultCatalog(raw).entries.task).toEqual(entry);
-    // Ignoring a removed derived field does not rewrite an existing catalog.
+    // Decoding is a read, not an implicit catalog rewrite.
     expect(raw.entries.task).toBe(packed);
     expect(() =>
       decodePerTaskVaultCatalog({

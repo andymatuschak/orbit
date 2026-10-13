@@ -1,114 +1,110 @@
-# @withorbit/app
+# Orbit Lab client
 
-This package contains the main Orbit GUI app for the web, iOS, Android, and macOS. It's built [React Native](https://reactnative.dev) (via [Expo](https://docs.expo.io) with [Continuous Native Generation](https://docs.expo.dev/workflow/continuous-native-generation/)); the web app is built with [react-native-web](https://github.com/necolas/react-native-web).
+This package contains the personal iOS and browser review clients. Both use one
+shared task repository and review/session implementation. Web uses Repo JS with
+the official IndexedDB storage adapter; iOS uses Repo Swift with ordinary files.
+There is no Firebase login, public API fallback, embed, reminder settings page,
+or legacy store selection.
 
-- Local development
-  - First, make sure all the libraries are built by running `bun install && bun run build` from the monorepo root.
-  - Install [`watchman`](https://facebook.github.io/watchman/docs/nodejs.html) with `brew install watchman` (the pure-JS file watcher will run out of file handles).
-  - Start up a local instance of the backend: see `packages/backend/Readme.md` for details.
-  - To run the Orbit web app: `bun run web`
-  - To smoke-test the embedded web flow against the local Firebase emulators: `bun run smoke:web` for legacy accounts, or `bun run smoke:web:hosted` with `ORBIT_AUTOMERGE_NEW_ACCOUNTS=true` emulators for Automerge. This starts its own Expo web server when needed. The thin-embed gate checks page-memory anonymous review/reload, current-page sign-in submission, and two review areas with publisher-relayed forgotten peer retries. Signed-in acknowledgements are checked against the account store; there is no anonymous journal or worker/fallback mode. It uses actual UI clicks in Bun's experimental WebView with Chrome, so Chrome (or another browser Bun can detect as its Chrome backend) must be installed.
-  - To run the Orbit iOS app on the simulator: `bun run ios`
-    - (You'll need to `cd ios; EXPO_USE_SOURCE=1 pod install` first; see [this issue](https://github.com/expo/expo/issues/12040) for background on the Expo workaround)
-  - To run the Orbit iOS app on an attached device: `bun run ios --device [device name]`
-  - To exercise native hosted sync from a root-only client through a
-    production-sized schema-2 catalog, start the Firebase emulators and run
-    `ORBIT_SIMULATOR_UDID=[dedicated simulator UDID] bun run ios:hosted-fetch-smoke`.
-    Add `ORBIT_IOS_CONFIGURATION=Release` for meaningful launch-stage timings.
-  - To run the Orbit macOS app:
-    - Run `bunx expo prebuild -p ios` to generate the iOS project.
-    - Run `bun run start` to start the Metro bundler.
-    - Open the Xcode workspace, change the device to "My Mac", and run.
-- Deployment
-  - To build locally and deploy a new iOS build to internal TestFlight: `bun run deploy:ios:testflight`
-  - For a faster physical-device dogfood loop, run `bun run deploy:ios:adhoc`. This makes the same focused release checks, creates a locally signed ad-hoc build, and uploads it to Firebase App Distribution for `andy@andymatuschak.org`. Firebase supplies the install link, so this path does not wait for TestFlight processing. A device must first be registered with `npx eas-cli@24.3.0 device:create`; EAS then includes that device in the ad-hoc provisioning profile.
-  - To deploy the Orbit web app: `bun run deploy:web`
+The first launch pairs with a private origin and key. The installation keeps one
+selection under `com.withorbit.lab.connection.v1`, with a fresh `lab-…` local
+store ID. It never reads public Orbit's former vault registry. Subsequent launch
+opens locally cached prompts without requiring the laptop. An uncached first
+launch still needs the server; a known catalog without any readable prompt is
+unavailable, not an empty review queue.
 
-Unsure what a device's name is? Run `xctrace list devices`.
+## Development and native code
 
-## Embedded review contract
+Run `bun run lab:dev` from the repository root. Metro serves the web client and
+the connected development loop. Set `EXPO_PUBLIC_ORBIT_LAB_ORIGIN` to the private
+Tailscale HTTPS origin, or loopback HTTP for Simulator-only work; the pairing
+key must never be an `EXPO_PUBLIC_` variable.
 
-An embed is a thin online client, not a local Automerge Repo. Anonymous reviews
-exist only for the current page visit; the publisher relays their public progress
-between sections and retains it for newly mounted iframes. Sign-in submits that
-page's pending progress. Signed-in reviews advance only after authenticated HTTP
-acknowledgement, using the hosted account Repo or the existing legacy API through
-one transport adapter. Closing the page loses any unsaved intent. There is no
-durable anonymous journal, worker owner, MessagePort RPC, or embed WebSocket sync.
+`bun run lab:install --simulator <UDID> --install` or
+`bun run lab:install --device <UDID> --install` makes an optimized local binary.
+The bundle identifier and App Group remain `com.withorbit.native` and
+`group.com.withorbit.native`; Lab replaces Orbit instead of installing alongside
+it. Preserve pending reviews before first replacement. Installation does not
+delete the app container.
 
-A section fetches current account state when it enters the viewport or the
-page/iframe regains visibility or focus. Users need not reload the page, but
-embeds do not subscribe to live updates from other devices. `/review` and the
-native app retain ordinary local-first Repo synchronization.
+Expo generates the native project. Keep changes in `modules`, `targets`, and
+`expoPlugin`, not generated `ios` output. The scene lifecycle adapter remains
+until Expo's released template provides equivalent wiring; its source records
+the upstream issue and removal conditions. Repo Swift's admission-order and
+remote-change notification workarounds remain covered by regressions.
 
-Ship the updated publisher component and embed app together for article-wide
-anonymous progress relay. Ready/configuration/order/attachment messages keep
-protocol version 1, so cached older publishers can still bootstrap the new
-iframe and provide attachments; they lack only the new page-memory relay.
-Old anonymous journals are intentionally ignored, not migrated or drained.
+## Offline application code
 
-## Widget handoff checks
+The installed app includes a complete bundle/assets. `expo-updates` selects the
+embedded or downloaded checkpoint immediately, then checks the private endpoint
+in the background. The native menu's **Check for app update** downloads a
+checkpoint and asks before reloading; it cannot reload during a pending
+review/delete/undo write. Otherwise a completed checkpoint applies on the next
+cold launch. Diagnostic logs identify the running update without test-only UI.
 
-The app and WidgetKit extension compile the same Foundation helper. It atomically
-replaces `orbit-widget-v3.json` in the App Group, coordinating on the shared
-directory. The queue is disposable; pending reviews for every vault remain until
-the app durably imports their stable IDs and acknowledges them with a fresh queue.
-Opening or foregrounding the app drains reviews. Older widget formats and their
-data are intentionally ignored; there is no conversion reader.
+Publish with the root `lab:checkpoint` command and the binary's matching native
+runtime version. Bump that version and rebuild when Swift, native dependencies,
+or entitlements change. Metro's latest bundle is not an offline checkpoint.
+The complete native download/kill/relaunch/rollback gates are recorded separately
+in [the validation record](../../design/automerge-validation-record.md).
 
-Run from `packages/app` on macOS:
+## Widget handoff
+
+The app and WidgetKit extension compile the same Foundation helper.
+`orbit-widget-v3.json` contains a disposable queue and durable pending reviews;
+`OrbitAppGroup` selects its shared directory. Coordinated atomic replacement
+prevents competing app/widget writers losing data. No Repo/network work occurs
+inside the file-coordination lock.
+
+Widget reviews retain stable IDs until the app durably imports them, acknowledges
+only that batch, and installs a fresh queue. Opening or foregrounding the app
+drains the outbox. The widget never opens the app's live Repo, and the app never
+uses the disposable widget queue as its own review index.
 
 ```sh
+cd packages/app
+bun test src expoPlugin
 bun run test:widget-projection-writer
 bun run test:widget-projection-reader
 bun run test:widget-projection-handoff
-bun test src/vault/WidgetProjectionCoordinator.test.ts src/vault/widgetForeground.test.ts
 ```
 
-The Swift checks compile the actual shared source under Swift 6. They cover
-JSON projection reads, independent-process publication/review races, interrupted
-writes, acceptance/import crash replay, cross-vault selective
-acknowledgement, stale account intents, and malformed-journal preservation. The
-crash-replay check uses a durable idempotent sink, not a running Repo; repository
-persistence-failure/cold-reopen checks live in `store-automerge`'s direct Repo tests.
-macOS file coordination needs access to its system service, so these Swift checks
-may need to run outside a restricted execution sandbox.
+The Swift tests compile the real helper under Swift 6 and cover independent
+processes, interrupted writes, replay, selective acknowledgement, and malformed
+journal preservation. Restricted execution sandboxes may need a narrow exception
+for Foundation's temporary files and file-coordination service.
 
-`ios:hosted-fetch-smoke` also accepts a review through this JSON helper, takes
-the sync server offline, and relaunches the cached app. It checks that the app
-advances, acknowledges the pending review, and retains its exact observation in
-ordinary Repo files after another process opens them. An uncached queue tail must
-not block already available prompts; a missing authoritative task is still an
-error when explicitly requested.
-
-For real WidgetKit rendering and App Intents, install a freshly built `Orbit.app`
-on a dedicated Simulator and place the medium Orbit widget at the top of its Home
-Screen. Then run:
+For actual controls, build the workspace and install a Release binary in a
+dedicated booted Simulator. The review gate requires Node, AXe, and an unused
+localhost port 8787; it never builds, installs, or stops an existing server.
 
 ```sh
-ORBIT_SIMULATOR_UDID=[dedicated simulator UDID] scripts/run_widget_ui_smoke.sh [Orbit.app path]
-ORBIT_SIMULATOR_UDID=[dedicated simulator UDID] scripts/run_widget_layout_smoke.sh [Orbit.app path]
-ORBIT_SIMULATOR_UDID=[dedicated simulator UDID] scripts/run_widget_link_smoke.sh [Orbit.app path]
+ORBIT_SIMULATOR_UDID=<UDID> bun run ios:review-smoke
+scripts/run_ios_review_smoke.sh --help
+ORBIT_SIMULATOR_UDID=<UDID> scripts/run_widget_ui_smoke.sh <Orbit.app-path>
+ORBIT_SIMULATOR_UDID=<UDID> scripts/run_widget_layout_smoke.sh <Orbit.app-path>
+ORBIT_SIMULATOR_UDID=<UDID> scripts/run_widget_link_smoke.sh <Orbit.app-path>
 ```
 
-The UI gate requires AXe. The link gate can save its screenshot with
-`ORBIT_WIDGET_LINK_SCREENSHOT`. `scripts/seed_widget_layout_smoke.sh [UDID]`
-publishes the layout fixtures for manual visual checks; all fixture tools use the
-ordinary coordinated JSON path, never product UI branches or direct SQL writes.
-Seeding resets only that fixture vault's pending reviews; other vaults' reviews
-are preserved.
+The review runner uses [ios_review_fixture.mjs](scripts/ios_review_fixture.mjs)
+to create three ordinary tasks in a disposable Repo and temporarily select it
+through the app's existing AsyncStorage record. It verifies native review →
+fresh JS peer, JS review → visible native queue advancement, an offline cold
+launch with the PNG visibly rendered, durable offline review bytes, and server
+reconnect. It restores the previous Lab selection, preserves other records,
+flushes its own server, and retains receipts/logs. Physical-device containers
+are rejected. No production configuration or test-only UI branch is involved.
 
-You'll need to copy Orbit's licensed proprietary app/native font files into `packages/app/assets/fonts`. Storybook serves the app-owned `packages/app/assets` directory, so its `/fonts/*` URLs resolve from `packages/app/assets/fonts`. For Expo web, stage the web-compatible font files in the ignored `packages/app/public/fonts` directory so its `/fonts/*` URLs resolve. These proprietary files must remain ignored and uncommitted: the fonts are non-free, and their licenses don't permit me to distribute them with the repository. For your local testing purposes only, you can find a demo distribution of the primary interface font, Dr, [here](https://www.productiontype.com/family/dr).
+The widget gates likewise use AXe/simctl and ordinary store writes. A runnable
+gate is not a claim that a newly built binary passed; actual results belong in
+[the validation record](../../design/automerge-validation-record.md).
 
-(At some point we should probably make a "no-trade-dress" flag you can set to get a "generic" build of Orbit.)
+## Font assets and licensing
 
-## Licensing
+Licensed DR/Raptor font files under `assets/fonts` remain ignored and must not be
+committed or distributed. Expo's native font plugin bundles the app-owned files;
+web-compatible files are staged in ignored `public/fonts`; Storybook serves
+the app-owned `assets` directory.
 
-This app, including its internal UI source subtree at `src/ui`, is licensed under `AGPL-3.0-or-later OR BUSL-1.1`. Proprietary DR and Raptor font files under `assets/fonts` are not distributed with the repository and remain subject to their separate licenses.
-
----
-
-```
-Copyright 2020 Andy Matuschak
-SPDX-License-Identifier: AGPL-3.0-or-later OR BUSL-1.1
-```
+This app, including its internal `src/ui`, is licensed under
+`AGPL-3.0-or-later OR BUSL-1.1`. Fonts retain their separate proprietary licenses.

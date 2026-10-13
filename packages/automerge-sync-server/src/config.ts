@@ -1,104 +1,78 @@
+import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
+import { isValidAutomergeUrl } from "@automerge/automerge-repo";
 
-export interface HostedSyncServerConfiguration {
-  host: string;
-  port: number;
-  exposeMetrics: boolean;
-  allowedOrigins: ReadonlySet<string>;
+export interface LabConfiguration {
   storageRoot: string;
-  maximumSocketLifetimeMillis: number;
-  maximumSockets: number;
-  maximumSocketsPerAccount: number;
-  maximumLoadedAccounts: number;
-  maximumMessageBytes: number;
-  maximumAdmissionFrameBytes: number;
-  admissionTimeoutMillis: number;
-  maximumMessagesPerMinute: number;
-  maximumControlRequestsPerMinute: number;
-  maximumStorageBytesPerAccount: number;
-  storageConcurrency: number;
-  idleRepoTimeoutMillis: number;
-  recycleAfterRepoCreations: number;
-  recycleRSSBytes: number;
+  rootDocumentURL: string;
+  pairingToken: string;
+  updatesRoot: string;
+  allowedOrigins: ReadonlySet<string>;
+  port: number;
 }
 
-export function configurationFromEnvironment(
-  environment: NodeJS.ProcessEnv = process.env,
-): HostedSyncServerConfiguration {
-  const storageRoot =
-    environment.ORBIT_SYNC_STORAGE_ROOT ??
-    path.resolve(".local/automerge-sync/storage");
+export const defaultLabDirectory = path.join(
+  os.homedir(),
+  "Library",
+  "Application Support",
+  "Orbit Lab",
+);
+export const defaultLabConfigurationPath = path.join(
+  defaultLabDirectory,
+  "config.json",
+);
+
+/** Setup imports a vault explicitly. Startup never manufactures an empty replacement. */
+export async function loadLabConfiguration(
+  configurationPath = defaultLabConfigurationPath,
+): Promise<LabConfiguration> {
+  const data = JSON.parse(await fs.readFile(configurationPath, "utf8"));
+  if (!data || typeof data !== "object" || Array.isArray(data))
+    throw new Error("Invalid Orbit Lab configuration");
+  if (
+    typeof data.storageRoot !== "string" ||
+    !path.isAbsolute(data.storageRoot)
+  )
+    throw new Error(
+      "Orbit Lab storageRoot must be an absolute persistent directory",
+    );
+  if (!isValidAutomergeUrl(data.rootDocumentURL))
+    throw new Error("Orbit Lab requires its imported rootDocumentURL");
+  if (
+    typeof data.pairingToken !== "string" ||
+    data.pairingToken.length < 32 ||
+    data.pairingToken.length > 1024 ||
+    /\s/.test(data.pairingToken)
+  )
+    throw new Error(
+      "Orbit Lab requires a private pairing token of at least 32 characters",
+    );
+  const updatesRoot =
+    data.updatesRoot ?? path.join(path.dirname(configurationPath), "updates");
+  if (typeof updatesRoot !== "string" || !path.isAbsolute(updatesRoot))
+    throw new Error("Orbit Lab updatesRoot must be an absolute directory");
+  const port = data.port ?? 8787;
+  if (!Number.isSafeInteger(port) || port < 1 || port > 65535)
+    throw new Error("Invalid Orbit Lab port");
+  const origins: unknown = data.allowedOrigins ?? [
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
+  ];
+  if (
+    !Array.isArray(origins) ||
+    origins.some(
+      (origin) =>
+        typeof origin !== "string" || new URL(origin).origin !== origin,
+    )
+  )
+    throw new Error("Orbit Lab allowedOrigins must contain exact origins");
   return {
-    host: environment.HOST ?? "127.0.0.1",
-    port: integer(environment.PORT, 8787),
-    exposeMetrics: environment.ORBIT_SYNC_EXPOSE_METRICS === "true",
-    allowedOrigins: new Set(
-      (
-        environment.ORBIT_SYNC_ALLOWED_ORIGINS ??
-        "http://localhost:19006,http://127.0.0.1:19006"
-      )
-        .split(",")
-        .map((value) => value.trim())
-        .filter(Boolean),
-    ),
-    storageRoot,
-    maximumSocketLifetimeMillis: integer(
-      environment.ORBIT_SYNC_MAX_SOCKET_LIFETIME_MILLIS,
-      20 * 60_000,
-    ),
-    maximumSockets: integer(environment.ORBIT_SYNC_MAX_SOCKETS, 100),
-    maximumSocketsPerAccount: integer(
-      environment.ORBIT_SYNC_MAX_SOCKETS_PER_ACCOUNT,
-      8,
-    ),
-    maximumLoadedAccounts: integer(
-      environment.ORBIT_SYNC_MAX_LOADED_ACCOUNTS,
-      4,
-    ),
-    maximumMessageBytes: integer(
-      environment.ORBIT_SYNC_MAX_MESSAGE_BYTES,
-      2 * 1_024 * 1_024,
-    ),
-    maximumAdmissionFrameBytes: integer(
-      environment.ORBIT_SYNC_MAX_ADMISSION_BYTES,
-      8 * 1_024,
-    ),
-    admissionTimeoutMillis: integer(
-      environment.ORBIT_SYNC_ADMISSION_TIMEOUT_MILLIS,
-      5_000,
-    ),
-    maximumMessagesPerMinute: integer(
-      environment.ORBIT_SYNC_MAX_MESSAGES_PER_MINUTE,
-      10_000,
-    ),
-    maximumControlRequestsPerMinute: integer(
-      environment.ORBIT_SYNC_MAX_CONTROL_REQUESTS_PER_MINUTE,
-      120,
-    ),
-    maximumStorageBytesPerAccount: integer(
-      environment.ORBIT_SYNC_MAX_STORAGE_BYTES_PER_ACCOUNT,
-      2 * 1_024 * 1_024 * 1_024,
-    ),
-    storageConcurrency: integer(environment.ORBIT_SYNC_STORAGE_CONCURRENCY, 32),
-    idleRepoTimeoutMillis: integer(
-      environment.ORBIT_SYNC_IDLE_REPO_TIMEOUT_MILLIS,
-      5 * 60_000,
-    ),
-    recycleAfterRepoCreations: integer(
-      environment.ORBIT_SYNC_RECYCLE_AFTER_REPO_CREATIONS,
-      100,
-    ),
-    recycleRSSBytes: integer(
-      environment.ORBIT_SYNC_RECYCLE_RSS_BYTES,
-      1_500 * 1_024 * 1_024,
-    ),
+    storageRoot: data.storageRoot,
+    rootDocumentURL: data.rootDocumentURL,
+    pairingToken: data.pairingToken,
+    updatesRoot,
+    port,
+    allowedOrigins: new Set(origins as string[]),
   };
-}
-
-function integer(value: string | undefined, fallback: number) {
-  const parsed = value === undefined ? fallback : Number(value);
-  if (!Number.isSafeInteger(parsed) || parsed < 1) {
-    throw new Error("Invalid positive integer sync-server configuration");
-  }
-  return parsed;
 }

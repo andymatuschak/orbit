@@ -1,10 +1,15 @@
 {
-  "extends": ["../tsconfig.base.json", "expo/tsconfig.base"],
+  "extends": [
+    "../tsconfig.base.json",
+    "expo/tsconfig.base"
+  ],
   "compilerOptions": {
     "module": "commonjs",
     "jsx": "react-native",
     "noEmit": true,
-    "types": ["bun"]
+    "types": [
+      "bun"
+    ]
   },
   "include": [
     "./src/**/*.tsx",
@@ -18,20 +23,15 @@
   ],
   "exclude": [
     "./scripts/ios_hosted_fetch_smoke_server.ts",
-    "./scripts/seed_ios_hosted_fetch_smoke.ts"
+    "./scripts/seed_ios_hosted_fetch_smoke.ts",
+    "./scripts/lab_checkpoint.ts"
   ],
   "references": [
     {
       "path": "../api"
     },
     {
-      "path": "../api-client"
-    },
-    {
       "path": "../core"
-    },
-    {
-      "path": "../embedded-support"
     },
     {
       "path": "../sample-data"
@@ -41,18 +41,6 @@
     },
     {
       "path": "../store-automerge"
-    },
-    {
-      "path": "../store-fs"
-    },
-    {
-      "path": "../store-web"
-    },
-    {
-      "path": "../ingester"
-    },
-    {
-      "path": "../sync"
     }
   ]
 }

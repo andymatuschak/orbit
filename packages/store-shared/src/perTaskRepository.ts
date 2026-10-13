@@ -1,6 +1,5 @@
 import {
   createReviewQueue,
-  decodeNotificationPreferences,
   defaultOrbitSchedulerPolicy,
   defaultReviewSessionMaximumQueueSize,
   getReviewQueueFuzzyDueTimestampThreshold,
@@ -10,7 +9,6 @@ import {
   type AttachmentMIMEType,
   type AutomergeDocumentURL,
   type ObservationID,
-  type NotificationPreferences,
   type OrbitVault,
   type ReviewItem,
   type SchedulingObservation,
@@ -382,34 +380,11 @@ export class PerTaskRepository {
     });
   }
 
-  /** Reminder reads use the same selected catalog, without projecting task histories. */
+  /** Inspect catalog rows without materializing task histories. */
   getCatalogEntries(): Promise<Readonly<Record<TaskID, PerTaskCatalogEntry>>> {
     return this.exclusive(async () => {
       await this.refresh();
       return { ...this.catalog.entries };
-    });
-  }
-
-  getNotificationPreferences(): Promise<NotificationPreferences | undefined> {
-    return this.exclusive(async () => {
-      await this.refresh();
-      return this.root.notificationPreferences
-        ? { ...this.root.notificationPreferences }
-        : undefined;
-    });
-  }
-
-  setNotificationPreferences(
-    preferences: NotificationPreferences,
-  ): Promise<void> {
-    return this.exclusive(async () => {
-      await this.refresh();
-      const validated = decodeNotificationPreferences(preferences);
-      await this.documents.patch(this.rootURL, [
-        { kind: "put", path: ["notificationPreferences"], value: validated },
-      ]);
-      this.root.notificationPreferences = validated;
-      this.emit();
     });
   }
 

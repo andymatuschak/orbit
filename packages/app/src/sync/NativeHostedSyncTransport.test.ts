@@ -127,7 +127,7 @@ describe("native hosted Repo lifecycle", () => {
     expect(native.ensureCalls).toEqual([["local-a", missing]]);
   });
 
-  test("connects Repo Swift, fetches through Repo, and refreshes Firebase auth", async () => {
+  test("connects Repo Swift, fetches through Repo, and refreshes paired credentials", async () => {
     const native = new FakeNativeRepo();
     const documents = new NativePerTaskDocuments(
       "local-a",
@@ -138,7 +138,7 @@ describe("native hosted Repo lifecycle", () => {
       websocketURL: "wss://sync.example.test/v1/sync",
       requestCredential: async () => {
         credentialRequests++;
-        return credential(`firebase-${credentialRequests}`);
+        return credential(`paired-${credentialRequests}`);
       },
       localStoreID: "local-a",
       retryIntervalMillis: 1,
@@ -149,7 +149,7 @@ describe("native hosted Repo lifecycle", () => {
     expect(native.connectCalls[0]).toEqual([
       "local-a",
       "wss://sync.example.test/v1/sync",
-      "firebase-1",
+      "paired-1",
     ]);
 
     const root = "automerge:NativeRoot" as AutomergeDocumentURL;
@@ -159,7 +159,7 @@ describe("native hosted Repo lifecycle", () => {
     native.emitSyncState({ localStoreID: "local-a", state: "disconnected" });
     await eventually(() => native.connectCalls.length === 2);
     expect(credentialRequests).toBe(2);
-    expect(native.connectCalls[1]?.[2]).toBe("firebase-2");
+    expect(native.connectCalls[1]?.[2]).toBe("paired-2");
 
     await transport.close();
     expect(native.disconnectCalls).toEqual(["local-a"]);
@@ -246,7 +246,7 @@ describe("native hosted Repo lifecycle", () => {
       requestCredential: async () => {
         credentialRequests++;
         if (credentialRequests === 2) throw new Error("temporarily offline");
-        return credential(`firebase-${credentialRequests}`);
+        return credential(`paired-${credentialRequests}`);
       },
       localStoreID: "local-a",
       retryIntervalMillis: 1,
@@ -256,7 +256,7 @@ describe("native hosted Repo lifecycle", () => {
     native.emitSyncState({ localStoreID: "local-a", state: "disconnected" });
     await eventually(() => native.connectCalls.length === 2);
     expect(credentialRequests).toBe(3);
-    expect(native.connectCalls[1]?.[2]).toBe("firebase-3");
+    expect(native.connectCalls[1]?.[2]).toBe("paired-3");
 
     await transport.close();
     await documents.close();
@@ -274,7 +274,7 @@ describe("native hosted Repo lifecycle", () => {
       requestCredential: async () => {
         credentialRequests++;
         if (credentialRequests === 1) throw new Error("offline");
-        return credential("firebase-2");
+        return credential("paired-2");
       },
       localStoreID: "local-a",
       retryIntervalMillis: 1,
@@ -283,7 +283,7 @@ describe("native hosted Repo lifecycle", () => {
     await expect(transport.connect()).rejects.toThrow("offline");
     await eventually(() => native.connectCalls.length === 1);
     expect(credentialRequests).toBe(2);
-    expect(native.connectCalls[0]?.[2]).toBe("firebase-2");
+    expect(native.connectCalls[0]?.[2]).toBe("paired-2");
 
     await transport.close();
     await documents.close();
@@ -395,7 +395,7 @@ describe("native hosted Repo lifecycle", () => {
 
 function credential(token: string): HostedSyncCredential {
   return {
-    kind: "firebaseIDToken",
+    kind: "pairedToken",
     token,
   };
 }

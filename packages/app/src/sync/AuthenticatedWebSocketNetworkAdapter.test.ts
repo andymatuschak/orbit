@@ -11,7 +11,7 @@ import {
 } from "./AuthenticatedWebSocketNetworkAdapter.js";
 
 describe("authenticated WebSocket Repo adapter", () => {
-  test("sends admission before Repo bytes and refreshes Firebase auth on reconnect", async () => {
+  test("sends admission before Repo bytes and refreshes paired credentials on reconnect", async () => {
     const factory = new FakeWebSocketFactory();
     let credentialCount = 0;
     const adapter = new AuthenticatedWebSocketNetworkAdapter(
@@ -28,7 +28,7 @@ describe("authenticated WebSocket Repo adapter", () => {
     expect(first.sent).toHaveLength(1);
     expect(JSON.parse(String(first.sent[0]))).toMatchObject({
       type: "orbit-sync-admission",
-      firebaseIDToken: "firebase-1",
+      token: "paired-1",
     });
 
     first.receive(
@@ -61,9 +61,7 @@ describe("authenticated WebSocket Repo adapter", () => {
     await eventually(() => factory.sockets.length === 2);
     const second = factory.sockets[1];
     second.open();
-    expect(JSON.parse(String(second.sent[0])).firebaseIDToken).toBe(
-      "firebase-2",
-    );
+    expect(JSON.parse(String(second.sent[0])).token).toBe("paired-2");
     expect(credentialCount).toBe(2);
     adapter.disconnect();
   });
@@ -163,8 +161,8 @@ class FakeWebSocket extends EventTarget {
 
 function credential(index: number): HostedSyncCredential {
   return {
-    kind: "firebaseIDToken",
-    token: `firebase-${index}`,
+    kind: "pairedToken",
+    token: `paired-${index}`,
   };
 }
 

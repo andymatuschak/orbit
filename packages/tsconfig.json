@@ -1,23 +1,27 @@
 {
   "files": [],
   "references": [
-    { "path": "./anki-import" },
-    { "path": "./api" },
-    { "path": "./api-client" },
-    { "path": "./app" },
-    { "path": "./automerge-sync-server" },
-    { "path": "./backend" },
-    { "path": "./core" },
-    { "path": "./embedded-support" },
-    { "path": "./ingester" },
-    { "path": "./interpreter" },
-    { "path": "./sample-data" },
-    { "path": "./store-fs" },
-    { "path": "./store-automerge" },
-    { "path": "./store-shared" },
-    { "path": "./store-web" },
-    { "path": "./sync" },
-    { "path": "./web-component" }
+    {
+      "path": "./api"
+    },
+    {
+      "path": "./app"
+    },
+    {
+      "path": "./automerge-sync-server"
+    },
+    {
+      "path": "./core"
+    },
+    {
+      "path": "./sample-data"
+    },
+    {
+      "path": "./store-automerge"
+    },
+    {
+      "path": "./store-shared"
+    }
   ],
   "compilerOptions": {
     "noEmit": true

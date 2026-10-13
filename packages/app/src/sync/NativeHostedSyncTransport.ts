@@ -15,7 +15,7 @@ export interface NativeHostedSyncTransportOptions {
 /**
  * Auth lifecycle around Repo Swift's WebSocketProvider. Repo Swift owns Repo
  * messages, sync states, document merging, and reconnect-safe file storage;
- * this class only obtains a fresh Firebase credential for each connection.
+ * this class supplies the paired credential for each connection.
  */
 export class NativeHostedSyncTransport {
   private readonly trackedDocuments = new Set<AutomergeDocumentURL>();

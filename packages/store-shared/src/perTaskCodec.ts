@@ -1,7 +1,5 @@
 import {
   AttachmentMIMEType,
-  decodeNotificationPreferences,
-  type NotificationPreferences,
   TaskContentType,
   TaskRepetitionOutcome,
   TaskSpecType,
@@ -39,7 +37,6 @@ export interface PerTaskVaultRoot {
   scheduler: SchedulerPolicy;
   attachments: Record<AttachmentID, VaultAttachment>;
   catalogCandidates: CatalogGenerationDescriptor[];
-  notificationPreferences?: NotificationPreferences;
 }
 
 export interface PerTaskVaultCatalog {
@@ -110,13 +107,6 @@ export function decodePerTaskVaultRoot(value: unknown): PerTaskVaultRoot {
       decodeAttachment,
     ) as Record<AttachmentID, VaultAttachment>,
     catalogCandidates: candidates,
-    ...(raw.notificationPreferences === undefined
-      ? {}
-      : {
-          notificationPreferences: decodeNotificationPreferences(
-            raw.notificationPreferences,
-          ),
-        }),
   };
 }
 

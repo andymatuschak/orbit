@@ -14,7 +14,7 @@ private enum WidgetReviewState {
   private static let revealedReviewItemKey = "OrbitWidget.revealedReviewItem"
   private static let defaults: UserDefaults = {
     guard
-      let appGroupID = Bundle.main.object(forInfoDictionaryKey: "OPSQLite_AppGroup") as? String,
+      let appGroupID = Bundle.main.object(forInfoDictionaryKey: "OrbitAppGroup") as? String,
       let defaults = UserDefaults(suiteName: appGroupID)
     else {
       preconditionFailure("The widget's shared app group isn't configured")

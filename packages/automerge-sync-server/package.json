@@ -6,18 +6,14 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist",
-    "deploy",
-    "Dockerfile"
+    "dist"
   ],
   "scripts": {
     "build": "node ../../node_modules/@typescript/native/bin/tsc -b",
-    "migrate-account": "node dist/migrateAccount.js",
     "start": "node dist/index.js",
-    "enroll-reminders": "node dist/index.js --enroll-reminders",
-    "test": "bun test src",
+    "test": "bun test src scripts",
     "test:integration": "bun run build && node --experimental-transform-types --test tests/*.test.mjs",
-    "test:durability-convergence": "bun run build && node --experimental-transform-types --test --test-name-pattern='native header admission exchanges|Repo sync survives volume restore|durability and convergence|per-task vault imports|only its persisted sync state' tests/server.integration.test.mjs"
+    "test:durability-convergence": "bun run test:integration"
   },
   "dependencies": {
     "@automerge/automerge": "3.4.1",
@@ -27,7 +23,6 @@
     "@withorbit/core": "0.0.1",
     "@withorbit/store-automerge": "0.0.1",
     "@withorbit/store-shared": "0.0.1",
-    "firebase-admin": "14.4.0",
     "ws": "8.21.0"
   },
   "devDependencies": {

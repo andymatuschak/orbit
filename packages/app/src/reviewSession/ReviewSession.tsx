@@ -28,47 +28,44 @@ import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AuthenticationClient } from "../authentication/index.js";
-import { useAuthenticationClient } from "../authentication/authContext.js";
+import type { LabConnection } from "../vault/labConnection.js";
 import {
   openReviewDatabase,
   type ReviewDatabase,
 } from "../model2/openReviewDatabase.js";
 import { ReviewSessionContainer } from "../ReviewSessionContainer.js";
 import { useReviewSessionManager } from "../reviewSessionManager.js";
-import { useAPIClient } from "../util/useAPIClient.js";
 import { LoadingScreen } from "./LoadingScreen.js";
+import useAppUpdateMenuItem from "../util/useAppUpdateMenuItem.js";
 
 interface ReviewDatabaseState {
-  accountID: string | null;
+  localStoreID: string | null;
   database: ReviewDatabase | null;
   openError: Error | null;
 }
 
 export function useReviewDatabase(
-  authenticationClient: AuthenticationClient,
-  userID: string,
+  connection: LabConnection,
 ): ReviewDatabaseState & {
   retry(): void;
 } {
   const [state, setState] = useState<ReviewDatabaseState>({
-    accountID: null,
+    localStoreID: null,
     database: null,
     openError: null,
   });
   const [openAttempt, setOpenAttempt] = useState(0);
-  const apiClient = useAPIClient(authenticationClient);
-
-  // A database owns one account namespace. Signing out or switching accounts
-  // closes that namespace before the next effect installs another database.
+  // Pairing selects one independent local Repo; laptop availability is not a
+  // prerequisite for opening its persisted documents.
   useEffect(() => {
     let isCanceled = false;
     let openedDatabase: ReviewDatabase | null = null;
-    setState({ accountID: userID, database: null, openError: null });
-    void openReviewDatabase(apiClient, userID, {
-      authenticationClient,
-      allowCachedBeforeAuth: Platform.OS === "ios",
-    }).then(
+    setState({
+      localStoreID: connection.localStoreID,
+      database: null,
+      openError: null,
+    });
+    void openReviewDatabase(connection).then(
       (database) => {
         if (isCanceled) {
           void database.close();
@@ -76,7 +73,7 @@ export function useReviewDatabase(
         }
         openedDatabase = database;
         setState({
-          accountID: userID,
+          localStoreID: connection.localStoreID,
           database,
           openError: null,
         });
@@ -85,7 +82,7 @@ export function useReviewDatabase(
         if (isCanceled) return;
         console.error("Could not open review vault", error);
         setState({
-          accountID: userID,
+          localStoreID: connection.localStoreID,
           database: null,
           openError: error instanceof Error ? error : new Error(String(error)),
         });
@@ -95,13 +92,12 @@ export function useReviewDatabase(
       isCanceled = true;
       void openedDatabase?.close();
     };
-  }, [userID, apiClient, authenticationClient, openAttempt]);
+  }, [connection, openAttempt]);
 
-  // Effects close the old database after a user transition. Hide it during the
-  // intervening render so one account's queue is never shown under another.
-  const currentState = state.accountID === userID ? state : null;
+  const currentState =
+    state.localStoreID === connection.localStoreID ? state : null;
   return {
-    accountID: currentState?.accountID ?? null,
+    localStoreID: currentState?.localStoreID ?? null,
     database: currentState?.database ?? null,
     openError: currentState?.openError ?? null,
     retry: () => setOpenAttempt((value) => value + 1),
@@ -178,29 +174,15 @@ function useReviewItemQueue(database: ReviewDatabase | null): {
 }
 
 function VaultOpenErrorScreen({
-  accountLabel,
-  authenticationClient,
+  error,
   retry,
+  onPairAgain,
 }: {
-  accountLabel: string;
-  authenticationClient: AuthenticationClient;
+  error: Error;
   retry(): void;
+  onPairAgain(): void;
 }) {
   const palette = styles.colors.palettes.red;
-  const [isPending, setPending] = useState(false);
-  const [actionError, setActionError] = useState<Error | null>(null);
-
-  const run = (operation: () => Promise<void>) => {
-    setPending(true);
-    setActionError(null);
-    void operation()
-      .catch((value: unknown) => {
-        setActionError(
-          value instanceof Error ? value : new Error(String(value)),
-        );
-      })
-      .finally(() => setPending(false));
-  };
 
   return (
     <View
@@ -216,33 +198,22 @@ function VaultOpenErrorScreen({
         <Text style={styles.type.headline.layoutStyle}>Vault unavailable</Text>
         <Spacer units={3} />
         <Text style={styles.type.runningText.layoutStyle}>
-          {`Orbit couldn't open the vault for ${accountLabel}. Your local data has not been replaced.`}
+          {
+            "Orbit Lab couldn't open its review data. Your local vault has not been replaced. If this is the first launch, connect to the laptop to download your prompts."
+          }
         </Text>
-        {actionError && (
-          <>
-            <Spacer units={2} />
-            <Text style={styles.type.runningText.layoutStyle}>
-              {actionError.message}
-            </Text>
-          </>
-        )}
+        <Spacer units={2} />
+        <Text style={styles.type.runningText.layoutStyle}>{error.message}</Text>
         <Spacer units={4} />
         <Button
           title="Try again"
-          disabled={isPending}
           backgroundColor={palette.secondaryBackgroundColor}
           onPress={() => {
             retry();
           }}
         />
         <Spacer units={2} />
-        <Button
-          title="Sign out"
-          disabled={isPending}
-          onPress={() =>
-            run(async () => void (await authenticationClient.signOut()))
-          }
-        />
+        <Button title="Pair again" onPress={onPairAgain} />
       </View>
     </View>
   );
@@ -315,15 +286,19 @@ function ReviewMenuButton({
 }
 
 export default function ReviewSession({
-  accountID,
-  accountLabel,
+  connection,
+  onPairAgain,
 }: {
-  accountID: string;
-  accountLabel: string;
+  connection: LabConnection;
+  onPairAgain(): void;
 }) {
   const insets = useSafeAreaInsets();
   const reviewSessionStartTimestampMillis = useRef(Date.now());
   const reviewWriteIsInFlight = useRef(false);
+  const pendingWrites = useRef(0);
+  const appUpdateMenuItem = useAppUpdateMenuItem(
+    () => pendingWrites.current === 0,
+  );
 
   const [pendingOutcome, setPendingOutcome] =
     useState<TaskRepetitionOutcome | null>(null);
@@ -341,11 +316,7 @@ export default function ReviewSession({
     ...reviewSessionManager
   } = useReviewSessionManager();
 
-  const authenticationClient = useAuthenticationClient();
-  const { database, openError, retry } = useReviewDatabase(
-    authenticationClient,
-    accountID,
-  );
+  const { database, openError, retry } = useReviewDatabase(connection);
   const { queue: initialQueue, error: queueError } =
     useReviewItemQueue(database);
   const hasInitialCard =
@@ -412,9 +383,9 @@ export default function ReviewSession({
   if (loadError) {
     return (
       <VaultOpenErrorScreen
-        accountLabel={accountLabel}
-        authenticationClient={authenticationClient}
+        error={loadError}
         retry={retry}
+        onPairAgain={onPairAgain}
       />
     );
   }
@@ -434,6 +405,11 @@ export default function ReviewSession({
       ? reviewAreaQueue[currentReviewAreaQueueIndex].colorPalette
       : styles.colors.palettes.red;
 
+  function commit(mutations: readonly VaultMutation[]) {
+    pendingWrites.current++;
+    return database!.apply(mutations).finally(() => pendingWrites.current--);
+  }
+
   function onMark(markingRecord: ReviewAreaMarkingRecord) {
     if (currentSessionItemIndex === null) {
       throw new Error("onMark called with no valid current item index");
@@ -447,8 +423,7 @@ export default function ReviewSession({
         reviewSessionStartTimestampMillis.current,
     });
     reviewWriteIsInFlight.current = true;
-    void database!
-      .apply([mutation])
+    void commit([mutation])
       .then(() => {
         console.log("[Performance] Log written", Date.now() / 1000.0);
         reviewSessionManager.markCurrentItem([mutation], (newState) => {
@@ -482,15 +457,14 @@ export default function ReviewSession({
     }
     reviewSessionManager.deleteCurrentItem();
     const eventID = generateUniqueID();
-    database!
-      .apply([
-        {
-          kind: "setTaskDeleted",
-          mutationID: `task-delete/${eventID}` as VaultMutationID,
-          taskID: reviewAreaQueue[currentReviewAreaQueueIndex].taskID,
-          isDeleted: true,
-        },
-      ])
+    commit([
+      {
+        kind: "setTaskDeleted",
+        mutationID: `task-delete/${eventID}` as VaultMutationID,
+        taskID: reviewAreaQueue[currentReviewAreaQueueIndex].taskID,
+        isDeleted: true,
+      },
+    ])
       .then(() => {
         console.log("Wrote delete event", Date.now() / 1000.0);
       })
@@ -504,8 +478,7 @@ export default function ReviewSession({
     reviewSessionManager.undo(({ getUndoMutations }) => {
       const undoMutations = getUndoMutations();
       if (undoMutations.length > 0) {
-        database!
-          .apply(undoMutations)
+        commit(undoMutations)
           .then(() => {
             console.log("Wrote undo events", Date.now() / 1000.0);
           })
@@ -601,6 +574,9 @@ export default function ReviewSession({
                         action: visitPromptOrigin,
                         disabled: !canVisitPromptOrigin,
                       },
+                      ...(appUpdateMenuItem
+                        ? [menuItemDividerSpec, appUpdateMenuItem]
+                        : []),
                     ]}
                   />
                 </View>
@@ -637,6 +613,17 @@ export default function ReviewSession({
               <Text style={styles.type.headline.layoutStyle}>
                 No more prompts in this session.
               </Text>
+              {appUpdateMenuItem ? (
+                <>
+                  <Spacer units={3} />
+                  <Button
+                    title={appUpdateMenuItem.title}
+                    disabled={appUpdateMenuItem.disabled}
+                    onPress={appUpdateMenuItem.action}
+                    color={currentColorPalette.accentColor}
+                  />
+                </>
+              ) : null}
             </View>
           );
         }

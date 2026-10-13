@@ -8,8 +8,6 @@ export type { ButtonProps } from "./components/Button.jsx";
 export { default as Card } from "./components/Card.jsx";
 export type { CardProps } from "./components/Card.jsx";
 
-export { default as ContinueWithUser } from "./components/ContinueWithUser.jsx";
-
 export { default as FadeView } from "./components/FadeView.jsx";
 export type { FadeViewProps } from "./components/FadeView.jsx";
 

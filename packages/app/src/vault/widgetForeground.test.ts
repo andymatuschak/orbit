@@ -1,13 +1,10 @@
-import type OrbitAPIClient from "@withorbit/api-client";
 import {
   TaskRepetitionOutcome,
   type ReviewItem,
   type VaultID,
 } from "@withorbit/core";
-import type { OrbitStore } from "@withorbit/store-shared";
 import type { PerTaskRepository } from "@withorbit/store-shared/perTaskRepository";
 import { expect, test } from "bun:test";
-import { LegacyReviewDatabase } from "../model2/LegacyReviewDatabase.js";
 import { openNativeHostedReviewDatabase } from "../sync/openHostedReviewDatabase.js";
 import type {
   WidgetProjectionBridge,
@@ -263,48 +260,4 @@ test("a delayed widget acknowledgement cannot replace a newer Repo queue notific
   expect(pending).toEqual([]);
   expect(pushed.every((items) => items === latest)).toBe(true);
   await database.close();
-});
-
-test("legacy foreground imports durably, refreshes listeners, and stops on close", async () => {
-  const events = lifecycle();
-  const { pending, calls, bridge } = outbox();
-  const store = {
-    database: {
-      async listEntities() {
-        return [];
-      },
-      async putEvents() {
-        calls.push("apply");
-      },
-      async close() {
-        calls.push("close");
-      },
-    },
-    attachmentStore: {},
-  } as unknown as OrbitStore;
-  const database = await LegacyReviewDatabase.open(
-    null as unknown as OrbitAPIClient,
-    "legacy-test",
-    {
-      createStore: async () => store,
-      syncStore: async () => {},
-      widgetProjectionBridge: bridge,
-      subscribeToForeground: events.subscribeToForeground,
-    },
-  );
-  const pushed = new Promise<ReviewItem[]>((resolve) =>
-    database.subscribeToReviewQueue(resolve),
-  );
-  pending.push(record());
-  events.resume();
-  expect(await pushed).toEqual([]);
-  expect(pending).toEqual([]);
-  expect(calls.filter((call) => call === "apply")).toHaveLength(1);
-  await database.close();
-  pending.push(record());
-  events.resume();
-  await Promise.resolve();
-  await Promise.resolve();
-  expect(calls.at(-1)).toBe("close");
-  expect(events.removed).toBe(1);
 });

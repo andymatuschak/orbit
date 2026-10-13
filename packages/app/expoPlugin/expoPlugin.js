@@ -1,13 +1,11 @@
 const { withInfoPlist, withPlugins } = require("expo/config-plugins");
 const withCatalystSupport = require("./withCatalystSupport");
-const withSQLImageURLLoader = require("./withSQLImageURLLoader");
 const withSceneLifecycle = require("./withSceneLifecycle");
 const withWidgetPluginFixes = require("./withWidgetPluginFixes");
 
 module.exports = function withOrbitExpoConfigPlugin(config) {
   config = withPlugins(config, [
     withCatalystSupport,
-    withSQLImageURLLoader,
     withSceneLifecycle,
     withWidgetPluginFixes,
   ]);

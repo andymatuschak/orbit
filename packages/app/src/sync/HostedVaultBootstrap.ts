@@ -10,8 +10,11 @@ import {
   IndexedDBRepoStorageAdapter,
   RepoPerTaskDocuments,
 } from "@withorbit/store-automerge";
-import { PerTaskRepository } from "@withorbit/store-shared/perTaskRepository";
-import type { HostedVaultRegistryEntry } from "../vault/vaultRegistry.js";
+import {
+  CatalogUnavailableError,
+  PerTaskRepository,
+} from "@withorbit/store-shared/perTaskRepository";
+import type { LabConnection } from "../vault/labConnection.js";
 import { AuthenticatedWebSocketNetworkAdapter } from "./AuthenticatedWebSocketNetworkAdapter.js";
 import { hostedSyncWebSocketURL } from "./HostedVaultClient.js";
 
@@ -24,9 +27,9 @@ export interface HostedVaultNetworkAdapter extends NetworkAdapterInterface {
   whenReady(): Promise<void>;
 }
 
-/** Opens an already-associated account root on this device without importing a source vault. */
+/** Opens the paired private root; network availability does not veto a local cache. */
 export async function openBoundHostedVault(input: {
-  entry: HostedVaultRegistryEntry;
+  entry: LabConnection;
   requestCredential: () => Promise<HostedSyncCredential>;
   openRepoStorage?: (localStoreID: string) => Promise<StorageAdapterInterface>;
   createNetwork?: (input: {
@@ -39,6 +42,7 @@ export async function openBoundHostedVault(input: {
     input.entry.localStoreID,
     input.openRepoStorage,
   );
+  let vault: PerTaskRepository | undefined;
   try {
     const network = attachHostedNetwork({
       repo,
@@ -46,17 +50,60 @@ export async function openBoundHostedVault(input: {
       requestCredential: input.requestCredential,
       createNetwork: input.createNetwork,
     });
-    await waitForNetworkReady(network, input.networkReadyTimeoutMillis);
     const documents = new RepoPerTaskDocuments(repo);
-    const vault = await PerTaskRepository.open(
-      documents,
-      input.entry.rootDocumentURL,
+    const cachedRoot = await documents.read(input.entry.rootDocumentURL, {
+      localOnly: true,
+    });
+    if (!cachedRoot) {
+      await waitForNetworkReady(network, input.networkReadyTimeoutMillis);
+      vault = await PerTaskRepository.open(
+        documents,
+        input.entry.rootDocumentURL,
+      );
+    } else {
+      try {
+        vault = await PerTaskRepository.open(
+          documents,
+          input.entry.rootDocumentURL,
+          cachedRoot,
+          { localOnly: true },
+        );
+      } catch (error) {
+        if (!(error instanceof CatalogUnavailableError)) throw error;
+        await waitForNetworkReady(network, input.networkReadyTimeoutMillis);
+        vault = await PerTaskRepository.open(
+          documents,
+          input.entry.rootDocumentURL,
+        );
+      }
+    }
+    const workingSet = (await vault.getCoreDocumentURLs()).slice(2);
+    const localTasks = await Promise.all(
+      workingSet.map((url) => documents.read(url, { localOnly: true })),
     );
+    const missing = workingSet.filter((_, index) => !localTasks[index]);
+    const fetchMissing = async () => {
+      const available = await Promise.all(
+        missing.map((url) => documents.fetch(url)),
+      );
+      if (available.some((value) => !value)) {
+        throw new Error("The Lab review working set is unavailable.");
+      }
+    };
+    if (workingSet.length > 0 && !localTasks.some(Boolean)) {
+      // A known catalog with no cached prompts is unavailable, not an empty queue.
+      await waitForNetworkReady(network, input.networkReadyTimeoutMillis);
+      await fetchMissing();
+    } else {
+      // A partial local queue remains useful offline; replenish it asynchronously.
+      void fetchMissing().catch(() => undefined);
+    }
     return {
       vault,
       repo,
     };
   } catch (error) {
+    await vault?.close();
     await repo.shutdown();
     throw error;
   }
@@ -70,7 +117,7 @@ async function createLocalRepo(
   const storage = openRepoStorage
     ? await openRepoStorage(localStoreID)
     : new IndexedDBRepoStorageAdapter(
-        `com.withorbit.automerge.${localStoreID}`,
+        `com.withorbit.lab.automerge.${localStoreID}`,
       );
   return new Repo({
     peerId: `orbit-client-${generateUniqueID()}` as PeerId,

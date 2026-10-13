@@ -23,7 +23,7 @@ final class WidgetProjectionStore {
   private let fileURL: URL
 
   convenience init() throws {
-    guard let appGroupID = Bundle.main.object(forInfoDictionaryKey: "OPSQLite_AppGroup") as? String,
+    guard let appGroupID = Bundle.main.object(forInfoDictionaryKey: "OrbitAppGroup") as? String,
       let directory = FileManager.default.containerURL(
         forSecurityApplicationGroupIdentifier: appGroupID)
     else { throw WidgetProjectionStoreError.missingAppGroup }

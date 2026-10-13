@@ -125,11 +125,11 @@ final class OrbitAutomergeRepoStore {
   func connect(
     localStoreID: String,
     websocketURL: String,
-    firebaseIDToken: String
+    pairingToken: String
   ) async throws {
     try await requireSession(localStoreID).connect(
       websocketURL: websocketURL,
-      firebaseIDToken: firebaseIDToken
+      pairingToken: pairingToken
     )
   }
 
@@ -174,7 +174,7 @@ private final class OrbitAutomergeRepoSession {
       // Repo Swift 0.3.2 uses `reconnectOnError` to keep its healthy receive
       // loop running, so `false` consumes only one post-handshake message.
       // Its retry-limit check also makes `1` exit before an internal retry,
-      // leaving Orbit to reconnect with a fresh Firebase credential.
+      // leaving Orbit to reconnect with a paired credential.
       .init(reconnectOnError: true, maxNumberOfConnectRetries: 1)
     )
     repo.addNetworkAdapter(adapter: websocket)
@@ -274,7 +274,7 @@ private final class OrbitAutomergeRepoSession {
 
   func connect(
     websocketURL: String,
-    firebaseIDToken: String
+    pairingToken: String
   ) async throws {
     guard
       let url = URL(string: websocketURL),
@@ -282,9 +282,9 @@ private final class OrbitAutomergeRepoSession {
       url.user == nil,
       url.password == nil,
       url.fragment == nil,
-      !firebaseIDToken.isEmpty,
-      firebaseIDToken.utf8.count <= 8_192,
-      firebaseIDToken.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
+      !pairingToken.isEmpty,
+      pairingToken.utf8.count <= 8_192,
+      pairingToken.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
     else {
       throw OrbitAutomergeRepoStoreError.invalidSyncConnection
     }
@@ -294,7 +294,7 @@ private final class OrbitAutomergeRepoSession {
     }
     var request = URLRequest(url: url)
     request.setValue(
-      "ID \(firebaseIDToken)",
+      "Bearer \(pairingToken)",
       forHTTPHeaderField: "Authorization"
     )
     try await websocket.connect(to: request)

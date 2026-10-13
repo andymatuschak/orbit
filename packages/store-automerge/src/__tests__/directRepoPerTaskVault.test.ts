@@ -98,7 +98,7 @@ test("new tasks are planned and created once with their first review already inc
   }
 });
 
-test("catalog-only reads and reminder preference writes share the repository without task loads", async () => {
+test("catalog-only reads do not materialize task documents", async () => {
   const storage = new ChunkStorage();
   const initialRepo = new Repo({ storage });
   const initial = await PerTaskRepository.create(
@@ -113,29 +113,8 @@ test("catalog-only reads and reminder preference writes share the repository wit
     new RepoPerTaskDocuments(repo),
     rootURL,
   );
-  const preferences = {
-    enabled: false,
-    snoozedUntilTimestampMillis: null,
-    localTimeMinutes: 8 * 60,
-    timeZone: "America/Los_Angeles",
-  };
   try {
     expect(Object.keys(await vault.getCatalogEntries())).toHaveLength(75);
-    expect(await vault.getNotificationPreferences()).toBeUndefined();
-    expect(Object.keys(repo.handles)).toHaveLength(2);
-    const rootID = String(
-      parseAutomergeUrl(rootURL as unknown as AutomergeUrl).documentId,
-    );
-    storage.failDocumentID = rootID;
-    await expect(vault.setNotificationPreferences(preferences)).rejects.toThrow(
-      "document save(s) failed",
-    );
-    await expect(vault.setNotificationPreferences(preferences)).rejects.toThrow(
-      "document save(s) failed",
-    );
-    storage.failDocumentID = undefined;
-    await vault.setNotificationPreferences(preferences);
-    expect(await vault.getNotificationPreferences()).toEqual(preferences);
     expect(Object.keys(repo.handles)).toHaveLength(2);
   } finally {
     storage.failDocumentID = undefined;
@@ -148,7 +127,7 @@ test("catalog-only reads and reminder preference writes share the repository wit
     rootURL,
   );
   try {
-    expect(await reopened.getNotificationPreferences()).toEqual(preferences);
+    expect(Object.keys(await reopened.getCatalogEntries())).toHaveLength(75);
     expect(Object.keys(coldRepo.handles)).toHaveLength(2);
   } finally {
     await reopened.close();

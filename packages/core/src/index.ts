@@ -6,7 +6,6 @@ export * from "./entities/attachmentReference.js";
 export * from "./eventReducer.js";
 export * from "./generateUniqueID.js";
 export * from "./reviewQueue.js";
-export * from "./notificationPreferences.js";
 export * from "./schedulers/spacedRepetitionScheduler.js";
 export * from "./vault/attachments.js";
 export * from "./vault/ids.js";

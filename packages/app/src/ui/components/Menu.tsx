@@ -70,6 +70,7 @@ export function Menu({
       onRequestClose={onClose}
     >
       <Pressable
+        accessible={false}
         style={{
           ...StyleSheet.absoluteFill,
         }}
@@ -86,6 +87,7 @@ export function Menu({
           }}
         >
           <Pressable
+            accessible={false}
             onPress={(event) => event.stopPropagation()}
             style={
               position && {

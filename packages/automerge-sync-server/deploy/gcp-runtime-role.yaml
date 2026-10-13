@@ -1,9 +1,0 @@
-title: Orbit Automerge sync runtime
-description: Minimal Firestore access for the hosted sync service.
-stage: GA
-includedPermissions:
-  - datastore.databases.get
-  - datastore.databases.getMetadata
-  - datastore.entities.create
-  - datastore.entities.get
-  - datastore.entities.update

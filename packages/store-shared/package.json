@@ -8,7 +8,6 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./databaseTests": "./dist/databaseTests.js",
     "./perTaskVault": "./dist/perTaskVault.js",
     "./perTaskCodec": "./dist/perTaskCodec.js",
     "./taskMutationPlanner": "./dist/taskMutationPlanner.js",
@@ -20,17 +19,13 @@
   "sideEffects": false,
   "scripts": {
     "test": "bun test",
-    "build": "node ../../node_modules/@typescript/native/bin/tsc -b",
-    "generateSchema": "typescript-json-schema src/validation/eventsValidator.ts Events -o src/validation/events.json --noExtraProps --required --ignoreErrors --strictNullChecks"
+    "build": "node ../../node_modules/@typescript/native/bin/tsc -b"
   },
   "dependencies": {
-    "@withorbit/core": "0.0.1",
-    "ajv": "^8.6.2"
+    "@withorbit/core": "0.0.1"
   },
   "devDependencies": {
     "@types/bun": "1.4.0",
-    "@withorbit/sample-data": "0.0.1",
-    "typescript": "6.0.3",
-    "typescript-json-schema": "^0.50.1"
+    "typescript": "6.0.3"
   }
 }

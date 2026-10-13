@@ -67,7 +67,7 @@ export interface OrbitAutomergeNativeModule {
   connectRepo(
     localStoreID: string,
     websocketURL: string,
-    firebaseIDToken: string,
+    pairingToken: string,
   ): Promise<void>;
   disconnectRepo(localStoreID: string): Promise<void>;
   addListener(

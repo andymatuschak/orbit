@@ -1,6 +1,8 @@
 import {
   NetworkAdapter,
   Repo,
+  parseAutomergeUrl,
+  type AutomergeUrl,
   type Message,
   type PeerId,
   type PeerMetadata,
@@ -19,16 +21,13 @@ import {
   type VaultID,
   type VaultMutationID,
 } from "@withorbit/core";
-import {
-  RepoAutomergeBinaryStorage,
-  RepoPerTaskDocuments,
-} from "@withorbit/store-automerge";
+import { RepoPerTaskDocuments } from "@withorbit/store-automerge";
 import { PerTaskRepository } from "@withorbit/store-shared/perTaskRepository";
 import { afterEach, describe, expect, test } from "bun:test";
 import {
-  MemoryVaultRegistryStorage,
-  VaultRegistryManager,
-} from "../vault/vaultRegistry.js";
+  MemoryLabConnectionStorage,
+  LabConnectionManager,
+} from "../vault/labConnection.js";
 import {
   openBoundHostedVault,
   type HostedVaultNetworkAdapter,
@@ -42,6 +41,79 @@ afterEach(async () => {
 });
 
 describe("hosted vault bootstrap", () => {
+  test("cached web prompts can be reviewed and reopened while the laptop is unreachable", async () => {
+    const repoStorage = new MemoryRepoStorage();
+    const seeded = await createPerTaskRepoVault(repoStorage);
+    const taskID = "offline-web-task" as TaskID;
+    await seeded.vault.apply([
+      {
+        kind: "ingestTask",
+        mutationID: "ingest-offline-web-task" as VaultMutationID,
+        task: {
+          taskID,
+          createdAtTimestampMillis: 1_000,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.Plain,
+              body: { text: "Cached offline prompt", attachments: [] },
+            },
+          },
+          provenance: null,
+          metadata: {},
+        },
+      },
+    ]);
+    const rootDocumentURL = seeded.vault.rootURL;
+    await seeded.vault.close();
+    await seeded.repo.shutdown();
+    repos.splice(repos.indexOf(seeded.repo), 1);
+    const connection = await new LabConnectionManager(
+      new MemoryLabConnectionStorage(),
+    ).pair({
+      serviceOrigin: "https://laptop.example.test",
+      token: "paired-key",
+      rootDocumentURL,
+    });
+    const openOffline = () =>
+      openBoundHostedVault({
+        entry: connection,
+        requestCredential,
+        openRepoStorage: async () => repoStorage,
+        createNetwork: () => new NeverReadyNetworkAdapter(),
+        networkReadyTimeoutMillis: 1,
+      });
+    const first = await openOffline();
+    repos.push(first.repo);
+    const database = openWebHostedReviewDatabase(first);
+    expect(
+      (await database.fetchReviewQueue()).map((item) => item.task.id),
+    ).toEqual([taskID]);
+    await database.apply([
+      {
+        kind: "recordReview",
+        mutationID: "review-offline-web-task" as VaultMutationID,
+        observationID: "review-offline-web-task" as ObservationID,
+        taskID,
+        componentID: "main",
+        reviewSessionID: null,
+        outcome: TaskRepetitionOutcome.Remembered,
+        occurredAtTimestampMillis: Date.now(),
+      },
+    ]);
+    await database.close();
+    repos.splice(repos.indexOf(first.repo), 1);
+    const reopened = await openOffline();
+    repos.push(reopened.repo);
+    expect(await reopened.vault.getReviewQueue()).toEqual([]);
+    expect(
+      await reopened.vault.readTaskObservation(
+        taskID,
+        "review-offline-web-task" as ObservationID,
+      ),
+    ).not.toBeNull();
+  });
+
   test("opens an existing local account binding", async () => {
     const repoStorage = new MemoryRepoStorage();
     const remote = await createPerTaskRepoVault(repoStorage, "remote-vault");
@@ -49,10 +121,9 @@ describe("hosted vault bootstrap", () => {
     await remote.repo.shutdown();
     repos.splice(repos.indexOf(remote.repo), 1);
 
-    const registry = new VaultRegistryManager(new MemoryVaultRegistryStorage());
-    const entry = await registry.getOrCreateHostedAccountVault({
-      authenticationUserID: "firebase-a",
-      accountID: "account-a",
+    const registry = new LabConnectionManager(new MemoryLabConnectionStorage());
+    const entry = await registry.pair({
+      token: "paired-token",
       serviceOrigin: "https://sync.example.test",
       rootDocumentURL: remote.vault.rootURL,
     });
@@ -70,10 +141,9 @@ describe("hosted vault bootstrap", () => {
 
   test("a connection failure keeps the hosted cache coordinates intact", async () => {
     const seeded = await createPerTaskRepoVault(new MemoryRepoStorage());
-    const registry = new VaultRegistryManager(new MemoryVaultRegistryStorage());
-    const entry = await registry.getOrCreateHostedAccountVault({
-      authenticationUserID: "firebase-a",
-      accountID: "account-a",
+    const registry = new LabConnectionManager(new MemoryLabConnectionStorage());
+    const entry = await registry.pair({
+      token: "paired-token",
       serviceOrigin: "https://sync.example.test",
       rootDocumentURL: seeded.vault.rootURL,
     });
@@ -86,7 +156,56 @@ describe("hosted vault bootstrap", () => {
         networkReadyTimeoutMillis: 1,
       }),
     ).rejects.toThrow("Timed out connecting to Orbit Sync");
-    expect((await registry.getRegistry()).hostedVaults).toEqual([entry]);
+    expect(await registry.load()).toEqual(entry);
+  });
+
+  test("a cached catalog with no local prompts is unavailable, not an empty queue", async () => {
+    const repoStorage = new MemoryRepoStorage();
+    const seeded = await createPerTaskRepoVault(repoStorage);
+    await seeded.vault.apply([
+      {
+        kind: "ingestTask",
+        mutationID: "missing-web-task" as VaultMutationID,
+        task: {
+          taskID: "missing-web-task" as TaskID,
+          createdAtTimestampMillis: 1_000,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.Plain,
+              body: { text: "Not cached", attachments: [] },
+            },
+          },
+          provenance: null,
+          metadata: {},
+        },
+      },
+    ]);
+    const rootDocumentURL = seeded.vault.rootURL;
+    const [, , taskURL] = await seeded.vault.getCoreDocumentURLs();
+    await seeded.vault.close();
+    await seeded.repo.shutdown();
+    repos.splice(repos.indexOf(seeded.repo), 1);
+    const { documentId } = parseAutomergeUrl(
+      taskURL as unknown as AutomergeUrl,
+    );
+    await repoStorage.removeRange([documentId]);
+    const entry = await new LabConnectionManager(
+      new MemoryLabConnectionStorage(),
+    ).pair({
+      serviceOrigin: "https://laptop.example.test",
+      token: "key",
+      rootDocumentURL,
+    });
+    await expect(
+      openBoundHostedVault({
+        entry,
+        requestCredential,
+        openRepoStorage: async () => repoStorage,
+        createNetwork: () => new NeverReadyNetworkAdapter(),
+        networkReadyTimeoutMillis: 1,
+      }),
+    ).rejects.toThrow("Timed out connecting");
   });
 
   test("opens a schema-2 account root without hydrating unrelated tasks", async () => {
@@ -95,10 +214,9 @@ describe("hosted vault bootstrap", () => {
     await seeded.vault.close();
     await seeded.repo.shutdown();
     repos.splice(repos.indexOf(seeded.repo), 1);
-    const registry = new VaultRegistryManager(new MemoryVaultRegistryStorage());
-    const entry = await registry.getOrCreateHostedAccountVault({
-      authenticationUserID: "firebase-a",
-      accountID: "account-a",
+    const registry = new LabConnectionManager(new MemoryLabConnectionStorage());
+    const entry = await registry.pair({
+      token: "paired-token",
       serviceOrigin: "https://sync.example.test",
       rootDocumentURL: seeded.vault.rootURL,
     });
@@ -174,7 +292,6 @@ async function createPerTaskRepoVault(
   vaultID = "schema-2-vault",
 ) {
   const repo = createRepo(repoStorage, "schema-2");
-  const storage = new RepoAutomergeBinaryStorage(repo);
   const vault = await PerTaskRepository.create(new RepoPerTaskDocuments(repo), {
     vaultID: vaultID as VaultID,
     createdAtTimestampMillis: 1_000,
@@ -183,7 +300,7 @@ async function createPerTaskRepoVault(
     observations: {},
     attachments: {},
   });
-  return { repo, storage, vault };
+  return { repo, vault };
 }
 
 class ReadyNetworkAdapter
@@ -263,7 +380,7 @@ function createRepo(storage: StorageAdapterInterface, suffix: string) {
 
 function requestCredential(): Promise<HostedSyncCredential> {
   return Promise.resolve({
-    kind: "firebaseIDToken",
-    token: "firebase-token",
+    kind: "pairedToken",
+    token: "paired-token",
   });
 }

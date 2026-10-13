@@ -4,19 +4,10 @@ import { WidgetProjectionCoordinator } from "../vault/WidgetProjectionCoordinato
 import type { WidgetProjectionBridge } from "../vault/widgetProjection.js";
 import { HostedReviewDatabase } from "./HostedReviewDatabase.js";
 import { openBoundNativeHostedVault } from "./NativeHostedVaultBootstrap.js";
-import {
-  prepareHostedReviewOpening,
-  type HostedReviewControlClient,
-} from "./hostedReviewOpening.js";
-import type {
-  HostedReviewDatabaseResult,
-  OpenHostedReviewDatabaseInput,
-} from "./openHostedReviewDatabase.types.js";
+import type { LabConnection } from "../vault/labConnection.js";
 
 export interface NativeHostedReviewDatabaseDependencies {
-  controlClient?: HostedReviewControlClient;
   runOpenBound?: typeof openBoundNativeHostedVault;
-  sleep?: (delayMillis: number) => Promise<void>;
   reviewQueueDebounceMillis?: number;
   documentTimeoutMillis?: number;
   widgetProjectionBridge?: WidgetProjectionBridge | null;
@@ -24,26 +15,19 @@ export interface NativeHostedReviewDatabaseDependencies {
   subscribeToForeground?: (listener: () => void) => () => void;
 }
 
-/** iOS uses Repo Swift; Android remains on its legacy platform facade. */
-export async function tryOpenHostedReviewDatabase(
-  input: OpenHostedReviewDatabaseInput,
+/** A private cache opens without authentication or laptop availability. */
+export async function openLabReviewDatabase(
+  connection: LabConnection,
   dependencies: NativeHostedReviewDatabaseDependencies = {},
-): Promise<HostedReviewDatabaseResult> {
+): Promise<HostedReviewDatabase> {
   const openingStartedAt = Date.now();
-  const opening = await prepareHostedReviewOpening(input, {
-    controlClient: dependencies.controlClient,
-    sleep: dependencies.sleep,
-  });
-  console.log(
-    "[Performance] Hosted vault selection",
-    Date.now() - openingStartedAt,
-    "ms",
-  );
-  if (opening.kind === "legacy") return null;
   const vault = await (dependencies.runOpenBound ?? openBoundNativeHostedVault)(
     {
-      entry: opening.entry,
-      requestCredential: () => opening.control.getSyncCredential(),
+      entry: connection,
+      requestCredential: async () => ({
+        kind: "pairedToken",
+        token: connection.token,
+      }),
       documentTimeoutMillis: dependencies.documentTimeoutMillis,
     },
   );

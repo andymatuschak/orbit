@@ -11,7 +11,7 @@ type Attachment = NonNullable<
   Awaited<ReturnType<HostedReviewVault["readAttachment"]>>
 >;
 
-/** One hosted review facade; only attachment URLs and WidgetKit are platform-specific. */
+/** One client review facade; only attachment URLs and WidgetKit are platform-specific. */
 export class HostedReviewDatabase implements ReviewDatabase {
   private readonly openedAt = Date.now();
   private closed = false;

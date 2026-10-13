@@ -9,10 +9,6 @@ import type {
 } from "@automerge/automerge-repo";
 const valueFileName = "_value";
 
-export class StorageQuotaExceededError extends Error {
-  readonly name = "StorageQuotaExceededError";
-}
-
 export interface NodeFSStorageMetrics {
   loads: number;
   loadRanges: number;
@@ -26,7 +22,7 @@ export interface NodeFSStorageMetrics {
 }
 
 /**
- * A quota-bounded, read-atomic StorageAdapter for the single-writer sync host.
+ * A read-atomic StorageAdapter for the single-writer private Repo.
  * Values are fsynced to a sibling temporary file and atomically renamed;
  * every key segment is encoded before it becomes a path component.
  */
@@ -35,8 +31,6 @@ export class AtomicNodeFSStorageAdapter implements StorageAdapterInterface {
   private mutation: Promise<unknown> = Promise.resolve();
   private closePromise: Promise<void> | null = null;
   private closing = false;
-  private sizes: Map<string, number> | null = null;
-  private indexedBytes = 0;
   readonly metrics: NodeFSStorageMetrics = {
     loads: 0,
     loadRanges: 0,
@@ -52,11 +46,8 @@ export class AtomicNodeFSStorageAdapter implements StorageAdapterInterface {
   constructor(
     readonly baseDirectory: string,
     maximumConcurrency = 32,
-    readonly maximumBytes = Number.MAX_SAFE_INTEGER,
   ) {
     this.limiter = new OperationLimiter(maximumConcurrency, this.metrics);
-    if (!Number.isSafeInteger(maximumBytes) || maximumBytes < 1)
-      throw new Error("Storage quota must be a positive integer");
   }
 
   async load(key: StorageKey): Promise<Uint8Array | undefined> {
@@ -81,14 +72,6 @@ export class AtomicNodeFSStorageAdapter implements StorageAdapterInterface {
     assertStorageKey(key);
     if (this.closing) return;
     await this.exclusiveMutation(async () => {
-      const sizes = await this.sizeIndex();
-      const encoded = JSON.stringify(key);
-      const nextTotal =
-        this.indexedBytes - (sizes.get(encoded) ?? 0) + binary.byteLength;
-      if (nextTotal > this.maximumBytes)
-        throw new StorageQuotaExceededError(
-          `Account storage quota exceeded (${nextTotal}/${this.maximumBytes})`,
-        );
       this.metrics.saves++;
       await this.limiter.run(async () => {
         const valuePath = this.valuePath(key);
@@ -112,8 +95,6 @@ export class AtomicNodeFSStorageAdapter implements StorageAdapterInterface {
         await syncDirectory(directory);
         this.metrics.bytesWritten += binary.byteLength;
       });
-      sizes.set(encoded, binary.byteLength);
-      this.indexedBytes = nextTotal;
     });
   }
 
@@ -122,7 +103,6 @@ export class AtomicNodeFSStorageAdapter implements StorageAdapterInterface {
     if (this.closing) return;
     this.metrics.removes++;
     await this.exclusiveMutation(async () => {
-      const sizes = await this.sizeIndex();
       await this.limiter.run(async () => {
         const valuePath = this.valuePath(key);
         try {
@@ -132,9 +112,6 @@ export class AtomicNodeFSStorageAdapter implements StorageAdapterInterface {
           if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
         }
       });
-      const encoded = JSON.stringify(key);
-      this.indexedBytes -= sizes.get(encoded) ?? 0;
-      sizes.delete(encoded);
     });
   }
 
@@ -160,41 +137,13 @@ export class AtomicNodeFSStorageAdapter implements StorageAdapterInterface {
     );
   }
 
-  /** Counts committed values by stat, without reading every document into memory. */
-  byteLength(): Promise<number> {
-    return this.exclusiveMutation(async () => {
-      await this.sizeIndex();
-      return this.indexedBytes;
-    });
-  }
-
-  private async sizeIndex(): Promise<Map<string, number>> {
-    if (this.sizes) return this.sizes;
-    const valuePaths = await this.walkValuePaths(this.baseDirectory);
-    const sizes = await Promise.all(
-      valuePaths.map((valuePath) =>
-        this.limiter.run(
-          async () =>
-            [
-              JSON.stringify(this.decodeValuePath(valuePath)),
-              (await fs.stat(valuePath)).size,
-            ] as const,
-        ),
-      ),
-    );
-    this.sizes = new Map(sizes);
-    this.indexedBytes = sizes.reduce((sum, [, bytes]) => sum + bytes, 0);
-    return this.sizes;
-  }
-
   async removeRange(prefix: StorageKey): Promise<void> {
     // Repo always removes a document/chunk prefix. Refuse an empty prefix so a
-    // malformed message can never erase the entire account namespace.
+    // malformed message can never erase the entire Repo.
     assertStorageKey(prefix);
     if (this.closing) return;
     this.metrics.removeRanges++;
     await this.exclusiveMutation(async () => {
-      const sizes = await this.sizeIndex();
       await this.limiter.run(async () => {
         await fs.rm(this.keyDirectory(prefix), {
           recursive: true,
@@ -202,13 +151,6 @@ export class AtomicNodeFSStorageAdapter implements StorageAdapterInterface {
         });
         await syncDirectory(path.dirname(this.keyDirectory(prefix)));
       });
-      for (const [encoded, bytes] of sizes) {
-        const key = JSON.parse(encoded) as StorageKey;
-        if (prefix.every((segment, index) => key[index] === segment)) {
-          this.indexedBytes -= bytes;
-          sizes.delete(encoded);
-        }
-      }
     });
   }
 
@@ -265,7 +207,7 @@ export class AtomicNodeFSStorageAdapter implements StorageAdapterInterface {
   private decodeValuePath(valuePath: string): StorageKey {
     const relative = path.relative(this.baseDirectory, path.dirname(valuePath));
     if (relative.startsWith("..") || path.isAbsolute(relative)) {
-      throw new Error("Storage path escaped its account namespace");
+      throw new Error("Storage path escaped the Repo directory");
     }
     return relative.split(path.sep).filter(Boolean).map(decodeKeySegment);
   }
@@ -274,11 +216,7 @@ export class AtomicNodeFSStorageAdapter implements StorageAdapterInterface {
     const result = this.mutation.then(operation, operation);
     this.mutation = result.then(
       () => undefined,
-      () => {
-        // A rename/unlink may have committed before a later fsync failed.
-        // Recount files before the next operation instead of trusting stale totals.
-        this.sizes = null;
-      },
+      () => undefined,
     );
     return result;
   }

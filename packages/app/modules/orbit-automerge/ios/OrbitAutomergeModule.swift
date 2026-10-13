@@ -180,12 +180,12 @@ public final class OrbitAutomergeModule: Module, @unchecked Sendable {
       (
         localStoreID: String,
         websocketURL: String,
-        firebaseIDToken: String
+        pairingToken: String
       ) async throws in
       try await repoStore.connect(
         localStoreID: localStoreID,
         websocketURL: websocketURL,
-        firebaseIDToken: firebaseIDToken
+        pairingToken: pairingToken
       )
     }
 

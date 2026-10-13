@@ -1,25 +1,18 @@
 import type { AutomergeDocumentURL } from "@withorbit/core";
 
 export interface HostedSyncCredential {
-  kind: "firebaseIDToken";
+  kind: "pairedToken";
   token: string;
 }
 
-export interface ResolveHostedRootResponse {
-  accountID: string;
+export interface LabVaultRoot {
   rootDocumentURL: AutomergeDocumentURL;
-}
-
-export interface HostedVaultControlClient {
-  resolveHostedRoot(
-    credential: HostedSyncCredential,
-  ): Promise<ResolveHostedRootResponse>;
 }
 
 export interface HostedSyncAdmissionFrame {
   type: "orbit-sync-admission";
   protocolVersion: 1;
-  firebaseIDToken: string;
+  token: string;
 }
 
 export interface HostedSyncAdmissionAcceptedFrame {
@@ -30,11 +23,7 @@ export interface HostedSyncAdmissionAcceptedFrame {
 export interface HostedControlErrorBody {
   error:
     | "authentication-required"
-    | "account-not-provisioned"
-    | "legacy-account"
-    | "root-not-bound"
     | "invalid-request"
     | "body-too-large"
-    | "rate-limited"
     | "service-unavailable";
 }

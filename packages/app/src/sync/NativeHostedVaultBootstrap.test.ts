@@ -206,9 +206,7 @@ function openFixture(
 ) {
   return openBoundNativeHostedVault({
     entry: {
-      kind: "hosted",
-      accountID: "account-native",
-      authenticationUserID: "firebase-native",
+      token: "paired-key",
       serviceOrigin: "https://sync.example.test",
       localStoreID: "native-cache",
       rootDocumentURL: fixture.vault.rootURL,

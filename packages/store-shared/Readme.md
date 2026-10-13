@@ -1,6 +1,6 @@
 # `@withorbit/store-shared`
 
-`OrbitStore` implements a standard interface for interacting with a database of Orbit user data and an associated blob store for attachments. This package contains types shared by the two main implementations, `@withorbit/store-fs` (for Node.JS and React Native) and `@withorbit/store-web` (for web browsers).
+The per-task repository, schema codec, scheduling projection, and mutation planner are shared by Repo JS and the native Repo Swift bridge. Per-task documents own task definitions and scheduling observations; replaceable catalog documents accelerate review selection.
 
 This library is compatible with Node.js, React Native, and web browser contexts.
 

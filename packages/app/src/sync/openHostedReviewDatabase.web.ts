@@ -6,40 +6,28 @@ import {
   type HostedVaultBootstrapResult,
   type HostedVaultNetworkAdapter,
 } from "./HostedVaultBootstrap.js";
-import {
-  prepareHostedReviewOpening,
-  type HostedReviewControlClient,
-} from "./hostedReviewOpening.js";
-import type {
-  HostedReviewDatabaseResult,
-  OpenHostedReviewDatabaseInput,
-} from "./openHostedReviewDatabase.types.js";
+import type { LabConnection } from "../vault/labConnection.js";
 
 export interface HostedReviewDatabaseDependencies {
-  controlClient?: HostedReviewControlClient;
   openRepoStorage?: (localStoreID: string) => Promise<StorageAdapterInterface>;
   createNetwork?: (input: {
     websocketURL: string;
     requestCredential: () => Promise<HostedSyncCredential>;
   }) => HostedVaultNetworkAdapter;
   runOpenBound?: typeof openBoundHostedVault;
-  sleep?: (delayMillis: number) => Promise<void>;
   networkReadyTimeoutMillis?: number;
 }
 
-/** Legacy accounts return null so opening keeps its compatibility path. */
-export async function tryOpenHostedReviewDatabase(
-  input: OpenHostedReviewDatabaseInput,
+export async function openLabReviewDatabase(
+  connection: LabConnection,
   dependencies: HostedReviewDatabaseDependencies = {},
-): Promise<HostedReviewDatabaseResult> {
-  const opening = await prepareHostedReviewOpening(input, {
-    controlClient: dependencies.controlClient,
-    sleep: dependencies.sleep,
-  });
-  if (opening.kind === "legacy") return null;
+): Promise<HostedReviewDatabase> {
   const result = await (dependencies.runOpenBound ?? openBoundHostedVault)({
-    entry: opening.entry,
-    requestCredential: () => opening.control.getSyncCredential(),
+    entry: connection,
+    requestCredential: async () => ({
+      kind: "pairedToken",
+      token: connection.token,
+    }),
     openRepoStorage: dependencies.openRepoStorage,
     createNetwork: dependencies.createNetwork,
     networkReadyTimeoutMillis: dependencies.networkReadyTimeoutMillis,
