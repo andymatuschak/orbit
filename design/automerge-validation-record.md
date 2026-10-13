@@ -4,7 +4,8 @@ This is the personal fork's evidence ledger, not the public migration's incident
 history. Public/cloud releases, old build incidents, experiments, and the
 2026-10-12 publisher repair remain preserved on
 `codex/automerge-phase-3-native:design/automerge-validation-record.md`.
-That service remains unchanged by Lab work. Start with
+Public Firebase remains unchanged; the separate dogfood serving stack was
+retired only after the private cutover proofs below. Start with
 [the review guide](automerge-review-guide.md) for the current reading path.
 
 ## 2026-10-13: source and platform boundaries
@@ -117,27 +118,66 @@ With the private sync/update route disconnected, Andy completed one app review
 and one widget Reveal/review and confirmed both advanced. Independent decoding
 of Chonk's captured ordinary files confirms two new observations on distinct
 tasks, with distinct stable IDs and the expected app/`WIDGET` session origins.
-The app was then stopped; the bytes remain present. iOS denied its cold relaunch
-while locked, so remote delivery remains to be verified after the next open.
+The app was then stopped; the bytes remain present. Initial locked-device
+relaunch attempts were denied. After opening with a working private connection,
+the root and catalog heads matched the server, but neither authoritative task
+history had arrived. The two reviewed tasks ranked 4,840 and 1,383, outside the
+first-50 opening set. Repo registers loaded handles, not every file in its
+storage: cold startup reopened only the current queue and stranded those saved
+histories. This is a confirmed document-interest bug, not a network hypothesis.
+
+The earlier three-task Simulator proof did not cover that boundary. The revised
+fixture seeds 53 due tasks and moves the three reviewed tasks to ranks 50–52.
+Its native verification reads ordinary cached bytes without registering the
+reviewed documents; a separate fresh JS peer must see their observations after
+cold relaunch. Native and browser startup now share a yielded background pass
+that enrolls only locally cached task documents, independent of the display
+queue.
+
+### Cached-history sync fix: confirmed
+
+- Build, lint, app typecheck, all 194 unit/operator tests, and all 13 server/
+  update integration tests pass. The real-browser offline/reconnect smoke passed
+  again without public HTTP/socket calls. The 53-task Repo-to-Repo regression
+  fails with enrollment disabled and passes with the fix.
+- The actual Release Simulator ran private checkpoint
+  `a68ac8b1-9fe8-4ed2-9243-3ad6c60e2c7e` without reinstalling. The updated 53-task
+  UI gate passed: native review to fresh JS peer, JS review advancing native UI,
+  visible offline PNG, local review survival through process death, and delivery
+  of all three exact IDs after cold reconnect. Reviewed catalog ranks were
+  50, 52, and 51, outside the first-50 window. The fixture runs on port 8788 and
+  leaves the normal private service on 8787 untouched.
+- Andy activated that same checkpoint on Chonk using the existing update menu.
+  Its copied Expo metadata confirms one successful launch and zero failures.
+  A fresh independent JS peer then read both previously missing observations
+  from the private server and compared their complete contents, not just the
+  derived catalog. IDs are `review/cepvEg7zSM-JfVIdmih-_g` (app) and
+  `review/I5_pcmHmTImGOWDwsdQ2AA` (widget), on distinct tasks.
+- A separate native ready/disconnected-before-promise-completion race was also
+  reproduced and fixed: connection completion no longer overwrites a later
+  disconnect, and retry resumes after the in-flight operation clears.
+
+Only locally cached task histories are enrolled. Repo Swift does not evict their
+handles, so memory and reconnect work grow with the downloaded corpus; batching
+is not an eviction policy. No new durable journal, index, native API, or binary
+was introduced by this fix.
 
 ## Source reduction
 
 The preserved migration branch remains available; Lab removes those retired
 responsibilities rather than disabling a second product behind flags. Counting
-tracked package TS/TSX/JS/MJS/Swift lines (including comments/blanks), excluding
-scripts, Expo plugins, tests, fixtures, stories, and testing helpers, the retained
+tracked package TS/TSX/JS/MJS/Swift lines at the initial Lab split (including
+comments/blanks), excluding scripts, Expo plugins, tests, fixtures, stories, and
+testing helpers, the retained
 runtime decreases from 37,375 to 17,284 lines. This is a whole-tree measurement,
 not the size of newly added Automerge code. Generated/ignored build artifacts and
 private vaults are not part of the count or the commits.
 
 ## Gates still open
 
-- Run the actual Home Screen widget Reveal/review flow on the Lab binary.
-- Repeat physical-device bidirectional/offline/widget and native checkpoint tests
-  on the installed Lab app.
-- Finish the physical edit/checkpoint/download/refresh loop on Chonk.
-- Retire the old cloud dogfood serving stack after these physical cutover gates,
-  as explicitly approved in the plan; preserve recovery data and public Firebase.
+- Broaden physical-device checks to image prompts, widget deep-links, and visible
+  browser-to-Chonk advancement. The actual native/JS Simulator gate covers both
+  sync directions; it does not substitute for these additional physical UI checks.
 
 The old cloud stack has been inventoried read-only. Operator access works and
 public Cloud Functions do not use its dedicated network/service account. Its
@@ -145,11 +185,66 @@ exact running image was streamed into the protected local recovery directory:
 97,260,782 compressed bytes, SHA-256
 `1223244193cf766ddbb7892e51965fef9447d4b1c91801eff30b88528db9d8bd`.
 The image configuration and all 35 layer hashes match; no local Docker image was
-loaded. No cloud container/VM, load balancer, disk, registry, IAM binding, or
-monitoring automation has been changed. A final quiesced source capture and READY
-cutover snapshot are required before destructive retirement.
+loaded.
 
-No Lab TestFlight/Firebase publication or cloud decommissioning is implied by
-this record. The locally signed phone installation above is explicit. Update
-the record with concrete receipts as
-each gate completes; do not reuse old public-release acceptance as Lab proof.
+## Cloud retirement: completed 2026-10-13
+
+After Chonk's exact app/widget review delivery and checkpoint launch were
+verified, the cloud container stopped gracefully (exit 0, no OOM). A late Guest
+Agent metadata-watcher cancellation came from VM shutdown, not an application
+flush failure; detailed application flush logs were unavailable. The quiesced
+final source export is semantically identical to the initial capture: no tasks
+or observations were added, removed, or changed, and all 69 attachments validate.
+
+Recovery files are protected under `~/Library/Application Support/Orbit Lab/recovery`:
+
+- `orbit-dogfood-final-20261013-b2953763-9fee-4c68-b0f3-2e4722a09919.tar.gz`:
+  46,505,473 bytes, SHA-256
+  `c6f13ae50b60eae8b545ea592cddc784e47947b1480ae18c4fee6414400637d1`.
+- The same basename's `.vault.json`: 43,924,815 bytes, SHA-256
+  `10981a4b688b4b7fbfb37717aeb50494d1e76e7e0e697adf2716226ae0da0167`.
+  Adjacent phase-A and shutdown-audit receipts record preservation and stop checks.
+- `sync-image-59fae8b319ca-20261013-48f02fb2-b1da-4a87-8eae-1e6a08e90aa1.tar.gz`:
+  the verified historical runtime image above, with its own receipt.
+- `lab-cutover-20261013-cached-sync/`: a separate quiesced snapshot and portable
+  export of the new private vault. It has 109,972 observations / 105,856 reviews.
+  Full comparison confirms every original task, observation, and attachment byte
+  is preserved; the only additions are the two real app/widget review IDs above.
+  Its semantic SHA-256 is
+  `b6ac50dd78b5a43eeb38b5bb5abb08fb8a25d8b0d22a9ef109de7498eec78c7b`.
+
+The final cloud snapshot `orbit-automerge-data-lab-cutover-20261013` was READY
+and checked against source disk ID `7531365632051874416` before any disk deletion.
+The approved cleanup then removed all three stopped dogfood VMs, all seven disks
+(110 GiB provisioned), the dedicated forwarding rule/reserved IP/proxy/URL map/
+backend/certificate/health check/instance group, the image registry, the two
+dedicated firewall rules, subnet, and VPC. The nine older active snapshots were
+deleted; the final snapshot remains. Its stored size after that chain cleanup is
+74,809,408 bytes, not the former 20 GiB disk allocation.
+
+Fresh inventories show no VM, disk, forwarding rule, or reserved address remains
+in this project. Only `gcf-artifacts` remains in its Artifact Registry location,
+and the default VPC was preserved. All 26 public Cloud Functions remain ACTIVE.
+No Firebase/Firestore/Hosting deployment, public publisher/iframe, project IAM,
+or other user's data was changed. The dedicated monitoring job is confirmed
+PAUSED through Codex's existing automation manager; its prompt/cadence were kept.
+
+The remaining dogfood run rate is snapshot storage only: roughly $0.004/month
+gross at the observed size and current regional standard-snapshot rate, before
+credits or temporary provider recycle-bin retention. This is an estimate, not a
+billing statement. [Google's snapshot pricing](https://cloud.google.com/compute/disks-image-pricing#disk_snapshot_pricing)
+explains compressed-byte billing and temporary retention. Nonbillable dedicated
+service accounts/IAM bindings were deliberately left unchanged.
+
+For data recovery, `bun run lab:seed --vault-json <protected .vault.json> --destination
+<new private repo>` validates the portable export and creates isolated document
+identities; it does not restore the old public service. The current Lab snapshot
+can instead be restored into a new directory with `bun run lab:restore`. Restoring the
+historical service would additionally require its preserved image, configuration,
+credentials and newly provisioned network/TLS; the released old IP is not a
+rollback guarantee.
+
+The normal `lab:dev` loop and private Tailscale route were restored after local
+backup, readiness passed, and a fresh JS peer again verified the two reviews.
+No Lab TestFlight/Firebase publication occurred. Additional physical UI checks
+above remain follow-ups, not claimed results.

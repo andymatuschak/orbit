@@ -103,6 +103,8 @@ by a permanent app compatibility reader.
 
 Laptop unavailability prevents sync and uncached fetches, not cached reviews or
 offline native launch. There is no reminder service, automatic cloud migration,
-or server document-GC policy in this fork. The existing cloud dogfood service is
-not retired merely because these local pieces build. Current proof boundaries
-are in [the validation record](automerge-validation-record.md).
+or server document-GC policy in this fork. The former cloud dogfood service was
+retired after the private device cutover, with its final export/image/snapshot
+preserved. Public Firebase remains unchanged. Current proofs, recovery material,
+and remaining physical UI checks are in
+[the validation record](automerge-validation-record.md).

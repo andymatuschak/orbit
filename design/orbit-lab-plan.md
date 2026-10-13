@@ -13,8 +13,12 @@ not a runtime responsibility.
 
 The independent fork is implemented and installed on Chonk. Browser and actual
 Release Simulator durability/convergence/update gates have passed; Andy confirmed
-the app and existing widget display the private queue. Physical review/widget/
-offline/update checks and cloud retirement remain open. See the
+the app and existing widget display the private queue. Physical app/widget
+offline reviews and their exact later delivery, plus a private JS checkpoint
+launch, are now confirmed. The strengthened 53-task Simulator gate covers cold
+reopening after reviewed tasks leave the first-50 queue. Additional physical UI
+checks remain follow-ups; the approved cloud retirement is complete with verified
+recovery data retained. See the
 [dated validation record](automerge-validation-record.md) for precise boundaries.
 
 ## Target architecture
@@ -315,7 +319,13 @@ so Andy need not review discarded implementations.
 
 ### 7 Retire the cloud dogfood deployment
 
-Approved by Andy on 2026-10-13. The cloud dogfood service costs approximately
+Completed on 2026-10-13 after Andy's approval and the private device proofs.
+The final cloud export/snapshot/image and a separate private Lab snapshot are
+preserved; billable serving resources and old disks are removed, and monitoring
+is paused. Public Firebase is unchanged. See the validation record for exact
+resources, recovery hashes, and the remaining snapshot-only cost.
+
+The approved plan was: the cloud dogfood service costs approximately
 $1–2 per day and will have no users after the Lab cutover. Keep it unchanged
 during setup, then shut it down after the private export and real-device gates
 pass. Stop its reminder sender and sync VM, remove the dogfood-only load balancer
