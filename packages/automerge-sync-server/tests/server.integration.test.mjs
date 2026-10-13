@@ -13,7 +13,7 @@ import {
 } from "@withorbit/core";
 import { RepoPerTaskDocuments } from "@withorbit/store-automerge";
 import { PerTaskRepository } from "@withorbit/store-shared/perTaskRepository";
-import { AuthenticatedWebSocketNetworkAdapter } from "../../app/src/sync/AuthenticatedWebSocketNetworkAdapter.ts";
+import { AuthenticatedWebSocketNetworkAdapter } from "@withorbit/store-automerge/authenticatedWebSocketNetworkAdapter";
 import {
   AtomicNodeFSStorageAdapter,
   LabSyncService,
@@ -112,6 +112,20 @@ test("browser admission rejects unauthenticated Repo bytes and sends acknowledge
   const client = await openClient(fixture);
   assert.ok(client.network.remoteStorageID);
   assert.equal((await client.vault.readLogicalVault()).vaultID, "lab-test");
+});
+
+test("an originless headless socket still rejects Repo bytes before paired admission", async () => {
+  const fixture = await startFixture();
+  const socket = new WebSocket(fixture.ws);
+  await opened(socket);
+  socket.send(
+    cbor.encode({
+      type: "join",
+      senderId: "not-admitted",
+      supportedProtocolVersions: ["1"],
+    }),
+  );
+  assert.equal(await closed(socket), 1008);
 });
 
 test("native header admission immediately accepts an ordinary Repo join without application frames", async () => {

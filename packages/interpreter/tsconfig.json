@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["bun", "node"]
+  },
+  "include": ["./src/**/*.ts", "./src/**/*.json"],
+  "exclude": ["./src/**/*.test.ts"],
+  "references": [{ "path": "../core" }, { "path": "../ingester" }]
+}

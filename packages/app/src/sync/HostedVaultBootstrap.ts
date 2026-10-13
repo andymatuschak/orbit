@@ -18,7 +18,7 @@ import {
   PerTaskRepository,
 } from "@withorbit/store-shared/perTaskRepository";
 import type { LabConnection } from "../vault/labConnection.js";
-import { AuthenticatedWebSocketNetworkAdapter } from "./AuthenticatedWebSocketNetworkAdapter.js";
+import { AuthenticatedWebSocketNetworkAdapter } from "@withorbit/store-automerge/authenticatedWebSocketNetworkAdapter";
 import { hostedSyncWebSocketURL } from "./HostedVaultClient.js";
 import { syncCachedTaskDocuments } from "./syncCachedTaskDocuments.js";
 

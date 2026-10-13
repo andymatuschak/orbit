@@ -8,6 +8,71 @@ Public Firebase remains unchanged; the separate dogfood serving stack was
 retired only after the private cutover proofs below. Start with
 [the review guide](automerge-review-guide.md) for the current reading path.
 
+## 2026-10-13: restore existing Bear ingestion
+
+Restored the original Markdown interpreter, deterministic prompt hashing, source
+types/validator, and reconciliation tests. The ingester now consumes task
+definitions and emits shared `VaultMutation`s, rather than reading an
+`OrbitStore` and emitting legacy events. Its CLI opens a separate paired Repo
+cache and applies through `PerTaskRepository`; it never writes directly into
+the running server's storage directory. The browser's existing admission adapter
+is shared with the CLI. Originless headless clients still require the pairing
+frame before any Repo bytes; supplied browser origins remain allowlisted.
+
+Confirmed:
+
+- Workspace build, lint, 263 unit/operator tests, and 18 integration tests pass.
+  Restored interpreter tests retain
+  their two matching snapshots and one pre-existing skipped whitespace case.
+- All 13 existing server/update integration tests, a new originless-admission
+  rejection test, and four new importer tests
+  pass. The importer test starts an actual private server, previews without task
+  mutations, imports a new document and provenance update while an independent
+  client reviews, observes the new task on that peer, and cold-repeats with zero
+  mutations. After quiescing the server, its own persisted files contain both
+  tasks and both original/concurrent review observations.
+- A remote provenance change between cold runs is reconciled, including through
+  the actual Bun CLI used by the notes wrapper. A 131-task fixture spans three
+  released inventory batches and cold-reopens successfully. An admitted server
+  that never supplies a document times out, exits nonzero, closes its socket,
+  and releases the importer lock.
+- Invalid input and authentication failures exit nonzero without printing the
+  pairing token. The obsolete `.catch(console.error)` false-success behavior is
+  not retained.
+- Source-scoped matching keeps identical prompts in separate notes distinct.
+  An unambiguous move retains its original task ID and observations; content
+  edits and re-adds retain the historical delete/create policy.
+
+The first real-data preview encountered ENOSPC before applying ingestion
+mutations. After Andy restarted the Mac, available space recovered to about
+68 GiB. Inventory reads now flush and release Repo handles/listeners in batches
+of 64; they retain decoded task definitions, not every live task history.
+
+The real interpreter read 4,880 sources and 3,574 prompts. Import applied 21 new
+tasks and one provenance-title update, with no deletions. The other three items
+from the earlier pending-event comparison belong to notes now in Bear's Trash;
+the coordinating sync task verified this read-only. A cold repeat produced zero
+mutations. Before/after comparisons preserve all 10,867 original task definitions
+(apart from the intended title), all 109,972 observations, and all attachment
+descriptors. The observation SHA-256 is unchanged:
+`722e8fa38e6ca0ff067b8c02191899eb0671475310816ed1f3cf52e9f4a93fde`.
+
+A quiesced server snapshot and independent portable export at
+`~/Library/Application Support/Orbit Lab/recovery/bear-ingest-20261013` contain
+10,888 tasks, 109,972 observations, 105,856 reviews, and all 69 byte-verified
+attachments (9,173,933 bytes). Its logical vault matches the client capture
+exactly; semantic SHA-256:
+`37682134c0915c423ad0b93148edbed4a1759afd2946a155773cd0505716edf9`.
+
+Only the Orbit checkout/ingestion stage in `/Users/andym/bin/syncNotes.sh` changed.
+It now interprets notes from this branch and calls `lab:ingest`, retaining nonzero
+failure status and removing the obsolete legacy upload command. Its other bytes
+are unchanged. Both Orbit commands were tested separately under the wrapper's
+scheduled PATH (without relying on interactive Node/fnm). The complete wrapper
+was not run: its Bear/reMarkable and website-publishing stages are outside this
+cutover. No public upload or legacy event-store/cursor changes occurred. Lab's
+loopback and private Tailscale readiness checks pass after restart.
+
 ## 2026-10-13: source and platform boundaries
 
 Implemented the independent paired client and single-user server. Client

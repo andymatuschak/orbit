@@ -1,0 +1,28 @@
+{
+  "name": "@withorbit/ingester",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "node ../../node_modules/@typescript/native/bin/tsc -b",
+    "test": "bun test src",
+    "ingest": "bun src/bin/run.ts",
+    "test:integration": "bun run build && node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@automerge/automerge-repo": "2.6.0-alpha.5",
+    "@withorbit/automerge-sync-server": "0.0.1",
+    "@withorbit/core": "0.0.1",
+    "@withorbit/store-automerge": "0.0.1",
+    "@withorbit/store-shared": "0.0.1",
+    "ajv": "^8.6.2"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.0",
+    "@types/node": "24.10.1",
+    "typescript": "6.0.3"
+  }
+}

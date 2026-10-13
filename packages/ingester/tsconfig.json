@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["bun", "node"],
+    "lib": ["es2023", "dom"]
+  },
+  "include": ["./src/**/*.ts", "./src/**/*.json"],
+  "exclude": ["./src/**/*.test.ts"],
+  "references": [
+    { "path": "../core" },
+    { "path": "../store-shared" },
+    { "path": "../store-automerge" },
+    { "path": "../automerge-sync-server" }
+  ]
+}

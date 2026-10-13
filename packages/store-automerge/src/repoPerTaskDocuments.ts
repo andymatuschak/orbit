@@ -112,6 +112,12 @@ export class RepoPerTaskDocuments implements PerTaskDocuments {
     this.listeners.clear();
   }
 
+  /** Release an inventory reader's listener before Repo removes its handle. */
+  release(url: AutomergeDocumentURL) {
+    this.detach.get(url)?.();
+    this.detach.delete(url);
+  }
+
   private async handle(url: AutomergeDocumentURL) {
     const handle = await this.repo.find<unknown>(
       url as unknown as AutomergeUrl,

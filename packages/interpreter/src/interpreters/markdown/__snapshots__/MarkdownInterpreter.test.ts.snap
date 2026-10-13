@@ -1,0 +1,149 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`interprets bear export file with mixed content 1`] = `
+{
+  "identifier": "0DE4CB36-2EFC-4207-9074-667CBAE25ABB-12048-0000D97D373A46D2",
+  "items": [
+    {
+      "identifier": "VGkBC83lHTUZs7mu7xxqJpvFuGys8iXzL54YDXgMB6E=",
+      "spec": {
+        "content": {
+          "body": {
+            "attachments": [],
+            "text": "This is a test cloze prompt",
+          },
+          "components": {
+            "0": {
+              "order": 0,
+              "ranges": [
+                {
+                  "hint": null,
+                  "length": 4,
+                  "startIndex": 10,
+                },
+              ],
+            },
+          },
+          "type": "cloze",
+        },
+        "type": "memory",
+      },
+    },
+    {
+      "identifier": "HsSkb6EQxnC4lUPQ66v1yjarOgo5aSXQPZ3QNErckGw=",
+      "spec": {
+        "content": {
+          "answer": {
+            "attachments": [],
+            "text": "It makes B harder to read w.r.t A",
+          },
+          "body": {
+            "attachments": [],
+            "text": "What is the influence of A on B?",
+          },
+          "type": "qa",
+        },
+        "type": "memory",
+      },
+    },
+    {
+      "identifier": "IolmfjQEMhQ7/rivRDy23KqggsnH9RI51WuR78zMcwg=",
+      "spec": {
+        "content": {
+          "answer": {
+            "attachments": [],
+            "text": "Which contains a completely valid answer.",
+          },
+          "body": {
+            "attachments": [],
+            "text": "This is another prompt.",
+          },
+          "type": "qa",
+        },
+        "type": "memory",
+      },
+    },
+  ],
+  "title": "Hello World",
+  "url": "bear://x-callback-url/open-note?id=0DE4CB36-2EFC-4207-9074-667CBAE25ABB-12048-0000D97D373A46D2",
+}
+`;
+
+exports[`interprets raw markdown file with mixed content 1`] = `
+{
+  "identifier": "/some/file/path/Hello World.md",
+  "items": [
+    {
+      "identifier": "jC4/8ovGX7TuYtKGkP6CZu42KteIbfW+UnFqP3WPong=",
+      "spec": {
+        "content": {
+          "body": {
+            "attachments": [],
+            "text": "This is a test cloze prompt",
+          },
+          "components": {
+            "0": {
+              "order": 0,
+              "ranges": [
+                {
+                  "hint": null,
+                  "length": 4,
+                  "startIndex": 10,
+                },
+              ],
+            },
+            "1": {
+              "order": 1,
+              "ranges": [
+                {
+                  "hint": null,
+                  "length": 6,
+                  "startIndex": 21,
+                },
+              ],
+            },
+          },
+          "type": "cloze",
+        },
+        "type": "memory",
+      },
+    },
+    {
+      "identifier": "HsSkb6EQxnC4lUPQ66v1yjarOgo5aSXQPZ3QNErckGw=",
+      "spec": {
+        "content": {
+          "answer": {
+            "attachments": [],
+            "text": "It makes B harder to read w.r.t A",
+          },
+          "body": {
+            "attachments": [],
+            "text": "What is the influence of A on B?",
+          },
+          "type": "qa",
+        },
+        "type": "memory",
+      },
+    },
+    {
+      "identifier": "IolmfjQEMhQ7/rivRDy23KqggsnH9RI51WuR78zMcwg=",
+      "spec": {
+        "content": {
+          "answer": {
+            "attachments": [],
+            "text": "Which contains a completely valid answer.",
+          },
+          "body": {
+            "attachments": [],
+            "text": "This is another prompt.",
+          },
+          "type": "qa",
+        },
+        "type": "memory",
+      },
+    },
+  ],
+  "title": "Hello World",
+  "url": undefined,
+}
+`;

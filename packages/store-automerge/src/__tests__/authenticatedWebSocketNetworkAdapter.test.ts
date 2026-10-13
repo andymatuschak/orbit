@@ -8,7 +8,7 @@ import { describe, expect, test } from "bun:test";
 import {
   AuthenticatedWebSocketNetworkAdapter,
   type BrowserWebSocketFactory,
-} from "./AuthenticatedWebSocketNetworkAdapter.js";
+} from "../authenticatedWebSocketNetworkAdapter.js";
 
 describe("authenticated WebSocket Repo adapter", () => {
   test("sends admission before Repo bytes and refreshes paired credentials on reconnect", async () => {

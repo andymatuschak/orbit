@@ -30,7 +30,9 @@ export class AuthenticatedWebSocketRouter {
       url.search ||
       this.isDraining() ||
       this.socketServer.clients.size >= 16 ||
-      (origin ? !this.allowedOrigins.has(origin) : !native) ||
+      // Browsers supply Origin; headless Repo clients do not. Either still
+      // needs the paired credential before any Repo bytes are admitted.
+      (origin !== undefined && !this.allowedOrigins.has(origin)) ||
       (native &&
         !pairedTokenMatches(
           bearerToken(request.headers.authorization),

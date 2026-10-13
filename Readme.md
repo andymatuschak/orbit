@@ -97,6 +97,24 @@ vault. Restoring does not automatically switch the running service, change the
 phone's selected root, or restore code checkpoints. A JavaScript rollback and a
 data restore are deliberately different operations.
 
+## Bear note ingestion
+
+The original Markdown interpreter and source/item reconciler are retained. They
+write through the same Automerge repository as reviews, not a legacy event store
+or the public service:
+
+```sh
+bun run --cwd packages/interpreter interpret <notes-directory> <private-output.json>
+bun run lab:ingest <private-output.json> --dry-run
+bun run lab:ingest <private-output.json>
+```
+
+The server must be running. The command uses the private server configuration
+and a separate ordinary Repo client cache. Existing IDs and reviews survive
+unchanged prompts, note renames, and unambiguous moves. Content edits retain the
+old delete-and-create policy. See [the ingester readme](packages/ingester/Readme.md)
+for complete-source semantics, private reports, and delivery boundaries.
+
 ## Packages
 
 | Package                 | Responsibility                                                             |
@@ -108,6 +126,8 @@ data restore are deliberately different operations.
 | `app`                   | Shared review UI, native Repo Swift bridge, local opening, widget handoff  |
 | `api`                   | Private pairing and admission message types                                |
 | `sample-data`           | Independent test fixtures                                                  |
+| `interpreter`           | Existing Bear/Markdown parsing and stable source/item identities           |
+| `ingester`              | Existing source reconciliation, shared task mutations, paired CLI          |
 
 ## License and origins
 

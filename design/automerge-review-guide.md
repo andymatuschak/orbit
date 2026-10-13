@@ -40,6 +40,10 @@ reading path. [The architecture](automerge-architecture.md) is the short overvie
 8. **Private tools.** [Seed/export](../packages/automerge-sync-server/scripts/labSeed.ts) and [snapshot/restore](../packages/automerge-sync-server/scripts/labSnapshot.ts) capture/validate/import
    and snapshot/restore isolated directories. These are offline operations,
    not migration or sync services. Root `lab:*` scripts provide the daily loop.
+9. **Bear ingestion.** [The existing reconciler](../packages/ingester/src/ingest.ts)
+   takes task definitions and produces shared mutations. Its CLI is an ordinary
+   paired Repo client; [the Markdown interpreter](../packages/interpreter/Readme.md)
+   has no persistence or Lab-specific policy. No legacy event store is restored.
 
 ## Focused gates
 
@@ -55,6 +59,8 @@ forms, two-client disconnect/reconnect persistence, restart, and single-writer
 refusal. Update protocol tests cover manifests/assets, matching runtime
 selection, interrupted/incomplete exports, and immutable files. These tests do
 not prove Expo's native downloaded-update launch path.
+The importer suite also verifies independent-peer visibility, concurrent reviews,
+quiesced server persistence, cold no-op repeats, and nonzero CLI failures.
 
 The app tests retain native fetch/admission ordering, queue merge notifications,
 offline cached reopening, and widget import/ack races. Actual Release Simulator
@@ -70,5 +76,5 @@ Neither is implied by passing unit tests or a successful native build.
 
 See [the validation record](automerge-validation-record.md) for dated outcomes.
 Benchmark figures describe their historical runtime/corpus, not today's Lab
-launch latency. Public deployment retirement remains a separately authorized
-operation after the private daily-use loop is proven.
+launch latency. The dogfood cloud deployment is retired; its verified recovery
+material and the remaining private device gates are recorded in the ledger.

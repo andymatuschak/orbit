@@ -77,16 +77,16 @@ Make these deletions on a personal branch, preserving the current migration
 branch and release receipts. Do not carry both products behind a Lab flag. The
 public deployment continues to run its already released code.
 
-| Responsibility | Personal fork disposition |
-| --- | --- |
-| Reminders and email | Delete server `notifications`, delivery SQLite, Mailjet/configuration/enrollment, email action tokens, reminder routes and client settings. Remove notification-specific repository methods and schema plumbing once the imported root no longer needs them. |
-| Firebase identity and account control | Delete Firebase initialization/token verification, Firestore account stores, sticky binding transactions, new-account provisioning, migration cohort checks, login/signup/access-code flows, cookie/session helpers, and personal-access-token UI. Replace them with one private connection setup. |
-| Legacy storage and sync | Delete `LegacyReviewDatabase`, platform store factories, legacy mutation/event adapters, API sync, and the Android legacy fallback. Remove `store-fs`, `store-web`, `sync`, `api-client`, and SQLite dependencies after their remaining callers are removed or deliberately rewired. Keep the official Repo IndexedDB adapter; it is not the legacy `store-web` package. |
-| Public backend and deployment | Remove Firebase backend workspaces/configuration, emulator setup, GCP/COS/Docker deployment, cloud IAM/enrollment tools, Firebase App Distribution uploads, and TestFlight publication scripts from the personal build path and then from the fork. Preserve useful local build/signing checks. |
-| Public embeds and publisher | Recommended first scope: remove the embed route, transient embedded-session/IPC code, publisher package, embedded-support package, and server HTTP review/attachment-submission routes. Public article embeds continue using public Orbit; they do not submit progress to Lab. |
-| Multiple accounts and vaults | Replace `AccountRepoPool`, eviction/recycling policy, per-account quotas/rate limits, account routing, and the multi-account client registry with one Repo and one selected vault. Keep graceful shutdown, stable Repo storage identity, bounded payloads, origin checks, and ordinary-file durability. |
-| Product and service extras | Remove page-view analytics, public Sentry initialization/upload plumbing, onboarding/marketing/download/terms routes, login restoration state, and public-service fallback URLs. Keep local diagnostics and tests. |
-| Migration operators | Use existing tools to capture the initial export, then remove live Firestore migration/freeze/cutover support. Retain a small private snapshot/export/restore command, not an account migration subsystem. |
+| Responsibility                        | Personal fork disposition                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Reminders and email                   | Delete server `notifications`, delivery SQLite, Mailjet/configuration/enrollment, email action tokens, reminder routes and client settings. Remove notification-specific repository methods and schema plumbing once the imported root no longer needs them.                                                                                                             |
+| Firebase identity and account control | Delete Firebase initialization/token verification, Firestore account stores, sticky binding transactions, new-account provisioning, migration cohort checks, login/signup/access-code flows, cookie/session helpers, and personal-access-token UI. Replace them with one private connection setup.                                                                       |
+| Legacy storage and sync               | Delete `LegacyReviewDatabase`, platform store factories, legacy mutation/event adapters, API sync, and the Android legacy fallback. Remove `store-fs`, `store-web`, `sync`, `api-client`, and SQLite dependencies after their remaining callers are removed or deliberately rewired. Keep the official Repo IndexedDB adapter; it is not the legacy `store-web` package. |
+| Public backend and deployment         | Remove Firebase backend workspaces/configuration, emulator setup, GCP/COS/Docker deployment, cloud IAM/enrollment tools, Firebase App Distribution uploads, and TestFlight publication scripts from the personal build path and then from the fork. Preserve useful local build/signing checks.                                                                          |
+| Public embeds and publisher           | Recommended first scope: remove the embed route, transient embedded-session/IPC code, publisher package, embedded-support package, and server HTTP review/attachment-submission routes. Public article embeds continue using public Orbit; they do not submit progress to Lab.                                                                                           |
+| Multiple accounts and vaults          | Replace `AccountRepoPool`, eviction/recycling policy, per-account quotas/rate limits, account routing, and the multi-account client registry with one Repo and one selected vault. Keep graceful shutdown, stable Repo storage identity, bounded payloads, origin checks, and ordinary-file durability.                                                                  |
+| Product and service extras            | Remove page-view analytics, public Sentry initialization/upload plumbing, onboarding/marketing/download/terms routes, login restoration state, and public-service fallback URLs. Keep local diagnostics and tests.                                                                                                                                                       |
+| Migration operators                   | Use existing tools to capture the initial export, then remove live Firestore migration/freeze/cutover support. Retain a small private snapshot/export/restore command, not an account migration subsystem.                                                                                                                                                               |
 
 Removing legacy packages requires checking callers beyond reviews. In particular,
 `handleIngestEvent.ts` currently writes to the old `OrbitStore`. Do not leave
@@ -99,22 +99,45 @@ Dropping public embeds and initial ingestion support are scope proposals, not
 claims that those capabilities are unimportant. They should be agreed before
 deletion; neither is necessary to establish the personal review loop.
 
+### Approved follow-up: reuse Bear ingestion
+
+On 2026-10-13 Andy approved restoring the existing Markdown interpreter and
+source/item reconciler, not a new Lab ingestion subsystem. The reconciler now
+takes task definitions and returns shared vault mutations. Only its command-line
+entry point selects the private configuration and opens an ordinary paired Repo
+client with its own cache. There is no legacy-store shim, public API upload,
+Firebase dependency, or live bridge back to the old service. Shortcuts remain
+out of scope.
+
+Completed after the Mac restart relieved disk pressure: parser/matching and
+real paired-client gates pass. The import added 21 prompts and updated one note
+title; a cold repeat changed nothing. The quiesced server export preserves every
+original review and attachment. Inventory reads release Repo handles in bounded
+batches rather than retain every task history.
+
+Only the existing external `syncNotes.sh` Orbit stage now points at this checkout
+and `lab:ingest`; the obsolete public event upload is removed. Both Orbit commands
+were verified under its scheduled PATH. Do not run the whole wrapper merely as
+an ingestion diagnostic: its other stages still export/synchronize notes and
+publish website content. The validation record contains the exact data counts
+and protected recovery path.
+
 ### Deletion inventory
 
 Current-tree physical TS/JS/Swift runtime lines, including comments/blanks and
 excluding named tests/testing/fixtures, give an approximate size for several
 candidate areas:
 
-| Area | Lines |
-| --- | ---: |
-| Server reminders | 717 |
-| Server accounts, auth, and migration | 1,918 |
-| Account Repo pool | 430 |
-| Server embedded review handler | 287 |
-| App authentication and Firebase helpers | 500 |
-| App embedded subsystem and route | 2,394 |
-| Legacy storage and sync packages | 1,945 |
-| Firebase backend runtime | 3,598 |
+| Area                                    | Lines |
+| --------------------------------------- | ----: |
+| Server reminders                        |   717 |
+| Server accounts, auth, and migration    | 1,918 |
+| Account Repo pool                       |   430 |
+| Server embedded review handler          |   287 |
+| App authentication and Firebase helpers |   500 |
+| App embedded subsystem and route        | 2,394 |
+| Legacy storage and sync packages        | 1,945 |
+| Firebase backend runtime                | 3,598 |
 
 These areas total approximately 11,800 lines before replacements. Some helpers
 will remain or move. This is a gross inventory in the whole current tree, not

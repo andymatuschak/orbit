@@ -18,6 +18,7 @@ import {
   type VaultID,
   type VaultMutation,
   type VaultProjectionSnapshot,
+  type VaultTask,
 } from "@withorbit/core";
 import {
   decodePerTaskVaultRoot,
@@ -347,6 +348,33 @@ export class PerTaskRepository {
       return {
         tasks: new Map(tasks.map((task) => [task.id, task])),
       };
+    });
+  }
+
+  /** Import reconciliation needs definitions, not a replay of every review. */
+  getTaskDefinitions(
+    taskIDs?: readonly TaskID[],
+  ): Promise<ReadonlyMap<TaskID, VaultTask>> {
+    return this.exclusive(async () => {
+      await this.refresh();
+      const entries = taskIDs
+        ? taskIDs.map((id): [TaskID, PerTaskCatalogEntry] => {
+            const entry = this.catalog.entries[id];
+            if (!entry)
+              throw new Error(`Task is absent from the catalog: ${id}`);
+            return [id, entry];
+          })
+        : (Object.entries(this.catalog.entries) as [
+            TaskID,
+            PerTaskCatalogEntry,
+          ][]);
+      const loaded = await this.readEntries(entries);
+      return new Map(
+        [...loaded.values()].map(({ document }) => [
+          document.taskID,
+          document.task,
+        ]),
+      );
     });
   }
 

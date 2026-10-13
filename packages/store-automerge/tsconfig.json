@@ -8,5 +8,9 @@
   },
   "include": ["./src/**/*.ts"],
   "exclude": ["./src/**/*.test.ts"],
-  "references": [{ "path": "../core" }, { "path": "../store-shared" }]
+  "references": [
+    { "path": "../core" },
+    { "path": "../api" },
+    { "path": "../store-shared" }
+  ]
 }
