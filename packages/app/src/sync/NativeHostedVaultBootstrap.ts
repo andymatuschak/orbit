@@ -9,6 +9,7 @@ import type { NativePerTaskDocuments } from "../vault/nativePerTaskDocuments.js"
 import type { LabConnection } from "../vault/labConnection.js";
 import { NativeHostedSyncTransport } from "./NativeHostedSyncTransport.js";
 import { hostedSyncWebSocketURL } from "./HostedVaultClient.js";
+import { syncCachedTaskDocuments } from "./syncCachedTaskDocuments.js";
 
 export async function openBoundNativeHostedVault(input: {
   entry: LabConnection;
@@ -32,20 +33,20 @@ export async function openBoundNativeHostedVault(input: {
       documentTimeoutMillis: input.documentTimeoutMillis,
     });
     documents.transport = transport;
-    let closure: AutomergeDocumentURL[] | null = null;
+    let workingSet: AutomergeDocumentURL[] | null = null;
     const locallyAvailable = new Set<AutomergeDocumentURL>();
     if ((await documents.containsMany([input.entry.rootDocumentURL]))[0]) {
       // Confirm the selected working set is on disk before connecting. Repo
       // Swift observes and syncs each locally loaded document normally.
-      transport.documentChanged(input.entry.rootDocumentURL);
+      transport.trackDocument(input.entry.rootDocumentURL);
       vault = await tryOpenNativeVault(input.entry, documents);
       if (vault) {
-        closure = await vault.getCoreDocumentURLs();
-        const presentDocuments = await documents.containsMany(closure);
-        for (const [index, documentURL] of closure.entries()) {
+        workingSet = await vault.getReviewWorkingSetDocumentURLs();
+        const presentDocuments = await documents.containsMany(workingSet);
+        for (const [index, documentURL] of workingSet.entries()) {
           if (presentDocuments[index]) {
             locallyAvailable.add(documentURL);
-            transport.documentChanged(documentURL);
+            transport.trackDocument(documentURL);
           }
         }
       }
@@ -58,9 +59,9 @@ export async function openBoundNativeHostedVault(input: {
       "ms",
     );
     const localWorkingSetIsUsable =
-      closure !== null &&
-      (closure.length === 2 ||
-        closure
+      workingSet !== null &&
+      (workingSet.length === 2 ||
+        workingSet
           .slice(2)
           .some((documentURL) => locallyAvailable.has(documentURL)));
     if (localWorkingSetIsUsable) {
@@ -89,18 +90,18 @@ export async function openBoundNativeHostedVault(input: {
         Date.now() - localInspectionFinishedAt,
         "ms after local inspection",
       );
-      closure = await vault.getCoreDocumentURLs();
+      workingSet = await vault.getReviewWorkingSetDocumentURLs();
       console.log(
         "[Performance] Hosted working set selected in",
         Date.now() - localInspectionFinishedAt,
         "ms after local inspection",
       );
     }
-    if (!closure) {
-      throw new Error("Native Repo did not resolve the vault document closure");
+    if (!workingSet) {
+      throw new Error("Native Repo did not resolve the review working set");
     }
 
-    const missingDocuments = closure.filter(
+    const missingDocuments = workingSet.filter(
       (documentURL) => !locallyAvailable.has(documentURL),
     );
     const fetchStartedAt = Date.now();
@@ -117,10 +118,23 @@ export async function openBoundNativeHostedVault(input: {
         "ms",
       );
       if (available.some((documentAvailable) => !documentAvailable))
-        throw new Error("Hosted Automerge document closure is incomplete");
+        throw new Error("Hosted Automerge review working set is incomplete");
     };
     if (localWorkingSetIsUsable) void fetchWorkingSet().catch(() => undefined);
     else await fetchWorkingSet();
+    void syncCachedTaskDocuments(
+      vault,
+      (urls) => documents.containsMany(urls),
+      async (urls) => {
+        // Track before attempting I/O: an initially offline connection must
+        // still rejoin these histories when the ordinary retry succeeds.
+        for (const url of urls) transport!.trackDocument(url);
+        if (transport!.isReady())
+          await transport!.ensureDocuments(urls).catch(() => undefined);
+      },
+    ).catch((error) =>
+      console.warn("Could not enroll cached task documents", error),
+    );
     return vault;
   } catch (error) {
     if (vault) await vault.close();

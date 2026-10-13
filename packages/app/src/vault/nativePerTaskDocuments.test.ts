@@ -115,11 +115,11 @@ describe("native Repo document adapter", () => {
     expect(created.url).toBe(url);
     expect(created.snapshot.data).toEqual({ field: "initial" });
     expect(await storage.load(url)).toBeDefined();
-    // Ordinary Repo observation announces local mutations. The facade must
-    // not re-import/refind an already-created or patched document for sync.
+    // Registration is pure bookkeeping for reconnect; it must not re-import
+    // or refind a document while the ordinary native write is being observed.
     const announcements: AutomergeDocumentURL[] = [];
     documents.transport = {
-      documentChanged: (documentURL: AutomergeDocumentURL) => {
+      trackDocument: (documentURL: AutomergeDocumentURL) => {
         announcements.push(documentURL);
       },
       async close() {},
@@ -130,7 +130,12 @@ describe("native Repo document adapter", () => {
     const random = await documents.create({ field: "random" });
     expect(random.url).toStartWith("automerge:");
     expect((await documents.read(url))?.data).toEqual({ field: "updated" });
-    expect(announcements).toEqual([]);
+    expect(announcements).toEqual([url, random.url]);
+    documents.emitDocumentChange({
+      localStoreID: "test-repo",
+      documentURL: url,
+    });
+    expect(announcements).toEqual([url, random.url]);
     await documents.close();
   });
 
@@ -279,7 +284,7 @@ describe("native Repo document adapter", () => {
         ),
       ).toEqual(Array.from({ length: 10 }, (_, index) => 1_000 + index));
       expect(await vault.getReviewQueue(0)).toHaveLength(50);
-      expect(await vault.getCoreDocumentURLs()).toHaveLength(52);
+      expect(await vault.getReviewWorkingSetDocumentURLs()).toHaveLength(52);
 
       // Simulate a task-first write whose catalog update was interrupted.
       const catalogBeforeRepair = JSON.parse(

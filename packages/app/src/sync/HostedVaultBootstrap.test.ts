@@ -21,7 +21,10 @@ import {
   type VaultID,
   type VaultMutationID,
 } from "@withorbit/core";
-import { RepoPerTaskDocuments } from "@withorbit/store-automerge";
+import {
+  BinaryPerTaskDocuments,
+  RepoPerTaskDocuments,
+} from "@withorbit/store-automerge";
 import { PerTaskRepository } from "@withorbit/store-shared/perTaskRepository";
 import { afterEach, describe, expect, test } from "bun:test";
 import {
@@ -41,6 +44,137 @@ afterEach(async () => {
 });
 
 describe("hosted vault bootstrap", () => {
+  test("cold reopening uploads an offline review outside the first 50 through ordinary Repo sync", async () => {
+    const serverStorage = new MemoryRepoStorage();
+    let server = await createPerTaskRepoVault(serverStorage);
+    const taskIDs = Array.from(
+      { length: 53 },
+      (_, index) => `cache-replay-${index}` as TaskID,
+    );
+    await server.vault.apply(
+      taskIDs.map((taskID, index) => ({
+        kind: "ingestTask" as const,
+        mutationID: `ingest-${taskID}` as VaultMutationID,
+        task: {
+          taskID,
+          createdAtTimestampMillis: 1_000 + index,
+          spec: {
+            type: TaskSpecType.Memory,
+            content: {
+              type: TaskContentType.Plain,
+              body: { text: `Cached replay prompt ${index}`, attachments: [] },
+            },
+          },
+          provenance: null,
+          metadata: {},
+        },
+      })),
+    );
+    await server.repo.flush();
+    const clientStorage = new MemoryRepoStorage();
+    for (const { key, data } of await serverStorage.loadRange([]))
+      await clientStorage.save(key, data);
+    await server.vault.close();
+    await server.repo.shutdown();
+    repos.splice(repos.indexOf(server.repo), 1);
+    const coldRepo = createRepo(serverStorage, "cold-peer");
+    server = {
+      repo: coldRepo,
+      vault: await PerTaskRepository.open(
+        new RepoPerTaskDocuments(coldRepo),
+        server.vault.rootURL,
+      ),
+    };
+    const inspection = await PerTaskRepository.open(
+      new BinaryPerTaskDocuments({
+        async load(url) {
+          return (
+            (await server.repo.storageSubsystem!.loadDocData(
+              parseAutomergeUrl(url as unknown as AutomergeUrl).documentId,
+            )) ?? undefined
+          );
+        },
+        async save() {
+          throw new Error("independent peer inspection is read-only");
+        },
+      }),
+      server.vault.rootURL,
+    );
+    const entry = await new LabConnectionManager(
+      new MemoryLabConnectionStorage(),
+    ).pair({
+      token: "paired-key",
+      serviceOrigin: "https://sync.example.test",
+      rootDocumentURL: server.vault.rootURL,
+    });
+    const offline = await openBoundHostedVault({
+      entry,
+      requestCredential,
+      openRepoStorage: async () => clientStorage,
+      createNetwork: () => new NeverReadyNetworkAdapter(),
+    });
+    const observationID = "offline-outside-working-set" as ObservationID;
+    const taskURL = (await offline.vault.getCatalogEntries())[taskIDs[0]]
+      .documentURL;
+    await offline.vault.apply([
+      {
+        kind: "recordReview",
+        mutationID: observationID as unknown as VaultMutationID,
+        observationID,
+        taskID: taskIDs[0],
+        componentID: "main",
+        reviewSessionID: null,
+        outcome: TaskRepetitionOutcome.Remembered,
+        occurredAtTimestampMillis: Date.now(),
+      },
+    ]);
+    expect(await offline.vault.getReviewWorkingSetDocumentURLs()).not.toContain(
+      taskURL,
+    );
+    await offline.vault.close();
+    await offline.repo.shutdown();
+    expect(
+      await inspection.readTaskObservation(taskIDs[0], observationID),
+    ).toBeNull();
+
+    const clientNetwork = new PairedNetworkAdapter();
+    const serverNetwork = new PairedNetworkAdapter();
+    clientNetwork.partner = serverNetwork;
+    serverNetwork.partner = clientNetwork;
+    server.repo.networkSubsystem.addNetworkAdapter(serverNetwork);
+    const reopened = await openBoundHostedVault({
+      entry,
+      requestCredential,
+      openRepoStorage: async () => clientStorage,
+      createNetwork: () => clientNetwork,
+    });
+    repos.push(reopened.repo);
+    try {
+      // The ordinary initial queue did not open the reviewed task. The shared
+      // background pass, not a manual reread of that task, must publish it.
+      expect(
+        reopened.repo.handles[
+          parseAutomergeUrl(taskURL as unknown as AutomergeUrl).documentId
+        ],
+      ).toBeUndefined();
+      await eventually(
+        async () =>
+          (await inspection.readTaskObservation(taskIDs[0], observationID)) !==
+          null,
+      );
+      expect(
+        await inspection.readTaskObservation(taskIDs[0], observationID),
+      ).toMatchObject({
+        kind: "review",
+        outcome: TaskRepetitionOutcome.Remembered,
+      });
+    } finally {
+      await reopened.vault.close();
+      await server.vault.close();
+      await inspection.close();
+    }
+  });
+
   test("cached web prompts can be reviewed and reopened while the laptop is unreachable", async () => {
     const repoStorage = new MemoryRepoStorage();
     const seeded = await createPerTaskRepoVault(repoStorage);
@@ -182,7 +316,7 @@ describe("hosted vault bootstrap", () => {
       },
     ]);
     const rootDocumentURL = seeded.vault.rootURL;
-    const [, , taskURL] = await seeded.vault.getCoreDocumentURLs();
+    const [, , taskURL] = await seeded.vault.getReviewWorkingSetDocumentURLs();
     await seeded.vault.close();
     await seeded.repo.shutdown();
     repos.splice(repos.indexOf(seeded.repo), 1);
@@ -337,6 +471,56 @@ class NeverReadyNetworkAdapter
   }
 }
 
+/** Actual Repo protocol, independent durable stores; no socket or service. */
+class PairedNetworkAdapter
+  extends NetworkAdapter
+  implements HostedVaultNetworkAdapter
+{
+  partner?: PairedNetworkAdapter;
+  private connected = false;
+  private resolveReady!: () => void;
+  private readonly ready = new Promise<void>((resolve) => {
+    this.resolveReady = resolve;
+  });
+  connect(peerId: PeerId, peerMetadata?: PeerMetadata) {
+    this.peerId = peerId;
+    this.peerMetadata = peerMetadata;
+    const partner = this.partner;
+    if (!partner?.peerId) return;
+    this.connected = partner.connected = true;
+    queueMicrotask(() => {
+      this.emit("peer-candidate", {
+        peerId: partner.peerId!,
+        peerMetadata: partner.peerMetadata ?? {},
+      });
+      partner.emit("peer-candidate", {
+        peerId,
+        peerMetadata: peerMetadata ?? {},
+      });
+      this.resolveReady();
+      partner.resolveReady();
+    });
+  }
+  disconnect() {
+    this.connected = false;
+    if (this.peerId)
+      this.partner?.emit("peer-disconnected", { peerId: this.peerId });
+  }
+  send(message: Message) {
+    if (!this.connected) return;
+    const copy = structuredClone(message);
+    queueMicrotask(() => {
+      if (this.connected) this.partner?.emit("message", copy);
+    });
+  }
+  isReady() {
+    return this.connected;
+  }
+  whenReady() {
+    return this.ready;
+  }
+}
+
 class MemoryRepoStorage implements StorageAdapterInterface {
   private readonly values = new Map<string, Uint8Array>();
   async load(key: StorageKey) {
@@ -383,4 +567,12 @@ function requestCredential(): Promise<HostedSyncCredential> {
     kind: "pairedToken",
     token: "paired-token",
   });
+}
+
+async function eventually(predicate: () => Promise<boolean>) {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    if (await predicate()) return;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  throw new Error("cached offline review did not reach the independent peer");
 }

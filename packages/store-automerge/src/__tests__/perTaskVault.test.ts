@@ -58,7 +58,7 @@ describe("per-task Automerge vault", () => {
       expect(
         (await opened.getReviewQueue(0)).map(({ task }) => task.id),
       ).toEqual([taskID(50)]);
-      expect(await opened.getCoreDocumentURLs()).toEqual([
+      expect(await opened.getReviewWorkingSetDocumentURLs()).toEqual([
         created.rootURL,
         created.catalogURL,
         taskURLs[taskID(50)],

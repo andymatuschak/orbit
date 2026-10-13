@@ -3,10 +3,12 @@ set -euo pipefail
 
 # Exercise an already-installed Release app and disposable real sync service.
 # No Metro, production config, live vault, or application-only fixture branch.
+# Dedicated loopback port 8788 leaves the private Lab on 8787 untouched.
 if [[ "${1:-}" == "--help" ]]; then
   echo "Set ORBIT_SIMULATOR_UDID to a dedicated booted Simulator with Orbit Release installed."
-  echo "Requires AXe, Node, built workspace/server, and unused localhost port 8787."
-  echo "Tests native → JS, JS → native, offline image/review durability, and reconnect."
+  echo "Requires AXe, Node, built workspace/server, and unused localhost port 8788."
+  echo "Seeds 53 due tasks; tests native ↔ JS and offline image/review durability."
+  echo "Cold relaunch must sync reviewed task documents now outside the first 50."
   echo "Restores the previous Lab selection; retains fixture receipts/logs for inspection."
   exit 0
 fi
@@ -21,8 +23,8 @@ fixture() { "$node_binary" --experimental-transform-types "$script_directory/ios
 [[ "$simulator_udid" =~ ^[A-Fa-f0-9]{8}(-[A-Fa-f0-9]{4}){3}-[A-Fa-f0-9]{12}$ ]] || { echo "Invalid Simulator UDID" >&2; exit 64; }
 command -v lsof >/dev/null
 assert_port_free() {
-  if lsof -nP -iTCP:8787 -sTCP:LISTEN >/dev/null; then
-    echo "Port 8787 is occupied. Stop the private Lab yourself before running this disposable gate." >&2
+  if lsof -nP -iTCP:8788 -sTCP:LISTEN >/dev/null; then
+    echo "Fixture port 8788 is occupied. The private Lab on 8787 must remain untouched." >&2
     return 69
   fi
 }
@@ -69,7 +71,7 @@ start_server() {
   server_pid=$!
   for ((attempt = 0; attempt < 30; attempt++)); do
     kill -0 "$server_pid" 2>/dev/null || { echo "Fixture server exited; inspect $fixture_directory/server.log" >&2; return 1; }
-    if curl --fail --silent --max-time 2 http://127.0.0.1:8787/_ready >/dev/null; then return 0; fi
+    if curl --fail --silent --max-time 2 http://127.0.0.1:8788/_ready >/dev/null; then return 0; fi
     sleep 1
   done
   echo "Fixture server was not ready in 30s" >&2; return 1
@@ -130,10 +132,11 @@ for ((attempt = 0; attempt < 10; attempt++)); do
 done
 $image_visible || { cat "$fixture_directory/image-check.log" >&2; exit 1; }
 review_once
-wait_for_text "No more prompts in this session."
+wait_for_text "Orbit Lab native sync: filler task 04"
 xcrun simctl terminate "$simulator_udid" "$bundle_id"
 fixture verify-native "$receipt" "$app_container" 3
 start_server
 launch_app
+wait_for_text "Orbit Lab native sync: filler task 04"
 fixture verify-server "$receipt" 3
-echo "Release review gate passed: native ↔ JS, offline PNG/review, cold relaunch and reconnect."
+echo "Release review gate passed: native ↔ JS, offline PNG/review, cold relaunch and reviewed documents outside the 50-task window."

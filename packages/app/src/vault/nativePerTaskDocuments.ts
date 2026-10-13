@@ -106,6 +106,7 @@ export class NativePerTaskDocuments implements PerTaskDocuments {
       canonicalJSONString(data),
       url ?? null,
     );
+    this.transport?.trackDocument(created.documentURL as AutomergeDocumentURL);
     return {
       url: created.documentURL as AutomergeDocumentURL,
       snapshot: nativeSnapshot(created),
@@ -114,11 +115,12 @@ export class NativePerTaskDocuments implements PerTaskDocuments {
 
   async patch(url: AutomergeDocumentURL, patches: readonly DocumentPatch[]) {
     this.assertOpen();
-    return this.native.applyRepoPatch(
+    await this.native.applyRepoPatch(
       this.localStoreID,
       url,
       canonicalJSONString(patches),
     );
+    this.transport?.trackDocument(url);
   }
 
   async fetch(url: AutomergeDocumentURL) {

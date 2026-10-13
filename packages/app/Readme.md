@@ -76,7 +76,8 @@ for Foundation's temporary files and file-coordination service.
 
 For actual controls, build the workspace and install a Release binary in a
 dedicated booted Simulator. The review gate requires Node, AXe, and an unused
-localhost port 8787; it never builds, installs, or stops an existing server.
+localhost port 8788; the private Lab on 8787 remains untouched. It never builds,
+installs, or stops an existing server.
 
 ```sh
 ORBIT_SIMULATOR_UDID=<UDID> bun run ios:review-smoke
@@ -87,11 +88,14 @@ ORBIT_SIMULATOR_UDID=<UDID> scripts/run_widget_link_smoke.sh <Orbit.app-path>
 ```
 
 The review runner uses [ios_review_fixture.mjs](scripts/ios_review_fixture.mjs)
-to create three ordinary tasks in a disposable Repo and temporarily select it
-through the app's existing AsyncStorage record. It verifies native review →
-fresh JS peer, JS review → visible native queue advancement, an offline cold
-launch with the PNG visibly rendered, durable offline review bytes, and server
-reconnect. It restores the previous Lab selection, preserves other records,
+to create 53 ordinary tasks (three named prompts and 50 fillers) in a disposable
+Repo and temporarily select it through the app's existing AsyncStorage record.
+It verifies native review → fresh JS peer, JS review → visible native queue
+advancement, an offline cold launch with the PNG visibly rendered, durable
+offline review bytes, and cold reconnect after the reviewed tasks fall outside
+the first 50 catalog entries. The native proof directly decodes cached files;
+it never opens Repo handles or starts catalog repair. It restores the previous
+Lab selection, preserves other records,
 flushes its own server, and retains receipts/logs. Physical-device containers
 are rejected. No production configuration or test-only UI branch is involved.
 

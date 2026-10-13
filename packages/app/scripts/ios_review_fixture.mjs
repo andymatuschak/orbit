@@ -11,12 +11,12 @@ import { fileURLToPath } from "node:url";
 const [action, argument, containerOrCount, count] = process.argv.slice(2);
 if (!action || action === "--help") {
   console.log(`Run with node --experimental-transform-types. Set ORBIT_SIMULATOR_UDID.
-  prepare                         create an independent three-task vault/config
+  prepare                         create 53 due tasks crossing the 50-task sync window
   pair-simulator RECEIPT CONTAINER select it in a stopped Simulator app
   restore-simulator RECEIPT CONTAINER restore the previous Lab selection
   verify-server RECEIPT COUNT      fetch observations through a fresh JS peer
   js-review-second RECEIPT         review task two through ordinary Repo sync
-  verify-native RECEIPT CONTAINER COUNT read the stopped app's actual Repo files
+  verify-native RECEIPT CONTAINER COUNT read only cached reviewed tasks/catalog/PNG
   verify-image RECEIPT SCREENSHOT  assert the PNG appears in the offline UI`);
   process.exit(0);
 }
@@ -26,20 +26,25 @@ const checkout = fileURLToPath(new URL("../../../", import.meta.url));
 const require = createRequire(path.join(checkout, "package.json"));
 const WebSocket = require("ws");
 const { Repo, parseAutomergeUrl } = require("@automerge/automerge-repo");
-const { AttachmentMIMEType, TaskContentType, TaskSpecType, TaskRepetitionOutcome, defaultOrbitSchedulerPolicy, generateUniqueID } = require("@withorbit/core");
+const { AttachmentMIMEType, TaskContentType, TaskSpecType, TaskRepetitionOutcome, defaultOrbitSchedulerPolicy, defaultReviewSessionMaximumQueueSize, generateUniqueID } = require("@withorbit/core");
 const { RepoPerTaskDocuments, BinaryPerTaskDocuments, RepoAutomergeAttachmentWriter } = require("@withorbit/store-automerge");
 const { PerTaskRepository } = require("@withorbit/store-shared/perTaskRepository");
+const { decodePerTaskVaultRoot, decodePerTaskVaultCatalog, decodePerTaskVaultTask } = require("@withorbit/store-shared/perTaskCodec");
 const { AtomicNodeFSStorageAdapter } = await import("../../automerge-sync-server/dist/storage/atomicNodeFSStorageAdapter.js");
 const { ensureStorageID } = await import("../../automerge-sync-server/dist/storage/storageMetadata.js");
 const { AuthenticatedWebSocketNetworkAdapter } = await import("../src/sync/AuthenticatedWebSocketNetworkAdapter.ts");
 const bundleID = "com.withorbit.native";
 const connectionKey = "com.withorbit.lab.connection.v1";
 const pairingToken = "orbit-lab-review-smoke-disposable-fixture-token";
+const reviewedTaskCount = 3;
+const syncWindowSize = 50;
 const prompts = [
   "Orbit Lab native sync: phone review reaches JavaScript",
   "Orbit Lab native sync: JavaScript review advances phone",
   "Orbit Lab native sync: offline review survives reconnect",
+  ...Array.from({ length: syncWindowSize }, (_, index) => `Orbit Lab native sync: filler task ${String(index + 4).padStart(2, "0")}`),
 ];
+assert.equal(defaultReviewSessionMaximumQueueSize, syncWindowSize, "Update the fixture if the ordinary sync window changes");
 
 async function prepare() {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "orbit-lab-review-gate."));
@@ -67,21 +72,27 @@ async function prepare() {
         spec: { type: TaskSpecType.Memory, content: { type: TaskContentType.QA,
           body: { text, attachments: index === 2 ? [attachmentID] : [] },
           answer: { text: `Answer ${index + 1}: ordinary paired Repo sync.`, attachments: [] },
-        } }, provenance: null, metadata: { fixture: "ios-review-smoke" },
+        } }, provenance: null, metadata: { fixture: "ios-review-smoke", fixtureIndex: String(index) },
       },
     })));
-    assert.deepEqual((await vault.getReviewQueue()).map(item => item.task.spec.content.body.text), prompts);
+    const logical = await vault.readLogicalVault();
+    assertFixtureTasks({ taskIDs, prompts }, logical.tasks, taskIDs);
+    assertCatalogWindow({ taskIDs }, await vault.getCatalogEntries(), 0);
+    const queue = await vault.getReviewQueue();
+    assert.equal(queue.length, syncWindowSize, "The ordinary review queue is capped, unlike the full catalog");
+    assert.deepEqual(queue.slice(0, reviewedTaskCount).map(item => item.task.spec.content.body.text), prompts.slice(0, reviewedTaskCount));
     assert.equal(sha256((await vault.readAttachment(attachmentID)).bytes), sha256(png));
     await repo.flush();
     const configurationPath = path.join(directory, "config.json");
     await fs.writeFile(configurationPath, JSON.stringify({ storageRoot, rootDocumentURL: vault.rootURL, pairingToken, updatesRoot,
-      allowedOrigins: ["http://localhost:8081", "http://127.0.0.1:8081"], port: 8787 }), { mode: 0o600 });
+      allowedOrigins: ["http://localhost:8081", "http://127.0.0.1:8081"], port: 8788 }), { mode: 0o600 });
     const receipt = { directory, configurationPath, storageRoot, rootDocumentURL: vault.rootURL, vaultID: vault.vaultID,
-      simulatorUDID, bundleID, serviceOrigin: "http://127.0.0.1:8787", localStoreID: `lab-${generateUniqueID()}`,
+      simulatorUDID, bundleID, serviceOrigin: "http://127.0.0.1:8788", localStoreID: `lab-${generateUniqueID()}`,
       taskIDs, prompts, attachmentID, attachmentSHA256: sha256(png), jsReviewObservationID: `review/${generateUniqueID()}` };
     const receiptPath = path.join(directory, "receipt.json");
     await fs.writeFile(receiptPath, JSON.stringify(receipt), { mode: 0o600 });
-    console.log(JSON.stringify({ receiptPath, configurationPath, directory, rootDocumentURL: vault.rootURL }));
+    console.log(JSON.stringify({ receiptPath, configurationPath, directory, rootDocumentURL: vault.rootURL,
+      catalogTaskCount: prompts.length, reviewQueueCount: queue.length, reviewedTaskCount }));
   } finally { await vault?.close(); await repo.shutdown(); }
 }
 
@@ -93,8 +104,10 @@ async function readReceipt(filename) {
   assert.equal(path.dirname(await fs.realpath(filename)), directory);
   assert.equal(receipt.simulatorUDID, simulatorUDID, "Receipt belongs to a different Simulator");
   assert.equal(receipt.bundleID, bundleID);
-  assert.equal(receipt.serviceOrigin, "http://127.0.0.1:8787");
+  assert.equal(receipt.serviceOrigin, "http://127.0.0.1:8788");
   assert.equal(receipt.storageRoot, path.join(receipt.directory, "repo"));
+  assert.equal(receipt.taskIDs.length, prompts.length, "Use a fresh 53-task regression fixture");
+  assert.deepEqual(receipt.prompts, prompts);
   return receipt;
 }
 
@@ -145,10 +158,37 @@ async function openJS(receipt) {
   } catch (error) { await repo.shutdown(); throw error; }
 }
 
-function assertReviews(receipt, logical, expected) {
-  assert.ok(Number.isInteger(expected) && expected >= 0 && expected <= 3, "Expected count 0 through 3");
-  assert.equal(Object.keys(logical.tasks).length, 3);
-  const observations = Object.entries(logical.observations);
+function assertFixtureTasks(receipt, tasks, taskIDs) {
+  assert.equal(Object.keys(tasks).length, taskIDs.length);
+  for (const id of taskIDs) {
+    const index = receipt.taskIDs.indexOf(id);
+    assert.deepEqual(tasks[id].metadata, { fixture: "ios-review-smoke", fixtureIndex: String(index) });
+    assert.equal(tasks[id].spec.content.body.text, receipt.prompts[index]);
+  }
+}
+
+function assertCatalogWindow(receipt, entries, expectedReviews) {
+  assert.equal(Object.keys(entries).length, prompts.length, "Catalog must retain all 53 tasks");
+  // Independent of getReviewWorkingSetDocumentURLs/getReviewQueue: inspect the catalog's
+  // complete due ordering without materializing any native task document.
+  const ranked = Object.entries(entries).sort(([leftID, left], [rightID, right]) =>
+    left.nextDueTimestampMillis - right.nextDueTimestampMillis || leftID.localeCompare(rightID));
+  for (const [, entry] of ranked) {
+    assert.equal(entry.isDeleted, false);
+    assert.ok(Number.isFinite(entry.nextDueTimestampMillis));
+    assert.ok(entry.indexedTaskHeads.length > 0);
+  }
+  const firstWindow = ranked.slice(0, syncWindowSize).map(([id]) => id);
+  assert.deepEqual(firstWindow, receipt.taskIDs.slice(expectedReviews, expectedReviews + syncWindowSize));
+  const reviewedRanks = receipt.taskIDs.slice(0, expectedReviews).map(id => ranked.findIndex(([taskID]) => taskID === id));
+  for (const rank of reviewedRanks) assert.ok(rank >= syncWindowSize, "Reviewed task must leave the ordinary 50-task sync window");
+  if (expectedReviews === reviewedTaskCount) assert.deepEqual([...reviewedRanks].sort((a, b) => a - b), [50, 51, 52]);
+  return reviewedRanks;
+}
+
+function assertReviews(receipt, source, expected) {
+  assert.ok(Number.isInteger(expected) && expected >= 0 && expected <= reviewedTaskCount, "Expected count 0 through 3");
+  const observations = Object.entries(source);
   assert.equal(observations.length, expected, `Expected exactly ${expected} observations`);
   for (let index = 0; index < expected; index++) {
     const matches = observations.filter(([, value]) => value.taskID === receipt.taskIDs[index]);
@@ -156,7 +196,7 @@ function assertReviews(receipt, logical, expected) {
     assert.equal(matches[0][1].kind, "review");
     assert.equal(matches[0][1].outcome, TaskRepetitionOutcome.Remembered);
   }
-  if (expected >= 2) assert.ok(logical.observations[receipt.jsReviewObservationID], "Expected JS review ID missing");
+  if (expected >= 2) assert.ok(source[receipt.jsReviewObservationID], "Expected JS review ID missing");
 }
 
 async function verifyServer(receipt, expected) {
@@ -164,15 +204,22 @@ async function verifyServer(receipt, expected) {
   try {
     let logical;
     await eventually(async () => { logical = await client.vault.readLogicalVault(); return Object.keys(logical.observations).length === expected; });
-    assertReviews(receipt, logical, expected);
-    console.log(JSON.stringify({ serverVerified: true, observationCount: expected }));
+    assertFixtureTasks(receipt, logical.tasks, receipt.taskIDs);
+    assertReviews(receipt, logical.observations, expected);
+    let reviewedRanks;
+    // Catalog and authoritative task updates need not arrive in the same frame.
+    await eventually(async () => {
+      try { reviewedRanks = assertCatalogWindow(receipt, await client.vault.getCatalogEntries(), expected); return true; }
+      catch (error) { if (error.code === "ERR_ASSERTION") return false; throw error; }
+    });
+    console.log(JSON.stringify({ serverVerified: true, catalogTaskCount: prompts.length, observationCount: expected, reviewedRanks }));
   } finally { await client.vault.close(); await client.repo.shutdown(); }
 }
 
 async function reviewSecond(receipt) {
   const client = await openJS(receipt);
   try {
-    assertReviews(receipt, await client.vault.readLogicalVault(), 1);
+    assertReviews(receipt, (await client.vault.readLogicalVault()).observations, 1);
     await client.vault.apply([{ kind: "recordReview", mutationID: receipt.jsReviewObservationID, observationID: receipt.jsReviewObservationID,
       taskID: receipt.taskIDs[1], componentID: "main", reviewSessionID: "lab-review-smoke-js", outcome: TaskRepetitionOutcome.Remembered,
       occurredAtTimestampMillis: Date.now() }]);
@@ -195,13 +242,45 @@ async function verifyNative(receipt, container, expected) {
     },
     async save() { throw new Error("Independent native verification is read-only"); },
   });
-  const vault = await PerTaskRepository.open(documents, receipt.rootDocumentURL);
   try {
-    assert.equal(vault.vaultID, receipt.vaultID);
-    assertReviews(receipt, await vault.readLogicalVault(), expected);
-    assert.equal(sha256((await vault.readAttachment(receipt.attachmentID)).bytes), receipt.attachmentSHA256);
-    console.log(JSON.stringify({ nativeFilesVerified: true, attachmentVerified: true, observationCount: expected }));
-  } finally { await vault.close(); }
+    // Pure decoding only: opening a domain repository would start catalog
+    // repair and make a supposedly independent proof attempt writes.
+    const rootSnapshot = await documents.read(receipt.rootDocumentURL, { localOnly: true });
+    assert.ok(rootSnapshot, "Fixture root is missing from the native cache");
+    const vaultRoot = decodePerTaskVaultRoot(rootSnapshot.data);
+    assert.equal(vaultRoot.vaultID, receipt.vaultID);
+    assert.equal(vaultRoot.catalogCandidates.length, 1, "This fixture has exactly one catalog generation");
+    const candidate = vaultRoot.catalogCandidates[0];
+    const catalogSnapshot = await documents.read(candidate.documentURL, { localOnly: true, heads: candidate.initialCatalogHeads });
+    assert.ok(catalogSnapshot, "Fixture catalog is missing from the native cache");
+    assert.equal(catalogSnapshot.hasRequestedHeads, true, "Native catalog must contain its announced initial heads");
+    const catalog = decodePerTaskVaultCatalog(catalogSnapshot.data);
+    assert.equal(catalog.vaultID, receipt.vaultID);
+    assert.equal(catalog.generation, candidate.generation);
+    const entries = catalog.entries;
+    const reviewedRanks = assertCatalogWindow(receipt, entries, expected);
+    const tasks = {};
+    const observations = {};
+    // Never reopen the phone's native Repo handles. These stopped-app bytes
+    // prove local durability without activating sync before the cold relaunch.
+    // The last two fillers need not have entered the native cache yet.
+    for (const taskID of receipt.taskIDs.slice(0, reviewedTaskCount)) {
+      const snapshot = await documents.read(entries[taskID].documentURL, { localOnly: true });
+      assert.ok(snapshot, "Reviewed task is missing from the native cache");
+      const document = decodePerTaskVaultTask(snapshot.data);
+      assert.equal(document.vaultID, receipt.vaultID);
+      assert.equal(document.taskID, taskID);
+      tasks[taskID] = document.task;
+      Object.assign(observations, document.observations);
+    }
+    assertFixtureTasks(receipt, tasks, receipt.taskIDs.slice(0, reviewedTaskCount));
+    assertReviews(receipt, observations, expected);
+    const attachment = vaultRoot.attachments[receipt.attachmentID];
+    assert.ok(attachment, "Fixture PNG metadata is missing from the native root");
+    assert.equal(sha256((await documents.readAttachment(attachment)).bytes), receipt.attachmentSHA256);
+    console.log(JSON.stringify({ nativeFilesVerified: true, cachedTasksChecked: reviewedTaskCount,
+      catalogTaskCount: prompts.length, attachmentVerified: true, observationCount: expected, reviewedRanks }));
+  } finally { await documents.close(); }
 }
 
 function verifyImage(receipt, screenshot) {

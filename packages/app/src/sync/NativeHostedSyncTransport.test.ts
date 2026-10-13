@@ -83,12 +83,47 @@ describe("native hosted Repo lifecycle", () => {
       },
       localStoreID: "local-a",
     });
-    transport.documentChanged(missing);
+    transport.trackDocument(missing);
     await transport.connect();
     await eventually(() => native.ensureCalls.length === 1);
     expect(native.ensureCalls).toEqual([["local-a", missing]]);
     await transport.close();
     await documents.close();
+  });
+
+  test("pure registration while offline is retained for a later connection", async () => {
+    const native = new FakeNativeRepo();
+    const cached =
+      "automerge:AlreadyReviewedCachedTask" as AutomergeDocumentURL;
+    native.localDocuments.add(cached);
+    const documents = new NativePerTaskDocuments(
+      "local-a",
+      native as unknown as OrbitAutomergeNativeModule,
+    );
+    let online = false;
+    const transport = new NativeHostedSyncTransport(documents, {
+      websocketURL: "wss://sync.example.test/v1/sync",
+      localStoreID: "local-a",
+      retryIntervalMillis: 10_000,
+      requestCredential: async () => {
+        if (!online) throw new Error("offline");
+        return credential("paired");
+      },
+    });
+    try {
+      await expect(transport.connect()).rejects.toThrow("offline");
+      transport.trackDocument(cached);
+      expect(native.ensureCalls).toEqual([]);
+      online = true;
+      await transport.connect();
+      expect(native.ensureCalls).toContainEqual(["local-a", cached]);
+      native.ensureCalls.length = 0;
+      transport.trackDocument(cached);
+      expect(native.ensureCalls).toEqual([]);
+    } finally {
+      await transport.close();
+      await documents.close();
+    }
   });
 
   test("waits for a peer before a remote-only catalog repair fetch", async () => {
@@ -164,6 +199,171 @@ describe("native hosted Repo lifecycle", () => {
     await transport.close();
     expect(native.disconnectCalls).toEqual(["local-a"]);
     await documents.close();
+  });
+
+  test("retries when native disconnects before the connect promise resolves", async () => {
+    const native = new FakeNativeRepo();
+    const connection = deferred();
+    native.connectBarrier = connection.promise;
+    const documents = new NativePerTaskDocuments(
+      "local-a",
+      native as unknown as OrbitAutomergeNativeModule,
+    );
+    const transport = new NativeHostedSyncTransport(documents, {
+      websocketURL: "wss://sync.example.test/v1/sync",
+      requestCredential: async () => credential("paired"),
+      localStoreID: "local-a",
+      retryIntervalMillis: 1,
+    });
+
+    try {
+      const connecting = transport.connect();
+      await eventually(() => native.connectCalls.length === 1);
+      expect(transport.isReady()).toBe(true);
+      native.emitSyncState({ localStoreID: "local-a", state: "disconnected" });
+      expect(transport.isReady()).toBe(false);
+      connection.resolve();
+      await expect(connecting).rejects.toThrow(
+        "disconnected during connection",
+      );
+      await eventually(() => native.connectCalls.length === 2);
+      expect(transport.isReady()).toBe(true);
+    } finally {
+      connection.resolve();
+      await transport.close();
+      await documents.close();
+    }
+  });
+
+  test("a stale disconnect before the replacement peer is ready does not cancel it", async () => {
+    const native = new FakeNativeRepo();
+    const replacementCredential = deferred();
+    const documents = new NativePerTaskDocuments(
+      "local-a",
+      native as unknown as OrbitAutomergeNativeModule,
+    );
+    let credentialRequests = 0;
+    const transport = new NativeHostedSyncTransport(documents, {
+      websocketURL: "wss://sync.example.test/v1/sync",
+      requestCredential: async () => {
+        if (++credentialRequests > 1) await replacementCredential.promise;
+        return credential("paired");
+      },
+      localStoreID: "local-a",
+      retryIntervalMillis: 1,
+    });
+    try {
+      await transport.connect();
+      native.emitSyncState({ localStoreID: "local-a", state: "disconnected" });
+      const connecting = transport.connect();
+      await eventually(() => credentialRequests === 2);
+      // The old provider can report disconnected while its replacement is
+      // requesting credentials. A later ready event is authoritative.
+      native.emitSyncState({ localStoreID: "local-a", state: "disconnected" });
+      replacementCredential.resolve();
+      await connecting;
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      expect(transport.isReady()).toBe(true);
+      expect(native.connectCalls).toHaveLength(2);
+    } finally {
+      replacementCredential.resolve();
+      await transport.close();
+      await documents.close();
+    }
+  });
+
+  test("successful completion before the ready event refreshes documents only once", async () => {
+    const native = new FakeNativeRepo();
+    native.emitReadyOnConnect = false;
+    const local = "automerge:LocalTask" as AutomergeDocumentURL;
+    native.localDocuments.add(local);
+    const documents = new NativePerTaskDocuments(
+      "local-a",
+      native as unknown as OrbitAutomergeNativeModule,
+    );
+    const transport = new NativeHostedSyncTransport(documents, {
+      websocketURL: "wss://sync.example.test/v1/sync",
+      requestCredential: async () => credential("paired"),
+      localStoreID: "local-a",
+    });
+    try {
+      transport.trackDocument(local);
+      await transport.connect();
+      expect(transport.isReady()).toBe(true);
+      await eventually(() => native.ensureCalls.length === 2); // prime, then ready refresh
+      native.emitSyncState({ localStoreID: "local-a", state: "ready" });
+      expect(native.ensureCalls).toHaveLength(2);
+    } finally {
+      await transport.close();
+      await documents.close();
+    }
+  });
+
+  test("a rejected handshake clears an early ready event and retries", async () => {
+    const native = new FakeNativeRepo();
+    const connection = deferred();
+    native.connectBarrier = connection.promise;
+    const documents = new NativePerTaskDocuments(
+      "local-a",
+      native as unknown as OrbitAutomergeNativeModule,
+    );
+    const transport = new NativeHostedSyncTransport(documents, {
+      websocketURL: "wss://sync.example.test/v1/sync",
+      requestCredential: async () => credential("paired"),
+      localStoreID: "local-a",
+      retryIntervalMillis: 1,
+    });
+    try {
+      const connecting = transport.connect();
+      await eventually(() => native.connectCalls.length === 1);
+      expect(transport.isReady()).toBe(true);
+      native.connectBarrier = Promise.resolve();
+      connection.reject(new Error("unexpected peer"));
+      await expect(connecting).rejects.toThrow("unexpected peer");
+      expect(transport.isReady()).toBe(false);
+      await eventually(() => native.connectCalls.length === 2);
+      expect(transport.isReady()).toBe(true);
+    } finally {
+      connection.resolve();
+      await transport.close();
+      await documents.close();
+    }
+  });
+
+  test("disposing documents during connection ignores late events and never retries", async () => {
+    const native = new FakeNativeRepo();
+    const connection = deferred();
+    native.connectBarrier = connection.promise;
+    const documents = new NativePerTaskDocuments(
+      "local-a",
+      native as unknown as OrbitAutomergeNativeModule,
+    );
+    const transport = new NativeHostedSyncTransport(documents, {
+      websocketURL: "wss://sync.example.test/v1/sync",
+      requestCredential: async () => credential("paired"),
+      localStoreID: "local-a",
+      retryIntervalMillis: 1,
+    });
+    documents.transport = transport;
+    try {
+      const connecting = transport.connect();
+      await eventually(() => native.connectCalls.length === 1);
+      native.emitSyncState({ localStoreID: "local-a", state: "disconnected" });
+      const disposing = documents.close();
+      native.emitSyncState({ localStoreID: "local-a", state: "ready" });
+      connection.resolve();
+      await Promise.all([connecting, disposing]);
+      native.emitSyncState({ localStoreID: "local-a", state: "disconnected" });
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      expect(transport.isReady()).toBe(false);
+      expect(native.connectCalls).toHaveLength(1);
+      expect(native.disconnectCalls).toEqual(["local-a", "local-a"]);
+      await expect(transport.connect()).rejects.toThrow("closed");
+    } finally {
+      connection.resolve();
+      await transport.close();
+      await documents.close();
+    }
   });
 
   test("the document adapter observes its own Repo independently of auth transport", async () => {
@@ -362,7 +562,7 @@ describe("native hosted Repo lifecycle", () => {
     ];
     for (const documentURL of locallyMaterialized) {
       native.localDocuments.add(documentURL);
-      transport.documentChanged(documentURL);
+      transport.trackDocument(documentURL);
     }
 
     await transport.connect();
@@ -406,6 +606,8 @@ class FakeNativeRepo {
   readonly disconnectCalls: string[] = [];
   ensureResult = true;
   ensureBarrier: Promise<void> = Promise.resolve();
+  connectBarrier: Promise<void> = Promise.resolve();
+  emitReadyOnConnect = true;
   readonly localDocuments = new Set<string>();
   private readonly documentListeners = new Set<
     (event: NativeRepoDocumentChangedEvent) => void
@@ -430,10 +632,13 @@ class FakeNativeRepo {
 
   async connectRepo(...input: unknown[]) {
     this.connectCalls.push(input);
-    this.emitSyncState({
-      localStoreID: String(input[0]),
-      state: "ready",
-    });
+    if (this.emitReadyOnConnect) {
+      this.emitSyncState({
+        localStoreID: String(input[0]),
+        state: "ready",
+      });
+    }
+    await this.connectBarrier;
   }
 
   async ensureRepoDocument(...input: unknown[]) {
@@ -459,6 +664,16 @@ class FakeNativeRepo {
   emitSyncState(event: NativeRepoSyncStateChangedEvent) {
     for (const listener of this.syncListeners) listener(event);
   }
+}
+
+function deferred() {
+  let resolve!: () => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<void>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
 }
 
 async function eventually(predicate: () => boolean | Promise<boolean>) {

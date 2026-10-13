@@ -2,6 +2,7 @@ import type { HostedSyncCredential } from "@withorbit/api";
 import type { AutomergeDocumentURL } from "@withorbit/core";
 import type { EventSubscription } from "expo-modules-core";
 import type { NativePerTaskDocuments } from "../vault/nativePerTaskDocuments.js";
+import { inDocumentBatches } from "./syncCachedTaskDocuments.js";
 
 export interface NativeHostedSyncTransportOptions {
   websocketURL: string;
@@ -116,11 +117,10 @@ export class NativeHostedSyncTransport {
     );
   }
 
-  /** Repo observes imported document changes and syncs them automatically. */
-  documentChanged(documentURL: AutomergeDocumentURL) {
+  /** Pure registration; Repo observes writes, and reconnect reopens this set. */
+  trackDocument(documentURL: AutomergeDocumentURL) {
     if (this.closed) return;
     this.trackedDocuments.add(documentURL);
-    if (this.ready) void this.refreshDocument(documentURL);
   }
 
   async close(): Promise<void> {
@@ -142,10 +142,9 @@ export class NativeHostedSyncTransport {
 
   private establish(): Promise<void> {
     const generation = ++this.generation;
-    let failed = false;
     let active = true;
     const operation = withTimeout(
-      this.primeTrackedDocuments().then(() =>
+      this.primeTrackedDocuments(generation).then(() =>
         this.options.requestCredential().then((credential) => {
           if (!active || this.closed || generation !== this.generation) return;
           return this.documents.native.connectRepo(
@@ -160,17 +159,21 @@ export class NativeHostedSyncTransport {
     )
       .then(() => {
         if (this.closed || generation !== this.generation) return;
-        this.markReady(generation);
+        // Native ready/disconnected events can precede promise completion.
+        // Completion must not overwrite a disconnect observed after ready.
+        if (this.refreshedGeneration !== generation) this.markReady(generation);
+        if (!this.ready)
+          throw new Error("Native hosted sync disconnected during connection");
       })
       .catch((error: unknown) => {
-        failed = true;
+        if (!this.closed && generation === this.generation) this.ready = false;
         throw asError(error);
       })
       .finally(() => {
         active = false;
         if (this.connectOperation !== operation) return;
         this.connectOperation = null;
-        if (failed && this.started) this.scheduleReconnect();
+        if (!this.ready && this.started) this.scheduleReconnect();
       });
     this.connectOperation = operation;
     return operation;
@@ -197,28 +200,39 @@ export class NativeHostedSyncTransport {
     // are already known to JavaScript, but Repo Swift has not necessarily
     // announced them to the new peer. Re-find the working set on every
     // connection so warm launches and reconnects receive remote changes.
-    for (const documentURL of this.trackedDocuments) {
-      if (!this.pendingDocuments.has(documentURL))
-        void this.refreshDocument(documentURL);
-    }
+    void inDocumentBatches(
+      [...this.trackedDocuments].filter(
+        (url) => !this.pendingDocuments.has(url),
+      ),
+      async (batch) => {
+        await Promise.all(batch.map((url) => this.refreshDocument(url)));
+      },
+      () => this.closed || !this.ready || generation !== this.generation,
+    );
   }
 
-  private async primeTrackedDocuments() {
+  private async primeTrackedDocuments(generation: number) {
     // Repo Swift's peer-join sweep only includes handles already loaded into
     // the Repo. A warm vault knows its on-disk working set before connecting,
     // so materialize those handles first and let the ordinary join protocol
     // synchronize them. This work remains off the local-first launch path
     // because warm callers intentionally do not await connect().
-    const tracked = [...this.trackedDocuments];
-    const local = await this.documents.containsMany(tracked);
-    await Promise.all(
-      tracked
-        .filter((_, index) => local[index])
-        .map((documentURL) =>
-          this.documents.native
-            .ensureRepoDocument(this.options.localStoreID, documentURL)
-            .catch(() => false),
-        ),
+    await inDocumentBatches(
+      [...this.trackedDocuments],
+      async (batch) => {
+        const local = await this.documents.containsMany(batch);
+        if (this.closed || generation !== this.generation) return;
+        await Promise.all(
+          batch
+            .filter((_, index) => local[index])
+            .map((url) =>
+              this.documents.native
+                .ensureRepoDocument(this.options.localStoreID, url)
+                .catch(() => false),
+            ),
+        );
+      },
+      () => this.closed || generation !== this.generation,
     );
   }
 

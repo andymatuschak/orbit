@@ -57,6 +57,20 @@ documents fetch in the background. With no cached prompts, opening needs the
 laptop or reports unavailable data rather than pretending the queue is empty.
 The shared session reconciles remote reviews and unseen queue changes.
 
+The first 50 review tasks are a display working set, not the complete sync set.
+On each opening, a shared background pass checks the catalog's task URLs for
+locally stored contents and registers only those cached documents with Repo.
+This lets an offline review sync after process death even when its task has
+left the queue. Presence checks and enrollment use yielded 32-document batches;
+uncached histories are not downloaded by this pass. Successful native writes
+also register their document for reconnects. No durable dirty-document journal
+or second index is maintained.
+
+Repo Swift currently has no handle eviction API. Registering cached histories
+therefore increases resident memory as the downloaded corpus grows; batching
+limits concurrent work, not the total retained history. This is an explicit
+limitation of the current fork, not a claim of a bounded 50-task memory footprint.
+
 ## Widget and code updates
 
 The widget's JSON queue is disposable. Its outbox is durable until the app

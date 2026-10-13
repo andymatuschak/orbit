@@ -1,5 +1,7 @@
 import {
   Repo,
+  parseAutomergeUrl,
+  type AutomergeUrl,
   type NetworkAdapterInterface,
   type PeerId,
   type StorageAdapterInterface,
@@ -9,6 +11,7 @@ import { generateUniqueID } from "@withorbit/core";
 import {
   IndexedDBRepoStorageAdapter,
   RepoPerTaskDocuments,
+  containsIndexedDBDocumentURLs,
 } from "@withorbit/store-automerge";
 import {
   CatalogUnavailableError,
@@ -17,6 +20,7 @@ import {
 import type { LabConnection } from "../vault/labConnection.js";
 import { AuthenticatedWebSocketNetworkAdapter } from "./AuthenticatedWebSocketNetworkAdapter.js";
 import { hostedSyncWebSocketURL } from "./HostedVaultClient.js";
+import { syncCachedTaskDocuments } from "./syncCachedTaskDocuments.js";
 
 export interface HostedVaultBootstrapResult {
   vault: PerTaskRepository;
@@ -38,7 +42,7 @@ export async function openBoundHostedVault(input: {
   }) => HostedVaultNetworkAdapter;
   networkReadyTimeoutMillis?: number;
 }): Promise<HostedVaultBootstrapResult> {
-  const repo = await createLocalRepo(
+  const { repo, storage } = await createLocalRepo(
     input.entry.localStoreID,
     input.openRepoStorage,
   );
@@ -77,7 +81,7 @@ export async function openBoundHostedVault(input: {
         );
       }
     }
-    const workingSet = (await vault.getCoreDocumentURLs()).slice(2);
+    const workingSet = (await vault.getReviewWorkingSetDocumentURLs()).slice(2);
     const localTasks = await Promise.all(
       workingSet.map((url) => documents.read(url, { localOnly: true })),
     );
@@ -98,6 +102,34 @@ export async function openBoundHostedVault(input: {
       // A partial local queue remains useful offline; replenish it asynchronously.
       void fetchMissing().catch(() => undefined);
     }
+    void syncCachedTaskDocuments(
+      vault,
+      async (urls) => {
+        const ids = urls.map(
+          (url) => parseAutomergeUrl(url as unknown as AutomergeUrl).documentId,
+        );
+        const present = input.openRepoStorage
+          ? await Promise.all(
+              ids.map(
+                async (id) =>
+                  (await storage.loadRange([id, "snapshot"])).length > 0 ||
+                  (await storage.loadRange([id, "incremental"])).length > 0,
+              ),
+            )
+          : await containsIndexedDBDocumentURLs(
+              `com.withorbit.lab.automerge.${input.entry.localStoreID}`,
+              urls,
+            );
+        return urls.map(
+          (_, index) => repo.handles[ids[index]]?.isReady() || present[index],
+        );
+      },
+      async (urls) => {
+        await Promise.all(urls.map((url) => documents.fetch(url)));
+      },
+    ).catch((error) =>
+      console.warn("Could not enroll cached task documents", error),
+    );
     return {
       vault,
       repo,
@@ -119,7 +151,7 @@ async function createLocalRepo(
     : new IndexedDBRepoStorageAdapter(
         `com.withorbit.lab.automerge.${localStoreID}`,
       );
-  return new Repo({
+  const repo = new Repo({
     peerId: `orbit-client-${generateUniqueID()}` as PeerId,
     isEphemeral: false,
     storage,
@@ -132,6 +164,7 @@ async function createLocalRepo(
     syncStateLoadConcurrency: 6,
     sharePolicyConcurrency: 8,
   });
+  return { repo, storage };
 }
 
 function attachHostedNetwork(input: {

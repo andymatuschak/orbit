@@ -208,7 +208,7 @@ test("unchanged opening reads root and catalog once and keeps one subscription",
   };
   const opened = await PerTaskRepository.open(documents, rootURL);
   try {
-    expect(await opened.getCoreDocumentURLs()).toHaveLength(52);
+    expect(await opened.getReviewWorkingSetDocumentURLs()).toHaveLength(52);
     expect(reads).toEqual(
       new Map([
         [rootURL, 1],

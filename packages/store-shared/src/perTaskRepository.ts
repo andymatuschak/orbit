@@ -117,6 +117,10 @@ export class PerTaskRepository {
     return this.root.vaultID;
   }
 
+  get isClosed(): boolean {
+    return this.closed;
+  }
+
   static async open(
     documents: PerTaskDocuments,
     rootURL: AutomergeDocumentURL,
@@ -388,7 +392,8 @@ export class PerTaskRepository {
     });
   }
 
-  getCoreDocumentURLs(): Promise<AutomergeDocumentURL[]> {
+  /** Startup priority only; previously cached tasks outside this set also need sync. */
+  getReviewWorkingSetDocumentURLs(): Promise<AutomergeDocumentURL[]> {
     return this.exclusive(async () => {
       await this.refresh();
       return [

@@ -2,10 +2,13 @@ import { expect, test } from "bun:test";
 import {
   TaskContentType,
   TaskSpecType,
+  TaskRepetitionOutcome,
   defaultOrbitSchedulerPolicy,
   type AutomergeDocumentURL,
   type TaskID,
   type VaultID,
+  type ObservationID,
+  type VaultMutationID,
 } from "@withorbit/core";
 import {
   MemoryAutomergeBinaryStorage,
@@ -90,7 +93,7 @@ test("a complete local root/catalog opens without awaiting an offline connection
 test("cached prompts open offline when the selected queue's tail is missing", async () => {
   const fixture = await createFixture(3);
   const [, , headURL, secondURL, missingURL] =
-    await fixture.vault.getCoreDocumentURLs();
+    await fixture.vault.getReviewWorkingSetDocumentURLs();
   await fixture.storage.remove(missingURL);
   const materializeMany = fixture.documents.materializeMany.bind(
     fixture.documents,
@@ -127,7 +130,7 @@ test("cached prompts open offline when the selected queue's tail is missing", as
 
 test("root and catalog with no locally readable prompt still await cold connection", async () => {
   const fixture = await createFixture(1);
-  const [, , taskURL] = await fixture.vault.getCoreDocumentURLs();
+  const [, , taskURL] = await fixture.vault.getReviewWorkingSetDocumentURLs();
   await fixture.storage.remove(taskURL);
   const transport = transportFor(fixture.documents, {
     connect: async () => {
@@ -140,6 +143,59 @@ test("root and catalog with no locally readable prompt still await cold connecti
       "offline cold start",
     );
   } finally {
+    await fixture.vault.close();
+  }
+});
+
+test("an offline cold reopen enrolls a cached reviewed task outside the next 50 without loading absent histories", async () => {
+  const fixture = await createFixture(53);
+  const entries = await fixture.vault.getCatalogEntries();
+  const reviewedURL = entries["native-bootstrap-0" as TaskID].documentURL;
+  const absentURL = entries["native-bootstrap-52" as TaskID].documentURL;
+  await fixture.vault.apply([
+    {
+      kind: "recordReview",
+      mutationID: "offline-native-review" as VaultMutationID,
+      observationID: "offline-native-review" as ObservationID,
+      taskID: "native-bootstrap-0" as TaskID,
+      componentID: "main",
+      outcome: TaskRepetitionOutcome.Remembered,
+      reviewSessionID: null,
+      occurredAtTimestampMillis: Date.now(),
+    },
+  ]);
+  expect(await fixture.vault.getReviewWorkingSetDocumentURLs()).not.toContain(
+    reviewedURL,
+  );
+  await fixture.storage.remove(absentURL);
+  const materialized: AutomergeDocumentURL[] = [];
+  const materialize = fixture.documents.materialize.bind(fixture.documents);
+  fixture.documents.materialize = async (url) => {
+    materialized.push(url);
+    return materialize(url);
+  };
+  const tracked = new Set<AutomergeDocumentURL>();
+  const transport = transportFor(fixture.documents, {
+    connect: async () => {
+      throw new Error("offline");
+    },
+    ensureDocument: async () => {
+      throw new Error("no remote fetch");
+    },
+  });
+  transport.trackDocument = (url) => {
+    tracked.add(url);
+  };
+  const reopened = await openFixture(fixture, transport);
+  try {
+    await eventually(() => tracked.size === 54);
+    expect(tracked.has(reviewedURL)).toBe(true);
+    expect(tracked.size).toBe(54); // root, catalog, 52 locally cached histories
+    expect(tracked.has(absentURL)).toBe(false);
+    expect(materialized).not.toContain(reviewedURL);
+    expect(materialized).not.toContain(absentURL);
+  } finally {
+    await reopened.close();
     await fixture.vault.close();
   }
 });
@@ -187,7 +243,8 @@ function transportFor(
 ) {
   return {
     ...operations,
-    documentChanged() {},
+    trackDocument() {},
+    isReady: () => false,
     async ensureDocuments(urls: AutomergeDocumentURL[]) {
       const present = await documents.containsMany(urls);
       return Promise.all(
@@ -218,4 +275,12 @@ function openFixture(
     openDocuments: async () => fixture.documents,
     documentTimeoutMillis: 100,
   });
+}
+
+async function eventually(predicate: () => boolean) {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    if (predicate()) return;
+    await new Promise((resolve) => setTimeout(resolve, 1));
+  }
+  throw new Error("cached task enrollment did not finish");
 }
