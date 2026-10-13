@@ -264,3 +264,51 @@ or Orbit review database was opened. The legacy-account emulator gate passed
 reminder-link cases and new/existing-account submission with independent
 attachment API verification. These are local release gates, not served-artifact
 or physical-device acceptance.
+
+## Public publisher repair (2026-10-12)
+
+[Issue #300](https://github.com/andymatuschak/orbit/issues/300) exposed the
+deployed mismatch recorded above: the 2021 publisher waited for `onLoad`, while
+the live iframe sent protocol-1 `ready`. The iframe never received its initial
+configuration. This was a served-pair release failure, not evidence that a
+user's vault was corrupt.
+
+Published **only `orbit-js`**, using publisher and IPC sources from `95ddb616`
+with unchanged shared helpers and installed build dependencies. The latest
+thin publisher was not suitable for this narrow repair: its fallback path is
+incompatible with the currently served heavyweight iframe. No app/iframe,
+native, server, IAM, or account data changed.
+
+Acceptance also found a second bug in the historical publisher: its registered
+prompt guard compared raw `JSON.stringify` results. Persistence reordered spec
+keys, so the guard rejected valid post-review updates and cross-section retries
+did not advance. The deployed amendment imports the already-bundled
+`fast-json-stable-stringify` and uses it on both specs in
+`isRegisteredTaskForElement`; it adds no dependency or active legacy code to
+the current thin implementation.
+
+Release receipt:
+
+- Publisher: 26,180 bytes, SHA-256
+  `353fe807811fe23f8a3ca60dc5b1534a34a06ddc7af1f737cd54c53ea5d54913`.
+- Hosting version `6c1f2e464b816b13`, release `1791841413157000`, published
+  `2026-10-12T21:43:33.157Z`. Previous version `a072382351756974` remains
+  available for rollback; the obsolete public source map was omitted.
+- Existing CORS and cache policy preserved: origin `*`;
+  `public, max-age=300, s-maxage=31536000`.
+
+Actual Chrome passed the public publisher/live iframe pair **without artifact
+substitution**, both with SharedWorker and with SharedWorker disabled: two
+sections bootstrap; image bytes render; Reveal, Forgotten, and Remembered
+work; a forgotten prompt is retried across sections; completing it updates
+both sections; and anonymous progress survives reload. Fresh isolated browser
+contexts blocked external POSTs and sockets, so no live account writes were
+made. The controls were tested with both sections visible in a tall viewport;
+scrolled, shorter-viewport input delivery was not verified.
+
+The reporter's current Qni page now uses its own quiz implementation and no
+longer requests the Orbit publisher or iframe, so that page cannot validate
+this repair. The served-pair fixture reproduces the original embedding shape.
+The newer thin candidate still requires a coordinated publisher/iframe release,
+with actual public-URL acceptance as a release gate. Existing open pages need
+reloading to use the repaired publisher.
