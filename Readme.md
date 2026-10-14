@@ -76,6 +76,22 @@ in the background. The native review menu also offers an explicit update check
 and confirmation before reloading. Metro/Fast Refresh is the connected editing
 loop, not the durable offline bundle.
 
+For a native-code change, publish an ad-hoc IPA to that same private server:
+
+```sh
+bun run lab:install --device <registered-UDID> --publish --build-number <new-integer>
+```
+
+This archives on the Mac without needing the phone connected, exports through
+Xcode's registered-device distribution signing, and publishes only after the
+app and extension profiles include that device. The update menu checks native
+builds independently of Expo runtime matching and offers **Install**. iOS owns
+the download, confirmation and replacement; it is not a silent self-update.
+Keep Tailscale connected and the laptop reachable until installation finishes.
+Never delete the existing app. Published build numbers are immutable; choose a
+larger number for the next build. The signed IPA/manifest remain outside Git in
+the configured updates directory. Signing/profile expiry still applies.
+
 ## Data and recovery
 
 Keep live Repo files, pairing configuration, captures, and backups outside Git

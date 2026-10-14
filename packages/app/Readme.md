@@ -48,6 +48,23 @@ or entitlements change. Metro's latest bundle is not an offline checkpoint.
 The complete native download/kill/relaunch/rollback gates are recorded separately
 in [the validation record](../../design/automerge-validation-record.md).
 
+The same menu first checks `/updates/native.json` for a newer installed-app build
+number. This is deliberately separate from Expo's runtime-filtered manifest:
+an old runtime must still discover its native replacement. **Install** rechecks
+the pending-write guard, then opens the `itms-services` manifest URL. iOS performs
+the signed installation after user confirmation. Loopback Simulator builds skip
+native discovery and retain ordinary JavaScript updates.
+
+Publish with `bun run lab:install --device <registered-UDID> --publish
+--build-number <new-integer>`, optionally `--output <artifact-directory>` and
+`--config <private-config>`. The phone need not be connected for archival. The
+export must contain unexpired ad-hoc app/extension profiles including that UDID;
+development and App Store IPAs are not accepted. No EAS/Firebase distribution is
+involved. HTTPS manifest and IPA URLs remain on the private Tailscale origin;
+the iOS installer does not inherit the app's pairing headers. Build artifacts
+are copied before atomically selecting the release, with old build URLs retained
+for downloads already in progress. Never uninstall to work around signing.
+
 ## Widget handoff
 
 The app and WidgetKit extension compile the same Foundation helper.
@@ -102,6 +119,16 @@ are rejected. No production configuration or test-only UI branch is involved.
 The widget gates likewise use AXe/simctl and ordinary store writes. A runnable
 gate is not a claim that a newly built binary passed; actual results belong in
 [the validation record](../../design/automerge-validation-record.md).
+
+For native update-menu behavior, build/install a dedicated Release Simulator
+with `EXPO_PUBLIC_ORBIT_LAB_ORIGIN=https://slab.tail0da701.ts.net:9443`, then run
+`ORBIT_SIMULATOR_UDID=<UDID> bun run ios:native-update-smoke` in this package.
+It uses the same disposable vault fixture, adds/removes only private Serve port
+9443, and verifies Later, the platform's installer handoff, same/missing native
+release fallthrough to JavaScript checks, and a saved review across relaunch.
+It never builds, installs, publishes to the real Lab, or accesses a phone.
+Simulator handoff results cannot prove ad-hoc installation or data preservation
+on a physical device.
 
 ## Font assets and licensing
 

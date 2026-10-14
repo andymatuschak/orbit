@@ -9,6 +9,7 @@ import {
   runtimeVersionPattern,
   type UpdateManifest,
 } from "./checkpoint.js";
+import { nativeUpdateResponse } from "./nativeRelease.js";
 
 // Expo owns persistence, integrity checks, runtime compatibility and fallback.
 // This private iOS-only adapter implements protocol 1, not EAS channels or auth.
@@ -29,9 +30,11 @@ export function createUpdatesRequestHandler({
       reply(response, 400, "Invalid update path");
       return true;
     }
-    if (request.method !== "GET") {
-      response.setHeader("Allow", "GET");
-      reply(response, 405, "Expected GET");
+    const native =
+      route === "/updates/native.json" || route.startsWith("/updates/native/");
+    if (request.method !== "GET" && !(native && request.method === "HEAD")) {
+      response.setHeader("Allow", native ? "GET, HEAD" : "GET");
+      reply(response, 405, native ? "Expected GET or HEAD" : "Expected GET");
       return true;
     }
     try {
@@ -39,7 +42,9 @@ export function createUpdatesRequestHandler({
         if (isMissingFile(error)) return path.resolve(updatesRoot);
         throw error;
       });
-      if (route === "/updates/manifest") {
+      if (native) {
+        await nativeUpdateResponse(request, response, directory, route);
+      } else if (route === "/updates/manifest") {
         await manifestResponse(request, response, directory);
       } else {
         const match =

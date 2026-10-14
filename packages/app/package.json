@@ -6,6 +6,7 @@
     "start": "expo start",
     "ios": "expo run:ios",
     "ios:review-smoke": "scripts/run_ios_review_smoke.sh",
+    "ios:native-update-smoke": "node scripts/run_native_update_smoke.mjs",
     "ios:widget-layout-smoke": "scripts/run_widget_layout_smoke.sh",
     "ios:widget-link-smoke": "scripts/run_widget_link_smoke.sh",
     "ios:release": "expo run:ios --scheme Orbit --configuration Release --no-bundler",

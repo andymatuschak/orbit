@@ -169,6 +169,14 @@ Measure the final runtime, dependencies, tests, and tools separately.
 
 ## Application code updates
 
+Approved follow-up, 2026-10-13: the existing update menu should also offer
+user-confirmed ad-hoc native installation through `itms-services`. Reuse the
+same private laptop endpoint and signing identity, not a distribution service.
+Native release discovery is independent of JavaScript runtime matching. Test
+discovery, cancellation, failure and review continuity in the Release Simulator;
+actual iOS installation and in-place data preservation require a physical-device
+gate. Andy is away during implementation, so do not attempt to install on Chonk.
+
 The daily-use phone build should be an optimized native build containing a
 complete embedded JavaScript bundle and assets, plus `expo-updates` configured
 for the private laptop endpoint. It opens the embedded or previously downloaded

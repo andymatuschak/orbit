@@ -24,7 +24,8 @@
   "exclude": [
     "./scripts/ios_hosted_fetch_smoke_server.ts",
     "./scripts/seed_ios_hosted_fetch_smoke.ts",
-    "./scripts/lab_checkpoint.ts"
+    "./scripts/lab_checkpoint.ts",
+    "./scripts/lab_publish_native.ts"
   ],
   "references": [
     {

@@ -8,6 +8,61 @@ Public Firebase remains unchanged; the separate dogfood serving stack was
 retired only after the private cutover proofs below. Start with
 [the review guide](automerge-review-guide.md) for the current reading path.
 
+## 2026-10-13: private native update handoff
+
+The existing update menu now checks the installed native identity/build before
+Expo's runtime-compatible JavaScript check. A newer native build offers an
+explicit `itms-services` installation; both that handoff and a JS reload recheck
+the pending-review-write guard. Same/missing native releases retain the JS path,
+and loopback development skips native discovery. No new distribution service,
+account store, native module or public endpoint was added.
+
+Ad-hoc publication derives identity/build/origin from the exported IPA, requires
+unexpired registered-device distribution profiles for the app and extensions,
+and selects the release only after complete immutable artifact copies. The
+existing private server supplies native discovery, XML manifests and resumable
+IPA downloads independently of Expo runtime matching.
+
+Server integration gates pass 20/20, including six native publication/download
+cases. The eight native-discovery unit tests cover identity, build comparison,
+private origins, loopback fallback and bounded failures. Workspace unit tests
+pass 271 cases with one pre-existing interpreter skip. All four importer
+integration cases pass on rerun; the first full run's 15-second inventory test
+timed out during the full native archive compilation rather than failing an
+assertion. A subsequent complete `bun run checkall` passes lint, workspace
+build, all 271 unit cases and all 24 integration cases.
+
+The current-source optimized Release Simulator build passes the new
+`ios:native-update-smoke` gate with an isolated ordinary 53-task vault and
+private HTTPS fixture port 9443. Actual controls show the newer-build offer;
+Later retains the same prompt; same/missing native builds reach the real Expo
+up-to-date dialog; a review is independently observed on the server and survives
+cold relaunch; an unreachable laptop produces an error without losing the
+queue. The Simulator accepts the `itms-services` URL without an observable
+installation, so this does not verify iOS installation or replacement. AXe
+omits the visually present menu's modal children; only that menu row uses a
+screenshot-observed coordinate tap, not a test branch in app code. The gate
+restores the previous selection and removes only its temporary Serve mapping,
+leaving the live 443/8443 routes unchanged.
+
+The existing full Release review smoke also passes on that same built app:
+native-to-JS and JS-to-native queue advancement, offline PNG rendering, a durable
+offline review, and cold reconnection after reviewed tasks leave the first-50
+window. Both gates restore the previous selection. Proof JSON, screenshots,
+complete check output and UI-gate logs are retained under
+`~/Library/Caches/Orbit Lab/native/validation-20261013`.
+
+The optimized iPhone archive for build 11 succeeded and is retained at
+`~/Library/Caches/Orbit Lab/native/Orbit-11.xcarchive`. Its embedded update URL
+is the normal private origin, not the Simulator fixture port. The first ad-hoc
+export reported an updated Apple agreement; Andy accepted it, and the retry
+no longer reports that error. Export is still blocked by Xcode's `No Accounts`
+and missing Orbit-team distribution-certificate/private-key errors. No native
+release has been published to the live Lab, and Chonk has not been changed.
+Andy is away from the Mac; actual OTA installation, Tailscale installer access
+and in-place app/widget
+data preservation remain explicit physical-device gates.
+
 ## 2026-10-13: restore existing Bear ingestion
 
 Restored the original Markdown interpreter, deterministic prompt hashing, source
