@@ -8,6 +8,42 @@ Public Firebase remains unchanged; the separate dogfood serving stack was
 retired only after the private cutover proofs below. Start with
 [the review guide](automerge-review-guide.md) for the current reading path.
 
+## 2026-10-14: signed native build 11 published privately
+
+After Andy restored Xcode's developer-account session, the retained build-11
+archive exported successfully with the existing `release-testing` options; no
+rebuild or source change was needed. The resulting IPA is 17,170,391 bytes.
+Strict recursive signature verification succeeds with Apple Distribution for
+team `MQ22N839N8`. App and widget both retain build 11, their existing bundle
+identifiers and `group.com.withorbit.native`; both distribution profiles include
+Chonk, disable development debugging, and expire 2027-09-07 16:36:40 UTC.
+
+The ordinary publisher selected build 11 on the existing private endpoint.
+Downloading the complete IPA through Tailscale HTTPS reproduces the local
+SHA-256 `ee8487b4a18c4f6a8172705d18f7d0934cb4ccc4aa3e05a328cffb46c01ba0b7`.
+The XML installation manifest validates; HEAD returns the correct MIME/length;
+a 1,024-byte Range request returns 206. The real client discovery helper offers
+11 to installed build 10 and no replacement to installed build 11.
+
+Published checkpoint `cca3b294-f516-4de3-9111-054ff029ad98` for the unchanged
+`orbit-lab-native-1` runtime so the existing phone binary can acquire the new
+native-update menu through its ordinary JS update/reload. A subsequent menu
+check can offer native build 11. All 111 checkpoint assets (5,810,391 bytes)
+were downloaded through the real private endpoint and their hashes verified.
+No native dependency, entitlement, runtime version or vault format changed.
+
+The private backend had stopped with a stale PID lock. Verified the recorded
+PID no longer existed and no writer/listener remained, retained the stale lock,
+and restarted the normal development loop. Private readiness now succeeds.
+Signed artifacts, metadata receipts and export/checkpoint logs are retained at
+`~/Library/Caches/Orbit Lab/native/validation-20261014`; the immutable selected
+IPA/manifest also remain in the configured updates directory.
+
+No installation or other device operation was initiated on Chonk. Actual iOS
+OTA replacement, installer access through Tailscale, and app/widget data
+preservation remain physical-device gates, not outcomes inferred from signing,
+download checks or the earlier Simulator tests. Public Orbit is unchanged.
+
 ## 2026-10-13: private native update handoff
 
 The existing update menu now checks the installed native identity/build before
