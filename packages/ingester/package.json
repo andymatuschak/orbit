@@ -5,12 +5,16 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./run": "./dist/bin/run.js"
+  },
   "sideEffects": false,
   "scripts": {
     "build": "node ../../node_modules/@typescript/native/bin/tsc -b",
     "test": "bun test src",
     "ingest": "bun src/bin/run.ts",
-    "test:integration": "bun run build && node --test tests/*.test.mjs"
+    "test:integration": "bun run --cwd ../interpreter build && node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@automerge/automerge-repo": "2.6.0-alpha.5",

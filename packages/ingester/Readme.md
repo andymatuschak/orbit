@@ -4,6 +4,8 @@
 reconciler, now returning `VaultMutation[]`. It has no Lab configuration,
 network, or storage dependency. The caller supplies current task definitions
 and applies the resulting mutations through the shared repository.
+`planIngestion` also returns each source/item's selected TaskID for source
+writeback, including unchanged tasks and history-preserving moves.
 
 Each supplied source is a complete snapshot of that note. Missing items are
 deleted; omitted sources are left alone, except when a prompt explicitly names
@@ -58,7 +60,14 @@ plan, including private note content, with mode 0600 and refuses to overwrite
 an existing file. Standard output contains only mutation counts. Failures exit
 nonzero; unsuccessful deliveries retain the local client cache for a retry.
 The command waits for the server's reported heads to match its writes. This is
-sync confirmation, not a separate server disk-fsync receipt.
+sync confirmation, not a separate server disk-fsync receipt. The programmatic
+`runIngest` result and completed private reports include task assignments; CLI
+stdout remains counts-only. Reports are reserved before applying and completed
+after sync; a failed run can leave an empty report, not a successful receipt.
+
+The opt-in [Markdown writeback command](../interpreter/Readme.md#import-and-stamp-selected-notes)
+uses those assignments to stamp selected source files. The original JSON-only
+command and scheduled Bear workflow do not modify Markdown.
 
 Unit tests preserve the original matching/provenance cases. The isolated Node
 integration tests run real paired Repo clients and inspect quiesced server files

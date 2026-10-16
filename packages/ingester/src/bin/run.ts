@@ -25,7 +25,7 @@ import type {
   TaskID,
   VaultTask,
 } from "@withorbit/core";
-import { ingestSources } from "../ingest.js";
+import { planIngestion } from "../ingest.js";
 import type { Ingestible } from "../ingestible.js";
 import { createIngestibleValidator } from "../validateIngestible.js";
 
@@ -106,37 +106,44 @@ export async function runIngest(input: {
         await repo.removeFromCache(documentIDs[i]);
       }
     }
-    const mutations = ingestSources(input.ingestible.sources, tasks);
+    const { mutations, assignments } = planIngestion(
+      input.ingestible.sources,
+      tasks,
+    );
     const summary = summarizeMutations(mutations);
-    if (input.reportPath) {
-      // Reports can contain note content. Create explicitly private new files.
-      await fs.writeFile(
-        input.reportPath,
-        JSON.stringify({ summary, mutations }),
-        { flag: "wx", mode: 0o600 },
+    // Reserve a private new report before applying: a reused path must not fail
+    // only after the vault changes. Failed imports leave no writeback receipt.
+    const report = input.reportPath
+      ? await fs.open(input.reportPath, "wx", 0o600)
+      : undefined;
+    try {
+      if (!input.dryRun) {
+        await repository.apply(mutations);
+        const updatedEntries = await repository.getCatalogEntries();
+        const changedURLs = mutations.map((mutation) => {
+          const taskID =
+            mutation.kind === "ingestTask"
+              ? mutation.task.taskID
+              : "taskID" in mutation
+                ? mutation.taskID
+                : null;
+          return taskID ? updatedEntries[taskID].documentURL : rootURL;
+        });
+        // Keep local files on failure and exit nonzero; never report an unsent run
+        // as success. Remote-head agreement is not a server disk-fsync receipt.
+        await waitForSync(
+          repo,
+          [repository.catalogURL, ...changedURLs],
+          network.remoteStorageID!,
+        );
+      }
+      await report?.writeFile(
+        JSON.stringify({ summary, mutations, assignments }),
       );
+      return { dryRun: input.dryRun ?? false, ...summary, assignments };
+    } finally {
+      await report?.close();
     }
-    if (!input.dryRun) {
-      await repository.apply(mutations);
-      const updatedEntries = await repository.getCatalogEntries();
-      const changedURLs = mutations.map((mutation) => {
-        const taskID =
-          mutation.kind === "ingestTask"
-            ? mutation.task.taskID
-            : "taskID" in mutation
-              ? mutation.taskID
-              : null;
-        return taskID ? updatedEntries[taskID].documentURL : rootURL;
-      });
-      // Keep local files on failure and exit nonzero; never report an unsent run
-      // as success. Remote-head agreement is not a server disk-fsync receipt.
-      await waitForSync(
-        repo,
-        [repository.catalogURL, ...changedURLs],
-        network.remoteStorageID!,
-      );
-    }
-    return { dryRun: input.dryRun ?? false, ...summary };
   } finally {
     try {
       try {
@@ -231,16 +238,14 @@ async function main() {
     throw new Error(
       `Invalid ingestible JSON: ${JSON.stringify(result.errors)}`,
     );
-  console.info(
-    JSON.stringify(
-      await runIngest({
-        ingestible,
-        configurationPath: values.config,
-        dryRun: values["dry-run"],
-        reportPath: values.report,
-      }),
-    ),
-  );
+  const { dryRun, mutationCount, counts } = await runIngest({
+    ingestible,
+    configurationPath: values.config,
+    dryRun: values["dry-run"],
+    reportPath: values.report,
+  });
+  // Source and task identifiers belong only in the private report, not stdout.
+  console.info(JSON.stringify({ dryRun, mutationCount, counts }));
 }
 
 if (

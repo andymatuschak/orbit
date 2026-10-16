@@ -1019,3 +1019,57 @@ The normal `lab:dev` loop and private Tailscale route were restored after local
 backup, readiness passed, and a fresh JS peer again verified the two reviews.
 No Lab TestFlight/Firebase publication occurred. Additional physical UI checks
 above remain follow-ups, not claimed results.
+
+## 2026-10-16: source-preserving task badges and live Bear writeback
+
+`lab:ingest-markdown` is an opt-in selected-file importer. It obtains the actual
+TaskIDs from the existing reconciliation plan, confirms sync, and inserts missing
+badges without reformatting Markdown. Preflight reinterpretation proves unchanged
+task specs, source identity, and cloze ranges. The scheduled JSON-only importer
+and external notes workflow were not changed; no bulk stamping was performed.
+
+Full lint/build/test checks passed, including 28 isolated integration tests and
+19 additional writeback unit tests. One pre-existing cloze-whitespace skip remains.
+The frozen 4,882-note / 3,574-prompt corpus still produces identical ingestion JSON.
+The new real-Repo integration covers exact source insertion, dry-run isolation,
+an independent peer's review, in-place wording edits, no-op repeats, and cold disk
+reopening after server shutdown.
+
+Live proof used one new private Bear note, `Orbit stamping live test 2026-10-16
+giEQRJ` (Bear ID `DBE5849D-4A24-433B-9E51-9F2741D5930D`). Only its unique tag was
+exported and round-tripped through an isolated existing Bear-sync ledger. The
+import created task `gUPXGoG0QI-RDvWhv2h7rA`; native Bear readback preserved all
+other source bytes and displayed the small ☉ link. A synthetic review on that
+test task, followed by a concurrency-checked native Bear wording edit and another
+import, retained its document URL, creation time, exact observation, and FSRS
+component states. The final import made zero mutations and zero source writes.
+
+The first immediate disk audit preceded the server's asynchronous catalog save;
+a fresh ordinary peer and later persisted-file reads both confirmed the entry.
+Sync-head confirmation is not an additional server-fsync receipt. The private note
+and its one synthetic review remain available for inspection; unrelated tasks
+were not changed. Proof artifacts are in
+`/private/tmp/orbit-stamping-live.giEQRJ/proof.json`. This is macOS Bear/native-store
+and Lab-server evidence, not a new iPhone Bear editing test or app release.
+
+### Multiparagraph BearID boundary follow-up
+
+Standalone BearID export comments now close Q&A regions instead of becoming part
+of a long answer. Source ranges end before the footer, so stamping places the
+badge on the final answer block and preserves the footer bytes. Ordinary comments
+and inline examples retain their existing behavior. Six new unit regressions
+cover these boundaries, unchanged hashes, paragraph/list/quote/code/math endings,
+CRLF, and repeated stamping. The single-paragraph real-Repo integration now also
+runs a multiparagraph variant. Full checks passed, including 29 integration
+tests; the frozen 4,882-note corpus still produces identical ingestion JSON.
+
+A second isolated native Bear proof, `Orbit stamping multiparagraph test
+2026-10-16 GsDjwq` (Bear ID `20F5AA41-7E75-4CA9-8DC3-8F289537095B`), ends its
+two-paragraph answer immediately before the generated footer. Task
+`rkareToQRGWRB6SEJLd1hw` was stamped before that footer, round-tripped exactly
+into Bear, and stored with neither badge nor footer in its answer. A wording edit
+preserved its document, creation time, single synthetic review, and FSRS states;
+the final cold importer run made zero mutations and zero source writes. The
+private note remains open for inspection, with proof at
+`/private/tmp/orbit-stamping-multiline.GsDjwq/proof.json`. Scheduled ingestion and
+unrelated notes were not changed.

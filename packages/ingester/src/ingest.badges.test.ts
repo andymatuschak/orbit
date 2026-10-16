@@ -16,7 +16,11 @@ import {
   MemoryAutomergeBinaryStorage,
 } from "@withorbit/store-automerge";
 import { PerTaskRepository } from "@withorbit/store-shared/perTaskRepository";
-import { INGEST_ITEM_IDENTIFIER_KEY, ingestSources } from "./ingest.js";
+import {
+  INGEST_ITEM_IDENTIFIER_KEY,
+  ingestSources,
+  planIngestion,
+} from "./ingest.js";
 import type {
   IngestibleItem,
   IngestibleItemIdentifier,
@@ -34,6 +38,116 @@ beforeEach(async () => {
   });
 });
 afterEach(async () => store.close());
+
+it("assigns every new item its actual created task ID and repeats it on retry", async () => {
+  const incoming = source([item("new-hash", "New")]);
+  const first = planIngestion([incoming], await store.getTaskDefinitions());
+  const addition = first.mutations.find(
+    (mutation) => mutation.kind === "ingestTask",
+  )!;
+  expect(first.assignments).toEqual([
+    {
+      sourceIdentifier: incoming.identifier,
+      itemIdentifier: incoming.items[0].identifier,
+      taskID: addition.task.taskID,
+    },
+  ]);
+  await store.apply(first.mutations);
+  const retry = planIngestion([incoming], await store.getTaskDefinitions());
+  expect(retry.mutations).toEqual([]);
+  expect(retry.assignments).toEqual(first.assignments);
+});
+
+it("returns unchanged items as assignments alongside changed items", async () => {
+  await seed();
+  const incoming = source([
+    item("old-hash"),
+    item(otherTaskID, "New", otherTaskID),
+  ]);
+  const result = planIngestion([incoming], await store.getTaskDefinitions());
+  expect(result.assignments).toEqual([
+    {
+      sourceIdentifier: incoming.identifier,
+      itemIdentifier: incoming.items[0].identifier,
+      taskID,
+    },
+    {
+      sourceIdentifier: incoming.identifier,
+      itemIdentifier: incoming.items[1].identifier,
+      taskID: otherTaskID,
+    },
+  ]);
+  expect(result.mutations).toMatchObject([
+    { kind: "ingestTask", task: { taskID: otherTaskID } },
+  ]);
+});
+
+it("assigns a legacy hash move the preserved task ID, not its discarded new ID", async () => {
+  await seed();
+  const moved = source([item("old-hash")], "new-note");
+  const result = planIngestion(
+    [source([]), moved],
+    await store.getTaskDefinitions(),
+  );
+  expect(result.assignments).toEqual([
+    {
+      sourceIdentifier: moved.identifier,
+      itemIdentifier: moved.items[0].identifier,
+      taskID,
+    },
+  ]);
+  expect(result.mutations).toMatchObject([
+    { kind: "updateTaskProvenance", taskID },
+  ]);
+  await store.apply(result.mutations);
+  const retry = planIngestion(
+    [source([]), moved],
+    await store.getTaskDefinitions(),
+  );
+  expect(retry.assignments).toEqual(result.assignments);
+  expect(retry.mutations).toEqual([]);
+});
+
+it("assigns badge adoption to the old task and repeats it after metadata changes", async () => {
+  await seed();
+  const incoming = source([item(taskID, "Original", taskID)]);
+  const result = planIngestion([incoming], await store.getTaskDefinitions());
+  expect(result.assignments).toEqual([
+    {
+      sourceIdentifier: incoming.identifier,
+      itemIdentifier: incoming.items[0].identifier,
+      taskID,
+    },
+  ]);
+  expect(result.mutations).toMatchObject([
+    { kind: "mergeTaskMetadata", taskID },
+  ]);
+  await store.apply(result.mutations);
+  const retry = planIngestion([incoming], await store.getTaskDefinitions());
+  expect(retry.assignments).toEqual(result.assignments);
+  expect(retry.mutations).toEqual([]);
+});
+
+it("assigns restored deleted tasks their original IDs", async () => {
+  await seed();
+  await store.apply(await plan([source([])]));
+  const incoming = source([item(taskID, "Original", taskID)]);
+  const result = planIngestion([incoming], await store.getTaskDefinitions());
+  expect(result.assignments).toEqual([
+    {
+      sourceIdentifier: incoming.identifier,
+      itemIdentifier: incoming.items[0].identifier,
+      taskID,
+    },
+  ]);
+  expect(result.mutations).toContainEqual(
+    expect.objectContaining({
+      kind: "setTaskDeleted",
+      taskID,
+      isDeleted: false,
+    }),
+  );
+});
 
 for (const scheduler of ["orbit", "fsrs"] as const) {
   it(`adopts a badge and edits wording without changing ${scheduler} scheduling or history`, async () => {

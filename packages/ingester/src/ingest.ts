@@ -12,6 +12,7 @@ import type {
   IngestibleItem,
   IngestibleItemIdentifier,
   IngestibleSource,
+  IngestibleSourceIdentifier,
 } from "./ingestible.js";
 
 export const INGEST_ITEM_IDENTIFIER_KEY = "ingestSourceIdentifier" as const;
@@ -28,6 +29,13 @@ type IngestTask = Pick<
 type NewTaskMutation = Extract<VaultMutation, { kind: "ingestTask" }>;
 type DeleteTaskMutation = Extract<VaultMutation, { kind: "setTaskDeleted" }>;
 
+/** The real task selected for one source item, including unchanged imports. */
+export type IngestionAssignment = {
+  sourceIdentifier: IngestibleSourceIdentifier;
+  itemIdentifier: IngestibleItemIdentifier;
+  taskID: TaskID;
+};
+
 /**
  * Source/item reconciliation, independent of storage and transport.
  * Sources are complete snapshots: omit a source to leave it alone; include an
@@ -40,6 +48,15 @@ export function ingestSources(
   tasks: ReadonlyMap<TaskID, IngestTask>,
   opts = { ingestDateMillis: Date.now() },
 ): VaultMutation[] {
+  return planIngestion(sources, tasks, opts).mutations;
+}
+
+/** Plan mutations and source writeback targets together, before applying either. */
+export function planIngestion(
+  sources: readonly IngestibleSource[],
+  tasks: ReadonlyMap<TaskID, IngestTask>,
+  opts = { ingestDateMillis: Date.now() },
+): { mutations: VaultMutation[]; assignments: IngestionAssignment[] } {
   const explicitTaskIDs = new Set<TaskID>();
   for (const source of sources)
     for (const item of source.items) {
@@ -83,12 +100,14 @@ export function ingestSources(
     itemID: IngestibleItemIdentifier;
     explicit: boolean;
     mutation: NewTaskMutation;
+    assignment: IngestionAssignment;
   }[] = [];
   const deletions: {
     itemID: IngestibleItemIdentifier;
     mutation: DeleteTaskMutation;
   }[] = [];
   const updates: VaultMutation[] = [];
+  const assignments: IngestionAssignment[] = [];
   const claimedTaskIDs = new Set<TaskID>();
   function claim(taskID: TaskID) {
     if (claimedTaskIDs.has(taskID))
@@ -103,6 +122,12 @@ export function ingestSources(
       const taskID =
         item.taskID ?? previous.get(itemID) ?? (generateUniqueID() as TaskID);
       claim(taskID);
+      const assignment = {
+        sourceIdentifier: source.identifier,
+        itemIdentifier: itemID,
+        taskID,
+      };
+      assignments.push(assignment);
       const task = tasks.get(taskID);
       if (task) {
         updates.push(...updateTask(taskID, task, item, provenance));
@@ -110,6 +135,7 @@ export function ingestSources(
         additions.push({
           itemID,
           explicit: item.taskID !== undefined,
+          assignment,
           mutation: {
             kind: "ingestTask",
             mutationID: mutationID(),
@@ -152,6 +178,7 @@ export function ingestSources(
     if (matchingAdditions.length === 1 && matchingDeletions?.length === 1) {
       const addition = matchingAdditions[0].mutation;
       const deletion = matchingDeletions[0].mutation;
+      matchingAdditions[0].assignment.taskID = deletion.taskID;
       movedAdditions.add(addition);
       movedDeletions.add(deletion);
       claim(deletion.taskID);
@@ -165,15 +192,18 @@ export function ingestSources(
       );
     }
   }
-  return [
-    ...additions
-      .map(({ mutation }) => mutation)
-      .filter((mutation) => !movedAdditions.has(mutation)),
-    ...unclaimedDeletions
-      .map(({ mutation }) => mutation)
-      .filter((mutation) => !movedDeletions.has(mutation)),
-    ...updates,
-  ];
+  return {
+    mutations: [
+      ...additions
+        .map(({ mutation }) => mutation)
+        .filter((mutation) => !movedAdditions.has(mutation)),
+      ...unclaimedDeletions
+        .map(({ mutation }) => mutation)
+        .filter((mutation) => !movedDeletions.has(mutation)),
+      ...updates,
+    ],
+    assignments,
+  };
 }
 
 function updateTask(

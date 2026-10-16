@@ -88,9 +88,40 @@ rejected before applying the import, and reordering existing blanks is **not saf
 their histories still belong to positions, not stable per-blank IDs. A task badge
 does not solve cloze-component identity.
 
-Recognizing a badge does not mint IDs or write back to notes. The `interpret`
-command remains read-only.
+The original `interpret` command still only reads notes. To import and write
+badges into explicitly selected Markdown files, use the opt-in command below.
 The `orbit://` link is recognized metadata, not yet implemented app navigation.
+
+## Import and stamp selected notes
+
+```sh
+bun run lab:ingest-markdown /path/to/note.md --dry-run
+bun run lab:ingest-markdown /path/to/note.md
+```
+
+Multiple explicit `.md` paths can be supplied together. The command uses the same
+private configuration as `lab:ingest` (`--config`, `ORBIT_LAB_CONFIG`, or the
+default Lab configuration). It does not scan a directory or enable writeback in
+the scheduled notes workflow.
+
+Ingestion returns the actual TaskID selected for each prompt, including unchanged
+hash-matched tasks. Only after successful sync does the command append each
+missing badge at its original source boundary. Surrounding Markdown stays
+byte-identical. The result is reinterpreted before writing to verify that the
+task content, source identity, and cloze ranges have not changed. Unsupported
+layouts fail during preflight, before importing; existing badges are left alone.
+
+Each changed file is staged and atomically replaced. The command checks the source
+again after ingestion and before replacement; if it changed, it stops rather than
+knowingly overwriting it. This is not a cross-process lock or an atomic multi-file
+transaction: run under the notes workflow's dispatch lock when integrating it
+there. Failed writeback leaves the accepted import hash-matched and retryable.
+The next stamped import adopts its TaskID as ingestion metadata; subsequent
+unchanged imports are no-ops.
+
+For Bear notes, run the existing Bear/Markdown sync afterwards to bring the badge
+back into Bear with its concurrency checks. This command does not write to Bear
+directly or change that sync's ledger.
 
 ## Validation
 
