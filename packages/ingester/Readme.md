@@ -65,9 +65,11 @@ sync confirmation, not a separate server disk-fsync receipt. The programmatic
 stdout remains counts-only. Reports are reserved before applying and completed
 after sync; a failed run can leave an empty report, not a successful receipt.
 
-The opt-in [Markdown writeback command](../interpreter/Readme.md#import-and-stamp-selected-notes)
-uses those assignments to stamp selected source files. The original JSON-only
-command and scheduled Bear workflow do not modify Markdown.
+[Markdown preparation](../interpreter/Readme.md#prepare-disposable-stamps) uses a
+dry-run plan's assignments to add missing badges to disposable copies. After the
+source owner accepts them, [Markdown import](../interpreter/Readme.md#import-source-snapshots)
+reads the accepted exports. Neither importer writes source files; source-system
+save checks and scheduling belong to the caller, not this package.
 
 Unit tests preserve the original matching/provenance cases. The isolated Node
 integration tests run real paired Repo clients and inspect quiesced server files

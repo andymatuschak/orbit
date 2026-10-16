@@ -88,11 +88,11 @@ rejected before applying the import, and reordering existing blanks is **not saf
 their histories still belong to positions, not stable per-blank IDs. A task badge
 does not solve cloze-component identity.
 
-The original `interpret` command still only reads notes. To import and write
-badges into explicitly selected Markdown files, use the opt-in command below.
+Both `interpret` and `lab:ingest-markdown` only read their source notes.
+Badge preparation is a separate operation on disposable Markdown copies.
 The `orbit://` link is recognized metadata, not yet implemented app navigation.
 
-## Import and stamp selected notes
+## Import source snapshots
 
 ```sh
 bun run lab:ingest-markdown /path/to/note.md --dry-run
@@ -105,30 +105,11 @@ default Lab configuration). Alternatively, `--directory <notes-dir>` reads the
 same immediate, visible, regular `.md` files as the original interpreter CLI;
 it ignores nested files and symlinks. Do not combine it with explicit paths.
 
-By default, every supplied note can receive badges. Repeat
-`--stamp-source <source-id>` to restrict **writeback**, while still importing all
-notes. Bear notes use their exported BearID as the source ID. `--no-stamp` imports
-without source writes, including adoption of existing badges; it cannot be
-combined with `--stamp-source`.
-
-Ingestion returns the actual TaskID selected for each prompt, including unchanged
-hash-matched tasks. Only after successful sync does the command append each
-missing badge at its original source boundary. Surrounding Markdown stays
-byte-identical. The result is reinterpreted before writing to verify that the
-task content, source identity, and cloze ranges have not changed. Unsupported
-layouts fail during preflight, before importing; existing badges are left alone.
-
-Each changed file is staged and atomically replaced. The command checks the source
-again after ingestion and before replacement; if it changed, it stops rather than
-knowingly overwriting it. This is not a cross-process lock or an atomic multi-file
-transaction: run under the notes workflow's dispatch lock when integrating it
-there. Failed writeback leaves the accepted import hash-matched and retryable.
-The next stamped import adopts its TaskID as ingestion metadata; subsequent
-unchanged imports are no-ops.
-
-For Bear notes, run the existing Bear/Markdown sync afterwards to bring the badge
-back into Bear with its concurrency checks. This command does not write to Bear
-directly or change that sync's ledger.
+`runMarkdownIngest({paths?, directory?, configurationPath?, dryRun?})` only reads
+these files and imports their interpreted snapshots. Existing badges target their
+TaskIDs; unbadged prompts keep content-hash matching. The result includes the
+selected task assignments, but importing never writes badges into the source.
+Use `--dry-run` to inspect the plan without applying ingestion mutations.
 
 ## Prepare disposable stamps
 
@@ -150,36 +131,17 @@ preserves existing content-hash matches without creating tasks prematurely. The
 plan may refresh the ordinary local Repo cache. Invalid badges or unsupported
 layouts fail before planning; a file changed during planning is not overwritten.
 
-After the source accepts the prepared text, use `lab:ingest-markdown --no-stamp`
+Each changed draft is staged and atomically replaced, preserving surrounding
+Markdown bytes and file permissions. Before writing, the command verifies that
+the task specs and source identity are unchanged and that the draft still matches
+what it read. This is not a cross-process lock or an atomic multi-file transaction;
+the drafts should be owned by the caller while preparation runs.
+
+After the source accepts the prepared text, use `lab:ingest-markdown`
 against the accepted export to import or update its tasks. Missing badges themselves
 identify unfinished preparation; Orbit keeps no deferred-note queue. The caller
 chooses scan timing and supplies the temporary files. Source-system synchronization,
 retry policy, and publication ordering remain outside Orbit.
-
-### Local Bear workflow
-
-The external `/Users/andym/bin/syncNotes.sh` first runs ordinary Bear sync, then
-asks the Bear tool's generic `transform.ts` command to run `lab:prepare-stamps`
-on disposable exports. The Bear tool saves each proposal only if its note still
-matches the version that was exported. Newer Bear text wins; rejected proposals
-are discarded rather than copied into the normal exported folder.
-
-The stamp scan runs even when that ordinary export reports no changes. The
-existing 15-minute scheduled workflow therefore finds missing stamps again,
-without a list of postponed notes. The pilot still selects only private notes
-`DBE5849D-4A24-433B-9E51-9F2741D5930D` and
-`20F5AA41-7E75-4CA9-8DC3-8F289537095B`; ordinary ingestion includes all notes.
-No bulk backfill is enabled. The Bear tool also postpones automatic changes to
-its selected note for 30 seconds after an edit; existing stamps are never replaced
-merely because a newly prepared attempt was discarded.
-
-After accepted native text is exported, the wrapper runs the ordinary
-`lab:ingest-markdown --no-stamp` import when anything changed (or publication is
-already pending). A quiet scan does not force vault access or website publication.
-Real conflicting human edits to both Bear and an exported file still use the
-ordinary sync's protective error; only generated temporary proposals are disposable.
-Neither Orbit's implementation nor the Bear converter depends on the other
-project: the outside wrapper supplies the command and the pilot selection.
 
 ## Validation
 

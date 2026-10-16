@@ -406,7 +406,7 @@ for (const { name, answerSource, answer, finalParagraph } of [
     finalParagraph: "A second paragraph.",
   },
 ]) {
-  test(`Markdown ingestion stamps and updates a ${name} without losing reviews`, async () => {
+  test(`prepared Markdown imports and updates a ${name} without losing reviews`, async () => {
     const fixture = await startFixture();
     const file = path.join(
       path.dirname(fixture.configurationPath),
@@ -446,30 +446,41 @@ for (const { name, answerSource, answer, finalParagraph } of [
       });
       assert.equal(preview.mutationCount, 1);
       assert.deepEqual(preview.counts, { ingestTask: 1 });
-      assert.equal(preview.stampedFileCount, 0);
       assert.equal(await fs.readFile(file, "utf8"), original);
       assert.deepEqual(await observer.readLogicalVault(), before);
 
-      const imported = await runMarkdownIngest({
+      const prepared = await prepareMarkdownStamps({
         paths: [file],
         configurationPath: fixture.configurationPath,
       });
-      assert.deepEqual(imported.counts, { ingestTask: 1 });
-      assert.equal(imported.stampedFileCount, 1);
-      assert.equal(imported.assignments.length, 1);
-      ({ taskID } = imported.assignments[0]);
+      assert.equal(prepared.stampedFileCount, 1);
+      const stamped = await fs.readFile(file, "utf8");
+      taskID = stamped.match(/\[☉\]\(orbit:\/\/task\/([A-Za-z0-9_-]{22})\)/)[1];
       assert.match(taskID, /^[A-Za-z0-9_-]{22}$/);
-      assert.equal(imported.assignments[0].sourceIdentifier, bearID);
-      const stamped = original.replace(
-        finalParagraph,
-        `${finalParagraph} [☉](orbit://task/${taskID})`,
+      assert.equal(
+        stamped,
+        original.replace(
+          finalParagraph,
+          `${finalParagraph} [☉](orbit://task/${taskID})`,
+        ),
       );
-      assert.equal(await fs.readFile(file, "utf8"), stamped);
       assert.ok(stamped.endsWith(footer));
       assert.ok(
         stamped.indexOf(`[☉](orbit://task/${taskID})`) <
           stamped.indexOf(footer),
       );
+      assert.deepEqual((await readFixture(fixture)).logical, before);
+      // This disposable snapshot is now accepted source text. Importing it
+      // must not perform another source-writeback step.
+      const imported = await runMarkdownIngest({
+        paths: [file],
+        configurationPath: fixture.configurationPath,
+      });
+      assert.deepEqual(imported.counts, { ingestTask: 1 });
+      assert.equal(imported.assignments.length, 1);
+      assert.equal(imported.assignments[0].taskID, taskID);
+      assert.equal(imported.assignments[0].sourceIdentifier, bearID);
+      assert.equal(await fs.readFile(file, "utf8"), stamped);
       const receiveDeadline = Date.now() + 5000;
       while (!(await observer.readLogicalVault()).tasks[taskID]) {
         if (Date.now() > receiveDeadline)
@@ -527,9 +538,7 @@ for (const { name, answerSource, answer, finalParagraph } of [
       });
       assert.deepEqual(updated.counts, {
         updateTaskSpec: 1,
-        mergeTaskMetadata: 1,
       });
-      assert.equal(updated.stampedFileCount, 0);
       assert.equal(updated.assignments[0].taskID, taskID);
       assert.equal(await fs.readFile(file, "utf8"), edited);
       const editDeadline = Date.now() + 5000;
@@ -560,8 +569,8 @@ for (const { name, answerSource, answer, finalParagraph } of [
         configurationPath: fixture.configurationPath,
       });
       assert.equal(repeat.mutationCount, 0);
-      assert.equal(repeat.stampedFileCount, 0);
       assert.equal(repeat.assignments[0].taskID, taskID);
+      assert.equal(await fs.readFile(file, "utf8"), edited);
     } finally {
       await observer.close();
       await observerRepo.shutdown();
@@ -607,163 +616,19 @@ for (const { name, answerSource, answer, finalParagraph } of [
   });
 }
 
-for (const failure of [
-  "unwritable source directory",
-  "source edited during import",
-]) {
-  test(`interrupted Markdown stamping is retryable after ${failure}`, async (t) => {
-    if (failure === "unwritable source directory" && process.getuid?.() === 0)
-      return t.skip("Root bypasses directory write permissions");
-    const fixture = await startFixture();
-    const notes = path.join(path.dirname(fixture.configurationPath), "notes");
-    await fs.mkdir(notes);
-    const file = path.join(notes, "Interrupted.md");
-    const original =
-      "# Interrupted stamping\n\nOriginal introduction.\n\nQ. What survives a retry?\nA. The same task.\n";
-    const edited = original.replace(
-      "Original introduction.",
-      "Introduction edited while the importer was running.",
-    );
-    const expectedSource =
-      failure === "source edited during import" ? edited : original;
-    await fs.writeFile(file, original);
-    const network = new AuthenticatedWebSocketNetworkAdapter(
-      `ws://127.0.0.1:${fixture.service.configuration.port}/v1/sync`,
-      async () => ({
-        kind: "pairedToken",
-        token: fixture.service.configuration.pairingToken,
-      }),
-    );
-    const observerRepo = new Repo({ network: [network] });
-    await network.whenReady();
-    const observer = await PerTaskRepository.open(
-      new RepoPerTaskDocuments(observerRepo),
-      fixture.rootURL,
-    );
-    try {
-      let fetchMock;
-      let editedDuringBootstrap = false;
-      if (failure === "unwritable source directory") {
-        // The importer's cache remains writable; only source staging must fail.
-        await fs.chmod(notes, 0o555);
-      } else {
-        const realFetch = globalThis.fetch.bind(globalThis);
-        const bootstrap = `http://127.0.0.1:${fixture.service.configuration.port}/v1/root`;
-        fetchMock = t.mock.method(globalThis, "fetch", async (...args) => {
-          if (String(args[0]) === bootstrap && !editedDuringBootstrap) {
-            // Parsing has finished, but all networking and Repo writes still
-            // use the real service. No timing sleep or application hook.
-            await fs.writeFile(file, edited);
-            editedDuringBootstrap = true;
-          }
-          return realFetch(...args);
-        });
-      }
-      try {
-        await assert.rejects(
-          runMarkdownIngest({
-            paths: [file],
-            configurationPath: fixture.configurationPath,
-          }),
-          (error) => {
-            assert.match(error.message, /vault import synced.*stamping/i);
-            if (failure === "unwritable source directory")
-              assert.equal(error.cause?.code, "EACCES");
-            else
-              assert.match(
-                error.cause?.message,
-                /Markdown changed during ingestion/,
-              );
-            return true;
-          },
-        );
-      } finally {
-        fetchMock?.mock.restore();
-        await fs.chmod(notes, 0o755);
-      }
-      if (failure === "source edited during import")
-        assert.equal(editedDuringBootstrap, true);
-      assert.equal(await fs.readFile(file, "utf8"), expectedSource);
-      assert.deepEqual(await fs.readdir(notes), ["Interrupted.md"]);
-
-      let accepted;
-      const deadline = Date.now() + 5000;
-      for (;;) {
-        accepted = await observer.readLogicalVault();
-        if (Object.keys(accepted.tasks).length === 2) break;
-        if (Date.now() > deadline)
-          assert.fail("Failed source write did not leave an accepted task");
-        await delay(20);
-      }
-      const taskID = Object.keys(accepted.tasks).find(
-        (id) => id !== "original-task",
-      );
-      assert.match(taskID, /^[A-Za-z0-9_-]{22}$/);
-      assert.equal(
-        accepted.tasks[taskID].spec.content.body.text,
-        "What survives a retry?",
-      );
-      assert.equal(
-        accepted.tasks[taskID].spec.content.answer.text,
-        "The same task.",
-      );
-      const documentURL = (await observer.getCatalogEntries())[taskID]
-        .documentURL;
-      const retry = await runMarkdownIngest({
-        paths: [file],
-        configurationPath: fixture.configurationPath,
-      });
-      assert.equal(retry.mutationCount, 0);
-      assert.equal(retry.stampedFileCount, 1);
-      assert.equal(retry.assignments[0].taskID, taskID);
-      const stamped = expectedSource.replace(
-        "The same task.",
-        `The same task. [☉](orbit://task/${taskID})`,
-      );
-      assert.equal(await fs.readFile(file, "utf8"), stamped);
-      const adoption = await runMarkdownIngest({
-        paths: [file],
-        configurationPath: fixture.configurationPath,
-      });
-      assert.deepEqual(adoption.counts, { mergeTaskMetadata: 1 });
-      assert.equal(adoption.assignments[0].taskID, taskID);
-      assert.equal(adoption.stampedFileCount, 0);
-      const repeat = await runMarkdownIngest({
-        paths: [file],
-        configurationPath: fixture.configurationPath,
-      });
-      assert.equal(repeat.mutationCount, 0);
-      assert.equal(repeat.stampedFileCount, 0);
-      assert.equal(repeat.assignments[0].taskID, taskID);
-      assert.equal(await fs.readFile(file, "utf8"), stamped);
-      assert.equal(
-        (await observer.getCatalogEntries())[taskID].documentURL,
-        documentURL,
-      );
-      assert.deepEqual(
-        (await observer.readLogicalVault()).observations,
-        accepted.observations,
-      );
-    } finally {
-      await observer.close();
-      await observerRepo.shutdown();
-    }
-  });
-}
-
-test("directory ingestion imports all notes but stamps only selected Bear sources", async () => {
+test("directory ingestion reads immediate regular Markdown without changing sources", async () => {
   const fixture = await startFixture();
   const directory = path.dirname(fixture.configurationPath);
   const notes = path.join(directory, "notes");
   await fs.mkdir(notes);
-  const selectedID = "C4B1329B-741C-42D4-A04D-CA36EC3F3B0B";
-  const untouchedID = "3B7765AD-6FB2-4E3A-A9F1-670A695BDA83";
-  const selectedFile = path.join(notes, "Selected.md");
-  const untouchedFile = path.join(notes, "Untouched.md");
-  const selected = `# Selected note\n\nQ. Which note gets a badge?\nA. This one.\n\n<!-- {BearID:${selectedID}} -->\n`;
-  const untouched = `# Untouched note\n\nQ. Which note is imported without writeback?\nA. This other one.\n\n<!-- {BearID:${untouchedID}} -->\n`;
-  await fs.writeFile(selectedFile, selected);
-  await fs.writeFile(untouchedFile, untouched);
+  const firstID = "C4B1329B-741C-42D4-A04D-CA36EC3F3B0B";
+  const secondID = "3B7765AD-6FB2-4E3A-A9F1-670A695BDA83";
+  const firstFile = path.join(notes, "First.md");
+  const secondFile = path.join(notes, "Second.md");
+  const first = `# First note\n\nQ. Which note comes first?\nA. This one.\n\n<!-- {BearID:${firstID}} -->\n`;
+  const second = `# Second note\n\nQ. Which note comes second?\nA. This other one.\n\n<!-- {BearID:${secondID}} -->\n`;
+  await fs.writeFile(firstFile, first);
+  await fs.writeFile(secondFile, second);
   const invalid =
     "Q. This file must not be parsed.\nA. Invalid badge [☉](orbit://task/not-valid)\n";
   const nested = path.join(notes, "nested");
@@ -777,88 +642,49 @@ test("directory ingestion imports all notes but stamps only selected Bear source
   await Promise.all(ignoredFiles.map((file) => fs.writeFile(file, invalid)));
   await fs.symlink(ignoredFiles[3], path.join(notes, "Linked.md"));
 
-  const network = new AuthenticatedWebSocketNetworkAdapter(
-    `ws://127.0.0.1:${fixture.service.configuration.port}/v1/sync`,
-    async () => ({
-      kind: "pairedToken",
-      token: fixture.service.configuration.pairingToken,
-    }),
+  const input = {
+    directory: notes,
+    configurationPath: fixture.configurationPath,
+  };
+  const imported = await runMarkdownIngest(input);
+  assert.deepEqual(imported.counts, { ingestTask: 2 });
+  assert.equal(imported.assignments.length, 2);
+  const assigned = new Map(
+    imported.assignments.map(({ sourceIdentifier, taskID }) => [
+      sourceIdentifier,
+      taskID,
+    ]),
   );
-  const observerRepo = new Repo({ network: [network] });
-  await network.whenReady();
-  const observer = await PerTaskRepository.open(
-    new RepoPerTaskDocuments(observerRepo),
-    fixture.rootURL,
+  assert.match(assigned.get(firstID), /^[A-Za-z0-9_-]{22}$/);
+  assert.match(assigned.get(secondID), /^[A-Za-z0-9_-]{22}$/);
+  assert.notEqual(assigned.get(firstID), assigned.get(secondID));
+  assert.equal(await fs.readFile(firstFile, "utf8"), first);
+  assert.equal(await fs.readFile(secondFile, "utf8"), second);
+  const accepted = await readFixture(fixture);
+  assert.equal(Object.keys(accepted.logical.tasks).length, 3);
+  assert.equal(
+    accepted.logical.tasks[assigned.get(firstID)].spec.content.answer.text,
+    "This one.",
   );
-  try {
-    const input = {
-      directory: notes,
-      stampSourceIdentifiers: [selectedID],
-      configurationPath: fixture.configurationPath,
-    };
-    const imported = await runMarkdownIngest(input);
-    assert.deepEqual(imported.counts, { ingestTask: 2 });
-    assert.equal(imported.assignments.length, 2);
-    assert.equal(imported.stampedFileCount, 1);
-    const assigned = new Map(
-      imported.assignments.map(({ sourceIdentifier, taskID }) => [
+  assert.equal(
+    accepted.logical.tasks[assigned.get(secondID)].spec.content.answer.text,
+    "This other one.",
+  );
+  const repeat = await runMarkdownIngest(input);
+  assert.equal(repeat.mutationCount, 0);
+  assert.deepEqual(
+    new Map(
+      repeat.assignments.map(({ sourceIdentifier, taskID }) => [
         sourceIdentifier,
         taskID,
       ]),
-    );
-    assert.match(assigned.get(selectedID), /^[A-Za-z0-9_-]{22}$/);
-    assert.match(assigned.get(untouchedID), /^[A-Za-z0-9_-]{22}$/);
-    assert.notEqual(assigned.get(selectedID), assigned.get(untouchedID));
-    const stamped = selected.replace(
-      "A. This one.",
-      `A. This one. [☉](orbit://task/${assigned.get(selectedID)})`,
-    );
-    assert.equal(await fs.readFile(selectedFile, "utf8"), stamped);
-    assert.equal(await fs.readFile(untouchedFile, "utf8"), untouched);
-
-    const deadline = Date.now() + 5000;
-    for (;;) {
-      const logical = await observer.readLogicalVault();
-      if (Object.keys(logical.tasks).length === 3) {
-        assert.equal(
-          logical.tasks[assigned.get(selectedID)].spec.content.answer.text,
-          "This one.",
-        );
-        assert.equal(
-          logical.tasks[assigned.get(untouchedID)].spec.content.answer.text,
-          "This other one.",
-        );
-        break;
-      }
-      if (Date.now() > deadline)
-        assert.fail("Independent peer did not receive both source notes");
-      await delay(20);
-    }
-    // The scheduled workflow reconciles returned badges without another write.
-    const reconcile = { ...input, stampSourceIdentifiers: [] };
-    const adoption = await runMarkdownIngest(reconcile);
-    assert.deepEqual(adoption.counts, { mergeTaskMetadata: 1 });
-    assert.equal(adoption.stampedFileCount, 0);
-    const repeat = await runMarkdownIngest(reconcile);
-    assert.equal(repeat.mutationCount, 0);
-    assert.equal(repeat.stampedFileCount, 0);
-    assert.deepEqual(
-      new Map(
-        repeat.assignments.map(({ sourceIdentifier, taskID }) => [
-          sourceIdentifier,
-          taskID,
-        ]),
-      ),
-      assigned,
-    );
-    assert.equal(await fs.readFile(selectedFile, "utf8"), stamped);
-    assert.equal(await fs.readFile(untouchedFile, "utf8"), untouched);
-    for (const file of ignoredFiles)
-      assert.equal(await fs.readFile(file, "utf8"), invalid);
-  } finally {
-    await observer.close();
-    await observerRepo.shutdown();
-  }
+    ),
+    assigned,
+  );
+  assert.equal(await fs.readFile(firstFile, "utf8"), first);
+  assert.equal(await fs.readFile(secondFile, "utf8"), second);
+  for (const file of ignoredFiles)
+    assert.equal(await fs.readFile(file, "utf8"), invalid);
 });
 
 for (const rejectedSave of [false, true]) {
@@ -954,15 +780,20 @@ for (const rejectedSave of [false, true]) {
       assert.deepEqual(await prepareMarkdownStamps(input), {
         stampedFileCount: 0,
       });
-      const imported = await runMarkdownIngest({
-        ...input,
-        stampSourceIdentifiers: [],
-      });
+      const acceptedSources = await Promise.all(
+        [oldFile, newFile].map((file) => fs.readFile(file, "utf8")),
+      );
+      const imported = await runMarkdownIngest(input);
       assert.deepEqual(imported.counts, {
         ingestTask: 1,
         mergeTaskMetadata: 1,
       });
-      assert.equal(imported.stampedFileCount, 0);
+      assert.deepEqual(
+        await Promise.all(
+          [oldFile, newFile].map((file) => fs.readFile(file, "utf8")),
+        ),
+        acceptedSources,
+      );
       const accepted = await readFixture(fixture);
       assert.deepEqual(
         Object.keys(accepted.logical.tasks).sort(),
@@ -1001,12 +832,14 @@ for (const rejectedSave of [false, true]) {
       assert.deepEqual(await prepareMarkdownStamps(input), {
         stampedFileCount: 0,
       });
-      const repeat = await runMarkdownIngest({
-        ...input,
-        stampSourceIdentifiers: [],
-      });
+      const repeat = await runMarkdownIngest(input);
       assert.equal(repeat.mutationCount, 0);
-      assert.equal(repeat.stampedFileCount, 0);
+      assert.deepEqual(
+        await Promise.all(
+          [oldFile, newFile].map((file) => fs.readFile(file, "utf8")),
+        ),
+        acceptedSources,
+      );
     },
   );
 }

@@ -43,7 +43,7 @@ function stubPlan(beforeReturn?: () => Promise<void>) {
     async (input) => {
       await beforeReturn?.();
       return {
-        dryRun: true,
+        dryRun: input.dryRun ?? false,
         mutationCount: 0,
         counts: {},
         assignments: [...input.ingestible.sources]
@@ -74,7 +74,7 @@ it("rejects mixed directory and file inputs before connecting", async () => {
   ).rejects.toThrow("either a notes directory or explicit Markdown paths");
 });
 
-it("rejects symlinks and unsupported stamping layouts before importing", async () => {
+it("rejects symlink inputs before connecting to the vault", async () => {
   const directory = await mkdtemp(join(tmpdir(), "orbit-stamping-test-"));
   try {
     const note = join(directory, "note.md");
@@ -85,13 +85,54 @@ it("rejects symlinks and unsupported stamping layouts before importing", async (
     await expect(runMarkdownIngest({ paths: [link] })).rejects.toThrow(
       "regular Markdown file",
     );
-    await expect(runMarkdownIngest({ paths: [note] })).rejects.toThrow(
-      "Cannot safely stamp",
-    );
     expect(await readFile(note, "utf8")).toBe(content);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+it("imports unbadged and unstamppable Markdown without modifying source files", async () => {
+  await withTempDirectory(async (directory) => {
+    const files = [join(directory, "plain.md"), join(directory, "heading.md")];
+    const content = ["Q. Front\nA. Back\n", "## A {heading} prompt ##\n"];
+    await Promise.all(
+      files.map((file, index) => writeFile(file, content[index])),
+    );
+    const plan = stubPlan();
+    for (const dryRun of [false, true]) {
+      const result = await runMarkdownIngest({
+        directory,
+        configurationPath: "/private/config.json",
+        dryRun,
+      });
+      expect(result).not.toHaveProperty("stampedFileCount");
+      expect(plan.mock.calls.at(-1)?.[0]).toMatchObject({
+        configurationPath: "/private/config.json",
+        dryRun,
+      });
+      expect(plan.mock.calls.at(-1)?.[0].ingestible.sources).toHaveLength(2);
+      expect(
+        await Promise.all(files.map((file) => readFile(file, "utf8"))),
+      ).toEqual(content);
+      expect((await readdir(directory)).sort()).toEqual([
+        "heading.md",
+        "plain.md",
+      ]);
+    }
+    expect(plan).toHaveBeenCalledTimes(2);
+  });
+});
+
+it("does not overwrite a concurrent source edit when ordinary ingestion completes", async () => {
+  await withTempDirectory(async (directory) => {
+    const file = join(directory, "note.md");
+    const original = "Q. Front\nA. Back\n";
+    const edited = "Q. A new human edit\nA. Keep this\n";
+    await writeFile(file, original);
+    stubPlan(() => writeFile(file, edited));
+    await runMarkdownIngest({ directory });
+    expect(await readFile(file, "utf8")).toBe(edited);
+  });
 });
 
 it("does not open a vault when all prompts already have badges or there are no prompts", async () => {
@@ -212,7 +253,7 @@ it("does not overwrite changed source files or stamp other files from a stale ba
     ]);
     const plan = stubPlan(() => writeFile(first, changed));
     await expect(prepareMarkdownStamps({ directory })).rejects.toThrow(
-      "Markdown changed during ingestion",
+      "Markdown changed during stamp preparation",
     );
     expect(plan).toHaveBeenCalledTimes(1);
     expect(await readFile(first, "utf8")).toBe(changed);
@@ -240,7 +281,7 @@ it("leaves disposable files unstamped when planning fails", async () => {
   });
 });
 
-it("exposes preparation as a counts-only CLI and rejects import-mode options", async () => {
+it("exposes preparation as a counts-only CLI and rejects removed stamping options", async () => {
   await withTempDirectory(async (directory) => {
     await writeFile(join(directory, "prose.md"), "# Prose only\n");
     const cli = fileURLToPath(new URL("./ingest.ts", import.meta.url));
@@ -269,7 +310,9 @@ it("exposes preparation as a counts-only CLI and rejects import-mode options", a
         new Response(child.stderr).text(),
       ]);
       expect(exitCode).toBe(extra.length ? 1 : 0);
-      if (extra.length) expect(stderr).toContain("cannot be combined");
+      if (extra[0] === "--dry-run")
+        expect(stderr).toContain("cannot be combined");
+      else if (extra.length) expect(stderr).toContain("Unknown option");
       else expect(JSON.parse(stdout)).toEqual({ stampedFileCount: 0 });
     }
   });

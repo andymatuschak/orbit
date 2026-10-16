@@ -14,47 +14,19 @@ import { stampMarkdownFile } from "../stampTaskBadges.js";
 type MarkdownInputs = { paths?: readonly string[]; directory?: string };
 type SourceFile = MarkdownFile & { mode: number };
 
-/** Import all supplied notes, optionally limiting source writeback by source ID. */
+/** Import source snapshots without modifying their Markdown files. */
 export async function runMarkdownIngest(
   input: MarkdownInputs & {
-    stampSourceIdentifiers?: readonly string[];
     configurationPath?: string;
     dryRun?: boolean;
   },
 ) {
   const files = await readMarkdownFiles(input);
-  const ingestible = interpretMarkdownFiles(files);
-  const selectedSources = input.stampSourceIdentifiers
-    ? new Set(input.stampSourceIdentifiers)
-    : null;
-  const stampFiles = files.filter(
-    (_, index) =>
-      !selectedSources ||
-      selectedSources.has(ingestible.sources[index].identifier),
-  );
-  preflightStamps(stampFiles, ingestible.sources);
-
-  const result = await runIngest({
-    ingestible,
+  return runIngest({
+    ingestible: interpretMarkdownFiles(files),
     configurationPath: input.configurationPath,
     dryRun: input.dryRun,
   });
-  let stampedFileCount;
-  try {
-    stampedFileCount = await writeTaskBadges(
-      files,
-      stampFiles,
-      result.assignments,
-      input.dryRun,
-    );
-  } catch (error) {
-    if (input.dryRun) throw error;
-    throw new Error(
-      "The vault import synced, but source stamping did not finish; resolve the file error and retry",
-      { cause: error },
-    );
-  }
-  return { ...result, stampedFileCount };
 }
 
 /** Prepare disposable Markdown only; accepted source text is ingested later. */
@@ -82,7 +54,7 @@ export async function prepareMarkdownStamps(
     dryRun: true,
   });
   return {
-    stampedFileCount: await writeTaskBadges(pending, pending, plan.assignments),
+    stampedFileCount: await writeTaskBadges(pending, plan.assignments),
   };
 }
 
@@ -146,17 +118,15 @@ function preflightStamps(
 
 async function writeTaskBadges(
   files: readonly SourceFile[],
-  selected: readonly SourceFile[],
   assignments: readonly IngestionAssignment[],
-  dryRun = false,
 ) {
-  const changes = selected
+  const changes = files
     .map((file) => ({
       ...file,
       stamped: stampMarkdownFile(file, assignments),
     }))
     .filter((file) => file.content !== file.stamped);
-  if (!dryRun && changes.length) {
+  if (changes.length) {
     for (const file of files) await assertUnchanged(file);
     for (const file of changes) {
       const directory = await fs.mkdtemp(
@@ -172,13 +142,13 @@ async function writeTaskBadges(
       }
     }
   }
-  return dryRun ? 0 : changes.length;
+  return changes.length;
 }
 
 async function assertUnchanged(file: { path: string; content: string }) {
   const stat = await fs.lstat(file.path);
   if (!stat.isFile() || (await fs.readFile(file.path, "utf8")) !== file.content)
-    throw new Error(`Markdown changed during ingestion: ${file.path}`);
+    throw new Error(`Markdown changed during stamp preparation: ${file.path}`);
 }
 
 async function main() {
@@ -188,23 +158,14 @@ async function main() {
       config: { type: "string" },
       "dry-run": { type: "boolean" },
       directory: { type: "string" },
-      "stamp-source": { type: "string", multiple: true },
-      "no-stamp": { type: "boolean" },
       "prepare-stamps": { type: "boolean" },
     },
   });
-  if (values["no-stamp"] && values["stamp-source"])
-    throw new Error("--no-stamp cannot be combined with --stamp-source");
-  if (
-    values["prepare-stamps"] &&
-    (values["dry-run"] || values["no-stamp"] || values["stamp-source"])
-  )
-    throw new Error(
-      "--prepare-stamps cannot be combined with --dry-run, --no-stamp, or --stamp-source",
-    );
+  if (values["prepare-stamps"] && values["dry-run"])
+    throw new Error("--prepare-stamps cannot be combined with --dry-run");
   if (!positionals.length && !values.directory)
     throw new Error(
-      "Usage: bun run lab:ingest-markdown <note.md> [more.md ...] | --directory <notes-dir> [--stamp-source <source-id> ... | --no-stamp] [--config <private-config>] [--dry-run]\nOr: bun run lab:prepare-stamps <note.md> [more.md ...] | --directory <temporary-notes-dir> [--config <private-config>]",
+      "Usage: bun run lab:ingest-markdown <note.md> [more.md ...] | --directory <notes-dir> [--config <private-config>] [--dry-run]\nOr: bun run lab:prepare-stamps <note.md> [more.md ...] | --directory <temporary-notes-dir> [--config <private-config>]",
     );
   if (values["prepare-stamps"]) {
     console.info(
@@ -221,7 +182,6 @@ async function main() {
   const { assignments: _assignments, ...summary } = await runMarkdownIngest({
     paths: positionals,
     directory: values.directory,
-    stampSourceIdentifiers: values["no-stamp"] ? [] : values["stamp-source"],
     configurationPath: values.config,
     dryRun: values["dry-run"],
   });

@@ -1020,159 +1020,118 @@ backup, readiness passed, and a fresh JS peer again verified the two reviews.
 No Lab TestFlight/Firebase publication occurred. Additional physical UI checks
 above remain follow-ups, not claimed results.
 
-## 2026-10-16: source-preserving task badges and live Bear writeback
+## 2026-10-16: stable source identities and disposable badge preparation
 
-`lab:ingest-markdown` is an opt-in selected-file importer. It obtains the actual
-TaskIDs from the existing reconciliation plan, confirms sync, and inserts missing
-badges without reformatting Markdown. Preflight reinterpretation proves unchanged
-task specs, source identity, and cloze ranges. The scheduled JSON-only importer
-and external notes workflow were not changed; no bulk stamping was performed.
+Current boundary: interpret → prepare disposable copies → source-owner conditional
+save → import accepted exports. The earlier combined import-and-stamp API and its
+selector flags have been removed; neither Markdown nor JSON import writes source
+files. The interpreter readme is the current command reference.
 
-Full lint/build/test checks passed, including 28 isolated integration tests and
-19 additional writeback unit tests. One pre-existing cloze-whitespace skip remains.
-The frozen 4,882-note / 3,574-prompt corpus still produces identical ingestion JSON.
-The new real-Repo integration covers exact source insertion, dry-run isolation,
-an independent peer's review, in-place wording edits, no-op repeats, and cold disk
-reopening after server shutdown.
+Task badges name existing TaskIDs without reformatting Markdown. Their source
+ranges cover ordinary/multiparagraph Q&A and clozes; standalone BearID footers end
+answers rather than becoming answer text. Reinterpretation checks unchanged task
+specs, source identity, and cloze ranges. Badged wording edits update the existing
+task/document and retain observations and FSRS state. Without an accepted badge,
+content-hash matching still applies; ambiguous matches are not guessed. Cloze
+component-count changes remain rejected, and same-count reordering is not safe.
 
-Live proof used one new private Bear note, `Orbit stamping live test 2026-10-16
-giEQRJ` (Bear ID `DBE5849D-4A24-433B-9E51-9F2741D5930D`). Only its unique tag was
-exported and round-tripped through an isolated existing Bear-sync ledger. The
-import created task `gUPXGoG0QI-RDvWhv2h7rA`; native Bear readback preserved all
-other source bytes and displayed the small ☉ link. A synthetic review on that
-test task, followed by a concurrency-checked native Bear wording edit and another
-import, retained its document URL, creation time, exact observation, and FSRS
-component states. The final import made zero mutations and zero source writes.
+The separate Bear tool owns temporary exports, backups, attachment serialization,
+and expected-version native saves. A newer native edit discards only its generated
+proposal; ordinary sync then exports current Bear text. Real local human edits
+remain protected. The existing periodic workflow scans even after an unchanged
+export: missing badges identify deferred work, without a new queue, cursor, cache,
+or daemon. Orbit has no dependency on the Bear tool.
 
-The first immediate disk audit preceded the server's asynchronous catalog save;
-a fresh ordinary peer and later persisted-file reads both confirmed the entry.
-Sync-head confirmation is not an additional server-fsync receipt. The private note
-and its one synthetic review remain available for inspection; unrelated tasks
-were not changed. Proof artifacts are in
-`/private/tmp/orbit-stamping-live.giEQRJ/proof.json`. This is macOS Bear/native-store
-and Lab-server evidence, not a new iPhone Bear editing test or app release.
+### Source round-trip gates and current scope
 
-### Multiparagraph BearID boundary follow-up
+The frozen 4,882-note / 3,574-prompt corpus retained byte-identical ingestion JSON.
+The current collection preview captured 4,884 files / 3,578 prompts, used the real
+pure ingestion plan (zero mutations), and found no unsupported/ambiguous cases.
+Every proposed ID already existed, with identical specs. The subsequent ordinary
+Bear refresh changed none of those source fingerprints.
 
-Standalone BearID export comments now close Q&A regions instead of becoming part
-of a long answer. Source ranges end before the footer, so stamping places the
-badge on the final answer block and preserves the footer bytes. Ordinary comments
-and inline examples retain their existing behavior. Six new unit regressions
-cover these boundaries, unchanged hashes, paragraph/list/quote/code/math endings,
-CRLF, and repeated stamping. The single-paragraph real-Repo integration now also
-runs a multiparagraph variant. Full checks passed, including 29 integration
-tests; the frozen 4,882-note corpus still produces identical ingestion JSON.
+All 4,856 Bear-managed files had valid matching raw BearIDs and ledger hashes.
+Their eligible cohort was **763 notes / 3,548 missing badges**, including 3,439
+reviewed tasks. Twenty-eight unmanaged local files were left byte-identical;
+26 contain one prompt each. They are not part of native Bear writeback.
 
-A second isolated native Bear proof, `Orbit stamping multiparagraph test
-2026-10-16 GsDjwq` (Bear ID `20F5AA41-7E75-4CA9-8DC3-8F289537095B`), ends its
-two-paragraph answer immediately before the generated footer. Task
-`rkareToQRGWRB6SEJLd1hw` was stamped before that footer, round-tripped exactly
-into Bear, and stored with neither badge nor footer in its answer. A wording edit
-preserved its document, creation time, single synthetic review, and FSRS states;
-the final cold importer run made zero mutations and zero source writes. The
-private note remains open for inspection, with proof at
-`/private/tmp/orbit-stamping-multiline.GsDjwq/proof.json`. Scheduled ingestion and
-unrelated notes were not changed.
+Live rollout first round-tripped three existing reviewed notes: Mozer 2009
+(single Q&A), Gwern (multiparagraph), and Do your own thinking (cloze). Native
+readback, exact source comparisons, document identity, observations, and FSRS
+checks passed. The remaining 760 notes then accepted their badges with no native
+version deferrals. Two preexisting Bear-tool defects were caught and fixed:
 
-### Writeback safety and scoped workflow integration
+- Long exported titles could exceed the filename limit when a backup suffix was
+  appended. Paired backups now use the existing stable note-ID/timestamp stem
+  (`9547ddc`). The failed first attempt changed no native note or export.
+- The shared manual-import helper unintentionally uncommented hidden tag lines.
+  All 19 affected notes differed by exactly that transformation; no task specs,
+  provenance, attachment references, or inventory changed. Their original comments
+  were restored while retaining badges. Hidden-tag restoration now belongs only
+  to ordinary manual import; generic conversion preserves its input (`37cea9f`).
+  No new mode or Orbit-specific branch was introduced.
 
-The milestone is committed as `ebad56fb` (stable identities/in-place updates)
-and `0109b53e` (source-preserving stamping). Additional real-Repo tests cover an
-unwritable source directory and an edit made during import: the accepted task
-remains retryable with the same document, source edits are preserved, and retry
-produces exactly one badge. Directory ingestion also proves all notes are
-imported while writeback is restricted to selected BearIDs. Final checks pass:
-lint/build, 476 unit tests (one existing skip), and 32 integration tests.
+An independent persisted-file audit through the actual current catalog confirms
+all **3,548 TaskID metadata adoptions**, unchanged task URLs/definitions/history,
+unchanged scheduler, and all 10,892 vault tasks retained. Apart from badges, every
+canonical source now matches its captured original bytes.
 
-Real Bear 3.0.1 reproduces the default conflict-copy hazard: concurrent native
-and stamped-local edits create another note with the same badge. The opt-in
-`--failOnConflict` safeguard in `bearcli-markdown-sync` commit `93320d4` instead
-preserves native/local/ledger bytes across repeated failures, then accepts
-explicit reconciliation and becomes a no-op. Actual stale `overwrite --base`
-is rejected even with `--force`. All four disposable conflict-test notes were
-moved to Bear's Trash; none was imported into Lab. Proof:
-`/private/tmp/orbit-bear-native-conflict-F1fcC8/proof.json`. External checks pass:
-141 tests, two existing environment-gated skips, and typecheck.
+### Cold-open gate: upstream loader defect, current state repaired
 
-The installed `/Users/andym/bin/syncNotes.sh` now replaces the intermediate JSON
-and late import with primary sync → selected stamping → strict badge return →
-read-only reconciliation, before existing downstream publication. Both primary
-syncs use the strict mode, under the existing dispatch lock/receipt. Initial
-writeback is limited to the two private test BearIDs above; ordinary ingestion
-still includes all notes. Bulk backfill remains disabled. Seventeen isolated
-shell cases and a real-dispatcher retry proof pass; no actual website or
-reMarkable publication was invoked for these tests. Proof artifacts:
-`/private/tmp/orbit-wrapper-proof.tsmej0/`.
+The final audit exposed an additional failure in Automerge 3.4.1 / Repo
+2.6.0-alpha.5: the catalog's one snapshot plus 42 incrementals (3,237,263 bytes)
+trigger a Rust allocation trap when concatenated and loaded together. Fresh Bun
+and Node reproduce concatenated loading failure. Loading the identical chunks
+one at a time succeeds, with no missing dependencies. This was not missing task
+writes, nor a reason to extend a timeout.
 
-A final isolated-tag native round trip appended one QA to the multiparagraph
-test note, created only task `iTRcbeQxSyuzdyyJ-wEpjA`, returned its actual badge
-to Bear, and adopted that metadata without more source writes. A subsequent
-preview planned zero mutations and the repeated Bear sync changed nothing.
-Persisted task count increased exactly once (10,890 → 10,891); the original task,
-document URL, observation, and FSRS states remained identical. This QA/task
-remain inspectable. Proof:
-`/private/tmp/orbit-live-stamping-integration-8yasam/proof.json`.
+A disposable same-document snapshot passed fresh ordinary loading and an actual
+unmodified, network-free Repo cold-open. Its 10,892 entries, heads, all 3,777
+change-byte hashes, and complete history were identical. Under quiesced writer
+locks, the private server and importer catalog stores were compacted using the
+same snapshot key/order as Repo's ordinary compaction. Only superseded catalog
+chunk values were removed; original bytes and a complete post-update vault backup
+are retained. Peer identity, sync state, document URLs, heads, and history did not
+change. The restarted service is ready and both stores cold-load normally.
 
-Installation held the dispatch lock and preserved the preceding executable at
-`/private/tmp/orbit-syncNotes-before-stamping-20261016.sh`; installed script SHA-256
-is `5a9e1e614a3373e36a5c073ebabfefb5a36e89149b6a0d09b608f9a9d6b1d712`.
-This is not automatic conflict resolution, a multi-note transaction, or a
-cross-process CAS on Markdown files. Ambiguous conflicts require explicit
-reconciliation; a narrow final file-check/rename race remains for noncooperating
-external file editors. No app release or cloud/public-service deployment occurred.
+This repairs current storage, **not the underlying concatenated-load defect**.
+Unrestricted scheduled stamping remains on HOLD; the installed wrapper retains
+its two-note pilot restriction. Existing stamped notes still import normally.
+Before widening automatic preparation, isolate/fix the upstream loader defect and
+repeat the large-update/cold-open gate. Do not add a custom application recovery
+layer or assume compaction prevents recurrence.
 
-### Disposable proposals and periodic scans replace generated-file conflicts
+The final ordinary import made zero mutations; its full before/after comparison
+passed. Already-badged preparation made zero native/source writes and succeeded
+with an unavailable configuration, proving it requires no vault connection.
 
-The Bear integration above is replaced by prepare → conditional native save →
-ordinary import. `lab:prepare-stamps` works only on caller-supplied disposable
-Markdown: scan locally, plan assigned task IDs once if any badges are missing,
-and stamp without applying ingestion mutations. Already-stamped input completes
-without loading Lab configuration or opening Repo. Ordinary Repo reads/cache
-refresh during a nonempty plan are unchanged; this is not a new read-only Repo.
+### Evidence and checks
 
-The Bear tool's generic converter, commit `7b8d87e`, owns temporary exports and
-source-version checks. A native edit causes only that generated proposal to be
-discarded; it is never copied into canonical Markdown or turned into a conflict
-note. Ordinary sync then exports current Bear text. Real local human edits remain
-protected. Missing badges are the unfinished-work marker: the existing periodic
-workflow scans even after an unchanged export, with no new pending-note ledger,
-date cursor, cache, daemon, or changed-note-only dependency. The two-note pilot
-remains in place; unrelated notes are imported normally, not stamped in bulk.
+- Orbit lint/build, 485 unit tests (one existing whitespace skip), and 32 isolated
+  integrations pass. Read-only import/concurrent-edit tests replace the retired
+  stamp-after-import failure contract.
+- Bear tool: 164 tests pass, two existing environment-gated skips; strict
+  TypeScript passes. Regressions cover long ASCII/Unicode backups, backup failure,
+  exact comment/tag/attachment round trips, and retained manual-import behavior.
+- Eighteen isolated shell cases, Bash syntax, and ShellCheck pass. The installed
+  importer command no longer uses the removed flag; wider scheduling is not
+  enabled. Existing reMarkable/shared lock protocols are unchanged.
+- Installed wrapper SHA-256:
+  `7d479160afc784cc7d3621b67e710fb224d905b24ab1e1fd2a8a067feefa0147`;
+  isolated installed-wrapper proof: `/private/tmp/orbit-installed-wrapper-AVvxgm/`.
+- Current-corpus preview and exact copies:
+  `/private/tmp/orbit-current-stamp-preview-bgdKJa/`.
+- Native stages, exact comment repair, complete comparisons, compaction archives,
+  and final no-op receipt:
+  `/private/tmp/orbit-stamp-rollout-G4LM4d/`.
+- Original catalog failure and successful normalized cold-open:
+  `/private/tmp/orbit-catalog-normalization-proof-hxoUsb/`.
+- Authoritative persisted task audit:
+  `/private/tmp/orbit-stamp-durability-audit-C4w1LN/proof.json`.
+- Earlier real native-edit race/deferral proof:
+  `/private/tmp/orbit-native-transform-integration-Ne15oX/proof.json`.
 
-Gates pass: Orbit lint/build, 483 unit tests (one existing skip), 34 integrations;
-Bear tool 159 tests (two existing skips) and strict typecheck; 18 isolated wrapper
-cases, Bash syntax, and ShellCheck. Wrapper cases prove an unchanged export still
-scans but does not force import/publication, accepted stamps trigger import, and
-ordinary failure/force-publication behavior remains intact. Artifacts:
-`/private/tmp/orbit-disposable-wrapper.bHjNWS/`.
-
-On temporary copies of the frozen 4,882-note corpus, initial preparation stamped
-789 files in 22,586 ms, including task lookup and file writes. A second full scan
-took 3,218 ms and succeeded with a nonexistent Lab configuration, proving no vault
-access. Source notes/Bear were not changed and no ingestion mutations were applied.
-These timings exclude staging the initial fixture and actual native Bear saves.
-Report: `/private/tmp/orbit-disposable-stamp-benchmark-ArwxWe/result.json`.
-
-The live proof used only the established private multiparagraph test note. Actual
-selected-note quiet deferral passed. A deliberately intervening native edit won
-over a real prepared stamp (applied 0, deferred 1); the refreshed ordinary sync
-then reported 0, but a subsequent scan still retried and saved the fresh stamp.
-Only accepted task `4FJCtyS5Qo-PK-9qOi0Nxg` entered Lab; discarded planned task
-`a66_9buNTumykOQd8D-hGw` did not. Persisted task count increased exactly once
-(10,891 → 10,892), and the existing task/document/review/FSRS stayed identical.
-The fully stamped repeat used unavailable configuration and made no native writes.
-The QA/task remain for inspection. Report:
-`/private/tmp/orbit-native-transform-integration-Ne15oX/proof.json`.
-
-Installed wrapper SHA-256:
-`4a9f6dbb305a5dd5bc76364f255136b46814b544460ffdb494219b7e7bceaef4`.
-The old executable is preserved at
-`/private/tmp/orbit-syncNotes-before-disposable-stamps-20261016.sh`. Installation
-held the existing dispatch lock; no website/reMarkable publication was forced for
-validation and no app/cloud deployment was needed.
-
-An optional lock hardening prototype was removed after discovering that reMarkable
-tools also use the existing shared file-existence lock protocol. No third-project
-lock behavior was changed. Ordinary errors release it; its preexisting SIGKILL
-stale-file limitation remains a separate maintenance item. This does not affect
-ordinary editing deferrals, which exit successfully and need no retry record.
+Complete pre/post-update vault snapshots are under the private Lab's
+`backups/task-badges-*` directories. Normal per-note Bear backups remain in
+`/Users/andym/Work/BearSyncBackup`. No website/reMarkable publication was invoked
+for these gates; no app release or cloud/public-service deployment occurred.

@@ -131,16 +131,24 @@ write through the same Automerge repository as reviews, not a legacy event store
 or the public service:
 
 ```sh
-bun run --cwd packages/interpreter interpret <notes-directory> <private-output.json>
-bun run lab:ingest <private-output.json> --dry-run
-bun run lab:ingest <private-output.json>
+bun run lab:ingest-markdown --directory <notes-directory> --dry-run
+bun run lab:ingest-markdown --directory <notes-directory>
 ```
 
 The server must be running. The command uses the private server configuration
 and a separate ordinary Repo client cache. Existing IDs and reviews survive
-unchanged prompts, note renames, and unambiguous moves. Content edits retain the
-old delete-and-create policy. See [the ingester readme](packages/ingester/Readme.md)
-for complete-source semantics, private reports, and delivery boundaries.
+unchanged prompts, note renames, and unambiguous moves. A prompt's
+`[☉](orbit://task/TASK-ID)` badge also preserves its identity across wording edits;
+without a badge, content changes still delete and recreate the task.
+
+Import never writes Markdown. To add missing badges, run
+`bun run lab:prepare-stamps --directory <disposable-copies>`, then let the source
+owner accept those proposals before importing its accepted exports. In the Bear
+workflow, the separate Bear tool owns temporary files and conditional native
+saves; Orbit does not call it. See [badge preparation](packages/interpreter/Readme.md#prepare-disposable-stamps)
+and [the ingester readme](packages/ingester/Readme.md) for matching, complete-source
+semantics, private reports, and delivery boundaries. The JSON interpreter/ingester
+commands remain available for other callers.
 
 ## Packages
 
