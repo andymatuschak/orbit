@@ -1,14 +1,10 @@
 import {
   AttachmentID,
-  AttachmentIngestEvent,
   AttachmentMIMEType,
   AttachmentReference,
   EntityType,
-  EventType,
-  generateUniqueID,
   Task,
   TaskID,
-  TaskIngestEvent,
 } from "@withorbit/core";
 import { testClozeSpec } from "./testClozeSpec.js";
 
@@ -63,27 +59,4 @@ export function createTestAttachmentReference(id: string): AttachmentReference {
     type: EntityType.AttachmentReference,
     mimeType: AttachmentMIMEType.PNG,
   };
-}
-
-export function createTestTaskIngestEvents(count: number): TaskIngestEvent[] {
-  return Array.from(new Array(count)).map((_, i) => ({
-    id: generateUniqueID(),
-    type: EventType.TaskIngest,
-    spec: testClozeSpec,
-    entityID: generateUniqueID(),
-    timestampMillis: i * 5000 + 10000,
-    provenance: null,
-  }));
-}
-
-export function createTestAttachmentIngestEvents(
-  count: number,
-): AttachmentIngestEvent[] {
-  return Array.from(new Array(count)).map((_, i) => ({
-    id: generateUniqueID(),
-    type: EventType.AttachmentIngest,
-    entityID: generateUniqueID(),
-    timestampMillis: i * 5000 + 10000,
-    mimeType: AttachmentMIMEType.PNG,
-  }));
 }

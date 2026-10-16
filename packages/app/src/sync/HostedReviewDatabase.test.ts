@@ -1,7 +1,12 @@
-import type {
-  AttachmentID,
-  AttachmentMIMEType,
-  ReviewItem,
+import {
+  defaultOrbitSchedulerPolicy,
+  type SchedulerPolicy,
+  type TaskID,
+  type Task,
+  type VaultMutation,
+  type AttachmentID,
+  type AttachmentMIMEType,
+  type ReviewItem,
 } from "@withorbit/core";
 import { expect, test } from "bun:test";
 import { HostedReviewDatabase } from "./HostedReviewDatabase.js";
@@ -325,5 +330,70 @@ test("apply acknowledges the authoritative durable write, not a second receipt p
   committed.resolve();
   await applying;
   expect(acknowledged).toBe(true);
+  await database.close();
+});
+
+test("forwards the live scheduler and projects a saved task even after it leaves the due queue", async () => {
+  let scheduler: SchedulerPolicy = defaultOrbitSchedulerPolicy;
+  const taskID = "saved-task" as TaskID;
+  const task = { id: taskID } as Task;
+  const requested: (readonly TaskID[])[] = [];
+  const database = new HostedReviewDatabase(
+    {
+      get scheduler() {
+        return scheduler;
+      },
+      async getTaskProjections(taskIDs: readonly TaskID[]) {
+        requested.push(taskIDs);
+        return { tasks: new Map([[taskID, task]]) };
+      },
+      getReviewQueue: async () => [],
+      subscribe: () => () => {},
+      apply: async () => {},
+      readAttachment: async () => null,
+      close: async () => {},
+    },
+    {
+      attachmentURL: async () => "unused",
+      releaseAttachmentURLs() {},
+    },
+  );
+  expect(database.scheduler).toBe(scheduler);
+  scheduler = { ...defaultOrbitSchedulerPolicy, intervalGrowthFactor: 3 };
+  expect(database.scheduler).toBe(scheduler);
+  expect((await database.getTaskProjections([taskID])).tasks.get(taskID)).toBe(
+    task,
+  );
+  expect(requested).toEqual([[taskID]]);
+  await database.close();
+  expect(() => database.getTaskProjections([taskID])).toThrow("closed");
+});
+
+test("a post-save projection failure does not change the completed durable-write result", async () => {
+  const saved: (readonly VaultMutation[])[] = [];
+  const database = new HostedReviewDatabase(
+    {
+      scheduler: defaultOrbitSchedulerPolicy,
+      getTaskProjections: async () => {
+        throw new Error("projection unavailable");
+      },
+      getReviewQueue: async () => [],
+      subscribe: () => () => {},
+      apply: async (mutations) => {
+        saved.push([...mutations]);
+      },
+      readAttachment: async () => null,
+      close: async () => {},
+    },
+    {
+      attachmentURL: async () => "unused",
+      releaseAttachmentURLs() {},
+    },
+  );
+  await database.apply([]);
+  await expect(
+    database.getTaskProjections(["saved-task" as TaskID]),
+  ).rejects.toThrow("projection unavailable");
+  expect(saved).toEqual([[]]);
   await database.close();
 });

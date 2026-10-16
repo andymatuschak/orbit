@@ -5,8 +5,8 @@ import {
   TaskSpecType,
 } from "../entities/task.js";
 import { EntityID } from "../entity.js";
-import { EventID, EventType, TaskIngestEvent } from "../event.js";
-import { eventReducer } from "../eventReducer.js";
+import { EventID, EventType, TaskIngestEvent } from "./legacy/event.js";
+import { eventReducer } from "./legacy/eventReducer.js";
 
 export const testClozeSpec: MemoryTaskSpec<ClozeTaskContent> = {
   type: TaskSpecType.Memory,

@@ -1,8 +1,15 @@
-import type { ReviewItem, TaskID } from "@withorbit/core";
+import {
+  getReviewQueueFuzzyDueTimestampThreshold,
+  type ReviewItem,
+  type Task,
+  type TaskID,
+} from "@withorbit/core";
 import { describe, expect, test } from "bun:test";
 import type { ReviewAreaItem } from "./ui/index.js";
 import {
   reviewSessionManagerReconcileReviewQueue,
+  reviewSessionManagerMarkCurrentItem,
+  reviewSessionManagerDeleteCurrentItem,
   type ReviewSessionManagerState,
 } from "./reviewSessionManager.js";
 
@@ -94,6 +101,229 @@ describe("review queue reconciliation", () => {
     ]);
     expect(next.currentReviewAreaQueueIndex).toBe(1);
     expect(next.currentSessionItemIndex).toBe(1);
+  });
+});
+
+describe("deleting the current prompt", () => {
+  test("deleting the only prompt leaves no invalid current item and preserves undo", () => {
+    const state = activeState([reviewItem("a")], 0);
+    const next = reviewSessionManagerDeleteCurrentItem(state);
+
+    expect(next.sessionItems).toEqual([]);
+    expect(next.reviewAreaQueue).toEqual([]);
+    expect(next.currentReviewAreaQueueIndex).toBe(0);
+    expect(next.currentSessionItemIndex).toBeNull();
+    expect(next.topUndoItem?.previousState).toBe(state);
+    expect(next.topUndoItem?.getUndoMutations()).toEqual([
+      expect.objectContaining({
+        kind: "setTaskDeleted",
+        taskID: "a",
+        isDeleted: false,
+      }),
+    ]);
+  });
+
+  test("deleting the last prompt keeps a valid remaining starburst item", () => {
+    const state = activeState([reviewItem("a"), reviewItem("b")], 1);
+    const next = reviewSessionManagerDeleteCurrentItem(state);
+
+    expect(next.sessionItems.map(({ task }) => String(task.id))).toEqual(["a"]);
+    expect(next.currentReviewAreaQueueIndex).toBe(1);
+    expect(next.currentSessionItemIndex).toBe(0);
+    expect(next.topUndoItem?.previousState).toBe(state);
+  });
+
+  test("deleting before the end advances to the next remaining prompt", () => {
+    const state = activeState([reviewItem("a"), reviewItem("b")], 0);
+    const next = reviewSessionManagerDeleteCurrentItem(state);
+
+    expect(next.sessionItems.map(({ task }) => String(task.id))).toEqual(["b"]);
+    expect(next.currentReviewAreaQueueIndex).toBe(0);
+    expect(next.currentSessionItemIndex).toBe(0);
+    expect(next.topUndoItem?.previousState).toBe(state);
+  });
+});
+
+describe("saved review projection", () => {
+  test("installs the saved FSRS state before selecting items to retry", () => {
+    const due = getReviewQueueFuzzyDueTimestampThreshold() - 1;
+    const item = reviewItem("a");
+    item.task.componentStates = {
+      main: {
+        createdAtTimestampMillis: 0,
+        lastRepetitionTimestampMillis: null,
+        intervalMillis: 0,
+        dueTimestampMillis: due,
+      },
+    };
+    const savedTask = {
+      ...item.task,
+      componentStates: {
+        main: {
+          ...item.task.componentStates.main,
+          intervalMillis: 12 * 86_400_000,
+          dueTimestampMillis: due + 12 * 86_400_000,
+          fsrs: {
+            stability: 12,
+            difficulty: 4,
+            lastReviewTimestampMillis: due,
+          },
+        },
+      },
+    } satisfies Task;
+    const next = reviewSessionManagerMarkCurrentItem(
+      activeState([item], 0),
+      savedTask,
+      "main",
+    );
+
+    expect(next.currentReviewAreaQueueIndex).toBe(1);
+    expect(next.sessionItems[0].task).toBe(savedTask);
+    expect(
+      next.sessionItems.filter(
+        (item) =>
+          item.task.componentStates[item.componentID].dueTimestampMillis <=
+          getReviewQueueFuzzyDueTimestampThreshold(),
+      ),
+    ).toEqual([]);
+    expect(next.topUndoItem).toBeNull();
+  });
+
+  test("updates every session component belonging to the saved task", () => {
+    const item = reviewItem("a");
+    item.task.componentStates = {
+      main: {
+        createdAtTimestampMillis: 0,
+        lastRepetitionTimestampMillis: null,
+        intervalMillis: 0,
+        dueTimestampMillis: 0,
+      },
+      other: {
+        createdAtTimestampMillis: 0,
+        lastRepetitionTimestampMillis: null,
+        intervalMillis: 0,
+        dueTimestampMillis: 0,
+      },
+    };
+    const other = { ...item, componentID: "other" };
+    const saved = { ...item.task };
+    const next = reviewSessionManagerMarkCurrentItem(
+      activeState([item, other], 0),
+      saved,
+      "main",
+    );
+    expect(next.sessionItems.every((item) => item.task === saved)).toBe(true);
+    expect(next.currentSessionItemIndex).toBe(1);
+  });
+
+  test("does not skip the successor when the queue advanced during the projection read", () => {
+    const reviewed = reviewItem("a");
+    reviewed.task.componentStates = {
+      main: {
+        createdAtTimestampMillis: 0,
+        lastRepetitionTimestampMillis: null,
+        intervalMillis: 0,
+        dueTimestampMillis: 0,
+      },
+      other: {
+        createdAtTimestampMillis: 0,
+        lastRepetitionTimestampMillis: null,
+        intervalMillis: 0,
+        dueTimestampMillis: 0,
+      },
+    };
+    for (const successor of [
+      reviewItem("b"),
+      { ...reviewed, componentID: "other" },
+    ]) {
+      const state = activeState([successor], 0);
+      const next = reviewSessionManagerMarkCurrentItem(
+        state,
+        reviewed.task,
+        "main",
+      );
+      expect(next.currentReviewAreaQueueIndex).toBe(0);
+      expect(next.currentSessionItemIndex).toBe(0);
+      expect(next.sessionItems[0].componentID).toBe(successor.componentID);
+    }
+    expect(
+      reviewSessionManagerMarkCurrentItem(emptyState(), reviewed.task, "main"),
+    ).toEqual(emptyState());
+  });
+
+  test("rejects a saved task missing the reviewed component", () => {
+    const item = reviewItem("a");
+    const state = activeState([item], 0);
+    expect(() =>
+      reviewSessionManagerMarkCurrentItem(
+        state,
+        {
+          ...item.task,
+          componentStates: {},
+        },
+        "main",
+      ),
+    ).toThrow("missing the current component");
+  });
+
+  test("refills an exhausted queue in the same repeatable state transition", () => {
+    const now = Date.UTC(2026, 9, 15);
+    const item = reviewItem("a");
+    const saved = {
+      ...item.task,
+      componentStates: {
+        main: {
+          createdAtTimestampMillis: 0,
+          lastRepetitionTimestampMillis: now,
+          intervalMillis: 0,
+          dueTimestampMillis: now,
+        },
+      },
+    } satisfies Task;
+    const state = activeState([item], 0);
+    const mark = () =>
+      reviewSessionManagerMarkCurrentItem(state, saved, "main", now);
+
+    expect(mark()).toEqual(mark());
+    expect(state.reviewAreaQueue).toHaveLength(1);
+    const next = mark();
+    expect(next.currentReviewAreaQueueIndex).toBe(1);
+    expect(next.currentSessionItemIndex).toBe(0);
+    expect(next.reviewAreaQueue).toEqual([
+      state.reviewAreaQueue[0],
+      state.reviewAreaQueue[0],
+    ]);
+    expect(next.sessionItems[0].task).toBe(saved);
+  });
+
+  test("does not immediately refill an FSRS retry that is not due yet", () => {
+    const now = Date.UTC(2026, 9, 15);
+    const item = reviewItem("a");
+    const saved = {
+      ...item.task,
+      componentStates: {
+        main: {
+          createdAtTimestampMillis: 0,
+          lastRepetitionTimestampMillis: now,
+          intervalMillis: 9 * 86_400_000,
+          dueTimestampMillis: now + 600_000,
+          fsrs: {
+            stability: 9,
+            difficulty: 4,
+            lastReviewTimestampMillis: now,
+            isRetry: true,
+          },
+        },
+      },
+    } satisfies Task;
+    const next = reviewSessionManagerMarkCurrentItem(
+      activeState([item], 0),
+      saved,
+      "main",
+      now,
+    );
+    expect(next.reviewAreaQueue).toHaveLength(1);
+    expect(next.currentReviewAreaQueueIndex).toBe(1);
   });
 });
 

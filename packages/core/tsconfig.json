@@ -6,5 +6,5 @@
     "types": ["bun", "node"]
   },
   "include": ["./src/**/*.ts", "./@types/**/*.d.ts"],
-  "exclude": ["./src/**/*.test.ts"]
+  "exclude": ["./src/**/*.test.ts", "./src/**/__tests__/**"]
 }

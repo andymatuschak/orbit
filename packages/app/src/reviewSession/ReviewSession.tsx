@@ -1,7 +1,6 @@
 import {
   defaultSpacedRepetitionSchedulerConfiguration,
   generateUniqueID,
-  getReviewQueueFuzzyDueTimestampThreshold,
   ReviewItem,
   TaskID,
   TaskRepetitionOutcome,
@@ -37,6 +36,11 @@ import { ReviewSessionContainer } from "../ReviewSessionContainer.js";
 import { useReviewSessionManager } from "../reviewSessionManager.js";
 import { LoadingScreen } from "./LoadingScreen.js";
 import useAppUpdateMenuItem from "../util/useAppUpdateMenuItem.js";
+import { getReviewIntervalAfterOutcome, itemIsStillDue } from "./scheduling.js";
+import {
+  observeReviewQueue,
+  type ReviewQueueState,
+} from "./observeReviewQueue.js";
 
 interface ReviewDatabaseState {
   localStoreID: string | null;
@@ -130,44 +134,15 @@ function createReviewMutation({
   return mutation;
 }
 
-function useReviewItemQueue(database: ReviewDatabase | null): {
-  queue: ReviewItem[] | null;
-  error: Error | null;
-} {
-  const [state, setState] = useState<{
-    queue: ReviewItem[] | null;
-    error: Error | null;
-  }>({ queue: null, error: null });
+function useReviewItemQueue(database: ReviewDatabase | null): ReviewQueueState {
+  const [state, setState] = useState<ReviewQueueState>({
+    queue: null,
+    error: null,
+  });
   useEffect(() => {
     setState({ queue: null, error: null });
     if (!database) return;
-
-    let isCanceled = false;
-    let pushedRevision = 0;
-    const unsubscribe = database.subscribeToReviewQueue((queue) => {
-      if (isCanceled) return;
-      pushedRevision++;
-      setState({ queue, error: null });
-    });
-    const startingRevision = pushedRevision;
-    void database.fetchReviewQueue().then(
-      (queue) => {
-        if (isCanceled || pushedRevision !== startingRevision) return;
-        setState({ queue, error: null });
-      },
-      (error: unknown) => {
-        if (isCanceled) return;
-        console.error("Could not load review queue", error);
-        setState({
-          queue: null,
-          error: error instanceof Error ? error : new Error(String(error)),
-        });
-      },
-    );
-    return () => {
-      isCanceled = true;
-      unsubscribe();
-    };
+    return observeReviewQueue(database, setState);
   }, [database]);
 
   return state;
@@ -424,28 +399,35 @@ export default function ReviewSession({
     });
     reviewWriteIsInFlight.current = true;
     void commit([mutation])
-      .then(() => {
-        console.log("[Performance] Log written", Date.now() / 1000.0);
-        reviewSessionManager.markCurrentItem([mutation], (newState) => {
-          // Refill queue with items to retry if we're at the end.
-          if (
-            newState.currentReviewAreaQueueIndex !== null &&
-            newState.currentReviewAreaQueueIndex >=
-              newState.reviewAreaQueue.length
-          ) {
-            const itemsToRetry = newState.sessionItems.filter(itemIsStillDue);
-            if (itemsToRetry.length > 0) {
-              console.log("Pushing items to retry", itemsToRetry);
-              reviewSessionManager.pushReviewAreaQueueItems(
-                getReviewAreaItemsFromReviewItems(itemsToRetry),
+      .then(
+        async () => {
+          console.log("[Performance] Log written", Date.now() / 1000.0);
+          let savedTask;
+          try {
+            const projection = await database!.getTaskProjections([
+              mutation.taskID,
+            ]);
+            savedTask = projection.tasks.get(mutation.taskID);
+            if (!savedTask || savedTask.id !== mutation.taskID)
+              throw new Error(
+                "Reviewed task is absent or mismatched in the vault projection",
               );
-            }
+          } catch (error) {
+            // The review is already durable. Keep the answered card until queue
+            // reconciliation catches up; never replay it with a default scheduler
+            // or report the successful write as a failed commit.
+            console.error(
+              "Review saved, but could not refresh its task",
+              error,
+            );
+            return;
           }
-        });
-      })
-      .catch((error) => {
-        console.error("Couldn't commit", reviewItem.task.id, error);
-      })
+          reviewSessionManager.markCurrentItem(savedTask, mutation.componentID);
+        },
+        (error) => {
+          console.error("Couldn't commit", reviewItem.task.id, error);
+        },
+      )
       .finally(() => {
         reviewWriteIsInFlight.current = false;
       });
@@ -475,17 +457,12 @@ export default function ReviewSession({
 
   const canUndo = !!reviewSessionManager.topUndoItem;
   function onUndo() {
-    reviewSessionManager.undo(({ getUndoMutations }) => {
-      const undoMutations = getUndoMutations();
-      if (undoMutations.length > 0) {
-        commit(undoMutations)
-          .then(() => {
-            console.log("Wrote undo events", Date.now() / 1000.0);
-          })
-          .catch((error) => {
-            console.error("Couldn't commit undo events", error);
-          });
-      }
+    const undoItem = reviewSessionManager.topUndoItem;
+    if (!undoItem) return;
+    const undoMutations = undoItem.getUndoMutations();
+    reviewSessionManager.undo();
+    commit(undoMutations).catch((error) => {
+      console.error("Couldn't commit undo events", error);
     });
   }
 
@@ -543,7 +520,16 @@ export default function ReviewSession({
                       itemIsStillDue(item),
                   }))}
                   currentItemIndex={currentSessionItemIndex}
-                  pendingOutcome={pendingOutcome}
+                  previewIntervalMillis={
+                    pendingOutcome === null
+                      ? undefined
+                      : getReviewIntervalAfterOutcome(
+                          sessionItems[currentSessionItemIndex],
+                          database.scheduler,
+                          pendingOutcome,
+                          Date.now(),
+                        )
+                  }
                   position="left"
                   showLegend={true}
                   colorMode="bicolor"
@@ -629,13 +615,5 @@ export default function ReviewSession({
         }
       }}
     </ReviewSessionContainer>
-  );
-}
-
-function itemIsStillDue(item: ReviewItem): boolean {
-  const nowDueThreshold = getReviewQueueFuzzyDueTimestampThreshold();
-  return (
-    item.task.componentStates[item.componentID].dueTimestampMillis <=
-    nowDueThreshold
   );
 }

@@ -1,8 +1,13 @@
 import {
+  extractReviewItemFromDueTask,
+  getReviewQueueFuzzyDueTimestampThreshold,
   projectVault,
+  selectReviewCandidates,
   type AutomergeDocumentURL,
   type ObservationID,
   type OrbitVault,
+  type ReviewCandidatePriority,
+  type ReviewCandidateSelectionOptions,
   type SchedulingObservation,
   type Task,
   type TaskID,
@@ -16,6 +21,11 @@ export interface PerTaskCatalogEntry {
   nextDueTimestampMillis: number;
   isDeleted: boolean;
   indexedTaskHeads: string[];
+  /** Rebuildable queue priority; task observations remain authoritative. */
+  fsrs?: {
+    reviewCount: number;
+    memory: NonNullable<ReviewCandidatePriority["memory"]> | null;
+  };
 }
 
 export interface PerTaskDocument {
@@ -48,57 +58,67 @@ export function derivePerTaskCatalogEntry(
   documentURL: AutomergeDocumentURL,
   taskDocument: PerTaskDocument,
   indexedTaskHeads: readonly string[],
+  projectedTask?: Task,
 ): PerTaskCatalogEntry {
-  const task = projectPerTask(envelope, taskDocument).tasks.get(
-    taskDocument.taskID,
-  );
+  const task =
+    projectedTask ??
+    projectPerTask(envelope, taskDocument).tasks.get(taskDocument.taskID);
   if (!task) throw new Error(`Projection omitted task ${taskDocument.taskID}`);
-  const components = Object.values(task.componentStates);
-  if (components.length === 0)
-    throw new Error(`Task ${taskDocument.taskID} has no components`);
+  const { componentID } = extractReviewItemFromDueTask(task);
+  const state = task.componentStates[componentID];
+  const scheduler = envelope.scheduler;
   return {
     documentURL,
-    nextDueTimestampMillis: Math.min(
-      ...components.map(({ dueTimestampMillis }) => dueTimestampMillis),
-    ),
+    nextDueTimestampMillis: state.dueTimestampMillis,
     isDeleted: task.isDeleted,
     indexedTaskHeads: [...indexedTaskHeads].sort(),
+    ...(scheduler.kind === "fsrs"
+      ? {
+          fsrs: {
+            reviewCount: Object.values(taskDocument.observations).filter(
+              (observation) =>
+                observation.kind === "review" &&
+                observation.occurredAtTimestampMillis >=
+                  scheduler.cutoverTimestampMillis,
+            ).length,
+            memory: state.fsrs
+              ? {
+                  stability: state.fsrs.stability,
+                  lastReviewTimestampMillis:
+                    state.fsrs.lastReviewTimestampMillis,
+                  ...(state.fsrs.isRetry ? { isRetry: true as const } : {}),
+                }
+              : null,
+          },
+        }
+      : {}),
   };
 }
 
-export function rankActivePerTaskEntries(
+export function selectPerTaskReviewEntries(
   entries: Record<TaskID, PerTaskCatalogEntry>,
+  options: ReviewCandidateSelectionOptions,
 ): [TaskID, PerTaskCatalogEntry][] {
-  return (Object.entries(entries) as [TaskID, PerTaskCatalogEntry][])
-    .filter(([, entry]) => !entry.isDeleted)
-    .sort(
-      ([leftID, left], [rightID, right]) =>
-        left.nextDueTimestampMillis - right.nextDueTimestampMillis ||
-        leftID.localeCompare(rightID),
-    );
-}
-
-/** Use authoritative task projections when a selected catalog entry was stale. */
-export function rankProjectedPerTaskTasks(tasks: readonly Task[]): Task[] {
-  const earliestDue = (task: Task) => {
-    const states = Object.values(task.componentStates);
-    if (states.length === 0)
-      throw new Error(`Task ${task.id} has no components`);
-    return Math.min(
-      ...states.map(({ dueTimestampMillis }) => dueTimestampMillis),
-    );
-  };
-  return [...tasks].sort(
-    (left, right) =>
-      earliestDue(left) - earliestDue(right) || left.id.localeCompare(right.id),
+  const threshold = getReviewQueueFuzzyDueTimestampThreshold(
+    options.nowTimestampMillis,
   );
-}
-
-export function sameTaskHeads(
-  left: readonly string[],
-  right: readonly string[],
-): boolean {
-  if (left.length !== right.length) return false;
-  const sortedRight = [...right].sort();
-  return [...left].sort().every((head, index) => head === sortedRight[index]);
+  const candidates = (
+    Object.entries(entries) as [TaskID, PerTaskCatalogEntry][]
+  ).filter(
+    ([, entry]) =>
+      !entry.isDeleted && entry.nextDueTimestampMillis <= threshold,
+  );
+  // Legacy selection preserves input order on equal due times; the catalog's
+  // historical tie-breaker is task ID rather than map insertion order.
+  if (options.scheduler?.kind !== "fsrs")
+    candidates.sort(([leftID], [rightID]) => leftID.localeCompare(rightID));
+  return selectReviewCandidates(
+    candidates,
+    ([id, entry]) => ({
+      id,
+      dueTimestampMillis: entry.nextDueTimestampMillis,
+      memory: entry.fsrs?.memory,
+    }),
+    options,
+  );
 }

@@ -1,16 +1,18 @@
 import { describe, expect, test } from "bun:test";
 import {
-  EventType,
   TaskContentType,
   TaskRepetitionOutcome,
   TaskSpecType,
-  eventReducer,
-  type Event,
-  type EventID,
   type Task,
   type TaskID,
   type TaskSpec,
 } from "../../index.js";
+import {
+  EventType,
+  type Event,
+  type EventID,
+} from "../../__tests__/legacy/event.js";
+import { eventReducer } from "../../__tests__/legacy/eventReducer.js";
 import type { ObservationID, VaultID } from "../ids.js";
 import type { OrbitVault, VaultTask } from "../schema.js";
 import { projectVault } from "../projection/projectVault.js";

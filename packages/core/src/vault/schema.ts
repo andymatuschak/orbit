@@ -4,11 +4,11 @@ import type {
 } from "../entities/attachmentReference.js";
 import {
   mainTaskComponentID,
+  type TaskRepetitionOutcome,
   type TaskID,
   type TaskProvenance,
   type TaskSpec,
 } from "../entities/task.js";
-import type { TaskRepetitionOutcome } from "../event.js";
 import type {
   AttachmentSHA256,
   AutomergeDocumentURL,
@@ -23,7 +23,18 @@ export interface OrbitSchedulerPolicy {
   initialReviewIntervalMillis: number;
 }
 
-export type SchedulerPolicy = OrbitSchedulerPolicy;
+/** FSRS-6; the cutover changes future reviews, not already scheduled dates. */
+export interface FSRSSchedulerPolicy {
+  kind: "fsrs";
+  version: 1;
+  modelVersion: 6;
+  weights: number[];
+  requestedRetention: number;
+  cutoverTimestampMillis: number;
+  previousPolicy: OrbitSchedulerPolicy;
+}
+
+export type SchedulerPolicy = OrbitSchedulerPolicy | FSRSSchedulerPolicy;
 
 export interface VaultTask {
   createdAtTimestampMillis: number;

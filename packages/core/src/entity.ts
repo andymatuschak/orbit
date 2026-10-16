@@ -1,7 +1,8 @@
 import { AttachmentReference } from "./entities/attachmentReference.js";
 import { Task } from "./entities/task.js";
 
-// An Entity is an object with a stable identity. Entity records aren't created or manipulated directly; they're computed from a sequence of Events. An entity data structure represents a snapshot of that entity's state up to a particular event.
+// Entities are application-facing records with stable identities. Task state is
+// projected from vault task definitions and scheduling observations.
 export type Entity = Task | AttachmentReference;
 
 export enum EntityType {

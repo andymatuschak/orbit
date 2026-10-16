@@ -1,3 +1,4 @@
+// Frozen legacy reference for projection parity, not the current mutation path.
 import { EntityOfEvent, Event, EventType, TypeOfEvent } from "./event.js";
 import { attachmentIngestEventReducer } from "./eventReducers/attachmentReducers.js";
 import {

@@ -54,7 +54,6 @@ const ReviewStarburstStory = ({
           containerHeight={height}
           items={items}
           currentItemIndex={0}
-          pendingOutcome={null}
           position="left"
           showLegend
           colorMode="bicolor"

@@ -47,10 +47,17 @@ describe("widget projection coordinator", () => {
     await began;
     const queued = importReviews();
     const closing = coordinator.close();
+    let secondCloseFinished = false;
+    const secondClosing = coordinator.close().then(() => {
+      secondCloseFinished = true;
+    });
+    await Promise.resolve();
+    expect(secondCloseFinished).toBe(false);
     release();
     expect(await active).toBe(1);
     expect(await queued).toBe(0);
     await closing;
+    await secondClosing;
     expect(calls).toEqual(["read", "apply", "mark"]);
   });
 
@@ -118,6 +125,41 @@ describe("widget projection coordinator", () => {
     expect(revisions).toHaveLength(2);
     expect(revisions[0]).toBe(revisions[1]);
     expect(revisions[0]).toHaveLength(64);
+  });
+
+  test("projection revisions preserve queue order, including import acknowledgement", async () => {
+    const revisions: string[] = [];
+    const publications: (readonly ReviewItem[])[] = [];
+    const bridge = fakeBridge([reviewRecord()], []);
+    bridge.replaceProjection = async ({ revision, reviewItems }) => {
+      revisions.push(revision);
+      publications.push(reviewItems);
+    };
+    bridge.markReviewsImported = async ({ revision, reviewItems }) => {
+      revisions.push(revision);
+      publications.push(reviewItems);
+    };
+    const coordinator = new WidgetProjectionCoordinator(vaultID, bridge);
+    const first = { task: { id: "task-z" }, componentID: "main" } as ReviewItem;
+    const second = {
+      task: { id: "task-b" },
+      componentID: "main",
+    } as ReviewItem;
+    const ordered = [first, second];
+    const reversed = [second, first];
+
+    await coordinator.publishLatest(ordered);
+    await coordinator.publishLatest(ordered);
+    await coordinator.publishLatest(reversed);
+    await coordinator.importPendingReviews(
+      async () => {},
+      async () => ordered,
+    );
+
+    expect(publications).toEqual([ordered, ordered, reversed, ordered]);
+    expect(revisions[0]).toBe(revisions[1]);
+    expect(revisions[2]).not.toBe(revisions[0]);
+    expect(revisions[3]).toBe(revisions[0]);
   });
 
   test("commits a fresh queue with acknowledgement and discards snapshots captured during import", async () => {

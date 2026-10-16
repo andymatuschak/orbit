@@ -11,6 +11,7 @@ import {
   type ObservationID,
   type OrbitVault,
   type ReviewItem,
+  type SchedulerPolicy,
   type SchedulingObservation,
   type Task,
   type TaskID,
@@ -33,9 +34,7 @@ import {
 import {
   derivePerTaskCatalogEntry,
   projectPerTask,
-  rankActivePerTaskEntries,
-  rankProjectedPerTaskTasks,
-  sameTaskHeads,
+  selectPerTaskReviewEntries,
   type PerTaskCatalogEntry,
 } from "./perTaskVault.js";
 import {
@@ -116,6 +115,10 @@ export class PerTaskRepository {
 
   get vaultID(): VaultID {
     return this.root.vaultID;
+  }
+
+  get scheduler(): SchedulerPolicy {
+    return this.root.scheduler;
   }
 
   get isClosed(): boolean {
@@ -318,18 +321,20 @@ export class PerTaskRepository {
       const threshold =
         getReviewQueueFuzzyDueTimestampThreshold(nowTimestampMillis);
       for (;;) {
-        const selected = rankActivePerTaskEntries(this.catalog.entries)
-          .filter(([, entry]) => entry.nextDueTimestampMillis <= threshold)
-          .slice(0, maximumTaskCount);
+        const options = this.reviewSelectionOptions(
+          nowTimestampMillis,
+          maximumTaskCount,
+        );
+        const selected = selectPerTaskReviewEntries(
+          this.catalog.entries,
+          options,
+        );
         const tasks = await this.projectEntries(selected, "cached", threshold);
-        // Repair can remove the entire capped window. Select its successors
-        // before concluding there are no due prompts beyond that old window.
-        if (
-          !tasks.length &&
-          selected.some(([id, entry]) => this.catalog.entries[id] !== entry)
-        )
+        // Repairs can change eligibility, retrievability, or the starting lane.
+        // Reselect globally before trusting a window chosen from stale rows.
+        if (selected.some(([id, entry]) => this.catalog.entries[id] !== entry))
           continue;
-        return createReviewQueue(tasks, maximumTaskCount);
+        return createReviewQueue(tasks, maximumTaskCount, options);
       }
     });
   }
@@ -427,9 +432,13 @@ export class PerTaskRepository {
       return [
         this.rootURL,
         this.catalogURL,
-        ...rankActivePerTaskEntries(this.catalog.entries)
-          .slice(0, defaultReviewSessionMaximumQueueSize)
-          .map(([, entry]) => entry.documentURL),
+        ...selectPerTaskReviewEntries(
+          this.catalog.entries,
+          this.reviewSelectionOptions(
+            Date.now(),
+            defaultReviewSessionMaximumQueueSize,
+          ),
+        ).map(([, entry]) => entry.documentURL),
       ];
     });
   }
@@ -459,18 +468,27 @@ export class PerTaskRepository {
         PerTaskCatalogEntry,
       ][];
       const loaded = await this.readEntries(selected);
-      const stale = selected
-        .filter(
-          ([id, entry]) =>
-            conflicts.has(id) ||
-            !sameTaskHeads(
-              entry.indexedTaskHeads,
-              loaded.get(entry.documentURL)!.heads,
+      const replacements = selected
+        .map(([id, entry]): [TaskID, PerTaskCatalogEntry] => {
+          const current = loaded.get(entry.documentURL)!;
+          return [
+            id,
+            derivePerTaskCatalogEntry(
+              this.root,
+              entry.documentURL,
+              current.document,
+              current.heads,
             ),
-        )
-        .map(([id]) => id);
-      return (await this.repair(stale, async (url) => loaded.get(url)))
-        .repairedTaskIDs.length;
+          ];
+        })
+        .filter(
+          ([id, replacement]) =>
+            conflicts.has(id) ||
+            canonicalJSONString(this.catalog.entries[id]) !==
+              canonicalJSONString(replacement),
+        );
+      await this.writeEntries(replacements);
+      return replacements.length;
     });
   }
 
@@ -686,20 +704,27 @@ export class PerTaskRepository {
     const localOnly = mode !== "strict";
     const loaded = await this.readEntries(entries, localOnly);
     const tasks: Task[] = [];
-    const stale: TaskID[] = [];
+    const replacements: [TaskID, PerTaskCatalogEntry][] = [];
     for (const [id, entry] of entries) {
       const current = loaded.get(entry.documentURL);
       if (!current) continue;
-      if (!sameTaskHeads(current.heads, entry.indexedTaskHeads)) stale.push(id);
       const task = projectPerTask(this.root, current.document).tasks.get(id);
+      const replacement = derivePerTaskCatalogEntry(
+        this.root,
+        entry.documentURL,
+        current.document,
+        current.heads,
+        task,
+      );
+      if (canonicalJSONString(entry) !== canonicalJSONString(replacement))
+        replacements.push([id, replacement]);
       if (task && !task.isDeleted) tasks.push(task);
     }
-    await this.repair(stale, async (url) => loaded.get(url));
-    const ranked = rankProjectedPerTaskTasks(tasks);
+    await this.writeEntries(replacements);
     const usable =
       dueTimestampThreshold === undefined
-        ? ranked
-        : ranked.filter((task) =>
+        ? tasks
+        : tasks.filter((task) =>
             Object.values(task.componentStates).some(
               ({ dueTimestampMillis }) =>
                 dueTimestampMillis <= dueTimestampThreshold,
@@ -714,6 +739,24 @@ export class PerTaskRepository {
         if (!loaded.has(entry.documentURL)) this.fetch(entry.documentURL);
     }
     return usable;
+  }
+
+  private reviewSelectionOptions(
+    nowTimestampMillis: number,
+    maximumCount: number,
+  ) {
+    return {
+      scheduler: this.root.scheduler,
+      nowTimestampMillis,
+      maximumCount,
+      // A count of immutable saved reviews rotates the first lane across queue
+      // refreshes without a cursor or a second piece of authoritative state.
+      // Include deleted/not-due rows: reviewing one still consumed a turn.
+      reviewCount: Object.values(this.catalog.entries).reduce(
+        (sum, entry) => sum + (entry.fsrs?.reviewCount ?? 0),
+        0,
+      ),
+    };
   }
 
   private decodeTask(
@@ -862,7 +905,14 @@ export class PerTaskRepository {
   }
 
   private emit() {
-    for (const listener of this.listeners) listener();
+    for (const listener of this.listeners) {
+      try {
+        listener();
+      } catch (error) {
+        // Observer failures must not turn a durable write into a failed review.
+        console.warn("Vault subscriber failed", error);
+      }
+    }
   }
 }
 

@@ -1,8 +1,9 @@
-import type {
-  AutomergeDocumentURL,
-  ReviewItem,
-  VaultID,
-  VaultMutation,
+import {
+  defaultOrbitSchedulerPolicy,
+  type AutomergeDocumentURL,
+  type ReviewItem,
+  type VaultID,
+  type VaultMutation,
 } from "@withorbit/core";
 import { describe, expect, test } from "bun:test";
 import type { PerTaskRepository } from "@withorbit/store-shared/perTaskRepository";
@@ -193,6 +194,8 @@ function fakeHostedVault(
 ): PerTaskRepository {
   return {
     vaultID: "native-vault" as VaultID,
+    scheduler: defaultOrbitSchedulerPolicy,
+    getTaskProjections: async () => ({ tasks: new Map() }),
     subscribe: overrides.subscribe ?? (() => () => undefined),
     getReviewQueue: overrides.getReviewQueue ?? (async () => []),
     apply: overrides.apply,

@@ -3,6 +3,7 @@ import {
   TaskContentType,
   TaskRepetitionOutcome,
   TaskSpecType,
+  validateFSRSSchedulerPolicy,
   type AttachmentID,
   type TaskID,
   type TaskProvenance,
@@ -143,8 +144,39 @@ export function decodePerTaskVaultCatalog(value: unknown): PerTaskVaultCatalog {
           decoded.indexedTaskHeads,
           `${path}.indexedTaskHeads`,
         ),
+        ...(decoded.fsrs === undefined
+          ? {}
+          : { fsrs: decodeCatalogFSRS(decoded.fsrs, `${path}.fsrs`) }),
       };
     }) as Record<TaskID, PerTaskCatalogEntry>,
+  };
+}
+
+function decodeCatalogFSRS(
+  value: unknown,
+  path: string,
+): NonNullable<PerTaskCatalogEntry["fsrs"]> {
+  const raw = record(value, path);
+  const memory =
+    raw.memory === null ? null : record(raw.memory, `${path}.memory`);
+  if (memory?.isRetry !== undefined)
+    literal(memory.isRetry, true, `${path}.memory.isRetry`);
+  return {
+    reviewCount: nonNegativeInteger(raw.reviewCount, `${path}.reviewCount`),
+    memory:
+      memory === null
+        ? null
+        : {
+            stability: positiveNumber(
+              memory.stability,
+              `${path}.memory.stability`,
+            ),
+            lastReviewTimestampMillis: finiteNumber(
+              memory.lastReviewTimestampMillis,
+              `${path}.memory.lastReviewTimestampMillis`,
+            ),
+            ...(memory.isRetry === true ? { isRetry: true } : {}),
+          },
   };
 }
 
@@ -299,7 +331,41 @@ export function decodeScheduler(value: unknown, path: string): SchedulerPolicy {
       ),
     };
   }
-  invalid(path, "supported orbit-sm2-like scheduler");
+  if (kind === "fsrs") {
+    literal(raw.modelVersion, 6, `${path}.modelVersion`);
+    const weights = arrayValue(raw.weights, `${path}.weights`).map(
+      (weight, index) => finiteNumber(weight, `${path}.weights[${index}]`),
+    );
+    if (weights.length !== 21) invalid(`${path}.weights`, "21 FSRS-6 weights");
+    const requestedRetention = positiveNumber(
+      raw.requestedRetention,
+      `${path}.requestedRetention`,
+    );
+    if (requestedRetention > 1)
+      invalid(`${path}.requestedRetention`, "at most 1");
+    const previousPolicy = decodeScheduler(
+      raw.previousPolicy,
+      `${path}.previousPolicy`,
+    );
+    if (previousPolicy.kind !== "orbit-sm2-like") {
+      invalid(`${path}.previousPolicy`, "original Orbit scheduler");
+    }
+    const policy: SchedulerPolicy = {
+      kind,
+      version: 1,
+      modelVersion: 6,
+      weights,
+      requestedRetention,
+      cutoverTimestampMillis: nonNegativeInteger(
+        raw.cutoverTimestampMillis,
+        `${path}.cutoverTimestampMillis`,
+      ),
+      previousPolicy,
+    };
+    validateFSRSSchedulerPolicy(policy);
+    return policy;
+  }
+  invalid(path, "supported Orbit or FSRS-6 scheduler");
 }
 
 export function decodeAttachment(
@@ -420,7 +486,7 @@ function positiveNumber(value: unknown, path: string): number {
   return decoded;
 }
 
-function literal<T extends string | number>(
+function literal<T extends string | number | boolean>(
   value: unknown,
   expected: T,
   path: string,

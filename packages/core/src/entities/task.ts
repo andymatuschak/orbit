@@ -4,8 +4,10 @@ import { AttachmentID } from "./attachmentReference.js";
 export { parseSingleCurlyBraceClozePromptMarkup } from "./util/parseClozeMarkup.js";
 
 // The Task entity stores the "spec" which describes a task's behavior and content, as well as the task's ongoing state and associated metadata.
-export interface Task<TC extends TaskContent = TaskContent>
-  extends EntityBase<EntityType.Task, TaskID> {
+export interface Task<TC extends TaskContent = TaskContent> extends EntityBase<
+  EntityType.Task,
+  TaskID
+> {
   id: TaskID;
 
   spec: TaskSpec<TC>;
@@ -34,9 +36,20 @@ export interface TaskComponentState {
   lastRepetitionTimestampMillis: number | null;
   intervalMillis: number;
   dueTimestampMillis: number; // due timestamp and interval can be changed independently
+  /** Rebuilt from observations, never a separate authoritative storage record. */
+  fsrs?: {
+    stability: number;
+    difficulty: number;
+    lastReviewTimestampMillis: number;
+    /** An FSRS-era recall failed; honor its retry due time without lookahead. */
+    isRetry?: true;
+  };
+}
 
-  // In the future, we'll likely accumulate a full list of reviews here.
-  // We'll likely also support additional simple key/value state management, e.g. to determine which variant of application prompt to show.
+export enum TaskRepetitionOutcome {
+  Remembered = "remembered",
+  Forgotten = "forgotten",
+  Skipped = "skipped",
 }
 
 /**
@@ -75,18 +88,20 @@ export type TaskContent = QATaskContent | ClozeTaskContent | PlainTaskContent;
 export const mainTaskComponentID = "main";
 export type MainTaskComponentID = typeof mainTaskComponentID;
 
-export interface QATaskContent
-  extends TaskContentBase<TaskContentType.QA, MainTaskComponentID, undefined> {
+export interface QATaskContent extends TaskContentBase<
+  TaskContentType.QA,
+  MainTaskComponentID,
+  undefined
+> {
   body: TaskContentField;
   answer: TaskContentField;
 }
 
-export interface ClozeTaskContent
-  extends TaskContentBase<
-    TaskContentType.Cloze,
-    string,
-    { [ClozeID: string]: ClozeTaskContentComponent }
-  > {
+export interface ClozeTaskContent extends TaskContentBase<
+  TaskContentType.Cloze,
+  string,
+  { [ClozeID: string]: ClozeTaskContentComponent }
+> {
   body: TaskContentField;
 }
 
@@ -98,12 +113,11 @@ export interface ClozeTaskContentComponent extends TaskContentComponent {
   }[];
 }
 
-export interface PlainTaskContent
-  extends TaskContentBase<
-    TaskContentType.Plain,
-    MainTaskComponentID,
-    undefined
-  > {
+export interface PlainTaskContent extends TaskContentBase<
+  TaskContentType.Plain,
+  MainTaskComponentID,
+  undefined
+> {
   type: TaskContentType.Plain;
   body: TaskContentField;
 }
@@ -112,8 +126,7 @@ type TaskContentBase<
   TCT extends TaskContentType,
   ComponentIDs extends string,
   ComponentData extends
-    | { [ComponentID in ComponentIDs]: TaskContentComponent }
-    | undefined,
+    { [ComponentID in ComponentIDs]: TaskContentComponent } | undefined,
 > = {
   type: TCT;
 } & (ComponentData extends undefined ? unknown : { components: ComponentData });
@@ -128,13 +141,10 @@ export interface TaskContentComponent {
   order: number;
 }
 
-export type ComponentIDsOf<TC extends TaskContent> = TC extends TaskContentBase<
-  any,
-  infer ComponentIDs,
-  any
->
-  ? ComponentIDs
-  : never;
+export type ComponentIDsOf<TC extends TaskContent> =
+  TC extends TaskContentBase<any, infer ComponentIDs, any>
+    ? ComponentIDs
+    : never;
 
 export interface TaskContentField {
   text: string;

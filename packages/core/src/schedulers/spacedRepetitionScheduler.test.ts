@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test";
 import { TaskComponentState } from "../entities/task.js";
-import { TaskRepetitionOutcome } from "../event.js";
+import { TaskRepetitionOutcome } from "../entities/task.js";
 import {
   createSpacedRepetitionScheduler,
   defaultSpacedRepetitionSchedulerConfiguration,

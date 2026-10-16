@@ -3,7 +3,7 @@ import type {
   AttachmentMIMEType,
 } from "../entities/attachmentReference.js";
 import type { TaskID, TaskProvenance, TaskSpec } from "../entities/task.js";
-import type { TaskRepetitionOutcome } from "../event.js";
+import type { TaskRepetitionOutcome } from "../entities/task.js";
 import type { ObservationID, VaultMutationID } from "./ids.js";
 import type { VaultAttachment } from "./schema.js";
 

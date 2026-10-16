@@ -1,11 +1,22 @@
-import type { AttachmentID, ReviewItem, VaultMutation } from "@withorbit/core";
+import type {
+  AttachmentID,
+  ReviewItem,
+  TaskID,
+  VaultMutation,
+} from "@withorbit/core";
 import type { PerTaskRepository } from "@withorbit/store-shared/perTaskRepository";
 import type { ReviewDatabase } from "../model2/openReviewDatabase.js";
 import type { WidgetProjectionCoordinator } from "../vault/WidgetProjectionCoordinator.js";
 
 type HostedReviewVault = Pick<
   PerTaskRepository,
-  "getReviewQueue" | "subscribe" | "apply" | "readAttachment" | "close"
+  | "scheduler"
+  | "getReviewQueue"
+  | "getTaskProjections"
+  | "subscribe"
+  | "apply"
+  | "readAttachment"
+  | "close"
 >;
 type Attachment = NonNullable<
   Awaited<ReturnType<HostedReviewVault["readAttachment"]>>
@@ -85,6 +96,15 @@ export class HostedReviewDatabase implements ReviewDatabase {
     };
     void operation.then(clear, clear);
     return operation;
+  }
+
+  get scheduler() {
+    return this.vault.scheduler;
+  }
+
+  getTaskProjections(taskIDs: readonly TaskID[]) {
+    this.assertOpen();
+    return this.vault.getTaskProjections(taskIDs);
   }
 
   subscribeToReviewQueue(listener: (items: ReviewItem[]) => void): () => void {

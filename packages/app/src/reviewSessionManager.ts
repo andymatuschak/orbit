@@ -1,15 +1,13 @@
 import {
-  createOrbitSchedulerAdapter,
-  defaultOrbitSchedulerPolicy,
   generateUniqueID,
   ReviewItem,
   Task,
-  type ReviewObservation,
   type VaultMutation,
   type VaultMutationID,
 } from "@withorbit/core";
 import { ReviewAreaItem } from "./ui/index.js";
 import { useMemo, useState } from "react";
+import { itemIsStillDue } from "./reviewSession/scheduling.js";
 
 export interface ReviewSessionManagerState {
   reviewAreaQueue: ReviewAreaItem[];
@@ -22,25 +20,14 @@ export interface ReviewSessionManagerState {
 }
 
 export interface ReviewSessionManagerActions {
-  markCurrentItem(
-    mutations: readonly RecordReviewMutation[],
-    continuation?: (newState: ReviewSessionManagerState) => void,
-  ): void;
-
-  updateSessionItems(
-    mutator: (sessionItems: ReviewItem[]) => ReviewItem[],
-  ): void;
-
-  pushReviewAreaQueueItems(items: ReviewAreaItem[]): void;
+  markCurrentItem(savedTask: Task, reviewedComponentID: string): void;
 
   reconcileReviewQueue(
     reviewItems: ReviewItem[],
     reviewAreaItems: ReviewAreaItem[],
   ): void;
 
-  undo(
-    continuation?: (undoItem: ReviewSessionManagerUndoStackItem) => void,
-  ): void;
+  undo(): void;
 
   deleteCurrentItem(): void;
 
@@ -70,28 +57,39 @@ function findSessionItemIndex(
   }
 }
 
-function reviewSessionManagerMarkCurrentItem(
+export function reviewSessionManagerMarkCurrentItem(
   state: ReviewSessionManagerState,
-  mutations: readonly RecordReviewMutation[],
+  savedTask: Task,
+  reviewedComponentID: string,
+  nowTimestampMillis = Date.now(),
 ): ReviewSessionManagerState {
+  if (!savedTask.componentStates[reviewedComponentID])
+    throw new Error("Saved review task is missing the current component");
+
+  // Use the vault's actual projection, including its selected scheduler and
+  // concurrent observations. Retry selection must not use a guessed schedule.
+  const newSessionItems = state.sessionItems.map((item) =>
+    item.task.id === savedTask.id ? { ...item, task: savedTask } : item,
+  );
+
+  const currentItem =
+    state.currentSessionItemIndex === null
+      ? null
+      : state.sessionItems[state.currentSessionItemIndex];
   if (
+    state.currentReviewAreaQueueIndex === null ||
     state.currentSessionItemIndex === null ||
-    state.currentReviewAreaQueueIndex === null
+    state.currentReviewAreaQueueIndex >= state.reviewAreaQueue.length ||
+    currentItem?.task.id !== savedTask.id ||
+    currentItem.componentID !== reviewedComponentID
   ) {
-    throw new Error(
-      `Attempting to mark current item when session item index or review area queue index is null`,
+    // The queue subscription may have already advanced while the post-save
+    // projection was loading. Do not mark or skip that successor as well.
+    return refillDueItems(
+      { ...state, sessionItems: newSessionItems },
+      nowTimestampMillis,
     );
   }
-
-  // Apply the same typed reviews optimistically that the database receives.
-  const newSessionItems = [...state.sessionItems];
-  newSessionItems[state.currentSessionItemIndex] = {
-    ...newSessionItems[state.currentSessionItemIndex],
-    task: mutations.reduce(
-      (task, mutation) => applyReviewMutation(task, mutation),
-      state.sessionItems[state.currentSessionItemIndex].task,
-    ),
-  };
 
   // Advance to the item in the review area queue.
   let newSessionItemIndex: number;
@@ -105,17 +103,44 @@ function reviewSessionManagerMarkCurrentItem(
     newSessionItemIndex = state.currentSessionItemIndex;
   }
 
-  return {
-    reviewAreaQueue: state.reviewAreaQueue,
-    currentReviewAreaQueueIndex: newReviewAreaQueueIndex,
-    sessionItems: newSessionItems,
-    currentSessionItemIndex: newSessionItemIndex,
-    // Automerge reviews are append-only, so do not offer a local-only undo.
-    topUndoItem: null,
-  };
+  return refillDueItems(
+    {
+      reviewAreaQueue: state.reviewAreaQueue,
+      currentReviewAreaQueueIndex: newReviewAreaQueueIndex,
+      sessionItems: newSessionItems,
+      currentSessionItemIndex: newSessionItemIndex,
+      // Automerge reviews are append-only, so do not offer a local-only undo.
+      topUndoItem: null,
+    },
+    nowTimestampMillis,
+  );
 }
 
-function reviewSessionManagerDeleteCurrentItem(
+function refillDueItems(
+  state: ReviewSessionManagerState,
+  nowTimestampMillis: number,
+): ReviewSessionManagerState {
+  if (
+    state.currentReviewAreaQueueIndex === null ||
+    state.currentReviewAreaQueueIndex < state.reviewAreaQueue.length
+  )
+    return state;
+
+  const areaItems = new Map(
+    state.reviewAreaQueue.map((item) => [reviewAreaItemKey(item), item]),
+  );
+  const retries = state.sessionItems
+    .filter((item) => itemIsStillDue(item, nowTimestampMillis))
+    .map((item) => {
+      const areaItem = areaItems.get(reviewItemKey(item));
+      if (!areaItem)
+        throw new Error("Retry item is absent from the review queue");
+      return areaItem;
+    });
+  return reviewSessionManagerPushReviewAreaQueueItems(state, retries);
+}
+
+export function reviewSessionManagerDeleteCurrentItem(
   state: ReviewSessionManagerState,
 ): ReviewSessionManagerState {
   if (
@@ -143,7 +168,9 @@ function reviewSessionManagerDeleteCurrentItem(
               newReviewAreaQueue[state.currentReviewAreaQueueIndex],
               newSessionItems,
             )
-          : newSessionItems.length - 1,
+          : newSessionItems.length === 0
+            ? null
+            : newSessionItems.length - 1,
       topUndoItem: {
         previousState: state,
         getUndoMutations: () => {
@@ -162,34 +189,6 @@ function reviewSessionManagerDeleteCurrentItem(
   } else {
     return state;
   }
-}
-
-function reviewSessionManagerUpdateSessionItems(
-  state: ReviewSessionManagerState,
-  mutator: (sessionItems: ReviewItem[]) => ReviewItem[],
-): ReviewSessionManagerState {
-  const newSessionItems = mutator(state.sessionItems);
-
-  let newCurrentSessionItemIndex: number | null;
-  if (state.currentReviewAreaQueueIndex === null) {
-    newCurrentSessionItemIndex = null;
-  } else {
-    if (state.currentReviewAreaQueueIndex >= state.reviewAreaQueue.length) {
-      // If we're past the end of the queue, freeze the starburst wherever it stopped. Not a great solution.
-      newCurrentSessionItemIndex = state.currentSessionItemIndex;
-    } else {
-      newCurrentSessionItemIndex = findSessionItemIndex(
-        state.reviewAreaQueue[state.currentReviewAreaQueueIndex],
-        newSessionItems,
-      );
-    }
-  }
-
-  return {
-    ...state,
-    sessionItems: newSessionItems,
-    currentSessionItemIndex: newCurrentSessionItemIndex,
-  };
 }
 
 function reviewSessionManagerPushReviewAreaQueueItems(
@@ -397,17 +396,17 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
 
   const reviewSessionManagerActions: ReviewSessionManagerActions = useMemo(
     () => ({
-      markCurrentItem: (mutations, continuation) => {
-        setState((state) => {
-          const next = reviewSessionManagerMarkCurrentItem(state, mutations);
-          continuation?.(next);
-          return next;
-        });
-      },
-      pushReviewAreaQueueItems: (queueItems) =>
+      markCurrentItem: (savedTask, reviewedComponentID) => {
+        const nowTimestampMillis = Date.now();
         setState((state) =>
-          reviewSessionManagerPushReviewAreaQueueItems(state, queueItems),
-        ),
+          reviewSessionManagerMarkCurrentItem(
+            state,
+            savedTask,
+            reviewedComponentID,
+            nowTimestampMillis,
+          ),
+        );
+      },
 
       reconcileReviewQueue: (reviewItems, reviewAreaItems) =>
         setState((state) =>
@@ -418,18 +417,12 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
           ),
         ),
 
-      updateSessionItems: (mutator) =>
-        setState((state) =>
-          reviewSessionManagerUpdateSessionItems(state, mutator),
-        ),
-
-      undo: (continuation) => {
+      undo: () => {
         setState((state) => {
           const { topUndoItem } = state;
           if (!topUndoItem) {
             throw new Error("Nothing on the undo stack");
           }
-          continuation?.(topUndoItem);
           return topUndoItem.previousState;
         });
       },
@@ -448,37 +441,4 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
   );
 
   return { ...reviewSessionManagerActions, ...state };
-}
-
-type RecordReviewMutation = Extract<VaultMutation, { kind: "recordReview" }>;
-
-const optimisticScheduler = createOrbitSchedulerAdapter(
-  defaultOrbitSchedulerPolicy,
-);
-
-function applyReviewMutation(task: Task, mutation: RecordReviewMutation): Task {
-  if (mutation.taskID !== task.id) {
-    throw new Error("Review mutation does not match the current task");
-  }
-  const state = task.componentStates[mutation.componentID];
-  if (!state)
-    throw new Error("Review mutation references an unknown component");
-  const observation: ReviewObservation = {
-    kind: "review",
-    taskID: mutation.taskID,
-    componentID: mutation.componentID,
-    reviewSessionID: mutation.reviewSessionID,
-    outcome: mutation.outcome,
-    occurredAtTimestampMillis: mutation.occurredAtTimestampMillis,
-  };
-  return {
-    ...task,
-    componentStates: {
-      ...task.componentStates,
-      [mutation.componentID]: optimisticScheduler.applyReview(
-        state,
-        observation,
-      ),
-    },
-  };
 }

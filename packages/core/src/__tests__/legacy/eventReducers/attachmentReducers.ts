@@ -1,5 +1,5 @@
-import { AttachmentReference } from "../entities/attachmentReference.js";
-import { EntityType } from "../entity.js";
+import { AttachmentReference } from "../../../entities/attachmentReference.js";
+import { EntityType } from "../../../entity.js";
 import { AttachmentIngestEvent } from "../event.js";
 
 export function attachmentIngestEventReducer(

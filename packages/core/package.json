@@ -19,5 +19,8 @@
     "@types/bun": "1.4.0",
     "@types/node": "24.10.1",
     "typescript": "6.0.3"
+  },
+  "dependencies": {
+    "ts-fsrs": "5.4.2"
   }
 }

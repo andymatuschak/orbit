@@ -3,12 +3,15 @@ import type { Task, TaskID } from "../../entities/task.js";
 import type { ObservationID } from "../ids.js";
 import {
   componentIDsForTaskSpec,
-  type OrbitSchedulerPolicy,
+  type SchedulerPolicy,
   type OrbitVault,
   type SchedulingObservation,
   type VaultTask,
 } from "../schema.js";
-import { createOrbitSchedulerAdapter } from "./orbitSchedulerAdapter.js";
+import {
+  createVaultSchedulerAdapter,
+  reviewHistoryIdentity,
+} from "./vaultSchedulerAdapter.js";
 
 export interface VaultProjectionIssue {
   kind: "unknown-component";
@@ -40,11 +43,11 @@ export function projectVault(input: {
 }
 
 export function projectResolvedVault(input: {
-  policy: OrbitSchedulerPolicy;
+  policy: SchedulerPolicy;
   resolvedTasks: ReadonlyMap<TaskID, VaultTask>;
   observations: Iterable<[ObservationID, SchedulingObservation]>;
 }): VaultProjectionSnapshot {
-  const scheduler = createOrbitSchedulerAdapter(input.policy);
+  const scheduler = createVaultSchedulerAdapter(input.policy);
   const issues: VaultProjectionIssue[] = [];
   const tasks = new Map<TaskID, Task>();
   for (const [taskID, task] of input.resolvedTasks) {
@@ -77,6 +80,7 @@ export function projectResolvedVault(input: {
     grouped.set(key, entries);
   }
   for (const entries of grouped.values()) {
+    const reviewed = input.policy.kind === "fsrs" ? new Set<string>() : null;
     entries.sort(
       ([leftID, left], [rightID, right]) =>
         left.occurredAtTimestampMillis - right.occurredAtTimestampMillis ||
@@ -94,10 +98,20 @@ export function projectResolvedVault(input: {
         });
         continue;
       }
-      task.componentStates[observation.componentID] =
-        observation.kind === "review"
-          ? scheduler.applyReview(oldState, observation)
-          : scheduler.applyReschedule(oldState, observation);
+      if (observation.kind === "review") {
+        const identity = reviewed
+          ? reviewHistoryIdentity(observationID, observation)
+          : "";
+        task.componentStates[observation.componentID] = scheduler.applyReview(
+          oldState,
+          observation,
+          !reviewed?.has(identity),
+        );
+        reviewed?.add(identity);
+      } else {
+        task.componentStates[observation.componentID] =
+          scheduler.applyReschedule(oldState, observation);
+      }
     }
   }
   return {

@@ -20,7 +20,7 @@
           "createdAtTimestampMillis": 1,
           "lastRepetitionTimestampMillis": null,
           "intervalMillis": 0,
-          "dueTimestampMillis": 1
+          "dueTimestampMillis": 30
         }
       }
     },
@@ -47,7 +47,7 @@
           "createdAtTimestampMillis": 1,
           "lastRepetitionTimestampMillis": null,
           "intervalMillis": 0,
-          "dueTimestampMillis": 1
+          "dueTimestampMillis": 10
         }
       }
     },
@@ -74,7 +74,7 @@
           "createdAtTimestampMillis": 1,
           "lastRepetitionTimestampMillis": null,
           "intervalMillis": 0,
-          "dueTimestampMillis": 1
+          "dueTimestampMillis": 20
         }
       }
     },

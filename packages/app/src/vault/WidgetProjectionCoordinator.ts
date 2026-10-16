@@ -5,9 +5,6 @@ import {
 } from "@withorbit/core";
 import type { WidgetProjectionBridge } from "./widgetProjection.js";
 
-type WidgetProjectionSource =
-  readonly ReviewItem[] | (() => Promise<readonly ReviewItem[]>);
-
 /**
  * The only bridge between an authoritative database and WidgetKit's small
  * disposable queue and durable pending-review handoff.
@@ -15,9 +12,7 @@ type WidgetProjectionSource =
 export class WidgetProjectionCoordinator {
   private operation: Promise<unknown> = Promise.resolve();
   private publishQueued = false;
-  private pendingSource:
-    { source: WidgetProjectionSource; epoch: number } | undefined;
-  private projectionEpoch = 0;
+  private pendingItems: readonly ReviewItem[] | undefined;
   private isClosed = false;
 
   constructor(
@@ -37,8 +32,7 @@ export class WidgetProjectionCoordinator {
       if (this.isClosed) return 0;
       // Discard snapshots captured before/during import; all publications and
       // acknowledgements use this same serial lane, never a cross-process lock.
-      this.projectionEpoch++;
-      this.pendingSource = undefined;
+      this.pendingItems = undefined;
       const records = await this.bridge.readPendingReviews(this.vaultID);
       if (records.length === 0) return 0;
       await apply(
@@ -54,8 +48,7 @@ export class WidgetProjectionCoordinator {
         })),
       );
       const reviewItems = await readFreshQueue();
-      this.projectionEpoch++;
-      this.pendingSource = undefined;
+      this.pendingItems = undefined;
       await this.bridge.markReviewsImported({
         vaultID: this.vaultID,
         observationIDs: records.map(({ observationID }) => observationID),
@@ -80,9 +73,9 @@ export class WidgetProjectionCoordinator {
    * Serializes disposable projection writes and coalesces queued work so an
    * older queue can never finish after, and replace, a newer one.
    */
-  publishLatest(source: WidgetProjectionSource): Promise<void> {
+  publishLatest(reviewItems: readonly ReviewItem[]): Promise<void> {
     if (this.isClosed) return Promise.resolve();
-    this.pendingSource = { source, epoch: this.projectionEpoch };
+    this.pendingItems = reviewItems;
     if (!this.publishQueued) {
       this.publishQueued = true;
       void this.enqueue(() => this.drainPublications());
@@ -91,21 +84,17 @@ export class WidgetProjectionCoordinator {
   }
 
   async close(): Promise<void> {
-    if (this.isClosed) return;
     this.isClosed = true;
     await this.operation;
   }
 
   private async drainPublications(): Promise<void> {
     try {
-      while (this.pendingSource) {
-        const { source, epoch } = this.pendingSource;
-        this.pendingSource = undefined;
-        if (epoch !== this.projectionEpoch) continue;
+      while (this.pendingItems) {
+        const reviewItems = this.pendingItems;
+        this.pendingItems = undefined;
         try {
-          await this.writeProjection(
-            typeof source === "function" ? await source() : source,
-          );
+          await this.writeProjection(reviewItems);
         } catch (error) {
           this.onPublishError(error);
         }
@@ -125,9 +114,9 @@ export class WidgetProjectionCoordinator {
 async function digestReviewItems(reviewItems: readonly ReviewItem[]) {
   const bytes = new TextEncoder().encode(
     JSON.stringify(
-      reviewItems
-        .map(({ task, componentID }) => [task.id, componentID, task])
-        .sort(([left], [right]) => String(left).localeCompare(String(right))),
+      // Order is part of the projection: an order-only change must refresh
+      // WidgetKit even when the selected tasks and their schedules are unchanged.
+      reviewItems.map(({ task, componentID }) => [task.id, componentID, task]),
     ),
   );
   const digest = new Uint8Array(

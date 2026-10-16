@@ -1,9 +1,7 @@
 export type { ColorPaletteName } from "./colorPaletteName.js";
 export * from "./entity.js";
-export * from "./event.js";
 export * from "./entities/task.js";
 export * from "./entities/attachmentReference.js";
-export * from "./eventReducer.js";
 export * from "./generateUniqueID.js";
 export * from "./reviewQueue.js";
 export * from "./schedulers/spacedRepetitionScheduler.js";
@@ -12,4 +10,5 @@ export * from "./vault/ids.js";
 export * from "./vault/mutations.js";
 export * from "./vault/schema.js";
 export * from "./vault/projection/orbitSchedulerAdapter.js";
+export * from "./vault/projection/vaultSchedulerAdapter.js";
 export * from "./vault/projection/projectVault.js";

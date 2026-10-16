@@ -12,6 +12,20 @@ func items(_ count: Int) throws -> String {
   return String(decoding: try JSONSerialization.data(withJSONObject: values), as: UTF8.self)
 }
 
+func orderedItems(_ entries: [(Int, Int)]) throws -> String {
+  let values = entries.map { index, due -> [String: Any] in
+    ["task": ["id": "task-\(index)", "componentStates": ["main": ["dueTimestampMillis": due]]], "componentID": "main"]
+  }
+  return String(decoding: try JSONSerialization.data(withJSONObject: values), as: UTF8.self)
+}
+
+func dueTaskIDs(_ store: WidgetProjectionStore, limit: Int = 50) throws -> [String] {
+  try store.dueReviewSnapshot(throughTimestampMillis: 100, limit: limit).items.map { json in
+    let item = try JSONSerialization.jsonObject(with: Data(json.utf8)) as! [String: Any]
+    return (item["task"] as! [String: Any])["id"] as! String
+  }
+}
+
 func review(_ store: WidgetProjectionStore, index: Int) throws {
   let id = "review/" + String(format: "%022d", index)
   _ = try store.recordReview(mutationID: id, observationID: id, taskID: "task-\(index)", componentID: "main", outcome: "remembered", occurredAtTimestampMillis: Int64(index), expectedVaultID: "vault-a")
@@ -86,6 +100,25 @@ func finished(_ process: Process, crashed: Bool = false) {
   if crashed { check(process.terminationReason == .uncaughtSignal, "The crash test did not terminate abruptly") }
   else { check(process.terminationStatus == 0, "A handoff process failed") }
 }
+
+// The app's mixed backlog order is authoritative, not ascending due time.
+// Filtering future and pending rows, truncation, and disk reloads retain it.
+let orderURL = directory.appendingPathComponent("order/widget.json")
+let ordered = try WidgetProjectionStore(fileURL: orderURL)
+let interleavedItems = try orderedItems([(3, 30), (0, 0), (2, 20), (4, 200), (1, 10)])
+_ = try ordered.replaceProjection(vaultID: "vault-a", reviewItemsJSON: interleavedItems, revision: "mixed")
+check(try dueTaskIDs(ordered, limit: 3) == ["task-3", "task-0", "task-2"], "Due filtering or the display limit reordered the mixed queue")
+try review(ordered, index: 0)
+check(try dueTaskIDs(ordered) == ["task-3", "task-2", "task-1"], "Accepting a widget review reordered the remaining queue")
+_ = try ordered.replaceProjection(vaultID: "vault-a", reviewItemsJSON: interleavedItems, revision: "pending-republish")
+let reopenedOrder = try WidgetProjectionStore(fileURL: orderURL)
+check(try dueTaskIDs(reopenedOrder) == ["task-3", "task-2", "task-1"], "A cold read or republish lost queue order or resurrected a pending review")
+try reopenedOrder.markReviewsImported(
+  vaultID: "vault-a", observationIDs: ["review/0000000000000000000000"],
+  reviewItemsJSON: orderedItems([(2, 20), (3, 30), (4, 200), (1, 10)]), revision: "fresh-mixed")
+let importedOrder = try WidgetProjectionStore(fileURL: orderURL)
+check(try dueTaskIDs(importedOrder) == ["task-2", "task-3", "task-1"], "Import acknowledgement did not preserve the fresh authoritative order")
+check(try dueTaskIDs(importedOrder, limit: 0).isEmpty, "A zero display limit returned queue entries")
 
 // Three independent processes share the actual production coordination path.
 let raceURL = directory.appendingPathComponent("race/widget.json")
@@ -170,4 +203,4 @@ do {
 } catch {}
 check(try Data(contentsOf: malformedURL) == missingJournalBytes, "A missing pending journal was overwritten")
 
-print("Widget JSON handoff passed: three-process races, eight interrupted writes, acceptance/import crash replay, selective account ack, malformed-journal preservation")
+print("Widget JSON handoff passed: mixed queue order across filtering/import/cold reload, three-process races, eight interrupted writes, acceptance/import crash replay, selective account ack, malformed-journal preservation")

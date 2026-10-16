@@ -12,7 +12,8 @@ import {
 } from "@withorbit/core";
 import { generateAutomergeUrl } from "@automerge/automerge-repo";
 import * as Automerge from "@automerge/automerge";
-import { describe, expect, test } from "bun:test";
+import { default_w } from "ts-fsrs";
+import { describe, expect, spyOn, test } from "bun:test";
 import type { AutomergeBinaryStorage } from "../binaryStorage.js";
 import { MemoryAutomergeBinaryStorage } from "../binaryStorage.js";
 import { PerTaskRepository } from "@withorbit/store-shared/perTaskRepository";
@@ -20,18 +21,67 @@ import { BinaryPerTaskDocuments } from "../repoPerTaskDocuments.js";
 import type { PerTaskDocuments } from "@withorbit/store-shared/perTaskRepository";
 
 const vaultID = "per-task-test-vault" as VaultID;
+const fsrsNow = Date.now();
 
 describe("per-task Automerge vault", () => {
+  test("subscriber failures neither reject durable reviews nor starve other subscribers", async () => {
+    const storage = new MemoryAutomergeBinaryStorage();
+    const repository = await PerTaskRepository.create(
+      new BinaryPerTaskDocuments(storage),
+      logicalVault(1),
+    );
+    const warning = spyOn(console, "warn").mockImplementation(() => {});
+    const observerError = new Error("injected subscriber failure");
+    let updates = 0;
+    repository.subscribe(() => {
+      throw observerError;
+    });
+    repository.subscribe(() => {
+      updates++;
+    });
+    const mutation = review(taskID(0), "observed-review", 20_000);
+    try {
+      await repository.apply([mutation]);
+      expect(updates).toBe(1);
+      expect(warning).toHaveBeenCalledWith(
+        "Vault subscriber failed",
+        observerError,
+      );
+      const reopened = await PerTaskRepository.open(
+        new BinaryPerTaskDocuments(storage),
+        repository.rootURL,
+      );
+      try {
+        expect(
+          await reopened.readTaskObservation(taskID(0), mutation.observationID),
+        ).toEqual({
+          kind: "review",
+          taskID: taskID(0),
+          componentID: "main",
+          reviewSessionID: null,
+          outcome: TaskRepetitionOutcome.Remembered,
+          occurredAtTimestampMillis: 20_000,
+        });
+        expect(await reopened.repairCatalog()).toBe(0);
+      } finally {
+        await reopened.close();
+      }
+    } finally {
+      warning.mockRestore();
+      await repository.close();
+    }
+  });
+
   test("unsupported scheduler policies are rejected before any document is created", async () => {
     const source = logicalVault(0);
     const storage = new MemoryAutomergeBinaryStorage();
     source.scheduler = {
-      kind: "fsrs",
+      kind: "future-scheduler",
       version: 1,
     } as unknown as OrbitVault["scheduler"];
     await expect(
       PerTaskRepository.create(new BinaryPerTaskDocuments(storage), source),
-    ).rejects.toThrow("supported orbit-sm2-like");
+    ).rejects.toThrow("supported Orbit or FSRS-6 scheduler");
     expect(storage.documentCount).toBe(0);
   });
   test("repairing a deleted capped window reselects the next due task", async () => {
@@ -268,6 +318,344 @@ describe("per-task Automerge vault", () => {
     expect(new Set(queue.map(({ task }) => task.id)).size).toBe(50);
   });
 
+  test("legacy catalog queue keeps its task-ID tie-breaker rather than map insertion order", async () => {
+    const source = logicalVault(3);
+    source.tasks = Object.fromEntries(
+      Object.entries(source.tasks)
+        .reverse()
+        .map(([id, task]) => [
+          id,
+          { ...task, createdAtTimestampMillis: 1_000 },
+        ]),
+    );
+    const repository = await PerTaskRepository.create(
+      new BinaryPerTaskDocuments(new MemoryAutomergeBinaryStorage()),
+      source,
+    );
+    try {
+      expect(
+        (await repository.getReviewQueue(10_000)).map(({ task }) => task.id),
+      ).toEqual([taskID(0), taskID(1), taskID(2)]);
+    } finally {
+      await repository.close();
+    }
+  });
+
+  test("FSRS selects both lanes across the full catalog before opening only 50 task documents", async () => {
+    const storage = new TrackingStorage(new MemoryAutomergeBinaryStorage());
+    const created = await PerTaskRepository.create(
+      new BinaryPerTaskDocuments(storage),
+      fsrsBacklog(75),
+    );
+    const reopened = await PerTaskRepository.open(
+      new BinaryPerTaskDocuments(storage),
+      created.rootURL,
+    );
+    try {
+      storage.loads.length = 0;
+      const queue = await reopened.getReviewQueue(fsrsNow, 50);
+      expect(queue.map(({ task }) => task.id)).toEqual(
+        Array.from({ length: 25 }, (_, index) => [
+          taskID(74 - index),
+          taskID(index),
+        ]).flat(),
+      );
+      expect(storage.loads).toHaveLength(52);
+      const entries = await reopened.getCatalogEntries();
+      expect(
+        (await reopened.getReviewWorkingSetDocumentURLs()).slice(2),
+      ).toEqual(queue.map(({ task }) => entries[task.id].documentURL));
+    } finally {
+      await reopened.close();
+      await created.close();
+    }
+  });
+
+  test("FSRS alternates the first lane after each saved review, including a one-item refresh", async () => {
+    const storage = new MemoryAutomergeBinaryStorage();
+    const repository = await PerTaskRepository.create(
+      new BinaryPerTaskDocuments(storage),
+      fsrsBacklog(75),
+    );
+    const first = async () =>
+      (await repository.getReviewQueue(fsrsNow, 1))[0].task.id;
+    try {
+      expect(await first()).toBe(taskID(74));
+      const saved = review(taskID(74), "mixed-first-review", fsrsNow);
+      await repository.apply([saved]);
+      expect(await first()).toBe(taskID(0));
+      await repository.apply([saved]);
+      expect(await first()).toBe(taskID(0));
+      expect(
+        (await repository.getCatalogEntries())[taskID(74)].fsrs?.reviewCount,
+      ).toBe(1);
+      await repository.apply([
+        review(taskID(0), "mixed-second-review", fsrsNow),
+      ]);
+      expect(await first()).toBe(taskID(73));
+      expect(
+        (await repository.getCatalogEntries())[taskID(0)].fsrs?.reviewCount,
+      ).toBe(1);
+    } finally {
+      await repository.close();
+    }
+  });
+
+  test("FSRS reselects beyond a stale capped window whose saved failure is not due yet", async () => {
+    const backing = new MemoryAutomergeBinaryStorage();
+    const failingStorage = new FailOnceStorage(backing);
+    const catalogURL = url("mixed-future-retry-stale-catalog");
+    const source = fsrsBacklog(2);
+    // Start the oldest lane. The later manual due observation in the fixture
+    // keeps this skipped card due without inventing a successful recall.
+    source.observations["earlier-skip" as ObservationID] = {
+      kind: "review",
+      taskID: taskID(0),
+      componentID: "main",
+      occurredAtTimestampMillis: fsrsNow - 20_000,
+      reviewSessionID: null,
+      outcome: TaskRepetitionOutcome.Skipped,
+    };
+    const created = await PerTaskRepository.create(
+      new BinaryPerTaskDocuments(failingStorage),
+      source,
+      { catalogURL },
+    );
+    expect((await created.getReviewQueue(fsrsNow, 1))[0].task.id).toBe(
+      taskID(0),
+    );
+    failingStorage.failNextSaveTo = catalogURL;
+    await expect(
+      created.apply([
+        {
+          ...review(taskID(0), "saved-future-retry", fsrsNow),
+          outcome: TaskRepetitionOutcome.Forgotten,
+        },
+      ]),
+    ).rejects.toThrow("injected catalog save failure");
+    const tracking = new TrackingStorage(backing);
+    const reopened = await PerTaskRepository.open(
+      new BinaryPerTaskDocuments(tracking),
+      created.rootURL,
+    );
+    try {
+      tracking.loads.length = 0;
+      expect(
+        (await reopened.getReviewQueue(fsrsNow, 1)).map(({ task }) => task.id),
+      ).toEqual([taskID(1)]);
+      // Only the stale task and its newly selected successor are opened. The
+      // other reads are the root/catalog refresh and catalog repair write.
+      expect(
+        tracking.loads.filter(
+          (documentURL) =>
+            documentURL !== created.rootURL && documentURL !== catalogURL,
+        ),
+      ).toHaveLength(2);
+      const repaired = (await reopened.getCatalogEntries())[taskID(0)];
+      expect(repaired.nextDueTimestampMillis).toBe(fsrsNow + 10 * 60_000);
+      expect(repaired.fsrs?.memory?.isRetry).toBe(true);
+      expect(repaired.fsrs?.reviewCount).toBe(2);
+    } finally {
+      await reopened.close();
+      await created.close();
+    }
+  });
+
+  test("FSRS reselects globally when repairing a saved review changes the first lane", async () => {
+    const backing = new MemoryAutomergeBinaryStorage();
+    const storage = new FailOnceStorage(backing);
+    const catalogURL = url("mixed-stale-lane-catalog");
+    const created = await PerTaskRepository.create(
+      new BinaryPerTaskDocuments(storage),
+      fsrsBacklog(3),
+      { catalogURL },
+    );
+    storage.failNextSaveTo = catalogURL;
+    await expect(
+      created.apply([
+        {
+          ...review(taskID(2), "saved-lane-skip", fsrsNow - 10),
+          outcome: TaskRepetitionOutcome.Skipped,
+        },
+        {
+          kind: "reschedule",
+          mutationID: "restore-old-due" as VaultMutationID,
+          observationID: "restore-old-due" as ObservationID,
+          taskID: taskID(2),
+          componentID: "main",
+          occurredAtTimestampMillis: fsrsNow,
+          newDueTimestampMillis: fsrsNow - 60_000,
+        },
+      ]),
+    ).rejects.toThrow("injected catalog save failure");
+    const reopened = await PerTaskRepository.open(
+      new BinaryPerTaskDocuments(backing),
+      created.rootURL,
+    );
+    try {
+      // The stale row initially selects high-recall task 2. Its saved skip
+      // changes parity but leaves it due; the correct new oldest lane starts
+      // at task 0, outside that old one-item selection.
+      expect(
+        (await reopened.getReviewQueue(fsrsNow, 1)).map(({ task }) => task.id),
+      ).toEqual([taskID(0)]);
+    } finally {
+      await reopened.close();
+      await created.close();
+    }
+  });
+
+  test("FSRS turn counts include skips and deleted rows; retries precede both lanes", async () => {
+    const storage = new MemoryAutomergeBinaryStorage();
+    const source = fsrsBacklog(4);
+    source.tasks[taskID(3)].isDeleted = true;
+    source.observations["deleted-skip" as ObservationID] = {
+      kind: "review",
+      taskID: taskID(3),
+      componentID: "main",
+      occurredAtTimestampMillis: fsrsNow,
+      reviewSessionID: null,
+      outcome: TaskRepetitionOutcome.Skipped,
+    };
+    // This has no recall estimate and still participates in the oldest lane.
+    delete source.observations["backlog-review-0" as ObservationID];
+    const repository = await PerTaskRepository.create(
+      new BinaryPerTaskDocuments(storage),
+      source,
+    );
+    try {
+      expect(
+        (await repository.getReviewQueue(fsrsNow)).map(({ task }) => task.id),
+      ).toEqual([taskID(0), taskID(2), taskID(1)]);
+      expect(
+        (await repository.getCatalogEntries())[taskID(3)].fsrs?.reviewCount,
+      ).toBe(1);
+      await repository.apply([
+        {
+          ...review(taskID(1), "mixed-retry", fsrsNow - 11 * 60_000),
+          outcome: TaskRepetitionOutcome.Forgotten,
+        },
+      ]);
+      expect((await repository.getReviewQueue(fsrsNow, 1))[0].task.id).toBe(
+        taskID(1),
+      );
+      expect(
+        (await repository.getCatalogEntries())[taskID(1)].fsrs?.memory?.isRetry,
+      ).toBe(true);
+    } finally {
+      await repository.close();
+    }
+  });
+
+  test("FSRS metadata backfills matching task heads without changing task histories or due dates", async () => {
+    const storage = new MemoryAutomergeBinaryStorage();
+    const source = fsrsBacklog(3);
+    const policy = source.scheduler;
+    source.scheduler = defaultOrbitSchedulerPolicy;
+    const documents = new BinaryPerTaskDocuments(storage);
+    const repository = await PerTaskRepository.create(documents, source);
+    const before = await repository.getCatalogEntries();
+    const bytes = new Map(
+      await Promise.all(
+        Object.values(before).map(
+          async (entry) =>
+            [
+              entry.documentURL,
+              (await storage.load(entry.documentURL))!,
+            ] as const,
+        ),
+      ),
+    );
+    await documents.patch(repository.rootURL, [
+      { kind: "put", path: ["scheduler"], value: policy },
+    ]);
+    try {
+      await repository.getTaskProjections([taskID(0)]);
+      const opened = await repository.getCatalogEntries();
+      expect(opened[taskID(0)].fsrs?.memory?.stability).toBeGreaterThan(0);
+      expect(opened[taskID(1)].fsrs).toBeUndefined();
+      expect(await repository.repairCatalog()).toBe(2);
+      expect(await repository.repairCatalog()).toBe(0);
+      const repaired = await repository.getCatalogEntries();
+      for (const [id, entry] of Object.entries(before)) {
+        expect(repaired[id as TaskID]).toEqual({
+          ...entry,
+          fsrs: expect.objectContaining({ reviewCount: 0 }),
+        });
+        expect(await storage.load(entry.documentURL)).toEqual(
+          bytes.get(entry.documentURL),
+        );
+      }
+      const row = repaired[taskID(1)];
+      await documents.patch(repository.catalogURL, [
+        {
+          kind: "put",
+          path: ["entries", taskID(1)],
+          value: JSON.stringify({
+            ...row,
+            fsrs: { reviewCount: 99, memory: null },
+          }),
+        },
+      ]);
+      await repository.getTaskProjections([taskID(1)]);
+      expect((await repository.getCatalogEntries())[taskID(1)]).toEqual(row);
+    } finally {
+      await repository.close();
+    }
+  });
+
+  test("FSRS catalog memory represents the queue's chosen cloze component, not an unrelated sibling", async () => {
+    const source = fsrsBacklog(1);
+    source.tasks[taskID(0)].spec = {
+      type: TaskSpecType.Memory,
+      content: {
+        type: TaskContentType.Cloze,
+        body: { text: "one two", attachments: [] },
+        components: {
+          second: { order: 0, ranges: [] },
+          first: { order: 1, ranges: [] },
+        },
+      },
+    };
+    source.observations = {};
+    for (const [componentID, daysAgo] of [
+      ["first", 3],
+      ["second", 8],
+    ] as const) {
+      source.observations[`review-${componentID}` as ObservationID] = {
+        kind: "review",
+        taskID: taskID(0),
+        componentID,
+        occurredAtTimestampMillis: fsrsNow - daysAgo * 86_400_000,
+        reviewSessionID: null,
+        outcome: TaskRepetitionOutcome.Remembered,
+      };
+      source.observations[`due-${componentID}` as ObservationID] = {
+        kind: "reschedule",
+        taskID: taskID(0),
+        componentID,
+        occurredAtTimestampMillis: fsrsNow - 1_000,
+        newDueTimestampMillis: fsrsNow - 60_000,
+      };
+    }
+    const repository = await PerTaskRepository.create(
+      new BinaryPerTaskDocuments(new MemoryAutomergeBinaryStorage()),
+      source,
+    );
+    try {
+      const [item] = await repository.getReviewQueue(fsrsNow);
+      expect(item.componentID).toBe("second");
+      const memory = (await repository.getCatalogEntries())[taskID(0)].fsrs
+        ?.memory;
+      expect(memory?.lastReviewTimestampMillis).toBe(fsrsNow - 8 * 86_400_000);
+      expect(memory?.stability).toBe(
+        item.task.componentStates.second.fsrs?.stability,
+      );
+    } finally {
+      await repository.close();
+    }
+  });
+
   test("repairs a crash after the authoritative task save", async () => {
     const backing = new MemoryAutomergeBinaryStorage();
     const rootURL = url("root");
@@ -320,65 +708,81 @@ describe("per-task Automerge vault", () => {
     expect(await reopened.repairCatalog()).toBe(0);
   });
 
-  test("concurrent offline reviews converge before catalog repair", async () => {
-    const base = new MemoryAutomergeBinaryStorage();
-    const rootURL = url("concurrent-root");
-    const catalogURL = url("concurrent-catalog");
-    const taskURL = url("concurrent-task");
-    await PerTaskRepository.create(
-      new BinaryPerTaskDocuments(base),
-      logicalVault(1),
-      {
+  test.each(["orbit", "fsrs"])(
+    "concurrent offline reviews converge before catalog repair (%s)",
+    async (kind) => {
+      const base = new MemoryAutomergeBinaryStorage();
+      const rootURL = url("concurrent-root");
+      const catalogURL = url("concurrent-catalog");
+      const taskURL = url("concurrent-task");
+      const source = logicalVault(1);
+      if (kind === "fsrs")
+        source.scheduler = {
+          kind: "fsrs",
+          version: 1,
+          modelVersion: 6,
+          weights: [...default_w],
+          requestedRetention: 0.9,
+          cutoverTimestampMillis: 0,
+          previousPolicy: defaultOrbitSchedulerPolicy,
+        };
+      await PerTaskRepository.create(new BinaryPerTaskDocuments(base), source, {
         rootURL,
         catalogURL,
         taskURLs: { [taskID(0)]: taskURL },
-      },
-    );
-    const leftStorage = await cloneStorage(base, [
-      rootURL,
-      catalogURL,
-      taskURL,
-    ]);
-    const rightStorage = await cloneStorage(base, [
-      rootURL,
-      catalogURL,
-      taskURL,
-    ]);
-    const left = await PerTaskRepository.open(
-      new BinaryPerTaskDocuments(leftStorage),
-      rootURL,
-    );
-    const right = await PerTaskRepository.open(
-      new BinaryPerTaskDocuments(rightStorage),
-      rootURL,
-    );
-    await left.apply([review(taskID(0), "left-review", 20_000)]);
-    await right.apply([review(taskID(0), "right-review", 30_000)]);
+      });
+      const leftStorage = await cloneStorage(base, [
+        rootURL,
+        catalogURL,
+        taskURL,
+      ]);
+      const rightStorage = await cloneStorage(base, [
+        rootURL,
+        catalogURL,
+        taskURL,
+      ]);
+      const left = await PerTaskRepository.open(
+        new BinaryPerTaskDocuments(leftStorage),
+        rootURL,
+      );
+      const right = await PerTaskRepository.open(
+        new BinaryPerTaskDocuments(rightStorage),
+        rootURL,
+      );
+      await left.apply([review(taskID(0), "left-review", 20_000)]);
+      await right.apply([review(taskID(0), "right-review", 30_000)]);
 
-    const merged = new MemoryAutomergeBinaryStorage();
-    for (const documentURL of [rootURL, catalogURL, taskURL]) {
-      const leftBytes = (await leftStorage.load(documentURL))!;
-      const rightBytes = (await rightStorage.load(documentURL))!;
-      const Automerge = await import("@automerge/automerge");
-      const leftDocument = Automerge.load(leftBytes);
-      const rightDocument = Automerge.load(rightBytes);
-      const result = Automerge.merge(leftDocument, rightDocument);
-      await merged.save(documentURL, Automerge.save(result));
-      Automerge.free(result);
-      Automerge.free(rightDocument);
-    }
+      const merged = new MemoryAutomergeBinaryStorage();
+      for (const documentURL of [rootURL, catalogURL, taskURL]) {
+        const leftBytes = (await leftStorage.load(documentURL))!;
+        const rightBytes = (await rightStorage.load(documentURL))!;
+        const Automerge = await import("@automerge/automerge");
+        const leftDocument = Automerge.load(leftBytes);
+        const rightDocument = Automerge.load(rightBytes);
+        const result = Automerge.merge(leftDocument, rightDocument);
+        await merged.save(documentURL, Automerge.save(result));
+        Automerge.free(result);
+        Automerge.free(rightDocument);
+      }
 
-    const converged = await PerTaskRepository.open(
-      new BinaryPerTaskDocuments(merged),
-      rootURL,
-    );
-    expect((await converged.getProjection()).observationCount).toBe(2);
-    expect(await converged.repairCatalog()).toBe(1);
-    expect(
-      (await converged.getProjection()).tasks.get(taskID(0))?.componentStates
-        .main,
-    ).toMatchObject({ lastRepetitionTimestampMillis: 30_000 });
-  });
+      const converged = await PerTaskRepository.open(
+        new BinaryPerTaskDocuments(merged),
+        rootURL,
+      );
+      expect((await converged.getProjection()).observationCount).toBe(2);
+      expect(await converged.repairCatalog()).toBe(1);
+      expect(
+        (await converged.getProjection()).tasks.get(taskID(0))?.componentStates
+          .main,
+      ).toMatchObject({ lastRepetitionTimestampMillis: 30_000 });
+      if (kind === "fsrs") {
+        const state = (await converged.getProjection()).tasks.get(taskID(0))!
+          .componentStates.main;
+        expect(state.fsrs?.lastReviewTimestampMillis).toBe(30_000);
+        expect(state.dueTimestampMillis).toBe(30_000 + state.intervalMillis);
+      }
+    },
+  );
 
   test("browser repairs a conflicting entry in the background using the visible URL", async () => {
     const storage = new MemoryAutomergeBinaryStorage();
@@ -783,6 +1187,37 @@ function logicalVault(taskCount: number): OrbitVault {
     observations: {},
     attachments: {},
   };
+}
+
+function fsrsBacklog(taskCount: number): OrbitVault {
+  const source = logicalVault(taskCount);
+  source.scheduler = {
+    kind: "fsrs",
+    version: 1,
+    modelVersion: 6,
+    weights: [...default_w],
+    requestedRetention: 0.9,
+    cutoverTimestampMillis: fsrsNow - 86_400_000,
+    previousPolicy: defaultOrbitSchedulerPolicy,
+  };
+  for (let index = 0; index < taskCount; index++) {
+    source.observations[`backlog-review-${index}` as ObservationID] = {
+      kind: "review",
+      taskID: taskID(index),
+      componentID: "main",
+      occurredAtTimestampMillis: fsrsNow - (taskCount - index + 1) * 86_400_000,
+      reviewSessionID: null,
+      outcome: TaskRepetitionOutcome.Remembered,
+    };
+    source.observations[`backlog-reschedule-${index}` as ObservationID] = {
+      kind: "reschedule",
+      taskID: taskID(index),
+      componentID: "main",
+      occurredAtTimestampMillis: fsrsNow - 1_000,
+      newDueTimestampMillis: fsrsNow - (taskCount - index) * 60_000,
+    };
+  }
+  return source;
 }
 
 function review(id: string, observation: string, timestamp: number) {

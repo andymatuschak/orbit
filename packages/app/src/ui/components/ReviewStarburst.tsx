@@ -1,8 +1,6 @@
 import {
-  createSpacedRepetitionScheduler,
   SpacedRepetitionSchedulerConfiguration,
   TaskComponentState,
-  TaskRepetitionOutcome,
 } from "@withorbit/core";
 import React, { useMemo } from "react";
 import { Animated, Easing, View } from "react-native";
@@ -20,7 +18,7 @@ export interface ReviewStarburstProps {
   containerHeight: number;
   items: ReviewStarburstItem[];
   currentItemIndex: number;
-  pendingOutcome: TaskRepetitionOutcome | null;
+  previewIntervalMillis?: number;
   position: "left" | "center";
   showLegend: boolean;
   colorMode: "accent" | "bicolor";
@@ -38,7 +36,7 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
   containerHeight,
   items,
   currentItemIndex,
-  pendingOutcome,
+  previewIntervalMillis,
   position,
   showLegend,
   colorMode,
@@ -65,21 +63,8 @@ const ReviewStarburst = React.memo(function ReviewStarburst({
     currentItemIndex < items.length ? items[currentItemIndex] : null;
   const currentComponent = currentItem?.component;
 
-  const currentItemEffectiveInterval = useMemo(() => {
-    const scheduler = createSpacedRepetitionScheduler(config);
-    if (currentComponent && pendingOutcome) {
-      const nextInterval = scheduler.computeNextDueIntervalMillisForRepetition(
-        currentComponent,
-        currentComponent?.lastRepetitionTimestampMillis
-          ? Date.now() - currentComponent.lastRepetitionTimestampMillis
-          : 0,
-        pendingOutcome,
-      );
-      return nextInterval.dueTimestampMillis;
-    } else {
-      return currentComponent?.intervalMillis ?? 0; // TODO use effective interval relative to review session start time https://github.com/andymatuschak/metabook/issues/117
-    }
-  }, [currentComponent, pendingOutcome, config]);
+  const currentItemEffectiveInterval =
+    previewIntervalMillis ?? currentComponent?.intervalMillis ?? 0;
 
   const starburstEntries = useMemo(
     () =>

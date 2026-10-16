@@ -2,8 +2,8 @@ import {
   mainTaskComponentID,
   Task,
   TaskComponentState,
-} from "../entities/task.js";
-import { EntityType } from "../entity.js";
+} from "../../../entities/task.js";
+import { EntityType } from "../../../entity.js";
 import {
   EventID,
   EventType,
@@ -15,7 +15,7 @@ import {
   TaskUpdateProvenanceEvent,
   TaskUpdateSpecEvent,
 } from "../event.js";
-import { createSpacedRepetitionScheduler } from "../schedulers/spacedRepetitionScheduler.js";
+import { createSpacedRepetitionScheduler } from "../../../schedulers/spacedRepetitionScheduler.js";
 
 export function taskIngestEventReducer(
   oldSnapshot: Task | null,

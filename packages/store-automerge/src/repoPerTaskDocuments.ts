@@ -226,7 +226,7 @@ function snapshot(doc: Automerge.Doc<unknown>): DocumentSnapshot {
       const record = value as Record<string, unknown>;
       const variants = Automerge.getConflicts(
         record as Automerge.Doc<Record<string, unknown>>,
-        key,
+        Array.isArray(value) ? Number(key) : key,
       );
       if (variants && Object.keys(variants).length > 1)
         conflicts.push({

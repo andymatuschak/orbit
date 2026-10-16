@@ -3,12 +3,12 @@ import {
   testClozeSpec,
   testClozeTask,
   testIngestClozeTaskEvent,
-} from "../__tests__/testTasks.js";
+} from "../../testTasks.js";
+import { TaskRepetitionOutcome } from "../../../entities/task.js";
 import {
   EventID,
   EventType,
   TaskRepetitionEvent,
-  TaskRepetitionOutcome,
   TaskRescheduleEvent,
   TaskUpdateDeletedEvent,
   TaskUpdateMetadataEvent,

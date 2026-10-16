@@ -98,11 +98,9 @@ final class WidgetProjectionStore {
     vaultID: String?, items: [String]
   ) {
     try access { state in
-      let items = state.queue.filter { $0.dueTimestampMillis <= throughTimestampMillis }.sorted {
-        ($0.dueTimestampMillis, $0.taskID, $0.componentID) < (
-          $1.dueTimestampMillis, $1.taskID, $1.componentID
-        )
-      }
+      // Queue selection and ordering belong to the shared scheduler. Filtering
+      // future entries must not undo its interleaved backlog policy.
+      let items = state.queue.filter { $0.dueTimestampMillis <= throughTimestampMillis }
       return (
         (state.selectedVaultID, try items.prefix(max(0, limit)).map { try jsonString($0.json) }),
         false

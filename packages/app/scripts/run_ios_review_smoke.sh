@@ -7,7 +7,8 @@ set -euo pipefail
 if [[ "${1:-}" == "--help" ]]; then
   echo "Set ORBIT_SIMULATOR_UDID to a dedicated booted Simulator with Orbit Release installed."
   echo "Requires AXe, Node, built workspace/server, and unused localhost port 8788."
-  echo "Seeds 53 due tasks; tests native ↔ JS and offline image/review durability."
+  echo "Seeds 53 due tasks plus future tasks in a >1 MiB catalog (14,000 total)."
+  echo "Tests native ↔ JS and offline image/review durability."
   echo "Cold relaunch must sync reviewed task documents now outside the first 50."
   echo "Restores the previous Lab selection; retains fixture receipts/logs for inspection."
   exit 0
