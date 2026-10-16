@@ -40,6 +40,11 @@ braces and calculating ranges. Q&A source spans instead address the original
 Markdown, including its Q./A. prefixes. Rendering fragments are not source-editing
 coordinates.
 
+Standalone BearID export comments also terminate Q&A regions. They remain in the
+source file and identify the note, but are not answer content; a multiparagraph
+answer's badge goes before that footer. Ordinary HTML comments and inline
+examples are not treated as these boundaries.
+
 The refactor preserves existing task-spec snapshots and fixes unanswered questions
 at EOF, headingless Q&A notes, frontmatter-only notes, malformed cloze escapes,
 Backlinks swallowing the next heading, and multiblock answers leaking extra cloze
@@ -48,9 +53,44 @@ explicitly tested as skipped; changing it would change content normalization.
 
 Interpretation is separate from ingestion so the generated input can be inspected
 and previewed before applying changes. See [the ingester](../ingester/Readme.md).
-Stable prompt-ID stamps and history-preserving source edits are not implemented
-here yet. They can build on the source spans without introducing another remark
-transformer or rewriting entire notes.
+
+## Stable task badges
+
+To edit an imported prompt while retaining its learning history, put its existing
+TaskID in a trailing Markdown link:
+
+```md
+Q. Front
+A. Back [☉](orbit://task/AbCdEfGhIjKlMnOpQrStUv)
+```
+
+The original `orbit://AbCdEfGhIjKlMnOpQrStUv` form is also accepted. These are
+actual 22-character, URL-safe Orbit task IDs, not content hashes or Automerge
+document URLs. The link is identity metadata: it is removed before rendering task
+content, calculating cloze ranges, or deriving a headingless note's title. Normal
+links with other labels or schemes remain content; code examples are not badges.
+
+A badge belongs at the end of the answer (including a multiblock answer's final
+block), or at the end of a cloze block. A single-block answer does not include a
+separate following paragraph. Invalid, ambiguous, or misplaced identity badges
+report an error rather than guessing which task should receive the edit.
+Use an inline link as shown above; reference-style Orbit badges are rejected.
+
+The interpreter emits the badge's ID as the item's import identifier and optional
+`taskID`. The ingester can adopt an existing task that was previously matched by
+content hash, update its wording/provenance in place, and preserve its observations.
+Unbadged prompts retain their historical content-hash identity. A deliberate copy
+can get a new identity by removing its badge; duplicate badges are errors, not
+instructions to merge two prompts.
+
+Cloze wording edits preserve positional component IDs. Adding/removing blanks is
+rejected before applying the import, and reordering existing blanks is **not safe**:
+their histories still belong to positions, not stable per-blank IDs. A task badge
+does not solve cloze-component identity.
+
+Recognizing a badge does not mint IDs or write back to notes. The `interpret`
+command remains read-only.
+The `orbit://` link is recognized metadata, not yet implemented app navigation.
 
 ## Validation
 

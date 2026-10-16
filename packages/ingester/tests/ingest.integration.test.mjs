@@ -180,14 +180,30 @@ test("a paired importer publishes new documents, preserves reviews, and cold rep
     0,
   );
   // The external notes wrapper has Bun, but no interactive fnm/Node PATH.
-  const inputPath = path.join(path.dirname(fixture.configurationPath), "input.json");
+  const inputPath = path.join(
+    path.dirname(fixture.configurationPath),
+    "input.json",
+  );
   await fs.writeFile(inputPath, JSON.stringify(input));
-  const bunChild = spawn("bun", [fileURLToPath(new URL("../src/bin/run.ts", import.meta.url)), inputPath, "--config", fixture.configurationPath]);
+  const bunChild = spawn("bun", [
+    fileURLToPath(new URL("../src/bin/run.ts", import.meta.url)),
+    inputPath,
+    "--config",
+    fixture.configurationPath,
+  ]);
   let bunOutput = "";
   let bunError = "";
-  bunChild.stdout.setEncoding("utf8").on("data", (text) => { bunOutput += text; });
-  bunChild.stderr.setEncoding("utf8").on("data", (text) => { bunError += text; });
-  assert.equal(await new Promise((resolve) => bunChild.once("close", resolve)), 0, bunError);
+  bunChild.stdout.setEncoding("utf8").on("data", (text) => {
+    bunOutput += text;
+  });
+  bunChild.stderr.setEncoding("utf8").on("data", (text) => {
+    bunError += text;
+  });
+  assert.equal(
+    await new Promise((resolve) => bunChild.once("close", resolve)),
+    0,
+    bunError,
+  );
   assert.equal(JSON.parse(bunOutput).mutationCount, 0);
   await fixture.service.shutdown();
   services.splice(services.indexOf(fixture.service), 1);
@@ -215,6 +231,147 @@ test("a paired importer publishes new documents, preserves reviews, and cold rep
     );
   } finally {
     await vault.close();
+    await repo.shutdown();
+    await storage.close();
+  }
+});
+
+test("adopting a badge updates the original document and preserves another client's reviews", async () => {
+  const taskID = "AbCdEfGhIjKlMnOpQrStUv";
+  const fixture = await startFixture(0, taskID);
+  const network = new AuthenticatedWebSocketNetworkAdapter(
+    `ws://127.0.0.1:${fixture.service.configuration.port}/v1/sync`,
+    async () => ({
+      kind: "pairedToken",
+      token: fixture.service.configuration.pairingToken,
+    }),
+  );
+  const observerRepo = new Repo({ network: [network] });
+  await network.whenReady();
+  const observer = await PerTaskRepository.open(
+    new RepoPerTaskDocuments(observerRepo),
+    fixture.rootURL,
+  );
+  const editedSpec = spec("Edited question");
+  editedSpec.content.answer.text = "Edited answer";
+  const input = {
+    sources: [
+      {
+        identifier: "moved-note",
+        title: "Moved note",
+        items: [{ identifier: taskID, taskID, spec: editedSpec }],
+      },
+    ],
+  };
+  let originalEntry;
+  let observationsBeforeEdit;
+  try {
+    await observer.apply([
+      {
+        kind: "recordReview",
+        mutationID: "peer-review",
+        observationID: "peer-review",
+        taskID,
+        componentID: "main",
+        reviewSessionID: null,
+        outcome: TaskRepetitionOutcome.Remembered,
+        occurredAtTimestampMillis: 2000,
+      },
+    ]);
+    observationsBeforeEdit = (await observer.readLogicalVault()).observations;
+    originalEntry = (await observer.getCatalogEntries())[taskID];
+    const handle = await observerRepo.find(originalEntry.documentURL);
+    const reviewDeadline = Date.now() + 5000;
+    while (
+      JSON.stringify(handle.heads().slice().sort()) !==
+      JSON.stringify(
+        handle.getSyncInfo(network.remoteStorageID)?.lastHeads.slice().sort(),
+      )
+    ) {
+      if (Date.now() > reviewDeadline)
+        assert.fail(
+          "Peer review did not reach the server before badge adoption",
+        );
+      await delay(20);
+    }
+    const result = await runIngest({
+      ingestible: input,
+      configurationPath: fixture.configurationPath,
+    });
+    assert.ok(result.mutationCount > 0);
+    assert.equal(result.counts.ingestTask, undefined);
+    const deadline = Date.now() + 5000;
+    for (;;) {
+      const logical = await observer.readLogicalVault();
+      const task = logical.tasks[taskID];
+      if (
+        task?.spec.content.body.text === "Edited question" &&
+        task.spec.content.answer.text === "Edited answer" &&
+        task.provenance?.identifier === "moved-note" &&
+        task.metadata.ingestSourceIdentifier === taskID
+      ) {
+        assert.deepEqual(Object.keys(logical.tasks), [taskID]);
+        assert.deepEqual(logical.tasks[taskID].spec, editedSpec);
+        assert.deepEqual(logical.tasks[taskID].provenance, {
+          identifier: "moved-note",
+          title: "Moved note",
+        });
+        assert.equal(
+          logical.tasks[taskID].metadata.ingestSourceIdentifier,
+          taskID,
+        );
+        assert.deepEqual(logical.observations, observationsBeforeEdit);
+        const entry = (await observer.getCatalogEntries())[taskID];
+        if (
+          JSON.stringify(entry.indexedTaskHeads) !==
+          JSON.stringify(originalEntry.indexedTaskHeads)
+        ) {
+          assert.equal(entry.documentURL, originalEntry.documentURL);
+          assert.equal(
+            entry.nextDueTimestampMillis,
+            originalEntry.nextDueTimestampMillis,
+          );
+          break;
+        }
+      }
+      if (Date.now() > deadline)
+        assert.fail(
+          "Independent peer did not receive the badge edit and refreshed catalog",
+        );
+      await delay(20);
+    }
+  } finally {
+    await observer.close();
+    await observerRepo.shutdown();
+  }
+  assert.equal(
+    (
+      await runIngest({
+        ingestible: input,
+        configurationPath: fixture.configurationPath,
+      })
+    ).mutationCount,
+    0,
+  );
+  await fixture.service.shutdown();
+  services.splice(services.indexOf(fixture.service), 1);
+  const storage = new AtomicNodeFSStorageAdapter(fixture.storageRoot);
+  const repo = new Repo({ storage, network: [] });
+  const reopened = await PerTaskRepository.open(
+    new RepoPerTaskDocuments(repo),
+    fixture.rootURL,
+  );
+  try {
+    const logical = await reopened.readLogicalVault();
+    assert.deepEqual(Object.keys(logical.tasks), [taskID]);
+    assert.deepEqual(logical.tasks[taskID].spec, editedSpec);
+    assert.deepEqual(logical.observations, observationsBeforeEdit);
+    assert.equal(
+      (await reopened.getCatalogEntries())[taskID].documentURL,
+      originalEntry.documentURL,
+    );
+  } finally {
+    await reopened.close();
     await repo.shutdown();
     await storage.close();
   }
@@ -346,7 +503,7 @@ test("a multi-batch inventory can be released and reopened on a cold repeat", as
   }
 });
 
-async function startFixture(extraTaskCount = 0) {
+async function startFixture(extraTaskCount = 0, taskID = "original-task") {
   const directory = await temporaryDirectory();
   const storageRoot = path.join(directory, "server");
   const seedStorage = new AtomicNodeFSStorageAdapter(storageRoot);
@@ -360,7 +517,7 @@ async function startFixture(extraTaskCount = 0) {
       kind: "ingestTask",
       mutationID: "seed",
       task: {
-        taskID: "original-task",
+        taskID,
         createdAtTimestampMillis: 0,
         spec: spec("Old"),
         provenance: { identifier: "note", title: "Old note" },
@@ -371,7 +528,7 @@ async function startFixture(extraTaskCount = 0) {
       kind: "recordReview",
       mutationID: "original-review",
       observationID: "original-review",
-      taskID: "original-task",
+      taskID,
       componentID: "main",
       reviewSessionID: null,
       outcome: TaskRepetitionOutcome.Remembered,

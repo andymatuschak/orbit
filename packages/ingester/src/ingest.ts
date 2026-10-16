@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from "node:util";
 import {
+  componentIDsForTaskSpec,
   generateUniqueID,
   type TaskID,
   type TaskProvenance,
@@ -20,21 +21,36 @@ export const MissingItemIdentifierError = new Error(
 export const DuplicateItemIdentifierError = (identifier: string) =>
   new Error(`item identifier '${identifier}' is not unique`);
 
-type IngestTask = Pick<VaultTask, "provenance" | "metadata" | "isDeleted">;
+type IngestTask = Pick<
+  VaultTask,
+  "spec" | "provenance" | "metadata" | "isDeleted"
+>;
 type NewTaskMutation = Extract<VaultMutation, { kind: "ingestTask" }>;
 type DeleteTaskMutation = Extract<VaultMutation, { kind: "setTaskDeleted" }>;
 
 /**
- * The original source/item reconciler, independent of storage and transport.
+ * Source/item reconciliation, independent of storage and transport.
  * Sources are complete snapshots: omit a source to leave it alone; include an
  * empty source to delete its prompts. Content-hash identity means an edited
  * prompt is deleted/re-created, while an unchanged moved prompt keeps its ID.
+ * An explicit task ID instead follows its task across sources and wording edits.
  */
 export function ingestSources(
   sources: readonly IngestibleSource[],
   tasks: ReadonlyMap<TaskID, IngestTask>,
   opts = { ingestDateMillis: Date.now() },
 ): VaultMutation[] {
+  const explicitTaskIDs = new Set<TaskID>();
+  for (const source of sources)
+    for (const item of source.items) {
+      if (item.taskID === undefined) continue;
+      if (
+        typeof item.taskID !== "string" ||
+        !/^[0-9a-zA-Z_-]{22}$/.test(item.taskID)
+      )
+        throw new Error(`invalid task ID '${item.taskID}'`);
+      explicitTaskIDs.add(item.taskID);
+    }
   const existingBySource = new Map<
     string,
     Map<IngestibleItemIdentifier, TaskID>
@@ -53,7 +69,10 @@ export function ingestSources(
     const items = existingBySource.get(task.provenance.identifier) ?? new Map();
     const identifier = task.metadata[INGEST_ITEM_IDENTIFIER_KEY];
     // Only the supplied sources participate in reconciliation.
-    if (!identifier) throw MissingItemIdentifierError;
+    if (!identifier) {
+      if (explicitTaskIDs.has(id)) continue;
+      throw MissingItemIdentifierError;
+    }
     items.set(identifier as IngestibleItemIdentifier, id);
     existingBySource.set(task.provenance.identifier, items);
   }
@@ -62,6 +81,7 @@ export function ingestSources(
   // distinct tasks, not one global content-hash slot.
   const additions: {
     itemID: IngestibleItemIdentifier;
+    explicit: boolean;
     mutation: NewTaskMutation;
   }[] = [];
   const deletions: {
@@ -69,23 +89,32 @@ export function ingestSources(
     mutation: DeleteTaskMutation;
   }[] = [];
   const updates: VaultMutation[] = [];
+  const claimedTaskIDs = new Set<TaskID>();
+  function claim(taskID: TaskID) {
+    if (claimedTaskIDs.has(taskID))
+      throw new Error(`task ID '${taskID}' is claimed by more than one prompt`);
+    claimedTaskIDs.add(taskID);
+  }
   for (const source of sources) {
     const previous = existingBySource.get(source.identifier) ?? new Map();
     const next = mapItems(source.items);
     const provenance = createProvenanceForSource(source);
     for (const [itemID, item] of next) {
-      const taskID = previous.get(itemID);
-      if (taskID) {
-        if (!isDeepStrictEqual(tasks.get(taskID)!.provenance, provenance))
-          updates.push(updateProvenance(taskID, provenance));
+      const taskID =
+        item.taskID ?? previous.get(itemID) ?? (generateUniqueID() as TaskID);
+      claim(taskID);
+      const task = tasks.get(taskID);
+      if (task) {
+        updates.push(...updateTask(taskID, task, item, provenance));
       } else {
         additions.push({
           itemID,
+          explicit: item.taskID !== undefined,
           mutation: {
             kind: "ingestTask",
             mutationID: mutationID(),
             task: {
-              taskID: generateUniqueID() as TaskID,
+              taskID,
               createdAtTimestampMillis: opts.ingestDateMillis,
               spec: item.spec,
               provenance,
@@ -96,32 +125,43 @@ export function ingestSources(
       }
     }
     for (const [itemID, taskID] of previous)
-      if (!next.has(itemID))
-        deletions.push({
-          itemID,
-          mutation: {
-            kind: "setTaskDeleted",
-            mutationID: mutationID(),
-            taskID,
-            isDeleted: true,
-          },
-        });
+      deletions.push({
+        itemID,
+        mutation: {
+          kind: "setTaskDeleted",
+          mutationID: mutationID(),
+          taskID,
+          isDeleted: true,
+        },
+      });
   }
 
   // A unique removal/addition of the same content is a move, not a new task.
   // Ambiguous identical copies retain ordinary add/delete semantics.
   const movedAdditions = new Set<NewTaskMutation>();
   const movedDeletions = new Set<DeleteTaskMutation>();
-  const deletionsByItem = groupByItem(deletions);
-  for (const [itemID, matchingAdditions] of groupByItem(additions)) {
+  // A stamped move/adoption must not be deleted by its previous source snapshot.
+  const unclaimedDeletions = deletions.filter(
+    ({ mutation }) => !claimedTaskIDs.has(mutation.taskID),
+  );
+  const deletionsByItem = groupByItem(unclaimedDeletions);
+  for (const [itemID, matchingAdditions] of groupByItem(
+    additions.filter(({ explicit }) => !explicit),
+  )) {
     const matchingDeletions = deletionsByItem.get(itemID);
     if (matchingAdditions.length === 1 && matchingDeletions?.length === 1) {
       const addition = matchingAdditions[0].mutation;
       const deletion = matchingDeletions[0].mutation;
       movedAdditions.add(addition);
       movedDeletions.add(deletion);
+      claim(deletion.taskID);
       updates.push(
-        updateProvenance(deletion.taskID, addition.task.provenance!),
+        ...updateTask(
+          deletion.taskID,
+          tasks.get(deletion.taskID)!,
+          { identifier: itemID, spec: addition.task.spec },
+          addition.task.provenance!,
+        ),
       );
     }
   }
@@ -129,11 +169,50 @@ export function ingestSources(
     ...additions
       .map(({ mutation }) => mutation)
       .filter((mutation) => !movedAdditions.has(mutation)),
-    ...deletions
+    ...unclaimedDeletions
       .map(({ mutation }) => mutation)
       .filter((mutation) => !movedDeletions.has(mutation)),
     ...updates,
   ];
+}
+
+function updateTask(
+  taskID: TaskID,
+  task: IngestTask,
+  item: IngestibleItem,
+  provenance: TaskProvenance,
+): VaultMutation[] {
+  const updates: VaultMutation[] = [];
+  if (!isDeepStrictEqual(task.spec, item.spec)) {
+    if (
+      componentIDsForTaskSpec(task.spec).join("\0") !==
+      componentIDsForTaskSpec(item.spec).join("\0")
+    )
+      throw new Error(`task '${taskID}' cannot change component IDs`);
+    updates.push({
+      kind: "updateTaskSpec",
+      mutationID: mutationID(),
+      taskID,
+      spec: item.spec,
+    });
+  }
+  if (!isDeepStrictEqual(task.provenance, provenance))
+    updates.push(updateProvenance(taskID, provenance));
+  if (task.metadata[INGEST_ITEM_IDENTIFIER_KEY] !== item.identifier)
+    updates.push({
+      kind: "mergeTaskMetadata",
+      mutationID: mutationID(),
+      taskID,
+      metadata: { [INGEST_ITEM_IDENTIFIER_KEY]: item.identifier },
+    });
+  if (task.isDeleted)
+    updates.push({
+      kind: "setTaskDeleted",
+      mutationID: mutationID(),
+      taskID,
+      isDeleted: false,
+    });
+  return updates;
 }
 
 function groupByItem<T extends { itemID: IngestibleItemIdentifier }>(

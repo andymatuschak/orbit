@@ -83,6 +83,10 @@
               },
               "spec": {
                 "$ref": "#/definitions/TaskSpec<TaskContent>"
+              },
+              "taskID": {
+                "pattern": "^[0-9a-zA-Z_\\-]{22}$",
+                "type": "string"
               }
             },
             "required": ["identifier", "spec"],

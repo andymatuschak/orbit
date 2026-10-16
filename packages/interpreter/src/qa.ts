@@ -18,7 +18,8 @@ type AnswerStart = {
 /**
  * Extract root-level Q./A. regions, leaving ordinary Markdown for clozes.
  * Q. text / A. text consume one paragraph each; putting the prefix on its own
- * line enables multiple blocks, terminated by a heading, rule, or another Q.
+ * line enables multiple blocks, terminated by a heading, rule, another Q.,
+ * or the export's standalone BearID metadata.
  */
 export function extractQAPrompts(root: Root): {
   prompts: QAPrompt[];
@@ -67,6 +68,9 @@ function isBoundary(node: RootContent): boolean {
   return (
     node.type === "heading" ||
     node.type === "thematicBreak" ||
+    // Export metadata is not learning content or part of the editable answer.
+    (node.type === "html" &&
+      /^<!-- \{BearID:[0-9A-F-]+\} -->$/.test(node.value.trim())) ||
     !!questionPrefix(node)
   );
 }

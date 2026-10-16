@@ -1,4 +1,4 @@
-import { ColorPaletteName, TaskSpec } from "@withorbit/core";
+import { ColorPaletteName, TaskID, TaskSpec } from "@withorbit/core";
 
 export type Ingestible = {
   sources: IngestibleSource[];
@@ -33,5 +33,7 @@ export type IngestibleItemIdentifier = string & {
 
 export type IngestibleItem = {
   identifier: IngestibleItemIdentifier;
+  /** An authored badge targets this task across sources, including deleted tasks. */
+  taskID?: TaskID;
   spec: TaskSpec;
 };

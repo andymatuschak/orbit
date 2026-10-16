@@ -2,8 +2,14 @@ import {
   ClozeTaskContent,
   TaskContentType,
   TaskSpecType,
+  type TaskID,
 } from "@withorbit/core";
-import type { IngestibleItemIdentifier } from "@withorbit/ingester";
+import {
+  createIngestibleValidator,
+  INGEST_ITEM_IDENTIFIER_KEY,
+  ingestSources,
+  type IngestibleItemIdentifier,
+} from "@withorbit/ingester";
 import { expect, test } from "bun:test";
 import { interpretMarkdownFiles, type MarkdownFile } from "./interpret.js";
 
@@ -79,6 +85,20 @@ test("a frontmatter-only note has no prompts and falls back to its filename", ()
 
   expect(source.items).toEqual([]);
   expect(source.title).toEqual("Source.md");
+});
+
+test("Bear export metadata preserves a multiblock answer's content and hash", () => {
+  const content =
+    "# Source\n\nQ. Question\nA.\nFirst paragraph.\n\nSecond paragraph.";
+  const original = interpret(content);
+  for (const newline of ["\n", "\r\n"]) {
+    const exported = interpret(
+      `${content}\n\n<!-- {BearID:ABC-123} -->\n`.replaceAll("\n", newline),
+    );
+    expect<string>(exported.identifier).toBe("ABC-123");
+    expect(exported.url).toBe("bear://x-callback-url/open-note?id=ABC-123");
+    expect(exported.items).toEqual(original.items);
+  }
 });
 
 test("multiblock QA retains lists and quotes without swallowing the next prompt", () => {
@@ -268,4 +288,43 @@ test("without Bear metadata the path, not content or filename, identifies the so
   expect<string>(after.identifier).toEqual("/elsewhere/Source.md");
   expect(before.url).toBeUndefined();
   expect(before.items).toEqual(after.items);
+});
+
+test("a Markdown badge survives the JSON boundary and targets an existing hash-imported task", () => {
+  const taskID = "AbCdEfGhIjKlMnOpQrStUv" as TaskID;
+  const original = interpret("# Source\n\nQ. Front\nA. Back");
+  const existing = {
+    spec: original.items[0].spec,
+    provenance: { identifier: original.identifier, title: original.title },
+    metadata: {
+      [INGEST_ITEM_IDENTIFIER_KEY]: original.items[0].identifier,
+    },
+    isDeleted: false,
+  };
+  const tasks = new Map([[taskID, existing]]);
+  const incoming = interpretMarkdownFiles([
+    {
+      name: "Source.md",
+      path: "/notes/Source.md",
+      content: `# Source\n\nQ. Revised front\nA. Revised back [☉](orbit://task/${taskID})`,
+    },
+  ]);
+  const serialized = JSON.parse(JSON.stringify(incoming));
+  expect(
+    createIngestibleValidator({ mutateWithDefaultValues: false }).validate(
+      serialized,
+    ),
+  ).toEqual({ isValid: true, errors: null });
+  expect(ingestSources(serialized.sources, tasks)).toMatchObject([
+    { kind: "updateTaskSpec", taskID, spec: incoming.sources[0].items[0].spec },
+    {
+      kind: "mergeTaskMetadata",
+      taskID,
+      metadata: { [INGEST_ITEM_IDENTIFIER_KEY]: taskID },
+    },
+  ]);
+  expect(existing.spec).toEqual(original.items[0].spec);
+  expect(existing.metadata[INGEST_ITEM_IDENTIFIER_KEY]).toBe(
+    original.items[0].identifier,
+  );
 });

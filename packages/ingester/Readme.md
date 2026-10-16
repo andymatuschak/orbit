@@ -6,11 +6,27 @@ network, or storage dependency. The caller supplies current task definitions
 and applies the resulting mutations through the shared repository.
 
 Each supplied source is a complete snapshot of that note. Missing items are
-deleted; omitted sources are left alone. The existing content-hash identity
-policy is unchanged: edited content creates a new task, while an unambiguous
-move between supplied sources preserves the task ID and review history.
-Deleted/re-added content creates a new task. Identical prompts in separate
-notes are kept separate rather than overwriting a global content-hash slot.
+deleted; omitted sources are left alone, except when a prompt explicitly names
+an existing TaskID to move it into a supplied source.
+
+Unstamped items retain their content-hash matching policy: edited content creates
+a new task, an unambiguous move between supplied sources preserves history, and
+deleted/re-added content creates a new task. Identical prompts in separate notes
+are separate tasks, not one global content-hash slot.
+
+An item can also supply `taskID`, binding it to that actual task across sources.
+The Markdown interpreter emits this from a trailing `[☉](orbit://task/ID)` badge
+and uses the same ID as the item's `identifier`. Existing tasks update their spec,
+provenance, and ingestion metadata in place without rewriting observations or
+creation time. Explicitly naming a deleted task restores it with its history; an
+unknown ID creates a new task with that ID. Importing stamped Markdown into an
+empty vault can therefore reuse task IDs without sharing documents or reviews.
+
+Duplicate task claims and incompatible component changes reject the mutation plan
+before application. This is not fuzzy matching or an alias registry: a badge with
+a different valid ID really requests a different task. First adoption should use
+the existing task's ID, not a freshly generated replacement. Once adopted, removing
+the badge deliberately returns that prompt to new/content-hash identity.
 
 ## Private command
 

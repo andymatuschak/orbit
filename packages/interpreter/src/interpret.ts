@@ -6,10 +6,12 @@ import {
 } from "@withorbit/core";
 import type {
   Ingestible,
+  IngestibleItem,
   IngestibleItemIdentifier,
+  IngestibleSource,
   IngestibleSourceIdentifier,
 } from "@withorbit/ingester";
-import type { BlockContent } from "mdast";
+import type { BlockContent, Link, Nodes } from "mdast";
 import { hashTaskSpec } from "./hashTaskSpec.js";
 import {
   findClozeBlocks,
@@ -20,8 +22,14 @@ import {
   stringifyMarkdown,
   walkMarkdown,
   withoutBacklinks,
+  type SourceRange,
 } from "./markdown.js";
 import { extractQAPrompts } from "./qa.js";
+import {
+  stripTaskBadge,
+  validateTaskBadges,
+  withoutTaskBadges,
+} from "./taskBadge.js";
 
 export type MarkdownFile = { name: string; path: string; content: string };
 
@@ -29,37 +37,87 @@ export type MarkdownFile = { name: string; path: string; content: string };
 export function interpretMarkdownFiles(
   files: readonly MarkdownFile[],
 ): Ingestible {
-  return {
-    sources: files.map((file) => {
-      const parsed = parseMarkdown(file.content);
-      const bearID = getBearID(parsed);
-      const root = withoutBacklinks(parsed);
-      const { prompts, remaining } = extractQAPrompts(root);
-      const specs: TaskSpec[] = [
-        // Keep the historical cloze-before-QA order for existing imports.
-        ...findClozeBlocks(remaining).map(compileCloze),
-        ...prompts.map(({ question, answer }): TaskSpec => ({
+  return { sources: files.map((file) => analyzeMarkdownFile(file).source) };
+}
+
+/** Shared interpretation and untouched source spans for source-preserving edits. */
+export function analyzeMarkdownFile(file: MarkdownFile): {
+  source: IngestibleSource;
+  prompts: {
+    item: IngestibleItem;
+    range: SourceRange;
+    separateParagraph: boolean;
+  }[];
+} {
+  const parsed = parseMarkdown(file.content);
+  const bearID = getBearID(parsed);
+  const root = withoutBacklinks(parsed);
+  const { prompts, remaining } = extractQAPrompts(root);
+  const acceptedBadges: Link[] = [];
+  function item(
+    spec: TaskSpec,
+    marker: ReturnType<typeof stripTaskBadge>,
+    range: SourceRange,
+    separateParagraph = false,
+  ) {
+    if (marker.badge) acceptedBadges.push(marker.badge);
+    return {
+      range,
+      separateParagraph,
+      item: {
+        identifier: (marker.taskID ??
+          hashTaskSpec(spec)) as IngestibleItemIdentifier,
+        ...(marker.taskID ? { taskID: marker.taskID } : {}),
+        spec,
+      },
+    };
+  }
+  const located = [
+    // Keep the historical cloze-before-QA order for existing imports.
+    ...findClozeBlocks(remaining).map((block) => {
+      const marker = stripTaskBadge([block]);
+      return item(
+        compileCloze(marker.nodes[0] as BlockContent),
+        marker,
+        sourceRange(block),
+      );
+    }),
+    ...prompts.map(({ question, answer, range }) => {
+      const marker = stripTaskBadge(answer);
+      return item(
+        {
           type: TaskSpecType.Memory,
           content: {
             type: TaskContentType.QA,
             body: { text: stringifyMarkdown(question), attachments: [] },
-            answer: { text: stringifyMarkdown(answer), attachments: [] },
+            answer: {
+              text: stringifyMarkdown(marker.nodes),
+              attachments: [],
+            },
           },
-        })),
-      ];
-      return {
-        identifier: (bearID ?? file.path) as IngestibleSourceIdentifier,
-        title: getNoteTitle(root) ?? file.name,
-        url: bearID
-          ? `bear://x-callback-url/open-note?id=${bearID}`
-          : undefined,
-        items: specs.map((spec) => ({
-          identifier: hashTaskSpec(spec) as IngestibleItemIdentifier,
-          spec,
-        })),
-      };
+        },
+        marker,
+        range,
+        !endsInInlineContent(answer[answer.length - 1]),
+      );
     }),
+  ];
+  validateTaskBadges(root, acceptedBadges, parsed);
+  return {
+    prompts: located,
+    source: {
+      identifier: (bearID ?? file.path) as IngestibleSourceIdentifier,
+      title: getNoteTitle(withoutTaskBadges(root, acceptedBadges)) ?? file.name,
+      url: bearID ? `bear://x-callback-url/open-note?id=${bearID}` : undefined,
+      items: located.map(({ item }) => item),
+    },
   };
+}
+
+function endsInInlineContent(node: Nodes): boolean {
+  if (node.type === "paragraph" || node.type === "heading") return true;
+  if (!("children" in node) || !node.children.length) return false;
+  return endsInInlineContent(node.children[node.children.length - 1]);
 }
 
 function compileCloze(block: BlockContent): TaskSpec {

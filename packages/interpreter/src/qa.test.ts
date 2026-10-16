@@ -45,6 +45,26 @@ const fixtures: [string, string, [string, string][]][] = [
     [["Question", "First\n\nSecond"]],
   ],
   [
+    "BearID export metadata terminates a multiblock answer",
+    "Q. Question\nA.\nFirst\n\nSecond\n\n<!-- {BearID:ABC-123} -->",
+    [["Question", "First\n\nSecond"]],
+  ],
+  [
+    "a multiblock question cannot span BearID export metadata",
+    "Q.\nQuestion\n\n<!-- {BearID:ABC-123} -->\n\nA. Answer",
+    [],
+  ],
+  [
+    "ordinary HTML comments remain answer content",
+    "Q. Question\nA.\nFirst\n\n<!-- explanation -->\n\nSecond",
+    [["Question", "First\n\n<!-- explanation -->\n\nSecond"]],
+  ],
+  [
+    "inline BearID-looking comments do not terminate an answer",
+    "Q. Question\nA.\nFirst <!-- {BearID:ABC-123} --> example.\n\nSecond",
+    [["Question", "First <!-- {BearID:ABC-123} --> example.\n\nSecond"]],
+  ],
+  [
     "multiblock question and answer",
     "Q.\nFirst\n\n![](test.png)\n\nA.\nSecond\n\nThird\n\n---\n\nOutside",
     [["First\n\n![](test.png)", "Second\n\nThird"]],
