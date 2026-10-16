@@ -1,66 +1,37 @@
-import { Ingestible } from "@withorbit/ingester";
-import fs from "fs";
-import path from "path";
-import { MarkdownInterpreter } from "../interpreters/index.js";
-import { InterpretableFile, Interpreter } from "../interpreter.js";
-import { CryptoBase64Hasher } from "../hasher/CryptoBase64Hasher.js";
+import { readdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { interpretMarkdownFiles } from "../interpret.js";
 
-async function run(
-  noteDirectory: string,
-  interpreter: Interpreter,
-): Promise<Ingestible> {
-  // read and parse each file in the directory
-  const fileNames = await listNoteFiles(noteDirectory);
-  const files = await Promise.all(
-    fileNames.map(async (fileName): Promise<InterpretableFile> => {
-      const filePath = path.join(noteDirectory, fileName);
-      const content = await readFile(filePath);
-      return {
-        name: fileName,
-        path: filePath,
-        content,
-      };
-    }),
-  );
-  return interpreter.interpret(files);
-}
-
-async function listNoteFiles(folderPath: string): Promise<string[]> {
-  const noteDirectoryEntries = await fs.promises.readdir(folderPath, {
-    withFileTypes: true,
-  });
-  return noteDirectoryEntries
-    .filter(
-      (entry) =>
-        entry.isFile() &&
-        !entry.name.startsWith(".") &&
-        entry.name.endsWith(".md"),
-    )
-    .map((entry) => entry.name);
-}
-
-async function readFile(path: string): Promise<string> {
-  const buffer = await fs.promises.readFile(path);
-  return buffer.toString("utf-8");
-}
-
-(async () => {
-  // ensure that the arguments are defined
+async function main(): Promise<void> {
   const noteDirectory = process.argv[2];
   const outJsonFilePath = process.argv[3];
   if (!noteDirectory || !outJsonFilePath) {
     console.error("Usage: bun run interpret /path/to/notes /path/to/json-file");
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
-  const interpreter = new MarkdownInterpreter(CryptoBase64Hasher);
-  const ingestible = await run(noteDirectory, interpreter);
-  await fs.promises.writeFile(outJsonFilePath, JSON.stringify(ingestible));
-})()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  });
+  const entries = await readdir(noteDirectory, { withFileTypes: true });
+  const files = await Promise.all(
+    entries
+      .filter(
+        (entry) =>
+          entry.isFile() &&
+          !entry.name.startsWith(".") &&
+          entry.name.endsWith(".md"),
+      )
+      .map(async ({ name }) => {
+        const path = join(noteDirectory, name);
+        return { name, path, content: await readFile(path, "utf8") };
+      }),
+  );
+  await writeFile(
+    outJsonFilePath,
+    JSON.stringify(interpretMarkdownFiles(files)),
+  );
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

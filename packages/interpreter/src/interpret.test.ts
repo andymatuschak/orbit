@@ -1,17 +1,14 @@
 import { ClozeTaskContent } from "@withorbit/core";
 import { expect, it } from "bun:test";
-import { CryptoBase64Hasher } from "../../hasher/CryptoBase64Hasher.js";
-import { InterpretableFile } from "../../interpreter.js";
-import { MarkdownInterpreter } from "./MarkdownInterpreter.js";
+import { interpretMarkdownFiles, type MarkdownFile } from "./interpret.js";
 
 async function ingestFromString(content: string) {
-  const file: InterpretableFile = {
+  const file: MarkdownFile = {
     name: "Hello World.md",
     path: "/some/file/path/Hello World.md",
     content,
   };
-  const interpreter = new MarkdownInterpreter(CryptoBase64Hasher);
-  return await interpreter.interpret([file]);
+  return interpretMarkdownFiles([file]);
 }
 
 it("interprets bear export file with mixed content", async () => {
