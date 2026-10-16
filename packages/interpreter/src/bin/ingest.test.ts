@@ -11,6 +11,12 @@ it("requires distinct explicit files before connecting to the vault", async () =
     );
 });
 
+it("rejects mixed directory and file inputs before connecting", async () => {
+  await expect(
+    runMarkdownIngest({ directory: "/unused", paths: ["/unused.md"] }),
+  ).rejects.toThrow("either a notes directory or explicit Markdown paths");
+});
+
 it("rejects symlinks and unsupported stamping layouts before importing", async () => {
   const directory = await mkdtemp(join(tmpdir(), "orbit-stamping-test-"));
   try {

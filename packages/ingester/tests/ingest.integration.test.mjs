@@ -746,6 +746,116 @@ for (const failure of [
   });
 }
 
+test("directory ingestion imports all notes but stamps only selected Bear sources", async () => {
+  const fixture = await startFixture();
+  const directory = path.dirname(fixture.configurationPath);
+  const notes = path.join(directory, "notes");
+  await fs.mkdir(notes);
+  const selectedID = "C4B1329B-741C-42D4-A04D-CA36EC3F3B0B";
+  const untouchedID = "3B7765AD-6FB2-4E3A-A9F1-670A695BDA83";
+  const selectedFile = path.join(notes, "Selected.md");
+  const untouchedFile = path.join(notes, "Untouched.md");
+  const selected = `# Selected note\n\nQ. Which note gets a badge?\nA. This one.\n\n<!-- {BearID:${selectedID}} -->\n`;
+  const untouched = `# Untouched note\n\nQ. Which note is imported without writeback?\nA. This other one.\n\n<!-- {BearID:${untouchedID}} -->\n`;
+  await fs.writeFile(selectedFile, selected);
+  await fs.writeFile(untouchedFile, untouched);
+  const invalid =
+    "Q. This file must not be parsed.\nA. Invalid badge [☉](orbit://task/not-valid)\n";
+  const nested = path.join(notes, "nested");
+  await fs.mkdir(nested);
+  const ignoredFiles = [
+    path.join(notes, ".Hidden.md"),
+    path.join(notes, "Other.txt"),
+    path.join(nested, "Nested.md"),
+    path.join(directory, "Outside.md"),
+  ];
+  await Promise.all(ignoredFiles.map((file) => fs.writeFile(file, invalid)));
+  await fs.symlink(ignoredFiles[3], path.join(notes, "Linked.md"));
+
+  const network = new AuthenticatedWebSocketNetworkAdapter(
+    `ws://127.0.0.1:${fixture.service.configuration.port}/v1/sync`,
+    async () => ({
+      kind: "pairedToken",
+      token: fixture.service.configuration.pairingToken,
+    }),
+  );
+  const observerRepo = new Repo({ network: [network] });
+  await network.whenReady();
+  const observer = await PerTaskRepository.open(
+    new RepoPerTaskDocuments(observerRepo),
+    fixture.rootURL,
+  );
+  try {
+    const input = {
+      directory: notes,
+      stampSourceIdentifiers: [selectedID],
+      configurationPath: fixture.configurationPath,
+    };
+    const imported = await runMarkdownIngest(input);
+    assert.deepEqual(imported.counts, { ingestTask: 2 });
+    assert.equal(imported.assignments.length, 2);
+    assert.equal(imported.stampedFileCount, 1);
+    const assigned = new Map(
+      imported.assignments.map(({ sourceIdentifier, taskID }) => [
+        sourceIdentifier,
+        taskID,
+      ]),
+    );
+    assert.match(assigned.get(selectedID), /^[A-Za-z0-9_-]{22}$/);
+    assert.match(assigned.get(untouchedID), /^[A-Za-z0-9_-]{22}$/);
+    assert.notEqual(assigned.get(selectedID), assigned.get(untouchedID));
+    const stamped = selected.replace(
+      "A. This one.",
+      `A. This one. [☉](orbit://task/${assigned.get(selectedID)})`,
+    );
+    assert.equal(await fs.readFile(selectedFile, "utf8"), stamped);
+    assert.equal(await fs.readFile(untouchedFile, "utf8"), untouched);
+
+    const deadline = Date.now() + 5000;
+    for (;;) {
+      const logical = await observer.readLogicalVault();
+      if (Object.keys(logical.tasks).length === 3) {
+        assert.equal(
+          logical.tasks[assigned.get(selectedID)].spec.content.answer.text,
+          "This one.",
+        );
+        assert.equal(
+          logical.tasks[assigned.get(untouchedID)].spec.content.answer.text,
+          "This other one.",
+        );
+        break;
+      }
+      if (Date.now() > deadline)
+        assert.fail("Independent peer did not receive both source notes");
+      await delay(20);
+    }
+    // The scheduled workflow reconciles returned badges without another write.
+    const reconcile = { ...input, stampSourceIdentifiers: [] };
+    const adoption = await runMarkdownIngest(reconcile);
+    assert.deepEqual(adoption.counts, { mergeTaskMetadata: 1 });
+    assert.equal(adoption.stampedFileCount, 0);
+    const repeat = await runMarkdownIngest(reconcile);
+    assert.equal(repeat.mutationCount, 0);
+    assert.equal(repeat.stampedFileCount, 0);
+    assert.deepEqual(
+      new Map(
+        repeat.assignments.map(({ sourceIdentifier, taskID }) => [
+          sourceIdentifier,
+          taskID,
+        ]),
+      ),
+      assigned,
+    );
+    assert.equal(await fs.readFile(selectedFile, "utf8"), stamped);
+    assert.equal(await fs.readFile(untouchedFile, "utf8"), untouched);
+    for (const file of ignoredFiles)
+      assert.equal(await fs.readFile(file, "utf8"), invalid);
+  } finally {
+    await observer.close();
+    await observerRepo.shutdown();
+  }
+});
+
 test("CLI input and authentication failures exit nonzero without leaking the pairing token", async () => {
   const fixture = await startFixture();
   const directory = path.dirname(fixture.configurationPath);

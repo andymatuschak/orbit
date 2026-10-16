@@ -101,8 +101,15 @@ bun run lab:ingest-markdown /path/to/note.md
 
 Multiple explicit `.md` paths can be supplied together. The command uses the same
 private configuration as `lab:ingest` (`--config`, `ORBIT_LAB_CONFIG`, or the
-default Lab configuration). It does not scan a directory or enable writeback in
-the scheduled notes workflow.
+default Lab configuration). Alternatively, `--directory <notes-dir>` reads the
+same immediate, visible, regular `.md` files as the original interpreter CLI;
+it ignores nested files and symlinks. Do not combine it with explicit paths.
+
+By default, every supplied note can receive badges. Repeat
+`--stamp-source <source-id>` to restrict **writeback**, while still importing all
+notes. Bear notes use their exported BearID as the source ID. `--no-stamp` imports
+without source writes, including adoption of existing badges; it cannot be
+combined with `--stamp-source`.
 
 Ingestion returns the actual TaskID selected for each prompt, including unchanged
 hash-matched tasks. Only after successful sync does the command append each
@@ -122,6 +129,35 @@ unchanged imports are no-ops.
 For Bear notes, run the existing Bear/Markdown sync afterwards to bring the badge
 back into Bear with its concurrency checks. This command does not write to Bear
 directly or change that sync's ledger.
+
+### Scheduled Bear workflow
+
+The installed `/Users/andym/bin/syncNotes.sh` now orders its changed-note path as:
+
+1. Primary Bear export/sync, with `--failOnConflict`.
+2. Directory import/stamping, initially limited to the two proven private test
+   notes (`DBE5849D-4A24-433B-9E51-9F2741D5930D` and
+   `20F5AA41-7E75-4CA9-8DC3-8F289537095B`). Other notes are ingested as before,
+   without source writes; no bulk backfill is enabled.
+3. Primary sync again with `--failOnConflict`, returning the badges to Bear.
+4. A final `--no-stamp` directory import, adopting those badges and any new native
+   edits pulled by the return sync, without starting another writeback cycle.
+5. Existing reMarkable reconciliation, web export, janitor, and site publication.
+
+This replaces the old intermediate JSON file and late import; it shares the
+existing whole-workflow dispatch lock and pending-publication retry receipt.
+Unchanged runs still reconcile reMarkable and skip import/publication. An import
+or badge-return failure stops publication; the dispatcher retries the complete
+workflow, even if the primary ledger already advanced.
+
+Bear sync's normal conflict-copy behavior would duplicate TaskIDs. The opt-in
+`--failOnConflict` mode instead stops before export/state advancement, preserving
+the native edit and local stamped file for explicit reconciliation. Both syncs
+must use it, including the next retry's initial sync. A real conflict remains
+blocked until reconciled: preserve the IDs, merge the native edit with only the
+intended badge insertions, then retry. Do not blindly delete the local file or
+enable default conflict copies to get past the error. Native overwrite also
+checks Bear's current content hash; a stale write is rejected even with `--force`.
 
 ## Validation
 

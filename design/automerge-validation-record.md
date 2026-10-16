@@ -1073,3 +1073,50 @@ the final cold importer run made zero mutations and zero source writes. The
 private note remains open for inspection, with proof at
 `/private/tmp/orbit-stamping-multiline.GsDjwq/proof.json`. Scheduled ingestion and
 unrelated notes were not changed.
+
+### Writeback safety and scoped workflow integration
+
+The milestone is committed as `ebad56fb` (stable identities/in-place updates)
+and `0109b53e` (source-preserving stamping). Additional real-Repo tests cover an
+unwritable source directory and an edit made during import: the accepted task
+remains retryable with the same document, source edits are preserved, and retry
+produces exactly one badge. Directory ingestion also proves all notes are
+imported while writeback is restricted to selected BearIDs. Final checks pass:
+lint/build, 476 unit tests (one existing skip), and 32 integration tests.
+
+Real Bear 3.0.1 reproduces the default conflict-copy hazard: concurrent native
+and stamped-local edits create another note with the same badge. The opt-in
+`--failOnConflict` safeguard in `bearcli-markdown-sync` commit `93320d4` instead
+preserves native/local/ledger bytes across repeated failures, then accepts
+explicit reconciliation and becomes a no-op. Actual stale `overwrite --base`
+is rejected even with `--force`. All four disposable conflict-test notes were
+moved to Bear's Trash; none was imported into Lab. Proof:
+`/private/tmp/orbit-bear-native-conflict-F1fcC8/proof.json`. External checks pass:
+141 tests, two existing environment-gated skips, and typecheck.
+
+The installed `/Users/andym/bin/syncNotes.sh` now replaces the intermediate JSON
+and late import with primary sync → selected stamping → strict badge return →
+read-only reconciliation, before existing downstream publication. Both primary
+syncs use the strict mode, under the existing dispatch lock/receipt. Initial
+writeback is limited to the two private test BearIDs above; ordinary ingestion
+still includes all notes. Bulk backfill remains disabled. Seventeen isolated
+shell cases and a real-dispatcher retry proof pass; no actual website or
+reMarkable publication was invoked for these tests. Proof artifacts:
+`/private/tmp/orbit-wrapper-proof.tsmej0/`.
+
+A final isolated-tag native round trip appended one QA to the multiparagraph
+test note, created only task `iTRcbeQxSyuzdyyJ-wEpjA`, returned its actual badge
+to Bear, and adopted that metadata without more source writes. A subsequent
+preview planned zero mutations and the repeated Bear sync changed nothing.
+Persisted task count increased exactly once (10,890 → 10,891); the original task,
+document URL, observation, and FSRS states remained identical. This QA/task
+remain inspectable. Proof:
+`/private/tmp/orbit-live-stamping-integration-8yasam/proof.json`.
+
+Installation held the dispatch lock and preserved the preceding executable at
+`/private/tmp/orbit-syncNotes-before-stamping-20261016.sh`; installed script SHA-256
+is `5a9e1e614a3373e36a5c073ebabfefb5a36e89149b6a0d09b608f9a9d6b1d712`.
+This is not automatic conflict resolution, a multi-note transaction, or a
+cross-process CAS on Markdown files. Ambiguous conflicts require explicit
+reconciliation; a narrow final file-check/rename race remains for noncooperating
+external file editors. No app release or cloud/public-service deployment occurred.
