@@ -8,6 +8,114 @@ Public Firebase remains unchanged; the separate dogfood serving stack was
 retired only after the private cutover proofs below. Start with
 [the review guide](automerge-review-guide.md) for the current reading path.
 
+## 2026-10-16: native merge panic after applying the checkpoint
+
+Chonk crashed after activating the maintained checkpoint. Its matching build-13
+crash report and a console-attached cold launch identify the original failure:
+Rust Automerge **0.7.2** panics in `op_set2/change/batch.rs:817` with
+`PatchLogMismatch`. That poisons the document lock; the next
+`generateSyncMessage` hits `PoisonError`, and UniFFI's generated Swift `try!`
+terminates the app. This is not a JavaScript rendering exception, timeout,
+WebSocket size limit, or memory-pressure termination.
+
+The cause matches [upstream issue 1390](https://github.com/automerge/automerge/issues/1390)
+and [its merged fix](https://github.com/automerge/automerge/pull/1400): a new actor
+makes a same-value/no-op write, leaving the patch log's actor bookkeeping
+inconsistent; an incoming merge then exposes the mismatch. The native Swift
+release still links the old Rust binary even though JavaScript uses a newer
+engine. No-op writes are legitimate, so the fix belongs in Automerge, not an
+Orbit-specific retry, data rewrite, or alternate merge policy.
+
+Copied Chonk's selected **161-document**, 10.4 MB Repo read-only into a separate
+diagnostic folder. All documents load and ordinary native synchronization passes.
+Adding the no-op write before the copied server's JavaScript sync exchange
+reproduces the exact panic in **7/8** root/catalog cases (actor-order-dependent).
+The **same eight cases all pass** with Rust **0.12.0** and unchanged Swift 0.7.2
+bindings. A synthetic fixed-actor document also reproduces the old panic and
+converges with the new engine; no private vault is needed for the regression.
+The prior clean Simulator fixtures did not exercise this sequence.
+
+The native preparation keeps Repo Swift 0.3.2 and Swift 0.7.2 APIs, applies only
+the four Rust-file changes from the merged
+[Swift core update](https://github.com/automerge/automerge-swift/pull/243), and
+builds its XCFramework. Explicit local Swift packages avoid replacing SwiftPM's
+downloaded/signed artifacts. Remove this build preparation when a released
+upstream XCFramework includes the fix. Native build **14**, runtime
+`orbit-lab-native-4`, separates the corrected engine from cached runtime-3 code.
+Publication and physical activation must be verified separately below; no phone
+data has been cleared or replaced.
+
+### Expo 58 and the new native boundary
+
+The same native candidate upgrades Expo to **58.0.13**, React Native to
+**0.88.0**, and React to **19.3.0**, using Expo's matching native dependency
+matrix. Expo Modules JSI **58.0.14** contains the upstream Xcode 27.1 / Swift
+6.4 interface fixes. No local Expo compiler patch is needed. Expo 58's generated
+scene lifecycle and manifest replace our adapter and its tests/utilities,
+removing **167 lines** of workaround code.
+
+Source migration is limited to public React Native instance/style types,
+awaiting the now-asynchronous attachment `File.write`, accepting an unknown
+initial AppState until its real activation event, and explicitly retaining
+single-page web output. No vault/schema/scheduler change accompanies the SDK
+upgrade. Runtime **4** separates both native changes from runtime-3 checkpoints.
+
+Fresh workspace lint/build and **386 unit tests**, **26 integration tests**, and
+the existing one-test skip pass. The real browser gate passes pairing, review,
+offline reload/review, and reconnect convergence without public HTTP/socket
+calls. The fresh signed Release Simulator build succeeds. Its generated Pods
+and resolved package graph use exactly one local Repo Swift → local Swift →
+local XCFramework chain; all **20** prepared artifact hashes match, and the
+effective Rust dependency is **0.12.0**, not the released 0.7.2 binary.
+
+The actual Release Simulator gates also pass:
+
+- **14,000 tasks / 1,206,232-byte catalog**: native → JavaScript and JavaScript →
+  native reviews, visible offline PNG, offline review, cold reopening, and upload
+  of reviewed documents outside the first 50. Three saved reviews are independently
+  verified in both native files and server data.
+- **53-task personalized FSRS/mixed queue**: the same review, attachment,
+  durability, and convergence assertions pass using Andy's calibrated weights.
+- **53-task update gate**: two real runtime-4 Expo checkpoints each record a
+  successful launch and zero failures. Native/JS foreground offers appear
+  immediately, including over a revealed answer; Later suppression/manual
+  reoffer, unreachable-laptop behavior, and three saved reviews survive cold
+  reopening. Simulator installer handoff is not physical OTA-install proof.
+- **Home Screen widget**: actual Reveal → answer → Remembered interactions twice
+  advance to the third prompt. The ordinary coordinated JSON contains both
+  pending reviews. This proves the widget/handoff boundary, not their delivery
+  to the live server.
+
+Archived and exported native **14** with the normal private **443** origin,
+runtime **4**, unchanged app/widget identities and App Group. The publication
+checks both app and extension ad-hoc profiles, expiry, and Chonk registration.
+Private HTTPS discovery, manifest, full IPA SHA-256, HEAD, and byte-range delivery
+match the exported **17,603,103-byte** IPA. Its SHA-256 is
+`381b2e98a3db377c2e0ce5151aa6a2e82bb308f1bc670e88eaa2ea6bc089aa39`.
+Previous release URLs remain available. No new live JavaScript checkpoint or
+backend restart was needed; build 14 contains the tested code and cannot select
+cached runtime-3 checkpoints.
+
+Installed that exact exported ad-hoc app over Orbit on Chonk without uninstalling
+or clearing data. CoreDevice confirms installed version **14**. Its initial and
+console-attached cold launches stay alive without `PatchLogMismatch` or the
+poisoned-lock crash; the same process remains running after detaching the host
+console. Independently decoded a private, read-only copy of all **161 cached
+documents**: every document's heads match the laptop's persisted counterpart,
+with **zero** missing documents, mismatches, or diagnostic server writes. No
+physical-device review was manufactured for this check. Direct device installation
+and successful launch are proven; this does not add another physical
+`itms-services` installation proof or visual widget confirmation on Chonk.
+
+Private receipts: `/private/tmp/orbit-sdk58-{checkall-final,web-smoke}-20261016.log`,
+`/private/tmp/orbit-sdk58-native14-{review,fsrs,update,widget}-smoke-20261016.log`,
+`/private/tmp/orbit-sdk58-native14-publication-proof-20261016.json`, and
+`/private/tmp/orbit-native14-chonk-convergence-proof-20261016.json`. Simulator
+receipts are retained in `orbit-lab-review-gate.F06Ljd` (large catalog),
+`.6HwWvr` (FSRS), and `.8Yr73j` (updates) under the macOS temporary directory.
+The temporary update route and test selection were restored; private health and
+readiness still pass. Public Firebase and the live Lab vault were not replaced.
+
 ## 2026-10-16: commit and publish the maintained Lab
 
 The pending implementation is committed as a linear source narrative:
