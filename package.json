@@ -11,6 +11,7 @@
     "checkall": "bun run lint && bun run build && bun run test",
     "lab:checkpoint": "bun packages/app/scripts/lab_checkpoint.ts",
     "lab:server": "node packages/automerge-sync-server/dist/index.js",
+    "lab:service": "bun packages/automerge-sync-server/scripts/labService.ts",
     "lab:dev": "bash packages/app/scripts/lab_dev.sh",
     "lab:ingest": "bun packages/ingester/src/bin/run.ts",
     "lab:install": "bash packages/app/scripts/lab_install.sh",

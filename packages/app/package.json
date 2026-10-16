@@ -4,12 +4,10 @@
   "main": "./src/index.js",
   "scripts": {
     "start": "expo start",
-    "ios": "expo run:ios",
     "ios:review-smoke": "scripts/run_ios_review_smoke.sh",
     "ios:native-update-smoke": "node scripts/run_native_update_smoke.mjs",
     "ios:widget-layout-smoke": "scripts/run_widget_layout_smoke.sh",
     "ios:widget-link-smoke": "scripts/run_widget_link_smoke.sh",
-    "ios:release": "expo run:ios --scheme Orbit --configuration Release --no-bundler",
     "web": "expo start --web -p 19006",
     "test": "bun test src expoPlugin",
     "test:widget-projection-reader": "scripts/test_widget_projection_reader.sh",

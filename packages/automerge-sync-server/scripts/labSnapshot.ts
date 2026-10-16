@@ -59,7 +59,7 @@ async function copyPrivateVault(
     recursive: true,
     force: false,
     errorOnExist: true,
-    filter: (filename) => path.basename(filename) !== ".writer-pid",
+    filter: (filename) => path.basename(filename) !== ".writer-lock",
   });
   // Write configuration last: incomplete copies have no usable configuration to publish.
   const configurationPath = path.join(destination, "config.json");

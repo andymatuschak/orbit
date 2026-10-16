@@ -1,6 +1,7 @@
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import type { HostedSyncAdmissionAcceptedFrame } from "@withorbit/api";
+import { automergeSyncMaximumMessageBytes } from "@withorbit/api";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { bearerToken, pairedTokenMatches } from "../auth/pairing.js";
 
@@ -8,7 +9,7 @@ import { bearerToken, pairedTokenMatches } from "../auth/pairing.js";
 export class AuthenticatedWebSocketRouter {
   readonly socketServer = new WebSocketServer({
     noServer: true,
-    maxPayload: 2 * 1024 * 1024,
+    maxPayload: automergeSyncMaximumMessageBytes,
     perMessageDeflate: false,
   });
   private accepted = 0;

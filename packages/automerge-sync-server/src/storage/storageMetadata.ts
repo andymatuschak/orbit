@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { spawnSync } from "node:child_process";
+import { constants } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type {
@@ -40,37 +42,35 @@ export async function storageTreeStatistics(
   );
 }
 
-/** Refuse overlapping writers. After a crash, inspect the PID before explicitly removing the stale lock. */
+/** The kernel owns the lock, not the file's contents. Never unlink its inode. */
 export async function acquireWriterLock(
   storageRoot: string,
 ): Promise<() => Promise<void>> {
-  const filename = path.join(storageRoot, ".writer-pid");
-  let handle;
+  const handle = await fs.open(
+    path.join(storageRoot, ".writer-lock"),
+    constants.O_CREAT | constants.O_RDWR | constants.O_NOFOLLOW,
+    0o600,
+  );
   try {
-    handle = await fs.open(filename, "wx", 0o600);
+    // Descriptor 3 is a duplicate of our open file description. flock remains
+    // held by our descriptor after this short-lived utility exits, and the OS
+    // releases it even after SIGKILL. No helper process or stale-PID recovery.
+    const darwin = process.platform === "darwin";
+    if (!darwin && process.platform !== "linux")
+      throw new Error("Orbit Lab writer locking requires macOS or Linux");
+    const result = spawnSync(
+      darwin ? "/usr/bin/lockf" : "/usr/bin/flock",
+      darwin ? ["-s", "-t", "0", "3"] : ["-n", "3"],
+      { stdio: ["ignore", "ignore", "pipe", handle.fd] },
+    );
+    if (result.error) throw result.error;
+    if (result.status === (darwin ? 75 : 1))
+      throw new Error("Orbit Lab storage is already open by another writer");
+    if (result.status !== 0)
+      throw new Error(`Could not lock Orbit Lab storage: ${result.stderr}`);
+    return () => handle.close();
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-    const pid = Number(await fs.readFile(filename, "utf8"));
-    if (!Number.isSafeInteger(pid) || pid < 1)
-      throw new Error(
-        "Orbit Lab writer lock is unreadable; inspect .writer-pid before reopening",
-      );
-    try {
-      process.kill(pid, 0);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
-      throw new Error(
-        "Orbit Lab has a stale writer lock; confirm its PID is stopped, then remove .writer-pid explicitly",
-      );
-    }
-    throw new Error("Orbit Lab storage is already open by another writer");
-  }
-  try {
-    await handle.writeFile(String(process.pid));
-  } finally {
     await handle.close();
+    throw error;
   }
-  return async () => {
-    await fs.unlink(filename);
-  };
 }

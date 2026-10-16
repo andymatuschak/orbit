@@ -13,12 +13,36 @@ export async function startLabSyncProcess(configurationPath?: string) {
   );
   const address = await service.start();
   console.info(
-    JSON.stringify({ event: "orbit_lab_started", port: address.port }),
+    JSON.stringify({
+      event: "orbit_lab_started",
+      port: address.port,
+      pid: process.pid,
+      timestamp: new Date().toISOString(),
+    }),
   );
-  const stop = () =>
-    void service.shutdown().catch(() => {
-      process.exitCode = 1;
-    });
+  const stop = (signal: NodeJS.Signals) => {
+    console.info(
+      JSON.stringify({
+        event: "orbit_lab_stopping",
+        signal,
+        timestamp: new Date().toISOString(),
+      }),
+    );
+    void service
+      .shutdown()
+      .then(() => {
+        console.info(
+          JSON.stringify({
+            event: "orbit_lab_stopped",
+            timestamp: new Date().toISOString(),
+          }),
+        );
+      })
+      .catch((error) => {
+        console.error("Orbit Lab shutdown failed", error);
+        process.exitCode = 1;
+      });
+  };
   process.once("SIGINT", stop);
   process.once("SIGTERM", stop);
   return service;

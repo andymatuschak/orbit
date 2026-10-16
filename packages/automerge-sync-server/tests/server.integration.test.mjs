@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -153,6 +154,21 @@ test("native header admission immediately accepts an ordinary Repo join without 
   socket.close();
   await closed(socket);
 });
+
+test(
+  "Repo messages above the old 2 MiB server limit survive upload and download",
+  { timeout: 30000 },
+  async () => {
+    const fixture = await startFixture();
+    const writer = await openClient(fixture);
+    const reader = await openClient(fixture);
+    // Random bytes cannot compress below either former transport limit.
+    const payload = new Uint8Array(randomBytes(2 * 1024 * 1024 + 128 * 1024));
+    const created = writer.repo.create({ payload });
+    const received = await reader.repo.find(created.url);
+    assert.deepEqual(received.doc().payload, payload);
+  },
+);
 
 test("startup refuses missing root files and concurrent writers rather than creating an empty vault", async () => {
   const fixture = await startFixture();

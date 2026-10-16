@@ -62,6 +62,12 @@ export EXPO_PUBLIC_ORBIT_LAB_ORIGIN="$(node "$repository_directory/node_modules/
 # native pods locally. No EAS, Firebase upload, or public release is involved.
 node "$repository_directory/node_modules/expo/bin/cli" prebuild --platform ios --no-install
 pod install --project-directory="$app_directory/ios"
+# Resolve before applying the small, guarded upstream receive-limit patch. Both
+# commands use the same checkout/cache; no fork or replacement transport.
+xcodebuild -resolvePackageDependencies -workspace "$app_directory/ios/Orbit.xcworkspace" \
+  -scheme Orbit -derivedDataPath "$output/DerivedData"
+node "$app_directory/expoPlugin/patchRepoSwiftWebSocket.js" \
+  "$output/DerivedData/SourcePackages/checkouts/automerge-repo-swift"
 build_arguments=(
   -workspace "$app_directory/ios/Orbit.xcworkspace" -scheme Orbit
   -configuration Release -derivedDataPath "$output/DerivedData"
@@ -69,7 +75,9 @@ build_arguments=(
 )
 if [[ "$target" == "simulator" ]]; then
   xcrun simctl bootstatus "$udid" -b
-  xcodebuild "${build_arguments[@]}" CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=YES build
+  # Simulator App Groups still require entitlements. An unsigned app can pass
+  # review tests while silently lacking its widget handoff container.
+  xcodebuild "${build_arguments[@]}" CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- ONLY_ACTIVE_ARCH=YES build
   built_app="$output/DerivedData/Build/Products/Release-iphonesimulator/Orbit.app"
 else
   # Use the existing team, app identity and App Group. Register/profile changes

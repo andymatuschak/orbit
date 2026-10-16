@@ -1,5 +1,9 @@
 import type { AutomergeDocumentURL } from "@withorbit/core";
 
+// Repo messages can include a complete catalog or attachment. Keep a finite
+// budget, shared with the native URLSession dependency patch.
+export const automergeSyncMaximumMessageBytes = 16 * 1024 * 1024;
+
 export interface HostedSyncCredential {
   kind: "pairedToken";
   token: string;

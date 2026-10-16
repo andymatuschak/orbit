@@ -6,9 +6,11 @@ repository_directory="$(cd -- "$script_directory/../../.." && pwd)"
 app_directory="$repository_directory/packages/app"
 configuration_path="${ORBIT_LAB_CONFIG:-$HOME/Library/Application Support/Orbit Lab/config.json}"
 metro_port="${ORBIT_METRO_PORT:-8081}"
+client_only=false
+if [[ "${1:-}" == "--client-only" ]]; then client_only=true; shift; fi
 if [[ "$#" -gt 0 ]]; then
   if [[ "$#" -ne 2 || "$1" != "--config" ]]; then
-    echo "Usage: bash scripts/lab_dev.sh [--config <private-config>]" >&2
+    echo "Usage: bash scripts/lab_dev.sh [--client-only] [--config <private-config>]" >&2
     exit 64
   fi
   configuration_path="$2"
@@ -25,8 +27,12 @@ export EXPO_PUBLIC_ORBIT_LAB_ORIGIN="$(node "$repository_directory/node_modules/
 cd -- "$repository_directory"
 bun run build
 service_port="$(node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).port ?? 8787)' "$configuration_path")"
-if curl --silent --max-time 1 "http://127.0.0.1:$service_port/_health" >/dev/null; then
-  echo "Lab server port is already occupied; stop that process before starting development." >&2
+if [[ "$client_only" == true ]]; then
+  curl --fail --silent --max-time 2 "http://127.0.0.1:$service_port/_ready" >/dev/null || {
+    echo "Start the managed backend with bun run lab:service start first." >&2; exit 69;
+  }
+elif curl --silent --max-time 1 "http://127.0.0.1:$service_port/_health" >/dev/null; then
+  echo "Lab backend is already running. Use lab:dev --client-only, or lab:service stop for backend watch mode." >&2
   exit 69
 fi
 compiler_pid=""
@@ -50,9 +56,11 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 node node_modules/@typescript/native/bin/tsc -b -w packages/tsconfig.json &
 compiler_pid="$!"
-node --watch --watch-preserve-output --watch-kill-signal SIGTERM \
-  packages/automerge-sync-server/dist/index.js --config "$configuration_path" &
-backend_pid="$!"
+if [[ "$client_only" == false ]]; then
+  node --watch --watch-preserve-output --watch-kill-signal SIGTERM \
+    packages/automerge-sync-server/dist/index.js --config "$configuration_path" &
+  backend_pid="$!"
+fi
 ready=false
 for ((attempt = 0; attempt < 20; attempt++)); do
   if curl --fail --silent --max-time 1 "http://127.0.0.1:$service_port/_ready" >/dev/null; then

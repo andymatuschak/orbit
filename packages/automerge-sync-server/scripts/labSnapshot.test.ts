@@ -28,6 +28,9 @@ test("quiesced snapshot/restore preserves the vault, rewrites local paths and ke
     configurationPath: source.configurationPath,
     destination,
   });
+  await expect(
+    fs.stat(path.join(backup.storageRoot, ".writer-lock")),
+  ).rejects.toThrow("ENOENT");
   const restored = await restoreLab({
     snapshot: destination,
     destination: path.join(await directory(), "restored"),
@@ -44,14 +47,13 @@ test("quiesced snapshot/restore preserves the vault, rewrites local paths and ke
     rootDocumentURL: source.rootDocumentURL,
   });
   expect(vault.vault.vaultID).toBe("snapshot-fixture" as VaultID);
-  for (const root of [
-    source.storageRoot,
-    backup.storageRoot,
-    restored.storageRoot,
-  ])
-    await expect(fs.stat(path.join(root, ".writer-pid"))).rejects.toThrow(
-      "ENOENT",
-    );
+  await expect(
+    fs.stat(path.join(restored.storageRoot, ".writer-lock")),
+  ).rejects.toThrow("ENOENT");
+  for (const root of [source.storageRoot, backup.storageRoot]) {
+    const release = await acquireWriterLock(root);
+    await release();
+  }
   expect((await fs.stat(restored.configurationPath)).mode & 0o777).toBe(0o600);
   expect((await fs.stat(destination)).mode & 0o777).toBe(0o700);
   expect(JSON.stringify(restored)).not.toContain(source.token);

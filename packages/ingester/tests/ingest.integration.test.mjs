@@ -11,6 +11,7 @@ import { Repo, cbor, generateAutomergeUrl } from "@automerge/automerge-repo";
 import { WebSocketServer } from "ws";
 import {
   AtomicNodeFSStorageAdapter,
+  acquireWriterLock,
   LabSyncService,
 } from "@withorbit/automerge-sync-server";
 import { RepoPerTaskDocuments } from "@withorbit/store-automerge";
@@ -326,10 +327,10 @@ nodeTest(
       1,
     );
     assert.match(stderr, /timeout|timed out/i);
-    await assert.rejects(
-      fs.access(path.join(directory, "ingester-repo", ".writer-pid")),
-      { code: "ENOENT" },
+    const release = await acquireWriterLock(
+      path.join(directory, "ingester-repo"),
     );
+    await release();
     assert.equal(sockets.clients.size, 0);
   },
 );
