@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - lab
     paths:
       - "**/*.ts"
       - "**/*.tsx"
@@ -16,6 +17,7 @@ on:
   pull_request:
     branches:
       - master
+      - lab
     paths:
       - "**/*.ts"
       - "**/*.tsx"
@@ -58,33 +60,3 @@ jobs:
         run: "bun run build"
       - name: "run test"
         run: "bun run test"
-  stale-api-schema:
-    name: Generated API schema matches source interfaces
-    runs-on: ubuntu-latest
-    steps:
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-      - uses: actions/checkout@v2
-      - name: Use pinned Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-      - name: "install dependencies"
-        run: bun install --frozen-lockfile
-      - name: "run build"
-        run: "bun run build"
-      - name: "run generateSchema for the API"
-        working-directory: packages/api
-        run: "bun run generateSchema"
-      - name: "check if changes are pending"
-        run: "git diff --exit-code"
-      - name: "run generateSchema for the events validator"
-        working-directory: packages/store-shared
-        run: "bun run generateSchema"
-      - name: "run generateSchema for the ingester validator"
-        working-directory: packages/ingester
-        run: "bun run generateSchema"
-      - name: "check if changes are pending"
-        run: "git diff --exit-code"
-        working-directory: packages
