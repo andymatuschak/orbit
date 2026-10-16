@@ -106,7 +106,7 @@ export default function useAppUpdateMenuItem(canReload: () => boolean): {
     const subscription = AppState.addEventListener("change", (state) =>
       controller.setAppState(state),
     );
-    controller.setAppState(AppState.currentState);
+    controller.setAppState(AppState.currentState ?? null);
     return () => {
       mounted = false;
       subscription.remove();

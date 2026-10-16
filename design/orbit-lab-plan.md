@@ -95,10 +95,13 @@ runtime; data compatibility separately requires a snapshot before schema changes
 Use the supported commands in [the root readme](../Readme.md): `lab:service`,
 `lab:dev --client-only`, `lab:checkpoint`, `lab:install`, `lab:ingest`, and the
 offline seed/export/snapshot/restore tools. Backend watch mode requires stopping
-the managed writer first. Use `lab:install` for native builds so the guarded
-Repo Swift WebSocket receive-limit patch is applied. A JavaScript rollback is a
-new compatible checkpoint from older source, not a data restore or necessarily
-an older manifest pointer.
+the managed writer first. Use `lab:install` for native builds so the pinned
+upstream Rust merge fix and Repo Swift WebSocket receive-limit patch are applied.
+Remove the local Rust build when an official Swift XCFramework includes the fix;
+the client does not own an alternative merge/recovery protocol. Expo 58 now owns
+scene startup, so the former scene-lifecycle adapter is removed. A JavaScript
+rollback is a new compatible checkpoint from older source, not a data restore or
+necessarily an older manifest pointer.
 
 ## Validation and remaining follow-ups
 

@@ -42,7 +42,7 @@ export class AppUpdateController {
     return this.inFlight;
   }
 
-  setAppState(state: string): void {
+  setAppState(state: string | null): void {
     if (this.closed) return;
     const check =
       state === "active" && (!this.hasBeenActive || this.backgrounded);

@@ -70,6 +70,17 @@ function fixture() {
   };
 }
 
+test("an unknown initial app state waits for the first active event", async () => {
+  const f = fixture();
+  f.controller.setAppState(null);
+  f.controller.idle();
+  expect(f.counts().nativeChecks).toBe(0);
+  expect(f.shown).toEqual([]);
+  await f.activate();
+  expect(f.counts().nativeChecks).toBe(1);
+  expect(f.shown).toEqual([{ kind: "native", release }]);
+});
+
 test("foreground discovery offers a native update immediately without a review boundary", async () => {
   const f = fixture();
   await f.activate();

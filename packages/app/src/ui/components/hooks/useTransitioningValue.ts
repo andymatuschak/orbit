@@ -10,7 +10,7 @@ export type AnimatedTransitionTiming =
 type AnimatedTransitionConfig<T> = {
   value: T;
   timing: AnimatedTransitionTiming;
-  onEndCallback?: Animated.EndCallback;
+  onEndCallback?: Parameters<Animated.CompositeAnimation["start"]>[0];
 };
 
 export function useTransitioningValue({

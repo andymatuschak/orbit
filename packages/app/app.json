@@ -11,7 +11,7 @@
     "scheme": "com.withorbit.native",
     "ios": {
       "bundleIdentifier": "com.withorbit.native",
-      "buildNumber": "10",
+      "buildNumber": "14",
       "appleTeamId": "MQ22N839N8",
       "deploymentTarget": "26.0",
       "supportsTablet": true,
@@ -32,7 +32,8 @@
       "package": "com.withorbit.app"
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single"
     },
     "plugins": [
       [

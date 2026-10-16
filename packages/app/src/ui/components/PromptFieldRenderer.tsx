@@ -13,7 +13,6 @@ import {
   LayoutChangeEvent,
   Platform,
   StyleProp,
-  StyleSheet,
   Text,
   TextStyle,
   View,
@@ -51,10 +50,7 @@ const sizeVariants: SizeVariant[] = [
   { style: type.promptSmall.layoutStyle },
 ];
 
-function getMarkdownStyles(
-  sizeVariant: SizeVariant,
-  accentColor: ColorValue,
-): StyleSheet.NamedStyles<unknown> {
+function getMarkdownStyles(sizeVariant: SizeVariant, accentColor: ColorValue) {
   const paragraphStyle = sizeVariant.style;
   if (!paragraphStyle) {
     throw new Error("Unknown shrink factor");

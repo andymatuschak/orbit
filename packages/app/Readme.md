@@ -59,19 +59,36 @@ Simulator app can review successfully while lacking the shared widget App Group,
 so the Home Screen gate must use the signed local build too.
 
 Expo generates the native project. Keep changes in `modules`, `targets`, and
-`expoPlugin`, not generated `ios` output. The scene lifecycle adapter remains
-until Expo's released template provides equivalent wiring; its source records
-the upstream issue and removal conditions. Repo Swift's admission-order and
-remote-change notification workarounds remain covered by regressions.
+`expoPlugin`, not generated `ios` output. Expo 58's template now owns scene
+startup and the scene manifest; the former Orbit adapter is removed. Repo Swift's
+admission-order and remote-change notification workarounds remain covered by
+regressions.
 
-Use `lab:install` for native builds: after resolving Swift packages it applies a
-guarded one-line Repo Swift 0.3.2 patch, raising URLSession's default 1 MiB message
-limit to the server's finite 16 MiB budget. A real catalog exceeded the default,
-silently breaking server → phone sync while small reviews still uploaded. Remove
-`expoPlugin/patchRepoSwiftWebSocket.js` when upstream exposes this setting; it
-fails loudly if that source changes. The large-catalog Simulator gate below
-must still pass after removal. Manual Expo/Xcode builds do not apply this
-preflight; the old `ios`/`ios:release` shortcuts are removed for that reason.
+Use `lab:install` for native builds. It prepares local, pinned upstream Swift
+packages rather than modifying SwiftPM's downloaded artifacts. Swift 0.7.2's
+released XCFramework contains a Rust bug: a same-value write followed by a merge
+can panic with `PatchLogMismatch`, then crash on the poisoned lock. The prepared
+package keeps its Swift API/bindings and applies only the merged
+[upstream core update](https://github.com/automerge/automerge-swift/pull/243),
+building Rust Automerge 0.12.0. This reproduces and fixes Chonk's launch crash;
+see the [validation record](../../design/automerge-validation-record.md).
+
+The first native build needs Rust and downloads its iOS/arm64 Simulator targets
+and Cargo dependencies. Later builds reuse the verified private cache; ordinary
+JavaScript checkpoints do not build Rust. Remove `prepareAutomergeNative.js`
+and the local-package override when an official Swift XCFramework includes this
+fix. Package drift fails preparation rather than reverting to the old engine.
+Every `lab:install` runs the synthetic native no-op/merge/sync regression against
+that exact built library before compiling the app. The test uses fixed actors
+and checks matching document heads and values, without reading the Lab vault.
+
+Preparation also applies the guarded one-line Repo Swift 0.3.2 WebSocket patch,
+raising URLSession's default 1 MiB message limit to the server's finite 16 MiB
+budget. A real catalog exceeded the default, silently breaking server → phone
+sync while small reviews still uploaded. Remove `patchRepoSwiftWebSocket.js`
+when upstream exposes that setting. The large-catalog Simulator gate must still
+pass after removal. Manual Expo/Xcode builds do not run these preparations;
+the old `ios`/`ios:release` shortcuts are removed for that reason.
 
 ## Offline application code
 

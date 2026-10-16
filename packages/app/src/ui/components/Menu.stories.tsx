@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-webpack5";
 import React, { useRef, useState } from "react";
-import { View } from "react-native";
+import { View, type ViewInstance } from "react-native";
 import { colors } from "../styles/index.js";
 import { colorPaletteArgType } from "./__fixtures__/colorPaletteArgType.js";
 import Button from "./Button.jsx";
@@ -8,7 +8,7 @@ import { IconName } from "./IconShared.js";
 import { Menu, menuItemDividerSpec } from "./Menu.jsx";
 
 const MenuStory = ({ colorPalette }: { colorPalette: colors.ColorPalette }) => {
-  const buttonRef = useRef<View | null>(null);
+  const buttonRef = useRef<ViewInstance | null>(null);
   const [menuIsVisible, setMenuIsVisible] = useState(false);
   return (
     <div

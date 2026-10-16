@@ -3,6 +3,7 @@ import {
   Platform,
   StyleSheet,
   TextInput as RNTextInput,
+  TextInputInstance,
   TextInputProps as RNTextInputProps,
   TextStyle,
   StyleProp,
@@ -47,7 +48,9 @@ function useFocusState(initialState: boolean) {
   };
 }
 
-const TextInput = React.forwardRef<RNTextInput, TextInputProps>(
+const TextInput: React.ForwardRefExoticComponent<
+  React.PropsWithoutRef<TextInputProps> & React.RefAttributes<TextInputInstance>
+> = React.forwardRef<TextInputInstance, TextInputProps>(
   function TextInput(props: TextInputProps, ref) {
     const { colorPalette, ...rest } = props;
     const { isFocused, onFocus, onBlur } = useFocusState(!!props.autoFocus);

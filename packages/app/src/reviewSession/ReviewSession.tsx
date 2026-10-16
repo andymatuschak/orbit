@@ -25,7 +25,7 @@ import {
 } from "../ui/index.js";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Platform, Text, View } from "react-native";
+import { Platform, Text, View, type ViewInstance } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { LabConnection } from "../vault/labConnection.js";
 import {
@@ -234,7 +234,7 @@ function ReviewMenuButton({
   colorPalette: styles.colors.ColorPalette;
   items: MenuItemSpec[];
 }) {
-  const buttonRef = useRef<View | null>(null);
+  const buttonRef = useRef<ViewInstance | null>(null);
   const [menuIsVisible, setMenuIsVisible] = useState(false);
   return (
     <View ref={buttonRef}>

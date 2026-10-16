@@ -9,7 +9,6 @@ import {
 import React from "react";
 import {
   Animated,
-  FlexStyle,
   StyleProp,
   StyleSheet,
   Text,
@@ -121,7 +120,7 @@ function PromptContextLabel({
 }: {
   provenance: TaskProvenance | null;
   size: "regular" | "small";
-  style?: FlexStyle;
+  style?: ViewStyle;
   accentColor?: string;
 }) {
   const color = accentColor ?? colors.ink;

@@ -94,7 +94,7 @@ export async function openNativeHostedReviewDatabase(
         `${[...digest].map((byte) => byte.toString(16).padStart(2, "0")).join("")}.${extension}`,
       );
       file.create({ intermediates: true, overwrite: true });
-      file.write(Uint8Array.from(attachment.bytes));
+      await file.write(Uint8Array.from(attachment.bytes));
       return file.uri;
     },
     async releaseAttachmentURLs(urls) {

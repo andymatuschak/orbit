@@ -1,7 +1,6 @@
 import React from "react";
 import {
   Alert,
-  FlexStyle,
   Linking,
   Platform,
   Pressable,
@@ -11,6 +10,8 @@ import {
   Text,
   TextProps,
   View,
+  ViewInstance,
+  ViewStyle,
 } from "react-native";
 import { colors, layout, type } from "../styles/index.js";
 import Hoverable from "./Hoverable.js";
@@ -40,7 +41,7 @@ export type ButtonProps = ButtonContents &
     alignment?: "left" | "right";
     hitSlop?: PressableProps["hitSlop"];
 
-    style?: StyleProp<FlexStyle>;
+    style?: StyleProp<ViewStyle>;
 
     onPendingInteractionStateDidChange?: (
       pendingActivationState: ButtonPendingActivationState,
@@ -125,7 +126,7 @@ export function openURL(href: string | null) {
 }
 
 export default React.memo(function Button(props: ButtonProps) {
-  const ref = React.useRef<View | null>(null);
+  const ref = React.useRef<ViewInstance | null>(null);
   const href = "href" in props ? props.href : null;
   const title = "title" in props ? props.title : null;
   const onPress = "onPress" in props ? props.onPress : null;
