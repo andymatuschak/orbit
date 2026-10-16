@@ -58,16 +58,19 @@ bun run build
 bash "$script_directory/run_ios_release_preflight.sh"
 cd -- "$app_directory"
 export EXPO_PUBLIC_ORBIT_LAB_ORIGIN="$(node "$repository_directory/node_modules/expo/bin/cli" config --type public --json | node -e 'let text=""; process.stdin.on("data", b => text += b); process.stdin.on("end", () => console.log(new URL(JSON.parse(text).updates.url).origin));')"
+# Prepare the pinned upstream packages and corrected Rust engine explicitly.
+# Do not replace SwiftPM's downloaded/signed binary artifacts in DerivedData.
+export ORBIT_AUTOMERGE_REPO_PACKAGE="$(node "$app_directory/expoPlugin/prepareAutomergeNative.js")"
+swift_package="$(cd -- "$ORBIT_AUTOMERGE_REPO_PACKAGE/../automerge-swift" && pwd)"
+sh "$script_directory/automerge-sync-regression/run.sh" \
+  "$swift_package" "$swift_package/automergeFFI.xcframework"
 # Regenerate configuration without deleting the existing project, then resolve
 # native pods locally. No EAS, Firebase upload, or public release is involved.
 node "$repository_directory/node_modules/expo/bin/cli" prebuild --platform ios --no-install
 pod install --project-directory="$app_directory/ios"
-# Resolve before applying the small, guarded upstream receive-limit patch. Both
-# commands use the same checkout/cache; no fork or replacement transport.
+# The prepared local Repo package includes the guarded receive-limit patch.
 xcodebuild -resolvePackageDependencies -workspace "$app_directory/ios/Orbit.xcworkspace" \
   -scheme Orbit -derivedDataPath "$output/DerivedData"
-node "$app_directory/expoPlugin/patchRepoSwiftWebSocket.js" \
-  "$output/DerivedData/SourcePackages/checkouts/automerge-repo-swift"
 build_arguments=(
   -workspace "$app_directory/ios/Orbit.xcworkspace" -scheme Orbit
   -configuration Release -derivedDataPath "$output/DerivedData"

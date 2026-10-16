@@ -40,7 +40,7 @@ module.exports = ({ config }) => {
     // Bump this whenever Swift, native dependencies, or entitlements change.
     // Ordinary JavaScript checkpoints target the installed native runtime.
     runtimeVersion:
-      process.env.EXPO_UPDATES_RUNTIME_VERSION || "orbit-lab-native-3",
+      process.env.EXPO_UPDATES_RUNTIME_VERSION || "orbit-lab-native-4",
     updates: {
       url: `${origin.origin}/updates/manifest`,
       checkAutomatically: "ON_LOAD",

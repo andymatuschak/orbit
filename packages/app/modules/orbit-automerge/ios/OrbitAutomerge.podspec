@@ -17,12 +17,18 @@ Pod::Spec.new do |s|
     raise 'OrbitAutomerge requires React Native 0.75 or newer for spm_dependency'
   end
 
-  # AutomergeRepo publicly imports Automerge, so linking its package is enough
-  # for both modules. Adding automerge-swift separately makes Xcode archive the
-  # shared automergeFFI binary artifact twice.
+  # Use the prepared upstream packages, not Swift 0.7.2's older Rust binary.
+  # lab:install applies the merged upstream core fix and builds its XCFramework.
+  # Falling back to the released binary would reintroduce a native sync crash.
+  repo_package = ENV['ORBIT_AUTOMERGE_REPO_PACKAGE']
+  unless repo_package && File.file?(File.join(repo_package, 'Package.swift'))
+    raise 'Run bun run lab:install to prepare the pinned Automerge native packages'
+  end
+  # AutomergeRepo publicly imports Automerge; avoid a second top-level product
+  # which would archive the shared automergeFFI binary twice.
   spm_dependency(
     s,
-    url: 'https://github.com/automerge/automerge-repo-swift.git',
+    url: repo_package,
     requirement: { kind: 'exactVersion', version: '0.3.2' },
     products: ['AutomergeRepo']
   )
