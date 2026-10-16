@@ -18,12 +18,17 @@ import { RepoPerTaskDocuments } from "@withorbit/store-automerge";
 import { AuthenticatedWebSocketNetworkAdapter } from "@withorbit/store-automerge/authenticatedWebSocketNetworkAdapter";
 import { PerTaskRepository } from "@withorbit/store-shared/perTaskRepository";
 import {
+  defaultOrbitSchedulerPolicy,
   TaskContentType,
   TaskSpecType,
   TaskRepetitionOutcome,
 } from "@withorbit/core";
 import { runIngest } from "../dist/bin/run.js";
-import { runMarkdownIngest } from "../../interpreter/dist/bin/ingest.js";
+import {
+  prepareMarkdownStamps,
+  runMarkdownIngest,
+} from "../../interpreter/dist/bin/ingest.js";
+import { hashTaskSpec } from "../../interpreter/dist/hashTaskSpec.js";
 
 const directories = [];
 const services = [];
@@ -856,6 +861,156 @@ test("directory ingestion imports all notes but stamps only selected Bear source
   }
 });
 
+for (const rejectedSave of [false, true]) {
+  test(
+    rejectedSave
+      ? "rejected source saves leave no provisional tasks before a newer snapshot is accepted"
+      : "preparing badges reuses reviewed task IDs without applying vault changes",
+    async () => {
+      const oldTaskID = "AbCdEfGhIjKlMnOpQrStUv";
+      const oldSourceID = "3B7B67AA-557E-4229-88C7-FC3029B56AB3";
+      const newSourceID = "65144798-E0AC-41BE-A5FD-3DC0E11AEF8A";
+      const scheduler = {
+        kind: "fsrs",
+        version: 1,
+        modelVersion: 6,
+        weights: [
+          0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722,
+          0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425,
+          0.0912, 0.0658, 0.1542,
+        ],
+        requestedRetention: 0.9,
+        cutoverTimestampMillis: 0,
+        previousPolicy: defaultOrbitSchedulerPolicy,
+      };
+      const fixture = await startFixture(0, oldTaskID, {
+        scheduler,
+        itemIdentifier: hashTaskSpec(spec("Old")),
+        provenance: {
+          identifier: oldSourceID,
+          title: "Old note",
+          url: `bear://x-callback-url/open-note?id=${oldSourceID}`,
+        },
+      });
+      const notes = path.join(
+        path.dirname(fixture.configurationPath),
+        "source",
+      );
+      await fs.mkdir(notes);
+      const oldFile = path.join(notes, "Old.md");
+      const newFile = path.join(notes, "New.md");
+      const oldBadge = `[☉](orbit://task/${oldTaskID})`;
+      // The rejected-save case already has an accepted stable badge; the other
+      // case exercises first adoption by matching historical content metadata.
+      const oldSource = `# Old note\n\nQ. Old\nA. Answer${rejectedSave ? ` ${oldBadge}` : ""}\n\n<!-- {BearID:${oldSourceID}} -->\n`;
+      const newSource = `# New note\n\nQ. A new question?\nA. A new answer.\n\n<!-- {BearID:${newSourceID}} -->\n`;
+      await fs.writeFile(oldFile, oldSource);
+      await fs.writeFile(newFile, newSource);
+      const input = {
+        directory: notes,
+        configurationPath: fixture.configurationPath,
+      };
+      const before = await readFixture(fixture);
+      assert.ok(before.projected.get(oldTaskID).componentStates.main.fsrs);
+      assert.deepEqual(await prepareMarkdownStamps(input), {
+        stampedFileCount: rejectedSave ? 1 : 2,
+      });
+      const preparedOld = await fs.readFile(oldFile, "utf8");
+      assert.equal(
+        preparedOld,
+        rejectedSave
+          ? oldSource
+          : oldSource.replace("A. Answer", `A. Answer ${oldBadge}`),
+      );
+      const badgePattern = /\[☉\]\(orbit:\/\/task\/([A-Za-z0-9_-]{22})\)/;
+      const attemptedID = (await fs.readFile(newFile, "utf8")).match(
+        badgePattern,
+      )[1];
+      assert.notEqual(attemptedID, oldTaskID);
+      // A fresh independent peer cannot inherit a stale pre-prepare snapshot.
+      assert.deepEqual(await readFixture(fixture), before);
+
+      let acceptedID = attemptedID;
+      if (rejectedSave) {
+        // Model the native source rejecting this temporary export: nothing from
+        // that generated snapshot is accepted, including its provisional ID.
+        await fs.rm(notes, { recursive: true });
+        await fs.mkdir(notes);
+        await fs.writeFile(oldFile, oldSource);
+        await fs.writeFile(
+          newFile,
+          newSource.replace("A new question?", "A newer question?"),
+        );
+        assert.deepEqual(await prepareMarkdownStamps(input), {
+          stampedFileCount: 1,
+        });
+        acceptedID = (await fs.readFile(newFile, "utf8")).match(
+          badgePattern,
+        )[1];
+        assert.notEqual(acceptedID, attemptedID);
+        assert.equal(await fs.readFile(oldFile, "utf8"), oldSource);
+        assert.deepEqual(await readFixture(fixture), before);
+      }
+      assert.deepEqual(await prepareMarkdownStamps(input), {
+        stampedFileCount: 0,
+      });
+      const imported = await runMarkdownIngest({
+        ...input,
+        stampSourceIdentifiers: [],
+      });
+      assert.deepEqual(imported.counts, {
+        ingestTask: 1,
+        mergeTaskMetadata: 1,
+      });
+      assert.equal(imported.stampedFileCount, 0);
+      const accepted = await readFixture(fixture);
+      assert.deepEqual(
+        Object.keys(accepted.logical.tasks).sort(),
+        [oldTaskID, acceptedID].sort(),
+      );
+      if (rejectedSave)
+        assert.equal(accepted.logical.tasks[attemptedID], undefined);
+      assert.equal(
+        accepted.logical.tasks[acceptedID].spec.content.body.text,
+        rejectedSave ? "A newer question?" : "A new question?",
+      );
+      assert.equal(
+        accepted.logical.tasks[oldTaskID].metadata.ingestSourceIdentifier,
+        oldTaskID,
+      );
+      assert.deepEqual(
+        accepted.logical.tasks[oldTaskID].spec,
+        before.logical.tasks[oldTaskID].spec,
+      );
+      assert.equal(
+        accepted.logical.tasks[oldTaskID].createdAtTimestampMillis,
+        before.logical.tasks[oldTaskID].createdAtTimestampMillis,
+      );
+      assert.deepEqual(
+        accepted.logical.observations,
+        before.logical.observations,
+      );
+      assert.equal(
+        accepted.entries[oldTaskID].documentURL,
+        before.entries[oldTaskID].documentURL,
+      );
+      assert.deepEqual(
+        accepted.projected.get(oldTaskID).componentStates,
+        before.projected.get(oldTaskID).componentStates,
+      );
+      assert.deepEqual(await prepareMarkdownStamps(input), {
+        stampedFileCount: 0,
+      });
+      const repeat = await runMarkdownIngest({
+        ...input,
+        stampSourceIdentifiers: [],
+      });
+      assert.equal(repeat.mutationCount, 0);
+      assert.equal(repeat.stampedFileCount, 0);
+    },
+  );
+}
+
 test("CLI input and authentication failures exit nonzero without leaking the pairing token", async () => {
   const fixture = await startFixture();
   const directory = path.dirname(fixture.configurationPath);
@@ -982,14 +1137,25 @@ test("a multi-batch inventory can be released and reopened on a cold repeat", as
   }
 });
 
-async function startFixture(extraTaskCount = 0, taskID = "original-task") {
+async function startFixture(
+  extraTaskCount = 0,
+  taskID = "original-task",
+  seed = {},
+) {
   const directory = await temporaryDirectory();
   const storageRoot = path.join(directory, "server");
   const seedStorage = new AtomicNodeFSStorageAdapter(storageRoot);
   const seedRepo = new Repo({ storage: seedStorage, network: [] });
-  const vault = await PerTaskRepository.createEmpty(
+  const vault = await PerTaskRepository.create(
     new RepoPerTaskDocuments(seedRepo),
-    { vaultID: "ingest-fixture" },
+    {
+      vaultID: "ingest-fixture",
+      createdAtTimestampMillis: Date.now(),
+      scheduler: seed.scheduler ?? defaultOrbitSchedulerPolicy,
+      tasks: {},
+      observations: {},
+      attachments: {},
+    },
   );
   await vault.apply([
     {
@@ -999,8 +1165,13 @@ async function startFixture(extraTaskCount = 0, taskID = "original-task") {
         taskID,
         createdAtTimestampMillis: 0,
         spec: spec("Old"),
-        provenance: { identifier: "note", title: "Old note" },
-        metadata: { ingestSourceIdentifier: "old-content" },
+        provenance: seed.provenance ?? {
+          identifier: "note",
+          title: "Old note",
+        },
+        metadata: {
+          ingestSourceIdentifier: seed.itemIdentifier ?? "old-content",
+        },
       },
     },
     {
@@ -1052,6 +1223,35 @@ async function startFixture(extraTaskCount = 0, taskID = "original-task") {
     }),
   );
   return { service, configurationPath, storageRoot, rootURL };
+}
+
+async function readFixture(fixture) {
+  const network = new AuthenticatedWebSocketNetworkAdapter(
+    `ws://127.0.0.1:${fixture.service.configuration.port}/v1/sync`,
+    async () => ({
+      kind: "pairedToken",
+      token: fixture.service.configuration.pairingToken,
+    }),
+  );
+  const repo = new Repo({ network: [network] });
+  await network.whenReady();
+  const repository = await PerTaskRepository.open(
+    new RepoPerTaskDocuments(repo),
+    fixture.rootURL,
+  );
+  try {
+    const logical = await repository.readLogicalVault();
+    return {
+      logical,
+      entries: await repository.getCatalogEntries(),
+      projected: (
+        await repository.getTaskProjections(Object.keys(logical.tasks))
+      ).tasks,
+    };
+  } finally {
+    await repository.close();
+    await repo.shutdown();
+  }
 }
 
 async function temporaryDirectory() {

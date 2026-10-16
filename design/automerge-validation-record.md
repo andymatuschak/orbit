@@ -1120,3 +1120,59 @@ This is not automatic conflict resolution, a multi-note transaction, or a
 cross-process CAS on Markdown files. Ambiguous conflicts require explicit
 reconciliation; a narrow final file-check/rename race remains for noncooperating
 external file editors. No app release or cloud/public-service deployment occurred.
+
+### Disposable proposals and periodic scans replace generated-file conflicts
+
+The Bear integration above is replaced by prepare → conditional native save →
+ordinary import. `lab:prepare-stamps` works only on caller-supplied disposable
+Markdown: scan locally, plan assigned task IDs once if any badges are missing,
+and stamp without applying ingestion mutations. Already-stamped input completes
+without loading Lab configuration or opening Repo. Ordinary Repo reads/cache
+refresh during a nonempty plan are unchanged; this is not a new read-only Repo.
+
+The Bear tool's generic converter, commit `7b8d87e`, owns temporary exports and
+source-version checks. A native edit causes only that generated proposal to be
+discarded; it is never copied into canonical Markdown or turned into a conflict
+note. Ordinary sync then exports current Bear text. Real local human edits remain
+protected. Missing badges are the unfinished-work marker: the existing periodic
+workflow scans even after an unchanged export, with no new pending-note ledger,
+date cursor, cache, daemon, or changed-note-only dependency. The two-note pilot
+remains in place; unrelated notes are imported normally, not stamped in bulk.
+
+Gates pass: Orbit lint/build, 483 unit tests (one existing skip), 34 integrations;
+Bear tool 159 tests (two existing skips) and strict typecheck; 18 isolated wrapper
+cases, Bash syntax, and ShellCheck. Wrapper cases prove an unchanged export still
+scans but does not force import/publication, accepted stamps trigger import, and
+ordinary failure/force-publication behavior remains intact. Artifacts:
+`/private/tmp/orbit-disposable-wrapper.bHjNWS/`.
+
+On temporary copies of the frozen 4,882-note corpus, initial preparation stamped
+789 files in 22,586 ms, including task lookup and file writes. A second full scan
+took 3,218 ms and succeeded with a nonexistent Lab configuration, proving no vault
+access. Source notes/Bear were not changed and no ingestion mutations were applied.
+These timings exclude staging the initial fixture and actual native Bear saves.
+Report: `/private/tmp/orbit-disposable-stamp-benchmark-ArwxWe/result.json`.
+
+The live proof used only the established private multiparagraph test note. Actual
+selected-note quiet deferral passed. A deliberately intervening native edit won
+over a real prepared stamp (applied 0, deferred 1); the refreshed ordinary sync
+then reported 0, but a subsequent scan still retried and saved the fresh stamp.
+Only accepted task `4FJCtyS5Qo-PK-9qOi0Nxg` entered Lab; discarded planned task
+`a66_9buNTumykOQd8D-hGw` did not. Persisted task count increased exactly once
+(10,891 → 10,892), and the existing task/document/review/FSRS stayed identical.
+The fully stamped repeat used unavailable configuration and made no native writes.
+The QA/task remain for inspection. Report:
+`/private/tmp/orbit-native-transform-integration-Ne15oX/proof.json`.
+
+Installed wrapper SHA-256:
+`4a9f6dbb305a5dd5bc76364f255136b46814b544460ffdb494219b7e7bceaef4`.
+The old executable is preserved at
+`/private/tmp/orbit-syncNotes-before-disposable-stamps-20261016.sh`. Installation
+held the existing dispatch lock; no website/reMarkable publication was forced for
+validation and no app/cloud deployment was needed.
+
+An optional lock hardening prototype was removed after discovering that reMarkable
+tools also use the existing shared file-existence lock protocol. No third-project
+lock behavior was changed. Ordinary errors release it; its preexisting SIGKILL
+stale-file limitation remains a separate maintenance item. This does not affect
+ordinary editing deferrals, which exit successfully and need no retry record.

@@ -15,6 +15,7 @@
     "lab:dev": "bash packages/app/scripts/lab_dev.sh",
     "lab:ingest": "bun packages/ingester/src/bin/run.ts",
     "lab:ingest-markdown": "bun packages/interpreter/src/bin/ingest.ts",
+    "lab:prepare-stamps": "bun packages/interpreter/src/bin/ingest.ts --prepare-stamps",
     "lab:install": "bash packages/app/scripts/lab_install.sh",
     "lab:seed": "bun packages/automerge-sync-server/scripts/labSeed.ts seed",
     "lab:export": "bun packages/automerge-sync-server/scripts/labSeed.ts export",

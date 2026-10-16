@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from "node:util";
 import type { IngestionAssignment } from "@withorbit/ingester";
 import { analyzeMarkdownFile, type MarkdownFile } from "./interpret.js";
 
-/** Insert actual, accepted task identities without reformatting the source. */
+/** Insert supplied task identities without reformatting the source. */
 export function stampMarkdownFile(
   file: MarkdownFile,
   assignments: readonly IngestionAssignment[],

@@ -130,34 +130,56 @@ For Bear notes, run the existing Bear/Markdown sync afterwards to bring the badg
 back into Bear with its concurrency checks. This command does not write to Bear
 directly or change that sync's ledger.
 
-### Scheduled Bear workflow
+## Prepare disposable stamps
 
-The installed `/Users/andym/bin/syncNotes.sh` now orders its changed-note path as:
+```sh
+bun run lab:prepare-stamps --directory /path/to/temporary-markdown
+```
 
-1. Primary Bear export/sync, with `--failOnConflict`.
-2. Directory import/stamping, initially limited to the two proven private test
-   notes (`DBE5849D-4A24-433B-9E51-9F2741D5930D` and
-   `20F5AA41-7E75-4CA9-8DC3-8F289537095B`). Other notes are ingested as before,
-   without source writes; no bulk backfill is enabled.
-3. Primary sync again with `--failOnConflict`, returning the badges to Bear.
-4. A final `--no-stamp` directory import, adopting those badges and any new native
-   edits pulled by the return sync, without starting another writeback cycle.
-5. Existing reMarkable reconciliation, web export, janitor, and site publication.
+`prepareMarkdownStamps({directory, configurationPath?})` (or explicit `paths`)
+only modifies the supplied Markdown files. Use disposable copies when another
+system owns the source. This is not an import: it applies no ingestion mutations.
+The source owner decides whether to accept the prepared text, using its own
+freshness checks; it can discard an attempt and regenerate from newer text.
 
-This replaces the old intermediate JSON file and late import; it shares the
-existing whole-workflow dispatch lock and pending-publication retry receipt.
-Unchanged runs still reconcile reMarkable and skip import/publication. An import
-or badge-return failure stops publication; the dispatcher retries the complete
-workflow, even if the primary ledger already advanced.
+Preparation parses the files locally first. If no prompt lacks a badge, it returns
+`{"stampedFileCount":0}` without reading configuration or connecting to the vault.
+Otherwise it validates the insertion layouts, batches only the notes with missing
+badges into one dry-run ingestion plan, and stamps its assigned TaskIDs. This
+preserves existing content-hash matches without creating tasks prematurely. The
+plan may refresh the ordinary local Repo cache. Invalid badges or unsupported
+layouts fail before planning; a file changed during planning is not overwritten.
 
-Bear sync's normal conflict-copy behavior would duplicate TaskIDs. The opt-in
-`--failOnConflict` mode instead stops before export/state advancement, preserving
-the native edit and local stamped file for explicit reconciliation. Both syncs
-must use it, including the next retry's initial sync. A real conflict remains
-blocked until reconciled: preserve the IDs, merge the native edit with only the
-intended badge insertions, then retry. Do not blindly delete the local file or
-enable default conflict copies to get past the error. Native overwrite also
-checks Bear's current content hash; a stale write is rejected even with `--force`.
+After the source accepts the prepared text, use `lab:ingest-markdown --no-stamp`
+against the accepted export to import or update its tasks. Missing badges themselves
+identify unfinished preparation; Orbit keeps no deferred-note queue. The caller
+chooses scan timing and supplies the temporary files. Source-system synchronization,
+retry policy, and publication ordering remain outside Orbit.
+
+### Local Bear workflow
+
+The external `/Users/andym/bin/syncNotes.sh` first runs ordinary Bear sync, then
+asks the Bear tool's generic `transform.ts` command to run `lab:prepare-stamps`
+on disposable exports. The Bear tool saves each proposal only if its note still
+matches the version that was exported. Newer Bear text wins; rejected proposals
+are discarded rather than copied into the normal exported folder.
+
+The stamp scan runs even when that ordinary export reports no changes. The
+existing 15-minute scheduled workflow therefore finds missing stamps again,
+without a list of postponed notes. The pilot still selects only private notes
+`DBE5849D-4A24-433B-9E51-9F2741D5930D` and
+`20F5AA41-7E75-4CA9-8DC3-8F289537095B`; ordinary ingestion includes all notes.
+No bulk backfill is enabled. The Bear tool also postpones automatic changes to
+its selected note for 30 seconds after an edit; existing stamps are never replaced
+merely because a newly prepared attempt was discarded.
+
+After accepted native text is exported, the wrapper runs the ordinary
+`lab:ingest-markdown --no-stamp` import when anything changed (or publication is
+already pending). A quiet scan does not force vault access or website publication.
+Real conflicting human edits to both Bear and an exported file still use the
+ordinary sync's protective error; only generated temporary proposals are disposable.
+Neither Orbit's implementation nor the Bear converter depends on the other
+project: the outside wrapper supplies the command and the pilot selection.
 
 ## Validation
 

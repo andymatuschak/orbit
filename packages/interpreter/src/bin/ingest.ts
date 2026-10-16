@@ -3,18 +3,93 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { generateUniqueID, type TaskID } from "@withorbit/core";
+import type {
+  IngestibleSource,
+  IngestionAssignment,
+} from "@withorbit/ingester";
 import { runIngest } from "@withorbit/ingester/run";
-import { interpretMarkdownFiles } from "../interpret.js";
+import { interpretMarkdownFiles, type MarkdownFile } from "../interpret.js";
 import { stampMarkdownFile } from "../stampTaskBadges.js";
 
+type MarkdownInputs = { paths?: readonly string[]; directory?: string };
+type SourceFile = MarkdownFile & { mode: number };
+
 /** Import all supplied notes, optionally limiting source writeback by source ID. */
-export async function runMarkdownIngest(input: {
-  paths?: readonly string[];
-  directory?: string;
-  stampSourceIdentifiers?: readonly string[];
-  configurationPath?: string;
-  dryRun?: boolean;
-}) {
+export async function runMarkdownIngest(
+  input: MarkdownInputs & {
+    stampSourceIdentifiers?: readonly string[];
+    configurationPath?: string;
+    dryRun?: boolean;
+  },
+) {
+  const files = await readMarkdownFiles(input);
+  const ingestible = interpretMarkdownFiles(files);
+  const selectedSources = input.stampSourceIdentifiers
+    ? new Set(input.stampSourceIdentifiers)
+    : null;
+  const stampFiles = files.filter(
+    (_, index) =>
+      !selectedSources ||
+      selectedSources.has(ingestible.sources[index].identifier),
+  );
+  preflightStamps(stampFiles, ingestible.sources);
+
+  const result = await runIngest({
+    ingestible,
+    configurationPath: input.configurationPath,
+    dryRun: input.dryRun,
+  });
+  let stampedFileCount;
+  try {
+    stampedFileCount = await writeTaskBadges(
+      files,
+      stampFiles,
+      result.assignments,
+      input.dryRun,
+    );
+  } catch (error) {
+    if (input.dryRun) throw error;
+    throw new Error(
+      "The vault import synced, but source stamping did not finish; resolve the file error and retry",
+      { cause: error },
+    );
+  }
+  return { ...result, stampedFileCount };
+}
+
+/** Prepare disposable Markdown only; accepted source text is ingested later. */
+export async function prepareMarkdownStamps(
+  input: MarkdownInputs & {
+    configurationPath?: string;
+  },
+): Promise<{ stampedFileCount: number }> {
+  const files = await readMarkdownFiles(input, true);
+  const interpreted = interpretMarkdownFiles(files);
+  const sources = interpreted.sources.filter((source) =>
+    source.items.some((item) => !item.taskID),
+  );
+  if (!sources.length) return { stampedFileCount: 0 };
+  const selected = new Set(sources);
+  const pending = files.filter((_, index) =>
+    selected.has(interpreted.sources[index]),
+  );
+  preflightStamps(pending, sources);
+  // One ordinary importer plan preserves existing hash-matched identities.
+  // Its mutations are not applied; generated attempts may simply be discarded.
+  const plan = await runIngest({
+    ingestible: { sources },
+    configurationPath: input.configurationPath,
+    dryRun: true,
+  });
+  return {
+    stampedFileCount: await writeTaskBadges(pending, pending, plan.assignments),
+  };
+}
+
+async function readMarkdownFiles(
+  input: MarkdownInputs,
+  allowEmpty = false,
+): Promise<SourceFile[]> {
   if (input.directory && input.paths?.length)
     throw new Error(
       "Supply either a notes directory or explicit Markdown paths",
@@ -30,9 +105,12 @@ export async function runMarkdownIngest(input: {
         .map((entry) => path.join(input.directory!, entry.name))
     : (input.paths ?? []);
   const paths = suppliedPaths.map((file) => path.resolve(file));
-  if (!paths.length || new Set(paths).size !== paths.length)
+  if (
+    (!paths.length && !(allowEmpty && input.directory)) ||
+    new Set(paths).size !== paths.length
+  )
     throw new Error("Supply one or more distinct Markdown file paths");
-  const files = await Promise.all(
+  return Promise.all(
     paths.map(async (file) => {
       const stat = await fs.lstat(file);
       if (!stat.isFile() || !file.endsWith(".md"))
@@ -47,70 +125,54 @@ export async function runMarkdownIngest(input: {
       };
     }),
   );
-  const ingestible = interpretMarkdownFiles(files);
-  const selectedSources = input.stampSourceIdentifiers
-    ? new Set(input.stampSourceIdentifiers)
-    : null;
-  const stampFiles = files.filter(
-    (_, index) =>
-      !selectedSources ||
-      selectedSources.has(ingestible.sources[index].identifier),
-  );
+}
+
+function preflightStamps(
+  files: readonly SourceFile[],
+  sources: readonly IngestibleSource[],
+) {
+  if (!files.length) return;
   // Check source layouts before touching the vault. These temporary IDs only
   // exercise insertion/round-trip validation and are never written or imported.
-  const preview = ingestible.sources
-    .filter(
-      (source) => !selectedSources || selectedSources.has(source.identifier),
-    )
-    .flatMap((source) =>
-      source.items.map((item) => ({
-        sourceIdentifier: source.identifier,
-        itemIdentifier: item.identifier,
-        taskID: item.taskID ?? (generateUniqueID() as TaskID),
-      })),
-    );
-  for (const file of stampFiles) stampMarkdownFile(file, preview);
+  const preview = sources.flatMap((source) =>
+    source.items.map((item) => ({
+      sourceIdentifier: source.identifier,
+      itemIdentifier: item.identifier,
+      taskID: item.taskID ?? (generateUniqueID() as TaskID),
+    })),
+  );
+  for (const file of files) stampMarkdownFile(file, preview);
+}
 
-  const result = await runIngest({
-    ingestible,
-    configurationPath: input.configurationPath,
-    dryRun: input.dryRun,
-  });
-  const changes = stampFiles
+async function writeTaskBadges(
+  files: readonly SourceFile[],
+  selected: readonly SourceFile[],
+  assignments: readonly IngestionAssignment[],
+  dryRun = false,
+) {
+  const changes = selected
     .map((file) => ({
       ...file,
-      stamped: stampMarkdownFile(file, result.assignments),
+      stamped: stampMarkdownFile(file, assignments),
     }))
     .filter((file) => file.content !== file.stamped);
-  if (!input.dryRun && changes.length) {
-    // The vault can be retried independently if source writeback fails. Its
-    // content-hash metadata remains usable until the badge is adopted next run.
-    try {
-      for (const file of files) await assertUnchanged(file);
-      for (const file of changes) {
-        const directory = await fs.mkdtemp(
-          path.join(path.dirname(file.path), ".orbit-stamp-"),
-        );
-        try {
-          const staged = path.join(directory, "note.md");
-          await fs.writeFile(staged, file.stamped, { mode: file.mode });
-          await assertUnchanged(file);
-          await fs.rename(staged, file.path);
-        } finally {
-          await fs.rm(directory, { recursive: true, force: true });
-        }
-      }
-    } catch (error) {
-      throw new Error(
-        "The vault import synced, but source stamping did not finish; resolve the file error and retry",
-        { cause: error },
+  if (!dryRun && changes.length) {
+    for (const file of files) await assertUnchanged(file);
+    for (const file of changes) {
+      const directory = await fs.mkdtemp(
+        path.join(path.dirname(file.path), ".orbit-stamp-"),
       );
+      try {
+        const staged = path.join(directory, "note.md");
+        await fs.writeFile(staged, file.stamped, { mode: file.mode });
+        await assertUnchanged(file);
+        await fs.rename(staged, file.path);
+      } finally {
+        await fs.rm(directory, { recursive: true, force: true });
+      }
     }
   }
-  return {
-    ...result,
-    stampedFileCount: input.dryRun ? 0 : changes.length,
-  };
+  return dryRun ? 0 : changes.length;
 }
 
 async function assertUnchanged(file: { path: string; content: string }) {
@@ -128,14 +190,34 @@ async function main() {
       directory: { type: "string" },
       "stamp-source": { type: "string", multiple: true },
       "no-stamp": { type: "boolean" },
+      "prepare-stamps": { type: "boolean" },
     },
   });
   if (values["no-stamp"] && values["stamp-source"])
     throw new Error("--no-stamp cannot be combined with --stamp-source");
+  if (
+    values["prepare-stamps"] &&
+    (values["dry-run"] || values["no-stamp"] || values["stamp-source"])
+  )
+    throw new Error(
+      "--prepare-stamps cannot be combined with --dry-run, --no-stamp, or --stamp-source",
+    );
   if (!positionals.length && !values.directory)
     throw new Error(
-      "Usage: bun run lab:ingest-markdown <note.md> [more.md ...] | --directory <notes-dir> [--stamp-source <source-id> ... | --no-stamp] [--config <private-config>] [--dry-run]",
+      "Usage: bun run lab:ingest-markdown <note.md> [more.md ...] | --directory <notes-dir> [--stamp-source <source-id> ... | --no-stamp] [--config <private-config>] [--dry-run]\nOr: bun run lab:prepare-stamps <note.md> [more.md ...] | --directory <temporary-notes-dir> [--config <private-config>]",
     );
+  if (values["prepare-stamps"]) {
+    console.info(
+      JSON.stringify(
+        await prepareMarkdownStamps({
+          paths: positionals,
+          directory: values.directory,
+          configurationPath: values.config,
+        }),
+      ),
+    );
+    return;
+  }
   const { assignments: _assignments, ...summary } = await runMarkdownIngest({
     paths: positionals,
     directory: values.directory,
