@@ -4,6 +4,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { privateUpdateOrigin } from "./checkpoint.js";
+import { syncDirectory, writeSynced } from "./durability.js";
 
 export interface NativeRelease {
   buildNumber: string;
@@ -253,23 +254,4 @@ function byteRange(value: string, size: number): [number, number] | undefined {
   if (start >= size || start > end || (first === undefined && last === 0))
     return;
   return [start, end];
-}
-
-async function writeSynced(filename: string, contents: string): Promise<void> {
-  const file = await fs.open(filename, "wx", 0o600);
-  try {
-    await file.writeFile(contents);
-    await file.sync();
-  } finally {
-    await file.close();
-  }
-}
-
-async function syncDirectory(directory: string): Promise<void> {
-  const file = await fs.open(directory, "r");
-  try {
-    await file.sync();
-  } finally {
-    await file.close();
-  }
 }

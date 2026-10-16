@@ -168,6 +168,38 @@ test("an interrupted streamed asset request does not damage the checkpoint or pr
   );
 });
 
+test("a checkpoint's directory is durable before its selection can replace the previous update", async () => {
+  const fixture = await makeFixture();
+  const checkpoint = await publishCheckpoint(fixture);
+  const open = fs.open;
+  fs.open = async (filename, ...args) => {
+    const file = await open(filename, ...args);
+    if (path.basename(filename).startsWith(".preparing-")) {
+      file.sync = async () => {
+        throw new Error("Injected checkpoint directory sync failure");
+      };
+    }
+    return file;
+  };
+  try {
+    await assert.rejects(
+      publishCheckpoint(fixture),
+      /Injected checkpoint directory sync failure/,
+    );
+  } finally {
+    fs.open = open;
+  }
+  assert.equal(
+    (await readSelection(fixture.updatesRoot)).current,
+    checkpoint.id,
+  );
+  assert.equal((await fetch(checkpoint.launchAsset.url)).status, 200);
+  assert.deepEqual(
+    (await fs.readdir(fixture.updatesRoot)).sort(),
+    [checkpoint.id, "current.json"].sort(),
+  );
+});
+
 test("path traversal, outside symlinks, query credentials and public origins are rejected", async () => {
   const fixture = await makeFixture();
   const checkpoint = await publishCheckpoint(fixture);

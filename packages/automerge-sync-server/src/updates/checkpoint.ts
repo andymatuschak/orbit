@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { syncDirectory, writeSynced } from "./durability.js";
 
 export interface UpdateAsset {
   hash: string;
@@ -121,7 +122,8 @@ export async function publishCheckpoint(options: {
       const bytes = await fs.readFile(source);
       const digest = createHash("sha256").update(bytes).digest();
       const filename = `${digest.toString("hex")}.${ext}`;
-      await durableWrite(path.join(staging, filename), bytes);
+      // Identical exported assets may share the same content-addressed name.
+      await writeSynced(path.join(staging, filename), bytes, "w");
       return {
         hash: digest.toString("base64url"),
         // Metro asset keys are content MD5s, not the SHA-256 integrity hashes.
@@ -143,12 +145,14 @@ export async function publishCheckpoint(options: {
       metadata: {},
       extra: { expoClient: options.expoConfig },
     };
-    await durableWrite(
+    await writeSynced(
       path.join(staging, "manifest.json"),
       JSON.stringify(manifest),
     );
+    await syncDirectory(staging);
     await fs.rename(staging, published);
-    await durableWrite(
+    await syncDirectory(options.updatesRoot);
+    await writeSynced(
       pointer,
       JSON.stringify({
         current: id,
@@ -189,28 +193,6 @@ export async function readSelection(
 
 export function isMissingFile(error: unknown): boolean {
   return (error as NodeJS.ErrnoException).code === "ENOENT";
-}
-
-async function durableWrite(
-  filename: string,
-  bytes: string | Uint8Array,
-): Promise<void> {
-  const file = await fs.open(filename, "w", 0o600);
-  try {
-    await file.writeFile(bytes);
-    await file.sync();
-  } finally {
-    await file.close();
-  }
-}
-
-async function syncDirectory(directory: string): Promise<void> {
-  const file = await fs.open(directory, "r");
-  try {
-    await file.sync();
-  } finally {
-    await file.close();
-  }
 }
 
 function assetContentType(ext: string): string {

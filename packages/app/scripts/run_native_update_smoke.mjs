@@ -15,6 +15,7 @@ if (process.argv.includes("--help")) {
   console.log("Build it with EXPO_PUBLIC_ORBIT_LAB_ORIGIN=https://slab.tail0da701.ts.net:9443; updates must be enabled.");
   console.log("Requires Node, AXe, built server, Tailscale, and free ports 8788/9443. Never builds or installs.");
   console.log("Temporarily adds Serve 9443→8788; preserves other routes and restores the previous Lab selection.");
+  console.log("Optionally set ORBIT_NATIVE_SMOKE_CHECKPOINT_EXPORT to a current Expo iOS export to update an existing compatible binary through the real JS update menu first.");
   process.exit(0);
 }
 const udid = process.env.ORBIT_SIMULATOR_UDID;
@@ -30,8 +31,10 @@ const fixturePath = fileURLToPath(new URL("ios_review_fixture.mjs", import.meta.
 const bundle = "com.withorbit.native";
 const axe = process.env.ORBIT_AXE_BINARY ?? "/opt/homebrew/bin/axe";
 const tailscale = process.env.ORBIT_TAILSCALE_BINARY ?? "/Applications/Tailscale.app/Contents/MacOS/Tailscale";
-const run = (command, args) => execFileSync(command, args, { encoding: "utf8", timeout: 60_000, stdio: ["ignore", "pipe", "pipe"] });
-const fixture = (...args) => run(process.execPath, ["--experimental-transform-types", fixturePath, ...args]);
+const run = (command, args, timeout = 60_000) => execFileSync(command, args, { encoding: "utf8", timeout, stdio: ["ignore", "pipe", "pipe"] });
+// Preparing the real 14,000-document fixture durably writes thousands of files;
+// keep that bounded separately from individual UI commands and assertions.
+const fixture = (...args) => run(process.execPath, ["--experimental-transform-types", fixturePath, ...args], args[0] === "prepare" ? 300_000 : 60_000);
 const simctl = (...args) => run("xcrun", ["simctl", ...args]);
 const plist = (file, key) => run("/usr/libexec/PlistBuddy", ["-c", `Print :${key}`, file]).trim();
 const sleep = millis => new Promise(resolve => setTimeout(resolve, millis));
@@ -51,6 +54,8 @@ assert.equal(plist(path.join(app, "Expo.plist"), "EXUpdatesURL"), `${origin}/upd
 assert.equal(plist(path.join(app, "Expo.plist"), "EXUpdatesEnabled"), "true", "JS fallback requires a real enabled Expo updates runtime");
 const installedBuild = Number(plist(path.join(app, "Info.plist"), "CFBundleVersion"));
 assert.ok(Number.isSafeInteger(installedBuild) && installedBuild > 0);
+const runtimeVersion = plist(path.join(app, "Expo.plist"), "EXUpdatesRuntimeVersion");
+const checkpointExport = process.env.ORBIT_NATIVE_SMOKE_CHECKPOINT_EXPORT;
 
 let server, logFD, receipt, paired = false, addedServe = false;
 const ui = () => run(axe, ["describe-ui", "--udid", udid]);
@@ -64,6 +69,68 @@ async function waitText(text) {
 }
 function tap(label, style = "physical") {
   run(axe, ["tap", "--label", label, "--element-type", "Button", "--tap-style", style, "--wait-timeout", "10", "--post-delay", "0.25", "--udid", udid]);
+}
+function launch(...options) {
+  const result = simctl("launch", ...options, udid, bundle);
+  const pid = result.match(/:\s*(\d+)\s*$/)?.[1];
+  assert.ok(pid, `Expected the ordinary app process ID from simctl: ${result}`);
+  return pid;
+}
+async function foreground(pid) {
+  run(axe, ["button", "home", "--udid", udid]);
+  // Observe the actual Home transition after one hardware-button action. The
+  // accessibility tree can lag the animation; a fixed delay mistakes that lag
+  // for an app failure, while a repeated Home press can mask a missed action.
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const state = ui();
+    const visiblePID = JSON.parse(state)[0]?.pid;
+    if (Number.isInteger(visiblePID) && String(visiblePID) !== pid && !state.includes("Show Answer")) {
+      (receipt.foregroundTransitions ??= []).push({ appPID: pid, backgroundVisiblePID: visiblePID });
+      assert.equal(launch(), pid, "Foreground checks must use the same process, not a cold launch");
+      return;
+    }
+    await sleep(250);
+  }
+  await screenshot("home-did-not-background");
+  throw new Error("A single Home action did not observably background the review UI");
+}
+async function waitCheckpointLaunched(checkpoint) {
+  assert.match(checkpoint.id, /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/);
+  const directory = path.join(container, "Library", "Application Support", ".expo-internal");
+  const database = (await fs.readdir(directory)).filter(name => /^expo-v\d+\.db$/.test(name));
+  assert.equal(database.length, 1, "Expected one ordinary Expo update database");
+  for (let attempt = 0; attempt < 30; attempt++) {
+    // Expo records a successful launch only after RCTContentDidAppear for this
+    // exact update. A repeated prompt string cannot prove which JS is active.
+    const row = run("/usr/bin/sqlite3", ["-readonly", path.join(directory, database[0]),
+      `SELECT successful_launch_count, failed_launch_count FROM updates WHERE id = X'${checkpoint.id.replaceAll("-", "")}';`]).trim();
+    if (row) {
+      const [successful, failed] = row.split("|").map(Number);
+      assert.equal(failed, 0, "The checkpoint must not have failed a native Expo launch");
+      if (successful > 0) {
+        (receipt.activatedCheckpoints ??= []).push({ checkpointID: checkpoint.id, successfulLaunchCount: successful, failedLaunchCount: failed });
+        return;
+      }
+    }
+    await sleep(500);
+  }
+  await screenshot("checkpoint-did-not-activate");
+  throw new Error(`Expo did not record a successful launch of checkpoint ${checkpoint.id}`);
+}
+async function assertReviewUninterrupted(prompt, { revealed = false, durationMillis = 2_500 } = {}) {
+  const until = Date.now() + durationMillis;
+  do {
+    const state = ui();
+    assert.ok(state.includes(prompt), "An update check must preserve the current question");
+    assert.ok(state.includes(revealed ? "Remembered" : "Show Answer"));
+    for (const alert of ["New app build available", "App update ready", "Could not check for an update"])
+      assert.ok(!state.includes(alert), `An automatic check must not interrupt a question: ${alert}`);
+    await sleep(250);
+  } while (Date.now() < until);
+}
+async function waitNativeOffer(build) {
+  await waitText("New app build available");
+  assert.ok(ui().includes(`(${build})?`), `Expected native build ${build}`);
 }
 function elementWithLabel(nodes, label) {
   for (const node of nodes) {
@@ -134,6 +201,24 @@ try {
   receipt = { ...JSON.parse(await fs.readFile(prepared.receiptPath, "utf8")), receiptPath: prepared.receiptPath };
   fixture("pair-simulator", receipt.receiptPath, container);
   paired = true;
+  let bootstrapCheckpoint, publishJSCheckpoint;
+  if (checkpointExport) {
+    // A real checkpoint lets this JavaScript-only change run on the existing
+    // optimized Release binary. Publication remains inside the disposable Lab;
+    // the normal automatic alert and Expo reload activate it, without UI test branches.
+    const expoConfig = JSON.parse(execFileSync(process.execPath,
+      [path.join(checkout, "node_modules/expo/bin/cli"), "config", "--type", "public", "--json"], {
+        cwd: path.join(checkout, "packages/app"),
+        env: { ...process.env, EXPO_PUBLIC_ORBIT_LAB_ORIGIN: origin, CI: "1" },
+        encoding: "utf8", timeout: 60_000, maxBuffer: 4 * 1024 * 1024,
+      }));
+    assert.equal(expoConfig.runtimeVersion, runtimeVersion, "The checkpoint must match this binary's native runtime");
+    assert.equal(expoConfig.updates?.url, `${origin}/updates/manifest`);
+    const { publishCheckpoint } = await import("../../automerge-sync-server/dist/updates/checkpoint.js");
+    publishJSCheckpoint = () => publishCheckpoint({ exportDirectory: checkpointExport,
+      updatesRoot: path.join(receipt.directory, "updates"), origin, runtimeVersion, expoConfig });
+    bootstrapCheckpoint = await publishJSCheckpoint();
+  }
   // Deliberately not an IPA. It exists only in the isolated test server; no OS
   // installation is possible and nothing is published to the live Lab.
   const fakeIPA = path.join(receipt.directory, "simulator-only-not-an-ipa");
@@ -141,7 +226,7 @@ try {
   const { publishNativeRelease } = await import("../../automerge-sync-server/dist/updates/nativeRelease.js");
   const publish = buildNumber => publishNativeRelease({ ipaPath: fakeIPA, updatesRoot: path.join(receipt.directory, "updates"), origin,
     buildNumber: String(buildNumber), version: "1.0.0", bundleIdentifier: bundle });
-  await publish(installedBuild + 1);
+  if (!bootstrapCheckpoint) await publish(installedBuild + 1);
   logFD = openSync(path.join(receipt.directory, "server.log"), "a", 0o600);
   server = spawn(process.execPath, [path.join(checkout, "packages/automerge-sync-server/dist/index.js"), "--config", receipt.configurationPath], { stdio: ["ignore", logFD, logFD] });
   for (let attempt = 0; ; attempt++) {
@@ -153,29 +238,51 @@ try {
   run(tailscale, ["serve", "--bg", "--https=9443", "http://127.0.0.1:8788"]);
   addedServe = true;
   assert.ok((await fetch(`${origin}/_ready`)).ok);
-  simctl("launch", "--terminate-running-process", udid, bundle);
+  let pid = launch("--terminate-running-process");
   const firstPrompt = receipt.prompts[0];
-  await waitText(firstPrompt);
-  await checkUpdate();
-  await waitText("New app build available");
-  await screenshot("native-offer");
+  if (bootstrapCheckpoint) {
+    await waitText("App update ready");
+    await screenshot("current-source-checkpoint-ready");
+    tap("Reload now");
+    await waitCheckpointLaunched(bootstrapCheckpoint);
+    await waitText(firstPrompt);
+    await publish(installedBuild + 1);
+    await foreground(pid);
+  }
+  await waitNativeOffer(installedBuild + 1);
+  await screenshot("automatic-offer-immediately-on-foreground");
+  // No review is needed to see the update; the existing card is untouched.
+  fixture("verify-server", receipt.receiptPath, "0");
   tap("Later");
   await waitText(firstPrompt);
+  tap("Show Answer");
+  await waitText("Remembered");
+  await assertReviewUninterrupted(firstPrompt, { revealed: true });
+  tap("Remembered");
+  fixture("verify-server", receipt.receiptPath, "1");
+  await waitText(receipt.prompts[1]);
+  await foreground(pid);
+  await waitText(receipt.prompts[1]);
+  await assertReviewUninterrupted(receipt.prompts[1]);
+  await screenshot("dismissed-build-not-reoffered-on-foreground");
+
+  // Manual checks deliberately override automatic session suppression.
   await checkUpdate();
-  await waitText("New app build available");
+  await waitNativeOffer(installedBuild + 1);
+  await screenshot("manual-reoffer-after-later");
   tap("Install");
   await sleep(2_000);
   const handoffState = ui();
   const handoffOutcome = handoffState.includes("Could not start installation")
     ? "rejected-with-safe-alert"
-    : handoffState.includes(firstPrompt)
+    : handoffState.includes(receipt.prompts[1])
       ? "accepted-without-observable-installation"
       : "handed-to-system-ui";
   await screenshot("simulator-install-handoff");
   if (handoffOutcome === "rejected-with-safe-alert") tap("OK");
-  else if (handoffOutcome === "handed-to-system-ui") simctl("launch", udid, bundle);
-  await waitText(firstPrompt);
-  fixture("verify-server", receipt.receiptPath, "0");
+  else if (handoffOutcome === "handed-to-system-ui") assert.equal(launch(), pid);
+  await waitText(receipt.prompts[1]);
+  fixture("verify-server", receipt.receiptPath, "1");
   await publish(installedBuild);
   await checkUpdate();
   await waitText("Orbit Lab is up to date");
@@ -186,29 +293,72 @@ try {
   await waitText("Orbit Lab is up to date");
   await screenshot("missing-native-release-js-fallback");
   tap("OK");
-  await waitText(firstPrompt);
+
+  // Use the fixture's existing JavaScript peer for task two. This retains its
+  // independent three-review verifier and exercises a genuine remote queue
+  // update before the next immediate foreground offer.
+  fixture("js-review-second", receipt.receiptPath);
+  await waitText(receipt.prompts[2]);
   tap("Show Answer");
   await waitText("Remembered");
+  let foregroundCheckpoint;
+  if (publishJSCheckpoint) {
+    // A new manifest ID is a real Expo update even when its code/assets match.
+    // Download on true foreground and offer immediately, without a review.
+    foregroundCheckpoint = await publishJSCheckpoint();
+    assert.notEqual(foregroundCheckpoint.id, bootstrapCheckpoint.id);
+  } else await publish(installedBuild + 2);
+  await foreground(pid);
+  if (foregroundCheckpoint) await waitText("App update ready");
+  else await waitNativeOffer(installedBuild + 2);
+  await screenshot(foregroundCheckpoint ? "automatic-js-offer-immediately-on-foreground" : "new-build-discovered-on-true-foreground");
+  fixture("verify-server", receipt.receiptPath, "2");
+  tap("Later");
+  await waitText(receipt.prompts[2]);
+  await waitText("Remembered");
+  await assertReviewUninterrupted(receipt.prompts[2], { revealed: true });
   tap("Remembered");
-  await waitText(receipt.prompts[1]);
-  fixture("verify-server", receipt.receiptPath, "1");
-  simctl("launch", "--terminate-running-process", udid, bundle);
-  await waitText(receipt.prompts[1]);
+  fixture("verify-server", receipt.receiptPath, "3");
+  const remainingPrompt = receipt.prompts[3];
+  await waitText(remainingPrompt);
+  pid = launch("--terminate-running-process");
+  if (foregroundCheckpoint) await waitCheckpointLaunched(foregroundCheckpoint);
+  else { await waitNativeOffer(installedBuild + 2); tap("Later"); }
+  await waitText(remainingPrompt);
   await screenshot("review-saved-after-update-checks");
   await stopServer();
+  await foreground(pid);
+  await waitText(remainingPrompt);
+  await assertReviewUninterrupted(remainingPrompt, { durationMillis: 6_000 });
+  await screenshot("unreachable-laptop-automatic-check-quiet");
   await checkUpdate();
   await waitText("Could not check for an update");
   await screenshot("unreachable-laptop");
   tap("OK");
-  await waitText(receipt.prompts[1]);
+  await waitText(remainingPrompt);
   await fs.writeFile(path.join(receipt.directory, "native-update-proof.json"), JSON.stringify({
-    simulatorUDID: udid, installedBuild, offeredBuild: installedBuild + 1, origin,
+    simulatorUDID: udid, installedBuild,
+    offeredBuilds: [installedBuild + 1, ...(!foregroundCheckpoint ? [installedBuild + 2] : [])], origin,
+    runtimeVersion, bootstrapCheckpointID: bootstrapCheckpoint?.id,
+    automaticJSCheckpointID: foregroundCheckpoint?.id,
+    activatedCheckpoints: receipt.activatedCheckpoints,
+    foregroundTransitions: receipt.foregroundTransitions,
+    currentSourceActivatedThroughRealJSUpdate: !!bootstrapCheckpoint,
+    realJavaScriptForegroundOfferWithoutReview: !!foregroundCheckpoint,
+    automaticNativeOfferWithoutReview: true,
+    foregroundOfferWhileAnswerRevealed: true,
+    laterPreservedFrontAndRevealedQuestion: true,
+    trueBackgroundForegroundKeptSameProcess: true,
+    laterSuppressedSameBuildOnForeground: true,
+    newReleaseDiscoveredOnForeground: true,
+    manualCheckReofferedDismissedBuild: true,
     laterPreservedPrompt: true, handoffOutcome, installHandoffDidNotMutateReviews: true,
-    sameAndMissingReleaseReachedJSFallback: true, reviewedObservationCount: 1,
+    sameAndMissingReleaseReachedJSFallback: true, reviewedObservationCount: 3,
     coldRelaunchPreservedReview: true, unreachableLaptopPreservedReviewQueue: true,
+    unreachableAutomaticForegroundCheckWasQuiet: true,
     physicalOTAInstallationVerified: false,
   }, null, 2));
-  console.log(`Release Simulator native update gate passed: Later, installer handoff (${handoffOutcome}), same/missing native JS fallback, review persistence and cold relaunch.`);
+  console.log(`Release Simulator native update gate passed: immediate foreground offers without a review${foregroundCheckpoint ? " (native and real JavaScript checkpoint)" : ""}, Later suppression, manual reoffer, installer handoff (${handoffOutcome}), same/missing native JS fallback, review persistence and cold relaunch.`);
 } finally {
   await cleanup();
 }

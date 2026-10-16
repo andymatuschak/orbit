@@ -271,10 +271,6 @@ export default function ReviewSession({
   const reviewSessionStartTimestampMillis = useRef(Date.now());
   const reviewWriteIsInFlight = useRef(false);
   const pendingWrites = useRef(0);
-  const appUpdateMenuItem = useAppUpdateMenuItem(
-    () => pendingWrites.current === 0,
-  );
-
   const [pendingOutcome, setPendingOutcome] =
     useState<TaskRepetitionOutcome | null>(null);
   const [initialReviewReady, setInitialReviewReady] = useState(false);
@@ -294,6 +290,8 @@ export default function ReviewSession({
   const { database, openError, retry } = useReviewDatabase(connection);
   const { queue: initialQueue, error: queueError } =
     useReviewItemQueue(database);
+  const appUpdates = useAppUpdateMenuItem(() => pendingWrites.current === 0);
+  const appUpdateMenuItem = appUpdates.menuItem;
   const hasInitialCard =
     initialQueue !== null &&
     initialQueue.length > 0 &&
@@ -382,7 +380,10 @@ export default function ReviewSession({
 
   function commit(mutations: readonly VaultMutation[]) {
     pendingWrites.current++;
-    return database!.apply(mutations).finally(() => pendingWrites.current--);
+    return database!.apply(mutations).finally(() => {
+      pendingWrites.current--;
+      appUpdates.writesFinished();
+    });
   }
 
   function onMark(markingRecord: ReviewAreaMarkingRecord) {
