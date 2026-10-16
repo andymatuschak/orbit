@@ -76,10 +76,6 @@ module.exports = function withWidgetPluginFixes(config) {
       throw new Error(`Could not find ${WIDGET_TARGET_NAME} target`);
     }
     widgetTarget.setBuildSetting("SWIFT_VERSION", "6.0");
-    widgetTarget.setBuildSetting(
-      "SWIFT_ACTIVE_COMPILATION_CONDITIONS",
-      "$(inherited) ORBIT_WIDGET_EXTENSION",
-    );
     ensureMathRenderingPackage(project, widgetTarget);
 
     // Compile the actual same handoff source into both processes. CocoaPods

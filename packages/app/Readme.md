@@ -6,6 +6,9 @@ the official IndexedDB storage adapter; iOS uses Repo Swift with ordinary files.
 There is no Firebase login, public API fallback, embed, reminder settings page,
 or legacy store selection.
 
+Native builds target iOS, not Mac Catalyst. Space/1/2 review shortcuts remain
+available in the browser; there is no native hardware-keyboard module.
+
 The first launch pairs with a private origin and key. The installation keeps one
 selection under `com.withorbit.lab.connection.v1`, with a fresh `lab-…` local
 store ID. It never reads public Orbit's former vault registry. Subsequent launch

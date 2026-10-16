@@ -7,6 +7,7 @@ import { Repo } from "@automerge/automerge-repo";
 import {
   defaultOrbitSchedulerPolicy,
   TaskContentType,
+  TaskRepetitionOutcome,
   TaskSpecType,
 } from "@withorbit/core";
 import {
@@ -147,6 +148,7 @@ try {
   })();`,
   });
   await view.navigate(`${webOrigin}/review`);
+  await activatePage();
   await waitText("Pair with Lab");
   // Actual DOM input events and controls, not a fixture-specific application path.
   await view.evaluate(`(() => {
@@ -161,18 +163,19 @@ try {
   })()`);
   await clickText("Pair with Lab");
   await waitText(prompts[0]);
-  await clickText("Show Answer");
+  await pressKey(" ", "Space", 32);
   await waitText("Answer 1");
-  await clickText("Remembered");
+  await pressKey("2", "Digit2", 50);
   await waitText(prompts[1]);
   await service.shutdown();
   service = undefined;
   assert.deepEqual(await view.evaluate("window.__nonlocalRequests"), []);
   await view.navigate(`${webOrigin}/review`);
+  await activatePage();
   await waitText(prompts[1]);
-  await clickText("Show Answer");
+  await pressKey(" ", "Space", 32);
   await waitText("Answer 2");
-  await clickText("Remembered");
+  await pressKey("1", "Digit1", 49);
   service = new LabSyncService(configuration);
   await service.start();
   await eventually(async () => {
@@ -180,17 +183,21 @@ try {
       storageRoot,
       rootDocumentURL: configuration.rootDocumentURL,
     });
-    assert.equal(
-      Object.values(captured.vault.observations).filter(
-        (item) => item.kind === "review",
-      ).length,
-      2,
+    assert.deepEqual(
+      Object.values(captured.vault.observations)
+        .filter((item) => item.kind === "review")
+        .map((item) => item.outcome)
+        .sort(),
+      [
+        TaskRepetitionOutcome.Forgotten,
+        TaskRepetitionOutcome.Remembered,
+      ].sort(),
     );
   });
   assert.deepEqual(await view.evaluate("window.__nonlocalRequests"), []);
   assert.deepEqual([...nonlocalNetworkRequests], []);
   console.log(
-    "Private browser smoke passed: real pairing, review, offline reload/review, and reconnect convergence; no public HTTP/socket calls.",
+    "Private browser smoke passed: real pairing, Space/1/2 review shortcuts, offline reload/review, and reconnect convergence; no public HTTP/socket calls.",
   );
 } catch (error) {
   console.error(
@@ -201,7 +208,9 @@ try {
   if (view)
     console.error(
       await view
-        .evaluate("document.body.innerText")
+        .evaluate(
+          "({ visibility: document.visibilityState, text: document.body.innerText })",
+        )
         .catch(() => "Browser unavailable"),
     );
   throw error;
@@ -221,10 +230,29 @@ async function waitText(text) {
     ),
   );
 }
+async function activatePage() {
+  // CDP keyboard events do not activate a hidden tab as view.click does.
+  // Keep layout/animation frames running, as they would for a user reviewing.
+  await view.cdp("Page.bringToFront", {});
+  await eventually(async () =>
+    assert.equal(await view.evaluate("document.visibilityState"), "visible"),
+  );
+}
 async function clickText(text) {
   await view.click(`[role="button"][aria-label=${JSON.stringify(text)}]`, {
     timeout: 30_000,
   });
+}
+async function pressKey(key, code, virtualKeyCode) {
+  for (const type of ["keyDown", "keyUp"]) {
+    await view.cdp("Input.dispatchKeyEvent", {
+      type,
+      key,
+      code,
+      windowsVirtualKeyCode: virtualKeyCode,
+      nativeVirtualKeyCode: virtualKeyCode,
+    });
+  }
 }
 async function eventually(assertion, timeout = 30_000) {
   const deadline = Date.now() + timeout;

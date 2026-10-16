@@ -11,7 +11,7 @@
     "scheme": "com.withorbit.native",
     "ios": {
       "bundleIdentifier": "com.withorbit.native",
-      "buildNumber": "14",
+      "buildNumber": "15",
       "appleTeamId": "MQ22N839N8",
       "deploymentTarget": "26.0",
       "supportsTablet": true,

@@ -8,6 +8,26 @@ Public Firebase remains unchanged; the separate dogfood serving stack was
 retired only after the private cutover proofs below. Start with
 [the review guide](automerge-review-guide.md) for the current reading path.
 
+## 2026-10-16: remove unused native platform support
+
+Removed the Catalyst plugin, its Mac-only entitlements, and the iOS/Catalyst
+hardware-keyboard module. Browser Space/1/2 shortcuts remain. Removed the widget's
+`ORBIT_WIDGET_EXTENSION` compilation flag: no source used it in a `#if` condition.
+The Swift widget renderer and shared handoff are unchanged.
+
+Fresh prebuild confirms the removed settings/module are absent and the widget
+App Group remains. Workspace checks pass (**386 unit**, **26 integration**, one
+existing skip). The browser smoke now exercises actual Space/2 and offline
+Space/1 reviews through reconnect, verifying both outcomes. The harness explicitly
+foregrounds its tab; raw CDP keys do not activate it like a click, and a hidden
+tab suspends layout callbacks. No app layout code or timeout was changed.
+
+Signed Release Simulator **15**, runtime **5**, passes the 53-task bidirectional
+sync, visible offline PNG/review, cold relaunch, and out-of-window upload gate.
+This is a native candidate only: nothing was published or installed on Chonk,
+which remains on build **14**. The previous generated project is recoverable at
+`/private/tmp/orbit-native-cleanup-generated.LxDxzX/ios`.
+
 ## 2026-10-16: native merge panic after applying the checkpoint
 
 Chonk crashed after activating the maintained checkpoint. Its matching build-13
