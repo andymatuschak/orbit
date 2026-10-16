@@ -9,9 +9,11 @@ reading path. [The architecture](automerge-architecture.md) is the short overvie
 ## Reading order
 
 1. **Domain and scheduling.** [Vault mutations](../packages/core/src/vault/mutations.ts) define observations,
-   mutation types, attachment integrity, and projections through the existing
-   scheduler. `OrbitVault` is an import/in-memory representation, not another
-   persistent database.
+   mutation types, attachment integrity, and projections through the root-selected
+   [scheduler](../packages/core/src/vault/projection/vaultSchedulerAdapter.ts).
+   `OrbitVault` is an import/in-memory representation, not another persistent
+   database. The old Event/EventReducer model survives only under `__tests__` as
+   an independent historical parity reference, not a second live mutation API.
 2. **Shared per-task repository.** [PerTaskRepository](../packages/store-shared/src/perTaskRepository.ts),
    `perTaskCodec.ts`, and `taskMutationPlanner.ts` own task-first writes,
    catalog selection/repair, and review queries. The catalog is replaceable;
@@ -28,18 +30,23 @@ reading path. [The architecture](automerge-architecture.md) is the short overvie
 5. **Local-first client.** [Lab connection](../packages/app/src/vault/labConnection.ts), the native/web opening
    functions, [review database](../packages/app/src/sync/HostedReviewDatabase.ts), and `reviewSessionManager.ts`
    share cache selection, queue reconciliation, and durable review boundaries.
+   `reviewSession/observeReviewQueue.ts` owns the initial-read/subscription race;
+   manager transitions are pure, and actual writes run in event handlers.
    Existing `Hosted*` names do not imply account routing or public services.
 6. **Native/widget boundary.** [Native module](../packages/app/modules/orbit-automerge/ios/OrbitAutomergeModule.swift) exposes generic
    document operations through Expo. [WidgetProjectionStore](../packages/app/modules/orbit-automerge/ios/WidgetProjectionStore.swift),
    `WidgetProjectionCoordinator.ts`, and `targets/widgets` implement the one-file
    handoff. Swift does not duplicate task scheduling or catalog policy.
 7. **Code updates.** [App configuration](../packages/app/app.config.js), server `src/updates`,
-   `scripts/lab_checkpoint.ts`, and `useAppUpdateMenuItem.native.ts` use Expo's
+   `scripts/lab_checkpoint.ts`, `appUpdateController.ts`, and `useAppUpdateMenuItem.native.ts` use Expo's
    device-side loader/cache with a private iOS-only manifest/asset adapter.
-   Code reload is explicit or on the next cold launch, never forced mid-review.
+   Offers appear immediately except during writes; code reload is explicit or on
+   the next cold launch, never forced mid-review. JS/native publication share
+   tiny file-durability primitives rather than separate persistence protocols.
 8. **Private tools.** [Seed/export](../packages/automerge-sync-server/scripts/labSeed.ts) and [snapshot/restore](../packages/automerge-sync-server/scripts/labSnapshot.ts) capture/validate/import
    and snapshot/restore isolated directories. These are offline operations,
-   not migration or sync services. Root `lab:*` scripts provide the daily loop.
+   not migration or sync services. Root `lab:*` scripts provide the daily loop;
+   `lab:service` supervises the daily-use backend separately from Metro.
 9. **Bear ingestion.** [The existing reconciler](../packages/ingester/src/ingest.ts)
    takes task definitions and produces shared mutations. Its CLI is an ordinary
    paired Repo client; [the Markdown interpreter](../packages/interpreter/Readme.md)

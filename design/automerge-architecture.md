@@ -41,8 +41,11 @@ It binds to `127.0.0.1`; Tailscale Serve supplies private HTTPS/WSS. Configurati
 defaults to `~/Library/Application Support/Orbit Lab/config.json`, outside Git,
 and includes absolute `storageRoot`/`updatesRoot`, `rootDocumentURL`, a private
 `pairingToken`, an exact browser-origin allowlist, and a port (default 8787).
-Startup validates the existing root and refuses missing data. A PID lock rejects
-overlapping writers; shutdown drains and flushes before releasing it.
+Startup validates the existing root and refuses missing data. A kernel-held
+file lock rejects overlapping writers and is released even after a crash; its
+stable `.writer-lock` file must not be deleted. Shutdown drains and flushes before
+releasing ownership. A user LaunchAgent supervises the daily-use backend;
+`lab:dev --client-only` adds Metro without owning that process.
 
 First pairing uses `POST /v1/root` with a Bearer key and caches the returned root.
 The phone sends that same key in the WebSocket upgrade header. Browser
@@ -71,6 +74,13 @@ therefore increases resident memory as the downloaded corpus grows; batching
 limits concurrent work, not the total retained history. This is an explicit
 limitation of the current fork, not a claim of a bounded 50-task memory footprint.
 
+The root selects the scheduler shared by every client. The current FSRS
+experiment preserves historical due dates until each component's first new
+review, reconstructs memory from its observations, and uses calibrated weights.
+The same queue selector interleaves high-retrievability and oldest-due tasks;
+due ten-minute retries take precedence. Neither Swift nor the widget implements
+another scheduler.
+
 ## Widget and code updates
 
 The widget's JSON queue is disposable. Its outbox is durable until the app
@@ -83,14 +93,20 @@ Application code has separate persistence. An optimized native binary embeds a
 complete JavaScript bundle/assets; `expo-updates` owns downloaded code, integrity
 checks, and native-runtime selection. The private server only serves immutable
 iOS checkpoints and protocol-1 manifests, publishing the pointer after a complete
-export. Startup launches cached code with zero network wait. A background check
-does not force reload; the explicit menu action asks first.
+export. Startup launches cached code with zero network wait. Launch and real
+foreground transitions check native and JavaScript updates. Available updates
+are offered immediately, including over a revealed answer, but pending durable
+writes defer the offer. Reload/install requires approval and rechecks that guard.
+Later suppresses the same offer for the mounted session; the menu can reoffer it.
 
 The update endpoint distributes executable code and relies on loopback/Tailscale
 privacy, not the vault pairing key (Expo asset requests may omit manifest auth).
 Never expose it publicly or bake credentials into update URLs/bundles. Native
 changes require a new binary/runtime; JavaScript checkpoints must match that
 runtime. Data compatibility is separate: snapshot before schema experiments.
+Use `lab:install` for native builds. It applies the guarded Repo Swift receive
+limit patch after package resolution; direct Expo/Xcode builds bypass that step.
+The shared finite 16 MiB message budget is covered by a real large-catalog gate.
 
 ## Data isolation and operational limits
 

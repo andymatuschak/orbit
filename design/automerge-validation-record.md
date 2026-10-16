@@ -8,6 +8,474 @@ Public Firebase remains unchanged; the separate dogfood serving stack was
 retired only after the private cutover proofs below. Start with
 [the review guide](automerge-review-guide.md) for the current reading path.
 
+## 2026-10-16: commit and publish the maintained Lab
+
+The pending implementation is committed as a linear source narrative:
+`87144bc7` covers local supervision, kernel-held writer ownership, and oversized
+native catalog messages; `9a508485` covers calibrated FSRS, shared queue policy,
+authoritative UI projections, and removal of the live legacy Event API;
+`51bcd3f3` covers immediate update offers and durable checkpoint publication.
+`803a5deb` enables the retained checks for `lab` and removes the obsolete schema
+generation job. The documentation commit records the current architecture,
+scope, and evidence.
+The requested source destination is `origin/lab`; public Orbit deployment is
+not part of this release.
+
+Fresh `checkall` passes lint/build, **384 unit tests**, **26 integration tests**,
+and one pre-existing skip. The prior real browser, native widget durability,
+14,000-task Release Simulator, and personalized FSRS gates are detailed below.
+No further scheduling cutover, calibration, vault migration, or phone data reset
+was performed.
+
+Published private checkpoint **e4c21ca7-19ed-4486-a932-5fa5f1a3048e**, runtime
+`orbit-lab-native-3`, for the existing native build **13**. Export/publication
+took 9.5 seconds and retained the preceding checkpoint. Build metadata is set
+to 13 explicitly; no new signed binary is needed. The local managed backend
+was gracefully restarted onto the committed build and is ready through private
+HTTPS with its existing vault and pairing configuration.
+
+Actual protocol-1 HTTPS discovery selects the new checkpoint on the normal 443
+origin. All **110 assets plus the launch bundle** download with matching SHA-256
+and content-key hashes. Matching-current and incompatible-runtime requests return
+the expected no-update directives; the native descriptor remains build 13.
+The launch SHA-256 is
+`b126a5960bc104703db74dc1f4cb30d94887ef2ca2187ea9cc48f6d597c80dea`.
+
+Hermes v98 embeds Expo's random temporary input path in debug information, so
+separate exports are not byte-identical. Compared the complete **4,935,736-byte
+executable section** with the Simulator-tested export, normalizing only the
+header's total-file-length field: they match. Manifest/asset integrity is still
+checked against the actual newly published bytes. Physical activation on Chonk
+is not claimed by these server-side checks.
+
+Private receipts: `/private/tmp/orbit-lab-release-checkall-20261016.log`,
+`/private/tmp/orbit-lab-release-publication-20261016.log`, and
+`/private/tmp/orbit-lab-release-proof-20261016.json`.
+
+## 2026-10-15: maintenance and simplification
+
+Audited the current domain/storage, app lifecycle, widget boundary, private
+server, and operator/build paths. This is a source cleanup, not another schema
+change or rollout. The live Lab service, vault, phone, pairing configuration,
+and published checkpoint are unchanged; no commit/history rewrite was made.
+
+- Retired the unused public Event/EventReducer API and sample-data event
+  generators. Its 347 original implementation lines and reducer tests moved to
+  test-only historical parity support, not deleted reference coverage. Production
+  compilation excludes that support; `TaskRepetitionOutcome` remains in the task
+  domain. Old generated output was recoverably moved to
+  `/private/tmp/orbit-core-generated-before-retirement.9IKhPP/core-dist` before a
+  clean rebuild, since TypeScript does not remove no-longer-included outputs.
+- Removed unused review-session actions, nested state updates, and undo writes
+  inside React updater callbacks. Mark/refill transitions are pure. Deleting the
+  sole review item now yields a null index instead of an invalid `-1`; three
+  deletion/undo regressions cover the boundary.
+- Extracted the actual initial-read/subscription lifecycle into a small tested
+  function. Once a live queue arrives, a late initial success **or failure**
+  cannot replace it; synchronous subscriptions and canceled reads are covered.
+  This fixes a possible false unavailable screen, not an attribution of every
+  historical load failure to that race.
+- Widget publication now accepts only immediate queue snapshots. Removed unused
+  lazy sources and epochs; one existing serial lane still orders publication,
+  import, and selective acknowledgement. Repeated close calls await that lane.
+  Native alert dismissal is idempotent, so an old callback cannot unblock a
+  successor prompt.
+- Subscriber exceptions no longer reject an already-durable review or prevent
+  later subscribers from being notified. A reopen-and-verify regression retains
+  explicit persistence failures. Reused queue options avoid a second catalog
+  review-count scan, and catalog priority uses the shared memory type.
+- JS/native publication share small synced-write/directory helpers. JS publication
+  now syncs the completed staging directory and its published parent before
+  selecting it. Injected sync failure leaves the previous checkpoint usable.
+- Removed native build shortcuts that bypassed the required Repo Swift patch.
+  Updated the architecture/reading guide and replaced the completed setup plan
+  with current scope, boundaries, and remaining gates.
+
+The original Orbit scheduler remains necessary for historical replay. Catalog
+repair, task-first persistence, native fetch/reconnect workarounds, and widget
+cross-process durability also remain justified. Kept Expo's startup updater:
+it supplies a JS-independent next-launch fallback, while the controller's
+initial check supplies an immediate offer. Expo serializes those procedures;
+removing one changes behavior and requires a separate native decision. No new
+cache, index, compatibility path, GC policy, or operational framework was added.
+
+Final `checkall` passes lint/build, **384 unit tests** (one pre-existing skip),
+and **26 integration tests**. The real browser gate passes pairing, review,
+offline reload/review, and reconnect with no public HTTP/socket calls. All three
+native widget reader/writer/handoff gates pass, including process races and
+interrupted writes. Five Python calibration tests also pass.
+
+The actual Release Simulator activates the final source through a real isolated
+Expo checkpoint, then passes the update/review gate with **14,000 tasks** and a
+**1,206,648-byte** catalog sync response. It verifies immediate native and JS
+offers without a review, an offer over a revealed answer, Later/manual reoffer,
+installer handoff, native-release fallback, three saved observations including
+an independent JS review, cold checkpoint activation, and quiet offline checks.
+Selection and private Serve routes restore cleanly. Fixture/receipt:
+`orbit-lab-review-gate.akTMPL` in the Mac's temporary directory. The initial run
+had stopped during fixture creation at the runner's one-minute process timeout,
+before pairing or serving anything; preparation now has a separate finite
+five-minute budget for its thousands of durable file writes. UI command and
+assertion budgets are unchanged. No physical installer proof is claimed.
+
+The same final checkpoint also passes the focused **53-task personalized FSRS**
+review gate with mixed ordering: native → JS, JS → visible native advancement,
+offline PNG rendering, durable offline review bytes, and cold reconnect after
+the three reviewed tasks leave the first-50 window. Native file decoding and a
+fresh independent JS peer verify all three observations and derived schedules.
+Its fixture/receipt is `orbit-lab-review-gate.aQp5Gy`; the previous Simulator
+selection is restored. This small fixture checks policy/continuity, not the
+large-message boundary proved by the separate 14,000-task run above.
+
+Final check logs are `/private/tmp/orbit-maintenance-checkall-final-20261015.log`,
+`/private/tmp/orbit-maintenance-web-smoke-20261015.log`, and
+`/private/tmp/orbit-maintenance-native-update-smoke-final-20261015.log`;
+the personalized review log is
+`/private/tmp/orbit-maintenance-fsrs-review-smoke-20261015.log`.
+
+## 2026-10-15: immediate foreground update offers
+
+Andy changed the policy to offer available updates immediately on foreground,
+including with an unrevealed question or revealed answer on screen. The client
+no longer passes a queue/session eligibility flag or a saved-review callback to
+the update controller. Pending review/delete/undo writes still defer the prompt
+and are rechecked at the actual reload/install tap. Applying updates remains
+explicit; Later suppresses the same offer for the mounted session, and offline
+automatic checks remain quiet. No native code or runtime change was needed.
+
+All 23 focused controller cases pass; workspace lint/build, 371 unit cases
+(one pre-existing skip), and 25 integration cases pass. The actual optimized
+Release Simulator uses an isolated HTTPS Serve route on 9443 and a disposable
+53-task vault. It shows a native offer before any review, and a real JavaScript
+checkpoint offer on foreground with the answer already revealed. Dismissing
+preserves that answer. The runner also verifies Later suppression, manual
+reoffer, native installer handoff, same/missing native fallback, three durable
+review observations, cold-launch checkpoint activation, and quiet offline
+foreground checks. Simulator handoff is not evidence of physical installation.
+
+All UI assertions passed. A transient CoreSimulator `Mach error -308` interrupted
+the runner's final selection restoration; its isolated Serve route and server
+were cleaned up, and rerunning the ordinary restoration action succeeded with
+other records preserved. This was cleanup failure, not an app/assertion failure.
+The fixture and receipt are `orbit-lab-review-gate.V9d9hX` in the Mac's temporary
+directory. Logs and the receipt are retained under
+`~/Library/Caches/Orbit Lab/native/validation-20261015/immediate-updates`.
+
+The live private checkpoint is **3649b188-cda9-4faf-b440-c961c2924a95**, runtime
+`orbit-lab-native-3`. Actual protocol-1 HTTPS discovery selects it with the normal
+443 private origin, and the downloaded launch asset matches its SHA-256.
+Native build 13 is unchanged. Andy confirmed that Chonk offered the update
+through its existing menu and completed the reload. Future offers use the new
+policy; an automatic foreground offer on the physical phone still awaits a
+subsequent release.
+
+The following read-only server-file audit at **2026-10-16 00:38 UTC** finds all
+**five** post-cutover review observations reflected in their catalog entries,
+with **zero** mismatches among the inspected task documents. Independent FSRS
+calculations and mixed-queue ordering assertions pass. The five reviewed-task
+conflicts have disappeared; the remaining 48 conflicts have structurally
+identical decoded values in every variant. The audit performed **zero storage
+writes**, so it did not repair the catalog itself. This verifies real-vault
+review-projection catch-up after the reload, not a direct inspection of every
+catalog row on Chonk. The raw audit is retained privately as
+`/private/tmp/orbit-after-immediate-update-live-audit-20261015.json`.
+
+## 2026-10-15: catalog sync exceeded the native WebSocket limit
+
+All three recent FSRS reviews reached their authoritative server task documents,
+but Chonk's catalog had not received the server's FSRS backfill. A read-only copy
+of its catalog had 51 FSRS rows versus 10,888 on the server. The server retained
+50 catalog conflicts, including the three newer review projections; this was
+not loss of review observations or an FSRS calculation failure.
+
+Replaying those exact document copies in memory converges normally. The required
+server → phone CBOR sync message is **1,154,895 bytes**, larger than URLSession's
+**1,048,576-byte** default. Repo Swift 0.3.2 neither overrides nor exposes that
+limit. Replaying the real message over a disposable loopback WebSocket with
+Apple's Foundation API fails with `NSPOSIXErrorDomain Code=40: Message too long`
+at the default, and receives every byte with the new limit. This explains why
+small phone → server review writes succeeded while the catalog stayed stale.
+
+The native installer resolves the pinned Swift package, then applies a guarded,
+idempotent one-line patch before compilation. It sets the upstream provider's
+`maximumMessageSize` to the same finite **16 MiB** budget used for server ingress.
+Repo Swift still owns the transport/protocol; no replacement provider, scheduler,
+index, or UI recovery path was added. Source drift fails the preflight rather
+than silently dropping the patch. Remove it once upstream exposes the setting.
+Native runtime 3 separates this binary change from existing compatible updates.
+
+The Simulator fixture now creates 53 due tasks and enough ordinary future tasks
+for a 14,000-entry catalog. It asserts the actual Automerge response exceeds
+1 MiB. Independent verification fetches only the relevant 53 task documents;
+the future bodies are not needed to display or verify the queue. A separate
+server regression uploads/downloads an incompressible document exceeding its
+former 2 MiB ingress limit.
+
+The default-limit build 12 fails that real Simulator gate with `Vault unavailable`
+and `Timed out fetching native Automerge document`. The response is 1,216,189
+bytes. Build 13 passes against the **same** dataset and partially downloaded
+native cache, without uninstalling or clearing data: native review → fresh JS
+peer, JS review → visible native advancement, offline PNG/cold launch, durable
+offline review bytes, and cold reconnect after all three reviewed tasks leave
+the 50-task window. Personalized FSRS weights and the mixed queue remain active;
+independent file decoding verifies the three observations and derived due dates.
+The previous Simulator selection is restored by both runs.
+
+Workspace lint/build, 371 unit tests (one pre-existing skip) and 25 integration
+tests pass. A signed Release archive for native build **13**, runtime
+`orbit-lab-native-3`, is retained. Its matching private checkpoint is
+`b6d24099-d05a-4eee-ade0-33862434f580`; older runtime checkpoints are unchanged.
+The managed private backend was gracefully restarted with the shared budget,
+and its private HTTPS readiness check passes.
+
+The first ad-hoc export was blocked by Xcode's saved account
+(`missing Xcode-Username` / `missing Xcode-Token`). After Andy opened his personal
+Apple account in Xcode, exporting the **same archive** succeeded without a
+rebuild. Native build **13 is now privately published**. Strict signature
+verification, app identity, runtime 3, private origin, App Group, and unexpired
+ad-hoc app/extension profiles including Chonk all pass. The IPA is 17,197,109
+bytes, SHA-256
+`7221d764cbf5d2a881996f21447a6de618dc4a737aeaeece1ff644f0bcc5e494`.
+The live private descriptor and installation manifest select build 13. A complete
+HTTPS download matches that hash; HEAD, byte-range responses, and readiness pass.
+Native build 12 does not receive the runtime-3 JavaScript checkpoint; it discovers
+the native replacement through the ordinary update menu. Andy subsequently
+installed it, and CoreDevice independently confirms build **13** on Chonk.
+The first post-install read-only audit still retained 53 conflicts and the five
+authoritative reviews. A copy from the
+previously selected native store still has only 51 FSRS rows. The phone became
+inaccessible wirelessly and the server had no connected sync socket; another
+awake, foreground connection was needed before distinguishing a remaining sync
+failure from an unavailable/backgrounded client. No phone data was cleared.
+The later reload and read-only catch-up evidence are recorded above.
+
+A later read-only audit after restart finds **five** authoritative FSRS reviews,
+including the two completed during this investigation. Independent FSRS
+calculations match all five; no live storage writes were made by the audit.
+At that point the old phone still could not receive the catalog, which had 53
+conflicts; real-vault repair was not yet verified.
+
+Before the subsequent policy change recorded above, the reported lack of a
+foreground update dialog matched the then-implemented gate: discovery ran on
+foreground, but an automatic dialog waited for an empty queue or a saved review
+boundary. Even an unrevealed question blocked it. Manual checking bypassed that
+prompt gate, not the pending-write guard. The 31 controller/native-discovery
+tests passed. This explained that initial behavior, not whether a particular
+foreground check had actually occurred on the phone.
+
+Proofs and logs are retained under
+`~/Library/Caches/Orbit Lab/native/validation-20261015/catalog-sync-limit`;
+the synthetic fixture is `orbit-lab-review-gate.Da7jvb` in the Mac's temporary
+directory. The oversized-message reproduction used copied real bytes only,
+with zero live storage writes. Nothing was deployed to public Orbit.
+
+## 2026-10-15: supervised local service and crash-safe writer locking
+
+The update-check failure was a 502 from the private HTTPS proxy: its local
+backend was gone, while both Tailscale peers remained connected. A leftover
+`.writer-pid` named a nonexistent process. Its bytes were preserved before the
+manual recovery; the original process's cause of death remains unknown.
+
+The backend now runs directly under a user-owned macOS LaunchAgent, independently
+of the terminal, TypeScript watch supervisor and Metro. `RunAtLoad`/`KeepAlive`
+configure login startup and process-exit recovery, with a ten-second restart
+throttle and thirty-second graceful-shutdown allowance. `lab:service` manages
+installation, status, graceful restart, stop/start and removal. It records
+absolute Node/checkout/config paths, not credentials. Timestamped lifecycle and
+shutdown failures go to `~/Library/Logs/Orbit Lab/server.log`. Stop/restart waits
+for the unloaded process to exit, not merely for `launchctl bootout` to return.
+
+The PID-file protocol is replaced with an OS-held exclusive lock on the stable
+`.writer-lock` inode: macOS `lockf` (Linux `flock`) locks an inherited descriptor,
+then exits while Node retains ownership. Closing the descriptor or process death
+releases ownership. No helper stays running and no lease, heartbeat, stale-PID
+deletion or new package is needed. A retained lock file is not an active lock;
+operators must never unlink it. Offline snapshot/restore, calibration and importer
+paths share this exclusion; snapshots omit the lock inode.
+
+Workspace lint/build, 369 unit tests (one pre-existing skip) and 24 integration
+tests pass on macOS. Cross-process regressions cover duplicate writers, symlink
+refusal, stable inode reuse and repeated SIGKILL/reacquisition. A temporary
+LaunchAgent using a separate synthetic vault recovered from two forced crashes
+in about 1.3 seconds each with its test-only one-second throttle, retained its
+root, refused a second writer, and passed a graceful unload/reload. The temporary
+job was removed. This does not claim a forced crash of the real vault, a reboot
+test, Linux execution or recovery from a process that stays alive but hangs.
+
+The actual foreground supervisor was stopped gracefully and replaced with the
+installed login service. Its graceful restart passes, with persistent stop/start
+logs. Native build 12 and both runtime checkpoints are unchanged; the complete
+private HTTPS download/hash and HEAD/Range checks pass. `lab:dev --client-only`
+now owns only compiler/Metro. Closing that supervisor left the managed backend
+PID and private readiness unchanged; the client loop was subsequently restored.
+Receipts are retained under
+`~/Library/Caches/Orbit Lab/native/validation-20261015/local-service`.
+
+## 2026-10-14: mixed FSRS backlog selection
+
+The shared selector now interleaves highest-retrievability and oldest-due
+choices before the 50-task cap. Both lanes choose the earliest-due component of
+each task and deduplicate tasks. Unscored cards enter the oldest lane; actually
+due FSRS-era retries precede the mixture, without the ordinary sixteen-hour
+lookahead. Historical failures are not retrospectively turned into retries.
+Saved-review count since cutover rotates the starting lane after each review,
+including remote reviews and relaunches. It is derived from task observations
+along with compact catalog memory summaries, not an additional queue cursor.
+The same selector drives startup priorities and final projected queues. Widget
+snapshots retain that order and their revision hash includes order changes.
+
+The one-time bounded backfill retained a complete snapshot at
+`~/Library/Application Support/Orbit Lab/recovery/mixed-queue-20261014`, then
+populated 10,888 catalog entries in batches of at most 64 task histories.
+Independent committed-byte comparison confirms all 12,933 non-catalog chunks
+are unchanged, including the root, scheduler, tasks, observations and
+attachments. Every original catalog due date is unchanged. The normal private
+development loop was restarted and readiness succeeds. The compressed catalog
+grew from 957,908 to 1,152,014 bytes. Desktop JS/Wasm selection took a median
+1.7 ms; combined catalog loading/materialization/decoding increased from about
+100 to 144 ms in that benchmark. These are warm-process desktop measurements,
+not Chonk launch timings; native/physical launch performance remains unmeasured.
+
+Final workspace lint/build, 367 unit cases and 24 integration cases pass, with
+one pre-existing interpreter skip. The three Foundation widget handoff/reader/
+writer gates pass, including cross-process races and interrupted writes. Fresh
+review found and fixed stale-catalog reselection after a task becomes a future
+retry, and the app-local final-card refill bypassing the ten-minute wait. Both
+have regressions. The real-history optimized Release Simulator gate passes
+native-to-JS and JS-to-native advancement, offline PNG rendering/save and cold
+reconnection. Its first high-retrievability task is outside the former oldest-50
+window; independent server and native-file checks confirm all three reviews and
+the alternating queue. Its synthetic reviews are confined to the disposable
+fixture, never the private live vault.
+
+Native build 12 is archived with runtime `orbit-lab-native-2`. Its first export
+reported "No Accounts"; the detailed log identified unreadable saved account
+credentials (missing Xcode token), despite the account and team appearing in
+Xcode. Retrying the same archive after Andy opened Accounts succeeded without
+account/keychain changes by the agent. The Home Screen widget gate exposed that unsigned
+Simulator builds lack their App Group; the local build script now uses ordinary
+ad-hoc signing so that gate tests the real shared container. The signed Simulator
+build has its actual App Group, and the medium widget was placed through normal
+SpringBoard controls. The Home Screen gate passes Reveal/answer/review progression
+through the supplied order with deliberately non-monotonic due dates (30,10,20).
+The runtime-2 update gate also passes on this signed build: it activates the exact
+final JavaScript through the ordinary menu, exercises native and JS foreground
+offers only at safe review boundaries, and verifies Later/manual reoffer,
+offline/cold launch and saved-review persistence. Its installer handoff remains
+Simulator-only, not physical OTA installation proof. A final real-history mixed
+FSRS review gate also passes after activating that exact checkpoint on the signed
+binary. All temporary routes and selections are restored.
+
+Published runtime-2 checkpoint `6249d4f3-91ce-4fc8-aab6-05dd31ab60b9`. All 111
+assets (5,869,794 bytes) were downloaded through the normal private HTTPS origin
+and hash-verified. Runtime-1 remains on checkpoint
+`15eb11e9-0c06-487b-9504-1c1308cb5988`; the older binary cannot accidentally
+acquire the new widget assumptions.
+The retained archive's native identity is build 12, runtime 2, with the normal
+443 update origin rather than the Simulator-only 9443 origin. Native build 12
+is now privately published. App and widget signatures verify recursively with
+the Orbit team, matching build numbers and App Group entitlements; both
+unexpired ad-hoc profiles include Chonk. The HTTPS IPA matches the local SHA-256,
+and installer manifest, HEAD/Range serving and build-11 update discovery pass.
+Physical installation remains Andy's acceptance check. This one native update
+removes WidgetKit's independent due-date sort; subsequent queue-order experiments
+can remain JavaScript-only. Receipts and final gate logs are retained in
+`~/Library/Caches/Orbit Lab/native/validation-20261014/mixed-queue`.
+
+## 2026-10-14: personalized FSRS scheduling activated
+
+The private Lab vault now selects FSRS-6 (`ts-fsrs@5.4.2`) from its root policy.
+Remembered maps to Good (3), Forgotten to Again (1), with 90% requested retention
+and deterministic intervals. Forgotten keeps the existing ten-minute retry;
+Skip defers one day without counting as recall. Historical observations warm
+FSRS memory, but original due dates/intervals remain until each component's
+first post-cutover review. The shared projection drives saved app state and
+starburst previews; neither Swift nor the widget gained a separate scheduler.
+
+One local calibration used the retained complete October 13 export. Of 105,856
+raw review observations, 30,097 were exact imported legacy aliases; fitting
+counted each once without deleting any history. After excluding 950 skips,
+74,809 binary reviews across 6,986 component histories provided 56,880 positive-day
+targets; same-day reviews remained context. The latest 20% of targets were held
+out chronologically. Compared with defaults, fitted weights reduced held-out
+log loss from 0.516651 to 0.511167 (1.06%) and binned RMSE from 0.062849 to
+0.055685 (11.4%). Only after both improved were all targets used for the final
+21 weights. The pinned `fsrs-rs-python==0.9.3` optimizer runs locally, is not
+shipped to clients, and agrees with the TypeScript memory equations on the
+representative parity histories. Binary data does not separately identify
+Hard/Easy behavior. Source export, reports and weights remain private.
+
+Full-vault preflight preserved all existing scheduling fields for 13,705
+components across 10,888 tasks, with no new projection issues. Simulating a
+Remembered review of each currently due component produced a median 45-day
+FSRS interval versus 913 days with the old scheduler; this is a hypothetical
+comparison, not a rescheduling of the queue. Future review load may increase.
+Complete workspace lint/build, 331 unit cases and 24 integration cases pass,
+with one pre-existing interpreter skip; all five calibration-script tests pass.
+The optimized Release Simulator loaded the actual new JavaScript through Expo,
+then passed the ordinary app-controls native-to-JS, JS-to-native, offline-save,
+and cold-reconnect gate using the personalized weights. Independent server and
+native-file checks verify all three reviews and their FSRS catalog dates. No
+test-specific UI branches or synthetic reviews were added to the live vault.
+
+Published checkpoint `15eb11e9-0c06-487b-9504-1c1308cb5988` supersedes the
+foreground-update checkpoint below, retaining runtime `orbit-lab-native-1` and
+native build 11. All 111 assets were fetched through the normal private HTTPS
+origin and hash-verified. After Andy confirmed loading it on Chonk, the complete
+development supervisor was stopped cleanly and the one-time operator retained
+`~/Library/Application Support/Orbit Lab/recovery/fsrs-cutover-20261014` before
+changing only the scheduler policy. Cutover is **2026-10-14 18:51:46.965 UTC**.
+Independent decoding of committed root bytes confirms the selected policy and
+weights, while SHA-256 comparison verifies all 12,949 non-root committed chunks
+are unchanged, including tasks, observations, attachments and catalog. This
+verifier constructed no Repo and made no writes. The normal development loop
+was restarted and private health/readiness succeed. A separate in-memory client
+then fetched the exact calibrated policy through the real private HTTPS
+WebSocket endpoint without submitting document changes. No public Orbit state
+was changed. A physical post-cutover FSRS review remains a user acceptance check;
+the automated end-to-end review proof is from the Simulator.
+
+Calibration evidence is retained at
+`~/Library/Application Support/Orbit Lab/fsrs-calibration-20261014`; validation
+logs, Simulator receipts and cutover verification are at
+`~/Library/Caches/Orbit Lab/native/validation-20261014/fsrs`.
+
+## 2026-10-14: foreground update discovery without interrupting reviews
+
+Launch and real background-to-foreground transitions now check native and
+JavaScript releases independently. Native replacement takes priority; otherwise
+a JavaScript checkpoint downloads in the background. Automatic prompts wait for
+the current answer's durable local save or an empty session. Later suppresses
+that same offer during the mounted session; the menu explicitly requests a
+result again. Offline automatic checks stay quiet. Reload/install still require
+approval and recheck pending writes at the action itself.
+
+The 23 focused lifecycle/prompt tests pass. Final `bun run checkall` passes
+lint, workspace build, 294 unit cases and 24 integration cases, with the one
+pre-existing interpreter skip. The optimized Release Simulator loaded the actual
+new code through Expo's normal checkpoint download/reload, without rebuilding
+the native binary or adding application test branches. Its existing isolated
+53-task gate verifies both native and real JavaScript foreground offers, holds
+each through the question and revealed answer, and presents only after a saved
+review. It also verifies Later suppression, explicit manual reoffer, independent
+server persistence of three observations, cold-launch activation, and quiet
+offline foregrounding. Observed Home/app process IDs prove these foregrounds
+are not cold starts. Expo's native successful-launch records confirm the exact
+checkpoint activations. One intermediate runner attempt failed its fixed Home
+delay after a successful JS activation; the runner now observes the background
+transition and captures failures instead of assuming it after 750 ms.
+
+Published JavaScript checkpoint `9a4308a9-0c03-4ff5-86f8-b9c98e071fd0` at the
+normal private origin for unchanged runtime `orbit-lab-native-1`. Every launch
+and supporting asset was fetched through Tailscale HTTPS and SHA-256 verified.
+Native build selection remains 11 and readiness succeeds. This does not claim
+Chonk has activated this checkpoint yet: its current menu can download/reload
+it once, enabling subsequent foreground checks. No Chonk operation or live-vault
+mutation was part of these tests. The temporary fixture server/Serve mapping
+were removed and the previous Simulator selection restored. Proof JSON,
+screenshots, suite logs and publication receipts are retained under
+`~/Library/Caches/Orbit Lab/native/validation-20261014/foreground-updates`.
+
 ## 2026-10-14: signed native build 11 published privately
 
 After Andy restored Xcode's developer-account session, the retained build-11
@@ -39,10 +507,22 @@ Signed artifacts, metadata receipts and export/checkpoint logs are retained at
 `~/Library/Caches/Orbit Lab/native/validation-20261014`; the immutable selected
 IPA/manifest also remain in the configured updates directory.
 
-No installation or other device operation was initiated on Chonk. Actual iOS
-OTA replacement, installer access through Tailscale, and app/widget data
-preservation remain physical-device gates, not outcomes inferred from signing,
-download checks or the earlier Simulator tests. Public Orbit is unchanged.
+Andy then used the in-app update flow and reported that it appeared to work.
+A read-only CoreDevice inventory independently confirms Chonk now has Orbit Lab
+`com.withorbit.native` version 1.0.0, native build 11, replacing build 10. This
+closes the physical OTA installation and installer-access-through-Tailscale
+gates; it is not merely the Simulator accepting the installation URL. No install,
+launch or review was initiated by the verification. Private readiness succeeds.
+After the update, Andy completed one app review and one widget review. Direct,
+read-only decoding of the private server's committed snapshot/incremental bytes
+confirms both observations: app `review/-jv2gsksT-eraaHnLPK8Ew` at 16:36:04 UTC
+and widget `review/NeXe-oh3TTi1XQUksnXLCw` at 16:36:14 UTC on October 14.
+Both are remembered outcomes; their catalog entries reference the correct task
+documents and reflect the current task heads. The widget observation appeared
+after reopening Lab to import its outbox, as designed. Verification created no
+Repo or network peer and made zero storage mutations. This closes the
+post-update app/widget review persistence and delivery check; it is not a new
+offline or full-vault recovery test. Public Orbit is unchanged.
 
 ## 2026-10-13: private native update handoff
 

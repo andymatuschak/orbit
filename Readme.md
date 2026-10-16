@@ -18,6 +18,11 @@ Start with [the architecture](design/automerge-architecture.md), then
 gates; [the validation record](design/automerge-validation-record.md) distinguishes
 proved behavior from pending native/device checks.
 
+Source work is published to remote branch `lab`. This checkout's local branch
+can have a different name; use `git push origin HEAD:lab` explicitly. Pushing
+source does not deploy public Orbit or publish a phone update: the private
+checkpoint and local service commands below are separate operations.
+
 ## Local development
 
 Requirements: Bun, Node 22.13 or newer, and a private vault configured outside
@@ -29,11 +34,16 @@ identity, and the ignored proprietary font assets described in
 bun install
 bun run build
 bun run test
-bun run lab:dev
+bun run lab:service install
+bun run lab:dev --client-only
 ```
 
-`lab:dev` builds/watches the retained packages, runs the single-writer backend,
-and starts Metro/web on port 8081. It defaults to
+The user LaunchAgent keeps the single-writer backend running across terminal
+closure and process crashes. `lab:service status` reports readiness;
+`lab:service restart` gracefully loads rebuilt server code. `lab:dev --client-only`
+builds/watches the retained packages and starts Metro/web on port 8081 without
+owning that backend. For backend auto-reload, stop the managed service and run
+ordinary `lab:dev`; the two writers must not overlap. Configuration defaults to
 `~/Library/Application Support/Orbit Lab/config.json`; use
 `bun run lab:dev --config <private-config>` or `ORBIT_LAB_CONFIG` to choose
 another private configuration. The browser's first visit asks for the private
@@ -71,9 +81,10 @@ starting development, and publishing checkpoints. Never put the pairing key in
 that environment variable or the bundle.
 
 Use the installed binary's actual runtime version. `expo-updates` opens the
-embedded or cached bundle without a startup network wait and checks for updates
-in the background. The native review menu also offers an explicit update check
-and confirmation before reloading. Metro/Fast Refresh is the connected editing
+embedded or cached bundle without a startup network wait. Launch/foreground
+checks offer available native and JavaScript updates immediately, except while
+a durable write is pending. Applying either requires approval. The menu can
+explicitly check again after Later. Metro/Fast Refresh is the connected editing
 loop, not the durable offline bundle.
 
 For a native-code change, publish an ad-hoc IPA to that same private server:
