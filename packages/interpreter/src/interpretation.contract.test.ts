@@ -251,6 +251,126 @@ Real {answer}.`);
   });
 });
 
+test("explicit cloze IDs change identity, not rendered Markdown or UTF-16 ranges", () => {
+  const plain = interpret(
+    "🦉 An {**important** [link](https://example.com)} and {a $x^{2}$ 🌈 formula}.",
+  ).items[0].spec.content as ClozeTaskContent;
+  const labeled = interpret(
+    "🦉 An {meaning::**important** [link](https://example.com)} and {equation-2::a $x^{2}$ 🌈 formula}.",
+  ).items[0].spec.content as ClozeTaskContent;
+  expect(labeled).toEqual({
+    ...plain,
+    components: {
+      meaning: plain.components["0"],
+      "equation-2": plain.components["1"],
+    },
+  });
+  expect(
+    Object.values(labeled.components).map(({ ranges: [range] }) =>
+      labeled.body.text.slice(
+        range.startIndex,
+        range.startIndex + range.length,
+      ),
+    ),
+  ).toEqual([
+    "**important** [link](https://example.com)",
+    "a $x^{2}$ 🌈 formula",
+  ]);
+});
+
+test("explicit numeric cloze IDs can preserve legacy normalized content and hashes", () => {
+  const plain = interpret("The {cat} sat on the {mat}.");
+  const labeled = interpret("The {0::cat} sat on the {1::mat}.");
+  expect(labeled.items).toEqual(plain.items);
+});
+
+test("mixed labeled and unlabeled clozes keep appearance order and positional defaults", () => {
+  const content = interpret("{subject::cat} met {dog} near {place::home}.")
+    .items[0].spec.content as ClozeTaskContent;
+  expect(Object.keys(content.components).sort()).toEqual([
+    "1",
+    "place",
+    "subject",
+  ]);
+  expect(content.components.subject.order).toBe(0);
+  expect(content.components["1"].order).toBe(1);
+  expect(content.components.place.order).toBe(2);
+});
+
+test("explicit cloze IDs follow their blanks when reordered", () => {
+  const first = interpret("The {animal::cat} sat on the {place::mat}.").items[0]
+    .spec.content as ClozeTaskContent;
+  const second = interpret("The {place::mat} held the {animal::cat}.").items[0]
+    .spec.content as ClozeTaskContent;
+  for (const id of ["animal", "place"]) {
+    const before = first.components[id].ranges[0];
+    const after = second.components[id].ranges[0];
+    expect(
+      first.body.text.slice(
+        before.startIndex,
+        before.startIndex + before.length,
+      ),
+    ).toBe(
+      second.body.text.slice(after.startIndex, after.startIndex + after.length),
+    );
+  }
+  expect(first.components.animal.order).toBe(0);
+  expect(second.components.animal.order).toBe(1);
+  expect(first.components.place.order).toBe(1);
+  expect(second.components.place.order).toBe(0);
+});
+
+test.each([
+  "{same::first} and {same::second}",
+  "{1::first} and {second}",
+  "{first} and {0::second}",
+])(
+  "duplicate cloze IDs cannot silently group or overwrite blanks: %s",
+  (text) => {
+    expect(() => interpret(text)).toThrow(
+      /Cloze component ID .* is used more than once/,
+    );
+  },
+);
+
+test("cloze IDs are scoped to their task, including JavaScript property names", () => {
+  const source = interpret(
+    "{__proto__::first} {constructor::second} {toString::third}.\n\n{__proto__::fourth}.",
+  );
+  expect(source.items).toHaveLength(2);
+  const first = source.items[0].spec.content as ClozeTaskContent;
+  expect(Object.keys(first.components)).toEqual([
+    "__proto__",
+    "constructor",
+    "toString",
+  ]);
+  expect(Object.values(first.components).map(({ order }) => order)).toEqual([
+    0, 1, 2,
+  ]);
+  const second = source.items[1].spec.content as ClozeTaskContent;
+  expect(Object.keys(second.components)).toEqual(["__proto__"]);
+  expect(second.components["__proto__"].order).toBe(0);
+});
+
+test("empty identified blanks remain prose without swallowing nearby valid blanks", () => {
+  const source = interpret("Empty {unused::} followed by {answer::content}.");
+  const content = source.items[0].spec.content as ClozeTaskContent;
+  expect(content.body.text).toBe("Empty {unused::} followed by content.");
+  expect(Object.keys(content.components)).toEqual(["answer"]);
+  expect(content.components.answer.order).toBe(0);
+});
+
+test("a literal escaped ID prefix stays in the answer rather than naming its component", () => {
+  const content = interpret("A {literal\\::answer}.").items[0].spec
+    .content as ClozeTaskContent;
+  expect(Object.keys(content.components)).toEqual(["0"]);
+  expect(content.body.text).toBe("A literal::answer.");
+  const range = content.components["0"].ranges[0];
+  expect(
+    content.body.text.slice(range.startIndex, range.startIndex + range.length),
+  ).toBe("literal::answer");
+});
+
 test("Bear identity survives file moves and does not enter task content", () => {
   const bearID = "860466DE-8254-47C1-AA71-BA9C0CE18FA3-402-00002ED1CDC440DA";
   const content = `---

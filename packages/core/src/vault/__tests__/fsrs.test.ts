@@ -319,6 +319,101 @@ test("cloze components fold independently", () => {
   });
 });
 
+test("cloze membership edits preserve retained FSRS, retire histories, and recover late reviews on restoration", () => {
+  function definition(ids: readonly string[]): VaultTask {
+    return {
+      ...task,
+      spec: {
+        type: TaskSpecType.Memory,
+        content: {
+          type: TaskContentType.Cloze,
+          body: { text: ids.join(" "), attachments: [] },
+          components: Object.fromEntries(
+            ids.map((id, order) => [id, { order, ranges: [] }]),
+          ),
+        },
+      },
+    };
+  }
+  const observations: [string, SchedulingObservation][] = [
+    ["a1", review(cutover, TaskRepetitionOutcome.Remembered, "a")],
+    ["a2", review(cutover + 5 * day, TaskRepetitionOutcome.Remembered, "a")],
+    ["b1", review(cutover + 2 * day, TaskRepetitionOutcome.Remembered, "b")],
+  ];
+  const before = project(observations, policy, definition(["a", "b"]));
+  const expanded = project(observations, policy, definition(["b", "c", "a"]));
+  expect(expanded.componentStates.a).toEqual(before.componentStates.a);
+  expect(expanded.componentStates.b).toEqual(before.componentStates.b);
+  expect(expanded.componentStates.c).toEqual({
+    createdAtTimestampMillis: task.createdAtTimestampMillis,
+    dueTimestampMillis: task.createdAtTimestampMillis,
+    intervalMillis: 0,
+    lastRepetitionTimestampMillis: null,
+  });
+  expect(expanded.componentStates.c.dueTimestampMillis).toBeLessThan(cutover);
+  observations.push([
+    "c1",
+    review(cutover + 8 * day, TaskRepetitionOutcome.Remembered, "c"),
+  ]);
+  const newReview = project(observations, policy, definition(["b", "c", "a"]));
+  expect(newReview.componentStates.c.fsrs).toEqual({
+    ...algorithm.next_state(null, 0, Rating.Good),
+    lastReviewTimestampMillis: cutover + 8 * day,
+  });
+
+  function withoutB() {
+    return projectResolvedVault({
+      policy,
+      resolvedTasks: new Map([[taskID, definition(["c", "a"])]]),
+      observations: observations as [ObservationID, SchedulingObservation][],
+    });
+  }
+  const removed = withoutB();
+  const remaining = removed.tasks.get(taskID)!;
+  expect(removed.issues).toEqual([]);
+  expect(removed.observationCount).toBe(4);
+  expect(Object.keys(remaining.componentStates).sort()).toEqual(["a", "c"]);
+  expect(remaining.componentStates.a).toEqual(before.componentStates.a);
+  expect(
+    project(observations, policy, definition(["b", "a", "c"])).componentStates
+      .b,
+  ).toEqual(before.componentStates.b);
+
+  observations.push([
+    "late-b",
+    review(cutover + 9 * day, TaskRepetitionOutcome.Forgotten, "b"),
+  ]);
+  const late = withoutB();
+  expect(late.issues).toEqual([]);
+  expect(late.observationCount).toBe(5);
+  expect(late.tasks.get(taskID)!.componentStates).toEqual(
+    remaining.componentStates,
+  );
+  const queue = createReviewQueue([...late.tasks.values()], 50, {
+    scheduler: policy,
+    nowTimestampMillis: cutover + 100 * day,
+  });
+  expect(queue).toHaveLength(1);
+  expect(queue[0].componentID).not.toBe("b");
+
+  const restored = project(observations, policy, definition(["b", "c", "a"]));
+  expect(restored.componentStates.a).toEqual(before.componentStates.a);
+  expect(restored.componentStates.c).toEqual(newReview.componentStates.c);
+  expect(restored.componentStates.b.lastRepetitionTimestampMillis).toBe(
+    cutover + 9 * day,
+  );
+  expect(restored.componentStates.b.fsrs?.isRetry).toBe(true);
+  expect(observations).toHaveLength(5);
+
+  const reordered = project([], policy, definition(["c", "a"]));
+  expect(
+    createReviewQueue([reordered], 50, {
+      scheduler: policy,
+      nowTimestampMillis: cutover,
+    })[0].componentID,
+  ).toBe("c");
+});
+
 test("duplicate legacy IDs warm memory once but preserve historical due; distinct same-time recalls remain distinct", () => {
   const observation = review(cutover - 10 * day);
   const observations: [string, SchedulingObservation][] = [

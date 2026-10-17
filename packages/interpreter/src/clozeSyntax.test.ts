@@ -48,6 +48,85 @@ test("parses cloze at end of line", () => {
   expect(stringify(processor.parse(markdown))).toBe(markdown);
 });
 
+test.each(["0", "1", "answer", "answer_2", "answer-two", "A_1-z"])(
+  "parses an explicit component ID without making it learning content: %s",
+  (componentID) => {
+    const markdown = `This is {${componentID}::a test}`;
+    const tree = processor.parse(markdown);
+    expect(tree).toMatchObject(
+      paragraph([
+        { type: "text", value: "This is " },
+        { ...cloze("a test"), componentID },
+      ]),
+    );
+    expect(stringify(tree)).toBe(markdown);
+  },
+);
+
+test("explicit component IDs retain ordinary Markdown inside the blank", () => {
+  const markdown = "{meaning::**naïve 🐙** and $x^{2}$}";
+  const tree = processor.parse(markdown);
+  expect(tree).toMatchObject(
+    paragraph([
+      {
+        type: "cloze",
+        componentID: "meaning",
+        children: [
+          { type: "strong", children: [{ type: "text", value: "naïve 🐙" }] },
+          { type: "text", value: " and " },
+          { type: "inlineMath", value: "x^{2}" },
+        ],
+      },
+    ]),
+  );
+  expect(stringify(tree)).toBe(markdown);
+});
+
+test.each(["{0::}", "{answer::}"])(
+  "does not parse an explicitly identified empty blank: %s",
+  (markdown) => {
+    const tree = processor.parse(markdown);
+    expect(tree).toMatchObject(paragraph([{ type: "text", value: markdown }]));
+    expect(stringify(tree)).toBe(markdown);
+  },
+);
+
+test.each([
+  ["{answer:value}", "answer:value"],
+  ["{::value}", "::value"],
+  ["{two words::value}", "two words::value"],
+  ["{naïve::value}", "naïve::value"],
+  ["{answer\\::value}", "answer::value"],
+])("only a complete ASCII ID prefix is metadata: %s", (markdown, value) => {
+  expect(processor.parse(markdown)).toMatchObject(paragraph([cloze(value)]));
+});
+
+test("identified clozes retain balanced and escaped braces", () => {
+  const tree = processor.parse("{answer::a {nested} and escaped \\} brace}");
+  expect(tree).toMatchObject(
+    paragraph([
+      { ...cloze("a {nested} and escaped } brace"), componentID: "answer" },
+    ]),
+  );
+  expect(stringify(tree)).toBe(
+    "{answer::a \\{nested\\} and escaped \\} brace}",
+  );
+});
+
+test.each(["{answer\\::value}", "{answer\\:\\:value}"])(
+  "an escaped literal ID-like prefix stays unlabeled through serialization: %s",
+  (markdown) => {
+    const tree = processor.parse(markdown);
+    expect(tree).toMatchObject(paragraph([cloze("answer::value")]));
+    const canonical = stringify(tree);
+    expect(canonical).toBe("{answer\\::value}");
+    expect(processor.parse(canonical)).toMatchObject(
+      paragraph([cloze("answer::value")]),
+    );
+    expect(stringify(processor.parse(canonical))).toBe(canonical);
+  },
+);
+
 test.each(["This is {a test of cloze", "This is {a non-cloze"])(
   "does not parse unbalanced braces: %s",
   (markdown) => {

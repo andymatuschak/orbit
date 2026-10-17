@@ -128,18 +128,32 @@ function compileCloze(block: BlockContent): TaskSpec {
   const clozes = [...walkMarkdown(parseMarkdown(marked))].filter(
     (node) => node.type === "cloze",
   );
-  const components: ClozeTaskContent["components"] = {};
+  const components = new Map<string, ClozeTaskContent["components"][string]>();
   let text = "";
   let cursor = 0;
   for (const [index, cloze] of clozes.entries()) {
     const { start, end } = sourceRange(cloze);
     text += marked.slice(cursor, start);
     const startIndex = text.length;
-    text += marked.slice(start + 1, end - 1);
-    components[index.toString()] = {
+    const componentID = cloze.componentID ?? index.toString();
+    if (components.has(componentID))
+      throw new Error(
+        `Cloze component ID ${JSON.stringify(componentID)} is used more than once; give each blank a distinct ID`,
+      );
+    const contentStart =
+      start +
+      1 +
+      (cloze.componentID === undefined ? 0 : componentID.length + 2);
+    let content = marked.slice(contentStart, end - 1);
+    // This escape exists only to keep the canonical source from reinterpreting
+    // a literal ID-like prefix. It was not part of legacy normalized answers.
+    if (cloze.componentID === undefined)
+      content = content.replace(/^([A-Za-z0-9_-]+)\\::/, "$1::");
+    text += content;
+    components.set(componentID, {
       order: index,
-      ranges: [{ hint: null, startIndex, length: end - start - 2 }],
-    };
+      ranges: [{ hint: null, startIndex, length: content.length }],
+    });
     cursor = end;
   }
   text += marked.slice(cursor);
@@ -148,7 +162,7 @@ function compileCloze(block: BlockContent): TaskSpec {
     content: {
       type: TaskContentType.Cloze,
       body: { text, attachments: [] },
-      components,
+      components: Object.fromEntries(components),
     },
   };
 }

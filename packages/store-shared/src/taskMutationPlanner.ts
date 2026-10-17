@@ -1,5 +1,5 @@
 import {
-  componentIDsForTaskSpec,
+  canUpdateTaskSpecComponents,
   referencedAttachmentIDs,
   type ObservationID,
   type SchedulingObservation,
@@ -44,10 +44,7 @@ export function planMutationsForTask(input: {
         break;
       }
       case "updateTaskSpec": {
-        if (
-          componentIDsForTaskSpec(task.spec).join("\0") !==
-          componentIDsForTaskSpec(mutation.spec).join("\0")
-        ) {
+        if (!canUpdateTaskSpecComponents(task.spec, mutation.spec)) {
           throw new Error("Vault cannot change component IDs");
         }
         assertAttachmentsRegistered(input.attachments, mutation.spec);

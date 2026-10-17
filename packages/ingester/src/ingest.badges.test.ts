@@ -353,14 +353,33 @@ it("rejects component-set changes before any valid item in the batch is applied"
 });
 
 for (const count of [1, 3]) {
-  it(`rejects ${count === 1 ? "removing" : "adding"} cloze components`, async () => {
+  it(`${count === 1 ? "removes" : "adds"} cloze components without replacing the task or reviews`, async () => {
     await seed(cloze(2), "0");
+    const before = await store.readLogicalVault();
+    const beforeState = await scheduling(taskID);
     const incoming = source([
       { ...item(taskID, "Cloze", taskID), spec: cloze(count) },
     ]);
-    await expect(plan([incoming])).rejects.toThrow(
-      "cannot change component IDs",
+    const mutations = await plan([incoming]);
+    expect(mutations.map(({ kind }) => kind)).toEqual([
+      "updateTaskSpec",
+      "mergeTaskMetadata",
+    ]);
+    await store.apply(mutations);
+    const after = await store.readLogicalVault();
+    expect(Object.keys(after.tasks)).toEqual([taskID]);
+    expect(after.observations).toEqual(before.observations);
+    expect(after.tasks[taskID].createdAtTimestampMillis).toBe(
+      before.tasks[taskID].createdAtTimestampMillis,
     );
+    expect((await scheduling(taskID))["0"]).toEqual(beforeState["0"]);
+    expect(Object.keys(await scheduling(taskID))).toHaveLength(count);
+    if (count === 3)
+      expect((await scheduling(taskID))["2"]).toMatchObject({
+        lastRepetitionTimestampMillis: null,
+        intervalMillis: 0,
+      });
+    expect(await plan([incoming])).toEqual([]);
   });
 }
 

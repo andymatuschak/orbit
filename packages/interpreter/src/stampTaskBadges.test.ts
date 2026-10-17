@@ -147,6 +147,15 @@ describe("source-preserving task stamping", () => {
     }
   });
 
+  it("preserves optional blank IDs and only stamps the whole cloze prompt", () => {
+    const note = file("{Paris} is the {2::capital} of {1::France}.");
+    const stamped = stampMarkdownFile(note, assignments(note));
+    expect(stamped).toBe(`${note.content} ${badge(ids[0])}`);
+    const updated = { ...note, content: stamped };
+    expect(source(updated).items[0].spec).toEqual(source(note).items[0].spec);
+    expect(stampMarkdownFile(updated, assignments(updated))).toBe(stamped);
+  });
+
   it("keeps an existing badge byte-identical and repeats without changes", () => {
     const original = `Q. First\nA. Answer [☉](orbit://${ids[0]})\n\nQ. Second\nA. Another`;
     const note = file(original);

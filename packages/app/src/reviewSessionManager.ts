@@ -63,7 +63,7 @@ export function reviewSessionManagerMarkCurrentItem(
   reviewedComponentID: string,
   nowTimestampMillis = Date.now(),
 ): ReviewSessionManagerState {
-  if (!savedTask.componentStates[reviewedComponentID])
+  if (!Object.hasOwn(savedTask.componentStates, reviewedComponentID))
     throw new Error("Saved review task is missing the current component");
 
   // Use the vault's actual projection, including its selected scheduler and

@@ -4,6 +4,7 @@ import type {
 } from "../entities/attachmentReference.js";
 import {
   mainTaskComponentID,
+  TaskContentType,
   type TaskRepetitionOutcome,
   type TaskID,
   type TaskProvenance,
@@ -99,6 +100,24 @@ export function componentIDsForTaskSpec(spec: TaskSpec): string[] {
       ? Object.keys(spec.content.components)
       : [mainTaskComponentID]
   ).sort();
+}
+
+/** Cloze component IDs retain their histories independently of membership/order. */
+export function canUpdateTaskSpecComponents(
+  previous: TaskSpec,
+  next: TaskSpec,
+): boolean {
+  if (
+    next.content.type === TaskContentType.Cloze &&
+    Object.keys(next.content.components).length === 0
+  )
+    return false;
+  return (
+    (previous.content.type === TaskContentType.Cloze &&
+      next.content.type === TaskContentType.Cloze) ||
+    componentIDsForTaskSpec(previous).join("\0") ===
+      componentIDsForTaskSpec(next).join("\0")
+  );
 }
 
 export function referencedAttachmentIDs(spec: TaskSpec): AttachmentID[] {

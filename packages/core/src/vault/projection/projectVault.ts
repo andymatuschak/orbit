@@ -1,5 +1,9 @@
 import { EntityType } from "../../entity.js";
-import type { Task, TaskID } from "../../entities/task.js";
+import {
+  TaskContentType,
+  type Task,
+  type TaskID,
+} from "../../entities/task.js";
 import type { ObservationID } from "../ids.js";
 import {
   componentIDsForTaskSpec,
@@ -88,8 +92,13 @@ export function projectResolvedVault(input: {
     );
     for (const [observationID, observation] of entries) {
       const task = tasks.get(observation.taskID);
-      const oldState = task?.componentStates[observation.componentID];
-      if (!task || !oldState) {
+      if (
+        !task ||
+        !Object.hasOwn(task.componentStates, observation.componentID)
+      ) {
+        // Cloze edits retire IDs without discarding their observations. If an
+        // ID returns, its complete history is replayed as usual.
+        if (task?.spec.content.type === TaskContentType.Cloze) continue;
         issues.push({
           kind: "unknown-component",
           observationID,
@@ -98,6 +107,7 @@ export function projectResolvedVault(input: {
         });
         continue;
       }
+      const oldState = task.componentStates[observation.componentID];
       if (observation.kind === "review") {
         const identity = reviewed
           ? reviewHistoryIdentity(observationID, observation)

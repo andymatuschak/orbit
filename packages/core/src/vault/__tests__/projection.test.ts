@@ -29,7 +29,7 @@ describe("vault projection", () => {
       const projected = projectVault({
         document: vault,
       }).tasks.get(taskID);
-      expect(projected).toEqual(legacyTask);
+      expect(projected).toEqual(legacyTask!);
     }
   });
 
@@ -56,7 +56,7 @@ describe("vault projection", () => {
     ).toBe(1_500);
   });
 
-  test("reports observations whose component no longer exists", () => {
+  test("reports observations for unknown non-cloze components", () => {
     const vault = baseVault();
     vault.tasks[taskID] = taskDefinition(1_000);
     vault.observations[observationID("review")] = {
@@ -78,6 +78,70 @@ describe("vault projection", () => {
       projection.tasks.get(taskID)?.componentStates.main
         .lastRepetitionTimestampMillis,
     ).toBeNull();
+  });
+
+  test("missing prototype-named components and unknown tasks still report issues", () => {
+    const vault = baseVault();
+    vault.tasks[taskID] = taskDefinition(1_000);
+    for (const id of ["constructor", "toString", "__proto__"])
+      vault.observations[observationID(`review/${id}`)] = {
+        ...review(2_000),
+        componentID: id,
+      };
+    vault.observations[observationID("unknown-task")] = {
+      ...review(3_000),
+      taskID: "missing-task" as TaskID,
+    };
+    const projected = projectVault({ document: vault });
+    expect(projected.issues.map(({ observationID: id }) => id)).toEqual(
+      [
+        "review/constructor",
+        "review/toString",
+        "review/__proto__",
+        "unknown-task",
+      ].map(observationID),
+    );
+    expect(Object.keys(projected.tasks.get(taskID)!.componentStates)).toEqual([
+      "main",
+    ]);
+  });
+
+  test("own cloze IDs may use prototype names while absent IDs remain retired", () => {
+    const vault = baseVault();
+    const ids = ["constructor", "toString", "__proto__"];
+    vault.tasks[taskID] = {
+      ...taskDefinition(1_000),
+      spec: {
+        type: TaskSpecType.Memory,
+        content: {
+          type: TaskContentType.Cloze,
+          body: { text: "a b c", attachments: [] },
+          components: Object.fromEntries(
+            ids.map((id, order) => [id, { order, ranges: [] }]),
+          ),
+        },
+      },
+    };
+    for (const id of [...ids, "valueOf"])
+      vault.observations[observationID(`review/${id}`)] = {
+        ...review(2_000),
+        componentID: id,
+      };
+    vault.observations[observationID("unknown-task")] = {
+      ...review(3_000),
+      taskID: "missing-task" as TaskID,
+      componentID: "constructor",
+    };
+    const projected = projectVault({ document: vault });
+    const states = projected.tasks.get(taskID)!.componentStates;
+    expect(Object.keys(states).sort()).toEqual([...ids].sort());
+    for (const id of ids)
+      expect(states[id].lastRepetitionTimestampMillis).toBe(2_000);
+    expect(Object.hasOwn(states, "valueOf")).toBe(false);
+    expect(projected.issues.map(({ observationID: id }) => id)).toEqual([
+      observationID("unknown-task"),
+    ]);
+    expect(projected.observationCount).toBe(5);
   });
 
   test("unsupported schedulers are rejected", () => {

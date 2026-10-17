@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from "node:util";
 import {
-  componentIDsForTaskSpec,
+  canUpdateTaskSpecComponents,
   generateUniqueID,
   type TaskID,
   type TaskProvenance,
@@ -214,10 +214,7 @@ function updateTask(
 ): VaultMutation[] {
   const updates: VaultMutation[] = [];
   if (!isDeepStrictEqual(task.spec, item.spec)) {
-    if (
-      componentIDsForTaskSpec(task.spec).join("\0") !==
-      componentIDsForTaskSpec(item.spec).join("\0")
-    )
+    if (!canUpdateTaskSpecComponents(task.spec, item.spec))
       throw new Error(`task '${taskID}' cannot change component IDs`);
     updates.push({
       kind: "updateTaskSpec",

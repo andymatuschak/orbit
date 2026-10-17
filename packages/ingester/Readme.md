@@ -30,6 +30,12 @@ a different valid ID really requests a different task. First adoption should use
 the existing task's ID, not a freshly generated replacement. Once adopted, removing
 the badge deliberately returns that prompt to new/content-hash identity.
 
+Cloze-to-cloze edits can add, remove, or reorder blanks. Histories follow their
+component IDs, not display order; removed components' observations remain stored
+and become active again if their ID returns. New IDs start unreviewed. The
+interpreter's [optional cloze prefixes](../interpreter/Readme.md#cloze-identities)
+let source edits retain those IDs without labeling every blank by default.
+
 ## Private command
 
 From the checkout root, after building:

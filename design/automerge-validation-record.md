@@ -1032,8 +1032,9 @@ ranges cover ordinary/multiparagraph Q&A and clozes; standalone BearID footers e
 answers rather than becoming answer text. Reinterpretation checks unchanged task
 specs, source identity, and cloze ranges. Badged wording edits update the existing
 task/document and retain observations and FSRS state. Without an accepted badge,
-content-hash matching still applies; ambiguous matches are not guessed. Cloze
-component-count changes remain rejected, and same-count reordering is not safe.
+content-hash matching still applies; ambiguous matches are not guessed. The initial
+badge implementation did not yet support changing cloze membership safely; the
+optional per-blank identity follow-up below removes that restriction.
 
 The separate Bear tool owns temporary exports, backups, attachment serialization,
 and expected-version native saves. A newer native edit discards only its generated
@@ -1135,3 +1136,33 @@ Complete pre/post-update vault snapshots are under the private Lab's
 `backups/task-badges-*` directories. Normal per-note Bear backups remain in
 `/Users/andym/Work/BearSyncBackup`. No website/reMarkable publication was invoked
 for these gates; no app release or cloud/public-service deployment occurred.
+
+## 2026-10-16: optional cloze identities
+
+`{content}` retains its zero-based positional component ID; `{id::content}`
+overrides that ID without changing display order or answer text. Explicit IDs
+are optional, not automatically stamped. The existing task badge still identifies
+the whole prompt. Duplicate IDs (including explicit/positional collisions) reject
+interpretation before import. The interpreter readme documents examples and
+literal-prefix escaping.
+
+Cloze-to-cloze edits now permit membership changes through one shared core rule
+used by ingestion and storage. Retained IDs replay exactly the same histories;
+new IDs start unreviewed and immediately due. Removed IDs leave the projected
+queue but their observations remain; restoring an ID replays its history,
+including reviews received while it was absent. This uses the existing spec and
+observation records, with no tombstones, migration, or per-blank registry. Empty
+cloze updates remain unsupported; removing the last blank in Markdown removes
+the prompt through ordinary source reconciliation.
+
+Validation: build and lint pass; **521 unit tests and 33 isolated integration
+tests pass**, with one pre-existing whitespace test skipped. Added coverage
+exercises Markdown/source round trips, collision rejection, string/prototype-key
+IDs, new/retired/restored components, unchanged FSRS state, catalog due selection,
+stable task/document identity, and cold persisted reload. The frozen **4,882-note
+/ 3,574-prompt** corpus remains byte-identical, including ingestion hashes and
+UTF-16 cloze ranges (SHA-256
+`d797785211a4e299f1f890dc09744ca12e264d53cc5b2f49368ac467b9191246`).
+Test logs: `/private/tmp/orbit-cloze-ids.TcEK4o/`. No live notes/vaults were changed,
+and no app/server release was published. The separate wide-stamping HOLD above
+is unchanged.

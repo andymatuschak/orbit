@@ -8,6 +8,7 @@ import type {
   Code,
   Construct,
   Event,
+  State as TokenizerState,
   Token as MicromarkToken,
   Tokenizer,
 } from "micromark-util-types";
@@ -21,6 +22,7 @@ export const CLOZE_NODE_TYPE = "cloze";
 export interface ClozeNode extends Parent {
   type: typeof CLOZE_NODE_TYPE;
   children: PhrasingContent[];
+  componentID?: string;
 }
 
 declare module "mdast" {
@@ -38,6 +40,7 @@ declare module "micromark-util-types" {
     cloze: "cloze";
     clozeOpen: "clozeOpen";
     clozeClose: "clozeClose";
+    clozeIdentifier: "clozeIdentifier";
   }
 }
 
@@ -55,7 +58,7 @@ export function clozeSyntax(this: Processor): void {
   });
   (data.fromMarkdownExtensions ??= []).push({
     enter: { cloze: enterCloze },
-    exit: { cloze: exitCloze },
+    exit: { cloze: exitCloze, clozeIdentifier: exitClozeIdentifier },
   });
   (data.toMarkdownExtensions ??= []).push({
     handlers: { cloze: clozeToMarkdown },
@@ -101,6 +104,16 @@ const tokenizeInterior: Tokenizer = function (effects, ok, nok) {
 
   function afterStart(code: Code) {
     // Empty braces are ordinary text, not clozes.
+    if (code === codes.rightCurlyBrace) return nok(code);
+    return effects.attempt(
+      { tokenize: tokenizeIdentifier, partial: true },
+      afterIdentifier,
+      lineStart,
+    )(code);
+  }
+
+  function afterIdentifier(code: Code) {
+    // An identifier does not turn an empty blank into learning content.
     return code === codes.rightCurlyBrace ? nok(code) : lineStart(code);
   }
 
@@ -159,6 +172,44 @@ const tokenizeInterior: Tokenizer = function (effects, ok, nok) {
   }
 };
 
+const tokenizeIdentifier: Tokenizer = function (effects, ok, nok) {
+  return start;
+
+  function start(code: Code) {
+    if (!isIdentifierCharacter(code)) return nok(code);
+    effects.enter("clozeIdentifier");
+    return identifier(code);
+  }
+
+  function identifier(code: Code): TokenizerState | undefined {
+    if (isIdentifierCharacter(code)) {
+      effects.consume(code);
+      return identifier;
+    }
+    if (code !== codes.colon) return nok(code);
+    effects.consume(code);
+    return secondColon;
+  }
+
+  function secondColon(code: Code) {
+    if (code !== codes.colon) return nok(code);
+    effects.consume(code);
+    effects.exit("clozeIdentifier");
+    return ok;
+  }
+};
+
+function isIdentifierCharacter(code: Code): boolean {
+  return (
+    code !== null &&
+    ((code >= codes.digit0 && code <= codes.digit9) ||
+      (code >= codes.uppercaseA && code <= codes.uppercaseZ) ||
+      (code >= codes.lowercaseA && code <= codes.lowercaseZ) ||
+      code === codes.dash ||
+      code === codes.underscore)
+  );
+}
+
 const clozeConstruct: Construct = {
   tokenize: tokenizeCloze,
   resolveTo: resolveCloze,
@@ -200,6 +251,11 @@ function exitCloze(this: CompileContext, token: Token): void {
   this.exit(token);
 }
 
+function exitClozeIdentifier(this: CompileContext, token: Token): void {
+  const node = this.stack[this.stack.length - 1] as ClozeNode;
+  node.componentID = this.sliceSerialize(token).slice(0, -2);
+}
+
 function clozeToMarkdown(
   node: ClozeNode,
   _parent: Parents | undefined,
@@ -208,12 +264,19 @@ function clozeToMarkdown(
 ): string {
   const tracker = state.createTracker(info);
   const exit = state.enter(CLOZE_NODE_TYPE);
-  let value = tracker.move("{");
-  value += state.containerPhrasing(node, {
+  let value = tracker.move(
+    node.componentID === undefined ? "{" : `{${node.componentID}::`,
+  );
+  let content = state.containerPhrasing(node, {
     ...tracker.current(),
     before: value,
     after: "}",
   });
+  // An escaped literal prefix must not become an ID when canonical Markdown
+  // is reparsed to calculate ranges. Leave unrelated colons unchanged.
+  if (node.componentID === undefined)
+    content = content.replace(/^([A-Za-z0-9_-]+)::/, "$1\\::");
+  value += content;
   value += tracker.move("}");
   exit();
   return value;

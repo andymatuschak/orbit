@@ -616,6 +616,219 @@ for (const { name, answerSource, answer, finalParagraph } of [
   });
 }
 
+test("stable cloze IDs retain reviewed components through membership edits and cold reload", async () => {
+  const scheduler = fsrsPolicy();
+  const fixture = await startFixture(0, "original-task", { scheduler });
+  const file = path.join(path.dirname(fixture.configurationPath), "Cloze.md");
+  const bearID = "676B2489-B897-487D-A0CD-F9FD92B229EC";
+  const source = (body, badge = "") =>
+    `# Editable cloze\n\n${body}${badge ? ` ${badge}` : ""}\n\n<!-- {BearID:${bearID}} -->\n`;
+  const original = source("The {alpha} follows {beta}.");
+  const input = { paths: [file], configurationPath: fixture.configurationPath };
+  await fs.writeFile(file, original);
+  const imported = await runMarkdownIngest(input);
+  assert.deepEqual(imported.counts, { ingestTask: 1 });
+  const taskID = imported.assignments[0].taskID;
+  const initial = await readFixture(fixture);
+  const documentURL = initial.entries[taskID].documentURL;
+  assert.deepEqual(
+    Object.keys(initial.logical.tasks[taskID].spec.content.components),
+    ["0", "1"],
+  );
+
+  const network = new AuthenticatedWebSocketNetworkAdapter(
+    `ws://127.0.0.1:${fixture.service.configuration.port}/v1/sync`,
+    async () => ({
+      kind: "pairedToken",
+      token: fixture.service.configuration.pairingToken,
+    }),
+  );
+  const reviewRepo = new Repo({ network: [network] });
+  await network.whenReady();
+  const reviewer = await PerTaskRepository.open(
+    new RepoPerTaskDocuments(reviewRepo),
+    fixture.rootURL,
+  );
+  const reviewTime = Date.now();
+  try {
+    await reviewer.apply(
+      ["0", "1"].map((componentID, index) => ({
+        kind: "recordReview",
+        mutationID: `cloze-review-${componentID}`,
+        observationID: `cloze-review-${componentID}`,
+        taskID,
+        componentID,
+        reviewSessionID: null,
+        outcome: TaskRepetitionOutcome.Remembered,
+        occurredAtTimestampMillis: reviewTime + index * 1000,
+      })),
+    );
+    const handle = await reviewRepo.find(documentURL);
+    const deadline = Date.now() + 5000;
+    while (
+      JSON.stringify(handle.heads().slice().sort()) !==
+      JSON.stringify(
+        handle.getSyncInfo(network.remoteStorageID)?.lastHeads.slice().sort(),
+      )
+    ) {
+      if (Date.now() > deadline)
+        assert.fail("Cloze reviews did not reach the server before editing");
+      await delay(20);
+    }
+  } finally {
+    await reviewer.close();
+    await reviewRepo.shutdown();
+  }
+  const reviewed = await readFixture(fixture);
+  const reviewedStates = reviewed.projected.get(taskID).componentStates;
+  for (const componentID of ["0", "1"])
+    assert.ok(reviewedStates[componentID].fsrs);
+
+  // First badge adoption must reuse the historical unlabeled task, not create
+  // a replacement merely because its component IDs are about to become explicit.
+  assert.deepEqual(await prepareMarkdownStamps(input), { stampedFileCount: 1 });
+  const badge = `[☉](orbit://task/${taskID})`;
+  assert.equal(
+    await fs.readFile(file, "utf8"),
+    source("The {alpha} follows {beta}.", badge),
+  );
+  const adopted = await runMarkdownIngest(input);
+  assert.deepEqual(adopted.counts, { mergeTaskMetadata: 1 });
+  assert.equal(adopted.assignments[0].taskID, taskID);
+  await fs.writeFile(file, source("The {0::alpha} follows {1::beta}.", badge));
+  assert.equal((await runMarkdownIngest(input)).mutationCount, 0);
+
+  const queueTime = reviewTime + 365 * 24 * 60 * 60 * 1000;
+  async function edit(body, componentIDs) {
+    const accepted = source(body, badge);
+    await fs.writeFile(file, accepted);
+    const result = await runMarkdownIngest(input);
+    assert.deepEqual(result.counts, { updateTaskSpec: 1 });
+    assert.equal(result.assignments[0].taskID, taskID);
+    assert.equal(await fs.readFile(file, "utf8"), accepted);
+    const current = await readFixture(fixture, queueTime);
+    assert.deepEqual(
+      Object.keys(current.logical.tasks).sort(),
+      ["original-task", taskID].sort(),
+    );
+    assert.equal(current.entries[taskID].documentURL, documentURL);
+    assert.deepEqual(
+      current.logical.observations,
+      reviewed.logical.observations,
+    );
+    assert.equal(
+      current.logical.tasks[taskID].createdAtTimestampMillis,
+      initial.logical.tasks[taskID].createdAtTimestampMillis,
+    );
+    assert.equal(
+      current.logical.tasks[taskID].metadata.ingestSourceIdentifier,
+      taskID,
+    );
+    const task = current.projected.get(taskID);
+    assert.deepEqual(
+      Object.keys(task.spec.content.components).sort(),
+      componentIDs.slice().sort(),
+    );
+    assert.deepEqual(
+      Object.keys(task.componentStates).sort(),
+      componentIDs.slice().sort(),
+    );
+    for (const componentID of componentIDs.filter(
+      (id) => id === "0" || id === "1",
+    ))
+      assert.deepEqual(
+        task.componentStates[componentID],
+        reviewedStates[componentID],
+      );
+    for (const item of current.queue.filter(({ task }) => task.id === taskID))
+      assert.ok(Object.hasOwn(task.spec.content.components, item.componentID));
+    return current;
+  }
+
+  const added = await edit(
+    "The {0::alpha} follows {1::beta} and {__proto__::gamma}.",
+    ["0", "1", "__proto__"],
+  );
+  assert.equal(
+    added.logical.tasks[taskID].spec.content.body.text,
+    "The alpha follows beta and gamma.",
+  );
+  const newState = added.projected.get(taskID).componentStates.__proto__;
+  assert.ok(
+    Object.hasOwn(added.projected.get(taskID).componentStates, "__proto__"),
+  );
+  assert.equal(newState.lastRepetitionTimestampMillis, null);
+  assert.equal(newState.fsrs, undefined);
+  const reordered = await edit(
+    "The {__proto__::gamma} precedes {1::beta}, then {0::alpha}.",
+    ["0", "1", "__proto__"],
+  );
+  assert.equal(
+    reordered.logical.tasks[taskID].spec.content.components.__proto__.order,
+    0,
+  );
+  assert.equal(
+    reordered.logical.tasks[taskID].spec.content.components["0"].order,
+    2,
+  );
+  const removed = await edit("The {__proto__::gamma} precedes {1::beta}.", [
+    "1",
+    "__proto__",
+  ]);
+  assert.ok(removed.logical.observations["cloze-review-0"]);
+  assert.ok(
+    removed.queue.every(
+      (item) => item.task.id !== taskID || item.componentID !== "0",
+    ),
+  );
+  const restored = await edit(
+    "The {0::alpha} returns after {__proto__::gamma} and {1::beta}.",
+    ["0", "1", "__proto__"],
+  );
+  assert.equal(
+    restored.logical.tasks[taskID].spec.content.body.text,
+    "The alpha returns after gamma and beta.",
+  );
+  assert.deepEqual(
+    restored.projected.get(taskID).componentStates.__proto__,
+    newState,
+  );
+  const accepted = await fs.readFile(file, "utf8");
+  await fs.writeFile(
+    file,
+    source("The {0::alpha} collides with {0::beta}.", badge),
+  );
+  await assert.rejects(runMarkdownIngest(input), /used more than once/);
+  assert.deepEqual(await readFixture(fixture, queueTime), restored);
+  await fs.writeFile(file, accepted);
+  assert.equal((await runMarkdownIngest(input)).mutationCount, 0);
+
+  await fixture.service.shutdown();
+  services.splice(services.indexOf(fixture.service), 1);
+  const storage = new AtomicNodeFSStorageAdapter(fixture.storageRoot);
+  const repo = new Repo({ storage, network: [] });
+  const reopened = await PerTaskRepository.open(
+    new RepoPerTaskDocuments(repo),
+    fixture.rootURL,
+  );
+  try {
+    assert.deepEqual(await reopened.readLogicalVault(), restored.logical);
+    assert.equal(
+      (await reopened.getCatalogEntries())[taskID].documentURL,
+      documentURL,
+    );
+    assert.deepEqual(
+      (await reopened.getTaskProjections([taskID])).tasks.get(taskID)
+        .componentStates,
+      restored.projected.get(taskID).componentStates,
+    );
+  } finally {
+    await reopened.close();
+    await repo.shutdown();
+    await storage.close();
+  }
+});
+
 test("directory ingestion reads immediate regular Markdown without changing sources", async () => {
   const fixture = await startFixture();
   const directory = path.dirname(fixture.configurationPath);
@@ -696,19 +909,7 @@ for (const rejectedSave of [false, true]) {
       const oldTaskID = "AbCdEfGhIjKlMnOpQrStUv";
       const oldSourceID = "3B7B67AA-557E-4229-88C7-FC3029B56AB3";
       const newSourceID = "65144798-E0AC-41BE-A5FD-3DC0E11AEF8A";
-      const scheduler = {
-        kind: "fsrs",
-        version: 1,
-        modelVersion: 6,
-        weights: [
-          0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722,
-          0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425,
-          0.0912, 0.0658, 0.1542,
-        ],
-        requestedRetention: 0.9,
-        cutoverTimestampMillis: 0,
-        previousPolicy: defaultOrbitSchedulerPolicy,
-      };
+      const scheduler = fsrsPolicy();
       const fixture = await startFixture(0, oldTaskID, {
         scheduler,
         itemIdentifier: hashTaskSpec(spec("Old")),
@@ -1058,7 +1259,7 @@ async function startFixture(
   return { service, configurationPath, storageRoot, rootURL };
 }
 
-async function readFixture(fixture) {
+async function readFixture(fixture, queueTime) {
   const network = new AuthenticatedWebSocketNetworkAdapter(
     `ws://127.0.0.1:${fixture.service.configuration.port}/v1/sync`,
     async () => ({
@@ -1080,6 +1281,9 @@ async function readFixture(fixture) {
       projected: (
         await repository.getTaskProjections(Object.keys(logical.tasks))
       ).tasks,
+      ...(queueTime === undefined
+        ? {}
+        : { queue: await repository.getReviewQueue(queueTime) }),
     };
   } finally {
     await repository.close();
@@ -1103,5 +1307,21 @@ function spec(question) {
       body: { text: question, attachments: [] },
       answer: { text: "Answer", attachments: [] },
     },
+  };
+}
+
+function fsrsPolicy() {
+  return {
+    kind: "fsrs",
+    version: 1,
+    modelVersion: 6,
+    weights: [
+      0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722,
+      0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425,
+      0.0912, 0.0658, 0.1542,
+    ],
+    requestedRetention: 0.9,
+    cutoverTimestampMillis: 0,
+    previousPolicy: defaultOrbitSchedulerPolicy,
   };
 }

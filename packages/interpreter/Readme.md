@@ -83,10 +83,42 @@ Unbadged prompts retain their historical content-hash identity. A deliberate cop
 can get a new identity by removing its badge; duplicate badges are errors, not
 instructions to merge two prompts.
 
-Cloze wording edits preserve positional component IDs. Adding/removing blanks is
-rejected before applying the import, and reordering existing blanks is **not safe**:
-their histories still belong to positions, not stable per-blank IDs. A task badge
-does not solve cloze-component identity.
+### Cloze identities
+
+Each blank has its own review history. By default, `{content}` uses its zero-based
+position in that prompt as its ID. Wording edits keep that history, but inserting,
+removing, or rearranging blanks can change which content occupies each position.
+Use an optional `{id::content}` prefix to retain a blank's existing ID when its
+position changes. IDs can contain ASCII letters, digits, `_`, and `-`.
+
+For example, this existing prompt has blank IDs `0` and `1`:
+
+```md
+{Paris} is the capital of {France}. [☉](orbit://task/AbCdEfGhIjKlMnOpQrStUv)
+```
+
+To add a blank without giving France's history to the new blank:
+
+```md
+{Paris} is the {2::capital} of {1::France}. [☉](orbit://task/AbCdEfGhIjKlMnOpQrStUv)
+```
+
+Paris still uses position `0`; France explicitly retains `1`; capital starts
+with the unused ID `2`. The prefix is not displayed in the review. The block's
+task badge still identifies the whole prompt; per-blank IDs do not replace it.
+Unbadged prompts still get new task identities when their content changes.
+
+Blank IDs must be unique within a prompt. Duplicate explicit IDs, or an explicit
+ID colliding with an unlabeled blank's position, reject the import rather than
+silently renumbering. Repeated IDs do not group blanks. Removing a prefix restores
+positional identity; it does not remember a previous explicit ID.
+To keep an ID-like prefix as literal answer text, escape its first colon:
+`{literal\::answer}` reviews `literal::answer` with a positional ID.
+
+Adding a previously unused ID starts an unreviewed, immediately due blank.
+Removing a blank removes it from review, not from stored history. Reusing its ID
+later restores that history, so use a new ID for genuinely new learning content.
+Changing blank IDs does not rewrite existing observations or FSRS states.
 
 Both `interpret` and `lab:ingest-markdown` only read their source notes.
 Badge preparation is a separate operation on disposable Markdown copies.

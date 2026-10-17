@@ -251,20 +251,24 @@ describe("saved review projection", () => {
     ).toEqual(emptyState());
   });
 
-  test("rejects a saved task missing the reviewed component", () => {
-    const item = reviewItem("a");
-    const state = activeState([item], 0);
-    expect(() =>
-      reviewSessionManagerMarkCurrentItem(
-        state,
-        {
-          ...item.task,
-          componentStates: {},
-        },
-        "main",
-      ),
-    ).toThrow("missing the current component");
-  });
+  test.each(["main", "__proto__", "constructor", "toString"])(
+    "rejects a saved task missing its own reviewed component: %s",
+    (componentID) => {
+      const item = reviewItem("a");
+      item.componentID = componentID;
+      const state = activeState([item], 0);
+      expect(() =>
+        reviewSessionManagerMarkCurrentItem(
+          state,
+          {
+            ...item.task,
+            componentStates: {},
+          },
+          componentID,
+        ),
+      ).toThrow("missing the current component");
+    },
+  );
 
   test("refills an exhausted queue in the same repeatable state transition", () => {
     const now = Date.UTC(2026, 9, 15);
