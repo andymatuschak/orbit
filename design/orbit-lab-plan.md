@@ -97,7 +97,8 @@ Use the supported commands in [the root readme](../Readme.md): `lab:service`,
 offline seed/export/snapshot/restore tools. Backend watch mode requires stopping
 the managed writer first. Use `lab:install` for native builds so the pinned
 upstream Rust merge fix and Repo Swift WebSocket receive-limit patch are applied.
-Remove the local Rust build when an official Swift XCFramework includes the fix;
+Remove the local Rust build when an official Swift XCFramework includes both the
+merge fix and the bounded raw-slab allocation fix (see `vendor/automerge`);
 the client does not own an alternative merge/recovery protocol. Expo 58 now owns
 scene startup, so the former scene-lifecycle adapter is removed. A JavaScript
 rollback is a new compatible checkpoint from older source, not a data restore or

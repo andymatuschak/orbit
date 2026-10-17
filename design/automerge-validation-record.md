@@ -8,6 +8,33 @@ Public Firebase remains unchanged; the separate dogfood serving stack was
 retired only after the private cutover proofs below. Start with
 [the review guide](automerge-review-guide.md) for the current reading path.
 
+## 2026-10-17: patched native candidate 16 (export pending)
+
+Release archive **16**, runtime **`orbit-lab-native-6`**, contains the bounded
+hexane allocation fix described below. The runtime change separates it from
+older cached JavaScript checkpoints; the app/widget identities, App Group,
+private origin, and vault format are unchanged. Both archived bundles are build
+16 and the archive passes strict recursive code-signature verification.
+
+The archive's staged arm64 Automerge library matches the tested prepared
+artifact: SHA-256
+`e73d625c1a61aefea3c222a6361e1764ef751e56de4eaf513db7ff67824be47b`.
+The current recipe fingerprint and all 69 prepared artifact hashes match.
+The release preflight passes **32 tests**, the widget writer regression, and
+the native no-op merge/sync/import regressions; the native recipe's **5 tests**
+also pass. The preceding large-catalog and Release Simulator proofs remain the
+behavioral gates for this unchanged engine and application code.
+
+Ad-hoc export is blocked by Xcode's missing saved Apple-account token and the
+unavailable personal-team distribution signing identity. No IPA was published:
+the private native descriptor still advertises build **14**. The successful
+archive is retained at `~/Library/Caches/Orbit Lab/native/Orbit-16.xcarchive`, so
+export can resume without recompiling. Chonk was unavailable to CoreDevice;
+installation, physical launch/sync, and wider automatic stamping remain pending.
+The private service is ready; no vault bytes or phone files were replaced.
+
+Build/export evidence: `/private/tmp/orbit-lab-native-16-release.log`.
+
 ## 2026-10-16: remove unused native platform support
 
 Removed the Catalyst plugin, its Mac-only entitlements, and the iOS/Catalyst
