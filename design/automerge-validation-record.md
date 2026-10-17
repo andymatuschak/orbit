@@ -1166,3 +1166,32 @@ UTF-16 cloze ranges (SHA-256
 Test logs: `/private/tmp/orbit-cloze-ids.TcEK4o/`. No live notes/vaults were changed,
 and no app/server release was published. The separate wide-stamping HOLD above
 is unchanged.
+
+### Live source round trip and rendered cloze gate
+
+One new, private disposable Bear note went through the real native/export/import
+path while the existing workflow dispatch lock excluded scheduled publication.
+The unlabeled cloze was imported, two test reviews were recorded, and the generic
+temporary-copy transform prepared its existing task badge. Bear accepted that
+proposal through its expected-hash save before Orbit imported the accepted text.
+Subsequent native edits added, reordered, removed, and restored blanks. Every
+step retained the same TaskID/document URL, exact observations, retained FSRS
+states, and root heads. The final fresh importer was a no-op. The task was then
+soft-deleted and the note moved to Bear's recoverable trash; the test observations
+remain attached to that deleted test task. No existing prompt was edited, and the
+full notes/site/reMarkable publishing workflow was not invoked.
+
+An exact isolated copy of that final task, its observations, and its scheduler
+then passed actual app and WidgetKit rendering in the dedicated iOS Simulator.
+The newly added component `2` was naturally due; fixture scheduling was not
+altered. Both showed “The ___ of France is Paris.” and revealed “capital” without
+displaying the source IDs. The settled widget Reveal retained the same task and
+component with no review queued. An earlier harness tap sampled before redraw
+and then recorded a disposable review; its evidence is retained rather than
+counted as the successful Reveal proof. The Simulator's previous pairing and
+byte-identical widget handoff/preferences were restored, including both existing
+pending widget reviews. This is Simulator evidence, not a physical-phone test.
+
+Evidence: `/private/tmp/orbit-cloze-live-pilot/proof.json` and
+`/private/tmp/orbit-cloze-render-proof/proof.json`; screenshots and interaction
+notes are beside the latter. The private Lab remained ready throughout.
