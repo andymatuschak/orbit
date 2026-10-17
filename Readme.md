@@ -30,6 +30,12 @@ the checkout. iOS builds also need macOS, Xcode, CocoaPods, the existing signing
 identity, and the ignored proprietary font assets described in
 [the app readme](packages/app/Readme.md).
 
+Automerge currently has a temporary upstream Rust allocation fix shared by the
+JavaScript dependency and native build recipe. [Its patch and pinned rebuild
+notes](vendor/automerge/Readme.md) explain the generated npm artifact and the
+condition for removing it. Normal installs need no Rust toolchain; `bun run test`
+includes the bounded-memory cold-open regression.
+
 ```sh
 bun install
 bun run build

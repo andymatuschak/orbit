@@ -1,0 +1,39 @@
+--- a/rust/hexane/src/raw.rs
++++ b/rust/hexane/src/raw.rs
+@@ -550,6 +550,11 @@
+         suffix
+     };
+ 
++    // split_off retains the original allocation on the prefix. When a loaded
++    // oversize slab is split repeatedly, retaining those allocations makes
++    // capacity grow quadratically even though the encoded data stays small.
++    slab.data.shrink_to(max_segments);
++
+     (vec![RawSlab { data: right_data }], overflow_del)
+ }
+ 
+@@ -672,6 +677,24 @@
+ #[cfg(test)]
+ mod tests {
+     use super::*;
++
++    #[test]
++    fn loaded_slab_splits_release_excess_capacity() {
++        let mut expected = vec![b'x'; 256 * 1024];
++        let mut column = RawColumn::load(&expected).unwrap();
++        for i in 0..128 {
++            let at = i * 1024 + i;
++            column.splice_slice(at, 0, b"y");
++            expected.insert(at, b'y');
++        }
++        assert_eq!(column.save(), expected);
++        let capacity: usize = column.slabs.iter().map(|slab| slab.data.capacity()).sum();
++        assert!(
++            capacity <= column.len() * 3,
++            "raw capacity {capacity} must remain proportional to data length {}",
++            column.len(),
++        );
++    }
+ 
+     fn drive(col: &RawColumn, expected: &[u8]) {
+         assert_eq!(col.len(), expected.len(), "len mismatch");

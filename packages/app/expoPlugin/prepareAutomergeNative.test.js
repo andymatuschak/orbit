@@ -6,7 +6,10 @@ const path = require("node:path");
 const {
   pins,
   corePatches,
+  hexane,
   replaceOnce,
+  patchHexaneLock,
+  patchRustManifest,
   patchSwiftPackage,
   patchRepoPackage,
   readReady,
@@ -59,6 +62,26 @@ test("Repo Swift resolves the prepared sibling package instead of an SPM binary-
   expect(patchRepoPackage(source)).toBe('.package(path: "../automerge-swift")');
   expect(() => patchRepoPackage(source.replace("0.5.7", "0.8.0"))).toThrow(
     "Upstream Automerge source changed",
+  );
+});
+
+test("the capacity repair replaces only the pinned hexane lock entry", () => {
+  const entry = `name = "hexane"\nversion = "${hexane.version}"\nsource = "registry+https://github.com/rust-lang/crates.io-index"\nchecksum = "${hexane.checksum}"`;
+  const before = `header\n[[package]]\n${entry}\ndependencies = ["leb128"]\n\nnext package`;
+  expect(patchHexaneLock(before)).toBe(
+    `header\n[[package]]\nname = "hexane"\nversion = "${hexane.version}"\ndependencies = ["leb128"]\n\nnext package`,
+  );
+  expect(() =>
+    patchHexaneLock(before.replace(hexane.checksum, "changed")),
+  ).toThrow("Upstream Automerge source changed");
+  expect(() => patchHexaneLock(before + before)).toThrow(
+    "Upstream Automerge source changed",
+  );
+  expect(patchRustManifest('[dependencies]\nautomerge = "0.12.0"\n')).toBe(
+    '[dependencies]\nautomerge = "0.12.0"\n\n[patch.crates-io]\nhexane = { path = "hexane" }\n',
+  );
+  expect(() => patchRustManifest("[patch.crates-io]\n")).toThrow(
+    "Review upstream Cargo patches",
   );
 });
 

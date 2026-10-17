@@ -4,7 +4,8 @@
     "build": "node node_modules/@typescript/native/bin/tsc -b packages/tsconfig.json",
     "watch": "node node_modules/@typescript/native/bin/tsc -b -w packages/tsconfig.json",
     "test:unit": "bun --filter '*' --sequential test",
-    "test": "bun run test:unit && bun run test:integration",
+    "test": "bun run test:unit && bun run test:automerge-capacity && bun run test:integration",
+    "test:automerge-capacity": "node --wasm-max-mem-pages=4096 vendor/automerge/regression.mjs",
     "test:integration": "bun --filter @withorbit/automerge-sync-server --filter @withorbit/ingester --sequential test:integration",
     "lint": "cd packages; eslint .",
     "lint:fix": "cd packages; eslint --fix .",
@@ -38,6 +39,7 @@
     "typescript": "6.0.3"
   },
   "overrides": {
+    "@automerge/automerge": "file:./vendor/automerge/automerge-automerge-3.4.1-orbit.1.tgz",
     "@expo/metro-runtime": "58.0.14",
     "@grpc/grpc-js": "1.14.5",
     "brace-expansion": "2.1.6",

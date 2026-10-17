@@ -1095,12 +1095,13 @@ chunk values were removed; original bytes and a complete post-update vault backu
 are retained. Peer identity, sync state, document URLs, heads, and history did not
 change. The restarted service is ready and both stores cold-load normally.
 
-This repairs current storage, **not the underlying concatenated-load defect**.
-Unrestricted scheduled stamping remains on HOLD; the installed wrapper retains
-its two-note pilot restriction. Existing stamped notes still import normally.
-Before widening automatic preparation, isolate/fix the upstream loader defect and
-repeat the large-update/cold-open gate. Do not add a custom application recovery
-layer or assume compaction prevents recurrence.
+That compaction repaired storage, **not the underlying concatenated-load defect**.
+The later retained-capacity fix below resolves that defect in the JavaScript
+dependency and native build recipe, with fresh-process regression evidence.
+Unrestricted scheduled stamping remains on HOLD until the patched native binary
+is installed and checked on Chonk; the installed wrapper retains its two-note
+pilot restriction. Existing stamped notes still import normally. No custom
+application recovery layer was added.
 
 The final ordinary import made zero mutations; its full before/after comparison
 passed. Already-badged preparation made zero native/source writes and succeeded
@@ -1195,3 +1196,70 @@ pending widget reviews. This is Simulator evidence, not a physical-phone test.
 Evidence: `/private/tmp/orbit-cloze-live-pilot/proof.json` and
 `/private/tmp/orbit-cloze-render-proof/proof.json`; screenshots and interaction
 notes are beside the latter. The private Lab remained ready throughout.
+
+## 2026-10-16: upstream loaded-buffer capacity fix
+
+The cold-load failure was memory amplification in hexane's `RawColumn`, not bad
+catalog bytes, missing changes, or a timeout. A loaded column occupies a large
+buffer. `Vec::split_off` left the original allocation attached to its shortened
+prefix; repeated splits retained many oversized allocations. One line,
+`slab.data.shrink_to(max_segments)`, releases excess capacity after splitting.
+The public Rust regression reproduces the defect with only 262 KB of data and
+bounds retained capacity without exhausting host memory. Unmodified JS 3.5.0 /
+Rust 0.12.0 also reproduces the issue, so a version bump alone is insufficient.
+
+The shared patch lives in `vendor/automerge`, with a pinned rebuild recipe,
+public generated-data regression, Cargo lock, and generated npm package
+`3.4.1-orbit.1` (15,023,241 bytes; SHA-256
+`568829d613c4a8cfbd7b6a2a403cdf7a62b47ce17569e37f40b489511ba1ff1b`).
+All JavaScript consumers resolve one overridden dependency; its 33 public API /
+declaration files and export map remain unchanged. The binary artifact retains
+upstream's supported Wasm variants so normal installs require no Rust build.
+The existing native preparation recipe applies the same source patch to a
+checksum-verified private hexane crate copy, never the shared Cargo registry.
+Its patch hash participates in the native cache fingerprint. There is no new
+storage format, migration, recovery path, or alternative Repo implementation.
+
+Validation:
+
+- Hexane's full Rust suite: **636 passed, 15 existing ignored**. The new capacity
+  assertion fails before the fix and passes after it.
+- Fresh Node and Bun load the original **43 chunks / 3,237,263 bytes** through
+  ordinary network-free Repo, direct concatenated loading, and the browser-base64
+  entrypoint. All **10,892 entries, 3,777 change-byte hashes, heads, full state,
+  and complete history** match. Roughly 678 ms includes materialization and all
+  digest verification; it is not an app-launch or pure-load benchmark.
+- The public **1,000-entry / 1,000-update** ordinary Repo flush/cold-reopen test
+  passes under Node's 256 MB Wasm limit; unpatched code fails safely under that
+  bound. It is part of the standard `bun run test` gate, not only a manual proof.
+- Lint/build, **522 unit tests / 33 integration tests**, and the browser's real
+  pairing/offline review/reload/reconnect smoke pass. One pre-existing whitespace
+  unit test remains skipped.
+- Native FFI builds for macOS, iOS, and Simulator. The existing no-op merge/sync/
+  import regressions pass. Native generated catalog tests also pass concatenated,
+  incremental, and merge loading with matching heads and every value, including
+  the JavaScript-generated 1,000-entry fixture (about 145 MiB peak process RSS).
+- The patched Release Simulator passes the full **14,000-row** native gate,
+  including an actual **1,206,515-byte** sync response, native-to-JavaScript and
+  JavaScript-to-native review propagation, cold offline PNG/review durability,
+  reconnect, and reviewed tasks beyond the first-50 sync window. The previous
+  pairing, widget JSON/preferences, and both pending widget reviews were restored.
+
+The private login service was stopped gracefully, snapshotted under its writer
+lock, and restarted with the fixed JavaScript dependency. Readiness passed and
+a fresh ordinary import inventory with an empty source list produced **zero
+mutations**. Vault bytes were not replaced or compacted during this deployment.
+Backup:
+`~/Library/Application Support/Orbit Lab/backups/raw-capacity-2026-10-17T02-48-41-594Z`.
+The current phone binary has not changed; automatic stamping remains pilot-scoped
+until a patched native binary is installed and checked. No public service or
+upstream issue/PR was modified.
+
+Evidence:
+`/private/tmp/orbit-cloze-live-pilot/` (complete test logs, native build/regressions,
+and `deployment.json`), `/private/tmp/orbit-patched-catalog-cold-XBoHoq/proof.json`
+(Node), `/private/tmp/orbit-patched-catalog-cold-7ez072/proof.json` (Bun), and
+`/private/tmp/orbit-rust-catalog-core-audit.Mm2c8N/full-hexane-tests.json`.
+Remove the temporary package/override and native patch only after upstream
+JavaScript **and** native releases pass these gates; compaction alone is not a
+substitute for the fix.

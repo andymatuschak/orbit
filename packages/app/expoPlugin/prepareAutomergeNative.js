@@ -6,13 +6,22 @@ const path = require("node:path");
 const { patchSource } = require("./patchRepoSwiftWebSocket.js");
 
 // Remove this source build when upstream publishes an XCFramework containing
-// PR243. Swift 0.7.2's released Rust binary panics on a no-op write followed by sync.
+// both PR243 and the hexane retained-capacity fix in vendor/automerge/Readme.md.
+// Swift 0.7.2's released Rust binary panics on a no-op write followed by sync.
 // https://github.com/automerge/automerge-swift/pull/243
 const pins = {
   swift: "aa45d17ac92cef2b8ded63b47e65a28dc85e3418", // 0.7.2
   upgrade: "d5b2643636643ce3fcc19c7a8c026ffb0944192e", // merged PR243
   repo: "cdeb8053c3aa2510189429d717ab09e70f134716", // 0.3.2
 };
+const hexane = {
+  version: "1.0.0-alpha.5",
+  checksum: "81df830f11babb0eee9a082e09135ef0a7d8791f3fe9b279bb9485bf7eaf23e0",
+};
+const capacityPatch = path.resolve(
+  __dirname,
+  "../../../vendor/automerge/hexane-retained-capacity.patch",
+);
 const corePatches = {
   "rust/Cargo.toml": ['version = "0.7.2"', 'version = "0.12.0"'],
   "rust/src/change.rs": [
@@ -49,6 +58,22 @@ function patchRepoPackage(source) {
     remoteSwift,
     '.package(path: "../automerge-swift")',
   );
+}
+
+function patchHexaneLock(source) {
+  return replaceOnce(
+    source,
+    `name = "hexane"\nversion = "${hexane.version}"\nsource = "registry+https://github.com/rust-lang/crates.io-index"\nchecksum = "${hexane.checksum}"`,
+    `name = "hexane"\nversion = "${hexane.version}"`,
+  );
+}
+
+function patchRustManifest(source) {
+  if (source.includes("[patch.crates-io]"))
+    throw new Error(
+      "Review upstream Cargo patches before preparing native Automerge",
+    );
+  return `${source.trimEnd()}\n\n[patch.crates-io]\nhexane = { path = "hexane" }\n`;
 }
 
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -101,7 +126,9 @@ function prepareAutomergeNative({
   const fingerprint = digest(
     JSON.stringify({
       pins,
+      hexane,
       rustVersion,
+      capacityPatch: digest(fs.readFileSync(capacityPatch)),
       recipe: digest(fs.readFileSync(__filename)),
       socket: patchSource(
         "let webSocketTask = URLSession.shared.webSocketTask(with: request)",
@@ -155,15 +182,22 @@ function prepareAutomergeNative({
     );
     fs.writeFileSync(
       path.join(swift, "rust/Cargo.lock"),
-      run("git", ["show", `${pins.upgrade}:rust/Cargo.lock`], {
-        cwd: swift,
-        stdio: "pipe",
-      }),
+      patchHexaneLock(
+        run("git", ["show", `${pins.upgrade}:rust/Cargo.lock`], {
+          cwd: swift,
+          stdio: "pipe",
+        }),
+      ),
     );
     const patches = [
       ...Object.entries(corePatches).map(([filename, [before, after]]) => [
         path.join(swift, filename),
-        (source) => replaceOnce(source, before, after),
+        (source) => {
+          const patched = replaceOnce(source, before, after);
+          return filename === "rust/Cargo.toml"
+            ? patchRustManifest(patched)
+            : patched;
+        },
       ]),
       [path.join(swift, "Package.swift"), patchSwiftPackage],
       [path.join(repo, "Package.swift"), patchRepoPackage],
@@ -177,6 +211,29 @@ function prepareAutomergeNative({
     ];
     for (const [filename, patch] of patches)
       fs.writeFileSync(filename, patch(fs.readFileSync(filename, "utf8")));
+
+    // Keep the registry cache immutable. Only this private, checksum-verified
+    // crate copy is patched, using the same source diff as JavaScript/Wasm.
+    const archive = path.join(staging, "hexane.crate");
+    run("curl", [
+      "--fail",
+      "--silent",
+      "--show-error",
+      "--location",
+      "--output",
+      archive,
+      `https://static.crates.io/crates/hexane/hexane-${hexane.version}.crate`,
+    ]);
+    if (digest(fs.readFileSync(archive)) !== hexane.checksum)
+      throw new Error("Native hexane crate checksum mismatch");
+    run("tar", ["xf", archive, "-C", staging]);
+    const hexaneDirectory = path.join(swift, "rust/hexane");
+    fs.renameSync(
+      path.join(staging, `hexane-${hexane.version}`),
+      hexaneDirectory,
+    );
+    run("git", ["apply", "-p3", capacityPatch], { cwd: hexaneDirectory });
+    fs.rmSync(archive);
 
     const targets = [
       "aarch64-apple-darwin",
@@ -232,6 +289,7 @@ function prepareAutomergeNative({
     const artifacts = Object.fromEntries(
       [
         path.join(swift, "rust/Cargo.lock"),
+        ...filesIn(hexaneDirectory),
         ...patches.map(([filename]) => filename),
         ...filesIn(framework),
       ].map((filename) => [
@@ -271,7 +329,10 @@ module.exports = {
   prepareAutomergeNative,
   pins,
   corePatches,
+  hexane,
   replaceOnce,
+  patchHexaneLock,
+  patchRustManifest,
   patchSwiftPackage,
   patchRepoPackage,
   readReady,
