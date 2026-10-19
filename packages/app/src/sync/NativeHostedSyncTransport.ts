@@ -141,6 +141,11 @@ export class NativeHostedSyncTransport {
   }
 
   private establish(): Promise<void> {
+    // A direct foreground request can preempt a scheduled retry. Its failure
+    // must be free to schedule another, rather than leave the stale timer as
+    // the only retry (that timer will discard its older generation).
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
     const generation = ++this.generation;
     let active = true;
     const operation = withTimeout(

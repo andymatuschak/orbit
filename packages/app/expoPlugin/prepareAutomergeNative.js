@@ -3,7 +3,10 @@ const { createHash } = require("node:crypto");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { patchSource } = require("./patchRepoSwiftWebSocket.js");
+const {
+  patchWebSocketSource,
+  patchRepoSource,
+} = require("./patchRepoSwift.js");
 
 // Remove this source build when upstream publishes an XCFramework containing
 // both PR243 and the hexane retained-capacity fix in vendor/automerge/Readme.md.
@@ -130,7 +133,10 @@ function prepareAutomergeNative({
       rustVersion,
       capacityPatch: digest(fs.readFileSync(capacityPatch)),
       recipe: digest(fs.readFileSync(__filename)),
-      socket: patchSource(
+      repoPatches: digest(
+        fs.readFileSync(require.resolve("./patchRepoSwift.js")),
+      ),
+      socket: patchWebSocketSource(
         "let webSocketTask = URLSession.shared.webSocketTask(with: request)",
       ),
     }),
@@ -206,8 +212,9 @@ function prepareAutomergeNative({
           repo,
           "Sources/AutomergeRepo/Networking/Providers/WebSocketProvider.swift",
         ),
-        patchSource,
+        patchWebSocketSource,
       ],
+      [path.join(repo, "Sources/AutomergeRepo/Repo.swift"), patchRepoSource],
     ];
     for (const [filename, patch] of patches)
       fs.writeFileSync(filename, patch(fs.readFileSync(filename, "utf8")));

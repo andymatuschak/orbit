@@ -462,6 +462,40 @@ describe("native hosted Repo lifecycle", () => {
     await documents.close();
   });
 
+  test("a failed direct reconnect replaces the older pending retry", async () => {
+    const native = new FakeNativeRepo();
+    const documents = new NativePerTaskDocuments(
+      "local-a",
+      native as unknown as OrbitAutomergeNativeModule,
+    );
+    const transport = new NativeHostedSyncTransport(documents, {
+      websocketURL: "wss://sync.example.test/v1/sync",
+      requestCredential: async () => credential("paired"),
+      localStoreID: "local-a",
+      retryIntervalMillis: 50,
+    });
+    const failedConnection = deferred();
+    try {
+      await transport.connect();
+      native.emitReadyOnConnect = false;
+      native.connectBarrier = failedConnection.promise;
+      native.emitSyncState({ localStoreID: "local-a", state: "disconnected" });
+      // A foreground fetch starts another attempt before the scheduled retry.
+      const connecting = transport.connect();
+      await eventually(() => native.connectCalls.length === 2);
+      native.connectBarrier = Promise.resolve();
+      native.emitReadyOnConnect = true;
+      failedConnection.reject(new Error("temporarily offline"));
+      await expect(connecting).rejects.toThrow("temporarily offline");
+      await eventually(() => native.connectCalls.length === 3);
+      expect(transport.isReady()).toBe(true);
+    } finally {
+      failedConnection.resolve();
+      await transport.close();
+      await documents.close();
+    }
+  });
+
   test("keeps retrying when the initial credential request is offline", async () => {
     const native = new FakeNativeRepo();
     const documents = new NativePerTaskDocuments(
