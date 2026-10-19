@@ -85,13 +85,17 @@ Every `lab:install` runs the synthetic native no-op/merge/sync regression agains
 that exact built library before compiling the app. The test uses fixed actors
 and checks matching document heads and values, without reading the Lab vault.
 
-Preparation also applies the guarded one-line Repo Swift 0.3.2 WebSocket patch,
+Preparation also applies guarded Repo Swift 0.3.2 patches,
 raising URLSession's default 1 MiB message limit to the server's finite 16 MiB
 budget. A real catalog exceeded the default, silently breaking server → phone
-sync while small reviews still uploaded. Remove `patchRepoSwiftWebSocket.js`
-when upstream exposes that setting. The large-catalog Simulator gate must still
-pass after removal. Manual Expo/Xcode builds do not run these preparations;
-the old `ios`/`ios:release` shortcuts are removed for that reason.
+sync while small reviews still uploaded. It also resets each peer's connection-
+specific sync state before synchronizing on a new connection: otherwise a lost
+outgoing message can remain marked in flight after reconnecting. Remove the
+corresponding parts of `patchRepoSwift.js` when upstream exposes the receive
+setting and resets sync state on reconnect. The large-catalog and interrupted-
+sync Simulator gates must still pass after removal. Manual Expo/Xcode builds do
+not run these preparations; the old `ios`/`ios:release` shortcuts are removed for
+that reason.
 
 ## Offline application code
 
@@ -203,6 +207,12 @@ only that batch, and installs a fresh queue. Opening or foregrounding the app
 drains the outbox. The widget never opens the app's live Repo, and the app never
 uses the disposable widget queue as its own review index.
 
+After a local app mutation, the saved review and fresh widget file are complete
+before the card advances. Queue notifications obey the same handoff boundary;
+they cannot advance it ahead of a slower file write. This waits for local files,
+not the laptop. A failed disposable projection is reported without rejecting or
+replaying an already-saved review.
+
 ```sh
 cd packages/app
 bun test src expoPlugin
@@ -248,6 +258,22 @@ are rejected. No production configuration or test-only UI branch is involved.
 The widget gates likewise use AXe/simctl and ordinary store writes. A runnable
 gate is not a claim that a newly built binary passed; actual results belong in
 [the validation record](../../design/automerge-validation-record.md).
+
+For the complete app/widget handoff gate, install a Release Simulator build
+with `EXPO_PUBLIC_ORBIT_LAB_ORIGIN=http://127.0.0.1:8788` and place its medium
+widget at the top of the Home Screen, then run:
+
+```sh
+ORBIT_SIMULATOR_UDID=<UDID> bun run ios:widget-handoff-smoke
+```
+
+This focused 53-task FSRS fixture uses ports 8788/8789. A test-only TCP relay
+drops the connection while keeping the same server Repo alive, so reconnecting
+must reset in-flight bookkeeping rather than benefit from a new peer ID. The
+gate exercises repeated Reveal/review/import, completed app review → immediate
+Home Screen, full queue membership/order, and exact review IDs received by a
+fresh peer. Previous pairing, shared JSON, and pending reviews are restored.
+It complements, rather than replaces, the 14,000-row receive-limit gate.
 
 For native update-menu behavior, build/install a dedicated Release Simulator
 with `EXPO_PUBLIC_ORBIT_LAB_ORIGIN=https://slab.tail0da701.ts.net:9443`, then run

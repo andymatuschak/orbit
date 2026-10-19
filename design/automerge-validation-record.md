@@ -8,6 +8,69 @@ Public Firebase remains unchanged; the separate dogfood serving stack was
 retired only after the private cutover proofs below. Start with
 [the review guide](automerge-review-guide.md) for the current reading path.
 
+## 2026-10-19: app/widget handoff and interrupted sync (candidate 17)
+
+A read-only Chonk audit distinguishes stale presentation from lost delivery.
+The widget's displayed "One very interesting claim, via…" task was already
+reviewed in both phone and laptop files and was not due until March 2027. Four
+other inspected widget reviews were durably present on the phone but missing
+from the laptop; their phone histories strictly extended the laptop histories.
+No phone files, reviews, or live vault bytes were replaced during diagnosis.
+
+The fixes retain the existing Repo and coordinated JSON handoff:
+
+- An empty foreground outbox check no longer erases a pending app publication.
+  Publications arriving during the fresh import read/acknowledgement survive.
+- App mutations and pushed queue notifications finish their local widget write
+  before advancing the card. Widget-only reads cannot initiate a network fetch;
+  an incomplete cached queue is not cached or announced as the complete app
+  queue. A disposable projection failure never rejects a saved review.
+- Repo Swift resets a peer's in-flight Automerge state on a new connection.
+  Otherwise a dropped message can remain marked as sent indefinitely. The
+  existing guarded upstream patch and prepared-artifact fingerprint cover this
+  change; no replacement transport or persistence layer was added.
+- A direct foreground connection cancels an older scheduled retry. A repeated
+  Home Screen gate exposed the missing cancellation: the direct attempt failed
+  while offline, then the obsolete timer discarded its old generation and no
+  further retry occurred. The new unit regression fails before the fix and
+  passes afterward.
+
+Candidate **17**, runtime **`orbit-lab-native-7`**, supersedes the unpublished
+candidate 16. Native identities, App Group, private origin, scheduler, and vault
+format are unchanged. Final source passes lint/build, **537 unit tests** with
+one existing skip, **33 integration tests**, and **71 release-boundary tests**
+plus the native widget writer regression. The initial Home Screen proof passed,
+but its repeat exposed the retry race above; release was stopped before
+publication.
+
+The retry-fixed Release Simulator then passes the actual Home Screen gate:
+**five widget reviews and two app reviews**, exact independent receipt of all
+seven observation IDs, and both app review → next card → immediate Home cycles.
+Four widget reviews imported offline reach the **same server process** about
+**376 ms** after restoring TCP. Previous pairing, shared JSON/preferences, and
+two original pending Simulator reviews are restored byte-for-byte. The separate
+14,000-task rerun is pending fresh user approval after the tool's safety check
+rejected it; no new large-catalog proof is claimed for candidate 17.
+
+Device archive **17** succeeds with the private HTTPS origin and valid recursive
+code signatures. All **70** prepared artifact hashes still match; the archive's
+staged arm64 library matches the prepared library at SHA-256
+`b7e8305a03c3dcdf484b6b70df2958cb04943c0e294c17597fde183faf1ab025`.
+Ad-hoc export fails because Xcode cannot load the personal account's saved
+`Xcode-Token` and has no matching distribution identity. The completed archive
+is retained at `~/Library/Caches/Orbit Lab/native/Orbit-17.xcarchive`; no rebuild
+is needed to retry export. Nothing was published: private native discovery
+still advertises **14**. Physical installation and delivery of the four
+previously inspected Chonk reviews remain unverified.
+
+Evidence is retained in `/private/tmp/orbit-widget-final-validation-20261019/`
+and the macOS temporary `orbit-widget-handoff-gate.OUPBif` directory. The latter's
+stopped-file audit proves all four synthetic reviews existed natively and none
+had reached the fixture server; cleanup restored the exact previous pairing,
+shared JSON/preferences, and two original pending Simulator reviews. The final
+passing gate is `orbit-widget-handoff-gate.cYF6Bv`; export diagnostics are in
+`/private/tmp/orbit-widget-native17-export.log`.
+
 ## 2026-10-17: patched native candidate 16 (export pending)
 
 Release archive **16**, runtime **`orbit-lab-native-6`**, contains the bounded
