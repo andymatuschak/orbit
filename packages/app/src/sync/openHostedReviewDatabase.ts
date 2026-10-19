@@ -62,7 +62,7 @@ export async function openNativeHostedReviewDatabase(
         async (mutations) => {
           await vault.apply(mutations);
         },
-        () => vault.getReviewQueue(),
+        () => vault.getReviewQueue(undefined, undefined, { localOnly: true }),
       );
     } catch (error) {
       onError(error);

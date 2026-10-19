@@ -20,6 +20,114 @@ const mutationID = "review/0000000000000000000000" as VaultMutationID;
 const taskID = "task-a" as TaskID;
 
 describe("widget projection coordinator", () => {
+  test.each(["empty outbox read", "acknowledgement"])(
+    "preserves a publication queued during an awaited %s",
+    async (phase) => {
+      const publications: (readonly ReviewItem[])[] = [];
+      const bridge = fakeBridge([], []);
+      let started!: () => void;
+      const blocked = new Promise<void>((resolve) => {
+        started = resolve;
+      });
+      let finish!: () => void;
+      const released = new Promise<void>((resolve) => {
+        finish = resolve;
+      });
+      bridge.readPendingReviews = async () => {
+        if (phase === "empty outbox read") {
+          started();
+          await released;
+          return [];
+        }
+        return [reviewRecord()];
+      };
+      bridge.markReviewsImported = async () => {
+        started();
+        await released;
+      };
+      bridge.replaceProjection = async ({ reviewItems }) => {
+        publications.push(reviewItems);
+      };
+      const coordinator = new WidgetProjectionCoordinator(vaultID, bridge);
+      const latest = [
+        { task: { id: "latest" }, componentID: "main" },
+      ] as ReviewItem[];
+      const importing = coordinator.importPendingReviews(
+        async () => {},
+        async () => [],
+      );
+      await blocked;
+      const publishing = coordinator.publishLatest(latest);
+      finish();
+      await Promise.all([importing, publishing]);
+      expect(publications).toEqual([latest]);
+      await coordinator.close();
+    },
+  );
+
+  test("an empty foreground import preserves a queued fresh projection", async () => {
+    const publications: (readonly ReviewItem[])[] = [];
+    const bridge = fakeBridge([], []);
+    bridge.replaceProjection = async ({ reviewItems }) => {
+      publications.push(reviewItems);
+    };
+    const coordinator = new WidgetProjectionCoordinator(vaultID, bridge);
+    const latest = [
+      { task: { id: "latest" }, componentID: "main" },
+    ] as ReviewItem[];
+
+    const importing = coordinator.importPendingReviews(
+      async () => {
+        throw new Error("Empty import must not apply");
+      },
+      async () => {
+        throw new Error("Empty import must not read the queue");
+      },
+    );
+    await Promise.all([importing, coordinator.publishLatest(latest)]);
+    expect(publications).toEqual([latest]);
+    await coordinator.close();
+  });
+
+  test("a publication arriving during the fresh import read is not discarded", async () => {
+    const publications: (readonly ReviewItem[])[] = [];
+    const bridge = fakeBridge([reviewRecord()], []);
+    let started!: () => void;
+    const reading = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    let finish!: (items: ReviewItem[]) => void;
+    const fresh = new Promise<ReviewItem[]>((resolve) => {
+      finish = resolve;
+    });
+    bridge.markReviewsImported = async ({ reviewItems }) => {
+      publications.push(reviewItems);
+    };
+    bridge.replaceProjection = async ({ reviewItems }) => {
+      publications.push(reviewItems);
+    };
+    const coordinator = new WidgetProjectionCoordinator(vaultID, bridge);
+    const imported = [
+      { task: { id: "after-import" }, componentID: "main" },
+    ] as ReviewItem[];
+    const latest = [
+      { task: { id: "after-another-review" }, componentID: "main" },
+    ] as ReviewItem[];
+    const importing = coordinator.importPendingReviews(
+      async () => {},
+      () => {
+        started();
+        return fresh;
+      },
+    );
+    await reading;
+    const publishing = coordinator.publishLatest(latest);
+    finish(imported);
+    await Promise.all([importing, publishing]);
+    expect(publications).toEqual([imported, latest]);
+    await coordinator.close();
+  });
+
   test("close finishes the active import and skips queued resumes", async () => {
     const calls: string[] = [];
     const coordinator = new WidgetProjectionCoordinator(

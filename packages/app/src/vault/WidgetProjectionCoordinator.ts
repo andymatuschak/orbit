@@ -30,11 +30,9 @@ export class WidgetProjectionCoordinator {
       // Finish an import already in progress, but do not start a queued resume
       // after its database has detached and begun closing.
       if (this.isClosed) return 0;
-      // Discard snapshots captured before/during import; all publications and
-      // acknowledgements use this same serial lane, never a cross-process lock.
-      this.pendingItems = undefined;
       const records = await this.bridge.readPendingReviews(this.vaultID);
       if (records.length === 0) return 0;
+      this.pendingItems = undefined;
       await apply(
         records.map((record) => ({
           kind: "recordReview" as const,
@@ -47,8 +45,11 @@ export class WidgetProjectionCoordinator {
           occurredAtTimestampMillis: record.occurredAtTimestampMillis,
         })),
       );
-      const reviewItems = await readFreshQueue();
+      // The fresh read supersedes snapshots captured before/during apply.
+      // Publications arriving during that read or acknowledgement are newer
+      // work: retain them for the serial drain after the import completes.
       this.pendingItems = undefined;
+      const reviewItems = await readFreshQueue();
       await this.bridge.markReviewsImported({
         vaultID: this.vaultID,
         observationIDs: records.map(({ observationID }) => observationID),
@@ -81,6 +82,11 @@ export class WidgetProjectionCoordinator {
       void this.enqueue(() => this.drainPublications());
     }
     return this.operation.then(() => undefined);
+  }
+
+  /** Finish already queued handoff work before a local review advances. */
+  async flush(): Promise<void> {
+    await this.operation;
   }
 
   async close(): Promise<void> {

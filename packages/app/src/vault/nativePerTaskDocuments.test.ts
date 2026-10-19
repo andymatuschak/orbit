@@ -250,6 +250,64 @@ describe("native Repo document adapter", () => {
     }
   });
 
+  test("widget handoff can exhaust its cached queue without fetching a missing task", async () => {
+    const opened = await openTestVault("local-only-review-tail");
+    try {
+      await opened.vault.apply([ingestMutation(0), ingestMutation(1)]);
+      const entries = await opened.vault.getCatalogEntries();
+      await opened.storage.remove(entries[taskID(1)].documentURL);
+      await opened.vault.apply([
+        {
+          kind: "recordReview",
+          mutationID: "local-only-review" as VaultMutationID,
+          observationID: "local-only-review" as ObservationID,
+          taskID: taskID(0),
+          componentID: "main",
+          reviewSessionID: "WIDGET",
+          outcome: TaskRepetitionOutcome.Remembered,
+          occurredAtTimestampMillis: 20_000,
+        },
+      ]);
+      const requests: AutomergeDocumentURL[] = [];
+      opened.documents.transport = {
+        trackDocument() {},
+        async ensureDocument(url: AutomergeDocumentURL) {
+          requests.push(url);
+          return false;
+        },
+        async ensureDocuments(urls: AutomergeDocumentURL[]) {
+          requests.push(...urls);
+          return urls.map(() => false);
+        },
+        async close() {},
+      } as never;
+      const reads: { url: AutomergeDocumentURL; localOnly?: boolean }[] = [];
+      const read = opened.documents.read.bind(opened.documents);
+      opened.documents.read = async (url, options) => {
+        reads.push({ url, localOnly: options?.localOnly });
+        return read(url, options);
+      };
+      expect(
+        await opened.vault.getReviewQueue(0, 50, { localOnly: true }),
+      ).toEqual([]);
+      expect(requests).toEqual([]);
+      expect(reads).toContainEqual({
+        url: opened.vault.rootURL,
+        localOnly: true,
+      });
+      expect(reads).toContainEqual({
+        url: opened.vault.catalogURL,
+        localOnly: true,
+      });
+      await expect(opened.vault.getReviewQueue(0)).rejects.toThrow(
+        "unavailable",
+      );
+      expect(requests).toEqual([entries[taskID(1)].documentURL]);
+    } finally {
+      await opened.vault.close();
+    }
+  });
+
   test("reads and writes the per-task catalog without loading every task", async () => {
     const vaultID = "vault-native-per-task" as VaultID;
     const storage = new MemoryDocumentStorage();

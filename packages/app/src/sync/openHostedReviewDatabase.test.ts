@@ -2,8 +2,10 @@ import {
   defaultOrbitSchedulerPolicy,
   type AutomergeDocumentURL,
   type ReviewItem,
+  type TaskID,
   type VaultID,
   type VaultMutation,
+  type VaultMutationID,
 } from "@withorbit/core";
 import { describe, expect, test } from "bun:test";
 import type { PerTaskRepository } from "@withorbit/store-shared/perTaskRepository";
@@ -132,7 +134,7 @@ describe("native Lab review database", () => {
     await database!.close();
   });
 
-  test("does not hold a durable review write behind its widget projection", async () => {
+  test("an empty mutation batch does not wait for an unrelated widget projection", async () => {
     const root = "automerge:native-widget-commit-root" as AutomergeDocumentURL;
     let widgetWriteStarted!: () => void;
     let finishWidgetWrite!: () => void;
@@ -172,7 +174,156 @@ describe("native Lab review database", () => {
     finishWidgetWrite();
     await database!.close();
   });
+
+  test("finishes the local widget handoff before a saved review can advance", async () => {
+    const root = "automerge:native-widget-advance-root" as AutomergeDocumentURL;
+    const next = { task: { id: "next" }, componentID: "main" } as ReviewItem;
+    const calls: string[] = [];
+    let emit = () => {};
+    const notified: ReviewItem[][] = [];
+    let started!: () => void;
+    const writing = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    let finish!: () => void;
+    const written = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const database = await openLabReviewDatabase(labConnection(root), {
+      reviewQueueDebounceMillis: 0,
+      widgetProjectionBridge: {
+        async readPendingReviews() {
+          return [];
+        },
+        async markReviewsImported() {},
+        async replaceProjection({ reviewItems }) {
+          expect(reviewItems).toEqual([next]);
+          calls.push("publishing");
+          started();
+          await written;
+          calls.push("published");
+        },
+      },
+      runOpenBound: async () =>
+        fakeHostedVault(root, {
+          async apply() {
+            calls.push("saved");
+            emit();
+          },
+          async getReviewQueue() {
+            return [next];
+          },
+          subscribe(listener) {
+            emit = listener;
+            return () => {};
+          },
+          async close() {},
+        }),
+    });
+    database.subscribeToReviewQueue((items) => notified.push(items));
+    let advanced = false;
+    const applying = database.apply([localMutation]).then(() => {
+      advanced = true;
+      calls.push("advance");
+    });
+    await writing;
+    // A pushed queue can advance the UI independently of apply's promise.
+    await new Promise<void>((resolve) => setTimeout(resolve, 5));
+    expect(advanced).toBe(false);
+    expect(notified).toEqual([]);
+    finish();
+    await applying;
+    expect(calls[0]).toBe("saved");
+    expect(calls.at(-1)).toBe("advance");
+    expect(calls.lastIndexOf("published")).toBe(
+      calls.lastIndexOf("publishing") + 1,
+    );
+    await new Promise<void>((resolve) => setTimeout(resolve, 5));
+    expect(notified).toEqual([[next]]);
+    await database.close();
+  });
+
+  test("the last cached review publishes locally without waiting for missing tasks", async () => {
+    const root = "automerge:native-offline-tail-root" as AutomergeDocumentURL;
+    const published: (readonly ReviewItem[])[] = [];
+    const reads: boolean[] = [];
+    const database = await openLabReviewDatabase(labConnection(root), {
+      widgetProjectionBridge: {
+        async readPendingReviews() {
+          return [];
+        },
+        async markReviewsImported() {},
+        async replaceProjection({ reviewItems }) {
+          published.push(reviewItems);
+        },
+      },
+      runOpenBound: async () =>
+        fakeHostedVault(root, {
+          async apply() {},
+          async getReviewQueue(_now, _max, options) {
+            reads.push(!!options?.localOnly);
+            if (!options?.localOnly) throw new Error("uncached task offline");
+            return [];
+          },
+          async close() {},
+        }),
+    });
+    await database.apply([localMutation]);
+    expect(reads).toEqual([true]);
+    expect(published).toEqual([[]]);
+    // The widget-only read must not masquerade as a complete app queue.
+    await expect(database.fetchReviewQueue()).rejects.toThrow(
+      "uncached task offline",
+    );
+    expect(reads).toEqual([true, false]);
+    await database.close();
+  });
+
+  test.each(["queue read", "widget write"])(
+    "a failed %s after saving does not reject or replay the review",
+    async (failure) => {
+      const root =
+        "automerge:native-widget-failure-root" as AutomergeDocumentURL;
+      const errors: unknown[] = [];
+      let writes = 0;
+      const database = await openLabReviewDatabase(labConnection(root), {
+        onWidgetError: (error) => errors.push(error),
+        widgetProjectionBridge: {
+          async readPendingReviews() {
+            return [];
+          },
+          async markReviewsImported() {},
+          async replaceProjection() {
+            throw new Error("widget write");
+          },
+        },
+        runOpenBound: async () =>
+          fakeHostedVault(root, {
+            async apply() {
+              writes++;
+            },
+            async getReviewQueue() {
+              if (failure === "queue read") throw new Error(failure);
+              return [];
+            },
+            async close() {},
+          }),
+      });
+      await database.apply([localMutation]);
+      expect(writes).toBe(1);
+      expect(errors).toHaveLength(1);
+      expect((errors[0] as Error).message).toBe(failure);
+      await database.close();
+    },
+  );
 });
+
+const localMutation: VaultMutation = {
+  kind: "setTaskDeleted",
+  mutationID: "task-delete/local-test" as VaultMutationID,
+  taskID: "reviewed" as TaskID,
+  isDeleted: true,
+};
 
 function labConnection(rootDocumentURL: AutomergeDocumentURL): LabConnection {
   return {
@@ -188,7 +339,7 @@ function fakeHostedVault(
   overrides: {
     apply: (mutations: readonly VaultMutation[]) => Promise<void>;
     close: () => Promise<void>;
-    getReviewQueue?: () => Promise<ReviewItem[]>;
+    getReviewQueue?: PerTaskRepository["getReviewQueue"];
     subscribe?: (listener: () => void) => () => void;
   },
 ): PerTaskRepository {

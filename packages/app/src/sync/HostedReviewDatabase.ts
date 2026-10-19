@@ -80,7 +80,7 @@ export class HostedReviewDatabase implements ReviewDatabase {
       } while (!this.closed && revision !== this.revision);
       if (!this.closed) {
         this.lastRead = { revision, items };
-        // A slow widget handoff never extends a read or durable-write boundary.
+        // Initial reads stay fast; commits and pushed queues flush separately.
         void this.platform.widget?.publishLatest(items);
       }
       console.log(
@@ -117,6 +117,24 @@ export class HostedReviewDatabase implements ReviewDatabase {
   async apply(mutations: readonly VaultMutation[]): Promise<void> {
     this.assertOpen();
     await this.vault.apply(mutations);
+    if (this.platform.widget && mutations.length) {
+      // The app advances after apply resolves. Finish the local handoff now,
+      // not from a debounced timer which iOS can pause on the Home Screen.
+      // A failed disposable projection must not reject an already-saved review.
+      try {
+        let items: ReviewItem[];
+        let revision: number;
+        do {
+          revision = this.revision;
+          items = await this.vault.getReviewQueue(undefined, undefined, {
+            localOnly: true,
+          });
+        } while (!this.closed && revision !== this.revision);
+        await this.platform.widget.publishLatest(items);
+      } catch (error) {
+        this.reportError(error);
+      }
+    }
   }
 
   getURLForAttachmentID(attachmentID: AttachmentID): Promise<string | null> {
@@ -184,6 +202,16 @@ export class HostedReviewDatabase implements ReviewDatabase {
             this.lastRead?.revision === this.revision
               ? this.lastRead.items
               : await this.fetchReviewQueue();
+          const revision =
+            this.lastRead?.items === items ? this.lastRead.revision : undefined;
+          // Pushed queues can advance the card too, independently of apply.
+          // Never expose a newer native queue before its local widget handoff.
+          await this.platform.widget?.flush();
+          if (this.closed) return;
+          if (revision !== this.revision) {
+            this.scheduleRefresh();
+            return;
+          }
           // Widget-only publication must not consume a change before the UI
           // subscribes; that later notification can reuse this fresh read.
           this.dirty = this.listeners.size === 0;
@@ -199,23 +227,19 @@ export class HostedReviewDatabase implements ReviewDatabase {
 
   private async importWidgetReviews(): Promise<void> {
     if (this.closed || !this.platform.widget) return;
-    let freshQueue: { items: ReviewItem[]; revision: number } | undefined;
     try {
-      await this.platform.widget.importPendingReviews(
+      const imported = await this.platform.widget.importPendingReviews(
         async (mutations) => {
           await this.vault.apply(mutations);
         },
-        async () => {
-          const revision = this.revision;
-          const items = await this.vault.getReviewQueue();
-          freshQueue = { items, revision };
-          return items;
-        },
+        () =>
+          this.vault.getReviewQueue(undefined, undefined, { localOnly: true }),
       );
-      if (freshQueue && !this.closed) {
-        if (freshQueue.revision === this.revision)
-          this.notify(freshQueue.items);
-        else this.scheduleRefresh();
+      if (imported && !this.closed) {
+        // A cached-only handoff may be incomplete. Let the ordinary read
+        // refresh the UI rather than announce a false "caught up" state.
+        this.dirty = true;
+        this.scheduleRefresh();
       }
     } catch (error) {
       this.reportError(error);

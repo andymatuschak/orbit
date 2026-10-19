@@ -314,10 +314,11 @@ export class PerTaskRepository {
   getReviewQueue(
     nowTimestampMillis = Date.now(),
     maximumTaskCount = defaultReviewSessionMaximumQueueSize,
+    readOptions: { localOnly?: boolean } = {},
   ): Promise<ReviewItem[]> {
     return this.exclusive(async () => {
       assertBound(maximumTaskCount);
-      await this.refresh();
+      await this.refresh(readOptions.localOnly);
       const threshold =
         getReviewQueueFuzzyDueTimestampThreshold(nowTimestampMillis);
       for (;;) {
@@ -329,7 +330,11 @@ export class PerTaskRepository {
           this.catalog.entries,
           options,
         );
-        const tasks = await this.projectEntries(selected, "cached", threshold);
+        const tasks = await this.projectEntries(
+          selected,
+          readOptions.localOnly ? "local" : "cached",
+          threshold,
+        );
         // Repairs can change eligibility, retrievability, or the starting lane.
         // Reselect globally before trusting a window chosen from stale rows.
         if (selected.some(([id, entry]) => this.catalog.entries[id] !== entry))
@@ -644,22 +649,29 @@ export class PerTaskRepository {
     await this.writeEntries([[taskID, replacement]]);
   }
 
-  private async refresh() {
+  private async refresh(localOnly = false) {
     if (this.documents.subscribe && !this.dirty) return;
     this.dirty = false;
     try {
-      const snapshot = await required(this.documents, this.rootURL);
+      const snapshot = await required(this.documents, this.rootURL, {
+        localOnly,
+      });
       assertAuthoritative(snapshot, this.rootURL);
       const root = decodePerTaskVaultRoot(snapshot.data);
       if (root.vaultID !== this.vaultID)
         throw new Error("Remote root changed immutable vault identity");
-      const selected = await selectCatalog(this.documents, root);
+      const selected = await selectCatalog(this.documents, root, localOnly);
       this.root = root;
       this.catalog = selected.catalog;
       this.catalogURL = selected.descriptor.documentURL;
-      this.scheduleConflictRepair(selected.snapshot);
-      if (root.catalogCandidates[0].documentURL !== this.catalogURL)
-        this.fetch(root.catalogCandidates[0].documentURL);
+      if (localOnly) {
+        // An ordinary read still needs to schedule any deferred remote repairs.
+        this.dirty = true;
+      } else {
+        this.scheduleConflictRepair(selected.snapshot);
+        if (root.catalogCandidates[0].documentURL !== this.catalogURL)
+          this.fetch(root.catalogCandidates[0].documentURL);
+      }
     } catch (error) {
       this.dirty = true;
       throw error;
@@ -698,7 +710,7 @@ export class PerTaskRepository {
 
   private async projectEntries(
     entries: readonly [TaskID, PerTaskCatalogEntry][],
-    mode: "strict" | "cached" = "strict",
+    mode: "strict" | "cached" | "local" = "strict",
     dueTimestampThreshold?: number,
   ): Promise<Task[]> {
     const localOnly = mode !== "strict";
@@ -730,7 +742,7 @@ export class PerTaskRepository {
                 dueTimestampMillis <= dueTimestampThreshold,
             ),
           );
-    if (localOnly && loaded.size < entries.length) {
+    if (mode === "cached" && loaded.size < entries.length) {
       // Present but deleted/not-due tasks are not usable prompts. If none
       // remain, wait for remote tasks instead of reporting an empty queue.
       if (!usable.length)
@@ -935,8 +947,9 @@ export function encodeTaskDocument(document: PerTaskVaultTask) {
 async function required(
   documents: PerTaskDocuments,
   url: AutomergeDocumentURL,
+  options?: { localOnly?: boolean },
 ): Promise<DocumentSnapshot> {
-  const result = await documents.read(url);
+  const result = await documents.read(url, options);
   if (!result) throw new Error("Automerge document unavailable: " + url);
   return result;
 }

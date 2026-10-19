@@ -79,6 +79,28 @@ test("a completed fresh fetch is reused by its pending change notification", asy
   await fixture.queue.close();
 });
 
+test("a merge during widget handoff cannot publish an older queue afterward", async () => {
+  const handoff = deferred<void>();
+  let flushes = 0;
+  const fixture = createQueue(
+    async (number) => items(String(number)),
+    [],
+    true,
+    () => (++flushes === 1 ? handoff.promise : Promise.resolve()),
+  );
+  const pushed: ReviewItem[][] = [];
+  fixture.queue.subscribe((queue) => pushed.push(queue));
+  fixture.change();
+  await tick();
+  expect(flushes).toBe(1);
+  expect(pushed).toEqual([]);
+  fixture.change();
+  handoff.resolve();
+  await tick();
+  expect(pushed).toEqual([items("2")]);
+  await fixture.queue.close();
+});
+
 test("a change between initial fetch and UI subscription is not lost", async () => {
   const fixture = createQueue(async (number) => items(String(number)));
   expect(await fixture.queue.fetch()).toEqual(items("1"));
@@ -177,6 +199,7 @@ function createQueue(
   read: (number: number) => Promise<ReviewItem[]>,
   errors: unknown[] = [],
   withWidget = true,
+  flush = async () => {},
 ) {
   let listener = () => {};
   let reads = 0;
@@ -204,6 +227,7 @@ function createQueue(
             async publishLatest(items: ReviewItem[]) {
               published.push(items);
             },
+            flush,
             async close() {},
           } as unknown as WidgetProjectionCoordinator)
         : undefined,

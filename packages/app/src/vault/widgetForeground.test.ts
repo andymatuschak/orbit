@@ -90,7 +90,7 @@ test("native foreground drains reviews, pushes the fresh queue, and unsubscribes
   events.resume();
   expect(await pushed).toEqual([]);
   expect(pending).toEqual([]);
-  expect(calls).toEqual(["read", "read", "apply", "queue", "ack"]);
+  expect(calls).toEqual(["read", "read", "apply", "queue", "ack", "queue"]);
   await database.close();
   pending.push(record());
   events.resume();
@@ -141,6 +141,62 @@ test("native close finishes an in-flight import and skips later queued resumes",
   expect(calls).toEqual(["read", "read", "apply", "queue", "ack", "close"]);
   expect(pending).toEqual([]);
 });
+
+test.each(["opening", "foreground"])(
+  "%s imports a cached-only queue without falsely announcing caught up",
+  async (when) => {
+    const events = lifecycle();
+    const { pending, bridge } = outbox();
+    const reads: boolean[] = [];
+    const errors: unknown[] = [];
+    const pushed: ReviewItem[][] = [];
+    let failed!: () => void;
+    const failure = new Promise<void>((resolve) => {
+      failed = resolve;
+    });
+    const hosted = {
+      vaultID: "vault-test" as VaultID,
+      subscribe: () => () => {},
+      async apply() {},
+      async getReviewQueue(
+        _now: unknown,
+        _max: unknown,
+        options?: { localOnly?: boolean },
+      ) {
+        reads.push(!!options?.localOnly);
+        if (!options?.localOnly) throw new Error("uncached task offline");
+        return [];
+      },
+      async close() {},
+    } as unknown as PerTaskRepository;
+    if (when === "opening") pending.push(record());
+    const database = await openNativeHostedReviewDatabase(hosted, {
+      widgetProjectionBridge: bridge,
+      subscribeToForeground: events.subscribeToForeground,
+      reviewQueueDebounceMillis: 0,
+      onWidgetError(error) {
+        errors.push(error);
+        failed();
+      },
+    });
+    database.subscribeToReviewQueue((items) => pushed.push(items));
+    if (when === "opening") {
+      expect(reads).toEqual([true]);
+      await expect(database.fetchReviewQueue()).rejects.toThrow(
+        "uncached task offline",
+      );
+    } else {
+      pending.push(record());
+      events.resume();
+      await failure;
+      expect(errors).toHaveLength(1);
+    }
+    expect(pending).toEqual([]);
+    expect(reads).toEqual([true, false]);
+    expect(pushed).toEqual([]);
+    await database.close();
+  },
+);
 
 test("native foreground does not notify or discard a review before its fresh queue is acknowledged", async () => {
   const events = lifecycle();
@@ -253,9 +309,13 @@ test("a delayed widget acknowledgement cannot replace a newer Repo queue notific
   ];
   queue = latest;
   change();
+  // Native queue notifications now wait for the coordinated file handoff too.
+  // Do not let the stale acknowledgement advance the UI while it is blocked.
+  await new Promise<void>((resolve) => setTimeout(resolve, 5));
+  expect(pushed).toEqual([]);
+  release();
   await changed;
   expect(pushed).toEqual([latest]);
-  release();
   await new Promise<void>((resolve) => setTimeout(resolve, 5));
   expect(pending).toEqual([]);
   expect(pushed.every((items) => items === latest)).toBe(true);
