@@ -46,8 +46,11 @@ answer's badge goes before that footer. Ordinary HTML comments and inline
 examples are not treated as these boundaries.
 
 Putting `Q.` or `A.` on its own line enables multiple Markdown blocks, including
-an immediately following list or quotation. A blank line does not end such an
-answer. Use a horizontal rule before unrelated content or separate cloze prompts:
+an immediately following list or quotation. One blank line continues an answer;
+two consecutive blank lines between blocks end it. Blank lines inside a list,
+quotation, or fenced code block remain content. Questions retain their existing
+multiblock behavior. A horizontal rule is another explicit way to end an answer
+before unrelated content or separate cloze prompts:
 
 ```md
 Q. What are the steps?

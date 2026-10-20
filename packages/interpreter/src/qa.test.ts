@@ -35,6 +35,36 @@ const fixtures: [string, string, [string, string][]][] = [
     [["Question", "First\n\nSecond"]],
   ],
   [
+    "two consecutive blank lines end a multiblock answer",
+    "Q. Question\nA.\nFirst\n\n\nOutside",
+    [["Question", "First"]],
+  ],
+  [
+    "three consecutive blank lines also end a multiblock answer",
+    "Q. Question\nA.\nFirst\n\n\n\nOutside",
+    [["Question", "First"]],
+  ],
+  [
+    "whitespace-only blank lines end a multiblock answer",
+    "Q. Question\nA.\nFirst\n \n\t\nOutside",
+    [["Question", "First"]],
+  ],
+  [
+    "two blank lines before the first answer block leave no answer",
+    "Q. Question\nA.\n\n\nOutside",
+    [],
+  ],
+  [
+    "two blank lines do not terminate a multiblock question",
+    "Q.\nFirst\n\n\nSecond\n\nA. Answer",
+    [["First\n\nSecond", "Answer"]],
+  ],
+  [
+    "blank lines inside fenced code are answer content",
+    "Q. Question\nA.\n```text\nFirst\n\n\nSecond\n```\n\nLast paragraph",
+    [["Question", "```text\nFirst\n\n\nSecond\n```\n\nLast paragraph"]],
+  ],
+  [
     "standalone answer before numbered list",
     "Q. Question\nA.\n1. First\n2. Second",
     [["Question", "1. First\n2. Second"]],
@@ -209,4 +239,31 @@ test("all answer blocks belong to the QA, not additional cloze tasks", () => {
   const blocks = findClozeBlocks(remaining);
   expect(blocks).toHaveLength(1);
   expect(stringifyMarkdown(blocks)).toBe("Outside {cloze}");
+});
+
+test("a two-blank-line boundary retains exact source spans and leaves clozes outside", () => {
+  for (const newline of ["\n", "\r\n"]) {
+    const body = "Q. Question\nA.\n* First\n* Second".replaceAll("\n", newline);
+    const source = `${body}${newline.repeat(3)}Outside {cloze}`;
+    const { prompts, remaining } = extractQAPrompts(parseMarkdown(source));
+    expect(prompts).toHaveLength(1);
+    expect(source.slice(prompts[0].range.start, prompts[0].range.end)).toBe(
+      body,
+    );
+    expect(stringifyMarkdown(prompts[0].answer)).toBe("* First\n* Second");
+    expect(stringifyMarkdown(findClozeBlocks(remaining))).toBe(
+      "Outside {cloze}",
+    );
+  }
+});
+
+test("blank lines inside a loose list do not split the answer's Markdown block", () => {
+  const source = "Q. Question\nA.\n* First\n\n\n* Second\n\nLast paragraph";
+  const { prompts, remaining } = extractQAPrompts(parseMarkdown(source));
+  expect(prompts).toHaveLength(1);
+  expect(prompts[0].answer.map((node) => node.type)).toEqual([
+    "list",
+    "paragraph",
+  ]);
+  expect(remaining.children).toEqual([]);
 });

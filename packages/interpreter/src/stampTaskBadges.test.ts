@@ -132,6 +132,27 @@ describe("source-preserving task stamping", () => {
     expect(() => source(note)).toThrow("multiple Orbit task badges");
   });
 
+  it("stamps before a two-blank-line boundary without joining the following cloze", () => {
+    for (const newline of ["\n", "\r\n"]) {
+      const answer = "* First point\n* Second point";
+      const content = `Q. Which points?\nA.\n${answer}\n\n\nA {separate} cloze. ${badge(ids[0])}`;
+      const note = file(content.replaceAll("\n", newline));
+      const before = source(note);
+      expect(before.items).toHaveLength(2);
+      const stamped = stampMarkdownFile(note, assignments(note));
+      expect(stamped).toBe(
+        content
+          .replace(answer, `${answer} ${badge(ids[1])}`)
+          .replaceAll("\n", newline),
+      );
+      const updated = { ...note, content: stamped };
+      expect(source(updated).items.map((item) => item.spec)).toEqual(
+        before.items.map((item) => item.spec),
+      );
+      expect(stampMarkdownFile(updated, assignments(updated))).toBe(stamped);
+    }
+  });
+
   it("stamps the final answer block before BearID without changing footer bytes", () => {
     for (const newline of ["\n", "\r\n"])
       for (const ending of [

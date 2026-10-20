@@ -406,6 +406,12 @@ for (const { name, answerSource, answer, finalParagraph } of [
     finalParagraph: "A second paragraph.",
   },
   {
+    name: "multiblock answer terminated by two blank lines before unrelated source prose",
+    answerSource: "A.\nA real answer.\n\n\nUnrelated source prose.",
+    answer: "A real answer.",
+    finalParagraph: "A real answer.",
+  },
+  {
     name: "bullet-list answer immediately after its standalone marker",
     answerSource: "A.\n* A real answer.\n* A second point.",
     answer: "* A real answer.\n* A second point.",

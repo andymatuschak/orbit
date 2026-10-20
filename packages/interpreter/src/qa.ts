@@ -19,7 +19,8 @@ type AnswerStart = {
  * Extract root-level Q./A. regions, leaving ordinary Markdown for clozes.
  * Q. text / A. text consume one paragraph each; putting the prefix on its own
  * line enables multiple blocks, terminated by a heading, rule, another Q.,
- * or the export's standalone BearID metadata.
+ * or the export's standalone BearID metadata. Two blank lines between blocks
+ * also end an answer.
  */
 export function extractQAPrompts(root: Root): {
   prompts: QAPrompt[];
@@ -47,7 +48,14 @@ export function extractQAPrompts(root: Root): {
 
     let end = answerIndex + 1;
     if (isMultiblockPrefix(match))
-      while (end < blocks.length && !isBoundary(blocks[end])) end++;
+      while (end < blocks.length && !isBoundary(blocks[end])) {
+        // One blank line joins answer blocks; two end the answer. Use the
+        // original positions, before prefix stripping or Markdown rendering.
+        const lineGap =
+          blocks[end].position!.start.line - blocks[end - 1].position!.end.line;
+        if (lineGap >= 3) break;
+        end++;
+      }
 
     const question = omitEmptyPrefixParagraph(
       removeQuestionPrefix(questionBlocks, prefix[0].length),
