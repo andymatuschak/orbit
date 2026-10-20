@@ -45,6 +45,25 @@ source file and identify the note, but are not answer content; a multiparagraph
 answer's badge goes before that footer. Ordinary HTML comments and inline
 examples are not treated as these boundaries.
 
+Putting `Q.` or `A.` on its own line enables multiple Markdown blocks, including
+an immediately following list or quotation. A blank line does not end such an
+answer. Use a horizontal rule before unrelated content or separate cloze prompts:
+
+```md
+Q. What are the steps?
+A.
+
+1. First step
+2. Second step
+
+---
+
+A separate {cloze} prompt.
+```
+
+The next question, a heading, or the BearID footer also ends the answer. There is
+no implicit cloze boundary: clozes inside an answer remain answer content.
+
 The refactor preserves existing task-spec snapshots and fixes unanswered questions
 at EOF, headingless Q&A notes, frontmatter-only notes, malformed cloze escapes,
 Backlinks swallowing the next heading, and multiblock answers leaking extra cloze

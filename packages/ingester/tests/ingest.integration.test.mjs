@@ -405,6 +405,24 @@ for (const { name, answerSource, answer, finalParagraph } of [
     answer: "A real answer.\n\nA second paragraph.",
     finalParagraph: "A second paragraph.",
   },
+  {
+    name: "bullet-list answer immediately after its standalone marker",
+    answerSource: "A.\n* A real answer.\n* A second point.",
+    answer: "* A real answer.\n* A second point.",
+    finalParagraph: "* A second point.",
+  },
+  {
+    name: "numbered-list answer immediately after its standalone marker",
+    answerSource: "A.\n1. A real answer.\n2. A second point.",
+    answer: "1. A real answer.\n2. A second point.",
+    finalParagraph: "2. A second point.",
+  },
+  {
+    name: "quoted answer immediately after its standalone marker",
+    answerSource: "A.\n> A real answer.",
+    answer: "> A real answer.",
+    finalParagraph: "> A real answer.",
+  },
 ]) {
   test(`prepared Markdown imports and updates a ${name} without losing reviews`, async () => {
     const fixture = await startFixture();

@@ -35,6 +35,46 @@ const fixtures: [string, string, [string, string][]][] = [
     [["Question", "First\n\nSecond"]],
   ],
   [
+    "standalone answer before numbered list",
+    "Q. Question\nA.\n1. First\n2. Second",
+    [["Question", "1. First\n2. Second"]],
+  ],
+  [
+    "standalone answer before bullet list",
+    "Q. Question\nA.\n* First\n* Second",
+    [["Question", "* First\n* Second"]],
+  ],
+  [
+    "standalone answer before quotation",
+    "Q. Question\nA.\n> Answer",
+    [["Question", "> Answer"]],
+  ],
+  [
+    "standalone answer before fenced code",
+    "Q. Question\nA.\n```js\nconst answer = 42;\n```",
+    [["Question", "```js\nconst answer = 42;\n```"]],
+  ],
+  [
+    "standalone question before list",
+    "Q.\n* First\n* Second\n\nA. Answer",
+    [["* First\n* Second", "Answer"]],
+  ],
+  [
+    "standalone question before quotation",
+    "Q.\n> Question\n\nA. Answer",
+    [["> Question", "Answer"]],
+  ],
+  [
+    "standalone question before fenced code",
+    "Q.\n```js\nquestion();\n```\n\nA. Answer",
+    [["```js\nquestion();\n```", "Answer"]],
+  ],
+  [
+    "blank lines after standalone question and answer",
+    "Q.\n\nFirst\n\nSecond\n\nA.\n\nAnswer",
+    [["First\n\nSecond", "Answer"]],
+  ],
+  [
     "heading terminates answer",
     "Q. Question\nA.\nFirst\n\nSecond\n\n# Heading",
     [["Question", "First\n\nSecond"]],
@@ -70,6 +110,25 @@ const fixtures: [string, string, [string, string][]][] = [
     [["First\n\n![](test.png)", "Second\n\nThird"]],
   ],
   ["same-line answer is not a prompt", "Q. Question. A. Answer", []],
+  ["unspaced question is not a prompt", "Q.Question\nA. Answer", []],
+  ["unspaced answer is not a prompt", "Q. Question\nA.Answer", []],
+  [
+    "unspaced formatted question is not a standalone marker",
+    "Q.**Question**\nA. Answer",
+    [],
+  ],
+  [
+    "unspaced formatted answer is not a standalone marker",
+    "Q. Question\nA.**Answer**",
+    [],
+  ],
+  ["standalone answer without content", "Q. Question\nA.", []],
+  ["standalone question without content", "Q.\n\nA. Answer", []],
+  [
+    "boundary after a standalone answer does not create an empty prompt",
+    "Q. Question\nA.\n\n---\n\nOutside",
+    [],
+  ],
   ["answer alone is not a prompt", "A. Answer", []],
   [
     "single-block question cannot skip a paragraph",

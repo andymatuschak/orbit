@@ -102,6 +102,36 @@ describe("source-preserving task stamping", () => {
     );
   });
 
+  it("stamps a list-only answer while preserving separate clozes after a rule", () => {
+    const answer = "1. First point\n2. Second point";
+    const clozes = `A {first} cloze. ${badge(ids[0])}\n\nA {second} cloze. ${badge(ids[1])}`;
+    const note = file(`Q. Which points?\nA.\n${answer}\n\n---\n\n${clozes}`);
+    const before = source(note);
+    expect(before.items).toHaveLength(3);
+    const stamped = stampMarkdownFile(note, assignments(note));
+    expect(stamped).toBe(
+      note.content.replace(answer, `${answer} ${badge(ids[2])}`),
+    );
+    const after = source({ ...note, content: stamped });
+    expect(after.items.map((item) => item.taskID)).toEqual(ids);
+    expect(after.items.map((item) => item.spec)).toEqual(
+      before.items.map((item) => item.spec),
+    );
+    expect(
+      stampMarkdownFile(
+        { ...note, content: stamped },
+        assignments({ ...note, content: stamped }),
+      ),
+    ).toBe(stamped);
+  });
+
+  it("does not guess a boundary when a multiblock answer contains other task badges", () => {
+    const note = file(
+      `Q. Which points?\nA.\n* First point\n\nA {first} cloze. ${badge(ids[0])}\n\nA {second} cloze. ${badge(ids[1])}`,
+    );
+    expect(() => source(note)).toThrow("multiple Orbit task badges");
+  });
+
   it("stamps the final answer block before BearID without changing footer bytes", () => {
     for (const newline of ["\n", "\r\n"])
       for (const ending of [

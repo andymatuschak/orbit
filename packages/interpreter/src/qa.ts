@@ -42,16 +42,27 @@ export function extractQAPrompts(root: Root): {
       child,
       match,
     );
-    const question = blocks.slice(start, answerIndex);
-    if (beforeAnswer) question.push(beforeAnswer);
+    const questionBlocks = blocks.slice(start, answerIndex);
+    if (beforeAnswer) questionBlocks.push(beforeAnswer);
 
     let end = answerIndex + 1;
-    if (match[1].endsWith("\n"))
+    if (isMultiblockPrefix(match))
       while (end < blocks.length && !isBoundary(blocks[end])) end++;
 
+    const question = omitEmptyPrefixParagraph(
+      removeQuestionPrefix(questionBlocks, prefix[0].length),
+    );
+    const answer = omitEmptyPrefixParagraph([
+      answerParagraph,
+      ...blocks.slice(answerIndex + 1, end),
+    ]);
+    if (!question.length || !answer.length) {
+      remaining.push(blocks[start]);
+      continue;
+    }
     prompts.push({
-      question: removeQuestionPrefix(question, prefix[0].length),
-      answer: [answerParagraph, ...blocks.slice(answerIndex + 1, end)],
+      question,
+      answer,
       range: sourceRange(blocks[start], blocks[end - 1]),
     });
     start = end - 1;
@@ -60,8 +71,26 @@ export function extractQAPrompts(root: Root): {
 }
 
 function questionPrefix(node: RootContent): RegExpExecArray | null {
-  const first = node.type === "paragraph" ? node.children[0] : undefined;
-  return first?.type === "text" ? /^Q\.(\s+)/.exec(first.value) : null;
+  if (node.type !== "paragraph") return null;
+  const first = node.children[0];
+  if (first?.type !== "text") return null;
+  const prefix = /^Q\.(\s+|$)/.exec(first.value);
+  // A text-node ending is not necessarily a paragraph ending: Q.**text** is
+  // still missing the required whitespace before its inline content.
+  return prefix && (prefix[1] || node.children.length === 1) ? prefix : null;
+}
+
+function isMultiblockPrefix(prefix: RegExpExecArray): boolean {
+  // Markdown drops a standalone marker's newline before another block.
+  return prefix[1] === "" || prefix[1].endsWith("\n");
+}
+
+function omitEmptyPrefixParagraph(blocks: RootContent[]): RootContent[] {
+  const first = blocks[0];
+  return first?.type === "paragraph" &&
+    first.children.every((node) => node.type === "text" && !node.value)
+    ? blocks.slice(1)
+    : blocks;
 }
 
 function isBoundary(node: RootContent): boolean {
@@ -80,7 +109,7 @@ function findAnswer(
   start: number,
   prefix: RegExpExecArray,
 ): AnswerStart | undefined {
-  const multiblock = prefix[1].endsWith("\n");
+  const multiblock = isMultiblockPrefix(prefix);
   const limit = multiblock ? blocks.length : Math.min(start + 2, blocks.length);
   for (let block = start; block < limit; block++) {
     const node = blocks[block];
@@ -93,9 +122,10 @@ function findAnswer(
       const text = node.children[child];
       if (text.type !== "text") continue;
       const pattern =
-        multiblock || block === start ? /^A\.(\s+)/m : /^A\.(\s+)/;
+        multiblock || block === start ? /^A\.(\s+|$)/m : /^A\.(\s+|$)/;
       const match = pattern.exec(text.value);
-      if (match) return { block, child, match };
+      if (match && (match[1] || child === node.children.length - 1))
+        return { block, child, match };
     }
   }
 }
