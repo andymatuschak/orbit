@@ -33,13 +33,27 @@ response, and complete served IPA match the exported artifact. SHA-256:
 `61ab69d5805faf1d775455c79755a24c1de6fffa06c0b00d0a96508ca9a33ac8`.
 Build **14** remains available at its immutable URL. Private health/readiness
 pass; no service restart, public release, vault migration, or phone file
-replacement was performed. Physical installation and delivery of the four
-previously inspected Chonk reviews still require activating the new build.
+replacement was performed.
+
+After Andy reports installing the update and opening Lab on Chonk, a read-only
+audit at **2026-10-20 17:54 UTC** confirms that all **four** previously stranded
+widget reviews are persisted on the laptop exactly once with unchanged IDs,
+contents, and timestamps. All **56** observations from those four original phone
+task histories are retained, their original phone heads are present in the
+laptop histories, and no dependencies are missing. Each current catalog entry
+points to the same task document and exactly matches its independently derived
+scheduling projection. The check loads stored Automerge bytes directly: it does
+not open a Repo, repair a catalog, import changes, or write to the vault.
+This confirms physical review delivery; no independent installed-version query
+or physical widget-rendering check was performed.
 
 Evidence: `/private/tmp/orbit-final17-14k-gate.XiBGFe/` contains the test log,
 result, exact restoration receipt, and delayed postcheck. Fixture receipt:
 `orbit-lab-review-gate.yzpV6U` under the macOS temporary directory. Export log:
-`/private/tmp/orbit-widget-native17-export-20261020.log`.
+`/private/tmp/orbit-widget-native17-export-20261020.log`. Physical delivery proof:
+`/private/tmp/orbit-native17-delivery-20261020.json`, compared against the
+preserved phone snapshot and audit in
+`/private/tmp/orbit-widget-chonk-20261019.oeAfNw/`.
 
 ## 2026-10-19: app/widget handoff and interrupted sync (candidate 17)
 
@@ -94,8 +108,8 @@ Ad-hoc export fails because Xcode cannot load the personal account's saved
 is retained at `~/Library/Caches/Orbit Lab/native/Orbit-17.xcarchive`. Nothing
 was published at this checkpoint; private native discovery still advertised
 **14**. Export and publication subsequently completed without rebuilding on
-2026-10-20. Physical installation and delivery of the four previously inspected
-Chonk reviews remain unverified.
+2026-10-20. The four previously inspected Chonk reviews were subsequently
+verified on the laptop as recorded above.
 
 Evidence is retained in `/private/tmp/orbit-widget-final-validation-20261019/`
 and the macOS temporary `orbit-widget-handoff-gate.OUPBif` directory. The latter's
