@@ -391,6 +391,7 @@ A. Answer
   expect(before).toEqual(after);
   expect<string>(before.identifier).toEqual(bearID);
   expect(before.url).toEqual(`bear://x-callback-url/open-note?id=${bearID}`);
+  expect(before.items[0].url).toBeUndefined();
   expect(before.title).toEqual("**Study** note");
   expect(before.items[0].spec.content).toEqual({
     type: TaskContentType.QA,
@@ -408,6 +409,63 @@ test("without Bear metadata the path, not content or filename, identifies the so
   expect<string>(after.identifier).toEqual("/elsewhere/Source.md");
   expect(before.url).toBeUndefined();
   expect(before.items).toEqual(after.items);
+});
+
+for (const [name, markdown] of [
+  ["QA", "Q. Front\nA. Back"],
+  ["multiblock QA", "Q. Front\nA.\nFirst paragraph.\n\nSecond paragraph."],
+  ["cloze", "{Paris} is the capital of {country::France}."],
+]) {
+  for (const prefix of ["orbit://task/", "orbit://"]) {
+    test(`a stamped Bear ${name} links to its ID with ${prefix}`, () => {
+      const taskID = "AbCdEfGhIjKlMnOpQrStUv" as TaskID;
+      const footer = "\n\n<!-- {BearID:ABC-123} -->";
+      const original = interpret(markdown + footer);
+      const source = interpret(`${markdown} [☉](${prefix}${taskID})${footer}`);
+      const item = source.items[0];
+      expect(source.url).toBe("bear://x-callback-url/open-note?id=ABC-123");
+      expect(item.url).toBe(`${source.url}&search=${taskID}`);
+      expect(item.spec).toEqual(original.items[0].spec);
+      expect(item.identifier).toBe(taskID);
+
+      const input = JSON.parse(JSON.stringify({ sources: [source] }));
+      expect(
+        createIngestibleValidator({ mutateWithDefaultValues: false }).validate(
+          input,
+        ),
+      ).toEqual({ isValid: true, errors: null });
+      // Reimporting an already stamped task changes navigation, not its
+      // identity, wording, observations, or schedule.
+      const existing = {
+        spec: item.spec,
+        provenance: {
+          identifier: source.identifier,
+          title: source.title,
+          url: source.url,
+        },
+        metadata: { [INGEST_ITEM_IDENTIFIER_KEY]: taskID },
+        isDeleted: false,
+      };
+      expect(
+        ingestSources(input.sources, new Map([[taskID, existing]])),
+      ).toEqual([
+        {
+          kind: "updateTaskProvenance",
+          mutationID: expect.any(String),
+          taskID,
+          provenance: { ...existing.provenance, url: item.url },
+        },
+      ]);
+    });
+  }
+}
+
+test("a badge without Bear source metadata does not invent a source URL", () => {
+  const source = interpret(
+    "Q. Front\nA. Back [☉](orbit://task/AbCdEfGhIjKlMnOpQrStUv)",
+  );
+  expect(source.url).toBeUndefined();
+  expect(source.items[0].url).toBeUndefined();
 });
 
 test("a Markdown badge survives the JSON boundary and targets an existing hash-imported task", () => {

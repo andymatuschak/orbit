@@ -117,8 +117,8 @@ export function planIngestion(
   for (const source of sources) {
     const previous = existingBySource.get(source.identifier) ?? new Map();
     const next = mapItems(source.items);
-    const provenance = createProvenanceForSource(source);
     for (const [itemID, item] of next) {
+      const provenance = createProvenance(source, item);
       const taskID =
         item.taskID ?? previous.get(itemID) ?? (generateUniqueID() as TaskID);
       claim(taskID);
@@ -264,11 +264,15 @@ function mapItems(items: readonly IngestibleItem[]) {
   return mapping;
 }
 
-function createProvenanceForSource(source: IngestibleSource): TaskProvenance {
+function createProvenance(
+  source: IngestibleSource,
+  item: IngestibleItem,
+): TaskProvenance {
+  const url = item.url ?? source.url;
   return {
     identifier: source.identifier,
     title: source.title,
-    ...(source.url ? { url: source.url } : {}),
+    ...(url ? { url } : {}),
     ...(source.colorPaletteName
       ? { colorPaletteName: source.colorPaletteName }
       : {}),

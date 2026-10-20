@@ -11,6 +11,10 @@ Each supplied source is a complete snapshot of that note. Missing items are
 deleted; omitted sources are left alone, except when a prompt explicitly names
 an existing TaskID to move it into a supplied source.
 
+Each item's optional `url` overrides its source's URL, allowing a link to open
+at that prompt's location. The source's identity, title, and color still apply;
+omitting the item URL falls back to the source URL.
+
 Unstamped items retain their content-hash matching policy: edited content creates
 a new task, an unambiguous move between supplied sources preserves history, and
 deleted/re-added content creates a new task. Identical prompts in separate notes

@@ -490,6 +490,10 @@ for (const { name, answerSource, answer, finalParagraph } of [
       const initial = (await observer.readLogicalVault()).tasks[taskID];
       assert.equal(initial.spec.content.body.text, "What survives an edit?");
       assert.equal(initial.spec.content.answer.text, answer);
+      assert.equal(
+        initial.provenance.url,
+        `bear://x-callback-url/open-note?id=${bearID}&search=${taskID}`,
+      );
       assert.doesNotMatch(
         initial.spec.content.answer.text,
         /BearID|orbit:\/\/|☉/,
@@ -594,6 +598,10 @@ for (const { name, answerSource, answer, finalParagraph } of [
         logical.tasks[taskID].spec.content.answer.text,
         editedAnswer,
       );
+      assert.equal(
+        logical.tasks[taskID].provenance.url,
+        `bear://x-callback-url/open-note?id=${bearID}&search=${taskID}`,
+      );
       assert.deepEqual(logical.observations, reviewed.observations);
       assert.equal(
         logical.tasks[taskID].createdAtTimestampMillis,
@@ -693,8 +701,15 @@ test("stable cloze IDs retain reviewed components through membership edits and c
     source("The {alpha} follows {beta}.", badge),
   );
   const adopted = await runMarkdownIngest(input);
-  assert.deepEqual(adopted.counts, { mergeTaskMetadata: 1 });
+  assert.deepEqual(adopted.counts, {
+    mergeTaskMetadata: 1,
+    updateTaskProvenance: 1,
+  });
   assert.equal(adopted.assignments[0].taskID, taskID);
+  assert.equal(
+    (await readFixture(fixture)).logical.tasks[taskID].provenance.url,
+    `bear://x-callback-url/open-note?id=${bearID}&search=${taskID}`,
+  );
   await fs.writeFile(file, source("The {0::alpha} follows {1::beta}.", badge));
   assert.equal((await runMarkdownIngest(input)).mutationCount, 0);
 
@@ -712,6 +727,10 @@ test("stable cloze IDs retain reviewed components through membership edits and c
       ["original-task", taskID].sort(),
     );
     assert.equal(current.entries[taskID].documentURL, documentURL);
+    assert.equal(
+      current.logical.tasks[taskID].provenance.url,
+      `bear://x-callback-url/open-note?id=${bearID}&search=${taskID}`,
+    );
     assert.deepEqual(
       current.logical.observations,
       reviewed.logical.observations,
@@ -988,6 +1007,7 @@ for (const rejectedSave of [false, true]) {
       assert.deepEqual(imported.counts, {
         ingestTask: 1,
         mergeTaskMetadata: 1,
+        updateTaskProvenance: 1,
       });
       assert.deepEqual(
         await Promise.all(
@@ -1000,6 +1020,14 @@ for (const rejectedSave of [false, true]) {
         Object.keys(accepted.logical.tasks).sort(),
         [oldTaskID, acceptedID].sort(),
       );
+      for (const [taskID, sourceID] of [
+        [oldTaskID, oldSourceID],
+        [acceptedID, newSourceID],
+      ])
+        assert.equal(
+          accepted.logical.tasks[taskID].provenance.url,
+          `bear://x-callback-url/open-note?id=${sourceID}&search=${taskID}`,
+        );
       if (rejectedSave)
         assert.equal(accepted.logical.tasks[attemptedID], undefined);
       assert.equal(

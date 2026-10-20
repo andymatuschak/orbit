@@ -87,6 +87,9 @@
               "taskID": {
                 "pattern": "^[0-9a-zA-Z_\\-]{22}$",
                 "type": "string"
+              },
+              "url": {
+                "type": "string"
               }
             },
             "required": ["identifier", "spec"],

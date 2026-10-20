@@ -83,6 +83,14 @@ Unbadged prompts retain their historical content-hash identity. A deliberate cop
 can get a new identity by removing its badge; duplicate badges are errors, not
 instructions to merge two prompts.
 
+For Bear exports, a stamped item's source link includes `search=<TaskID>`.
+Bear finds the ID inside the badge's hidden link destination and brings that
+prompt into view with its in-note Find panel open. This works for either badge
+URL form and does not depend on the question's wording or Markdown formatting.
+Unstamped prompts keep the ordinary note link. The ingester accepts an optional
+per-item `url` overriding the source URL, so the app does not need to know about
+Bear; existing tasks acquire the more precise link on their next import.
+
 ### Cloze identities
 
 Each blank has its own review history. By default, `{content}` uses its zero-based

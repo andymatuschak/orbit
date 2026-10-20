@@ -51,6 +51,9 @@ export function analyzeMarkdownFile(file: MarkdownFile): {
 } {
   const parsed = parseMarkdown(file.content);
   const bearID = getBearID(parsed);
+  const sourceURL = bearID
+    ? `bear://x-callback-url/open-note?id=${bearID}`
+    : undefined;
   const root = withoutBacklinks(parsed);
   const { prompts, remaining } = extractQAPrompts(root);
   const acceptedBadges: Link[] = [];
@@ -68,6 +71,11 @@ export function analyzeMarkdownFile(file: MarkdownFile): {
         identifier: (marker.taskID ??
           hashTaskSpec(spec)) as IngestibleItemIdentifier,
         ...(marker.taskID ? { taskID: marker.taskID } : {}),
+        // Bear's in-note search also matches hidden link destinations. Use the
+        // authored ID, not question text that can change during round-tripping.
+        ...(sourceURL && marker.taskID
+          ? { url: `${sourceURL}&search=${marker.taskID}` }
+          : {}),
         spec,
       },
     };
@@ -108,7 +116,7 @@ export function analyzeMarkdownFile(file: MarkdownFile): {
     source: {
       identifier: (bearID ?? file.path) as IngestibleSourceIdentifier,
       title: getNoteTitle(withoutTaskBadges(root, acceptedBadges)) ?? file.name,
-      url: bearID ? `bear://x-callback-url/open-note?id=${bearID}` : undefined,
+      url: sourceURL,
       items: located.map(({ item }) => item),
     },
   };

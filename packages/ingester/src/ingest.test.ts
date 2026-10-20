@@ -592,6 +592,78 @@ describe("provenance", () => {
     });
   });
 
+  it("uses per-item URLs while retaining the source URL as a fallback", async () => {
+    const source: IngestibleSource = {
+      ...BASE,
+      url: "https://example.com/chapter",
+      items: [
+        { ...BASE.items[0], url: "https://example.com/chapter#question" },
+        {
+          ...BASE.items[0],
+          identifier: "another-question" as IngestibleItemIdentifier,
+        },
+      ],
+    };
+    const mutations = await reconcile([source]);
+    expect(mutations).toMatchObject([
+      { task: { provenance: { url: source.items[0].url } } },
+      { task: { provenance: { url: source.url } } },
+    ]);
+    await store.apply(mutations);
+    expect(await reconcile([source])).toEqual([]);
+  });
+
+  it("updates existing tasks' URLs and falls back when an item URL is removed", async () => {
+    const source = { ...BASE, url: "notes://source" };
+    const additions = await reconcile([source]);
+    await store.apply(additions);
+    const taskID = (additions[0] as IngestTaskMutation).task.taskID;
+    const targeted = {
+      ...source,
+      items: [{ ...source.items[0], url: "notes://source?selection=prompt" }],
+    };
+    const updates = await reconcile([targeted]);
+    expect(updates).toMatchObject([
+      {
+        kind: "updateTaskProvenance",
+        taskID,
+        provenance: { url: targeted.items[0].url },
+      },
+    ]);
+    expect(updates).toHaveLength(1);
+    await store.apply(updates);
+    expect(await reconcile([targeted])).toEqual([]);
+    expect(await reconcile([source])).toMatchObject([
+      { kind: "updateTaskProvenance", taskID, provenance: { url: source.url } },
+    ]);
+  });
+
+  it("keeps the destination item's URL when preserving a moved task", async () => {
+    const additions = await reconcile([BASE]);
+    await store.apply(additions);
+    const taskID = (additions[0] as IngestTaskMutation).task.taskID;
+    const destination: IngestibleSource = {
+      ...BASE,
+      identifier: "new-source" as IngestibleSourceIdentifier,
+      url: "https://example.com/new-source",
+      items: [
+        { ...BASE.items[0], url: "https://example.com/new-source#prompt" },
+      ],
+    };
+    const sources = [{ ...BASE, items: [] }, destination];
+    const mutations = await reconcile(sources);
+    expect(mutations).toMatchObject([
+      {
+        kind: "updateTaskProvenance",
+        taskID,
+        provenance: { url: destination.items[0].url },
+      },
+    ]);
+    expect(mutations).toHaveLength(1);
+    await store.apply(mutations);
+    expect(await reconcile(sources)).toEqual([]);
+  });
+
   it("uses colorPaletteName", async () => {
     const source: IngestibleSource = { ...BASE, colorPaletteName: "lime" };
     const mutations = await reconcile([source]);

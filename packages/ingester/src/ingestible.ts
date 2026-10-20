@@ -35,5 +35,7 @@ export type IngestibleItem = {
   identifier: IngestibleItemIdentifier;
   /** An authored badge targets this task across sources, including deleted tasks. */
   taskID?: TaskID;
+  /** Optional per-prompt provenance URL, overriding the source URL. */
+  url?: string;
   spec: TaskSpec;
 };

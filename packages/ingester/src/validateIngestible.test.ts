@@ -13,6 +13,7 @@ it("accepts valid schema", () => {
         items: [
           {
             identifier: "identifier_item_A",
+            url: "https://example.com/source#prompt",
             spec: {
               type: "memory",
               content: {
@@ -28,6 +29,37 @@ it("accepts valid schema", () => {
   });
   expect(errors).toBeNull();
   expect(isValid).toBeTruthy();
+});
+
+it("rejects non-string item URLs", () => {
+  const { isValid, errors } = createIngestibleValidator({
+    mutateWithDefaultValues: false,
+  }).validate({
+    sources: [
+      {
+        identifier: "source",
+        title: "Source",
+        items: [
+          {
+            identifier: "item",
+            url: {},
+            spec: {
+              type: "memory",
+              content: {
+                type: "plain",
+                body: { text: "Prompt", attachments: [] },
+              },
+            },
+          },
+        ],
+      },
+    ],
+  });
+  expect(isValid).toBe(false);
+  expect(errors).toContainEqual({
+    path: "/sources/0/items/0/url",
+    message: "must be string",
+  });
 });
 
 it("rejects invalid schema", () => {
