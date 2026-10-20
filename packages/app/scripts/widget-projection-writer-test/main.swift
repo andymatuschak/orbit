@@ -82,4 +82,75 @@ do {
   // Expected.
 }
 
+// FSRS interval calculations legitimately produce fractional milliseconds.
+let fractionalDue = "1789442596306.177"
+let fractionalProjection = reviewItemsJSON.replacingOccurrences(
+  of: "\"dueTimestampMillis\": 1", with: "\"dueTimestampMillis\": \(fractionalDue)"
+)
+guard try store.replaceProjection(
+  vaultID: "vault-b", reviewItemsJSON: fractionalProjection, revision: "fractional"
+) else {
+  fatalError("A fractional due timestamp rejected the entire projection")
+}
+let reopenedStore = try WidgetProjectionStore(fileURL: fileURL)
+guard
+  let fractionalJSON = try reopenedStore.projectedReviewItemsJSON(vaultID: "vault-b"),
+  let fractionalData = fractionalJSON.data(using: .utf8),
+  let fractionalItems = try JSONSerialization.jsonObject(with: fractionalData)
+    as? [[String: Any]],
+  let task = fractionalItems.first?["task"] as? [String: Any],
+  let components = task["componentStates"] as? [String: Any],
+  let component = components["main"] as? [String: Any],
+  let due = component["dueTimestampMillis"] as? NSNumber,
+  due.doubleValue == Double(fractionalDue),
+  try reopenedStore.dueReviewSnapshot(throughTimestampMillis: 1_789_442_596_305, limit: 1)
+    .items.isEmpty,
+  try reopenedStore.dueReviewSnapshot(throughTimestampMillis: 1_789_442_596_306, limit: 1)
+    .items.count == 1
+else {
+  fatalError("A fractional due timestamp did not survive persistence and timeline conversion")
+}
+
+for invalidDue in ["true", "false", "NaN", "Infinity", "-Infinity", "1e309",
+  "9007199254740992", "-9007199254740992"]
+{
+  let invalidProjection = reviewItemsJSON.replacingOccurrences(
+    of: "\"dueTimestampMillis\": 1", with: "\"dueTimestampMillis\": \(invalidDue)"
+  )
+  do {
+    _ = try store.replaceProjection(
+      vaultID: "vault-b", reviewItemsJSON: invalidProjection, revision: "invalid"
+    )
+    fatalError("An invalid due timestamp was accepted: \(invalidDue)")
+  } catch {
+    // Expected, including non-finite values which JSON itself cannot encode.
+  }
+}
+
+// Unlike calculated due dates, recorded observation times must stay safe integers.
+let pendingFileURL = temporaryDirectory.appending(component: "pending.json")
+let pendingStore = try WidgetProjectionStore(fileURL: pendingFileURL)
+for invalidTimestamp in [fractionalDue, "true", "false", "9007199254740992",
+  "-9007199254740992"]
+{
+  let pendingJSON = """
+    {"version":1,"selectedVaultID":"vault-b","revision":"pending","queue":[],
+     "pendingReviews":[{"vaultID":"vault-b",
+       "mutationID":"review/AAAAAAAAAAAAAAAAAAAAAA",
+       "observationID":"review/AAAAAAAAAAAAAAAAAAAAAA",
+       "taskID":"task-a","componentID":"main","outcome":"remembered",
+       "occurredAtTimestampMillis":\(invalidTimestamp)}]}
+    """
+  let pendingData = Data(pendingJSON.utf8)
+  try pendingData.write(to: pendingFileURL, options: .atomic)
+  do {
+    _ = try pendingStore.pendingReviewsJSON(vaultID: "vault-b")
+    fatalError("An invalid observation timestamp was accepted: \(invalidTimestamp)")
+  } catch {
+    guard try Data(contentsOf: pendingFileURL) == pendingData else {
+      fatalError("Rejected pending reviews were overwritten")
+    }
+  }
+}
+
 print("Widget projection writer regression test passed")

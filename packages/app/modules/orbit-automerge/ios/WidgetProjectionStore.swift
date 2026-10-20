@@ -193,7 +193,7 @@ final class WidgetProjectionStore {
         let components = task["componentStates"] as? [String: Any],
         let component = components[componentID] as? [String: Any],
         let due = component["dueTimestampMillis"] as? NSNumber,
-        widgetSafeInteger(due)
+        widgetSafeNumber(due)
       else { throw WidgetProjectionStoreError.invalidInput("invalid review item") }
       self.json = json
       self.taskID = taskID
@@ -337,8 +337,11 @@ final class WidgetProjectionStore {
   }
 }
 
-private func widgetSafeInteger(_ number: NSNumber) -> Bool {
+private func widgetSafeNumber(_ number: NSNumber) -> Bool {
   CFGetTypeID(number) != CFBooleanGetTypeID() && number.doubleValue.isFinite
-    && number.doubleValue.rounded(.towardZero) == number.doubleValue
     && abs(number.doubleValue) <= 9_007_199_254_740_991
+}
+
+private func widgetSafeInteger(_ number: NSNumber) -> Bool {
+  widgetSafeNumber(number) && number.doubleValue.rounded(.towardZero) == number.doubleValue
 }
