@@ -70,6 +70,7 @@ export async function openNativeHostedReviewDatabase(
   }
   return new HostedReviewDatabase(vault, {
     widget,
+    finishInBackground: bridge?.finishInBackground,
     onError,
     debounceMillis: dependencies.reviewQueueDebounceMillis,
     subscribeToForeground:

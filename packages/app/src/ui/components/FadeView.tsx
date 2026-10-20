@@ -48,6 +48,8 @@ export default function FadeView(props: FadeViewProps) {
 
   return (
     <Animated.View
+      accessibilityElementsHidden={!isVisible}
+      importantForAccessibility={isVisible ? "auto" : "no-hide-descendants"}
       style={useMemo(
         () => [
           style,

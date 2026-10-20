@@ -17,6 +17,8 @@ export interface WidgetReviewOutboxRecord {
 }
 
 export interface WidgetProjectionBridge {
+  /** Finish an app review and its handoff even if Home suspends the app. */
+  finishInBackground?(operation: () => Promise<void>): Promise<void>;
   subscribeToForeground?(listener: () => void): () => void;
   replaceProjection(input: {
     vaultID: VaultID;

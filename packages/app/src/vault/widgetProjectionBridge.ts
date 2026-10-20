@@ -7,6 +7,15 @@ let cachedBridge: WidgetProjectionBridge | undefined;
 
 export function getWidgetProjectionBridge(): WidgetProjectionBridge {
   cachedBridge ??= {
+    async finishInBackground(operation) {
+      const native = getOrbitAutomergeNative();
+      const task = await native.beginReviewWork();
+      try {
+        await operation();
+      } finally {
+        await native.endReviewWork(task);
+      }
+    },
     subscribeToForeground: (listener) => {
       const subscription = AppState.addEventListener("change", (state) => {
         if (state === "active") listener();

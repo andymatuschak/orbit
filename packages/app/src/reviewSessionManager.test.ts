@@ -10,6 +10,7 @@ import {
   reviewSessionManagerReconcileReviewQueue,
   reviewSessionManagerMarkCurrentItem,
   reviewSessionManagerDeleteCurrentItem,
+  reviewSessionManagerRefreshTask,
   type ReviewSessionManagerState,
 } from "./reviewSessionManager.js";
 
@@ -145,6 +146,28 @@ describe("deleting the current prompt", () => {
 });
 
 describe("saved review projection", () => {
+  test("refreshes authoritative scheduling without advancing the successor", () => {
+    const a = reviewItem("a");
+    const b = reviewItem("b");
+    const authoritative = {
+      ...a.task,
+      componentStates: {
+        main: {
+          createdAtTimestampMillis: 0,
+          lastRepetitionTimestampMillis: 1000,
+          intervalMillis: 86400000,
+          dueTimestampMillis: Date.now() + 86400000,
+        },
+      },
+    } satisfies Task;
+    const state = activeState([a, b], 1);
+    const refreshed = reviewSessionManagerRefreshTask(state, authoritative);
+    expect(refreshed.sessionItems[0].task).toBe(authoritative);
+    expect(refreshed.currentReviewAreaQueueIndex).toBe(1);
+    expect(refreshed.currentSessionItemIndex).toBe(1);
+    expect(refreshed.reviewAreaQueue).toBe(state.reviewAreaQueue);
+  });
+
   test("installs the saved FSRS state before selecting items to retry", () => {
     const due = getReviewQueueFuzzyDueTimestampThreshold() - 1;
     const item = reviewItem("a");

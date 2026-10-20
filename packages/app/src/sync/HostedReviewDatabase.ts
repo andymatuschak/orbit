@@ -33,6 +33,7 @@ export class HostedReviewDatabase implements ReviewDatabase {
   private readOperation: Promise<ReviewItem[]> | undefined;
   private lastRead: { revision: number; items: ReviewItem[] } | undefined;
   private refreshOperation: Promise<void> = Promise.resolve();
+  private writeOperation: Promise<void> = Promise.resolve();
   private readonly listeners = new Set<(items: ReviewItem[]) => void>();
   private readonly attachmentURLs = new Map<AttachmentID, string>();
   private readonly attachmentOperations = new Map<
@@ -49,6 +50,7 @@ export class HostedReviewDatabase implements ReviewDatabase {
       releaseAttachmentURLs(urls: Iterable<string>): Promise<void> | void;
       shutdownRepo?: () => Promise<void>;
       widget?: WidgetProjectionCoordinator;
+      finishInBackground?: (operation: () => Promise<void>) => Promise<void>;
       subscribeToForeground?: (listener: () => void) => () => void;
       debounceMillis?: number;
       onError?: (error: unknown) => void;
@@ -114,12 +116,30 @@ export class HostedReviewDatabase implements ReviewDatabase {
     return () => this.listeners.delete(listener);
   }
 
-  async apply(mutations: readonly VaultMutation[]): Promise<void> {
+  apply(mutations: readonly VaultMutation[]): Promise<void> {
     this.assertOpen();
+    // Reserve action order before requesting an asynchronous native allowance.
+    // Independent grants must not reorder e.g. delete followed by restore.
+    const previous = this.writeOperation;
+    const persist = async () => {
+      await previous;
+      await this.persist(mutations);
+    };
+    const write = this.platform.finishInBackground
+      ? this.platform.finishInBackground(persist)
+      : persist();
+    // Reject to the caller, but let later actions/retries use this lane.
+    this.writeOperation = Promise.allSettled([previous, write]).then(() => {});
+    return write;
+  }
+
+  private async persist(mutations: readonly VaultMutation[]): Promise<void> {
+    const started = performance.now();
     await this.vault.apply(mutations);
+    const persisted = performance.now();
     if (this.platform.widget && mutations.length) {
-      // The app advances after apply resolves. Finish the local handoff now,
-      // not from a debounced timer which iOS can pause on the Home Screen.
+      // UI advances optimistically. Keep the handoff within the native
+      // background allowance, not a timer iOS can pause on the Home Screen.
       // A failed disposable projection must not reject an already-saved review.
       try {
         let items: ReviewItem[];
@@ -135,6 +155,10 @@ export class HostedReviewDatabase implements ReviewDatabase {
         this.reportError(error);
       }
     }
+    console.log("[Performance] Review write", {
+      persistenceMillis: Math.round(persisted - started),
+      widgetMillis: Math.round(performance.now() - persisted),
+    });
   }
 
   getURLForAttachmentID(attachmentID: AttachmentID): Promise<string | null> {
@@ -164,6 +188,9 @@ export class HostedReviewDatabase implements ReviewDatabase {
     if (this.timer !== undefined) clearTimeout(this.timer);
     this.listeners.clear();
     this.closeOperation = (async () => {
+      // UI can leave while a write is pending. Do not close its Repo or widget
+      // coordinator until the accepted mutation and handoff have finished.
+      await this.writeOperation;
       await Promise.allSettled([
         this.refreshOperation,
         this.readOperation,

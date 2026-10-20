@@ -357,6 +357,234 @@ test("apply acknowledges the authoritative durable write, not a second receipt p
   await database.close();
 });
 
+test("close keeps Repo and widget alive until a background review finishes", async () => {
+  const persisted = deferred<void>();
+  const projected = deferred<void>();
+  const calls: string[] = [];
+  const database = new HostedReviewDatabase(
+    {
+      subscribe: () => () => {},
+      async apply() {
+        calls.push("persist");
+        await persisted.promise;
+      },
+      async getReviewQueue() {
+        calls.push("project");
+        return [];
+      },
+      async close() {
+        calls.push("close repo");
+      },
+    } as unknown as PerTaskRepository,
+    {
+      attachmentURL: async () => "unused",
+      releaseAttachmentURLs() {},
+      async finishInBackground(work) {
+        calls.push("begin background");
+        try {
+          await work();
+        } finally {
+          calls.push("end background");
+        }
+      },
+      widget: {
+        async publishLatest() {
+          calls.push("publish");
+          await projected.promise;
+        },
+        async close() {
+          calls.push("close widget");
+        },
+      } as unknown as WidgetProjectionCoordinator,
+    },
+  );
+  const writing = database.apply([{} as VaultMutation]);
+  const closing = database.close();
+  await Promise.resolve();
+  expect(calls).toEqual(["begin background", "persist"]);
+  persisted.resolve();
+  await tick();
+  expect(calls).toEqual(["begin background", "persist", "project", "publish"]);
+  projected.resolve();
+  await writing;
+  await closing;
+  expect(calls).toEqual([
+    "begin background",
+    "persist",
+    "project",
+    "publish",
+    "end background",
+    "close widget",
+    "close repo",
+  ]);
+});
+
+test("reverse-resolved background grants preserve delete then restore order", async () => {
+  const grants = [deferred<void>(), deferred<void>()];
+  let grantIndex = 0;
+  let isDeleted = false;
+  const applied: boolean[] = [];
+  const database = new HostedReviewDatabase(
+    {
+      subscribe: () => () => {},
+      async apply(mutations: readonly VaultMutation[]) {
+        for (const mutation of mutations) {
+          if (mutation.kind !== "setTaskDeleted")
+            throw new Error("Unexpected mutation");
+          applied.push(mutation.isDeleted);
+          isDeleted = mutation.isDeleted;
+        }
+      },
+      async close() {},
+    } as unknown as PerTaskRepository,
+    {
+      attachmentURL: async () => "unused",
+      releaseAttachmentURLs() {},
+      async finishInBackground(work) {
+        await grants[grantIndex++].promise;
+        await work();
+      },
+    },
+  );
+  const deleting = database.apply([
+    {
+      kind: "setTaskDeleted",
+      mutationID: "test/delete",
+      taskID: "task",
+      isDeleted: true,
+    } as VaultMutation,
+  ]);
+  const restoring = database.apply([
+    {
+      kind: "setTaskDeleted",
+      mutationID: "test/restore",
+      taskID: "task",
+      isDeleted: false,
+    } as VaultMutation,
+  ]);
+  grants[1].resolve();
+  await tick();
+  expect(applied).toEqual([]);
+  grants[0].resolve();
+  await Promise.all([deleting, restoring]);
+  expect(applied).toEqual([true, false]);
+  expect(isDeleted).toBe(false);
+  await database.close();
+});
+
+test("a failed earlier write does not poison the next reserved action", async () => {
+  const failure = new Error("disk temporarily unavailable");
+  const applied: boolean[] = [];
+  const database = new HostedReviewDatabase(
+    {
+      subscribe: () => () => {},
+      async apply(mutations: readonly VaultMutation[]) {
+        for (const mutation of mutations) {
+          if (mutation.kind !== "setTaskDeleted")
+            throw new Error("Unexpected mutation");
+          applied.push(mutation.isDeleted);
+          if (mutation.isDeleted) throw failure;
+        }
+      },
+      async close() {},
+    } as unknown as PerTaskRepository,
+    {
+      attachmentURL: async () => "unused",
+      releaseAttachmentURLs() {},
+      finishInBackground: (work) => work(),
+    },
+  );
+  const deleting = database.apply([
+    {
+      kind: "setTaskDeleted",
+      mutationID: "test/delete",
+      taskID: "task",
+      isDeleted: true,
+    } as VaultMutation,
+  ]);
+  const rejected = expect(deleting).rejects.toBe(failure);
+  const restoring = database.apply([
+    {
+      kind: "setTaskDeleted",
+      mutationID: "test/restore",
+      taskID: "task",
+      isDeleted: false,
+    } as VaultMutation,
+  ]);
+  await rejected;
+  await restoring;
+  expect(applied).toEqual([true, false]);
+  await database.close();
+});
+
+test("a failed later background grant cannot detach an earlier write from close", async () => {
+  const firstGrant = deferred<void>();
+  const failure = new Error("background allowance unavailable");
+  const calls: string[] = [];
+  let grantCount = 0;
+  const database = new HostedReviewDatabase(
+    {
+      subscribe: () => () => {},
+      async apply() {
+        calls.push("persist earlier action");
+      },
+      async close() {
+        calls.push("close repo");
+      },
+    } as unknown as PerTaskRepository,
+    {
+      attachmentURL: async () => "unused",
+      releaseAttachmentURLs() {},
+      async finishInBackground(work) {
+        if (++grantCount === 2) throw failure;
+        await firstGrant.promise;
+        await work();
+      },
+    },
+  );
+  const earlier = database.apply([]);
+  await expect(database.apply([])).rejects.toBe(failure);
+  const closing = database.close();
+  await tick();
+  const callsBeforeGrant = [...calls];
+  firstGrant.resolve();
+  await earlier;
+  await closing;
+  expect(callsBeforeGrant).toEqual([]);
+  expect(calls).toEqual(["persist earlier action", "close repo"]);
+});
+
+test("a failed background write releases its allowance and close still completes", async () => {
+  const calls: string[] = [];
+  const failure = new Error("disk full");
+  const database = new HostedReviewDatabase(
+    {
+      subscribe: () => () => {},
+      async apply() {
+        throw failure;
+      },
+      async close() {
+        calls.push("closed");
+      },
+    } as unknown as PerTaskRepository,
+    {
+      attachmentURL: async () => "unused",
+      releaseAttachmentURLs() {},
+      async finishInBackground(work) {
+        calls.push("begin");
+        try {
+          await work();
+        } finally {
+          calls.push("end");
+        }
+      },
+    },
+  );
+  await expect(database.apply([{} as VaultMutation])).rejects.toBe(failure);
+  await database.close();
+  expect(calls).toEqual(["begin", "end", "closed"]);
+});
+
 test("forwards the live scheduler and projects a saved task even after it leaves the due queue", async () => {
   let scheduler: SchedulerPolicy = defaultOrbitSchedulerPolicy;
   const taskID = "saved-task" as TaskID;

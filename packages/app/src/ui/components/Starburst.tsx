@@ -216,30 +216,7 @@ export default React.memo(function Starburst({
     unitThickness,
   );
 
-  const allPaths: string[] = [];
-  const pathsByColor: { [key: string]: string[] } = {};
-  let animatingColorEntry: {
-    color: string;
-    index: number;
-    fromPath: string;
-  } | null = null;
-  entries.forEach(({ value, color }, index) => {
-    const theta = (-index / entries.length) * 2 * Math.PI;
-    const strokeRadius = getStarburstRayLength(value, quillOuterRadius, 1);
-    const path = getRayPath(
-      quillInnerRadius,
-      quillOuterRadius,
-      strokeRadius,
-      theta,
-      unitThickness,
-    );
-
-    if (!pathsByColor[color]) {
-      pathsByColor[color] = [];
-    }
-    pathsByColor[color].push(path);
-    allPaths.push(path);
-
+  entries.forEach(({ value }, index) => {
     // Start an animation if the entry has changed in length.
     if (canAnimateEntries && value !== previousEntries![index].value) {
       if (animationState.current) {
@@ -259,22 +236,50 @@ export default React.memo(function Starburst({
         animationState.current = undefined;
       });
     }
+  });
+
+  const staticPaths: string[] = [];
+  const pathsByColor: { [key: string]: string[] } = {};
+  let animatedRay:
+    | {
+        color: string;
+        d: Animated.WithAnimatedValue<string>;
+      }
+    | undefined;
+  entries.forEach(({ value, color }, index) => {
+    const theta = (-index / entries.length) * 2 * Math.PI;
+    const path = getRayPath(
+      quillInnerRadius,
+      quillOuterRadius,
+      getStarburstRayLength(value, quillOuterRadius, 1),
+      theta,
+      unitThickness,
+    );
+
     if (animationState.current?.entryIndex === index) {
-      animatingColorEntry = {
-        color,
-        index: pathsByColor[color].length - 1,
-        fromPath: getRayPath(
-          quillInnerRadius,
+      // Interpolate only the changing ray, not every coordinate in the burst.
+      // The colored path and clipped accent share this same interpolation.
+      const fromPath = getRayPath(
+        quillInnerRadius,
+        quillOuterRadius,
+        getStarburstRayLength(
+          animationState.current.fromValue,
           quillOuterRadius,
-          getStarburstRayLength(
-            animationState.current.fromValue,
-            quillOuterRadius,
-            1,
-          ),
-          theta,
-          unitThickness,
+          1,
         ),
+        theta,
+        unitThickness,
+      );
+      animatedRay = {
+        color,
+        d: animationState.current.value.interpolate({
+          inputRange: [0, 1],
+          outputRange: [fromPath, path],
+        }),
       };
+    } else {
+      (pathsByColor[color] ??= []).push(path);
+      staticPaths.push(path);
     }
   });
 
@@ -285,29 +290,6 @@ export default React.memo(function Starburst({
         : 0,
     timing: { ...animationTiming, type: "spring" },
   }).interpolate({ inputRange: [0, 360], outputRange: ["0deg", "360deg"] });
-  function getAnimatedPath(
-    paths: string[],
-    animatingEntry: { index: number; oldValue: string } | null,
-  ) {
-    const joinedPaths = paths.join(" ");
-    let d: Animated.WithAnimatedValue<string>;
-    if (animatingEntry === null) {
-      d = joinedPaths;
-    } else {
-      d = animationState.current!.value.interpolate({
-        inputRange: [0, 1],
-        outputRange: [
-          [
-            ...paths.slice(0, animatingEntry.index),
-            animatingEntry.oldValue,
-            ...paths.slice(animatingEntry.index + 1),
-          ].join(" "),
-          joinedPaths,
-        ],
-      });
-    }
-    return d;
-  }
 
   return (
     <Svg height={diameter} width={diameter} viewBox={"-1 -1 2 2"}>
@@ -317,23 +299,12 @@ export default React.memo(function Starburst({
           transform: [{ rotate: outerRotationDegrees }],
         }}
       >
-        {Object.keys(pathsByColor).map((color) => {
-          return (
-            <AnimatedPath
-              key={color}
-              d={getAnimatedPath(
-                pathsByColor[color],
-                color === animatingColorEntry?.color
-                  ? {
-                      index: animatingColorEntry.index,
-                      oldValue: animatingColorEntry.fromPath,
-                    }
-                  : null,
-              )}
-              fill={color}
-            />
-          );
-        })}
+        {Object.keys(pathsByColor).map((color) => (
+          <Path key={color} d={pathsByColor[color].join(" ")} fill={color} />
+        ))}
+        {animatedRay && (
+          <AnimatedPath d={animatedRay.d} fill={animatedRay.color} />
+        )}
       </AnimatedG>
       {accentOverlayColor && (
         <>
@@ -355,18 +326,10 @@ export default React.memo(function Starburst({
                 transform: [{ rotate: outerRotationDegrees }],
               }}
             >
-              <AnimatedPath
-                d={getAnimatedPath(
-                  allPaths,
-                  animationState.current
-                    ? {
-                        index: animationState.current.entryIndex,
-                        oldValue: animatingColorEntry!.fromPath,
-                      }
-                    : null,
-                )}
-                fill={accentOverlayColor}
-              />
+              <Path d={staticPaths.join(" ")} fill={accentOverlayColor} />
+              {animatedRay && (
+                <AnimatedPath d={animatedRay.d} fill={accentOverlayColor} />
+              )}
             </AnimatedG>
           </G>
         </>

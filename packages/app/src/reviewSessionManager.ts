@@ -20,7 +20,9 @@ export interface ReviewSessionManagerState {
 }
 
 export interface ReviewSessionManagerActions {
-  markCurrentItem(savedTask: Task, reviewedComponentID: string): void;
+  markCurrentItem(reviewedTask: Task, reviewedComponentID: string): void;
+
+  refreshTask(task: Task): void;
 
   reconcileReviewQueue(
     reviewItems: ReviewItem[],
@@ -59,17 +61,17 @@ function findSessionItemIndex(
 
 export function reviewSessionManagerMarkCurrentItem(
   state: ReviewSessionManagerState,
-  savedTask: Task,
+  reviewedTask: Task,
   reviewedComponentID: string,
   nowTimestampMillis = Date.now(),
 ): ReviewSessionManagerState {
-  if (!Object.hasOwn(savedTask.componentStates, reviewedComponentID))
+  if (!Object.hasOwn(reviewedTask.componentStates, reviewedComponentID))
     throw new Error("Saved review task is missing the current component");
 
-  // Use the vault's actual projection, including its selected scheduler and
-  // concurrent observations. Retry selection must not use a guessed schedule.
+  // Advance with the shared scheduler's immediate preview. An authoritative
+  // projection can refresh it later without advancing the successor again.
   const newSessionItems = state.sessionItems.map((item) =>
-    item.task.id === savedTask.id ? { ...item, task: savedTask } : item,
+    item.task.id === reviewedTask.id ? { ...item, task: reviewedTask } : item,
   );
 
   const currentItem =
@@ -80,7 +82,7 @@ export function reviewSessionManagerMarkCurrentItem(
     state.currentReviewAreaQueueIndex === null ||
     state.currentSessionItemIndex === null ||
     state.currentReviewAreaQueueIndex >= state.reviewAreaQueue.length ||
-    currentItem?.task.id !== savedTask.id ||
+    currentItem?.task.id !== reviewedTask.id ||
     currentItem.componentID !== reviewedComponentID
   ) {
     // The queue subscription may have already advanced while the post-save
@@ -111,6 +113,23 @@ export function reviewSessionManagerMarkCurrentItem(
       currentSessionItemIndex: newSessionItemIndex,
       // Automerge reviews are append-only, so do not offer a local-only undo.
       topUndoItem: null,
+    },
+    nowTimestampMillis,
+  );
+}
+
+/** Reconcile saved scheduling state without marking the card now on screen. */
+export function reviewSessionManagerRefreshTask(
+  state: ReviewSessionManagerState,
+  task: Task,
+  nowTimestampMillis = Date.now(),
+): ReviewSessionManagerState {
+  return refillDueItems(
+    {
+      ...state,
+      sessionItems: state.sessionItems.map((item) =>
+        item.task.id === task.id ? { ...item, task } : item,
+      ),
     },
     nowTimestampMillis,
   );
@@ -405,6 +424,13 @@ export function useReviewSessionManager(): ReviewSessionManagerActions &
             reviewedComponentID,
             nowTimestampMillis,
           ),
+        );
+      },
+
+      refreshTask: (task) => {
+        const nowTimestampMillis = Date.now();
+        setState((state) =>
+          reviewSessionManagerRefreshTask(state, task, nowTimestampMillis),
         );
       },
 

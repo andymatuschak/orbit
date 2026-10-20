@@ -6,7 +6,7 @@ import { addLatexSupport } from "./markdownLatexSupport.js";
 export function useMarkdownItInstance(
   withLatexSupport: boolean,
 ): MarkdownDisplay.MarkdownIt {
-  const instance = React.useRef(
+  const [instance] = React.useState(() =>
     MarkdownDisplay.MarkdownIt({
       typographer: true,
     }).use(clozeHighlightPlugin),
@@ -17,8 +17,8 @@ export function useMarkdownItInstance(
 
   if (withLatexSupport && !hasRequestedLatex.current) {
     hasRequestedLatex.current = true;
-    addLatexSupport(instance.current).then(() => setLatexLoaded(true));
+    addLatexSupport(instance).then(() => setLatexLoaded(true));
   }
 
-  return instance.current;
+  return instance;
 }

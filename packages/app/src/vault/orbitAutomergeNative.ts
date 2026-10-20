@@ -27,6 +27,8 @@ export interface NativeRepoSyncStateChangedEvent {
 }
 
 export interface OrbitAutomergeNativeModule {
+  beginReviewWork(): Promise<number>;
+  endReviewWork(task: number): Promise<void>;
   openRepo(localStoreID: string): Promise<void>;
   closeRepo(localStoreID: string): Promise<void>;
   repoDocumentsExist(

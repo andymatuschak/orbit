@@ -8,6 +8,95 @@ Public Firebase remains unchanged; the separate dogfood serving stack was
 retired only after the private cutover proofs below. Start with
 [the review guide](automerge-review-guide.md) for the current reading path.
 
+## 2026-10-20: immediate review response (candidate 18)
+
+The build-17 button awaited the task and catalog saves, a fresh 50-item queue,
+the coordinated widget handoff, and another saved-task projection before
+advancing. An offline Release Simulator using a disposable copy of the preserved
+phone vault reproduces **354, 366, and 410 ms** from marking to completed write,
+before that final projection and animation. Network latency is not necessary
+to reproduce the delay. Selection and shared widget files are restored exactly.
+
+A separate optimized macOS control uses the same native Automerge build and
+preserved **10,893-entry** catalog. Median catalog materialization is **110 ms**
+and full catalog encoding **53 ms**, versus **15 ms** to materialize 50 cached
+tasks and **1.8 ms** for their FSRS projections. The task patch/encoding is under
+1 ms; the actual coordinated widget writer, including its disk barriers, takes
+about **12 ms**. These are Mac control timings, not Chonk measurements. Delta
+encoding is much cheaper, but this change does not introduce another storage
+cursor or replace Repo's compaction/persistence policy.
+
+The card now advances synchronously using the existing scheduler and exact
+review mutation. The authoritative task refresh runs afterward and cannot mark
+the successor or overwrite a newer pending review. Duplicate callbacks from a
+departing card are ignored; later cards are usable while earlier saves finish.
+Failures retain the exact command in memory and show a Retry banner. App updates
+cannot reload while reviews are unconfirmed. This is not another durable journal:
+an immediate force-quit or power loss before local persistence can still lose
+an unconfirmed review.
+
+A finite UIKit background-execution allowance covers local persistence and the
+widget handoff, so ordinary Home/background transitions no longer require
+blocking the card. It is not a periodic background job or a guarantee beyond
+iOS's execution allowance. The facade preserves action order even when native
+grants resolve out of order or fail, and close drains accepted writes before
+closing Repo or WidgetKit. Native build **18** / runtime **8** prevents the new
+bridge calls from reaching older binaries. No vault format or scheduler change.
+
+The existing three-card pool now stays laid out while transparent, with hidden
+cards excluded from accessibility. A stable attachment callback preserves its
+memoization; Markdown parsers are constructed once per field, not on every
+render. The starburst animates only the changing ray instead of interpolating
+the coordinates of all 50 rays twice per frame. This preserves the animation
+and removes roughly 40 lines rather than adding another rendering/cache layer.
+
+The real-copy gate also discovers a pre-existing widget publication failure:
+two legitimate legacy due dates have fractional milliseconds. The writer
+rejected the entire queue because it reused the observation's integer-only
+validator. Projection due dates now accept finite, safe-range numbers and retain
+their JSON precision; only timeline filtering converts them to Int64. Accepted
+review timestamps remain strict integers. Native regression coverage rejects
+boolean, nonfinite, and out-of-range dates without altering the saved handoff.
+
+Control evidence: `/private/tmp/orbit-native-review-latency.cTiJX3/`;
+build-17 copied-vault proof: `/private/tmp/orbit-simulator-review-latency.KZO1tq/`.
+
+Final Release Simulator results on that copied vault: review preparation
+**0.15–0.18 ms**, next animation-frame callback **23, 13, and 6 ms** (median
+**13 ms**), with local persistence **81–91 ms** and widget maintenance continuing
+afterward. Three exact new observations are retained, including the first after
+cold reopening; the widget selects the expected vault and excludes the reviewed
+component. No invalid-item errors remain. Screenshots and transition video show
+the normal card/starburst animation, without a spinner or blank transition.
+These are Simulator measurements, not physical Chonk timings. Automation reached
+Home after persistence completed, so this copy test does not prove completion
+of an unfinished write while suspended; the finite native allowance and its
+ordered/drained lifecycle are separately covered by implementation/unit checks.
+
+The full Release Home Screen gate also passes: five widget reviews, two app
+reviews followed by Home, offline import, same-peer reconnect, and seven exact
+server observation IDs. Pairing, shared JSON/preferences, and both original
+pending Simulator reviews are restored exactly. Lint/build, **552 unit tests**
+(one existing skip), **33 integration tests**, **106 release-boundary tests**,
+and the compiled native widget writer regression pass. No live reviews or phone
+files were manufactured or replaced.
+
+Private build **18** / runtime **8** is published. Both app and widget are version
+18; personal-team ad-hoc profiles include Chonk and disallow debugging. Recursive
+exported code signatures pass. Discovery, installation manifest, and complete
+served IPA match the **17,606,180-byte** export; SHA-256:
+`37416619172d2319358981a87c2d00673f4fc8d439764f2a6e8dfc058b1fa1f2`.
+The runtime-8 Expo manifest correctly returns `noUpdateAvailable` for the embedded
+candidate; readiness passes. No server restart or public deployment was needed.
+Physical installation and the feel of the response on Chonk remain unverified.
+
+Final copied-vault evidence:
+`/private/tmp/orbit-simulator-review-latency.juftZ1/comparison-summary.json`
+and adjacent screenshots/video/restoration receipt. Full Home Screen evidence:
+`/var/folders/2w/5pk0gvb16xgb608cy24mq7n40000gn/T/orbit-widget-handoff-gate.YQC3o4/`.
+Final archive: `~/Library/Caches/Orbit Lab/native/Orbit-18-final.xcarchive`;
+export: `~/Library/Caches/Orbit Lab/native/export-18/Orbit.ipa`.
+
 ## 2026-10-20: private native 17 published
 
 With explicit approval, the same Release Simulator **17** / runtime **7**

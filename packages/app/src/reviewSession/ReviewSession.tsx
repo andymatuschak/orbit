@@ -5,6 +5,7 @@ import {
   TaskID,
   TaskRepetitionOutcome,
   type ObservationID,
+  type AttachmentID,
   type VaultMutation,
   type VaultMutationID,
 } from "@withorbit/core";
@@ -36,11 +37,17 @@ import { ReviewSessionContainer } from "../ReviewSessionContainer.js";
 import { useReviewSessionManager } from "../reviewSessionManager.js";
 import { LoadingScreen } from "./LoadingScreen.js";
 import useAppUpdateMenuItem from "../util/useAppUpdateMenuItem.js";
-import { getReviewIntervalAfterOutcome, itemIsStillDue } from "./scheduling.js";
+import {
+  getReviewIntervalAfterOutcome,
+  getTaskAfterReview,
+  itemIsStillDue,
+  type ReviewMutation,
+} from "./scheduling.js";
 import {
   observeReviewQueue,
   type ReviewQueueState,
 } from "./observeReviewQueue.js";
+import { ReviewSubmission, type ReviewSaveState } from "./reviewSubmission.js";
 
 interface ReviewDatabaseState {
   localStoreID: string | null;
@@ -116,11 +123,11 @@ function createReviewMutation({
   reviewItem: ReviewItem;
   outcome: TaskRepetitionOutcome;
   reviewSessionStartTimestampMillis: number;
-}): Extract<VaultMutation, { kind: "recordReview" }> {
+}): ReviewMutation {
   console.log("[Performance] Mark prompt", Date.now() / 1000.0);
 
   const id = generateUniqueID();
-  const mutation: Extract<VaultMutation, { kind: "recordReview" }> = {
+  const mutation: ReviewMutation = {
     kind: "recordReview",
     mutationID: `review/${id}` as VaultMutationID,
     observationID: `review/${id}` as ObservationID,
@@ -269,8 +276,12 @@ export default function ReviewSession({
 }) {
   const insets = useSafeAreaInsets();
   const reviewSessionStartTimestampMillis = useRef(Date.now());
-  const reviewWriteIsInFlight = useRef(false);
   const pendingWrites = useRef(0);
+  const submissions = useRef<ReviewSubmission | null>(null);
+  const [reviewSaveState, setReviewSaveState] = useState<ReviewSaveState>({
+    failedCount: 0,
+    isRetrying: false,
+  });
   const [pendingOutcome, setPendingOutcome] =
     useState<TaskRepetitionOutcome | null>(null);
   const [initialReviewReady, setInitialReviewReady] = useState(false);
@@ -288,10 +299,25 @@ export default function ReviewSession({
   } = useReviewSessionManager();
 
   const { database, openError, retry } = useReviewDatabase(connection);
+  // Keep pre-rendered cards' Markdown/attachments memoized while only the
+  // current card and its answer visibility change.
+  const getURLForAttachmentID = React.useCallback(
+    (id: AttachmentID) => database!.getURLForAttachmentID(id),
+    [database],
+  );
+  const weakDatabase = useWeakRef(database);
   const { queue: initialQueue, error: queueError } =
     useReviewItemQueue(database);
-  const appUpdates = useAppUpdateMenuItem(() => pendingWrites.current === 0);
+  const appUpdates = useAppUpdateMenuItem(
+    () =>
+      pendingWrites.current === 0 && !submissions.current?.hasUnsavedReviews,
+  );
   const appUpdateMenuItem = appUpdates.menuItem;
+  const displayedItem =
+    currentReviewAreaQueueIndex === null
+      ? undefined
+      : reviewAreaQueue[currentReviewAreaQueueIndex];
+  const displayedCardIdentity = `${currentReviewAreaQueueIndex}\0${displayedItem?.taskID}\0${displayedItem?.componentID}`;
   const hasInitialCard =
     initialQueue !== null &&
     initialQueue.length > 0 &&
@@ -310,6 +336,30 @@ export default function ReviewSession({
   // Keep the prompt already on screen stable while remote merges replace the
   // not-yet-seen tail of the queue and append newly due work.
   const weakReviewSessionManager = useWeakRef(reviewSessionManager);
+  const reviewSubmissions = (submissions.current ??= new ReviewSubmission(
+    setReviewSaveState,
+    (mutation) => {
+      const database = weakDatabase.current;
+      const version = submissions.current?.savedTaskVersion(mutation.taskID);
+      if (!database || version === undefined) return;
+      // Reconcile the saved task off the response path. A late result must not
+      // mark the successor or overwrite a newer preview for this same task.
+      void database.getTaskProjections([mutation.taskID]).then(
+        ({ tasks }) => {
+          if (
+            weakDatabase.current !== database ||
+            submissions.current?.savedTaskVersion(mutation.taskID) !== version
+          )
+            return;
+          const task = tasks.get(mutation.taskID);
+          if (task) weakReviewSessionManager.current.refreshTask(task);
+        },
+        (error) =>
+          console.error("Review saved, but could not refresh its task", error),
+      );
+    },
+  ));
+  reviewSubmissions.showCard(displayedCardIdentity);
   useEffect(() => {
     if (initialQueue !== null) {
       weakReviewSessionManager.current.reconcileReviewQueue(
@@ -386,52 +436,55 @@ export default function ReviewSession({
     });
   }
 
+  function retryFailedReviews() {
+    void reviewSubmissions.retryFailed(
+      (mutation) => commit([mutation]),
+      () => appUpdates.writesFinished(),
+    );
+  }
+
   function onMark(markingRecord: ReviewAreaMarkingRecord) {
+    const responseStartedAt = performance.now();
     if (currentSessionItemIndex === null) {
       throw new Error("onMark called with no valid current item index");
     }
-    if (reviewWriteIsInFlight.current) return;
     const reviewItem = sessionItems[currentSessionItemIndex];
+    // A second callback from the departing card must not record another review.
+    // This guard belongs to that displayed card, not to the ongoing save: the
+    // next card remains usable while earlier commands finish in the background.
+    if (
+      !reviewSubmissions.canSubmit(displayedCardIdentity) ||
+      markingRecord.reviewAreaItem.taskID !== reviewItem.task.id ||
+      markingRecord.reviewAreaItem.componentID !== reviewItem.componentID
+    )
+      return;
     const mutation = createReviewMutation({
-      reviewItem: sessionItems[currentSessionItemIndex],
+      reviewItem,
       outcome: markingRecord.outcome,
       reviewSessionStartTimestampMillis:
         reviewSessionStartTimestampMillis.current,
     });
-    reviewWriteIsInFlight.current = true;
-    void commit([mutation])
-      .then(
-        async () => {
-          console.log("[Performance] Log written", Date.now() / 1000.0);
-          let savedTask;
-          try {
-            const projection = await database!.getTaskProjections([
-              mutation.taskID,
-            ]);
-            savedTask = projection.tasks.get(mutation.taskID);
-            if (!savedTask || savedTask.id !== mutation.taskID)
-              throw new Error(
-                "Reviewed task is absent or mismatched in the vault projection",
-              );
-          } catch (error) {
-            // The review is already durable. Keep the answered card until queue
-            // reconciliation catches up; never replay it with a default scheduler
-            // or report the successful write as a failed commit.
-            console.error(
-              "Review saved, but could not refresh its task",
-              error,
-            );
-            return;
-          }
-          reviewSessionManager.markCurrentItem(savedTask, mutation.componentID);
-        },
-        (error) => {
-          console.error("Couldn't commit", reviewItem.task.id, error);
-        },
-      )
-      .finally(() => {
-        reviewWriteIsInFlight.current = false;
-      });
+    const preview = getTaskAfterReview(
+      reviewItem,
+      database!.scheduler,
+      mutation,
+    );
+    const preparedAt = performance.now();
+    void reviewSubmissions.submit(
+      displayedCardIdentity,
+      mutation,
+      () => {
+        reviewSessionManager.markCurrentItem(preview, mutation.componentID);
+        requestAnimationFrame(() => {
+          console.log("[Performance] Review response", {
+            preparationMillis: preparedAt - responseStartedAt,
+            responseMillis: performance.now() - responseStartedAt,
+          });
+        });
+      },
+      (mutation) => commit([mutation]),
+      () => appUpdates.writesFinished(),
+    );
   }
 
   function onDelete() {
@@ -487,6 +540,34 @@ export default function ReviewSession({
     }
   }
 
+  const saveFailureNotice = reviewSaveState.failedCount ? (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        padding: styles.layout.gridUnit,
+        marginBottom: styles.layout.gridUnit,
+        backgroundColor: currentColorPalette.secondaryBackgroundColor,
+      }}
+    >
+      <Text
+        accessibilityRole="alert"
+        style={[styles.type.runningTextSmall.layoutStyle, { flex: 1 }]}
+      >
+        {reviewSaveState.failedCount === 1
+          ? "One review hasn’t been saved. "
+          : `${reviewSaveState.failedCount} reviews haven’t been saved. `}
+        Keep Orbit open and retry.
+      </Text>
+      <Button
+        size="small"
+        title={reviewSaveState.isRetrying ? "Retrying…" : "Retry"}
+        disabled={reviewSaveState.isRetrying}
+        onPress={retryFailedReviews}
+      />
+    </View>
+  ) : null;
+
   return (
     <ReviewSessionContainer
       insets={{ top: insets.top }}
@@ -502,6 +583,7 @@ export default function ReviewSession({
         ) {
           return (
             <>
+              {saveFailureNotice}
               <View
                 style={{
                   flexDirection: "row",
@@ -574,9 +656,7 @@ export default function ReviewSession({
                 currentItemIndex={currentReviewAreaQueueIndex}
                 onMark={(markingRecord) => onMark(markingRecord)}
                 onPendingOutcomeChange={setPendingOutcome}
-                getURLForAttachmentID={(id) =>
-                  database.getURLForAttachmentID(id)
-                }
+                getURLForAttachmentID={getURLForAttachmentID}
                 insetBottom={
                   // So long as the container isn't tall enough to be centered, we consume the bottom insets in the button bar's padding, extending the background down through the safe area.
                   containerSize.height === styles.layout.maximumContentHeight
@@ -597,6 +677,7 @@ export default function ReviewSession({
                 justifyContent: "center",
               }}
             >
+              {saveFailureNotice}
               <Text style={styles.type.headline.layoutStyle}>
                 No more prompts in this session.
               </Text>

@@ -3,12 +3,37 @@ import AutomergeRepo
 import CryptoKit
 import ExpoModulesCore
 import Foundation
+import UIKit
 import WidgetKit
 
 private let bridgeQueue = DispatchQueue(
   label: "com.withorbit.automerge.bridge",
   qos: .userInitiated
 )
+
+/// This is a finite execution allowance, not a scheduled background job or
+/// another persistence layer. The authoritative review still lives in Repo.
+@MainActor
+private enum ReviewBackgroundWork {
+  private static var nextID = 0
+  private static var tasks: [Int: UIBackgroundTaskIdentifier] = [:]
+
+  static func begin() -> Int {
+    nextID += 1
+    let id = nextID
+    let task = UIApplication.shared.beginBackgroundTask(withName: "Save Orbit review") {
+      end(id)
+    }
+    if task != .invalid { tasks[id] = task }
+    return id
+  }
+
+  static func end(_ id: Int) {
+    if let task = tasks.removeValue(forKey: id) {
+      UIApplication.shared.endBackgroundTask(task)
+    }
+  }
+}
 
 struct OrbitRepoMaterializedDocument: Sendable {
   let json: String
@@ -76,6 +101,14 @@ public final class OrbitAutomergeModule: Module, @unchecked Sendable {
       orbitRepoEvents.documentChanged,
       orbitRepoEvents.syncStateChanged
     )
+
+    AsyncFunction("beginReviewWork") { () async -> Int in
+      await ReviewBackgroundWork.begin()
+    }
+
+    AsyncFunction("endReviewWork") { (id: Int) async in
+      await ReviewBackgroundWork.end(id)
+    }
 
     AsyncFunction("openRepo") { (localStoreID: String) async throws in
       try await repoStore.open(localStoreID: localStoreID)

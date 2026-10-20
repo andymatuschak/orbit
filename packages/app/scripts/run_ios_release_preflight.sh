@@ -10,6 +10,9 @@ repository_directory="$(cd -- "$script_directory/../../.." && pwd)"
 # before spending time signing or uploading an iOS build.
 cd -- "$repository_directory"
 bun test \
+  packages/app/src/reviewSession/reviewSubmission.test.ts \
+  packages/app/src/reviewSession/scheduling.test.ts \
+  packages/app/src/reviewSessionManager.test.ts \
   packages/app/src/sync/HostedReviewDatabase.test.ts \
   packages/app/src/sync/openHostedReviewDatabase.test.ts \
   packages/app/src/sync/NativeHostedSyncTransport.test.ts \
